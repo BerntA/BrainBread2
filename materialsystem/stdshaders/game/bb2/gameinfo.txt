@@ -1,0 +1,59 @@
+"GameInfo"
+{
+	game	             "BrainBread 2"
+    name                 "BrainBread 2"
+    title                ""
+    title2               ""
+	type                 multiplayer_only
+	developer            "Reperio Studios"
+	developer_url	     "http://www.brainbread2.eu"
+	manual   	         "http://wiki.brainbread2.eu"
+	icon	             "resource/game"
+	nomodels 1
+	nohimodel 1
+	nocrosshair 1
+	supportsvr	1
+	InstancePath "mapsrc/"
+
+	hidden_maps
+	{
+		"test_speakers"		1
+		"test_hardware"		1
+		"tutorial"          1
+	}
+
+    GameData			"fgd/game.fgd"
+
+	FileSystem
+	{
+		SteamAppId 346330
+		
+		SearchPaths
+		{
+            // Scan Custom Stuff:
+            game+mod |gameinfo_path|addons/*
+			game+mod |gameinfo_path|../../../workshop/content/346330/*
+			game+mod |gameinfo_path|../steamapps/workshop/content/346330/*
+
+			game+mod+mod_write+default_write_path	    |gameinfo_path|.
+			gamebin				|gameinfo_path|bin
+			
+			game+game_write		                    brainbread2
+			gamebin									brainbread2/bin
+			
+			// Base Content
+			game				|gameinfo_path|../base/hl2_textures.vpk
+			game				|gameinfo_path|../base/hl2_sound_misc.vpk
+			game				|gameinfo_path|../base/hl2_misc.vpk
+			game				|gameinfo_path|../base/base_content_l4d2.vpk
+			
+			game									|gameinfo_path|../base
+			
+			// Platform
+			platform								|all_source_engine_paths|platform/platform_misc.vpk
+			platform								|all_source_engine_paths|platform
+
+            game+download	                        |gameinfo_path|download
+		}
+	}
+}

@@ -1,0 +1,131 @@
+"UserConfigData"
+{
+	"resource"
+	{
+		"mdlpicker.res"
+		{
+			"FileBrowserSplitter"
+			{
+				"child0"
+				{
+					"AssetSplitter"
+					{
+						"child1"
+						{
+							"AssetBrowser"
+							{
+								"lastBarWidth"		"629"
+								"0_hidden"		"0"
+								"0_width"		"160"
+								"1_hidden"		"0"
+								"1_width"		"470"
+							}
+						}
+						"0_splitter_pos"		"310.000000"
+						"1_splitter_pos"		"620.000000"
+					}
+				}
+				"child1"
+				{
+					"PreviewSplitter"
+					{
+						"child1"
+						{
+							"ViewsSheet"
+							{
+								"SequencesPage"
+								{
+									"SequencesList"
+									{
+										"lastBarWidth"		"612"
+										"0_hidden"		"0"
+										"0_width"		"613"
+									}
+								}
+								"ActivitiesPage"
+								{
+									"ActivitiesList"
+									{
+										"lastBarWidth"		"612"
+										"0_hidden"		"0"
+										"0_width"		"613"
+									}
+								}
+								"SkinsPage"
+								{
+									"SkinsList"
+									{
+										"lastBarWidth"		"612"
+										"0_hidden"		"0"
+										"0_width"		"613"
+									}
+								}
+								"InfoPage"
+								{
+									"PropData"
+									{
+										"lastBarWidth"		"612"
+										"0_hidden"		"0"
+										"0_width"		"250"
+										"1_hidden"		"0"
+										"1_width"		"363"
+									}
+								}
+							}
+						}
+						"0_splitter_pos"		"310.000000"
+						"1_splitter_pos"		"620.000000"
+					}
+				}
+				"0_splitter_pos"		"659.500000"
+				"1_splitter_pos"		"1319.000000"
+			}
+			"filter"		"bag"
+		}
+		"assetpicker.res"
+		{
+			"AssetSplitter"
+			{
+				"child1"
+				{
+					"AssetBrowser"
+					{
+						"lastBarWidth"		"237"
+						"0_hidden"		"0"
+						"0_width"		"52"
+						"1_hidden"		"0"
+						"1_width"		"186"
+					}
+				}
+				"0_splitter_pos"		"160.000000"
+				"1_splitter_pos"		"320.000000"
+			}
+		}
+		"assetpickerframe.res"
+		{
+			"AssetPicker"
+			{
+				"AssetSplitter"
+				{
+					"child1"
+					{
+						"AssetBrowser"
+						{
+							"lastBarWidth"		"237"
+							"0_hidden"		"0"
+							"0_width"		"52"
+							"1_hidden"		"0"
+							"1_width"		"186"
+						}
+					}
+					"0_splitter_pos"		"160.000000"
+					"1_splitter_pos"		"320.000000"
+				}
+			}
+			"xpos"		"525"
+			"ypos"		"136"
+			"wide"		"268"
+			"tall"		"380"
+		}
+	}
+}

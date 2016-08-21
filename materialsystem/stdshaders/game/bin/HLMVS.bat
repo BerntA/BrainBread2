@@ -1,0 +1,1 @@
+hlmv.exe -game "D:\Program Files (x86)\Steam\steamapps\common\brainbread2\brainbread2"

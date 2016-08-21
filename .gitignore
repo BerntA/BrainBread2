@@ -1,0 +1,59 @@
+# Files to ignore when considering what GIT should commit.
+
+# Visual Studio
+*.obj
+*.pdb
+*.idb
+*.tlog
+*.exp
+*.pch
+*.log
+*.ilk
+*.scc
+*.sln.docstates
+*.suo
+*.sdf
+*.opensdf
+*.sln
+*.lastbuildstate
+*.write.1.tlog
+*.sentinel
+*.user
+*.vcxproj
+*.vpc_crc
+*.filters
+*.DS_Store
+*.TemporaryItems
+*.hgignore
+*.ipch
+
+# Version Controlling
+*.hg
+/.hg/*
+hg
+
+# OSX/Linux build products
+*.mak
+*.mak.vpc_crc
+*.xcodeproj/
+obj*/
+!devtools/*.mak
+!utils/smdlexp/smdlexp.mak
+*.dSYM
+*.dbg
+
+# Misc Folders
+ipch
+/ipch/*
+/Debug_brainbread2/*
+/Release_brainbread2/*
+/Debug/*
+/Release/*
+/stdshaders/game/*
+/stdshaders/game/bin/*
+/stdshaders/game/bb2/*
+/stdshaders/game/bb2/shaders/*
+/stdshaders/game/bb2/shaders/fxc/*
+
+# shader files
+*.tmp

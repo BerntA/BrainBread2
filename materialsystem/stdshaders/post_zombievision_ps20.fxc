@@ -1,0 +1,27 @@
+#include "common_ps_fxc.h"
+ 
+const HALF Brightness : register (c0); 
+ 
+sampler BaseTextureSampler : register( s0 ); 
+ 
+HALF4 main(float2 iTexCoord : TEXCOORD0) : COLOR 
+{
+	float4 vAdd = float4(0.1,0.1,0.1,0); 
+ 
+	float4 cColor = tex2D(BaseTextureSampler,iTexCoord); 
+	cColor += tex2D(BaseTextureSampler, iTexCoord.xy + 0.001); 
+	cColor += tex2D(BaseTextureSampler, iTexCoord.xy + 0.002);
+	cColor += tex2D(BaseTextureSampler, iTexCoord.xy + 0.003); 
+	if (((cColor.r + cColor.g + cColor.b)/3) < 0.9) 
+	{
+		cColor = cColor / 4; 
+	}
+ 
+	float4 cTempColor = cColor; 
+	float4 cFinal = cTempColor + vAdd; 
+ 
+	cFinal.g = cTempColor.g; 
+	cFinal.r = cTempColor.r; 
+	cFinal.b = cTempColor.b;
+	return cFinal * Brightness; 
+}

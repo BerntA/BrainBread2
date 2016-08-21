@@ -1,0 +1,128 @@
+//=========       Copyright © Reperio Studios 2015 @ Bernt Andreas Eide!       ============//
+//
+// Purpose: Skill Icon - Draws the icon related to the skill, searches scripts/skills/*.txt for a relative file to the cc_language (translatable).
+//
+//========================================================================================//
+
+#include "cbase.h"
+#include "vgui/MouseCode.h"
+#include "vgui/IInput.h"
+#include "vgui/IScheme.h"
+#include "vgui/ISurface.h"
+#include <vgui/IVGui.h>
+#include "vgui_controls/EditablePanel.h"
+#include "vgui_controls/ScrollBar.h"
+#include "vgui_controls/Label.h"
+#include "vgui_controls/Button.h"
+#include <vgui_controls/ImageList.h>
+#include <vgui_controls/Frame.h>
+#include <vgui_controls/ImagePanel.h>
+#include "vgui_controls/Controls.h"
+#include "SkillTreeIcon.h"
+#include "iclientmode.h"
+#include "vgui_controls/AnimationController.h"
+#include <igameresources.h>
+#include "cdll_util.h"
+#include "GameBase_Client.h"
+#include "KeyValues.h"
+#include "filesystem.h"
+
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
+using namespace vgui;
+
+SkillTreeIcon::SkillTreeIcon(vgui::Panel *parent, char const *panelName, const char *name, const char *description, const char *command, const char *iconTexture) : vgui::Panel(parent, panelName)
+{
+	SetParent(parent);
+	SetName(panelName);
+
+	SetMouseInputEnabled(true);
+	SetKeyBoardInputEnabled(true);
+	SetProportional(true);
+	SetScheme("BaseScheme");
+
+	// Icon
+	m_pIcon = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "IconImage"));
+	m_pIcon->SetZPos(12);
+	m_pIcon->SetImage("transparency");
+	m_pIcon->SetShouldScaleImage(true);
+
+	m_pMousePanel = vgui::SETUP_PANEL(new vgui::MouseInputPanel(this, "MouseInputs"));
+	m_pMousePanel->SetZPos(90);
+	m_pMousePanel->SetVisible(true);
+	m_pMousePanel->SetEnabled(true);
+
+	Q_strncpy(szName, name, 128);
+	Q_strncpy(szDesc, description, 128);
+	Q_strncpy(szCommand, command, 128);
+	m_pIcon->SetImage(iconTexture);
+
+	SetProgressValue(0.0f);
+
+	SetPaintEnabled(true);
+	SetPaintBackgroundEnabled(true);
+
+	InvalidateLayout();
+
+	PerformLayout();
+}
+
+SkillTreeIcon::~SkillTreeIcon()
+{
+}
+
+void SkillTreeIcon::PerformLayout()
+{
+	BaseClass::PerformLayout();
+
+	int x, y, w, h;
+	GetSize(w, h);
+	GetPos(x, y);
+
+	m_pIcon->SetSize(w - scheme()->GetProportionalScaledValue(8), h - scheme()->GetProportionalScaledValue(8));
+	m_pIcon->SetPos(scheme()->GetProportionalScaledValue(4), scheme()->GetProportionalScaledValue(4));
+
+	m_pMousePanel->SetSize(w, h);
+	m_pMousePanel->SetPos(0, 0);
+}
+
+void SkillTreeIcon::ApplySchemeSettings(vgui::IScheme *pScheme)
+{
+	BaseClass::ApplySchemeSettings(pScheme);
+}
+
+void SkillTreeIcon::Paint()
+{
+	BaseClass::Paint();
+
+	Color col = Color(255, 255, 255, 255);
+
+	CHudTexture *pHudIcon = gHUD.GetIcon("level_min");
+	if (pHudIcon)
+	{
+		surface()->DrawSetColor(col);
+		surface()->DrawSetTexture(pHudIcon->textureId);
+		surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
+	}
+
+	pHudIcon = gHUD.GetIcon("level_max");
+	if (pHudIcon)
+		pHudIcon->DrawCircularProgression(col, 0, 0, GetWide(), GetTall(), flProgress);
+}
+
+void SkillTreeIcon::OnMousePressed(vgui::MouseCode code)
+{
+	if (!IsVisible())
+	{
+		BaseClass::OnMousePressed(code);
+		return;
+	}
+
+	if (code == MOUSE_LEFT)
+		engine->ClientCmd_Unrestricted(VarArgs("%s 1\n", szCommand));
+	else if (code == MOUSE_RIGHT)
+		engine->ClientCmd_Unrestricted(VarArgs("%s 0\n", szCommand));
+	else
+		BaseClass::OnMousePressed(code);
+}
