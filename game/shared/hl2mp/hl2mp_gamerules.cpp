@@ -2702,7 +2702,7 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	// ------------------------------------------------------------	
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_NONE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_MILITARY_VEHICLE, D_HT, 1);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_PLAYER, D_HT, 1);
+	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_PLAYER, D_HT, 2);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_PLAYER_ZOMB, D_LI, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_PLAYER_INFECTED, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_BULLSEYE, D_NU, 0);

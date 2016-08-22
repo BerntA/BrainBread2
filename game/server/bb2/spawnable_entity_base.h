@@ -36,8 +36,7 @@ public:
 	void InputSetMinRespawnDelay(inputdata_t &data);
 
 protected:
-	void OnEntityCheck(void);
-
+	virtual void OnEntityCheck(void);
 	virtual bool ShouldRespawnEntity(CBaseEntity *pActiveEntity);
 	virtual CBaseEntity *SpawnNewEntity(void) { return NULL; }
 

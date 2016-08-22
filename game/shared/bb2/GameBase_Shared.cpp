@@ -443,16 +443,19 @@ void CGameBaseShared::DispatchBleedout(CBaseEntity *pEntity)
 
 	Vector vecStart, vecEnd, vecDown;
 	AngleVectors(pEntity->GetAbsAngles(), NULL, NULL, &vecDown);
-	vecStart = pEntity->GetAbsOrigin();
-	vecEnd = pEntity->GetAbsOrigin() - (vecDown * MAX_TRACE_LENGTH);
-	Vector ZombieMins = Vector(-60, -60, 0);
-	Vector ZombieMax = Vector(60, 60, 82);
+	vecStart = pEntity->GetAbsOrigin() + Vector(0, 0, 12);
+	vecEnd = pEntity->GetAbsOrigin();
+	vecDown = (vecEnd - vecStart);
+	VectorNormalize(vecDown);
+
+	Vector mins = Vector(-60, -60, 0);
+	Vector maxs = Vector(60, 60, 12);
 
 	Ray_t ray;
 	trace_t tr;
-	ray.Init(vecStart, vecEnd, ZombieMins, ZombieMax);
-	UTIL_TraceRay(ray, MASK_SOLID_BRUSHONLY, pEntity, COLLISION_GROUP_DEBRIS, &tr);
+	CTraceFilterNoNPCsOrPlayer filter(pEntity, COLLISION_GROUP_DEBRIS);
 
+	UTIL_TraceHull(vecStart, vecEnd + (vecDown * MAX_TRACE_LENGTH), mins, maxs, MASK_SOLID_BRUSHONLY, &filter, &tr);
 	if (tr.DidHitWorld() && !tr.allsolid && !tr.IsDispSurface() && (tr.fraction != 1.0f) && (tr.plane.normal.z == 1.0f))
 	{
 		QAngle qAngle(0, 0, 0);

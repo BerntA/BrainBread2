@@ -59,6 +59,8 @@ void CHL2MPSniperRifle::SetZoomLevel(int level)
 
 		if (!pViewMDL->IsEffectActive(EF_NODRAW))
 			pViewMDL->AddEffects(EF_NODRAW);
+
+		WeaponSound(SPECIAL1); // Zoom-In.
 		return;
 	}
 
@@ -66,6 +68,7 @@ void CHL2MPSniperRifle::SetZoomLevel(int level)
 	{
 		pOwner->SetFOV(this, 0, 0.3f);
 		pViewMDL->RemoveEffects(EF_NODRAW);
+		WeaponSound(SPECIAL2); // Zoom-Out.
 	}
 }
 

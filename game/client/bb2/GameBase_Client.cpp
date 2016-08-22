@@ -822,12 +822,20 @@ void CGameBaseClient::LoadGameLocalization(void)
 	const char *currentSelectedLanguage = steamapicontext->SteamApps()->GetCurrentGameLanguage();
 	char pchPathToLocalizedFile[80];
 
+	// Load default localization:
+	const char *localizationFiles[] = { "resource/chat_", "resource/gameui_", "resource/hl2_", "resource/replay_", "resource/valve_", "resource/youtube_" };
+	for (int i = 0; i < _ARRAYSIZE(localizationFiles); ++i)
+	{
+		Q_snprintf(pchPathToLocalizedFile, 80, "%s%s.txt", localizationFiles[i], currentSelectedLanguage);
+		g_pVGuiLocalize->AddFile(pchPathToLocalizedFile, "GAME");
+	}
+
 	// Load game localization:
-	Q_snprintf(pchPathToLocalizedFile, 80, "data/localization/%s.txt", currentSelectedLanguage);
+	Q_snprintf(pchPathToLocalizedFile, 80, "resource/brainbread2_%s.txt", currentSelectedLanguage);
 	if (filesystem->FileExists(pchPathToLocalizedFile, "MOD"))
 		g_pVGuiLocalize->AddFile(pchPathToLocalizedFile, "MOD");
 	else
-		g_pVGuiLocalize->AddFile("data/localization/english.txt", "MOD");
+		g_pVGuiLocalize->AddFile("resource/brainbread2_english.txt", "MOD");
 
 	// Load subtitle localization:
 	Q_snprintf(pchPathToLocalizedFile, 80, "resource/closecaption_%s.dat", currentSelectedLanguage);
@@ -835,8 +843,6 @@ void CGameBaseClient::LoadGameLocalization(void)
 		engine->ClientCmd_Unrestricted(VarArgs("cc_lang %s\n", currentSelectedLanguage));
 	else
 		engine->ClientCmd_Unrestricted("cc_lang english\n");
-
-	// todo: We still have to load the proper hl2 base localization like gameui, valve, etc... *sigh*
 }
 
 void CGameBaseClient::OnUpdate(void)

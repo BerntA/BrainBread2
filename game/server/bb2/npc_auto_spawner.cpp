@@ -15,6 +15,21 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+int GetCollisionGroupForClassname(const char *classname)
+{
+	if (classname && classname[0])
+	{
+		if (!strcmp(classname, "npc_walker") || !strcmp(classname, "npc_runner") || !strcmp(classname, "npc_fred"))
+			return COLLISION_GROUP_NPC_ZOMBIE;
+		else if (!strcmp(classname, "npc_military") || !strcmp(classname, "npc_military_static"))
+			return COLLISION_GROUP_NPC_MILITARY;
+		else if (!strcmp(classname, "npc_bandit"))
+			return COLLISION_GROUP_NPC_MERCENARY;
+	}
+
+	return COLLISION_GROUP_NPC;
+}
+
 class CNPCAutoSpawner : public CSpawnableEntity
 {
 public:
@@ -26,6 +41,7 @@ public:
 
 protected:
 	CBaseEntity *SpawnNewEntity(void);
+	void OnEntityCheck(void);
 
 private:
 	string_t szClassname;
@@ -80,4 +96,42 @@ CBaseEntity *CNPCAutoSpawner::SpawnNewEntity(void)
 	}
 
 	return pEntity;
+}
+
+void CNPCAutoSpawner::OnEntityCheck(void)
+{
+	float flNextThink = 0.4f;
+
+	if (m_bShouldCreate)
+	{
+		bool bCanSpawnEnt = true;
+
+		trace_t tr;
+		CTraceFilterOnlyNPCsAndPlayer filter(NULL, GetCollisionGroupForClassname(STRING(szClassname)));
+
+		Vector mins = Vector(-60, -60, 0);
+		Vector maxs = Vector(60, 60, 80);
+
+		UTIL_TraceHull(GetAbsOrigin(), GetAbsOrigin(), mins, maxs, MASK_NPCSOLID, &filter, &tr);
+		if (tr.fraction != 1.0f)
+		{
+			bCanSpawnEnt = false;
+			flNextThink = 1.25f;
+		}
+
+		if (bCanSpawnEnt)
+		{
+			m_bShouldCreate = false;
+			SpawnEntity();
+		}
+	}
+
+	if (ShouldRespawnEntity(m_pEntityToSpawn.Get()) && !m_bShouldCreate && !m_bDisabled)
+	{
+		m_pEntityToSpawn = NULL;
+		m_bShouldCreate = true;
+		flNextThink = random->RandomFloat(m_flMinRespawnDelay, m_flMaxRespawnDelay);
+	}
+
+	SetNextThink(gpGlobals->curtime + flNextThink);
 }
