@@ -114,7 +114,6 @@ void CWeaponREX::PrimaryAttack(void)
 		return;
 
 	WeaponSound(SINGLE);
-	pPlayer->DoMuzzleFlash();
 
 	SendWeaponAnim(ACT_VM_PRIMARYATTACK);
 

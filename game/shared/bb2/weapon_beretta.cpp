@@ -157,7 +157,6 @@ void CWeaponBeretta::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatC
 
 			WeaponSound( SINGLE_NPC );
 			pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
-			pOperator->DoMuzzleFlash();
 			m_iClip1 = m_iClip1 - 1;
 		}
 		break;

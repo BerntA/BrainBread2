@@ -50,19 +50,13 @@ CHL2MPMachineGun::CHL2MPMachineGun( void )
 void CHL2MPMachineGun::PrimaryAttack( void )
 {
 	// Only the player fires this way so we can cast
-	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
 	if (!pPlayer)
-		return;
-
-	CHL2MP_Player *pHL2MPPlayer = ToHL2MPPlayer(pPlayer);
-	if (!pHL2MPPlayer)
 		return;
 	
 	// Abort here to handle burst and auto fire modes
 	if ( (UsesClipsForAmmo1() && m_iClip1 == 0) || ( !UsesClipsForAmmo1() && !pPlayer->GetAmmoCount(m_iPrimaryAmmoType) ) )
 		return;
-
-	pPlayer->DoMuzzleFlash();
 
 	// To make the firing framerate independent, we may have to fire more than one bullet here on low-framerate systems, 
 	// especially if the weapon we're firing has a really fast rate of fire.
@@ -88,13 +82,13 @@ void CHL2MPMachineGun::PrimaryAttack( void )
 	// Fire the bullets
 	FireBulletsInfo_t info;
 	info.m_iShots = iBulletsToFire;
-	info.m_vecSrc = pHL2MPPlayer->Weapon_ShootPosition( );
+	info.m_vecSrc = pPlayer->Weapon_ShootPosition();
 	info.m_vecDirShooting = pPlayer->GetAutoaimVector( AUTOAIM_5DEGREES );
-	info.m_vecSpread = pHL2MPPlayer->GetAttackSpread( this );
+	info.m_vecSpread = pPlayer->GetAttackSpread(this);
 	info.m_flDistance = MAX_TRACE_LENGTH;
 	info.m_iAmmoType = m_iPrimaryAmmoType;
 	info.m_iTracerFreq = 2;
-	info.m_vecFirstStartPos = pHL2MPPlayer->GetAbsOrigin();
+	info.m_vecFirstStartPos = pPlayer->GetAbsOrigin();
 	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
 	FireBullets( info );
 
@@ -103,7 +97,7 @@ void CHL2MPMachineGun::PrimaryAttack( void )
 
 	int shootAct = GetPrimaryAttackActivity();
 	SendWeaponAnim(shootAct);
-	pHL2MPPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, shootAct);
+	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, shootAct);
 }
 
 void CHL2MPMachineGun::SecondaryAttack(void)

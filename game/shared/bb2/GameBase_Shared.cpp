@@ -442,7 +442,6 @@ void CGameBaseShared::DispatchBleedout(CBaseEntity *pEntity)
 		return;
 
 	Vector vecStart, vecEnd, vecDown;
-	AngleVectors(pEntity->GetAbsAngles(), NULL, NULL, &vecDown);
 	vecStart = pEntity->GetAbsOrigin() + Vector(0, 0, 12);
 	vecEnd = pEntity->GetAbsOrigin();
 	vecDown = (vecEnd - vecStart);
@@ -451,7 +450,6 @@ void CGameBaseShared::DispatchBleedout(CBaseEntity *pEntity)
 	Vector mins = Vector(-60, -60, 0);
 	Vector maxs = Vector(60, 60, 12);
 
-	Ray_t ray;
 	trace_t tr;
 	CTraceFilterNoNPCsOrPlayer filter(pEntity, COLLISION_GROUP_DEBRIS);
 

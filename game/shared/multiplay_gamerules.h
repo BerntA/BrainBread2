@@ -93,6 +93,7 @@ extern ConVar bb2_roundstart_freezetime;
 extern ConVar bb2_vote_disable_kick;
 extern ConVar bb2_vote_disable_ban;
 extern ConVar bb2_vote_disable_map;
+extern ConVar bb2_vote_required_percentage;
 extern ConVar bb2_vote_time;
 extern ConVar bb2_vote_frequency_time;
 extern ConVar bb2_ban_time;

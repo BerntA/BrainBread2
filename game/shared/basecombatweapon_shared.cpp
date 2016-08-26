@@ -1840,7 +1840,7 @@ Vector CBaseCombatWeapon::GetBulletConeByAccLevel(void)
 		m_flViewKickTime = gpGlobals->curtime; // reset the timer.
 	}
 	else
-		m_flViewKickPenalty = iAccuracyLevel;
+		m_flViewKickPenalty = (float)iAccuracyLevel;
 
 	switch ((int)m_flViewKickPenalty)
 	{
@@ -2338,8 +2338,6 @@ void CBaseCombatWeapon::PrimaryAttack( void )
 	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
 	if (!pPlayer)
 		return;
-
-	pPlayer->DoMuzzleFlash();
 
 	SendWeaponAnim( GetPrimaryAttackActivity() );
 

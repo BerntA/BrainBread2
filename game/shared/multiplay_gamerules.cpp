@@ -103,8 +103,9 @@ ConVar bb2_npc_scaling("bb2_npc_scaling", "1", FCVAR_REPLICATED, "Set the start 
 ConVar bb2_allow_latejoin( "bb2_allow_latejoin", "1", FCVAR_REPLICATED, "Allow players who join late to spawn as a human.", true, 0.0f, true, 1.0f );
 
 ConVar bb2_vote_disable_kick("bb2_vote_disable_kick", "0", FCVAR_REPLICATED, "Disable vote kick.", true, 0.0f, true, 1.0f);
-ConVar bb2_vote_disable_ban("bb2_vote_disable_ban", "0", FCVAR_REPLICATED, "Disable vote ban.", true, 0.0f, true, 1.0f);
+ConVar bb2_vote_disable_ban("bb2_vote_disable_ban", "1", FCVAR_REPLICATED, "Disable vote ban.", true, 0.0f, true, 1.0f);
 ConVar bb2_vote_disable_map("bb2_vote_disable_map", "0", FCVAR_REPLICATED, "Disable vote map.", true, 0.0f, true, 1.0f);
+ConVar bb2_vote_required_percentage("bb2_vote_required_percentage", "70", FCVAR_REPLICATED, "The percent of yes votes required to pass a vote.", true, 0.0f, true, 100.0f);
 ConVar bb2_vote_time("bb2_vote_time", "30", FCVAR_REPLICATED, "The time in seconds until the vote ends.", true, 10.0f, true, 120.0f);
 ConVar bb2_vote_frequency_time("bb2_vote_frequency_time", "60", FCVAR_REPLICATED, "The time in seconds until players can vote again.", true, 10.0f, true, 120.0f);
 ConVar bb2_ban_time("bb2_ban_time", "30", FCVAR_REPLICATED, "For how many minutes will a player be banned if a ban vote passes?", true, 0.0f, false, 0.0f);

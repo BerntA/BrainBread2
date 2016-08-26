@@ -1189,10 +1189,9 @@ void CHL2MPRules::VoteSystemThink(void)
 			int iVotesLeft = m_iAmountOfVoters - m_iCurrentYesVotes;
 			m_iCurrentNoVotes = iVotesLeft;
 
-			float yesVotes = ((float)m_iCurrentYesVotes) / ((float)m_iAmountOfVoters);
-			float noVotes = ((float)m_iCurrentNoVotes) / ((float)m_iAmountOfVoters);
+			float yesVotes = (((float)m_iCurrentYesVotes) / ((float)m_iAmountOfVoters)) * 100.0f;
 			bool bVoteStatus = false;
-			if (yesVotes > noVotes)
+			if (yesVotes >= bb2_vote_required_percentage.GetFloat())
 			{
 				bVoteStatus = true;
 				char pchServerCMD[64];
@@ -1282,6 +1281,16 @@ void CHL2MPRules::CreateBanKickVote(CBasePlayer *pVoter, CBasePlayer *pTarget, b
 	{
 		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_KICK_DISABLED", 1, pVoter->entindex());
 		return;
+	}
+
+	CHL2MP_Player *pTargetClient = ToHL2MPPlayer(pTarget);
+	if (pTargetClient)
+	{
+		if (pTargetClient->IsAdminOnServer())
+		{
+			GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_KICKBAN_ADMIN", 1, pVoter->entindex());
+			return;
+		}
 	}
 
 	if (!CanCreateVote(pVoter))

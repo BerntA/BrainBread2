@@ -172,7 +172,6 @@ void CWeaponAK47::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, Vector 
 	pOperator->FireBullets( GetWpnData().m_iPellets, vecShootOrigin, vecShootDir, GetBulletSpread(),
 		MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2, entindex(), 0 );
 
-	pOperator->DoMuzzleFlash();
 	m_iClip1 = m_iClip1 - 1;
 }
 

@@ -195,7 +195,6 @@ void CWeaponRemington::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, boo
 	CAI_BaseNPC *npc = pOperator->MyNPCPointer();
 	ASSERT(npc != NULL);
 	WeaponSound(SINGLE_NPC);
-	pOperator->DoMuzzleFlash();
 	m_iClip1 = m_iClip1 - 1;
 
 	if (bUseWeaponAngles)
@@ -418,8 +417,6 @@ void CWeaponRemington::PrimaryAttack(void)
 
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	WeaponSound(SINGLE);
-
-	pPlayer->DoMuzzleFlash();
 
 	SendWeaponAnim(ACT_VM_PRIMARYATTACK);
 

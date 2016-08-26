@@ -204,7 +204,6 @@ void CWeaponSawedOff::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, boo
 	CAI_BaseNPC *npc = pOperator->MyNPCPointer();
 	ASSERT( npc != NULL );
 	WeaponSound( SINGLE_NPC );
-	pOperator->DoMuzzleFlash();
 	m_iClip1 = m_iClip1 - 1;
 
 	if ( bUseWeaponAngles )

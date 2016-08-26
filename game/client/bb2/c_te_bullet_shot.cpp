@@ -13,7 +13,7 @@
 #include "util_shared.h"
 #include "input.h"
 
-ConVar bb2_enable_particle_tracers("bb2_enable_particle_tracers", "1", FCVAR_ARCHIVE, "Enable particle based tracers when firing weapons.", true, 0.0f, true, 1.0f);
+ConVar bb2_enable_particle_gunfx("bb2_enable_particle_gunfx", "1", FCVAR_ARCHIVE, "Enable particle based gun effects like: Muzzleflashes, Bullet tracers and Smoke.", true, 0.0f, true, 1.0f);
 
 class C_TEBulletShot : public C_BaseTempEntity
 {
@@ -81,6 +81,8 @@ void C_TEBulletShot::CreateEffects(void)
 	if (!pOwnerOfWep)
 		return;
 
+	bool bParticleGunFX = bb2_enable_particle_gunfx.GetBool();
+
 	if (m_bDoTracers || m_bDoImpacts)
 	{
 		Vector vecEnd = m_vecOrigin + m_vecDir * MAX_TRACE_LENGTH;
@@ -107,7 +109,7 @@ void C_TEBulletShot::CreateEffects(void)
 				data.m_nAttachmentIndex = pWpn->GetTracerAttachment();
 			}
 
-			if (bb2_enable_particle_tracers.GetBool())
+			if (bParticleGunFX)
 			{
 				const char *pParticleEffect = pWpn->GetParticleEffect(PARTICLE_TYPE_TRACER);
 				int iParticleIndex = GetParticleSystemIndex(pParticleEffect);
@@ -155,13 +157,19 @@ void C_TEBulletShot::CreateEffects(void)
 		{
 			pDispatcher = pvm;
 			bThirdpersonDispatch = false;
+
+			if (!bParticleGunFX)
+				pvm->DoMuzzleFlash();
 		}
 
 		if (entindexplr == GetLocalPlayerIndex())
 			pWpn->GetBaseAnimating()->ProcessMuzzleFlashEvent();
 	}
 
-	DispatchParticleEffect(pWpn->GetParticleEffect(PARTICLE_TYPE_MUZZLE, bThirdpersonDispatch), PATTACH_POINT_FOLLOW, pDispatcher, particleAttachment);
+	if (bParticleGunFX)
+		DispatchParticleEffect(pWpn->GetParticleEffect(PARTICLE_TYPE_MUZZLE, bThirdpersonDispatch), PATTACH_POINT_FOLLOW, pDispatcher, particleAttachment);
+	else
+		pWpn->DoMuzzleFlash();
 }
 
 void C_TEBulletShot::PostDataUpdate(DataUpdateType_t updateType)

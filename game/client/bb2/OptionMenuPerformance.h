@@ -43,7 +43,7 @@ namespace vgui
 		vgui::ImagePanel *m_pDivider[2];
 		vgui::Label *m_pTextTitle[2];
 
-		vgui::GraphicalCheckBox *m_pCheckBoxVar[9];
+		vgui::GraphicalCheckBox *m_pCheckBoxVar[10];
 		vgui::GraphicalOverlay *m_pSlider[3];
 		vgui::InlineMenuButton *m_pApplyButton;
 

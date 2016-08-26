@@ -65,6 +65,7 @@ OptionMenuPerformance::OptionMenuPerformance(vgui::Panel *parent, char const *pa
 		"#GameUI_RenderMuzzleDLight",
 		"#GameUI_MulticoreRendering",
 		"#GameUI_RenderWeaponAttachments",
+		"#GameUI_GunEffectsFX",
 	};
 
 	for (int i = 0; i < _ARRAYSIZE(m_pCheckBoxVar); i++)
@@ -145,6 +146,7 @@ void OptionMenuPerformance::ApplyChanges(void)
 	ConVarRef cl_new_impact_effects("cl_new_impact_effects");
 	ConVarRef muzzleflash_light("muzzleflash_light");
 	ConVarRef bb2_render_weapon_attachments("bb2_render_weapon_attachments");
+	ConVarRef bb2_enable_particle_gunfx("bb2_enable_particle_gunfx");
 
 	bb2_extreme_gore.SetValue(m_pCheckBoxVar[0]->IsChecked());
 	bb2_gibs_spawn_blood_puddle.SetValue(m_pCheckBoxVar[1]->IsChecked());
@@ -156,6 +158,7 @@ void OptionMenuPerformance::ApplyChanges(void)
 	muzzleflash_light.SetValue(m_pCheckBoxVar[6]->IsChecked());
 	bb2_enable_multicore.SetValue(m_pCheckBoxVar[7]->IsChecked());
 	bb2_render_weapon_attachments.SetValue(m_pCheckBoxVar[8]->IsChecked());
+	bb2_enable_particle_gunfx.SetValue(m_pCheckBoxVar[9]->IsChecked());
 
 	engine->ClientCmd_Unrestricted("host_writeconfig\n");
 }
@@ -191,6 +194,7 @@ void OptionMenuPerformance::SetupLayout(void)
 		ConVarRef cl_new_impact_effects("cl_new_impact_effects");
 		ConVarRef muzzleflash_light("muzzleflash_light");
 		ConVarRef bb2_render_weapon_attachments("bb2_render_weapon_attachments");
+		ConVarRef bb2_enable_particle_gunfx("bb2_enable_particle_gunfx");
 
 		m_pCheckBoxVar[0]->SetCheckedStatus(bb2_extreme_gore.GetBool());
 		m_pCheckBoxVar[1]->SetCheckedStatus(bb2_gibs_spawn_blood_puddle.GetBool());
@@ -201,6 +205,7 @@ void OptionMenuPerformance::SetupLayout(void)
 		m_pCheckBoxVar[6]->SetCheckedStatus(muzzleflash_light.GetBool());
 		m_pCheckBoxVar[7]->SetCheckedStatus(bb2_enable_multicore.GetBool());
 		m_pCheckBoxVar[8]->SetCheckedStatus(bb2_render_weapon_attachments.GetBool());
+		m_pCheckBoxVar[9]->SetCheckedStatus(bb2_enable_particle_gunfx.GetBool());
 	}
 
 	for (int i = 0; i < _ARRAYSIZE(m_pTextTitle); i++)
