@@ -149,6 +149,7 @@ public:
 
 	// Shared Stuff:
 	float GetTimeLeft();
+	float GetTimelimitValue();
 
 	CNetworkVar(bool, m_bRoundStarted);
 	CNetworkVar(bool, m_bShouldShowScores);

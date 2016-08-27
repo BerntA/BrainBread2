@@ -304,7 +304,7 @@ public:
 	// Achievement Checks
 	CAchievementManager *GetAchievementManager() { return m_pAchievementManager; }
 	void EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pVictim, CBaseEntity *pInflictor);
-	void OnGameOver(float timeLeft);
+	void OnGameOver(float timeLeft, int iWinner);
 
 	// Server Commands and Client Commands checks.
 	bool ClientCommand(const CCommand &args);

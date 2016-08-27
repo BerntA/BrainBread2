@@ -109,7 +109,10 @@ void CBB2PlayerShared::OnNewModel()
 	{
 		pOwner = ToHL2MPPlayer(m_pPlayerHands->GetOwner());
 		if (pOwner)
+		{
 			m_pPlayerHands->SetWeaponModel(GetPlayerHandModel(pOwner), NULL);
+			m_pPlayerHands->m_nSkin = pOwner->GetSkin();
+		}
 	}
 }
 

@@ -61,7 +61,11 @@ ConVar mp_chattime(
 		true, 120.0f );
 
 // BB2
-ConVar mp_timelimit("mp_timelimit", "30", FCVAR_REPLICATED, "Set the timelimit in minutes.", true, 10.0f, false, 0.0f);
+ConVar mp_timelimit_objective("mp_timelimit_objective", "60", FCVAR_REPLICATED, "Set the timelimit in minutes for Objective & Story maps.", true, 10.0f, false, 0.0f);
+ConVar mp_timelimit_arena("mp_timelimit_arena", "40", FCVAR_REPLICATED, "Set the timelimit in minutes for Arena maps.", true, 10.0f, false, 0.0f);
+ConVar mp_timelimit_deathmatch("mp_timelimit_deathmatch", "20", FCVAR_REPLICATED, "Set the timelimit in minutes for Deathmatch maps.", true, 10.0f, false, 0.0f);
+ConVar mp_timelimit_elimination("mp_timelimit_elimination", "30", FCVAR_REPLICATED, "Set the timelimit in minutes for Elimination maps.", true, 10.0f, false, 0.0f);
+
 ConVar mp_limitteams("mp_limitteams", "1", FCVAR_REPLICATED, "If the player count difference between two teams are bigger than this value it will auto-balance the teams.", true, 1.0f, false, 0.0f);
 
 ConVar bb2_elimination_fraglimit("bb2_elimination_fraglimit", "200", FCVAR_REPLICATED, "Set the max amount of frags a team can obtain before that team will win the game.", true, 50.0f, false, 500.0f);
@@ -106,6 +110,7 @@ ConVar bb2_vote_disable_kick("bb2_vote_disable_kick", "0", FCVAR_REPLICATED, "Di
 ConVar bb2_vote_disable_ban("bb2_vote_disable_ban", "1", FCVAR_REPLICATED, "Disable vote ban.", true, 0.0f, true, 1.0f);
 ConVar bb2_vote_disable_map("bb2_vote_disable_map", "0", FCVAR_REPLICATED, "Disable vote map.", true, 0.0f, true, 1.0f);
 ConVar bb2_vote_required_percentage("bb2_vote_required_percentage", "70", FCVAR_REPLICATED, "The percent of yes votes required to pass a vote.", true, 0.0f, true, 100.0f);
+ConVar bb2_vote_required_level("bb2_vote_required_level", "15", FCVAR_REPLICATED, "In Objective, Story & Arena this is the minimum level a player must be in order to create votes.", true, 0.0f, true, 500.0f);
 ConVar bb2_vote_time("bb2_vote_time", "30", FCVAR_REPLICATED, "The time in seconds until the vote ends.", true, 10.0f, true, 120.0f);
 ConVar bb2_vote_frequency_time("bb2_vote_frequency_time", "60", FCVAR_REPLICATED, "The time in seconds until players can vote again.", true, 10.0f, true, 120.0f);
 ConVar bb2_ban_time("bb2_ban_time", "30", FCVAR_REPLICATED, "For how many minutes will a player be banned if a ban vote passes?", true, 0.0f, false, 0.0f);

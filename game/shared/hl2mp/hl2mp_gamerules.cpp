@@ -514,11 +514,26 @@ const char *CHL2MPRules::GetNameForCombatCharacter(int index)
 
 float CHL2MPRules::GetTimeLeft()
 {
-	float flTime = (m_flServerStartTime + (mp_timelimit.GetInt() * 60.0f)) - gpGlobals->curtime;
+	float flTime = (m_flServerStartTime + (GetTimelimitValue() * 60.0f)) - gpGlobals->curtime;
 	if (flTime > 0)
 		return flTime;
 
 	return 0.0f;
+}
+
+float CHL2MPRules::GetTimelimitValue()
+{
+	switch (GetCurrentGamemode())
+	{
+	case MODE_ARENA:
+		return mp_timelimit_arena.GetFloat();
+	case MODE_DEATHMATCH:
+		return mp_timelimit_deathmatch.GetFloat();
+	case MODE_ELIMINATION:
+		return mp_timelimit_elimination.GetFloat();
+	}
+
+	return  mp_timelimit_objective.GetFloat();
 }
 
 float CHL2MPRules::GetReinforcementRespawnTime()
@@ -1255,6 +1270,18 @@ bool CHL2MPRules::CanCreateVote(CBasePlayer *pVoter)
 		return false;
 	}
 
+	CHL2MP_Player *pClient = ToHL2MPPlayer(pVoter);
+	if (pClient && CanUseSkills() && engine->IsDedicatedServer())
+	{
+		if (pClient->GetPlayerLevel() < bb2_vote_required_level.GetInt())
+		{
+			char pchLevel[32];
+			Q_snprintf(pchLevel, 32, "%i", bb2_vote_required_level.GetInt());
+			GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_DENY_LEVEL", 1, pVoter->entindex(), pchLevel);
+			return false;
+		}
+	}
+
 	return true;
 }
 
@@ -1508,7 +1535,7 @@ void CHL2MPRules::GoToIntermission(int iWinner)
 		pPlayer->HandleLocalProfile(true);
 	}
 
-	GameBaseShared()->OnGameOver(GetTimeLeft());
+	GameBaseShared()->OnGameOver(GetTimeLeft(), iWinner);
 #endif
 }
 

@@ -1213,9 +1213,11 @@ void CBaseCombatWeapon::SetWeaponVisible( bool visible )
 	}
 	else
 	{
+		StopParticleEffects(this);
 		AddEffects( EF_NODRAW );
 		if ( vm )
 		{
+			StopParticleEffects(vm);
 			vm->AddEffects(EF_NODRAW);
 		}
 	}

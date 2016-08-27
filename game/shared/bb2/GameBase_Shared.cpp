@@ -993,9 +993,9 @@ void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pV
 // Purpose:
 // The game is over, we're changing map! Give achievs?
 ///////////////////////////////////////////////
-void CGameBaseShared::OnGameOver(float timeLeft)
+void CGameBaseShared::OnGameOver(float timeLeft, int iWinner)
 {
-	if (GameBaseServer()->CanStoreSkills() != PROFILE_GLOBAL)
+	if ((GameBaseServer()->CanStoreSkills() != PROFILE_GLOBAL) || (iWinner != TEAM_HUMANS))
 		return;
 
 	int iPlayersInGame = (HL2MPRules()->GetTeamSize(TEAM_HUMANS) + HL2MPRules()->GetTeamSize(TEAM_DECEASED));

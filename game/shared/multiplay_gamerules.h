@@ -56,7 +56,11 @@ typedef struct
 
 } VoiceCommandMenuItem_t;
 
-extern ConVar mp_timelimit;
+extern ConVar mp_timelimit_objective;
+extern ConVar mp_timelimit_arena;
+extern ConVar mp_timelimit_deathmatch;
+extern ConVar mp_timelimit_elimination;
+
 extern ConVar mp_limitteams;
 
 extern ConVar bb2_elimination_fraglimit;
@@ -94,6 +98,7 @@ extern ConVar bb2_vote_disable_kick;
 extern ConVar bb2_vote_disable_ban;
 extern ConVar bb2_vote_disable_map;
 extern ConVar bb2_vote_required_percentage;
+extern ConVar bb2_vote_required_level;
 extern ConVar bb2_vote_time;
 extern ConVar bb2_vote_frequency_time;
 extern ConVar bb2_ban_time;

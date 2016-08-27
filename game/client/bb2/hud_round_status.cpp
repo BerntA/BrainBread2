@@ -136,7 +136,10 @@ bool CHudRoundStatus::ShouldDraw(void)
 
 float CHudRoundStatus::GetSecondsFromTimeByPercentage(int iPercent)
 {
-	return (((mp_timelimit.GetFloat() * 60) / 100) * iPercent);
+	if (HL2MPRules())
+		return (((HL2MPRules()->GetTimelimitValue() * 60) / 100) * iPercent);
+
+	return 0.0f;
 }
 
 //------------------------------------------------------------------------
