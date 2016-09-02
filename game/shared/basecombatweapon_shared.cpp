@@ -682,7 +682,8 @@ void CBaseCombatWeapon::Drop( const Vector &vecVelocity )
 
 	//If it was dropped then there's no need to respawn it.
 	AddSpawnFlags( SF_NORESPAWN );
-
+	RemoveSpawnFlags(SF_WEAPON_NO_MOTION);
+	ResetAllParticles();
 	StopAnimation();
 	StopFollowingEntity( );
 	SetMoveType( MOVETYPE_FLYGRAVITY );
@@ -731,6 +732,19 @@ void CBaseCombatWeapon::Drop( const Vector &vecVelocity )
 #endif
 }
 
+void CBaseCombatWeapon::ResetAllParticles(void)
+{
+#if !defined( CLIENT_DLL )
+	CBaseViewModel *vm = NULL;
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	if (pOwner)
+		vm = pOwner->GetViewModel(m_nViewModelIndex);
+
+	StopParticleEffects(this);
+	if (vm)
+		StopParticleEffects(vm);
+#endif
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1213,11 +1227,10 @@ void CBaseCombatWeapon::SetWeaponVisible( bool visible )
 	}
 	else
 	{
-		StopParticleEffects(this);
+		ResetAllParticles();
 		AddEffects( EF_NODRAW );
 		if ( vm )
 		{
-			StopParticleEffects(vm);
 			vm->AddEffects(EF_NODRAW);
 		}
 	}

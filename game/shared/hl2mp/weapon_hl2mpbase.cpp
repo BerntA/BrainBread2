@@ -326,7 +326,7 @@ void CWeaponHL2MPBase::FallInit( void )
 	SetModel( GetWorldModel() );
 	VPhysicsDestroyObject();
 
-	if (HasSpawnFlags(SF_NORESPAWN))
+	if (HasSpawnFlags(SF_NORESPAWN) && !HasSpawnFlags(SF_WEAPON_NO_MOTION))
 	{
 		if (!VPhysicsInitNormal(SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, false))
 		{

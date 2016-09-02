@@ -41,6 +41,7 @@ class CUserCmd;
 #define	SF_WEAPON_START_CONSTRAINED	(1<<0)	
 #define SF_WEAPON_NO_PLAYER_PICKUP	(1<<1)
 #define SF_WEAPON_NO_PHYSCANNON_PUNT (1<<2)
+#define SF_WEAPON_NO_MOTION (1<<3)
 
 //Percent
 #define	CLIP_PERC_THRESHOLD		0.75f	
@@ -174,6 +175,7 @@ public:
 
 	virtual void			Equip( CBaseCombatCharacter *pOwner );
 	virtual void			Drop( const Vector &vecVelocity );
+	virtual void            ResetAllParticles(void);
 
 	virtual	int				UpdateClientData( CBasePlayer *pPlayer );
 
