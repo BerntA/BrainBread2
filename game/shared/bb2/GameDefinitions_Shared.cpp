@@ -16,6 +16,7 @@
 #include "hud.h"
 #include "hudelement.h"
 #include "vgui/ISurface.h"
+#include "c_world.h"
 
 // Soundsets
 static ConVar bb2_sound_player_human("bb2_sound_player_human", "Pantsman", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_SERVER_CAN_EXECUTE, "Selected player sound set prefix.");
@@ -34,6 +35,9 @@ static ConVar bb2_survivor_choice_extra_head("bb2_survivor_choice_extra_head", "
 static ConVar bb2_survivor_choice_extra_body("bb2_survivor_choice_extra_body", "0", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_SERVER_CAN_EXECUTE, "Selected player model bodygroup for extra body.");
 static ConVar bb2_survivor_choice_extra_leg_right("bb2_survivor_choice_extra_leg_right", "0", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_SERVER_CAN_EXECUTE, "Selected player model bodygroup for extra right leg.");
 static ConVar bb2_survivor_choice_extra_leg_left("bb2_survivor_choice_extra_leg_left", "0", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_SERVER_CAN_EXECUTE, "Selected player model bodygroup for extra left leg.");
+
+#else
+#include "GameBase_Server.h"
 #endif
 
 // Gamemode data
@@ -1634,6 +1638,14 @@ const char *GetTeamPerkName(int perk)
 
 const char *GetGamemodeName(int gamemode)
 {
+#ifdef CLIENT_DLL
+	if (GetClientWorldEntity() && GetClientWorldEntity()->m_bIsStoryMap)
+		return "Story";
+#else
+	if (GameBaseServer()->IsStoryMode())
+		return "Story";
+#endif
+
 	switch (gamemode)
 	{
 	case MODE_OBJECTIVE:

@@ -189,7 +189,7 @@ void InventoryItem::SetSize(int wide, int tall)
 	m_pInputPanel->SetSize(wide, tall);
 
 	m_pBackground->SetPos(0, 0);
-	m_pBackground->SetSize(wide, tall);
+	m_pBackground->SetSize(wide, (tall - scheme()->GetProportionalScaledValue(flScale)));
 
 	m_pHeaderImage->SetPos(0, tall - scheme()->GetProportionalScaledValue(flScale));
 	m_pHeaderImage->SetSize(wide, scheme()->GetProportionalScaledValue(flScale));

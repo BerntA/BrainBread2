@@ -30,6 +30,7 @@
 #include "filesystem.h"
 #include "hl2mp_gamerules.h"
 #include "c_playerresource.h"
+#include "c_world.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -190,7 +191,7 @@ void ScoreboardItem::UpdateItem(KeyValues *pkvPlayerData)
 		m_pSkullIcon->SetVisible((!g_PR->IsAlive(m_iPlayerIndex) || (g_PR->GetTeam(m_iPlayerIndex) <= TEAM_SPECTATOR)));
 
 		// Spectators in this mode are treated as escapees.
-		if ((g_PR->GetTeam(m_iPlayerIndex) == TEAM_SPECTATOR) && (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE))
+		if ((g_PR->GetTeam(m_iPlayerIndex) == TEAM_SPECTATOR) && (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE) && GetClientWorldEntity() && !GetClientWorldEntity()->m_bIsStoryMap)
 			m_pSkullIcon->SetImage("hud/objectiveicons/escapeicon");
 		else
 			m_pSkullIcon->SetImage("hud/notices/suicide");

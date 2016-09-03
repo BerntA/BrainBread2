@@ -1227,7 +1227,6 @@ void CBaseCombatWeapon::SetWeaponVisible( bool visible )
 	}
 	else
 	{
-		ResetAllParticles();
 		AddEffects( EF_NODRAW );
 		if ( vm )
 		{
@@ -1370,7 +1369,7 @@ bool CBaseCombatWeapon::FullHolster(void)
 
 	m_bInReload = false;
 	m_bFiringWholeClip = false;
-
+	ResetAllParticles();
 	SetThink(NULL);
 	SetWeaponVisible(false);
 
@@ -1574,6 +1573,8 @@ void CBaseCombatWeapon::StartHolsterSequence()
 	m_flNextPrimaryAttack = flHolsterTime + 0.05f;
 	m_flNextSecondaryAttack = flHolsterTime + 0.05f;
 	m_flMeleeCooldown = 0.0f;
+
+	ResetAllParticles();
 
 	// We will stay active in the pre frame until we're done so we don't override the visibility state or animation state as we change to the new active weapon.
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
