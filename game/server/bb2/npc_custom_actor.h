@@ -9,6 +9,7 @@
 
 #include "npc_playercompanion.h"
 #include "ai_behavior_functank.h"
+#include "GameEventListener.h"
 
 //-------------------------------------
 // Spawnflags
@@ -21,7 +22,7 @@
 
 //-------------------------------------
 
-class CNPC_CustomActor : public CNPC_PlayerCompanion
+class CNPC_CustomActor : public CNPC_PlayerCompanion, public CGameEventListener
 {
 	DECLARE_CLASS(CNPC_CustomActor, CNPC_PlayerCompanion);
 public:
@@ -99,6 +100,7 @@ public:
 	// Damage handling
 	//---------------------------------
 	int 			OnTakeDamage_Alive(const CTakeDamageInfo &info);
+	void FireBullets(const FireBulletsInfo_t &info);
 
 	//---------------------------------
 	// Following Logic:
@@ -130,6 +132,11 @@ public:
 
 	void    PlaySound(const char *sound, float eventtime = -1.0f);
 
+	void AnnounceEnemyKill(CBaseEntity *pEnemy);
+	NPC_STATE SelectIdealState(void);
+
+protected:
+		void FireGameEvent(IGameEvent *event);
 private:
 	//-----------------------------------------------------
 	// Conditions, Schedules, Tasks
@@ -151,6 +158,12 @@ private:
 	bool m_bBossState;
 	int             m_iTotalHP;
 	bool            m_bIsAlly;
+
+	float m_flDamageScaleValue;
+	float m_flDamageScaleFactor;
+
+	float m_flHealthScaleValue;
+	float m_flHealthScaleFactor;
 
 	bool			m_bShouldPatrol;
 	float			m_flTimeLastCloseToPlayer;

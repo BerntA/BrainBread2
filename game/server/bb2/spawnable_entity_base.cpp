@@ -12,6 +12,7 @@
 #include "GameBase_Shared.h"
 #include "objective_icon.h"
 #include "basecombatweapon_shared.h"
+#include "particle_parse.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -75,7 +76,13 @@ void CSpawnableEntity::SpawnEntity()
 {
 	m_pEntityToSpawn = SpawnNewEntity();
 	if (m_pEntityToSpawn != NULL)
+	{
 		m_OnSpawnEntity.FireOutput(this, this);
+
+		// Respawn FX.
+		if (!m_pEntityToSpawn->IsNPC())
+			DispatchParticleEffect("bb2_item_spawn", GetAbsOrigin(), GetAbsAngles());
+	}
 }
 
 void CSpawnableEntity::CheckSpawnInterval(void)

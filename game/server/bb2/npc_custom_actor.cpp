@@ -64,6 +64,22 @@ CBasePlayer *GetNearestMatchingPlayer(CAI_BaseNPC *pLooker, bool bVisibleMask = 
 	return pNearest;
 }
 
+const char *actorCustomSoundScripts[] =
+{
+	"ManDown",
+	"FootstepLeft",
+	"FootstepRight",
+	"EnemySpotted",
+	"Stop",
+	"WhatNow",
+	"Greetings",
+	"Death",
+	"Scared",
+	"Taunt",
+	"Pain",
+	"PlayerDown",
+};
+
 LINK_ENTITY_TO_CLASS(npc_custom_actor, CNPC_CustomActor);
 
 BEGIN_DATADESC(CNPC_CustomActor)
@@ -79,6 +95,9 @@ DEFINE_KEYFIELD(m_bBossState, FIELD_BOOLEAN, "boss"),
 DEFINE_KEYFIELD(m_iTotalHP, FIELD_INTEGER, "totalhealth"),
 DEFINE_KEYFIELD(m_iszNPCName, FIELD_STRING, "npcname"),
 DEFINE_KEYFIELD(m_iszSoundScriptBase, FIELD_STRING, "soundprefix"),
+
+DEFINE_KEYFIELD(m_flDamageScaleFactor, FIELD_FLOAT, "damageScale"),
+DEFINE_KEYFIELD(m_flHealthScaleFactor, FIELD_FLOAT, "healthScale"),
 
 DEFINE_OUTPUT(m_OnPlayerUse, "OnPlayerUse"),
 DEFINE_OUTPUT(m_OnNavFailBlocked, "OnNavFailBlocked"),
@@ -101,6 +120,11 @@ CNPC_CustomActor::CNPC_CustomActor()
 	m_iszNPCName = NULL_STRING;
 	m_iszSoundScriptBase = NULL_STRING;
 	m_iTotalHP = 100;
+	
+	m_flDamageScaleValue = m_flHealthScaleValue = 0.0f;
+	m_flDamageScaleFactor = m_flHealthScaleFactor = 1.0f;
+
+	ListenForGameEvent("player_connection");
 }
 
 bool CNPC_CustomActor::CreateBehaviors()
@@ -116,6 +140,15 @@ bool CNPC_CustomActor::CreateBehaviors()
 void CNPC_CustomActor::Precache()
 {
 	PrecacheModel(STRING(GetModelName()));
+
+	// Precache the linked soundscripts for this custom npc.
+	for (int i = 0; i < _ARRAYSIZE(actorCustomSoundScripts); i++)
+	{
+		char pchSoundScript[64];
+		Q_snprintf(pchSoundScript, 64, "%s.%s.%s", STRING(m_iszSoundScriptBase), actorCustomSoundScripts[i], (GetGender() == true) ? "Male" : "Female");
+		PrecacheScriptSound(pchSoundScript);
+	}
+
 	BaseClass::Precache();
 }
 
@@ -286,6 +319,38 @@ void CNPC_CustomActor::PlaySound(const char *sound, float eventtime)
 		EmitSound(pchSoundScript, eventtime);
 	else 
 		EmitSound(pchSoundScript);
+}
+
+NPC_STATE CNPC_CustomActor::SelectIdealState(void)
+{
+	switch (m_NPCState)
+	{
+	case NPC_STATE_COMBAT:
+	{
+		if (HasCondition(COND_ENEMY_DEAD))
+		{
+			AnnounceEnemyKill(GetEnemy());
+		}
+	}
+
+	default:
+	{
+		return BaseClass::SelectIdealState();
+	}
+	}
+
+	return GetIdealState();
+}
+
+void CNPC_CustomActor::AnnounceEnemyKill(CBaseEntity *pEnemy)
+{
+	if (!pEnemy)
+		return;
+
+	if (pEnemy->IsPlayer() && !m_bIsAlly)
+		PlaySound("PlayerDown");
+	else
+		PlaySound("Taunt");
 }
 
 //-----------------------------------------------------------------------------
@@ -807,7 +872,31 @@ int CNPC_CustomActor::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 
 	CTakeDamageInfo newInfo = info;
 
-	return BaseClass::OnTakeDamage_Alive(newInfo);
+	int ret = BaseClass::OnTakeDamage_Alive(newInfo);
+	if (ret)
+		PlaySound("Pain");
+
+	return ret;
+}
+
+void CNPC_CustomActor::FireBullets(const FireBulletsInfo_t &info)
+{
+	CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+	FireBulletsInfo_t modinfo = info;
+
+	float flDamage = info.m_flDamage;
+	if (pWeapon)
+	{
+		modinfo.m_vecFirstStartPos = GetAbsOrigin();
+		modinfo.m_flDropOffDist = pWeapon->GetWpnData().m_flDropOffDistance;
+	}
+
+	flDamage += ((flDamage / 100.0f) * m_flDamageScaleValue);
+
+	modinfo.m_flDamage = flDamage;
+	modinfo.m_iPlayerDamage = (int)flDamage;
+
+	BaseClass::FireBullets(modinfo);
 }
 
 //-----------------------------------------------------------------------------
@@ -956,6 +1045,63 @@ bool CNPC_CustomActor::UseSemaphore(void)
 		return false;
 
 	return BaseClass::UseSemaphore();
+}
+
+void CNPC_CustomActor::FireGameEvent(IGameEvent *event)
+{
+	const char *type = event->GetName();
+	if (!strcmp(type, "player_connection"))
+	{
+		if ((!bb2_enable_scaling.GetBool() && (HL2MPRules()->GetCurrentGamemode() != MODE_ARENA)) || (HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION))
+		{
+			m_flDamageScaleValue = 0.0f;
+			m_flHealthScaleValue = 0.0f;
+			return;
+		}
+
+		float flDamageScaleAmount = 0.0f, flHealthScaleAmount = 0.0f;
+		int iNumPlayers = 0;
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+			if (!pClient)
+				continue;
+
+			if (!pClient->IsConnected())
+				continue;
+
+			iNumPlayers++;
+		}
+
+		if (iNumPlayers > 0)
+			iNumPlayers--; // Everyone but the first player will affect scaling.
+
+		flDamageScaleAmount = (bb2_npc_scaling.GetInt() * iNumPlayers * m_flDamageScaleFactor);
+		flHealthScaleAmount = (bb2_npc_scaling.GetInt() * iNumPlayers * m_flHealthScaleFactor);
+
+		float defaultTotalHP = (float)m_iTotalHP;
+		float flTotal = (flHealthScaleAmount * (float)((float)defaultTotalHP / 100)) + defaultTotalHP;
+		m_iTotalHP = (int)flTotal;
+
+		float newHP = 0.0f;
+		float hpPercentLeft = (float)(((float)GetHealth()) / ((float)GetMaxHealth()));
+
+		if (hpPercentLeft >= 1) // No HP lost.
+			newHP = flTotal;
+		else // HP lost
+			newHP = (float)((float)((float)m_iTotalHP / 100) * (hpPercentLeft * 100));
+
+		newHP = round(newHP);
+
+		if (newHP <= 0)
+			newHP = 1;
+
+		SetHealth((int)newHP);
+		SetMaxHealth(m_iTotalHP);
+
+		m_flDamageScaleValue = flDamageScaleAmount;
+		m_flHealthScaleValue = flHealthScaleAmount;
+	}
 }
 
 //-----------------------------------------------------------------------------

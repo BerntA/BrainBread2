@@ -283,7 +283,6 @@ void CWeaponHL2MPBase::Materialize( void )
 	if ( IsEffectActive( EF_NODRAW ) )
 	{	
 		RemoveEffects( EF_NODRAW );
-		DoMuzzleFlash();
 	}
 
 	if ( (HasSpawnFlags( SF_NORESPAWN ) == false) )

@@ -412,7 +412,6 @@ void CItem::Materialize( void )
 	if ( IsEffectActive( EF_NODRAW ) )
 	{
 		RemoveEffects( EF_NODRAW );
-		DoMuzzleFlash();
 	}
 
 	SetTouch( &CItem::ItemTouch );

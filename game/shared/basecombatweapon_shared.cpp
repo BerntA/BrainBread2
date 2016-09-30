@@ -734,16 +734,17 @@ void CBaseCombatWeapon::Drop( const Vector &vecVelocity )
 
 void CBaseCombatWeapon::ResetAllParticles(void)
 {
-#if !defined( CLIENT_DLL )
-	CBaseViewModel *vm = NULL;
-	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
-	if (pOwner)
-		vm = pOwner->GetViewModel(m_nViewModelIndex);
-
-	StopParticleEffects(this);
-	if (vm)
-		StopParticleEffects(vm);
-#endif
+	// This doesn't actually do what it is supposed to do.
+//#if !defined( CLIENT_DLL )
+//	CBaseViewModel *vm = NULL;
+//	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+//	if (pOwner)
+//		vm = pOwner->GetViewModel(m_nViewModelIndex);
+//
+//	StopParticleEffects(this);
+//	if (vm)
+//		StopParticleEffects(vm);
+//#endif
 }
 
 //-----------------------------------------------------------------------------
