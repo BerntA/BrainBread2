@@ -861,6 +861,10 @@ void CHL2MPRules::EmitSoundToClient(CBaseEntity *pAnnouncer, const char *szOrigi
 			if (pAnnouncer->MyNPCPointer()->GetSoundPenaltyTime() > gpGlobals->curtime)
 				return;
 
+			// Prevent spamming.
+			if ((random->RandomInt(0, 4) == 2) && !strcmp(szOriginalSound, "Pain"))
+				return;
+
 			pAnnouncer->MyNPCPointer()->SetSoundPenaltyTime(8.0f);
 		}
 

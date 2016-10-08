@@ -213,6 +213,8 @@ public:
 
 	ScrollBar *GetScrollBar(void) { return m_pScrollBar; }
 
+	void RefreshList() { m_bSortNeeded = true; PerformLayout(); }
+
 protected:
 	virtual void PerformLayout();
 	virtual void ApplySchemeSettings(IScheme *pScheme);

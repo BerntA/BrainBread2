@@ -131,7 +131,7 @@ void CLoadingPanel::SetupLayout(void)
 	m_pTextMapDetail[3]->SetSize(scheme()->GetProportionalScaledValue(60), scheme()->GetProportionalScaledValue(18));
 
 	m_pMapRating->SetSize(scheme()->GetProportionalScaledValue(32), scheme()->GetProportionalScaledValue(8));
-	m_pMapRating->SetPos((ScreenWidth() - scheme()->GetProportionalScaledValue(44)), scheme()->GetProportionalScaledValue(33));
+	m_pMapRating->SetPos((ScreenWidth() - scheme()->GetProportionalScaledValue(44)), scheme()->GetProportionalScaledValue(45));
 
 	// IF the server kicked, banned or shut down or timed out we will notice that, fixup the GUI:
 	if (m_bDisconnected)

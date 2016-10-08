@@ -1374,7 +1374,7 @@ bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 	{
 		if ((pVictim != NULL) && IsAlive() && (iXP > 1))
 		{
-			if (random->RandomInt(0, 4) == 2)
+			if (random->RandomInt(0, 8) == 4)
 				HL2MPRules()->EmitSoundToClient(this, "Taunt", BB2_SoundTypes::TYPE_PLAYER, GetSoundsetGender());
 		}
 
@@ -1397,7 +1397,7 @@ bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 	// Enable Perks: (% chance stuff)
 	if ((pVictim != NULL) && IsAlive() && (iXP > 1))
 	{
-		if (random->RandomInt(0, 4) == 2)
+		if (random->RandomInt(0, 8) == 4)
 			HL2MPRules()->EmitSoundToClient(this, "Taunt", BB2_SoundTypes::TYPE_PLAYER, GetSoundsetGender());
 
 		int iPercentChance = 0;

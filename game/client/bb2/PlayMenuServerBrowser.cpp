@@ -49,6 +49,28 @@ using namespace vgui;
 #define SERVER_FILTERS_HEIGHT scheme()->GetProportionalScaledValue(70)
 #define SERVER_PLAYER_LIST_WIDE scheme()->GetProportionalScaledValue(150)
 
+static int m_iCurrentSortMethod = 0;
+
+enum serverSortMethods_t
+{
+	SORT_NONE = 0,
+
+	SORT_HOSTNAME_DESCENDING,
+	SORT_HOSTNAME_ASCENDING,
+
+	SORT_GAMEMODE_DESCENDING,
+	SORT_GAMEMODE_ASCENDING,
+
+	SORT_PLAYER_COUNT_DESCENDING,
+	SORT_PLAYER_COUNT_ASCENDING,
+
+	SORT_PING_DESCENDING,
+	SORT_PING_ASCENDING,
+
+	SORT_MAP_DESCENDING,
+	SORT_MAP_ASCENDING,
+};
+
 PlayMenuServerBrowser::PlayMenuServerBrowser(vgui::Panel *parent, char const *panelName) : BaseClass(parent, panelName, 0.5f)
 {
 	SetParent(parent);
@@ -64,6 +86,11 @@ PlayMenuServerBrowser::PlayMenuServerBrowser(vgui::Panel *parent, char const *pa
 	m_pTooltipItem->SetTooltipDelay(200);
 	m_pTooltipItem->SetEnabled(true);
 	m_pTooltipItem->SetTooltipFormatToSingleLine();
+
+	m_pTooltipItemLong = new vgui::TextTooltip(this, "");
+	m_pTooltipItemLong->SetTooltipDelay(200);
+	m_pTooltipItemLong->SetEnabled(true);
+	m_pTooltipItemLong->SetTooltipFormatToMultiLine();
 
 	m_pServerList = vgui::SETUP_PANEL(new vgui::SectionedListPanel(this, "ServerBrowser"));
 	m_pServerList->SetZPos(250);
@@ -86,9 +113,12 @@ PlayMenuServerBrowser::PlayMenuServerBrowser(vgui::Panel *parent, char const *pa
 
 	for (int i = 0; i < _ARRAYSIZE(m_pServerBrowserSectionInfo); i++)
 	{
-		m_pServerBrowserSectionInfo[i] = vgui::SETUP_PANEL(new vgui::Label(this, "ServerSectionInfo", pchSectionInfoForBrowser[i]));
+		m_pServerBrowserSectionInfo[i] = vgui::SETUP_PANEL(new vgui::Button(this, "ServerSectionInfo", pchSectionInfoForBrowser[i], this, VarArgs("SortList%i", (i + 1))));
+		m_pServerBrowserSectionInfo[i]->SetPaintBorderEnabled(false);
 		m_pServerBrowserSectionInfo[i]->SetZPos(395);
 	}
+
+	m_pServerBrowserSectionInfo[1]->SetTooltip(m_pTooltipItemLong, "#GameUI_ServerBrowser_InfoGamemode");
 
 	m_pPlayerList = vgui::SETUP_PANEL(new vgui::SectionedListPanel(this, "PlayerList"));
 	m_pPlayerList->SetZPos(300);
@@ -303,6 +333,7 @@ PlayMenuServerBrowser::PlayMenuServerBrowser(vgui::Panel *parent, char const *pa
 	pPlayerInfoRequest = NULL;
 	m_nServers = 0;
 	m_nPlayers = 0;
+	m_iCurrentSortMethod = SORT_PLAYER_COUNT_DESCENDING;
 	InvalidateLayout();
 	PerformLayout();
 
@@ -677,6 +708,8 @@ void PlayMenuServerBrowser::ApplySchemeSettings(vgui::IScheme *pScheme)
 	{
 		m_pServerBrowserSectionInfo[i]->SetFont(pScheme->GetFont("ServerBrowser"));
 		m_pServerBrowserSectionInfo[i]->SetFgColor(pScheme->GetColor("ServerListInfoTextColor", Color(255, 255, 255, 255)));
+		m_pServerBrowserSectionInfo[i]->SetBgColor(Color(0, 0, 0, 0));
+		m_pServerBrowserSectionInfo[i]->SetBorder(NULL);
 	}
 }
 
@@ -978,6 +1011,22 @@ void PlayMenuServerBrowser::OnCommand(const char* pcCommand)
 		RefreshServerList(m_iCurrentSearchMode);
 	else if (!strcmp(pcCommand, "FavoriteState"))
 		HandleFavoriteStateOfServer();
+
+	int sortIndex = 1;
+	for (int i = 0; i < _ARRAYSIZE(m_pServerBrowserSectionInfo); i++)
+	{
+		if (!strcmp(pcCommand, VarArgs("SortList%i", (i + 1))))
+		{
+			if (m_iCurrentSortMethod == sortIndex)
+				sortIndex += 1;
+
+			m_iCurrentSortMethod = sortIndex;
+			m_pServerList->RefreshList();
+			break;
+		}
+
+		sortIndex += 2;
+	}
 }
 
 void PlayMenuServerBrowser::OnKeyCodeTyped(KeyCode code)
@@ -1003,12 +1052,72 @@ bool PlayMenuServerBrowser::StaticServerSortFunc(vgui::SectionedListPanel *list,
 	KeyValues *it2 = list->GetItemData(itemID2);
 	Assert(it1 && it2);
 
-	int v1 = it1->GetInt("activePlayers");
-	int v2 = it2->GetInt("activePlayers");
-	if (v1 > v2)
-		return true;
-	else if (v1 < v2)
-		return false;
+	const char *keyToSearch = "hostname";
+	if ((m_iCurrentSortMethod == SORT_GAMEMODE_DESCENDING) || (m_iCurrentSortMethod == SORT_GAMEMODE_ASCENDING))
+		keyToSearch = "game";
+	else if ((m_iCurrentSortMethod == SORT_MAP_DESCENDING) || (m_iCurrentSortMethod == SORT_MAP_ASCENDING))
+		keyToSearch = "map";
+	else if ((m_iCurrentSortMethod == SORT_PLAYER_COUNT_DESCENDING) || (m_iCurrentSortMethod == SORT_PLAYER_COUNT_ASCENDING))
+		keyToSearch = "activePlayers";
+	else if ((m_iCurrentSortMethod == SORT_PING_DESCENDING) || (m_iCurrentSortMethod == SORT_PING_ASCENDING))
+		keyToSearch = "ping";
+
+	// Sort the list by plr count or ping.
+	if ((m_iCurrentSortMethod >= SORT_PLAYER_COUNT_DESCENDING && m_iCurrentSortMethod <= SORT_PLAYER_COUNT_ASCENDING) ||
+		(m_iCurrentSortMethod >= SORT_PING_DESCENDING && m_iCurrentSortMethod <= SORT_PING_ASCENDING))
+	{
+		int v1 = it1->GetInt(keyToSearch);
+		int v2 = it2->GetInt(keyToSearch);
+
+		if ((m_iCurrentSortMethod == SORT_PLAYER_COUNT_DESCENDING) || (m_iCurrentSortMethod == SORT_PING_DESCENDING))
+		{
+			if (v1 > v2)
+				return true;
+			else if (v1 < v2)
+				return false;
+		}
+		else if ((m_iCurrentSortMethod == SORT_PLAYER_COUNT_ASCENDING) || (m_iCurrentSortMethod == SORT_PING_ASCENDING))
+		{
+			if (v1 > v2)
+				return false;
+			else if (v1 < v2)
+				return true;
+		}
+	}
+	else // Sort by hostname, gamemode or map.
+	{
+		char n1[128], n2[128];
+		Q_strncpy(n1, it1->GetString(keyToSearch), 128);
+		Q_strncpy(n2, it2->GetString(keyToSearch), 128);
+		Q_strlower(n1); Q_strlower(n2);
+
+		if ((m_iCurrentSortMethod == SORT_HOSTNAME_DESCENDING) || (m_iCurrentSortMethod == SORT_GAMEMODE_DESCENDING) || (m_iCurrentSortMethod == SORT_MAP_DESCENDING))
+		{
+			for (uint i = 0; i < strlen(n1); i++)
+			{
+				if (i >= strlen(n2))
+					break;
+
+				if (((uint)n1[i]) > ((uint)n2[i]))
+					return true;
+				else if (((uint)n1[i]) < ((uint)n2[i]))
+					return false;
+			}
+		}
+		else if ((m_iCurrentSortMethod == SORT_HOSTNAME_ASCENDING) || (m_iCurrentSortMethod == SORT_GAMEMODE_ASCENDING) || (m_iCurrentSortMethod == SORT_MAP_ASCENDING))
+		{
+			for (uint i = 0; i < strlen(n1); i++)
+			{
+				if (i >= strlen(n2))
+					break;
+
+				if (((uint)n1[i]) > ((uint)n2[i]))
+					return false;
+				else if (((uint)n1[i]) < ((uint)n2[i]))
+					return true;
+			}
+		}
+	}
 
 	// the same, so compare itemID's (as a sentinel value to get deterministic sorts)
 	return (itemID1 < itemID2);

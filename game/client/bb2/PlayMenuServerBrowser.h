@@ -90,11 +90,12 @@ namespace vgui
 
 		vgui::OverlayButton *m_pButtons[9];
 
-		vgui::Label *m_pServerBrowserSectionInfo[5];
+		vgui::Button *m_pServerBrowserSectionInfo[5];
 		vgui::SectionedListPanel *m_pServerList;
 		vgui::SectionedListPanel *m_pPlayerList;
 		vgui::ImageList *m_pImageList;
 		vgui::TextTooltip *m_pTooltipItem;
+		vgui::TextTooltip *m_pTooltipItemLong;
 
 		// Filtering GUI
 		vgui::ImagePanel *m_pFilterBG;
