@@ -344,6 +344,7 @@ $Project
 			$File "$SRCDIR\game\shared\bb2\weapon_m9_bayonet.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_sledgehammer.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_remington.cpp"
+			$File "$SRCDIR\game\shared\bb2\weapon_winchester94.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_sawedoff.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_zombiehands.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_fireaxe.cpp"			
