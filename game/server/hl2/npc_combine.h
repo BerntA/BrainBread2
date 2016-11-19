@@ -152,6 +152,7 @@ public:
 
 protected:
 
+	int m_iNumGrenades;
 	virtual BB2_SoundTypes GetNPCType() { return TYPE_SOLDIER; }
 	void SetKickDamage( int nDamage ) { m_nKickDamage = nDamage; }
 	CAI_Sentence< CNPC_Combine > *GetSentences() { return &m_Sentences; }
@@ -277,7 +278,6 @@ private:
 
 	CAI_Sentence< CNPC_Combine > m_Sentences;
 
-	int			m_iNumGrenades;
 	CAI_AssaultBehavior			m_AssaultBehavior;
 	CCombineStandoffBehavior	m_StandoffBehavior;
 	CAI_FollowBehavior			m_FollowBehavior;

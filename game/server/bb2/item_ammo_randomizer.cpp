@@ -23,6 +23,7 @@ const char *pszAmmoClassnames[] =
 	"ammo_revolver",
 	"ammo_smg",
 	"ammo_sniper",
+	"ammo_trapper",
 };
 
 class CItemAmmoRandomizer : public CSpawnableEntity

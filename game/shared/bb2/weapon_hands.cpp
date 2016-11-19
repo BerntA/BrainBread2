@@ -28,6 +28,14 @@
 #define CWeaponHands C_WeaponHands
 #endif
 
+enum MegaPunchStates
+{
+	MEGA_PUNCH_STATE_NONE = 0,
+	MEGA_PUNCH_STATE_CHARGE,
+	MEGA_PUNCH_STATE_IDLE,
+	MEGA_PUNCH_STATE_RELEASE,
+};
+
 class CWeaponHands : public CBaseHL2MPBludgeonWeapon
 {
 public:
@@ -41,22 +49,42 @@ public:
 	CWeaponHands(const CWeaponHands &);
 
 	int GetMeleeDamageType() { return DMG_CLUB; }
-	bool CanDoSecondaryAttack() { return false; }
 	int GetMeleeSkillFlags(void) { return 0; }
 
-	void		Drop(const Vector &vecVelocity);
-	bool        VisibleInWeaponSelection() { return false; }
+	void Drop(const Vector &vecVelocity);
+	bool VisibleInWeaponSelection() { return false; }
 
-	Activity    GetCustomActivity(int bIsSecondary);
+	Activity GetCustomActivity(int bIsSecondary);
+
+	void ItemPostFrame(void);
+	void SecondaryAttack(void);
+
+	CNetworkVar(int, m_iChargeState);
+	CNetworkVar(float, m_flTimeCharged);
+	CNetworkVar(float, m_flTimeChargeDecay);
 };
 
 IMPLEMENT_NETWORKCLASS_ALIASED(WeaponHands, DT_WeaponHands)
 
 BEGIN_NETWORK_TABLE(CWeaponHands, DT_WeaponHands)
+#ifdef CLIENT_DLL
+RecvPropInt(RECVINFO(m_iChargeState)),
+RecvPropFloat(RECVINFO(m_flTimeCharged)),
+RecvPropFloat(RECVINFO(m_flTimeChargeDecay)),
+#else
+SendPropInt(SENDINFO(m_iChargeState), 2, SPROP_UNSIGNED),
+SendPropFloat(SENDINFO(m_flTimeCharged)),
+SendPropFloat(SENDINFO(m_flTimeChargeDecay)),
+#endif
 END_NETWORK_TABLE()
 
+#ifdef CLIENT_DLL
 BEGIN_PREDICTION_DATA(CWeaponHands)
+DEFINE_PRED_FIELD(m_iChargeState, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+DEFINE_PRED_FIELD(m_flTimeCharged, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
+DEFINE_PRED_FIELD(m_flTimeChargeDecay, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
 END_PREDICTION_DATA()
+#endif
 
 LINK_ENTITY_TO_CLASS(weapon_hands, CWeaponHands);
 PRECACHE_WEAPON_REGISTER(weapon_hands);
@@ -94,6 +122,9 @@ IMPLEMENT_ACTTABLE(CWeaponHands);
 //-----------------------------------------------------------------------------
 CWeaponHands::CWeaponHands(void)
 {
+	m_iChargeState = MEGA_PUNCH_STATE_NONE;
+	m_flTimeCharged = 0.0f;
+	m_flTimeChargeDecay = 0.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -108,9 +139,77 @@ void CWeaponHands::Drop(const Vector &vecVelocity)
 
 Activity CWeaponHands::GetCustomActivity(int bIsSecondary)
 {
-	int iRandomChoice = random->RandomInt(1, 2);
-	if (iRandomChoice == 1)
-		return ACT_VM_PRIMARYATTACK;
-	else
-		return ACT_VM_SECONDARYATTACK;
+	if (bIsSecondary)
+		return ACT_VM_CHARGE_ATTACK;
+
+	return ACT_VM_PRIMARYATTACK;
+}
+
+void CWeaponHands::ItemPostFrame(void)
+{
+	BaseClass::ItemPostFrame();
+
+	CHL2MP_Player *pOwner = ToHL2MPPlayer(GetOwner());
+	if (!pOwner)
+		return;
+
+	switch (m_iChargeState)
+	{
+
+	case MEGA_PUNCH_STATE_CHARGE:
+	{
+		if (m_flNextPrimaryAttack <= gpGlobals->curtime)
+		{
+			m_iChargeState = MEGA_PUNCH_STATE_IDLE;
+			SendWeaponAnim(ACT_VM_CHARGE_IDLE);
+			m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
+			m_flNextSecondaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
+		}
+
+		break;
+	}
+
+	case MEGA_PUNCH_STATE_IDLE:
+	{
+		if (!(pOwner->m_nButtons & IN_ATTACK2))
+		{
+			m_iChargeState = MEGA_PUNCH_STATE_RELEASE;
+		}
+		else if (m_flNextPrimaryAttack <= gpGlobals->curtime)
+		{
+			SendWeaponAnim(ACT_VM_CHARGE_IDLE);
+			m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
+			m_flNextSecondaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
+		}
+
+		break;
+	}
+
+	case MEGA_PUNCH_STATE_RELEASE:
+	{
+		m_iChargeState = MEGA_PUNCH_STATE_NONE;
+
+		WeaponSound(SINGLE);
+		SendWeaponAnim(ACT_VM_CHARGE_ATTACK);
+		pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, ACT_VM_CHARGE_ATTACK);
+		m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
+		m_flNextSecondaryAttack = gpGlobals->curtime + SpecialPunishTime() + GetViewModelSequenceDuration();
+		m_flMeleeCooldown = gpGlobals->curtime;
+		break;
+	}
+
+	}
+}
+
+void CWeaponHands::SecondaryAttack(void)
+{
+	if (m_iChargeState != MEGA_PUNCH_STATE_NONE)
+		return;
+
+	m_iChargeState = MEGA_PUNCH_STATE_CHARGE;
+
+	WeaponSound(SPECIAL1);
+	SendWeaponAnim(ACT_VM_CHARGE_START);
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
+	m_flNextSecondaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 }

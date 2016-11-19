@@ -440,6 +440,7 @@ bool CHL2MP_Player::SaveGlobalStatsForPlayer(void)
 	steamgameserverapicontext->SteamGameServerStats()->SetUserStat(pSteamClient, "BBX_ST_XP_LEFT", m_BB2Local.m_iSkill_XPLeft);
 	steamgameserverapicontext->SteamGameServerStats()->SetUserStat(pSteamClient, "BBX_ST_LEVEL", GetPlayerLevel());
 	steamgameserverapicontext->SteamGameServerStats()->SetUserStat(pSteamClient, "BBX_ST_TALENTS", m_BB2Local.m_iSkill_Talents); // Can be spent on the skills panel tree!
+	steamgameserverapicontext->SteamGameServerStats()->SetUserStat(pSteamClient, "BBX_ST_ZM_POINTS", m_BB2Local.m_iZombieCredits);
 
 	for (int i = 0; i < _ARRAYSIZE(pszGameSkills); i++)
 		steamgameserverapicontext->SteamGameServerStats()->SetUserStat(pSteamClient, pszGameSkills[i], GetSkillValue(i));
@@ -463,17 +464,19 @@ void CHL2MP_Player::OnReceiveStatsForPlayer(GSStatsReceived_t *pCallback, bool b
 		return;
 	}
 
-	int m_iSkill_XPCurrent = 0, m_iSkill_XPLeft = 65, m_iSkill_Level = 1, m_iSkill_Talents = 0;
+	int iXPCurrent = 0, iXPLeft = 65, iLevel = 1, iTalents = 0, iZombieCredits = 0;
 
-	steamgameserverapicontext->SteamGameServerStats()->GetUserStat(pCallback->m_steamIDUser, "BBX_ST_XP_CURRENT", &m_iSkill_XPCurrent);
-	steamgameserverapicontext->SteamGameServerStats()->GetUserStat(pCallback->m_steamIDUser, "BBX_ST_XP_LEFT", &m_iSkill_XPLeft);
-	steamgameserverapicontext->SteamGameServerStats()->GetUserStat(pCallback->m_steamIDUser, "BBX_ST_LEVEL", &m_iSkill_Level);
-	steamgameserverapicontext->SteamGameServerStats()->GetUserStat(pCallback->m_steamIDUser, "BBX_ST_TALENTS", &m_iSkill_Talents);
+	steamgameserverapicontext->SteamGameServerStats()->GetUserStat(pCallback->m_steamIDUser, "BBX_ST_XP_CURRENT", &iXPCurrent);
+	steamgameserverapicontext->SteamGameServerStats()->GetUserStat(pCallback->m_steamIDUser, "BBX_ST_XP_LEFT", &iXPLeft);
+	steamgameserverapicontext->SteamGameServerStats()->GetUserStat(pCallback->m_steamIDUser, "BBX_ST_LEVEL", &iLevel);
+	steamgameserverapicontext->SteamGameServerStats()->GetUserStat(pCallback->m_steamIDUser, "BBX_ST_TALENTS", &iTalents);
+	steamgameserverapicontext->SteamGameServerStats()->GetUserStat(pCallback->m_steamIDUser, "BBX_ST_ZM_POINTS", &iZombieCredits);
 
-	m_BB2Local.m_iSkill_XPCurrent = m_iSkill_XPCurrent;
-	m_BB2Local.m_iSkill_XPLeft = m_iSkill_XPLeft;
-	SetPlayerLevel(m_iSkill_Level);
-	m_BB2Local.m_iSkill_Talents = m_iSkill_Talents; // Can be spent on the skills panel tree!
+	m_BB2Local.m_iSkill_XPCurrent = iXPCurrent;
+	m_BB2Local.m_iSkill_XPLeft = iXPLeft;
+	SetPlayerLevel(iLevel);
+	m_BB2Local.m_iSkill_Talents = iTalents; // Can be spent on the skills panel tree!
+	m_BB2Local.m_iZombieCredits = iZombieCredits;
 
 	for (int i = 0; i < _ARRAYSIZE(pszGameSkills); i++)
 	{
@@ -2849,7 +2852,6 @@ void CHL2MP_Player::ResetZombieSkills(void)
 {
 	m_iZombKills = 0;
 	m_iZombDeaths = 0;
-	m_BB2Local.m_iZombieCredits = 0;
 }
 
 void CHL2MP_Player::RefreshSpeed(void)
@@ -2897,6 +2899,7 @@ bool CHL2MP_Player::HandleLocalProfile(bool bSave)
 					"    \"XPCurrent\" \"%i\"\n"
 					"    \"XPLeft\" \"%i\"\n"
 					"    \"Talents\" \"%i\"\n"
+					"    \"ZombiePoints\" \"%i\"\n"
 
 					"    \"Speed\" \"%i\"\n"
 					"    \"Acrobatics\" \"%i\"\n"
@@ -2931,12 +2934,24 @@ bool CHL2MP_Player::HandleLocalProfile(bool bSave)
 					"    \"MagazineRefill\" \"%i\"\n"
 					"    \"Gunslinger\" \"%i\"\n"
 
+					"    \"ZombieHealth\" \"%i\"\n"
+					"    \"ZombieDamage\" \"%i\"\n"
+					"    \"ZombieDamageReduction\" \"%i\"\n"
+					"    \"ZombieSpeed\" \"%i\"\n"
+					"    \"ZombieJump\" \"%i\"\n"
+					"    \"ZombieLeap\" \"%i\"\n"
+					"    \"ZombieDeath\" \"%i\"\n"
+					"    \"ZombieLifeLeech\" \"%i\"\n"
+					"    \"ZombieHealthRegen\" \"%i\"\n"
+					"    \"ZombieMassInvasion\" \"%i\"\n"
+
 					"}\n",
 
 					m_iSkill_Level,
 					m_BB2Local.m_iSkill_XPCurrent,
 					m_BB2Local.m_iSkill_XPLeft,
 					m_BB2Local.m_iSkill_Talents,
+					m_BB2Local.m_iZombieCredits,
 
 					GetSkillValue(0),
 					GetSkillValue(1),
@@ -2969,7 +2984,18 @@ bool CHL2MP_Player::HandleLocalProfile(bool bSave)
 					GetSkillValue(26),
 					GetSkillValue(27),
 					GetSkillValue(28),
-					GetSkillValue(29)
+					GetSkillValue(29),
+
+					GetSkillValue(30),
+					GetSkillValue(31),
+					GetSkillValue(32),
+					GetSkillValue(33),
+					GetSkillValue(34),
+					GetSkillValue(35),
+					GetSkillValue(36),
+					GetSkillValue(37),
+					GetSkillValue(38),
+					GetSkillValue(39)
 					);
 
 				g_pFullFileSystem->Write(&pszFileContent, strlen(pszFileContent), localProfile);
@@ -3000,13 +3026,14 @@ bool CHL2MP_Player::HandleLocalProfile(bool bSave)
 		m_BB2Local.m_iSkill_XPCurrent = pkvProfile->GetInt("XPCurrent");
 		m_BB2Local.m_iSkill_XPLeft = pkvProfile->GetInt("XPLeft", 5);
 		m_BB2Local.m_iSkill_Talents = pkvProfile->GetInt("Talents");
+		m_BB2Local.m_iZombieCredits = pkvProfile->GetInt("ZombiePoints");
 
 		int indexIter = 0;
 		int skillIndex = 0;
 		for (KeyValues *sub = pkvProfile->GetFirstSubKey(); sub; sub = sub->GetNextKey())
 		{
 			indexIter++;
-			if (indexIter > 4)
+			if (indexIter > 5)
 			{
 				SetSkillValue(skillIndex, sub->GetInt());
 				skillIndex++;

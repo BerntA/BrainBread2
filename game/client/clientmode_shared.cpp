@@ -48,6 +48,7 @@
 #include "c_client_gib.h"
 #include "music_system.h"
 #include "c_bb2_player_shared.h"
+#include "c_ai_basenpc.h"
 
 #if defined( _X360 )
 #include "xbox/xbox_console.h"
@@ -1135,60 +1136,70 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 				return;
 
 			const char *entName = GameBaseShared()->GetSharedGameDetails()->GetEntityNameFromEntitySoundType(iType);
-			if ((strlen(entName) > 0))
+			bool bEmitSound = false;
+			int soundSetIndex = GameBaseShared()->GetSharedGameDetails()->GetConVarValueForEntitySoundType(iType);
+
+			if (iType == BB2_SoundTypes::TYPE_CUSTOM)
 			{
-				bool bEmitSound = false;
-				int soundSetIndex = GameBaseShared()->GetSharedGameDetails()->GetConVarValueForEntitySoundType(iType);
-				if (bIsPlayerSound)
+				C_BaseEntity *pEntity = ClientEntityList().GetEnt(iEntIndex);
+				if (pEntity && pEntity->IsNPC() && pEntity->MyNPCPointer())
 				{
 					bEmitSound = true;
-					Q_snprintf(szSoundToEmit, 256, "%s_%s_%s.%s", entName, GameBaseShared()->GetSharedGameDetails()->GetPlayerSoundsetPrefix(iType, szSurvivorLink, szSoundsetPrefix), szGender, szOriginal);
+					Q_snprintf(szSoundToEmit, 256, "Custom.%s.%s.%s", pEntity->MyNPCPointer()->GetNPCName(), szOriginal, szGender);
 				}
-				else if (soundSetIndex != -1)
+			}
+			else if (bIsPlayerSound)
+			{
+				bEmitSound = true;
+				Q_snprintf(szSoundToEmit, 256, "%s_%s_%s.%s", entName, GameBaseShared()->GetSharedGameDetails()->GetPlayerSoundsetPrefix(iType, szSurvivorLink, szSoundsetPrefix), szGender, szOriginal);
+			}
+			else if (soundSetIndex != -1)
+			{
+				if (bIsDeathmatchAnnouncer)
 				{
-					if (bIsDeathmatchAnnouncer)
-					{
-						Q_snprintf(szSoundToEmit, 256, "%s_%s.%s", entName, GameBaseShared()->GetSharedGameDetails()->GetSoundPrefix(iType, soundSetIndex), szOriginal);
-						if (szSoundToEmit[0] && (strlen(szSoundToEmit) > 0))
-						{
-							// If this sound doesn't exist / not parsed then fallback to anything available:
-							CSoundParameters params;
-							if (pClient->GetParametersForSound(szSoundToEmit, params, NULL) == false)
-								Q_snprintf(szSoundToEmit, 256, "%s_%s.%s", entName, GameBaseShared()->GetSharedGameDetails()->GetSoundPrefix(iType, 0), szOriginal);
-
-							if (!enginesound->IsSoundPrecached(szSoundToEmit))
-								pClient->PrecacheScriptSound(szSoundToEmit);
-
-							pClient->EmitSound(szSoundToEmit);
-						}
-					}
-					else
-					{
-						bEmitSound = true;
-						Q_snprintf(szSoundToEmit, 256, "%s_%s_%s.%s", entName, GameBaseShared()->GetSharedGameDetails()->GetSoundPrefix(iType, soundSetIndex, szSurvivorLink), szGender, szOriginal);
-					}
-				}
-
-				if (bEmitSound)
-				{
-					C_BaseEntity *pEntity = ClientEntityList().GetEnt(iEntIndex);
-					if (szSoundToEmit[0] && pEntity && (strlen(szSoundToEmit) > 0))
+					Q_snprintf(szSoundToEmit, 256, "%s_%s.%s", entName, GameBaseShared()->GetSharedGameDetails()->GetSoundPrefix(iType, soundSetIndex), szOriginal);
+					if (szSoundToEmit[0] && (strlen(szSoundToEmit) > 0))
 					{
 						// If this sound doesn't exist / not parsed then fallback to anything available:
 						CSoundParameters params;
 						if (pClient->GetParametersForSound(szSoundToEmit, params, NULL) == false)
-						{
-							if (pEntity->IsPlayer()) // For players we simplify it a bit.
-								Q_snprintf(szSoundToEmit, 256, "%s_%s.%s", entName, szGender, szOriginal);
-							else // For NPC we use the default (first) soundset.
-								Q_snprintf(szSoundToEmit, 256, "%s_%s_%s.%s", entName, GameBaseShared()->GetSharedGameDetails()->GetSoundPrefix(iType, 0), szGender, szOriginal);
-						}
+							Q_snprintf(szSoundToEmit, 256, "%s_%s.%s", entName, GameBaseShared()->GetSharedGameDetails()->GetSoundPrefix(iType, 0), szOriginal);
 
 						if (!enginesound->IsSoundPrecached(szSoundToEmit))
 							pClient->PrecacheScriptSound(szSoundToEmit);
 
-						pEntity->EmitSound(szSoundToEmit);
+						pClient->EmitSound(szSoundToEmit);
 					}
+				}
+				else
+				{
+					bEmitSound = true;
+					Q_snprintf(szSoundToEmit, 256, "%s_%s_%s.%s", entName, GameBaseShared()->GetSharedGameDetails()->GetSoundPrefix(iType, soundSetIndex, szSurvivorLink), szGender, szOriginal);
+				}
+			}
+
+			if (bEmitSound)
+			{
+				C_BaseEntity *pEntity = ClientEntityList().GetEnt(iEntIndex);
+				if (szSoundToEmit[0] && pEntity && (strlen(szSoundToEmit) > 0))
+				{
+					// If this sound doesn't exist / not parsed then fallback to anything available:
+					CSoundParameters params;
+					if (pClient->GetParametersForSound(szSoundToEmit, params, NULL) == false)
+					{
+						if ((iType == BB2_SoundTypes::TYPE_CUSTOM) || (iType == BB2_SoundTypes::TYPE_UNKNOWN))
+							return;
+
+						if (pEntity->IsPlayer()) // For players we simplify it a bit.
+							Q_snprintf(szSoundToEmit, 256, "%s_%s.%s", entName, szGender, szOriginal);
+						else // For NPC we use the default (first) soundset.
+							Q_snprintf(szSoundToEmit, 256, "%s_%s_%s.%s", entName, GameBaseShared()->GetSharedGameDetails()->GetSoundPrefix(iType, 0), szGender, szOriginal);
+					}
+
+					if (!enginesound->IsSoundPrecached(szSoundToEmit))
+						pClient->PrecacheScriptSound(szSoundToEmit);
+
+					pEntity->EmitSound(szSoundToEmit);
 				}
 			}
 		}

@@ -296,4 +296,10 @@ void CHudBaseAmmo::UpdatePlayer(C_HL2MP_Player *pClient, C_BaseCombatWeapon *pWe
 
 		m_iMagsLeft = iMags;
 	}
+
+	if (!strcmp(szWep, "winchester1894"))
+	{
+		m_iMagsLeft = iAmmoCount;
+		ammoIconPrimary = gHUD.GetIcon(VarArgs("mag_trapper_%i", pWeapon->m_iClip1));
+	}
 }

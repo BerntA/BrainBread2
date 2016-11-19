@@ -513,6 +513,9 @@ void CGameBaseServer::OnUpdate(int iClientsInGame)
 		if (GameBaseShared()->GetSharedMapData())
 			GameBaseShared()->GetSharedMapData()->FetchMapData();
 
+		if (GameBaseShared()->GetServerWorkshopData())
+			GameBaseShared()->GetServerWorkshopData()->Initialize();
+
 		uint32 unIP = steamgameserverapicontext->SteamGameServer()->GetPublicIP();
 		bIsServerBlacklisted = FindItemInSharedList(GetPublicIP(unIP), DATA_SECTION_SERVER_BLACKLIST);
 		if (bIsServerBlacklisted)
@@ -543,6 +546,9 @@ void CGameBaseServer::OnUpdate(int iClientsInGame)
 		if (m_flChangeLevelTimeLerp < 0)
 			m_flChangeLevelTimeLerp = 0;
 	}
+
+	if (GameBaseShared()->GetServerWorkshopData())
+		GameBaseShared()->GetServerWorkshopData()->DownloadThink();
 }
 
 void CGameBaseServer::DoMapChange(const char *map)

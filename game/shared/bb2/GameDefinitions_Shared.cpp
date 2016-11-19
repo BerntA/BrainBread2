@@ -1357,7 +1357,7 @@ int CGameDefinitionsShared::GetConVarValueForEntitySoundType(int iType)
 	else if (iType == BB2_SoundTypes::TYPE_ANNOUNCER)
 		return bb2_sound_announcer.GetInt();
 
-	Warning("Unable to find cvar value for type %i!\n", iType);
+	DevMsg(2, "Unable to find cvar value for type %i!\n", iType);
 	return -1;
 }
 
@@ -1746,7 +1746,7 @@ achievementStatItem_t GAME_STAT_AND_ACHIEVEMENT_DATA[CURRENT_ACHIEVEMENT_NUMBER]
 	// Shotguns
 	{ "ACH_WEP_870", "BBX_KI_870", 210, ACHIEVEMENT_TYPE_DEFAULT, 150, false },
 	{ "ACH_WEP_DOUBLEBARREL", "BBX_KI_SAWOFF", 200, ACHIEVEMENT_TYPE_DEFAULT, 200, false },
-	{ "ACH_WEP_WINCHESTER", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 0, true },
+	{ "ACH_WEP_WINCHESTER", "BBX_KI_TRAPPER", 240, ACHIEVEMENT_TYPE_DEFAULT, 400, false },
 
 	// Special & Snipers
 	{ "ACH_WEP_MINIGUN", "BBX_KI_MINIGUN", 12000, ACHIEVEMENT_TYPE_DEFAULT, 3000, false },

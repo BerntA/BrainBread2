@@ -36,6 +36,6 @@ private:
 	bool CanWriteToType(const char *param, int iType);
 };
 
-extern const char *pszGameSkills[30]; // Skill stat definition array.
+extern const char *pszGameSkills[40]; // Skill stat definition array.
 
 #endif // SHARED_ACHIEVEMENT_HANDLER_H

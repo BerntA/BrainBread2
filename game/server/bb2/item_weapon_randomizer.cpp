@@ -38,7 +38,7 @@ weaponInfoItem pszWeapons[] =
 	{ "weapon_minigun", 4, false },
 	{ "weapon_sawedoff", 25, false },
 	{ "weapon_remington", 40, false },
-	{ "weapon_winchester94", 45, false },
+	{ "weapon_winchester1894", 45, false },
 	{ "weapon_m9_bayonet", 100, true },
 	{ "weapon_fireaxe", 50, true },
 	{ "weapon_machete", 30, true },

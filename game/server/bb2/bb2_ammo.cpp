@@ -428,3 +428,65 @@ void CAmmoSniper::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 		}
 	}
 }
+
+class CAmmoTrapper : public CItem
+{
+public:
+	DECLARE_CLASS(CAmmoTrapper, CItem);
+
+	CAmmoTrapper()
+	{
+		color32 col32 = { 135, 206, 250, 240 };
+		m_GlowColor = col32;
+	}
+
+	void Spawn(void);
+	void Precache(void);
+
+	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
+};
+
+LINK_ENTITY_TO_CLASS(ammo_trapper, CAmmoTrapper);
+PRECACHE_REGISTER(ammo_trapper);
+
+void CAmmoTrapper::Spawn(void)
+{
+	Precache();
+	SetModel("models/items/ammo_winchester.mdl");
+	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
+	BaseClass::Spawn();
+}
+
+void CAmmoTrapper::Precache(void)
+{
+	PrecacheModel("models/items/ammo_winchester.mdl");
+}
+
+void CAmmoTrapper::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
+{
+	if (!pActivator)
+		return;
+
+	if (!pActivator->IsPlayer())
+		return;
+
+	if (pActivator->IsZombie())
+		return;
+
+	CBasePlayer *pPlayer = ToBasePlayer(pActivator);
+
+	if (!CanPickup())
+		return;
+
+	if (CanReplenishAmmo(pPlayer, WEAPON_TYPE_RIFLE))
+	{
+		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
+		{
+			Respawn();
+		}
+		else
+		{
+			UTIL_Remove(this);
+		}
+	}
+}

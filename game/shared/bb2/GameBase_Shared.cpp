@@ -100,6 +100,7 @@ void CGameBaseShared::Init()
 	m_pSteamServers = new CSteamServerLister();
 #else
 	m_pAchievementManager = new CAchievementManager();
+	m_pServerWorkshopData = new CGameDefinitionsWorkshop();
 #endif
 }
 
@@ -170,6 +171,9 @@ void CGameBaseShared::Release()
 
 	if (m_pAchievementManager)
 		delete m_pAchievementManager;
+
+	if (m_pServerWorkshopData)
+		delete m_pServerWorkshopData;
 #endif
 }
 
@@ -963,6 +967,8 @@ void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pV
 				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_GLOCK17");
 			else if (FClassnameIs(pWeapon, "weapon_remington700"))
 				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_REM700");
+			else if (FClassnameIs(pWeapon, "weapon_winchester1894"))
+				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_TRAPPER");
 
 			if (pWeapon->IsAkimboWeapon())
 				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_AKIMBO");

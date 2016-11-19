@@ -15,9 +15,10 @@ globalStatItem_t szGameStats[] =
 	{ "BBX_ST_XP_LEFT", 65 },
 	{ "BBX_ST_LEVEL", 1 },
 	{ "BBX_ST_TALENTS", 0 },
+	{ "BBX_ST_ZM_POINTS", 0 },
 };
 
-const char *pszGameSkills[30] =
+const char *pszGameSkills[40] =
 {
 	"BBX_ST_AGI_SPEED",
 	"BBX_ST_AGI_ACROBATICS",
@@ -51,6 +52,17 @@ const char *pszGameSkills[30] =
 	"BBX_ST_PRO_EMPOWERED_BULLETS",
 	"BBX_ST_PRO_MAGAZINE_REFILL",
 	"BBX_ST_PRO_GUNSLINGER",
+
+	"BBX_ST_ZM_HEALTH",
+	"BBX_ST_ZM_DAMAGE",
+	"BBX_ST_ZM_DAMAGE_REDUCTION",
+	"BBX_ST_ZM_SPEED",
+	"BBX_ST_ZM_JUMP",
+	"BBX_ST_ZM_LEAP",
+	"BBX_ST_ZM_DEATH",
+	"BBX_ST_ZM_LIFE_LEECH",
+	"BBX_ST_ZM_HEALTH_REGEN",
+	"BBX_ST_ZM_MASS_INVASION",
 };
 
 CAchievementManager::CAchievementManager()

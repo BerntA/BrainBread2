@@ -135,6 +135,8 @@ public:
 	void AnnounceEnemyKill(CBaseEntity *pEnemy);
 	NPC_STATE SelectIdealState(void);
 
+	virtual BB2_SoundTypes GetNPCType() { return TYPE_CUSTOM; }
+
 protected:
 		void FireGameEvent(IGameEvent *event);
 private:
@@ -153,7 +155,6 @@ private:
 
 	// Customization
 	string_t m_iszNPCName;
-	string_t m_iszSoundScriptBase;
 	bool m_bGender;
 	bool m_bBossState;
 	int             m_iTotalHP;

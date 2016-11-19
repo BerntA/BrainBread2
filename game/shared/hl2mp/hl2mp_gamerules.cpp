@@ -856,16 +856,16 @@ void CHL2MPRules::EmitSoundToClient(CBaseEntity *pAnnouncer, const char *szOrigi
 			return;
 
 		// If the emitter is some NPC then check the sound penalty time:
-		if (pAnnouncer->IsNPC() && pAnnouncer->MyNPCPointer() && strcmp(szOriginalSound, "Death") && strcmp(szOriginalSound, "Die"))
+		if (pAnnouncer->IsNPC() && pAnnouncer->MyNPCPointer() && !pAnnouncer->MyNPCPointer()->IsBoss() && strcmp(szOriginalSound, "Death") && strcmp(szOriginalSound, "Die"))
 		{
 			if (pAnnouncer->MyNPCPointer()->GetSoundPenaltyTime() > gpGlobals->curtime)
 				return;
 
 			// Prevent spamming.
-			if ((random->RandomInt(0, 4) == 2) && !strcmp(szOriginalSound, "Pain"))
+			if ((random->RandomInt(0, 4) == 2) && (!strcmp(szOriginalSound, "Pain") || !strcmp(szOriginalSound, "Taunt")))
 				return;
 
-			pAnnouncer->MyNPCPointer()->SetSoundPenaltyTime(8.0f);
+			pAnnouncer->MyNPCPointer()->SetSoundPenaltyTime(4.0f);
 		}
 
 		CHL2MP_Player *pPlayer = ToHL2MPPlayer(pAnnouncer);
@@ -2277,6 +2277,7 @@ CAmmoDef *GetAmmoDef()
 		def.AddAmmoType("Remington700", DMG_BULLET, TRACER_LINE_AND_WHIZ, 100, 100, 40, BULLET_IMPULSE(1500, 8000), 0);
 		def.AddAmmoType("AK47", DMG_BULLET, TRACER_LINE_AND_WHIZ, 10, 18, 180, BULLET_IMPULSE(1200, 5000), 0);
 		def.AddAmmoType("Famas", DMG_BULLET, TRACER_LINE_AND_WHIZ, 7, 12, 200, BULLET_IMPULSE(2200, 7500), 0);
+		def.AddAmmoType("Trapper", DMG_BULLET, TRACER_LINE_AND_WHIZ, 20, 20, 40, BULLET_IMPULSE(1300, 6000), 0);
 		def.AddAmmoType("Minigun", DMG_BULLET, TRACER_LINE_AND_WHIZ, 5, 10, 0, BULLET_IMPULSE(4000, 12500), 0);
 		def.AddAmmoType("MAC11", DMG_BULLET, TRACER_LINE_AND_WHIZ, 5, 10, 192, BULLET_IMPULSE(1500, 6000), 0);
 		def.AddAmmoType("MP7", DMG_BULLET, TRACER_LINE_AND_WHIZ, 3, 6, 240, BULLET_IMPULSE(1300, 4500), 0);

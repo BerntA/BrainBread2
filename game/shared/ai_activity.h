@@ -361,6 +361,10 @@ typedef enum
 	ACT_VM_SHOOT_LEFT_DRYFIRE,
 	ACT_VM_SHOOT_RIGHT_DRYFIRE,
 
+	ACT_VM_CHARGE_START,
+	ACT_VM_CHARGE_IDLE,
+	ACT_VM_CHARGE_ATTACK,
+
 //===========================
 // HL2 Specific Activities
 //===========================

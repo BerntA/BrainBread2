@@ -25,6 +25,7 @@
 #else
 #include "hl2mp_player.h"
 #include "achievement_manager.h"
+#include "GameDefinitions_Workshop.h"
 #endif
 
 #define MAX_INVENTORY_ITEM_COUNT 12
@@ -306,6 +307,9 @@ public:
 	void EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pVictim, CBaseEntity *pInflictor);
 	void OnGameOver(float timeLeft, int iWinner);
 
+	// Workshop Handler:
+	CGameDefinitionsWorkshop *GetServerWorkshopData(void) { return m_pServerWorkshopData; }
+
 	// Server Commands and Client Commands checks.
 	bool ClientCommand(const CCommand &args);
 
@@ -336,6 +340,9 @@ private:
 
 	// Stat and Achievement Handler
 	CAchievementManager *m_pAchievementManager;
+
+	// Server Workshop Handler:
+	CGameDefinitionsWorkshop *m_pServerWorkshopData;
 #endif
 
 	// Shared Game Data Info

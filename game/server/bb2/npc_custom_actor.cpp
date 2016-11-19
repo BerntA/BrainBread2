@@ -94,7 +94,6 @@ DEFINE_KEYFIELD(m_bGender, FIELD_BOOLEAN, "gender"),
 DEFINE_KEYFIELD(m_bBossState, FIELD_BOOLEAN, "boss"),
 DEFINE_KEYFIELD(m_iTotalHP, FIELD_INTEGER, "totalhealth"),
 DEFINE_KEYFIELD(m_iszNPCName, FIELD_STRING, "npcname"),
-DEFINE_KEYFIELD(m_iszSoundScriptBase, FIELD_STRING, "soundprefix"),
 
 DEFINE_KEYFIELD(m_flDamageScaleFactor, FIELD_FLOAT, "damageScale"),
 DEFINE_KEYFIELD(m_flHealthScaleFactor, FIELD_FLOAT, "healthScale"),
@@ -118,7 +117,6 @@ CNPC_CustomActor::CNPC_CustomActor()
 	m_bGender = true;
 	m_bBossState = false;
 	m_iszNPCName = NULL_STRING;
-	m_iszSoundScriptBase = NULL_STRING;
 	m_iTotalHP = 100;
 	
 	m_flDamageScaleValue = m_flHealthScaleValue = 0.0f;
@@ -140,14 +138,6 @@ bool CNPC_CustomActor::CreateBehaviors()
 void CNPC_CustomActor::Precache()
 {
 	PrecacheModel(STRING(GetModelName()));
-
-	// Precache the linked soundscripts for this custom npc.
-	for (int i = 0; i < _ARRAYSIZE(actorCustomSoundScripts); i++)
-	{
-		char pchSoundScript[64];
-		Q_snprintf(pchSoundScript, 64, "%s.%s.%s", STRING(m_iszSoundScriptBase), actorCustomSoundScripts[i], (GetGender() == true) ? "Male" : "Female");
-		PrecacheScriptSound(pchSoundScript);
-	}
 
 	BaseClass::Precache();
 }
@@ -312,13 +302,9 @@ void CNPC_CustomActor::OnChangeRunningBehavior(CAI_BehaviorBase *pOldBehavior, C
 
 void CNPC_CustomActor::PlaySound(const char *sound, float eventtime)
 {
-	char pchSoundScript[64];
-	Q_snprintf(pchSoundScript, 64, "%s.%s.%s", STRING(m_iszSoundScriptBase), sound, (GetGender() == true) ? "Male" : "Female");
-
-	if (eventtime != -1.0f)
-		EmitSound(pchSoundScript, eventtime);
-	else 
-		EmitSound(pchSoundScript);
+	char pchSoundScript[32];
+	Q_strncpy(pchSoundScript, sound, 32);
+	HL2MPRules()->EmitSoundToClient(this, pchSoundScript, GetNPCType(), GetGender());
 }
 
 NPC_STATE CNPC_CustomActor::SelectIdealState(void)
