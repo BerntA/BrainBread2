@@ -24,7 +24,7 @@ int GetAmmoCountMultiplier(int wepType)
 	return 2;
 }
 
-bool CanReplenishAmmo(CBasePlayer *pPlayer, int wepType, bool bSecondaryType = false, bool bSuppressSound = false)
+bool CanReplenishAmmo(CBasePlayer *pPlayer, const char *linkedWeapons[], int size, bool bSecondaryType = false, bool bSuppressSound = false)
 {
 	if (!pPlayer)
 		return false;
@@ -36,21 +36,32 @@ bool CanReplenishAmmo(CBasePlayer *pPlayer, int wepType, bool bSecondaryType = f
 		if (!pWeapon)
 			continue;
 
-		if (pWeapon->GetWeaponType() == wepType)
+		bool bFoundWeapon = false;
+		for (int iWep = 0; iWep < size; iWep++)
 		{
-			int ammoCount = 0;
-			if (bSecondaryType)
+			if (FClassnameIs(pWeapon, linkedWeapons[iWep]))
 			{
-				ammoCount = (pWeapon->GetMaxClip2() * GetAmmoCountMultiplier(wepType));
-				if (pPlayer->GiveAmmo(ammoCount, pWeapon->GetSecondaryAmmoType(), bSuppressSound))
-					bReceived = true;
+				bFoundWeapon = true;
+				break;
 			}
-			else
-			{
-				ammoCount = (pWeapon->GetMaxClip1() * GetAmmoCountMultiplier(wepType));
-				if (pPlayer->GiveAmmo(ammoCount, pWeapon->GetPrimaryAmmoType(), bSuppressSound))
-					bReceived = true;
-			}
+		}
+
+		if (!bFoundWeapon)
+			continue;
+
+		int wepType = pWeapon->GetWeaponType();
+		int ammoCount = 0;
+		if (bSecondaryType)
+		{
+			ammoCount = (pWeapon->GetMaxClip2() * GetAmmoCountMultiplier(wepType));
+			if (pPlayer->GiveAmmo(ammoCount, pWeapon->GetSecondaryAmmoType(), bSuppressSound))
+				bReceived = true;
+		}
+		else
+		{
+			ammoCount = (pWeapon->GetMaxClip1() * GetAmmoCountMultiplier(wepType));
+			if (pPlayer->GiveAmmo(ammoCount, pWeapon->GetPrimaryAmmoType(), bSuppressSound))
+				bReceived = true;
 		}
 	}
 
@@ -106,7 +117,8 @@ void CAmmoPistol::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 	if (!CanPickup())
 		return;
 
-	if (CanReplenishAmmo(pPlayer, WEAPON_TYPE_PISTOL))
+	const char *weapons[] = { "weapon_beretta", "weapon_glock17" };
+	if (CanReplenishAmmo(pPlayer, weapons, 2))
 	{
 		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
 		{
@@ -168,7 +180,8 @@ void CAmmoRifle::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 	if (!CanPickup())
 		return;
 
-	if (CanReplenishAmmo(pPlayer, WEAPON_TYPE_RIFLE))
+	const char *weapons[] = { "weapon_ak47", "weapon_famas" };
+	if (CanReplenishAmmo(pPlayer, weapons, 2))
 	{
 		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
 		{
@@ -230,7 +243,8 @@ void CAmmoSlugs::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 	if (!CanPickup())
 		return;
 
-	if (CanReplenishAmmo(pPlayer, WEAPON_TYPE_SHOTGUN))
+	const char *weapons[] = { "weapon_sawedoff", "weapon_remington" };
+	if (CanReplenishAmmo(pPlayer, weapons, 2))
 	{
 		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
 		{
@@ -292,7 +306,8 @@ void CAmmoRevolver::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE 
 	if (!CanPickup())
 		return;
 
-	if (CanReplenishAmmo(pPlayer, WEAPON_TYPE_REVOLVER))
+	const char *weapons[] = { "weapon_rex", "weapon_akimbo_rex" };
+	if (CanReplenishAmmo(pPlayer, weapons, 2))
 	{
 		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
 		{
@@ -354,7 +369,8 @@ void CAmmoSMG::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useTy
 	if (!CanPickup())
 		return;
 
-	if (CanReplenishAmmo(pPlayer, WEAPON_TYPE_SMG))
+	const char *weapons[] = { "weapon_mac11", "weapon_mp7" };
+	if (CanReplenishAmmo(pPlayer, weapons, 2))
 	{
 		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
 		{
@@ -416,7 +432,8 @@ void CAmmoSniper::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 	if (!CanPickup())
 		return;
 
-	if (CanReplenishAmmo(pPlayer, WEAPON_TYPE_SNIPER))
+	const char *weapons[] = { "weapon_remington700" };
+	if (CanReplenishAmmo(pPlayer, weapons, 1))
 	{
 		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
 		{
@@ -478,7 +495,8 @@ void CAmmoTrapper::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 	if (!CanPickup())
 		return;
 
-	if (CanReplenishAmmo(pPlayer, WEAPON_TYPE_RIFLE))
+	const char *weapons[] = { "weapon_winchester1894" };
+	if (CanReplenishAmmo(pPlayer, weapons, 1))
 	{
 		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
 		{

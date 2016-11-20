@@ -47,20 +47,24 @@ public:
 
 	void		ClearAttackConditions(void);
 
+	void NotifyDeadFriend(CBaseEntity* pFriend);
+	void AnnounceEnemyKill(CBaseEntity *pEnemy);
+
 	bool		m_fIsBlocking;
 
 	bool		IsLightDamage(const CTakeDamageInfo &info);
 	bool		IsHeavyDamage(const CTakeDamageInfo &info);
 
+	bool ShouldChargePlayer();
+
 	bool AllowedToIgnite(void) { return false; }
 	bool IsBoss() { return true; }
 	bool CanAlwaysSeePlayers() { return true; }
 	bool GetGender() { return true; } // force male
-	// bool UsesNavMesh(void) { return true; }
+	bool UsesNavMesh(void) { return true; }
 	int AllowEntityToBeGibbed(void) { return GIB_NO_GIBS; }
 
 	Class_T Classify(void);
-
 	BB2_SoundTypes GetNPCType() { return TYPE_CUSTOM; }
 
 	const char *GetNPCName() { return "Johnsson"; }
@@ -90,12 +94,16 @@ void CNPCBanditJohnsson::Spawn(void)
 	CapabilitiesAdd(bits_CAP_ANIMATEDFACE);
 	CapabilitiesAdd(bits_CAP_MOVE_SHOOT);
 	CapabilitiesAdd(bits_CAP_DOORS_GROUP);
+	AddSpawnFlags(SF_NPC_LONG_RANGE);
 
 	BaseClass::Spawn();
 
 	SetCollisionGroup(COLLISION_GROUP_NPC_MERCENARY);
 
 	m_iNumGrenades = 2000;
+
+	// No kicking for Johnsson.
+	CapabilitiesRemove(bits_CAP_INNATE_MELEE_ATTACK1);
 }
 
 //-----------------------------------------------------------------------------
@@ -138,6 +146,25 @@ void CNPCBanditJohnsson::ClearAttackConditions()
 		// don't sense for it every frame.
 		SetCondition(COND_CAN_RANGE_ATTACK2);
 	}
+}
+
+void CNPCBanditJohnsson::NotifyDeadFriend(CBaseEntity* pFriend)
+{
+	if (FInViewCone(pFriend) && FVisible(pFriend))
+		HL2MPRules()->EmitSoundToClient(this, "Taunt", GetNPCType(), GetGender());
+
+	BaseClass::NotifyDeadFriend(pFriend);
+}
+
+void CNPCBanditJohnsson::AnnounceEnemyKill(CBaseEntity *pEnemy)
+{
+	if (!pEnemy)
+		return;
+
+	if (pEnemy->IsPlayer())
+		HL2MPRules()->EmitSoundToClient(this, "PlayerDown", GetNPCType(), GetGender());
+	else
+		BaseClass::AnnounceEnemyKill(pEnemy);
 }
 
 void CNPCBanditJohnsson::PrescheduleThink(void)
@@ -242,6 +269,11 @@ bool CNPCBanditJohnsson::IsLightDamage(const CTakeDamageInfo &info)
 bool CNPCBanditJohnsson::IsHeavyDamage(const CTakeDamageInfo &info)
 {
 	return BaseClass::IsHeavyDamage(info);
+}
+
+bool CNPCBanditJohnsson::ShouldChargePlayer()
+{
+	return GetEnemy() && GetEnemy()->IsPlayer();
 }
 
 Class_T	CNPCBanditJohnsson::Classify(void)

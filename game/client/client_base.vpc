@@ -212,6 +212,7 @@ $Project
 			$File "bb2/hud_votesystem.cpp"
 			$File "bb2/hud_inventory_view.cpp"
 			$File "bb2/hud_scope_view.cpp"
+			$File "bb2/hud_timeview.cpp"
 		}
 		
 		$Folder "Shaders"
@@ -359,6 +360,8 @@ $Project
 			$File "$SRCDIR\game\shared\bb2\weapon_remington700.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_base_sniper.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_base_sniper.h"
+			$File "$SRCDIR\game\shared\bb2\weapon_melee_chargeable.cpp"
+			$File "$SRCDIR\game\shared\bb2\weapon_melee_chargeable.h"			
 		}
 	}
 	

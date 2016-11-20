@@ -388,8 +388,11 @@ void CNPC_Combine::Spawn( void )
 
 	NPCInit();
 
-	m_flDistTooFar = 512.0;
-	GetSenses()->SetDistLook(512.0);
+	if (!IsBoss())
+	{
+		m_flDistTooFar = 512.0;
+		GetSenses()->SetDistLook(512.0);
+	}
 
 	OnSetGibHealth();
 }

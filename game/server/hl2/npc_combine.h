@@ -123,17 +123,17 @@ public:
 	// -------------
 	// Sounds
 	// -------------
-	void			DeathSound( void );
-	void			PainSound( void );
-	void			IdleSound( void );
-	void			AlertSound( void );
-	void			LostEnemySound( void );
-	void			FoundEnemySound( void );
-	void			AnnounceAssault( void );
-	void			AnnounceEnemyType( CBaseEntity *pEnemy );
-	void			AnnounceEnemyKill( CBaseEntity *pEnemy );
+	virtual void			DeathSound(void);
+	virtual void			PainSound(void);
+	virtual void			IdleSound(void);
+	virtual void			AlertSound(void);
+	virtual void			LostEnemySound(void);
+	virtual void			FoundEnemySound(void);
+	virtual void			AnnounceAssault(void);
+	virtual void			AnnounceEnemyType(CBaseEntity *pEnemy);
+	virtual void			AnnounceEnemyKill( CBaseEntity *pEnemy );
 
-	void			NotifyDeadFriend( CBaseEntity* pFriend );
+	virtual void			NotifyDeadFriend(CBaseEntity* pFriend);
 
 	virtual float	HearingSensitivity( void ) { return 1.0; };
 	int				GetSoundInterests( void );
@@ -156,6 +156,12 @@ protected:
 	virtual BB2_SoundTypes GetNPCType() { return TYPE_SOLDIER; }
 	void SetKickDamage( int nDamage ) { m_nKickDamage = nDamage; }
 	CAI_Sentence< CNPC_Combine > *GetSentences() { return &m_Sentences; }
+
+	// Select the combat schedule
+	virtual int SelectCombatSchedule();
+
+	// Should we charge the player?
+	virtual bool ShouldChargePlayer();
 
 private:
 	//=========================================================
@@ -230,11 +236,6 @@ private:
 	};
 
 private:
-	// Select the combat schedule
-	int SelectCombatSchedule();
-
-	// Should we charge the player?
-	bool ShouldChargePlayer();
 
 	// Chase the enemy, updating the target position as the player moves
 	void StartTaskChaseEnemyContinuously( const Task_t *pTask );

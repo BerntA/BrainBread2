@@ -1568,7 +1568,7 @@ void CBaseCombatWeapon::StartHolsterSequence()
 
 	float flHolsterTime = gpGlobals->curtime + GetViewModelSequenceDuration();
 	if (HL2MPRules() && HL2MPRules()->IsFastPacedGameplay())
-		flHolsterTime = gpGlobals->curtime;
+		flHolsterTime = gpGlobals->curtime + 0.1f;
 
 	m_flHolsteredTime = flHolsterTime;
 	m_flNextPrimaryAttack = flHolsterTime + 0.05f;
