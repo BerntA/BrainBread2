@@ -24,21 +24,27 @@ public:
 	void Initialize();
 	void DownloadThink();
 	void UpdateDownloadedItems();
+	void DownloadCollection(PublishedFileId_t itemID);
 
 	void AddItemToList(PublishedFileId_t itemID);
 	void RemoveItemFromList(PublishedFileId_t itemID);
+	bool DownloadNextItemInList(void);
 	int GetItemInList(PublishedFileId_t itemID);
-	int GetLastItemInList(void) { return (m_pWorkshopItemUpdateList.Count() - 1); }
+	int GetLastItemInList(void) { return (m_pWorkshopItemDownloadList.Count() - 1); }
 
 	const char *GetWorkshopDir() { return pszWorkshopDir; }
 
 protected:
 	STEAM_GAMESERVER_CALLBACK(CGameDefinitionsWorkshop, DownloadedItem, DownloadItemResult_t, m_CallbackItemDownloaded);
 
+	UGCQueryHandle_t ugcQueryHandle;
+	void OnReceiveUGCQueryUGCDetails(SteamUGCQueryCompleted_t *pCallback, bool bIOFailure);
+	CCallResult< CGameDefinitionsWorkshop, SteamUGCQueryCompleted_t > m_SteamCallResultUGCQuery;
+
 private:
 	char pszWorkshopDir[2048];
 	float m_flDownloadInfoDelay;
-	CUtlVector<PublishedFileId_t> m_pWorkshopItemUpdateList;
+	CUtlVector<PublishedFileId_t> m_pWorkshopItemDownloadList;
 };
 
 #endif // GAME_DEFINITIONS_WORKSHOP_H
