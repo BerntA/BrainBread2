@@ -1865,6 +1865,27 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 					if (info.m_nPlayerSkillFlags & SKILL_FLAG_EMPOWERED_BULLETS)
 						flCumulativeDamage += FirePenetrativeBullet(info, tr.endpos, vecDir, pAttacker, pHitEnt, nActualDamageType);
 				}
+				else if (!bStartedInWater && !bHitWater && pAttacker && pAttacker->IsPlayer() && tr.DidHitWorld() && !tr.IsDispSurface()) // world bullet penetration.
+				{
+					if (strcmp(tr.surface.name, "tools/toolsblockbullets"))
+					{
+						surfacedata_t *p_penetrsurf = physprops->GetSurfaceData(tr.surface.surfaceProps);
+						if (p_penetrsurf)
+						{
+							DataPenetrationItem_t *penetrationInfo = GetPenetrationDataForMaterial(p_penetrsurf->game.material);
+							if (penetrationInfo)
+							{
+								Vector vecNewStart = tr.endpos + vecDir * penetrationInfo->depth;
+								trace_t trPeneTest;
+								AI_TraceLine(vecNewStart, vecNewStart + vecDir * info.m_flDistance, MASK_SHOT, &traceFilter, &trPeneTest);
+								if (!trPeneTest.startsolid)
+								{
+									flCumulativeDamage += FirePenetrativeBullet(info, vecNewStart, vecDir, pAttacker, NULL, nActualDamageType);
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 

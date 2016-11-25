@@ -133,7 +133,7 @@ void CEndScoreMenu::ShowPanel(bool bShow)
 	g_pVGuiPanel->MoveToBack(GetVPanel());
 }
 
-void CEndScoreMenu::SetupLayout(bool bReset, int iWinner)
+void CEndScoreMenu::SetupLayout(bool bReset, int iWinner, bool bTimeRanOut)
 {
 	if (bReset)
 	{
@@ -155,16 +155,23 @@ void CEndScoreMenu::SetupLayout(bool bReset, int iWinner)
 	switch (iWinner)
 	{
 	case TEAM_DECEASED:
+	{
 		labelText = "#VGUI_GameOver_ZombiesDefault";
 		if (gamemode == MODE_ARENA)
 			labelText = "#VGUI_GameOver_ZombiesArena";
 		break;
+	}
 	case TEAM_HUMANS:
+	{
 		labelText = "#VGUI_GameOver_HumansDefault";
 		if (gamemode == MODE_ARENA)
 			labelText = "#VGUI_GameOver_HumansArena";
 		break;
 	}
+	}
+
+	if (bTimeRanOut)
+		labelText = "#VGUI_GameOver_NoTime";
 
 	if (gamemode == MODE_DEATHMATCH)
 		labelText = "#VGUI_GameOver_Deathmatch";
@@ -189,8 +196,7 @@ void CEndScoreMenu::ForceClose(void)
 
 void CEndScoreMenu::SetData(KeyValues *data)
 {
-	int iWinner = data->GetInt("winner");
-	SetupLayout(false, iWinner);
+	SetupLayout(false, data->GetInt("winner"), data->GetBool("timeRanOut"));
 }
 
 void CEndScoreMenu::ApplySchemeSettings(vgui::IScheme *pScheme)

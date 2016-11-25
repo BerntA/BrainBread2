@@ -310,6 +310,12 @@ struct DataExplosiveItem_t
 	float flNPCDamage;
 };
 
+struct DataPenetrationItem_t
+{
+	unsigned short material;
+	float depth;
+};
+
 class CGameDefinitionsShared
 {
 public:
@@ -427,6 +433,8 @@ extern const char *GetGamemodeNameForPrefix(const char *map);
 extern int GetGamemodeForMap(const char *map);
 
 #define CURRENT_ACHIEVEMENT_NUMBER 72
+
 extern achievementStatItem_t GAME_STAT_AND_ACHIEVEMENT_DATA[CURRENT_ACHIEVEMENT_NUMBER];
+extern DataPenetrationItem_t *GetPenetrationDataForMaterial(unsigned short material);
 
 #endif // GAME_DEFINITIONS_SHARED_H

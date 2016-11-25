@@ -11,6 +11,7 @@
 #include "GameBase_Shared.h"
 #include "hl2mp_gamerules.h"
 #include "gibs_shared.h"
+#include "decals.h"
 
 #ifdef CLIENT_DLL
 #include "hud.h"
@@ -1795,3 +1796,31 @@ achievementStatItem_t GAME_STAT_AND_ACHIEVEMENT_DATA[CURRENT_ACHIEVEMENT_NUMBER]
 	{ "", "BBX_ST_KILLS", 9999999, ACHIEVEMENT_TYPE_DEFAULT, 0, true },
 	{ "", "BBX_ST_DEATHS", 9999999, ACHIEVEMENT_TYPE_DEFAULT, 0, true },
 };
+
+#define PENETRATION_DATA_SIZE 12
+DataPenetrationItem_t PENETRATION_DATA_LIST[PENETRATION_DATA_SIZE] =
+{
+	{ CHAR_TEX_WOOD, 9.0f },
+	{ CHAR_TEX_GRATE, 6.0f },
+	{ CHAR_TEX_CONCRETE, 4.0f },
+	{ CHAR_TEX_TILE, 5.0f },
+	{ CHAR_TEX_COMPUTER, 5.0f },
+	{ CHAR_TEX_GLASS, 8.0f },
+	{ CHAR_TEX_VENT, 4.0f },
+	{ CHAR_TEX_METAL, 5.0f },
+	{ CHAR_TEX_PLASTIC, 8.0f },
+	{ CHAR_TEX_BLOODYFLESH, 16.0f },
+	{ CHAR_TEX_FLESH, 16.0f },
+	{ CHAR_TEX_DIRT, 6.0f },
+};
+
+DataPenetrationItem_t *GetPenetrationDataForMaterial(unsigned short material)
+{
+	for (int i = 0; i < PENETRATION_DATA_SIZE; i++)
+	{
+		if (PENETRATION_DATA_LIST[i].material == material)
+			return &PENETRATION_DATA_LIST[i];
+	}
+	
+	return NULL;
+}

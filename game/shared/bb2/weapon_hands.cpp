@@ -103,7 +103,7 @@ CWeaponHands::CWeaponHands(void)
 //-----------------------------------------------------------------------------
 void CWeaponHands::Drop(const Vector &vecVelocity)
 {
-	BaseClass::Drop(vecVelocity);
+	ResetStates();
 
 #ifndef CLIENT_DLL
 	UTIL_Remove(this);

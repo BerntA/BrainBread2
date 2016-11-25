@@ -67,7 +67,7 @@ CHudTimeView::CHudTimeView(const char * pElementName) : CHudElement(pElementName
 	SetParent(pParent);
 
 	m_nTextureTimeLeft = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_nTextureTimeLeft, "vgui/spectating/stopwatch", true, false);
+	surface()->DrawSetTextureFile(m_nTextureTimeLeft, "vgui/spectating/stopwatch_bg", true, false);
 
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
 }

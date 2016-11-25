@@ -1530,6 +1530,7 @@ void CHL2MPRules::GoToIntermission(int iWinner)
 
 		KeyValues *data = new KeyValues("data");
 		data->SetInt("winner", iWinner);
+		data->SetBool("timeRanOut", (GetTimeLeft() <= 0.0f));
 		pPlayer->ShowViewPortPanel(PANEL_ENDSCORE, true, data);
 		data->deleteThis();
 

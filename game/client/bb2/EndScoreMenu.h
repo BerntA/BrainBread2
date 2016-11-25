@@ -63,7 +63,7 @@ protected:
 	bool RecordKeyPresses() { return false; }
 	virtual vgui::Panel *CreateControlByName(const char *controlName);
 	void PerformLayout();
-	void SetupLayout(bool bReset = false, int iWinner = 0);
+	void SetupLayout(bool bReset = false, int iWinner = 0, bool bTimeRanOut = false);
 	void ForceClose(void);
 
 	vgui::Label *m_pLabelWinner;
