@@ -190,6 +190,8 @@ public:
 	bool CanLevelUp(int iXP, CBaseEntity *pVictim);
 	bool PerformLevelUp(int iXP);
 	bool ActivatePerk(int skill);
+	bool EnterRageMode(void);
+	float GetExtraPerkData(int type);
 
 	Vector GetAttackSpread(CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget = NULL);
 	virtual Vector GetAutoaimVector(float flDelta);

@@ -70,7 +70,8 @@ private:
 	// 0 - Agi
 	// 1 - Str
 	// 2 - Pro
-	int m_nTexture_Perk[3];
+	// 3 - Zombie Rage
+	int m_nTexture_Perk[4];
 	int m_nTexture_PerkHint;
 
 	int m_nTexture_Background;
@@ -161,6 +162,7 @@ CHudProfileStats::CHudProfileStats(const char * pElementName) : CHudElement(pEle
 		"vgui/skills/humans/ico_reality_phase",
 		"vgui/skills/humans/ico_blood_rage",
 		"vgui/skills/humans/ico_gunslinger",
+		"vgui/skills/zombies/ico_damage",
 	};
 
 	const char *szBars[] =
@@ -250,6 +252,9 @@ void CHudProfileStats::Paint()
 
 	bool bSkillsEnabled = HL2MPRules()->CanUseSkills();
 	bool bCanRespawnAsHuman = (pPlayer->m_BB2Local.m_bCanRespawnAsHuman && !pPlayer->m_BB2Local.m_bHasPlayerEscaped);
+
+	float xposZombie = misc_x;
+	float yposZombie = misc_y;
 
 	float xPosOffset = 0.0f;
 	if (!bSkillsEnabled || m_bIsZombie)
@@ -390,7 +395,7 @@ void CHudProfileStats::Paint()
 				g_pVGuiLocalize->ConstructString(unicode, sizeof(unicode), g_pVGuiLocalize->Find("#VGUI_SkillPoints"), 1, wszArg1);
 
 				surface()->DrawSetTextFont(m_hSmallFont);
-				surface()->DrawSetTextPos(misc_x, misc_y);
+				surface()->DrawSetTextPos(xposZombie, yposZombie);
 				surface()->DrawPrintText(unicode, wcslen(unicode));
 
 				if (bCanRespawnAsHuman)
@@ -408,7 +413,8 @@ void CHudProfileStats::Paint()
 
 					wchar_t longTip[128];
 					g_pVGuiLocalize->ConstructString(longTip, sizeof(longTip), g_pVGuiLocalize->Find("#HUD_ZombieHumanRespawnTip"), 1, wszArg1);
-					surface()->DrawSetTextPos(misc_x, misc_y - surface()->GetFontTall(m_hSmallFont));
+					yposZombie -= surface()->GetFontTall(m_hSmallFont);
+					surface()->DrawSetTextPos(xposZombie, yposZombie);
 					surface()->DrawPrintText(longTip, wcslen(longTip));
 				}
 			}
@@ -473,62 +479,91 @@ void CHudProfileStats::Paint()
 		{
 			surface()->DrawSetColor(GetFgColor());
 			surface()->DrawSetTexture(m_nTexture_PerkHint);
-			surface()->DrawTexturedRect(perk_icon_x, flPerkYOffset, perk_icon_x + perk_icon_w, flPerkYOffset + perk_icon_h);
 
-			flPerkYTextOffset -= (surface()->GetFontTall(m_hSmallFont) / 2);
-			V_swprintf_safe(unicode, L"Perks Available!");
-			vgui::surface()->DrawSetTextPos(perk_icon_x + perk_icon_w + flPerkXTextOffset, flPerkYTextOffset);
-			surface()->DrawPrintText(unicode, wcslen(unicode));
+			if (m_bIsZombie)
+			{
+				yposZombie -= (perk_icon_h + 1);
+				surface()->DrawTexturedRect(xposZombie, yposZombie, xposZombie + perk_icon_w, yposZombie + perk_icon_h);
+				V_swprintf_safe(unicode, L"Rage Mode Available!");
+				surface()->DrawSetTextPos(xposZombie + perk_icon_w + flPerkXTextOffset, yposZombie + (perk_icon_h / 2) - (surface()->GetFontTall(m_hSmallFont) / 2));
+				surface()->DrawPrintText(unicode, wcslen(unicode));
+			}
+			else
+			{
+				surface()->DrawTexturedRect(perk_icon_x, flPerkYOffset, perk_icon_x + perk_icon_w, flPerkYOffset + perk_icon_h);
 
-			flPerkYOffset -= (perk_icon_h + 1.0f);
-			flPerkYTextOffset = flPerkYOffset + (perk_icon_h / 2);
+				flPerkYTextOffset -= (surface()->GetFontTall(m_hSmallFont) / 2);
+				V_swprintf_safe(unicode, L"Perks Available!");
+				vgui::surface()->DrawSetTextPos(perk_icon_x + perk_icon_w + flPerkXTextOffset, flPerkYTextOffset);
+				surface()->DrawPrintText(unicode, wcslen(unicode));
+
+				flPerkYOffset -= (perk_icon_h + 1.0f);
+				flPerkYTextOffset = flPerkYOffset + (perk_icon_h / 2);
+			}
 		}
 
-		if (pPlayer->GetPerkFlags() && !m_bIsZombie && bSkillsEnabled)
+		if (pPlayer->GetPerkFlags() && bSkillsEnabled)
 		{
-			if (pPlayer->IsPerkFlagActive(PERK_HUMAN_REALITYPHASE))
+			if (m_bIsZombie)
 			{
-				surface()->DrawSetColor(GetFgColor());
-				surface()->DrawSetTexture(m_nTexture_Perk[0]);
-				surface()->DrawTexturedRect(perk_icon_x, flPerkYOffset, perk_icon_x + perk_icon_w, flPerkYOffset + perk_icon_h);
+				if (pPlayer->IsPerkFlagActive(PERK_ZOMBIE_RAGE))
+				{
+					yposZombie -= (perk_icon_h + 1);
+					surface()->DrawSetColor(GetFgColor());
+					surface()->DrawSetTexture(m_nTexture_Perk[3]);
+					surface()->DrawTexturedRect(xposZombie, yposZombie, xposZombie + perk_icon_w, yposZombie + perk_icon_h);
 
-				flPerkYTextOffset -= (surface()->GetFontTall(m_hSmallFont) / 2);
-				V_swprintf_safe(unicode, L"Perk x%i", pPlayer->GetSkillValue(PLAYER_SKILL_HUMAN_REALITY_PHASE));
-				vgui::surface()->DrawSetTextPos(perk_icon_x + perk_icon_w + flPerkXTextOffset, flPerkYTextOffset);
-				surface()->DrawPrintText(unicode, wcslen(unicode));
-
-				flPerkYOffset -= (perk_icon_h + 1.0f);
-				flPerkYTextOffset = flPerkYOffset + (perk_icon_h / 2);
+					V_swprintf_safe(unicode, L"RAGE Mode Active!");
+					surface()->DrawSetTextPos(xposZombie + perk_icon_w + flPerkXTextOffset, yposZombie + (perk_icon_h / 2) - (surface()->GetFontTall(m_hSmallFont) / 2));
+					surface()->DrawPrintText(unicode, wcslen(unicode));
+				}
 			}
-
-			if (pPlayer->IsPerkFlagActive(PERK_HUMAN_BLOODRAGE))
+			else
 			{
-				surface()->DrawSetColor(GetFgColor());
-				surface()->DrawSetTexture(m_nTexture_Perk[1]);
-				surface()->DrawTexturedRect(perk_icon_x, flPerkYOffset, perk_icon_x + perk_icon_w, flPerkYOffset + perk_icon_h);
+				if (pPlayer->IsPerkFlagActive(PERK_HUMAN_REALITYPHASE))
+				{
+					surface()->DrawSetColor(GetFgColor());
+					surface()->DrawSetTexture(m_nTexture_Perk[0]);
+					surface()->DrawTexturedRect(perk_icon_x, flPerkYOffset, perk_icon_x + perk_icon_w, flPerkYOffset + perk_icon_h);
 
-				flPerkYTextOffset -= (surface()->GetFontTall(m_hSmallFont) / 2);
-				V_swprintf_safe(unicode, L"Perk x%i", pPlayer->GetSkillValue(PLAYER_SKILL_HUMAN_BLOOD_RAGE));
-				vgui::surface()->DrawSetTextPos(perk_icon_x + perk_icon_w + flPerkXTextOffset, flPerkYTextOffset);
-				surface()->DrawPrintText(unicode, wcslen(unicode));
+					flPerkYTextOffset -= (surface()->GetFontTall(m_hSmallFont) / 2);
+					V_swprintf_safe(unicode, L"Perk x%i", pPlayer->GetSkillValue(PLAYER_SKILL_HUMAN_REALITY_PHASE));
+					vgui::surface()->DrawSetTextPos(perk_icon_x + perk_icon_w + flPerkXTextOffset, flPerkYTextOffset);
+					surface()->DrawPrintText(unicode, wcslen(unicode));
 
-				flPerkYOffset -= (perk_icon_h + 1.0f);
-				flPerkYTextOffset = flPerkYOffset + (perk_icon_h / 2);
-			}
+					flPerkYOffset -= (perk_icon_h + 1.0f);
+					flPerkYTextOffset = flPerkYOffset + (perk_icon_h / 2);
+				}
 
-			if (pPlayer->IsPerkFlagActive(PERK_HUMAN_GUNSLINGER))
-			{
-				surface()->DrawSetColor(GetFgColor());
-				surface()->DrawSetTexture(m_nTexture_Perk[2]);
-				surface()->DrawTexturedRect(perk_icon_x, flPerkYOffset, perk_icon_x + perk_icon_w, flPerkYOffset + perk_icon_h);
+				if (pPlayer->IsPerkFlagActive(PERK_HUMAN_BLOODRAGE))
+				{
+					surface()->DrawSetColor(GetFgColor());
+					surface()->DrawSetTexture(m_nTexture_Perk[1]);
+					surface()->DrawTexturedRect(perk_icon_x, flPerkYOffset, perk_icon_x + perk_icon_w, flPerkYOffset + perk_icon_h);
 
-				flPerkYTextOffset -= (surface()->GetFontTall(m_hSmallFont) / 2);
-				V_swprintf_safe(unicode, L"Perk x%i", pPlayer->GetSkillValue(PLAYER_SKILL_HUMAN_GUNSLINGER));
-				vgui::surface()->DrawSetTextPos(perk_icon_x + perk_icon_w + flPerkXTextOffset, flPerkYTextOffset);
-				surface()->DrawPrintText(unicode, wcslen(unicode));
+					flPerkYTextOffset -= (surface()->GetFontTall(m_hSmallFont) / 2);
+					V_swprintf_safe(unicode, L"Perk x%i", pPlayer->GetSkillValue(PLAYER_SKILL_HUMAN_BLOOD_RAGE));
+					vgui::surface()->DrawSetTextPos(perk_icon_x + perk_icon_w + flPerkXTextOffset, flPerkYTextOffset);
+					surface()->DrawPrintText(unicode, wcslen(unicode));
 
-				flPerkYOffset -= (perk_icon_h + 1.0f);
-				flPerkYTextOffset = flPerkYOffset + (perk_icon_h / 2);
+					flPerkYOffset -= (perk_icon_h + 1.0f);
+					flPerkYTextOffset = flPerkYOffset + (perk_icon_h / 2);
+				}
+
+				if (pPlayer->IsPerkFlagActive(PERK_HUMAN_GUNSLINGER))
+				{
+					surface()->DrawSetColor(GetFgColor());
+					surface()->DrawSetTexture(m_nTexture_Perk[2]);
+					surface()->DrawTexturedRect(perk_icon_x, flPerkYOffset, perk_icon_x + perk_icon_w, flPerkYOffset + perk_icon_h);
+
+					flPerkYTextOffset -= (surface()->GetFontTall(m_hSmallFont) / 2);
+					V_swprintf_safe(unicode, L"Perk x%i", pPlayer->GetSkillValue(PLAYER_SKILL_HUMAN_GUNSLINGER));
+					vgui::surface()->DrawSetTextPos(perk_icon_x + perk_icon_w + flPerkXTextOffset, flPerkYTextOffset);
+					surface()->DrawPrintText(unicode, wcslen(unicode));
+
+					flPerkYOffset -= (perk_icon_h + 1.0f);
+					flPerkYTextOffset = flPerkYOffset + (perk_icon_h / 2);
+				}
 			}
 		}
 
@@ -536,12 +571,7 @@ void CHudProfileStats::Paint()
 		{
 			if (m_bIsZombie)
 			{
-				float teamBonusX = misc_x, teamBonusY = misc_y - surface()->GetFontTall(m_hSmallFont), teamBonusTextY = misc_y + (perk_icon_h / 2) - surface()->GetFontTall(m_hSmallFont);
-				if (bCanRespawnAsHuman)
-				{
-					teamBonusY -= surface()->GetFontTall(m_hSmallFont);
-					teamBonusTextY -= surface()->GetFontTall(m_hSmallFont);
-				}
+				float teamBonusX = xposZombie, teamBonusY = yposZombie - surface()->GetFontTall(m_hSmallFont), teamBonusTextY = yposZombie + (perk_icon_h / 2) - surface()->GetFontTall(m_hSmallFont);
 
 				surface()->DrawSetColor(GetFgColor());
 				surface()->DrawSetTexture(m_nTexture_Bonus);

@@ -59,6 +59,8 @@ struct DataGamemodeItem_Shared_t
 	int iXPGameWinDeathmatch;
 
 	int iKillsRequiredToPerk;
+	int iZombieCreditsRequiredToRage;
+
 	int iDefaultZombieCredits;
 	float flAmmoResupplyTime;
 };
@@ -171,6 +173,15 @@ struct DataPlayerItem_Zombies_Skills_t
 	float flLifeLeech;
 	float flHealthRegen;
 	float flMassInvasion;
+};
+
+struct DataPlayerItem_ZombieRageMode_t
+{
+	float flHealth;
+	float flHealthRegen;
+	float flSpeed;
+	float flJump;
+	float flLeap;
 };
 
 struct DataPlayerItem_Shared_WeaponInfo_t
@@ -335,6 +346,7 @@ public:
 	DataPlayerItem_MiscSkillInfo_t GetPlayerMiscSkillData(void) const;
 	DataPlayerItem_Humans_Skills_t GetPlayerHumanSkillData(void) const;
 	DataPlayerItem_Zombies_Skills_t GetPlayerZombieSkillData(void) const;
+	DataPlayerItem_ZombieRageMode_t GetPlayerZombieRageData(void) const;
 	DataPlayerItem_Survivor_Shared_t GetSurvivorDataForIndex(int index) const;
 	DataPlayerItem_Player_PowerupItem_t GetPlayerPowerupData(const char *powerupName) const;
 	DataPlayerItem_Player_PowerupItem_t GetPlayerPowerupData(int powerupFlag) const;
@@ -396,6 +408,7 @@ private:
 	DataPlayerItem_MiscSkillInfo_t pszPlayerMiscSkillData;
 	DataPlayerItem_Humans_Skills_t pszHumanSkillData;
 	DataPlayerItem_Zombies_Skills_t pszZombieSkillData;
+	DataPlayerItem_ZombieRageMode_t pszZombieRageModeData;
 	CUtlVector<DataPlayerItem_Player_Shared_t> pszPlayerData;
 	CUtlVector<DataPlayerItem_Survivor_Shared_t> pszPlayerSurvivorData;
 	CUtlVector<DataPlayerItem_Shared_WeaponInfo_t> pszPlayerWeaponData;

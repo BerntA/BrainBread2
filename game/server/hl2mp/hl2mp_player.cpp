@@ -622,10 +622,17 @@ void CHL2MP_Player::PerformPlayerUpdate(void)
 
 		m_BB2Local.m_iPerkTeamBonus = iPlayersFound;
 
-		if (IsHuman() && IsAlive())
+		if (IsAlive())
 		{
-			m_BB2Local.m_bCanActivatePerk = (!GetPerkFlags() && (m_iNumPerkKills >= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iKillsRequiredToPerk)
-				&& ((GetSkillValue(PLAYER_SKILL_HUMAN_REALITY_PHASE) > 0) || (GetSkillValue(PLAYER_SKILL_HUMAN_BLOOD_RAGE) > 0) || (GetSkillValue(PLAYER_SKILL_HUMAN_GUNSLINGER) > 0)));
+			if (IsHuman())
+			{
+				m_BB2Local.m_bCanActivatePerk = (!GetPerkFlags() && (m_iNumPerkKills >= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iKillsRequiredToPerk)
+					&& ((GetSkillValue(PLAYER_SKILL_HUMAN_REALITY_PHASE) > 0) || (GetSkillValue(PLAYER_SKILL_HUMAN_BLOOD_RAGE) > 0) || (GetSkillValue(PLAYER_SKILL_HUMAN_GUNSLINGER) > 0)));
+			}
+			else if (IsZombie())
+			{
+				m_BB2Local.m_bCanActivatePerk = (!GetPerkFlags() && (m_BB2Local.m_iZombieCredits >= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iZombieCreditsRequiredToRage));
+			}
 		}
 	}
 	else
@@ -1496,6 +1503,56 @@ bool CHL2MP_Player::ActivatePerk(int skill)
 	return true;
 }
 
+bool CHL2MP_Player::EnterRageMode(void) // Zombie 'Perk' thing. (lasts until death)
+{
+	if (
+		!IsZombie() || !IsAlive() || (GetPerkFlags() != 0) || 
+		(m_BB2Local.m_iZombieCredits < GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iZombieCreditsRequiredToRage) || (!HL2MPRules()->CanUseSkills())
+		)
+		return false;
+
+	m_BB2Local.m_iZombieCredits -= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iZombieCreditsRequiredToRage;
+	m_BB2Local.m_bCanActivatePerk = false;
+
+	int health = round(GetSkillValue("Health", PLAYER_SKILL_ZOMBIE_HEALTH, TEAM_DECEASED)) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flHealth;
+	SetHealth(health);
+	SetMaxHealth(health);
+	SetPlayerSpeed(GetSkillValue("Speed", PLAYER_SKILL_ZOMBIE_SPEED, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flSpeed);
+	SetLeapLength(GetSkillValue("Leap", PLAYER_SKILL_ZOMBIE_LEAP, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flLeap);
+	SetJumpHeight(GetSkillValue("Jump", PLAYER_SKILL_ZOMBIE_JUMP, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flJump);
+	SetHealthRegenAmount(GetSkillValue("HealthRegen", PLAYER_SKILL_ZOMBIE_HEALTH_REGEN, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flHealthRegen);
+	RefreshSpeed();
+
+	AddPerkFlag(PERK_ZOMBIE_RAGE);
+	DispatchParticleEffect("bb2_perk_activate", PATTACH_ROOTBONE_FOLLOW, this, -1, true);
+	return true;
+}
+
+// If we're active in some external mode, ex rage mode / perk and use the skill tree then we might want to sum extra values to the skill values, 
+// ex speed during rage mode for zombies, using the skill tree before would reset your speed to the base skill speed, not taking the 'rage' speed into account, compensate for it here...
+float CHL2MP_Player::GetExtraPerkData(int type) 
+{
+	if (IsPerkFlagActive(PERK_ZOMBIE_RAGE))
+	{
+		switch (type)
+		{
+		case PLAYER_SKILL_ZOMBIE_SPEED:
+			return GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flSpeed;
+
+		case PLAYER_SKILL_ZOMBIE_JUMP:
+			return GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flJump;
+
+		case PLAYER_SKILL_ZOMBIE_LEAP:
+			return GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flLeap;
+
+		case PLAYER_SKILL_ZOMBIE_HEALTH_REGEN:
+			return GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flHealthRegen;
+		}
+	}
+
+	return 0.0f;
+}
+
 bool CHL2MP_Player::CanEnablePowerup(int powerupFlag, float duration)
 {
 	if (GetPerkFlags() || !HL2MPRules()->IsPowerupsAllowed())
@@ -2026,6 +2083,8 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 
 		if (m_bCanApplyChanges)
 		{
+			float extraData = GetExtraPerkData(iSkillType);
+
 			switch (iSkillType)
 			{
 			case PLAYER_SKILL_ZOMBIE_HEALTH:
@@ -2044,23 +2103,23 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 			}
 			case PLAYER_SKILL_ZOMBIE_SPEED:
 			{
-				SetPlayerSpeed(GetSkillValue("Speed", PLAYER_SKILL_ZOMBIE_SPEED, TEAM_DECEASED));
+				SetPlayerSpeed(GetSkillValue("Speed", iSkillType, TEAM_DECEASED) + extraData);
 				RefreshSpeed();
 				break;
 			}
 			case PLAYER_SKILL_ZOMBIE_JUMP:
 			{
-				SetJumpHeight(GetSkillValue("Jump", PLAYER_SKILL_ZOMBIE_JUMP, TEAM_DECEASED));
+				SetJumpHeight(GetSkillValue("Jump", iSkillType, TEAM_DECEASED) + extraData);
 				break;
 			}
 			case PLAYER_SKILL_ZOMBIE_LEAP:
 			{
-				SetLeapLength(GetSkillValue("Leap", PLAYER_SKILL_ZOMBIE_LEAP, TEAM_DECEASED));
+				SetLeapLength(GetSkillValue("Leap", iSkillType, TEAM_DECEASED) + extraData);
 				break;
 			}
 			case PLAYER_SKILL_ZOMBIE_HEALTH_REGEN:
 			{
-				SetHealthRegenAmount(GetSkillValue("HealthRegen", PLAYER_SKILL_ZOMBIE_HEALTH_REGEN, TEAM_DECEASED));
+				SetHealthRegenAmount(GetSkillValue("HealthRegen", iSkillType, TEAM_DECEASED) + extraData);
 				break;
 			}
 			}
@@ -3455,6 +3514,15 @@ CON_COMMAND(activate_perk_proficiency, "Activate Proficiency Perk")
 		return;
 
 	pClient->ActivatePerk(PLAYER_SKILL_HUMAN_GUNSLINGER);
+}
+
+CON_COMMAND(activate_zombie_rage, "Activate Zombie Rage Perk")
+{
+	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
+	if (!pClient)
+		return;
+
+	pClient->EnterRageMode();
 }
 
 CON_COMMAND(holster_weapon, "Holster your weapon.")

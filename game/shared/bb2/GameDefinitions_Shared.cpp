@@ -155,6 +155,16 @@ bool CGameDefinitionsShared::LoadData(void)
 			pszZombieSkillData.flMassInvasion = pkvSkills->GetFloat("MassInvasion", 1.0f);
 		}
 
+		pkvSkills = pkvParseData->FindKey("ZombieRageMode");
+		if (pkvSkills)
+		{
+			pszZombieRageModeData.flHealth = pkvSkills->GetFloat("Health", 50.0f);
+			pszZombieRageModeData.flHealthRegen = pkvSkills->GetFloat("HealthRegen", 5.0f);
+			pszZombieRageModeData.flSpeed = pkvSkills->GetFloat("Speed", 25.0f);
+			pszZombieRageModeData.flJump = pkvSkills->GetFloat("Jump", 5.0f);
+			pszZombieRageModeData.flLeap = pkvSkills->GetFloat("Leap", 5.0f);
+		}
+
 		pkvSkills = pkvParseData->FindKey("MiscSkillInfo");
 		if (pkvSkills)
 		{
@@ -350,6 +360,8 @@ bool CGameDefinitionsShared::LoadData(void)
 		pszGamemodeData.iXPGameWinDeathmatch = pkvParseData->GetInt("game_win_deathmatch", 500);
 
 		pszGamemodeData.iKillsRequiredToPerk = pkvParseData->GetInt("perk_kills_required", 50);
+		pszGamemodeData.iZombieCreditsRequiredToRage = pkvParseData->GetInt("rage_credits_required", 10);
+
 		pszGamemodeData.iDefaultZombieCredits = pkvParseData->GetInt("zombie_credits_start", 10);
 		pszGamemodeData.flAmmoResupplyTime = pkvParseData->GetFloat("ammo_resupply_time", 30.0f);
 
@@ -474,7 +486,7 @@ bool CGameDefinitionsShared::LoadData(void)
 				for (KeyValues *sub = pkvBloodField->GetFirstSubKey(); sub; sub = sub->GetNextKey())
 				{
 					DataExplosiveItem_t item;
-					item.iType = atoi(sub->GetName());		
+					item.iType = atoi(sub->GetName());
 					Q_strncpy(item.szParticle, sub->GetString("Particle"), MAX_MAP_NAME);
 					item.flRadius = sub->GetFloat("Radius");
 					item.flPlayerDamage = sub->GetFloat("PlayerDamage");
@@ -811,6 +823,11 @@ DataPlayerItem_Humans_Skills_t CGameDefinitionsShared::GetPlayerHumanSkillData(v
 DataPlayerItem_Zombies_Skills_t CGameDefinitionsShared::GetPlayerZombieSkillData(void) const
 {
 	return pszZombieSkillData;
+}
+
+DataPlayerItem_ZombieRageMode_t CGameDefinitionsShared::GetPlayerZombieRageData(void) const
+{
+	return pszZombieRageModeData;
 }
 
 DataPlayerItem_Survivor_Shared_t CGameDefinitionsShared::GetSurvivorDataForIndex(int index) const
@@ -1821,6 +1838,6 @@ DataPenetrationItem_t *GetPenetrationDataForMaterial(unsigned short material)
 		if (PENETRATION_DATA_LIST[i].material == material)
 			return &PENETRATION_DATA_LIST[i];
 	}
-	
+
 	return NULL;
 }
