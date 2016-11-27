@@ -235,6 +235,7 @@ CON_COMMAND(workshop_help, "Display some help & tips related to gameserver works
 	Msg("workshop_download_item <publishedID> - Downloads the specified item.\n");
 	Msg("workshop_download_collection <collectionID> - Downloads an entire collection of workshop items.\n");
 	Msg("workshop_update_items - Updates all of your downloaded items.\n");
+	Msg("Whenever you download or update workshop items make sure to restart the server so that the items will load properly!\n");
 }
 
 CON_COMMAND(workshop_download_item, "Download some item on the workshop.")

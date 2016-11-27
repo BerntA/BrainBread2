@@ -20,6 +20,7 @@
 #define PANEL_ZOMBIE        "zombie"
 #define PANEL_TEAM          "team"
 #define PANEL_ENDSCORE      "end_score"
+#define PANEL_ENDVOTE       "end_vote"
 #define PANEL_KEYPAD        "keypad"
 #define PANEL_SPECGUI		"specgui"	// passive spectator elements (top/bottom bars)
 #define PANEL_INFO			"info"

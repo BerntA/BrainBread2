@@ -112,6 +112,7 @@ ConVar bb2_vote_disable_map("bb2_vote_disable_map", "0", FCVAR_REPLICATED, "Disa
 ConVar bb2_vote_required_percentage("bb2_vote_required_percentage", "70", FCVAR_REPLICATED, "The percent of yes votes required to pass a vote.", true, 0.0f, true, 100.0f);
 ConVar bb2_vote_required_level("bb2_vote_required_level", "15", FCVAR_REPLICATED, "In Objective, Story & Arena this is the minimum level a player must be in order to create votes.", true, 0.0f, true, 500.0f);
 ConVar bb2_vote_time("bb2_vote_time", "30", FCVAR_REPLICATED, "The time in seconds until the vote ends.", true, 10.0f, true, 120.0f);
+ConVar bb2_vote_time_endgame("bb2_vote_time_endgame", "10", FCVAR_REPLICATED, "When the game ends the players will have this much time to vote for the next map.", true, 10.0f, true, 30.0f);
 ConVar bb2_vote_frequency_time("bb2_vote_frequency_time", "60", FCVAR_REPLICATED, "The time in seconds until players can vote again.", true, 10.0f, true, 120.0f);
 ConVar bb2_ban_time("bb2_ban_time", "30", FCVAR_REPLICATED, "For how many minutes will a player be banned if a ban vote passes?", true, 0.0f, false, 0.0f);
 

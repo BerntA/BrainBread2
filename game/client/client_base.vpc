@@ -298,6 +298,8 @@ $Project
 			$File "bb2/ComboImageList.h"
 			$File "bb2/ComboList.cpp"
 			$File "bb2/ComboList.h"
+			$File "bb2/MapVoteItem.cpp"
+			$File "bb2/MapVoteItem.h"
 			$File "bb2/ScoreBoardSectionPanel.cpp"
 			$File "bb2/ScoreBoardSectionPanel.h"			
 		}
@@ -322,6 +324,8 @@ $Project
 			$File "bb2/EndScoreMenu.h"
 			$File "bb2/ScoreBoardPanel.cpp"
 			$File "bb2/ScoreBoardPanel.h"
+			$File "bb2/EndMapVoteMenu.cpp"
+			$File "bb2/EndMapVoteMenu.h"
 			$File "bb2/vote_menu.cpp"
 			$File "bb2/vote_menu.h"
 		}

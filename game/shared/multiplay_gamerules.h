@@ -100,6 +100,7 @@ extern ConVar bb2_vote_disable_map;
 extern ConVar bb2_vote_required_percentage;
 extern ConVar bb2_vote_required_level;
 extern ConVar bb2_vote_time;
+extern ConVar bb2_vote_time_endgame;
 extern ConVar bb2_vote_frequency_time;
 extern ConVar bb2_ban_time;
 extern ConVar bb2_allow_npc_to_score;

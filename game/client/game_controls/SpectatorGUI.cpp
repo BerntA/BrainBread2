@@ -155,7 +155,7 @@ void CSpectatorGUI::OnThink()
 
 	UpdateSpecInfo();
 
-	m_bShouldHide = !(GameBaseClient->IsViewPortPanelVisible(PANEL_ENDSCORE) || GameBaseClient->IsViewPortPanelVisible(PANEL_SCOREBOARD) || GameBaseClient->IsViewPortPanelVisible(PANEL_INFO) || GameBaseClient->IsViewPortPanelVisible(PANEL_TEAM));
+	m_bShouldHide = !(GameBaseClient->IsViewPortPanelVisible(PANEL_ENDSCORE) || GameBaseClient->IsViewPortPanelVisible(PANEL_ENDVOTE) || GameBaseClient->IsViewPortPanelVisible(PANEL_SCOREBOARD) || GameBaseClient->IsViewPortPanelVisible(PANEL_INFO) || GameBaseClient->IsViewPortPanelVisible(PANEL_TEAM));
 
 	m_pPlayerLabel->SetContentAlignment(Label::Alignment::a_center);
 	m_pPlayerLabel->SetPos(0, h - scheme()->GetProportionalScaledValue(24));

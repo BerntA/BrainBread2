@@ -125,9 +125,9 @@ void CHudTimeView::Paint()
 	Color baseTimerColor = GetFgColor();
 	int timer = HL2MPRules()->GetTimeLeft();
 
-	if (GetSecondsFromTimeByPercentage(10) > timer)
+	if (GetSecondsFromTimeByPercentage(20) > timer)
 		baseTimerColor = Color(255, 0, 0, iAlpha);
-	else if (GetSecondsFromTimeByPercentage(20) > timer)
+	else if (GetSecondsFromTimeByPercentage(40) > timer)
 		baseTimerColor = Color(255, 255, 0, iAlpha);
 
 	surface()->DrawSetTexture(m_nTextureTimeLeft);

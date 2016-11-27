@@ -60,6 +60,17 @@ enum BB2_SoundTypes // Current available types ( npcs )... Custom & Unknown will
 	TYPE_CUSTOM,
 };
 
+enum BB2_EndMapVoteTypes
+{
+	ENDMAP_VOTE_OBJECTIVE = 1,
+	ENDMAP_VOTE_ARENA,
+	ENDMAP_VOTE_ELIMINATION,
+	ENDMAP_VOTE_DEATHMATCH,
+	ENDMAP_VOTE_RETRY,
+	ENDMAP_VOTE_REFRESH,
+	ENDMAP_VOTE_TYPES_MAX = 6,
+};
+
 #ifdef CLIENT_DLL
 	#define CHL2MPRules C_HL2MPRules
 	#define CHL2MPGameRulesProxy C_HL2MPGameRulesProxy
@@ -188,6 +199,8 @@ public:
 	const HL2MPViewVectors* GetHL2MPViewVectors() const;
 
 	int GetTeamSize(int team);
+	int GetPlayersInGame(void);
+
 	const char *GetNameForCombatCharacter(int index);
 
 	// Vote System:
@@ -196,8 +209,12 @@ public:
 	CNetworkVar(int, m_iCurrentNoVotes);
 	CNetworkVar(float, m_flTimeUntilVoteEnds);
 	CNetworkVar(float, m_flTimeVoteStarted);
+
+	// Game End Map Vote System:
+	CNetworkArray(int, m_iEndMapVotesForType, ENDMAP_VOTE_TYPES_MAX);
 	
 #ifndef CLIENT_DLL
+	// User vote system:
 	int m_iAmountOfVoters;
 	int m_iUserIDToKickOrBan;
 	float m_flNextVoteTime;
@@ -212,6 +229,18 @@ public:
 	void SetupVote(int indexOfVoter);
 	void PlayerVote(CBasePlayer *pPlayer, bool bYes);
 	void DispatchVoteEvent(int indexOfVoter, int targetIndex, bool bVoteEnd = false);
+
+	// End game map vote system:
+	void GameEndVoteThink(void);
+	void StartEndMapVote(bool bRefresh = false);
+	void ResetEndMapVoting(void);
+	void RecalculateEndMapVotes(void);
+	int GetVoteTypeWithMostVotes(void);
+	const char *GetRandomMapForVoteSys(int mode);
+	char pchMapOptions[4][MAX_MAP_NAME];
+	float m_flEndVoteTimeEnd;
+	int m_iEndVotePlayerChoices[MAX_PLAYERS];
+	bool m_bEndMapVotingEnabled;
 
 	void EmitSoundToClient(CBaseEntity *pAnnouncer, const char *szOriginalSound, int iType, bool bGenderMale, int playerIndex = 0);
 	void DisplayScores(int iWinner = TEAM_HUMANS);

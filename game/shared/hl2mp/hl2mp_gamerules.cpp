@@ -150,6 +150,8 @@ BEGIN_NETWORK_TABLE_NOBASE( CHL2MPRules, DT_HL2MPRules )
 	RecvPropInt(RECVINFO(m_iCurrentNoVotes)),
 	RecvPropFloat( RECVINFO( m_flTimeUntilVoteEnds ) ),
 	RecvPropFloat(RECVINFO(m_flTimeVoteStarted)),
+
+	RecvPropArray3(RECVINFO_ARRAY(m_iEndMapVotesForType), RecvPropInt(RECVINFO(m_iEndMapVotesForType[0]))),
 #else
 	SendPropInt(SENDINFO(m_iCurrentGamemode), 3, SPROP_UNSIGNED),
 	SendPropBool(SENDINFO(m_bRoundStarted)),
@@ -165,6 +167,8 @@ BEGIN_NETWORK_TABLE_NOBASE( CHL2MPRules, DT_HL2MPRules )
 	SendPropInt(SENDINFO(m_iCurrentNoVotes), 5, SPROP_UNSIGNED),
 	SendPropFloat(SENDINFO(m_flTimeUntilVoteEnds)),
 	SendPropFloat(SENDINFO(m_flTimeVoteStarted)),
+
+	SendPropArray3(SENDINFO_ARRAY3(m_iEndMapVotesForType), SendPropInt(SENDINFO_ARRAY(m_iEndMapVotesForType), 4, SPROP_UNSIGNED)),
 #endif
 
 	END_NETWORK_TABLE()
@@ -355,6 +359,8 @@ CHL2MPRules::CHL2MPRules()
 	m_iUserIDToKickOrBan = 0;
 	pchMapToChangeTo[0] = 0;
 
+	ResetEndMapVoting();
+
 	char pszFullPath[80];
 	Q_snprintf(pszFullPath, 80, "maps/%s.bsp", szCurrentMap);
 	if (filesystem->FileExists(pszFullPath, "MOD"))
@@ -462,6 +468,31 @@ int CHL2MPRules::GetTeamSize(int team)
 
 		if (pPlayer->GetSelectedTeam() == team)
 			playerCount++;
+#endif
+	}
+
+	return playerCount;
+}
+
+int CHL2MPRules::GetPlayersInGame(void)
+{
+#ifdef CLIENT_DLL
+	if (!g_PR)
+		return 0;
+#endif
+
+	int playerCount = 0;
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+#ifdef CLIENT_DLL
+		if (g_PR->IsConnected(i))
+			playerCount++;
+#else
+		CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+		if (!pPlayer)
+			continue;
+
+		playerCount++;
 #endif
 	}
 
@@ -652,6 +683,9 @@ void CHL2MPRules::DisplayScores(int iWinner)
 		gameeventmanager->FireEvent(event);
 	}
 
+	KeyValues *data = new KeyValues("data");
+	data->SetInt("winner", iWinner);
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
@@ -664,12 +698,10 @@ void CHL2MPRules::DisplayScores(int iWinner)
 			continue;
 
 		GetRewardFromRoundWin(pPlayer, iWinner, false);
-
-		KeyValues *data = new KeyValues("data");
-		data->SetInt("winner", iWinner);
 		pPlayer->ShowViewPortPanel(PANEL_ENDSCORE, true, data);
-		data->deleteThis();
 	}
+
+	data->deleteThis();
 }
 
 void CHL2MPRules::NewRoundInit(int iPlayersInGame)
@@ -1446,6 +1478,227 @@ void CHL2MPRules::DispatchVoteEvent(int indexOfVoter, int targetIndex, bool bVot
 		gameeventmanager->FireEvent(event);
 	}
 }
+
+void CHL2MPRules::GameEndVoteThink(void)
+{
+	if (!g_fGameOver)
+		return;
+
+	if (m_flIntermissionEndTime < gpGlobals->curtime)
+	{
+		if (!m_bChangelevelDone)
+		{
+			for (int i = 1; i <= gpGlobals->maxClients; i++)
+			{
+				CHL2MP_Player *pPlayer = (CHL2MP_Player*)UTIL_PlayerByIndex(i);
+				if (!pPlayer)
+					continue;
+
+				pPlayer->Reset();
+				pPlayer->ShowViewPortPanel(PANEL_ENDSCORE, false);
+			}
+
+			if (GetPlayersInGame() > 0)
+				StartEndMapVote();
+			else
+				ChangeLevel();
+
+			m_bChangelevelDone = true;
+		}
+		else if (m_bEndMapVotingEnabled)
+		{
+			if (m_flEndVoteTimeEnd < gpGlobals->curtime)
+			{				
+				bool bDoReset = true;
+				int voteChoice = GetVoteTypeWithMostVotes();
+
+				switch (voteChoice)
+				{
+
+				case ENDMAP_VOTE_OBJECTIVE:
+				{
+					GameBaseServer()->DoMapChange(pchMapOptions[0]);
+					break;
+				}
+
+				case ENDMAP_VOTE_ARENA:
+				{
+					GameBaseServer()->DoMapChange(pchMapOptions[1]);
+					break;
+				}
+
+				case ENDMAP_VOTE_ELIMINATION:
+				{
+					GameBaseServer()->DoMapChange(pchMapOptions[2]);
+					break;
+				}
+
+				case ENDMAP_VOTE_DEATHMATCH:
+				{
+					GameBaseServer()->DoMapChange(pchMapOptions[3]);
+					break;
+				}
+
+				case ENDMAP_VOTE_RETRY:
+				{
+					GameBaseServer()->DoMapChange(szCurrentMap);
+					break;
+				}
+
+				case ENDMAP_VOTE_REFRESH:
+				{
+					bDoReset = false;
+					StartEndMapVote(true);
+					break;
+				}
+
+				default: // No one voted... 
+				{
+					ChangeLevel();
+					break;
+				}
+
+				}
+
+				if (bDoReset)
+					ResetEndMapVoting();
+			}
+		}
+	}
+}
+
+void CHL2MPRules::StartEndMapVote(bool bRefresh)
+{
+	ResetEndMapVoting();
+
+	m_bEndMapVotingEnabled = true;
+	m_flEndVoteTimeEnd = gpGlobals->curtime + bb2_vote_time_endgame.GetFloat();
+
+	Q_strncpy(pchMapOptions[0], GetRandomMapForVoteSys(MODE_OBJECTIVE), MAX_MAP_NAME);
+	Q_strncpy(pchMapOptions[1], GetRandomMapForVoteSys(MODE_ARENA), MAX_MAP_NAME);
+	Q_strncpy(pchMapOptions[2], GetRandomMapForVoteSys(MODE_ELIMINATION), MAX_MAP_NAME);
+	Q_strncpy(pchMapOptions[3], GetRandomMapForVoteSys(MODE_DEATHMATCH), MAX_MAP_NAME);
+
+	KeyValues *data = new KeyValues("data");
+	data->SetBool("refresh", bRefresh);
+
+	data->SetString("map1", pchMapOptions[0]);
+	data->SetString("map2", pchMapOptions[1]);
+	data->SetString("map3", pchMapOptions[2]);
+	data->SetString("map4", pchMapOptions[3]);
+
+	data->SetFloat("timeleft", m_flEndVoteTimeEnd);
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+		if (!pPlayer)
+			continue;
+
+		if (pPlayer->IsBot())
+			continue;
+
+		pPlayer->ShowViewPortPanel(PANEL_ENDVOTE, true, data);
+	}
+
+	data->deleteThis();
+}
+
+void CHL2MPRules::ResetEndMapVoting(void)
+{
+	m_bEndMapVotingEnabled = false;
+	m_flEndVoteTimeEnd = 0.0f;
+
+	for (int i = 0; i < MAX_PLAYERS; i++)
+		m_iEndVotePlayerChoices[i] = 0;
+
+	for (int i = 0; i < ENDMAP_VOTE_TYPES_MAX; i++)
+		m_iEndMapVotesForType.Set(i, 0);
+
+	pchMapOptions[0][0] = 0;
+	pchMapOptions[1][0] = 0;
+	pchMapOptions[2][0] = 0;
+	pchMapOptions[3][0] = 0;
+}
+
+void CHL2MPRules::RecalculateEndMapVotes(void)
+{
+	for (int i = 0; i < ENDMAP_VOTE_TYPES_MAX; i++)
+	{
+		int votes = 0;
+		for (int plr = 0; plr < MAX_PLAYERS; plr++)
+		{
+			if (m_iEndVotePlayerChoices[plr] == (i + 1))
+				votes++;
+		}
+
+		m_iEndMapVotesForType.Set(i, votes);
+	}
+}
+
+int CHL2MPRules::GetVoteTypeWithMostVotes(void)
+{
+	CUtlVector<int> pVotesCast;
+	for (int i = 0; i < MAX_PLAYERS; i++)
+	{
+		if ((m_iEndVotePlayerChoices[i] > 0) && (m_iEndVotePlayerChoices[i] <= ENDMAP_VOTE_REFRESH))
+			pVotesCast.AddToTail(m_iEndVotePlayerChoices[i]);
+	}
+
+	int iChoice = 0;
+	for (int i = 0; i < pVotesCast.Count(); i++)
+	{
+		int votesWithType = 0;
+		for (int x = 0; x < pVotesCast.Count(); x++)
+		{
+			if (pVotesCast[i] == pVotesCast[x])
+				votesWithType++;
+		}
+
+		if (votesWithType > iChoice)
+			iChoice = pVotesCast[i];
+	}
+
+	pVotesCast.Purge();
+	return iChoice; 
+}
+
+const char *CHL2MPRules::GetRandomMapForVoteSys(int mode)
+{
+	CUtlVector<char*> pNewMapList;
+	for (int i = 0; i < m_MapList.Count(); i++)
+	{
+		bool bAdd = false;
+		if (Q_stristr(m_MapList[i], "bbc_") && (mode == MODE_OBJECTIVE))
+			bAdd = true;
+		else if (Q_stristr(m_MapList[i], "bba_") && (mode == MODE_ARENA))
+			bAdd = true;
+		else if (Q_stristr(m_MapList[i], "bbe_") && (mode == MODE_ELIMINATION))
+			bAdd = true;
+		else if (Q_stristr(m_MapList[i], "bbd_") && (mode == MODE_DEATHMATCH))
+			bAdd = true;
+
+		if (bAdd)
+			pNewMapList.AddToTail(m_MapList[i]);
+	}
+
+	if (pNewMapList.Count() <= 0)
+		return ""; 
+
+	int index = random->RandomInt(0, (pNewMapList.Count() - 1));
+	if (pNewMapList.Count() > 1)
+	{
+		while (!strcmp(szCurrentMap, pNewMapList[index]))
+			index = random->RandomInt(0, (pNewMapList.Count() - 1));
+	}
+
+	char pchOut[MAX_MAP_NAME];
+	Q_strncpy(pchOut, pNewMapList[index], MAX_MAP_NAME);
+	pNewMapList.RemoveAll();
+
+	const char *mapName = pchOut;
+	return mapName;
+}
 #endif
 
 void CHL2MPRules::Think( void )
@@ -1456,30 +1709,10 @@ void CHL2MPRules::Think( void )
 
 	VoteSystemThink();
 	GameModeSharedThink();
+	GameEndVoteThink();
 
-	if ( g_fGameOver )   // someone else quit the game already
-	{
-		// check to see if we should change levels now
-		if ( m_flIntermissionEndTime < gpGlobals->curtime )
-		{
-			if ( !m_bChangelevelDone )
-			{
-				for (int i = 1; i <= gpGlobals->maxClients; i++ )
-				{
-					CHL2MP_Player *pPlayer = (CHL2MP_Player*) UTIL_PlayerByIndex( i );
-					if ( !pPlayer )
-						continue;
-
-					pPlayer->Reset();
-				}
-
-				ChangeLevel(); // intermission is over
-				m_bChangelevelDone = true;
-			}
-		}
-
+	if (g_fGameOver)
 		return;
-	}
 
 	if ( gpGlobals->curtime > m_tmNextPeriodicThink )
 	{		
@@ -1515,6 +1748,10 @@ void CHL2MPRules::GoToIntermission(int iWinner)
 		gameeventmanager->FireEvent(event);
 	}
 
+	KeyValues *data = new KeyValues("data");
+	data->SetInt("winner", iWinner);
+	data->SetBool("timeRanOut", (GetTimeLeft() <= 0.0f));
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
@@ -1527,12 +1764,7 @@ void CHL2MPRules::GoToIntermission(int iWinner)
 			continue;
 
 		GetRewardFromRoundWin(pPlayer, iWinner, true);
-
-		KeyValues *data = new KeyValues("data");
-		data->SetInt("winner", iWinner);
-		data->SetBool("timeRanOut", (GetTimeLeft() <= 0.0f));
 		pPlayer->ShowViewPortPanel(PANEL_ENDSCORE, true, data);
-		data->deleteThis();
 
 		// Tell our clients that they should do a 'last' save of their stats if we're allowed to save and if the client has loaded his stats. (so we don't overwrite his current stats)
 		GameBaseShared()->GetAchievementManager()->SaveGlobalStats(pPlayer);
@@ -1540,6 +1772,7 @@ void CHL2MPRules::GoToIntermission(int iWinner)
 		pPlayer->HandleLocalProfile(true);
 	}
 
+	data->deleteThis();
 	GameBaseShared()->OnGameOver(GetTimeLeft(), iWinner);
 #endif
 }
@@ -2250,6 +2483,13 @@ bool CHL2MPRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 	CHL2MP_Player *pPlayer = (CHL2MP_Player *) pEdict;
 	if ( pPlayer->ClientCommand( args ) )
 		return true;
+
+	if (pPlayer && FStrEq(args[0], "player_vote_endmap_choice") && (args.ArgC() == 2) && m_bEndMapVotingEnabled)
+	{
+		m_iEndVotePlayerChoices[pPlayer->entindex()] = atoi(args[1]);
+		RecalculateEndMapVotes();
+		return true;
+	}
 #endif
 
 	return false;

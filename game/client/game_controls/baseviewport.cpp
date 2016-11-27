@@ -45,6 +45,7 @@
 #include "voice_menu.h"
 #include "team_menu.h"
 #include "EndScoreMenu.h"
+#include "EndMapVoteMenu.h"
 #include "hl2mp_gamerules.h"
 #include "GameBase_Client.h"
 
@@ -268,6 +269,7 @@ void CBaseViewport::CreateDefaultPanels( void )
 	AddNewPanel(CreatePanelByName(PANEL_VOICEWHEEL), "PANEL_VOICEWHEEL");
 	AddNewPanel(CreatePanelByName(PANEL_TEAM), "PANEL_TEAM");
 	AddNewPanel(CreatePanelByName(PANEL_ENDSCORE), "PANEL_ENDSCORE");
+	AddNewPanel(CreatePanelByName(PANEL_ENDVOTE), "PANEL_ENDVOTE");
 	AddNewPanel( CreatePanelByName( PANEL_KEYPAD ), "PANEL_KEYPAD" );
 #endif
 }
@@ -323,6 +325,10 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 	else if (Q_strcmp(PANEL_ENDSCORE, szPanelName) == 0)
 	{
 		newpanel = new CEndScoreMenu(this);
+	}
+	else if (Q_strcmp(PANEL_ENDVOTE, szPanelName) == 0)
+	{
+		newpanel = new CEndMapVoteMenu(this);
 	}
 	else if ( Q_strcmp(PANEL_SPECGUI, szPanelName) == 0 )
 	{
