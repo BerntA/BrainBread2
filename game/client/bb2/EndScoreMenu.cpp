@@ -170,7 +170,7 @@ void CEndScoreMenu::SetupLayout(bool bReset, int iWinner, bool bTimeRanOut)
 	}
 	}
 
-	if (bTimeRanOut)
+	if (bTimeRanOut && (gamemode != MODE_DEATHMATCH) && (gamemode != MODE_ELIMINATION))
 		labelText = "#VGUI_GameOver_NoTime";
 
 	if (gamemode == MODE_DEATHMATCH)

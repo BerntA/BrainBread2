@@ -102,6 +102,7 @@ CON_COMMAND( showpanel, "Shows a viewport panel <name>" )
 		!strcmp(args[1], PANEL_SKILL) || 
 		!strcmp(args[1], PANEL_ZOMBIE) || 
 		!strcmp(args[1], PANEL_TEAM) ||
+		!strcmp(args[1], PANEL_ENDVOTE) ||
 		!strcmp(args[1], PANEL_VOICEWHEEL))
 		return;
 		

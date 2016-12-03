@@ -135,7 +135,7 @@ private:
 	CPanelAnimationVarAliasType( float, voice_icon_tall, "icon_tall", "16", "proportional_float" );
 	CPanelAnimationVarAliasType( float, voice_icon_wide, "icon_wide", "16", "proportional_float" );
 
-	CPanelAnimationVarAliasType( bool, show_dead_icon, "show_dead_icon", "1", "bool" );
+	CPanelAnimationVarAliasType( bool, show_dead_icon, "show_dead_icon", "0", "bool" );
 	CPanelAnimationVarAliasType( float, dead_icon_ypos, "dead_ypos", "0", "proportional_float" );
 	CPanelAnimationVarAliasType( float, dead_icon_xpos, "dead_xpos", "0", "proportional_float" );
 	CPanelAnimationVarAliasType( float, dead_icon_tall, "dead_tall", "16", "proportional_float" );
