@@ -24,7 +24,7 @@ int GetAmmoCountMultiplier(int wepType)
 	return 2;
 }
 
-bool CanReplenishAmmo(CBasePlayer *pPlayer, const char *linkedWeapons[], int size, bool bSecondaryType = false, bool bSuppressSound = false)
+bool CanReplenishAmmo(const char *ammoClassname, CBasePlayer *pPlayer, int amountOverride, bool bSecondaryType = false, bool bSuppressSound = false)
 {
 	if (!pPlayer)
 		return false;
@@ -36,30 +36,20 @@ bool CanReplenishAmmo(CBasePlayer *pPlayer, const char *linkedWeapons[], int siz
 		if (!pWeapon)
 			continue;
 
-		bool bFoundWeapon = false;
-		for (int iWep = 0; iWep < size; iWep++)
-		{
-			if (FClassnameIs(pWeapon, linkedWeapons[iWep]))
-			{
-				bFoundWeapon = true;
-				break;
-			}
-		}
-
-		if (!bFoundWeapon)
+		if (strcmp(pWeapon->GetAmmoEntityLink(), ammoClassname))
 			continue;
 
 		int wepType = pWeapon->GetWeaponType();
 		int ammoCount = 0;
 		if (bSecondaryType)
 		{
-			ammoCount = (pWeapon->GetMaxClip2() * GetAmmoCountMultiplier(wepType));
+			ammoCount = ((amountOverride > 0) ? amountOverride : (pWeapon->GetMaxClip2() * GetAmmoCountMultiplier(wepType)));
 			if (pPlayer->GiveAmmo(ammoCount, pWeapon->GetSecondaryAmmoType(), bSuppressSound))
 				bReceived = true;
 		}
 		else
 		{
-			ammoCount = (pWeapon->GetMaxClip1() * GetAmmoCountMultiplier(wepType));
+			ammoCount = ((amountOverride > 0) ? amountOverride : (pWeapon->GetMaxClip1() * GetAmmoCountMultiplier(wepType)));
 			if (pPlayer->GiveAmmo(ammoCount, pWeapon->GetPrimaryAmmoType(), bSuppressSound))
 				bReceived = true;
 		}
@@ -68,21 +58,69 @@ bool CanReplenishAmmo(CBasePlayer *pPlayer, const char *linkedWeapons[], int siz
 	return bReceived;
 }
 
-class CAmmoPistol : public CItem
+class CAmmoItemBase : public CItem
 {
 public:
-	DECLARE_CLASS(CAmmoPistol, CItem);
+	DECLARE_CLASS(CAmmoItemBase, CItem);
 
-	CAmmoPistol()
+	CAmmoItemBase()
 	{
 		color32 col32 = { 135, 206, 250, 240 };
 		m_GlowColor = col32;
+		m_iAmmoAmountOverride = 0;
 	}
+
+	virtual void Spawn(void);
+	virtual void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
+	virtual void SetAmmoOverrideAmount(int amount) { m_iAmmoAmountOverride = amount; }
+
+protected:
+	int m_iAmmoAmountOverride;
+};
+
+void CAmmoItemBase::Spawn(void)
+{
+	BaseClass::Spawn();
+
+	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
+}
+
+void CAmmoItemBase::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
+{
+	if (!pActivator)
+		return;
+
+	if (!pActivator->IsPlayer())
+		return;
+
+	if (pActivator->IsZombie())
+		return;
+
+	CBasePlayer *pPlayer = ToBasePlayer(pActivator);
+	if (!pPlayer)
+		return;
+
+	if (!CanPickup())
+		return;
+
+	if (CanReplenishAmmo(GetClassname(), pPlayer, m_iAmmoAmountOverride))
+	{
+		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
+			Respawn();
+		else
+			UTIL_Remove(this);
+	}
+}
+
+#define AMMO_BASE_CLASS CAmmoItemBase
+
+class CAmmoPistol : public AMMO_BASE_CLASS
+{
+public:
+	DECLARE_CLASS(CAmmoPistol, AMMO_BASE_CLASS);
 
 	void Spawn(void);
 	void Precache(void);
-
-	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 };
 
 LINK_ENTITY_TO_CLASS(ammo_pistol, CAmmoPistol);
@@ -92,7 +130,6 @@ void CAmmoPistol::Spawn(void)
 {
 	Precache();
 	SetModel("models/weapons/ammo/pistol_ammo.mdl");
-	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
 	BaseClass::Spawn();
 }
 
@@ -101,51 +138,13 @@ void CAmmoPistol::Precache(void)
 	PrecacheModel("models/weapons/ammo/pistol_ammo.mdl");
 }
 
-void CAmmoPistol::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
-{
-	if (!pActivator)
-		return;
-
-	if (!pActivator->IsPlayer())
-		return;
-
-	if (pActivator->IsZombie())
-		return;
-
-	CBasePlayer *pPlayer = ToBasePlayer(pActivator);
-
-	if (!CanPickup())
-		return;
-
-	const char *weapons[] = { "weapon_beretta", "weapon_glock17" };
-	if (CanReplenishAmmo(pPlayer, weapons, 2))
-	{
-		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
-		{
-			Respawn();
-		}
-		else
-		{
-			UTIL_Remove(this);
-		}
-	}
-}
-
-class CAmmoRifle : public CItem
+class CAmmoRifle : public AMMO_BASE_CLASS
 {
 public:
-	DECLARE_CLASS(CAmmoRifle, CItem);
-
-	CAmmoRifle()
-	{
-		color32 col32 = { 135, 206, 250, 240 };
-		m_GlowColor = col32;
-	}
+	DECLARE_CLASS(CAmmoRifle, AMMO_BASE_CLASS);
 
 	void Spawn(void);
 	void Precache(void);
-
-	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 };
 
 LINK_ENTITY_TO_CLASS(ammo_rifle, CAmmoRifle);
@@ -155,7 +154,6 @@ void CAmmoRifle::Spawn(void)
 {
 	Precache();
 	SetModel("models/items/combine_rifle_cartridge01.mdl");
-	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
 	BaseClass::Spawn();
 }
 
@@ -164,51 +162,13 @@ void CAmmoRifle::Precache(void)
 	PrecacheModel("models/items/combine_rifle_cartridge01.mdl");
 }
 
-void CAmmoRifle::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
-{
-	if (!pActivator)
-		return;
-
-	if (!pActivator->IsPlayer())
-		return;
-
-	if (pActivator->IsZombie())
-		return;
-
-	CBasePlayer *pPlayer = ToBasePlayer(pActivator);
-
-	if (!CanPickup())
-		return;
-
-	const char *weapons[] = { "weapon_ak47", "weapon_famas" };
-	if (CanReplenishAmmo(pPlayer, weapons, 2))
-	{
-		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
-		{
-			Respawn();
-		}
-		else
-		{
-			UTIL_Remove(this);
-		}
-	}
-}
-
-class CAmmoSlugs : public CItem
+class CAmmoSlugs : public AMMO_BASE_CLASS
 {
 public:
-	DECLARE_CLASS(CAmmoSlugs, CItem);
-
-	CAmmoSlugs()
-	{
-		color32 col32 = { 135, 206, 250, 240 };
-		m_GlowColor = col32;
-	}
+	DECLARE_CLASS(CAmmoSlugs, AMMO_BASE_CLASS);
 
 	void Spawn(void);
 	void Precache(void);
-
-	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 };
 
 LINK_ENTITY_TO_CLASS(ammo_slugs, CAmmoSlugs);
@@ -218,7 +178,6 @@ void CAmmoSlugs::Spawn(void)
 {
 	Precache();
 	SetModel("models/items/boxbuckshot.mdl");
-	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
 	BaseClass::Spawn();
 }
 
@@ -227,51 +186,13 @@ void CAmmoSlugs::Precache(void)
 	PrecacheModel("models/items/boxbuckshot.mdl");
 }
 
-void CAmmoSlugs::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
-{
-	if (!pActivator)
-		return;
-
-	if (!pActivator->IsPlayer())
-		return;
-
-	if (pActivator->IsZombie())
-		return;
-
-	CBasePlayer *pPlayer = ToBasePlayer(pActivator);
-
-	if (!CanPickup())
-		return;
-
-	const char *weapons[] = { "weapon_sawedoff", "weapon_remington" };
-	if (CanReplenishAmmo(pPlayer, weapons, 2))
-	{
-		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
-		{
-			Respawn();
-		}
-		else
-		{
-			UTIL_Remove(this);
-		}
-	}
-}
-
-class CAmmoRevolver : public CItem
+class CAmmoRevolver : public AMMO_BASE_CLASS
 {
 public:
-	DECLARE_CLASS(CAmmoRevolver, CItem);
-
-	CAmmoRevolver()
-	{
-		color32 col32 = { 135, 206, 250, 240 };
-		m_GlowColor = col32;
-	}
+	DECLARE_CLASS(CAmmoRevolver, AMMO_BASE_CLASS);
 
 	void Spawn(void);
 	void Precache(void);
-
-	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 };
 
 LINK_ENTITY_TO_CLASS(ammo_revolver, CAmmoRevolver);
@@ -281,7 +202,6 @@ void CAmmoRevolver::Spawn(void)
 {
 	Precache();
 	SetModel("models/items/ammo_speedloader.mdl");
-	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
 	BaseClass::Spawn();
 }
 
@@ -290,51 +210,13 @@ void CAmmoRevolver::Precache(void)
 	PrecacheModel("models/items/ammo_speedloader.mdl");
 }
 
-void CAmmoRevolver::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
-{
-	if (!pActivator)
-		return;
-
-	if (!pActivator->IsPlayer())
-		return;
-
-	if (pActivator->IsZombie())
-		return;
-
-	CBasePlayer *pPlayer = ToBasePlayer(pActivator);
-
-	if (!CanPickup())
-		return;
-
-	const char *weapons[] = { "weapon_rex", "weapon_akimbo_rex" };
-	if (CanReplenishAmmo(pPlayer, weapons, 2))
-	{
-		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
-		{
-			Respawn();
-		}
-		else
-		{
-			UTIL_Remove(this);
-		}
-	}
-}
-
-class CAmmoSMG : public CItem
+class CAmmoSMG : public AMMO_BASE_CLASS
 {
 public:
-	DECLARE_CLASS(CAmmoSMG, CItem);
-
-	CAmmoSMG()
-	{
-		color32 col32 = { 135, 206, 250, 240 };
-		m_GlowColor = col32;
-	}
+	DECLARE_CLASS(CAmmoSMG, AMMO_BASE_CLASS);
 
 	void Spawn(void);
 	void Precache(void);
-
-	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 };
 
 LINK_ENTITY_TO_CLASS(ammo_smg, CAmmoSMG);
@@ -344,7 +226,6 @@ void CAmmoSMG::Spawn(void)
 {
 	Precache();
 	SetModel("models/items/ammo_smg.mdl");
-	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
 	BaseClass::Spawn();
 }
 
@@ -353,51 +234,13 @@ void CAmmoSMG::Precache(void)
 	PrecacheModel("models/items/ammo_smg.mdl");
 }
 
-void CAmmoSMG::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
-{
-	if (!pActivator)
-		return;
-
-	if (!pActivator->IsPlayer())
-		return;
-
-	if (pActivator->IsZombie())
-		return;
-
-	CBasePlayer *pPlayer = ToBasePlayer(pActivator);
-
-	if (!CanPickup())
-		return;
-
-	const char *weapons[] = { "weapon_mac11", "weapon_mp7" };
-	if (CanReplenishAmmo(pPlayer, weapons, 2))
-	{
-		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
-		{
-			Respawn();
-		}
-		else
-		{
-			UTIL_Remove(this);
-		}
-	}
-}
-
-class CAmmoSniper : public CItem
+class CAmmoSniper : public AMMO_BASE_CLASS
 {
 public:
-	DECLARE_CLASS(CAmmoSniper, CItem);
-
-	CAmmoSniper()
-	{
-		color32 col32 = { 135, 206, 250, 240 };
-		m_GlowColor = col32;
-	}
+	DECLARE_CLASS(CAmmoSniper, AMMO_BASE_CLASS);
 
 	void Spawn(void);
 	void Precache(void);
-
-	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 };
 
 LINK_ENTITY_TO_CLASS(ammo_sniper, CAmmoSniper);
@@ -407,7 +250,6 @@ void CAmmoSniper::Spawn(void)
 {
 	Precache();
 	SetModel("models/items/ammo_700.mdl");
-	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
 	BaseClass::Spawn();
 }
 
@@ -416,51 +258,13 @@ void CAmmoSniper::Precache(void)
 	PrecacheModel("models/items/ammo_700.mdl");
 }
 
-void CAmmoSniper::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
-{
-	if (!pActivator)
-		return;
-
-	if (!pActivator->IsPlayer())
-		return;
-
-	if (pActivator->IsZombie())
-		return;
-
-	CBasePlayer *pPlayer = ToBasePlayer(pActivator);
-
-	if (!CanPickup())
-		return;
-
-	const char *weapons[] = { "weapon_remington700" };
-	if (CanReplenishAmmo(pPlayer, weapons, 1))
-	{
-		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
-		{
-			Respawn();
-		}
-		else
-		{
-			UTIL_Remove(this);
-		}
-	}
-}
-
-class CAmmoTrapper : public CItem
+class CAmmoTrapper : public AMMO_BASE_CLASS
 {
 public:
-	DECLARE_CLASS(CAmmoTrapper, CItem);
-
-	CAmmoTrapper()
-	{
-		color32 col32 = { 135, 206, 250, 240 };
-		m_GlowColor = col32;
-	}
+	DECLARE_CLASS(CAmmoTrapper, AMMO_BASE_CLASS);
 
 	void Spawn(void);
 	void Precache(void);
-
-	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 };
 
 LINK_ENTITY_TO_CLASS(ammo_trapper, CAmmoTrapper);
@@ -470,7 +274,6 @@ void CAmmoTrapper::Spawn(void)
 {
 	Precache();
 	SetModel("models/items/ammo_winchester.mdl");
-	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
 	BaseClass::Spawn();
 }
 
@@ -479,32 +282,52 @@ void CAmmoTrapper::Precache(void)
 	PrecacheModel("models/items/ammo_winchester.mdl");
 }
 
-void CAmmoTrapper::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
+CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
 {
-	if (!pActivator)
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_GetCommandClient());
+	if (!pPlayer)
 		return;
 
-	if (!pActivator->IsPlayer())
+	if (!pPlayer->IsHuman() || !pPlayer->IsAlive())
 		return;
 
-	if (pActivator->IsZombie())
+	CBaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
+	if (!pWeapon)
 		return;
 
-	CBasePlayer *pPlayer = ToBasePlayer(pActivator);
-
-	if (!CanPickup())
+	if (pWeapon->IsMeleeWeapon() || !pWeapon->UsesClipsForAmmo1() || !pWeapon->UsesPrimaryAmmo())
 		return;
 
-	const char *weapons[] = { "weapon_winchester1894" };
-	if (CanReplenishAmmo(pPlayer, weapons, 1))
+	int ammoCount = pPlayer->GetAmmoCount(pWeapon->m_iPrimaryAmmoType);
+	if (ammoCount <= 0)
+		return;
+
+	const char *classNew = pWeapon->GetAmmoEntityLink();
+	if (strlen(classNew) <= 0)
+		return;
+
+	int ammoForItem = pWeapon->GetMaxClip1();
+	if (ammoForItem > ammoCount)
+		ammoForItem = ammoCount;
+
+	pPlayer->RemoveAmmo(ammoForItem, pWeapon->m_iPrimaryAmmoType);
+	CAmmoItemBase *pEntity = (CAmmoItemBase*)CreateEntityByName(classNew);
+	if (pEntity)
 	{
-		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
-		{
-			Respawn();
-		}
-		else
-		{
-			UTIL_Remove(this);
-		}
+		Vector vecAbsOrigin = pPlayer->GetAbsOrigin();
+		int iCollisionGroup = pPlayer ? pPlayer->GetCollisionGroup() : COLLISION_GROUP_WEAPON;
+		Vector vecStartPos = vecAbsOrigin + Vector(0, 0, 20);
+		Vector vecEndPos = vecAbsOrigin;
+		Vector vecDir = (vecEndPos - vecStartPos);
+		VectorNormalize(vecDir);
+
+		trace_t tr;
+		CTraceFilterNoNPCsOrPlayer trFilter(pPlayer, iCollisionGroup);
+		UTIL_TraceLine(vecStartPos, vecEndPos + (vecDir * MAX_TRACE_LENGTH), MASK_SHOT, &trFilter, &tr);
+
+		pEntity->SetLocalOrigin(tr.endpos);
+		pEntity->Spawn();
+		pEntity->AddSpawnFlags(SF_NORESPAWN);
+		pEntity->SetAmmoOverrideAmount(ammoForItem);
 	}
 }

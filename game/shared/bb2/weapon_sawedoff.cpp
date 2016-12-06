@@ -55,6 +55,8 @@ public:
 
 	int GetOverloadCapacity() { return 1; }
 	int GetWeaponType(void) { return WEAPON_TYPE_SHOTGUN; }
+	const char *GetAmmoEntityLink(void) { return "ammo_slugs"; }
+
 	bool Reload( void );
 	void FillClip( int iAmount );
 	void StartHolsterSequence();

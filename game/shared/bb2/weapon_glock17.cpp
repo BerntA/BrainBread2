@@ -44,6 +44,7 @@ public:
 	int GetWeaponType(void) { return WEAPON_TYPE_PISTOL; }
 	bool AllowBurst(void) { return true; }
 	float GetBurstFireRate(void) { return GetWpnData().m_flBurstFireRate; }
+	const char *GetAmmoEntityLink(void) { return "ammo_pistol"; }
 
 	Activity	GetPrimaryAttackActivity(void);
 

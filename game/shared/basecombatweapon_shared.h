@@ -282,6 +282,7 @@ public:
 	virtual bool UsesEmptyAnimation() { return false; }
 	virtual int GetWeaponType(void) { return WEAPON_TYPE_RIFLE; }
 	virtual bool IsAkimboWeapon(void) { return false; }
+	virtual const char *GetAmmoEntityLink(void) { return ""; }
 
 	// Melee Base:
 	virtual bool CanPerformMeleeAttacks() { return true; }

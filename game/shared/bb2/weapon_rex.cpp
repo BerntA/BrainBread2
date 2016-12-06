@@ -33,6 +33,7 @@ public:
 
 	int GetOverloadCapacity() { return 2; }
 	int GetWeaponType(void) { return WEAPON_TYPE_REVOLVER; }
+	const char *GetAmmoEntityLink(void) { return "ammo_revolver"; }
 
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
@@ -191,6 +192,7 @@ public:
 
 	int GetOverloadCapacity() { return 3; }
 	int GetWeaponType(void) { return WEAPON_TYPE_REVOLVER; }
+	const char *GetAmmoEntityLink(void) { return "ammo_revolver"; }
 	bool IsAkimboWeapon(void) { return true; }
 
 	const char *GetMuzzleflashAttachment(bool bPrimaryAttack)

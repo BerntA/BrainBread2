@@ -49,6 +49,7 @@ public:
 
 	int GetOverloadCapacity() { return 3; }
 	int GetWeaponType(void) { return WEAPON_TYPE_RIFLE; }
+	const char *GetAmmoEntityLink(void) { return "ammo_trapper"; }
 
 	bool StartReload(void);
 	bool Reload(void);

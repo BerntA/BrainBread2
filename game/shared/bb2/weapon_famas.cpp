@@ -41,6 +41,7 @@ public:
 	int		GetMinBurst() { return 1; }
 	int		GetMaxBurst() { return 3; }
 	bool    AllowBurst(void) { return true; }
+	const char *GetAmmoEntityLink(void) { return "ammo_rifle"; }
 
 	const WeaponProficiencyInfo_t *GetProficiencyValues();
 

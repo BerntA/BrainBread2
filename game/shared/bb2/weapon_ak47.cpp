@@ -37,6 +37,7 @@ public:
 	DECLARE_PREDICTABLE();
 
 	int GetOverloadCapacity() { return 10; }
+	const char *GetAmmoEntityLink(void) { return "ammo_rifle"; }
 
 	int		GetMinBurst() { return 1; }
 	int		GetMaxBurst() { return 3; }

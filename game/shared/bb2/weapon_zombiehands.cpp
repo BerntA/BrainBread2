@@ -7,6 +7,7 @@
 #include "cbase.h"
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
 #include "weapon_hl2mpbasebasebludgeon.h"
+#include "weapon_melee_chargeable.h"
 #include "gamerules.h"
 #include "ammodef.h"
 #include "mathlib/mathlib.h"
@@ -29,10 +30,10 @@
 #define CWeaponZombieHands C_WeaponZombieHands
 #endif
 
-class CWeaponZombieHands : public CBaseHL2MPBludgeonWeapon
+class CWeaponZombieHands : public CHL2MPMeleeChargeable
 {
 public:
-	DECLARE_CLASS(CWeaponZombieHands, CBaseHL2MPBludgeonWeapon);
+	DECLARE_CLASS(CWeaponZombieHands, CHL2MPMeleeChargeable);
 
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
@@ -42,17 +43,15 @@ public:
 	CWeaponZombieHands(const CWeaponZombieHands &);
 
 	float GetDamageForActivity(Activity hitActivity);
-	bool CanDoSecondaryAttack() { return false; }
 	int GetMeleeSkillFlags(void) { return 0; }
-
-	void Drop(const Vector &vecVelocity);
-	bool VisibleInWeaponSelection() { return false; }
-
-	Activity    GetCustomActivity(int bIsSecondary) { return ACT_VM_HITCENTER; }
-
 	int GetMeleeDamageType() { return DMG_ZOMBIE; }
 
-	void	PrimaryAttack(void);
+	void PrimaryAttack(void);
+	void Drop(const Vector &vecVelocity);
+
+	bool VisibleInWeaponSelection() { return false; }
+
+	Activity GetCustomActivity(int bIsSecondary);
 };
 
 IMPLEMENT_NETWORKCLASS_ALIASED( WeaponZombieHands, DT_WeaponZombieHands )
@@ -106,11 +105,16 @@ float CWeaponZombieHands::GetDamageForActivity( Activity hitActivity )
 	CWeaponHL2MPBase *pWeapon = dynamic_cast<CWeaponHL2MPBase *>(this);
 	if (pWeapon)
 	{
+		float flDamage = (float)pWeapon->GetHL2MPWpnData().m_iPlayerDamage;
+		bool bSpecialAttack = (hitActivity == ACT_VM_CHARGE_ATTACK);
+		if (bSpecialAttack)
+			flDamage += GetSpecialAttackDamage();
+
 		float flMultiplier = 0.0f;
 		CHL2MP_Player *pClient = ToHL2MPPlayer(GetOwner());
 		if (pClient)
 		{
-			flMultiplier = ((float)pWeapon->GetHL2MPWpnData().m_iPlayerDamage / 100.0f) * (pClient->GetSkillValue(PLAYER_SKILL_ZOMBIE_DAMAGE, TEAM_DECEASED));
+			flMultiplier = (flDamage / 100.0f) * (pClient->GetSkillValue(PLAYER_SKILL_ZOMBIE_DAMAGE, TEAM_DECEASED));
 
 			float iZombieTeamBonusPercIncr = pClient->GetSkillValue(PLAYER_SKILL_ZOMBIE_MASS_INVASION, TEAM_DECEASED);
 			if (pClient->m_BB2Local.m_iPerkTeamBonus && (iZombieTeamBonusPercIncr > 0.0f))
@@ -121,10 +125,10 @@ float CWeaponZombieHands::GetDamageForActivity( Activity hitActivity )
 #endif
 		}
 
-		return ((float)pWeapon->GetHL2MPWpnData().m_iPlayerDamage + flMultiplier);
+		return (flDamage + flMultiplier);
 	}
 
-	return 25.0f;
+	return 20.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -132,13 +136,26 @@ float CWeaponZombieHands::GetDamageForActivity( Activity hitActivity )
 //-----------------------------------------------------------------------------
 void CWeaponZombieHands::Drop( const Vector &vecVelocity )
 {
+	ResetStates();
+
 #ifndef CLIENT_DLL
 	UTIL_Remove( this );
 #endif
 }
 
+Activity CWeaponZombieHands::GetCustomActivity(int bIsSecondary)
+{
+	if (bIsSecondary)
+		return ACT_VM_CHARGE_ATTACK;
+
+	return ACT_VM_PRIMARYATTACK;
+}
+
 void CWeaponZombieHands::PrimaryAttack()
 {
+	if (m_iChargeState != 0)
+		return;
+
 	CHL2MP_Player *pOwner = ToHL2MPPlayer(GetOwner());
 	if (!pOwner)
 		return;

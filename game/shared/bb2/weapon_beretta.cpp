@@ -42,6 +42,7 @@ public:
 	int GetOverloadCapacity() { return 4; }
 	bool UsesEmptyAnimation() { return true; }
 	int GetWeaponType(void) { return WEAPON_TYPE_PISTOL; }
+	const char *GetAmmoEntityLink(void) { return "ammo_pistol"; }
 
 	Activity	GetPrimaryAttackActivity( void );
 

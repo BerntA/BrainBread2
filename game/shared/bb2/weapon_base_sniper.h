@@ -37,6 +37,7 @@ public:
 	virtual bool ShouldDrawCrosshair(void) { return false; }
 	virtual int GetOverloadCapacity() { return 2; }
 	virtual int GetWeaponType(void) { return WEAPON_TYPE_SNIPER; }
+	virtual const char *GetAmmoEntityLink(void) { return "ammo_sniper"; }
 	virtual void WeaponIdle(void);
 	virtual void ItemPostFrame(void);
 

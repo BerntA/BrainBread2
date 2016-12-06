@@ -38,6 +38,7 @@ public:
 
 	int GetOverloadCapacity() { return 8; }
 	int GetWeaponType(void) { return WEAPON_TYPE_SMG; }
+	const char *GetAmmoEntityLink(void) { return "ammo_smg"; }
 
 	int		GetMinBurst() { return 1; }
 	int		GetMaxBurst() { return 3; }

@@ -1669,7 +1669,7 @@ const char *CHL2MPRules::GetRandomMapForVoteSys(int mode)
 	for (int i = 0; i < m_MapList.Count(); i++)
 	{
 		bool bAdd = false;
-		if ((Q_stristr(m_MapList[i], "bbc_") || Q_stristr(m_MapList[i], "bbs_")) && (mode == MODE_OBJECTIVE))
+		if (!Q_stristr(m_MapList[i], "bba_") && !Q_stristr(m_MapList[i], "bbe_") && !Q_stristr(m_MapList[i], "bbd_") && (mode == MODE_OBJECTIVE))
 			bAdd = true;
 		else if (Q_stristr(m_MapList[i], "bba_") && (mode == MODE_ARENA))
 			bAdd = true;

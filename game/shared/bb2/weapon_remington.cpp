@@ -49,6 +49,7 @@ public:
 
 	int GetOverloadCapacity() { return 4; }
 	int GetWeaponType(void) { return WEAPON_TYPE_SHOTGUN; }
+	const char *GetAmmoEntityLink(void) { return "ammo_slugs"; }
 
 	bool StartReload(void);
 	bool Reload(void);
