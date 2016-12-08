@@ -340,6 +340,7 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 
 	// BB2 Skills:
 	m_flSpecialDamage = 0.0f;
+	m_flSpecialDamage2 = 0.0f;
 	m_iLevelReq = 0;
 	m_iPellets = 1;
 	m_iAccuracy = 0;
@@ -357,6 +358,7 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 	m_flSecondaryAttackCooldown = 0.0f;
 	m_flDropOffDistance = 0.0f;
 	m_flBurstFireRate = 0.2f;
+	m_flWeaponChargeTime = 3.0f;
 
 	m_flSkillDamageFactor = 6.0f;
 	m_flSkillFireRateFactor = 3.0f;
@@ -410,6 +412,7 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 	m_bMeleeWeapon = ( pKeyValuesData->GetInt( "MeleeWeapon", 0 ) != 0 ) ? true : false;
 
 	m_flSpecialDamage = pKeyValuesData->GetFloat("damage_special", 0.0f);
+	m_flSpecialDamage2 = pKeyValuesData->GetFloat("damage_special2", 0.0f);
 
 #if defined(_DEBUG) && defined(HL2_CLIENT_DLL)
 	// make sure two weapons aren't in the same slot & position
@@ -460,6 +463,7 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 	m_flSecondaryAttackCooldown = pPropertiesField ? pPropertiesField->GetFloat("secondary_cooldown", 0.0f) : 0.0f;
 	m_flDropOffDistance = pPropertiesField ? pPropertiesField->GetFloat("dropoff_distance", 0.0f) : 0.0f;
 	m_flBurstFireRate = pPropertiesField ? pPropertiesField->GetFloat("fire_rate_burst", 0.2f) : 0.2f;
+	m_flWeaponChargeTime = pPropertiesField ? pPropertiesField->GetFloat("charge_time", 3.0f) : 3.0f;
 
 	m_iZoomModeFOV[0] = pPropertiesField ? pPropertiesField->GetInt("zoom_mode_1") : 0;
 	m_iZoomModeFOV[1] = pPropertiesField ? pPropertiesField->GetInt("zoom_mode_2") : 0;

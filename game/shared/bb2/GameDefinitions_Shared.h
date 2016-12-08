@@ -60,6 +60,7 @@ struct DataGamemodeItem_Shared_t
 
 	int iKillsRequiredToPerk;
 	int iZombieCreditsRequiredToRage;
+	int iZombieKillsRequiredToRage;
 
 	int iDefaultZombieCredits;
 	float flAmmoResupplyTime;
@@ -445,7 +446,7 @@ extern const char *GetGamemodeName(int gamemode);
 extern const char *GetGamemodeNameForPrefix(const char *map);
 extern int GetGamemodeForMap(const char *map);
 
-#define CURRENT_ACHIEVEMENT_NUMBER 72
+#define CURRENT_ACHIEVEMENT_NUMBER 73
 
 extern achievementStatItem_t GAME_STAT_AND_ACHIEVEMENT_DATA[CURRENT_ACHIEVEMENT_NUMBER];
 extern DataPenetrationItem_t *GetPenetrationDataForMaterial(unsigned short material);

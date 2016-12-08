@@ -192,7 +192,9 @@ $Project
 		$Folder "Player"
 		{
 			$File "bb2/bb2_playerlocaldata.cpp"
-			$File "bb2/bb2_playerlocaldata.h"			
+			$File "bb2/bb2_playerlocaldata.h"
+			$File "bb2/player_loadout_handler.cpp"
+			$File "bb2/player_loadout_handler.h"
 		}
 		
 		$Folder "Weapons"

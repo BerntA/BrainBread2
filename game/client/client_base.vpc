@@ -213,6 +213,7 @@ $Project
 			$File "bb2/hud_inventory_view.cpp"
 			$File "bb2/hud_scope_view.cpp"
 			$File "bb2/hud_timeview.cpp"
+			$File "bb2/hud_weapon_charger.cpp"
 		}
 		
 		$Folder "Shaders"

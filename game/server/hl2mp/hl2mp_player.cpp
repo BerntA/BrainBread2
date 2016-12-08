@@ -224,6 +224,7 @@ CHL2MP_Player::CHL2MP_Player()
 	m_iRoundScore = 0;
 	m_iRoundDeaths = 0;
 	m_iZombKills = 0;
+	m_iZombCurrentKills = 0;
 	m_nGroupID = 0;
 	m_iZombDeaths = 0;
 	m_iNumPerkKills = 0;
@@ -1503,24 +1504,42 @@ bool CHL2MP_Player::ActivatePerk(int skill)
 	return true;
 }
 
-bool CHL2MP_Player::EnterRageMode(void) // Zombie 'Perk' thing. (lasts until death)
+bool CHL2MP_Player::EnterRageMode(bool bForce) // Zombie 'Perk' thing. (lasts until death)
 {
-	if (
-		!IsZombie() || !IsAlive() || (GetPerkFlags() != 0) || 
-		(m_BB2Local.m_iZombieCredits < GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iZombieCreditsRequiredToRage) || (!HL2MPRules()->CanUseSkills())
-		)
+	if (!IsZombie() || !IsAlive() || (GetPerkFlags() != 0))
 		return false;
 
-	m_BB2Local.m_iZombieCredits -= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iZombieCreditsRequiredToRage;
+	if (!bForce)
+	{
+		if (!HL2MPRules()->CanUseSkills() || (m_BB2Local.m_iZombieCredits < GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iZombieCreditsRequiredToRage))
+			return false;
+
+		m_BB2Local.m_iZombieCredits -= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iZombieCreditsRequiredToRage;
+	}
+
 	m_BB2Local.m_bCanActivatePerk = false;
 
-	int health = round(GetSkillValue("Health", PLAYER_SKILL_ZOMBIE_HEALTH, TEAM_DECEASED)) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flHealth;
-	SetHealth(health);
-	SetMaxHealth(health);
-	SetPlayerSpeed(GetSkillValue("Speed", PLAYER_SKILL_ZOMBIE_SPEED, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flSpeed);
-	SetLeapLength(GetSkillValue("Leap", PLAYER_SKILL_ZOMBIE_LEAP, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flLeap);
-	SetJumpHeight(GetSkillValue("Jump", PLAYER_SKILL_ZOMBIE_JUMP, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flJump);
-	SetHealthRegenAmount(GetSkillValue("HealthRegen", PLAYER_SKILL_ZOMBIE_HEALTH_REGEN, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flHealthRegen);
+	if (HL2MPRules()->CanUseSkills())
+	{
+		int health = round(GetSkillValue("Health", PLAYER_SKILL_ZOMBIE_HEALTH, TEAM_DECEASED)) + (int)GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flHealth;
+		SetHealth(health);
+		SetMaxHealth(health);
+		SetPlayerSpeed(GetSkillValue("Speed", PLAYER_SKILL_ZOMBIE_SPEED, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flSpeed);
+		SetLeapLength(GetSkillValue("Leap", PLAYER_SKILL_ZOMBIE_LEAP, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flLeap);
+		SetJumpHeight(GetSkillValue("Jump", PLAYER_SKILL_ZOMBIE_JUMP, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flJump);
+		SetHealthRegenAmount(GetSkillValue("HealthRegen", PLAYER_SKILL_ZOMBIE_HEALTH_REGEN, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flHealthRegen);
+	}
+	else
+	{
+		int health = GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).iHealth + (int)GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flHealth;
+		SetHealth(health);
+		SetMaxHealth(health);
+		SetPlayerSpeed(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flSpeed + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flSpeed);
+		SetLeapLength(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flLeapLength + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flLeap);
+		SetJumpHeight(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flJumpHeight + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flJump);
+		SetHealthRegenAmount(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flHealthRegenerationRate + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flHealthRegen);
+	}
+
 	RefreshSpeed();
 
 	AddPerkFlag(PERK_ZOMBIE_RAGE);
@@ -2616,6 +2635,19 @@ void CHL2MP_Player::CheckCanRespawnAsHuman()
 		m_BB2Local.m_bCanRespawnAsHuman = true;
 }
 
+void CHL2MP_Player::CheckCanRage()
+{
+	if ((HL2MPRules() && (HL2MPRules()->GetCurrentGamemode() != MODE_ELIMINATION)) || !GameBaseShared()->GetSharedGameDetails() || GetPerkFlags())
+		return;
+
+	m_iZombCurrentKills++;
+	if (m_iZombCurrentKills >= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iZombieKillsRequiredToRage)
+	{
+		m_iZombCurrentKills = 0;
+		EnterRageMode(true);
+	}
+}
+
 void CHL2MP_Player::CheckChatText(char *p, int bufsize)
 {
 	//Look for escape sequences and replace
@@ -3117,13 +3149,25 @@ void CHL2MP_Player::SetZombie()
 		SetPlayerModel(TEAM_DECEASED);
 		ApplyArmor(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).iArmor, GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).iArmorType);
 
-		int health = round(GetSkillValue("Health", PLAYER_SKILL_ZOMBIE_HEALTH, TEAM_DECEASED));
-		SetHealth(health);
-		SetMaxHealth(health);
-		SetPlayerSpeed(GetSkillValue("Speed", PLAYER_SKILL_ZOMBIE_SPEED, TEAM_DECEASED));
-		SetLeapLength(GetSkillValue("Leap", PLAYER_SKILL_ZOMBIE_LEAP, TEAM_DECEASED));
-		SetJumpHeight(GetSkillValue("Jump", PLAYER_SKILL_ZOMBIE_JUMP, TEAM_DECEASED));
-		SetHealthRegenAmount(GetSkillValue("HealthRegen", PLAYER_SKILL_ZOMBIE_HEALTH_REGEN, TEAM_DECEASED));
+		if (HL2MPRules()->CanUseSkills())
+		{
+			int health = round(GetSkillValue("Health", PLAYER_SKILL_ZOMBIE_HEALTH, TEAM_DECEASED));
+			SetHealth(health);
+			SetMaxHealth(health);
+			SetPlayerSpeed(GetSkillValue("Speed", PLAYER_SKILL_ZOMBIE_SPEED, TEAM_DECEASED));
+			SetLeapLength(GetSkillValue("Leap", PLAYER_SKILL_ZOMBIE_LEAP, TEAM_DECEASED));
+			SetJumpHeight(GetSkillValue("Jump", PLAYER_SKILL_ZOMBIE_JUMP, TEAM_DECEASED));
+			SetHealthRegenAmount(GetSkillValue("HealthRegen", PLAYER_SKILL_ZOMBIE_HEALTH_REGEN, TEAM_DECEASED));
+		}
+		else
+		{
+			SetHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).iHealth);
+			SetMaxHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).iHealth);
+			SetPlayerSpeed(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flSpeed);
+			SetLeapLength(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flLeapLength);
+			SetJumpHeight(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flJumpHeight);
+			SetHealthRegenAmount(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flHealthRegenerationRate);
+		}
 
 		GiveItem("weapon_zombhands");
 
@@ -3199,6 +3243,9 @@ void CHL2MP_Player::SetHuman()
 			if (pWantedWeapon != NULL)
 				Weapon_Switch(pWantedWeapon, true);
 		}
+
+		if (GameBaseShared()->GetPlayerLoadoutHandler())
+			GameBaseShared()->GetPlayerLoadoutHandler()->LoadDataForPlayer(this);
 	}
 }
 
@@ -3232,6 +3279,7 @@ void CHL2MP_Player::SetPlayerClass(int iTeam)
 	if (HL2MPRules()->GetCurrentGamemode() != MODE_ELIMINATION)
 		SetSelectedTeam(iTeam);
 
+	m_iZombCurrentKills = 0;
 	m_iDMKills = 0;
 	m_flDMTimeSinceLastKill = 0.0f;
 }

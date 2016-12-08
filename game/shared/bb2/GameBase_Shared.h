@@ -26,6 +26,7 @@
 #include "hl2mp_player.h"
 #include "achievement_manager.h"
 #include "GameDefinitions_Workshop.h"
+#include "player_loadout_handler.h"
 #endif
 
 #define MAX_INVENTORY_ITEM_COUNT 12
@@ -310,6 +311,9 @@ public:
 	// Workshop Handler:
 	CGameDefinitionsWorkshop *GetServerWorkshopData(void) { return m_pServerWorkshopData; }
 
+	// Loadout Handler:
+	CPlayerLoadoutHandler *GetPlayerLoadoutHandler(void) { return m_pPlayerLoadoutHandler; }
+
 	// Server Commands and Client Commands checks.
 	bool ClientCommand(const CCommand &args);
 
@@ -343,6 +347,8 @@ private:
 
 	// Server Workshop Handler:
 	CGameDefinitionsWorkshop *m_pServerWorkshopData;
+	// Server Loadout Handler:
+	CPlayerLoadoutHandler *m_pPlayerLoadoutHandler;
 #endif
 
 	// Shared Game Data Info

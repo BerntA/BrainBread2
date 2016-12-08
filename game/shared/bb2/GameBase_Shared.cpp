@@ -101,6 +101,7 @@ void CGameBaseShared::Init()
 #else
 	m_pAchievementManager = new CAchievementManager();
 	m_pServerWorkshopData = new CGameDefinitionsWorkshop();
+	m_pPlayerLoadoutHandler = new CPlayerLoadoutHandler();
 #endif
 }
 
@@ -174,6 +175,9 @@ void CGameBaseShared::Release()
 
 	if (m_pServerWorkshopData)
 		delete m_pServerWorkshopData;
+
+	if (m_pPlayerLoadoutHandler)
+		delete m_pPlayerLoadoutHandler;
 #endif
 }
 
@@ -1028,6 +1032,8 @@ void CGameBaseShared::OnGameOver(float timeLeft, int iWinner)
 			pAchievement = "ACH_MAP_DEVILSCRYPT";
 		else if (!strcmp(currMap, "bba_swamptrouble"))
 			pAchievement = "ACH_MAP_SWAMPTROUBLE";
+		else if (!strcmp(currMap, "bba_salvage"))
+			pAchievement = "ACH_MAP_SALVAGE";
 	}
 
 	if (GetAchievementManager() && !bTimeOut)

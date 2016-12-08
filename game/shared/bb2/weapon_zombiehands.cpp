@@ -108,7 +108,7 @@ float CWeaponZombieHands::GetDamageForActivity( Activity hitActivity )
 		float flDamage = (float)pWeapon->GetHL2MPWpnData().m_iPlayerDamage;
 		bool bSpecialAttack = (hitActivity == ACT_VM_CHARGE_ATTACK);
 		if (bSpecialAttack)
-			flDamage += GetSpecialAttackDamage();
+			flDamage += GetChargeDamage();
 
 		float flMultiplier = 0.0f;
 		CHL2MP_Player *pClient = ToHL2MPPlayer(GetOwner());

@@ -361,6 +361,7 @@ bool CGameDefinitionsShared::LoadData(void)
 
 		pszGamemodeData.iKillsRequiredToPerk = pkvParseData->GetInt("perk_kills_required", 50);
 		pszGamemodeData.iZombieCreditsRequiredToRage = pkvParseData->GetInt("rage_credits_required", 10);
+		pszGamemodeData.iZombieKillsRequiredToRage = pkvParseData->GetInt("rage_kills_required", 3);
 
 		pszGamemodeData.iDefaultZombieCredits = pkvParseData->GetInt("zombie_credits_start", 10);
 		pszGamemodeData.flAmmoResupplyTime = pkvParseData->GetFloat("ammo_resupply_time", 30.0f);
@@ -1799,6 +1800,7 @@ achievementStatItem_t GAME_STAT_AND_ACHIEVEMENT_DATA[CURRENT_ACHIEVEMENT_NUMBER]
 	{ "ACH_MAP_CARGO", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false },
 	{ "ACH_MAP_DEVILSCRYPT", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false },
 	{ "ACH_MAP_SWAMPTROUBLE", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false },
+	{ "ACH_MAP_SALVAGE", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 2000, false },
 
 	// Hidden:
 	{ "ACH_SECRET_WATCHYOURSTEP", "", 0, ACHIEVEMENT_TYPE_MAP, 0, true },

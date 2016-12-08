@@ -86,6 +86,12 @@ void CTriggerChangelevel::OnThink(void)
 	{
 		if (IsEnoughPlayersInVolume())
 		{
+			if (GameBaseShared()->GetPlayerLoadoutHandler())
+			{
+				GameBaseShared()->GetPlayerLoadoutHandler()->SetMapTransit(true);
+				GameBaseShared()->GetPlayerLoadoutHandler()->SaveLoadoutData();
+			}
+
 			for (int i = 1; i <= gpGlobals->maxClients; i++)
 			{
 				CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));

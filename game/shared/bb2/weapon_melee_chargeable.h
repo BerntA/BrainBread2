@@ -35,7 +35,12 @@ public:
 	virtual void ItemPostFrame(void);
 	virtual void PrimaryAttack(void);
 	virtual void SecondaryAttack(void);
+
 	virtual float GetDamageForActivity(Activity hitActivity);
+	virtual float GetChargeDamage(void);
+	virtual float GetMaxChargeTime(void) { return GetWpnData().m_flWeaponChargeTime; }
+	virtual float GetChargeFraction(void);
+	virtual bool IsChargingWeapon(void) { return (m_iChargeState == 2); }
 
 	virtual void ResetStates();
 	virtual void StartHolsterSequence();
@@ -46,7 +51,6 @@ public:
 protected:
 	CNetworkVar(int, m_iChargeState);
 	CNetworkVar(float, m_flTimeCharged);
-	CNetworkVar(float, m_flTimeChargeDecay);
 
 private:
 	CHL2MPMeleeChargeable(const CHL2MPMeleeChargeable &);

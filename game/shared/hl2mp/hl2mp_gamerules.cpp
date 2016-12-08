@@ -2216,6 +2216,7 @@ void CHL2MPRules::DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info)
 			pKillerPlayer->m_iZombKills++;
 			pKillerPlayer->m_BB2Local.m_iZombieCredits += GetZombieCredits(pVictim);
 			pKillerPlayer->CheckCanRespawnAsHuman();
+			pKillerPlayer->CheckCanRage();
 		}
 		else // Humans gain EXP from killing.
 			pKillerPlayer->CanLevelUp(experience, pVictim);
@@ -2228,6 +2229,8 @@ void CHL2MPRules::DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info)
 	if (pVictimPlayer)
 	{
 		pVictimPlayer->RemoveGlowEffect();
+		if (GameBaseShared()->GetPlayerLoadoutHandler())
+			GameBaseShared()->GetPlayerLoadoutHandler()->RemoveDataForPlayer(pVictimPlayer);
 	}
 
 	IGameEvent *event = gameeventmanager->CreateEvent("death_notice");
@@ -2593,6 +2596,8 @@ void CHL2MPRules::RestartGame()
 
 		if (!pPlayer->HasLoadedStats())
 			continue;
+
+		pPlayer->RemoveAllItems();
 
 		// Everyone will become a human on game restart.
 		if (GetCurrentGamemode() != MODE_ELIMINATION)

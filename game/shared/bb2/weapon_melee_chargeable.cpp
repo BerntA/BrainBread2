@@ -28,11 +28,9 @@ BEGIN_NETWORK_TABLE(CHL2MPMeleeChargeable, DT_HL2MPMeleeChargeable)
 #ifdef CLIENT_DLL
 RecvPropInt(RECVINFO(m_iChargeState)),
 RecvPropFloat(RECVINFO(m_flTimeCharged)),
-RecvPropFloat(RECVINFO(m_flTimeChargeDecay)),
 #else
 SendPropInt(SENDINFO(m_iChargeState), 2, SPROP_UNSIGNED),
 SendPropFloat(SENDINFO(m_flTimeCharged)),
-SendPropFloat(SENDINFO(m_flTimeChargeDecay)),
 #endif
 END_NETWORK_TABLE()
 
@@ -40,7 +38,6 @@ END_NETWORK_TABLE()
 BEGIN_PREDICTION_DATA(CHL2MPMeleeChargeable)
 DEFINE_PRED_FIELD(m_iChargeState, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
 DEFINE_PRED_FIELD(m_flTimeCharged, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
-DEFINE_PRED_FIELD(m_flTimeChargeDecay, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
 END_PREDICTION_DATA()
 #endif
 
@@ -68,6 +65,7 @@ void CHL2MPMeleeChargeable::ItemPostFrame(void)
 			SendWeaponAnim(ACT_VM_CHARGE_IDLE);
 			m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 			m_flNextSecondaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
+			m_flTimeCharged = gpGlobals->curtime;
 		}
 
 		break;
@@ -131,16 +129,25 @@ float CHL2MPMeleeChargeable::GetDamageForActivity(Activity hitActivity)
 	float damage = BaseClass::GetDamageForActivity(hitActivity);
 	bool bSpecialAttack = (hitActivity == ACT_VM_CHARGE_ATTACK);
 	if (bSpecialAttack)
-		damage += GetSpecialAttackDamage();
+		damage += GetChargeDamage();
 
 	return damage;
+}
+
+float CHL2MPMeleeChargeable::GetChargeDamage(void)
+{
+	return (GetSpecialAttackDamage() + (GetWpnData().m_flSpecialDamage2 * GetChargeFraction()));
+}
+
+float CHL2MPMeleeChargeable::GetChargeFraction(void)
+{
+	return (clamp(((gpGlobals->curtime - m_flTimeCharged) / GetMaxChargeTime()), 0.0f, 1.0f));
 }
 
 void CHL2MPMeleeChargeable::ResetStates()
 {
 	m_iChargeState = CHARGE_STATE_NONE;
 	m_flTimeCharged = 0.0f;
-	m_flTimeChargeDecay = 0.0f;
 }
 
 void CHL2MPMeleeChargeable::StartHolsterSequence()

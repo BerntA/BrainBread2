@@ -117,6 +117,7 @@ public:
 	QAngle angAttachmentAngOffset;
 
 	float m_flSpecialDamage;
+	float m_flSpecialDamage2;
 
 	// Weapon Detailed Properties:
 	int m_iLevelReq;
@@ -133,6 +134,7 @@ public:
 	float m_flSecondaryAttackCooldown;
 	float m_flDropOffDistance;
 	float m_flBurstFireRate;
+	float m_flWeaponChargeTime;
 
 	// Weapon Skill Stuff:
 	float m_flSkillDamageFactor;

@@ -190,7 +190,7 @@ public:
 	bool CanLevelUp(int iXP, CBaseEntity *pVictim);
 	bool PerformLevelUp(int iXP);
 	bool ActivatePerk(int skill);
-	bool EnterRageMode(void);
+	bool EnterRageMode(bool bForce = false);
 	float GetExtraPerkData(int type);
 
 	Vector GetAttackSpread(CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget = NULL);
@@ -219,6 +219,8 @@ public:
 	void ResetSlideVars();
 
 	void CheckCanRespawnAsHuman();
+	void CheckCanRage();
+
 	void CheckChatText(char *p, int bufsize);
 
 	void State_Transition(HL2MPPlayerState newState);
@@ -335,6 +337,10 @@ private:
 	float m_flLastTimeCheckedPing;
 	float m_flTimeUntilEndCheckPing;
 	bool m_bFinishedPingCheck;
+
+	// Zombie
+	// Monitor amount of kills since spawn, allow auto rage when X kills have been reached in certain gamemodes.
+	int m_iZombCurrentKills;
 
 protected:
 	virtual void HandlePainSound(int iMajor, int iDamageTypeBits);
