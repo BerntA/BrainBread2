@@ -319,6 +319,7 @@ CON_COMMAND(dev_reset_stats, "Reset Stats")
 	pPlayer->m_BB2Local.m_iSkill_Talents = ((iLevel > 100) ? 100 : (iLevel - 1));
 	pPlayer->m_BB2Local.m_iSkill_XPLeft = (GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().iXPIncreasePerLevel * iLevel);
 	pPlayer->m_BB2Local.m_iSkill_XPCurrent = 0;
+	pPlayer->m_BB2Local.m_iZombieCredits = 0;
 
 	for (int i = 0; i < MAX_SKILL_ARRAY; i++)
 		pPlayer->m_BB2Local.m_iPlayerSkills.Set(i, 0);
@@ -368,6 +369,7 @@ CON_COMMAND(bb2_perform_prestige, "If your level is high enough you can reset al
 	pPlayer->m_BB2Local.m_iSkill_Talents = ((iLevel > 100) ? 100 : (iLevel - 1));
 	pPlayer->m_BB2Local.m_iSkill_XPLeft = (GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().iXPIncreasePerLevel * iLevel);
 	pPlayer->m_BB2Local.m_iSkill_XPCurrent = 0;
+	pPlayer->m_BB2Local.m_iZombieCredits = 0;
 
 	for (int i = 0; i < MAX_SKILL_ARRAY; i++)
 		pPlayer->m_BB2Local.m_iPlayerSkills.Set(i, 0);
