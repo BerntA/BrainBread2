@@ -58,7 +58,7 @@ protected:
 	virtual BB2_SoundTypes GetNPCType() { return TYPE_UNKNOWN; }
 
 	virtual float GetScaleValue(bool bDamageScale);
-
+	virtual void OnNPCScaleUpdated(void) { }
 	virtual void FireGameEvent(IGameEvent *event);
 
 	int m_iModelSkin;

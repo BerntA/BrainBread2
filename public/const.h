@@ -420,6 +420,7 @@ enum Collision_Group_t
 	COLLISION_GROUP_NPC_SCRIPTED,	// USed for NPCs in scripts that should not collide with each other
 	COLLISION_GROUP_PLAYER_ZOMBIE, // Used for player zombies to filtrate them properly from each other.
 	COLLISION_GROUP_NPC_ZOMBIE, // Used for zombie npcs to separated them to nocollide with other zombies and player zombies.
+	COLLISION_GROUP_NPC_ZOMBIE_BOSS, // Used for zombie npc bosses, bosses will be allowed to go through normal zombie npcs.
 	COLLISION_GROUP_NPC_MILITARY, // Used for human friendly npcs (to players) to separate them to nocollide with other friendly military and player humans.
 	COLLISION_GROUP_NPC_MERCENARY, // Used for humanoid enemy npcs.
 	COLLISION_GROUP_NPC_ZOMBIE_SPAWNING, // Used for spawning zombies, non-bosses of course.

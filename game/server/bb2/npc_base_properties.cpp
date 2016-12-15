@@ -127,6 +127,8 @@ void CNPCBaseProperties::UpdateNPCScaling()
 
 	m_flDamageScaleValue = flDamageScaleAmount;
 	m_flHealthScaleValue = flHealthScaleAmount;
+
+	OnNPCScaleUpdated();
 }
 
 void CNPCBaseProperties::FireGameEvent(IGameEvent *event)

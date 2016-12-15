@@ -19,8 +19,10 @@ int GetCollisionGroupForClassname(const char *classname)
 {
 	if (classname && classname[0])
 	{
-		if (!strcmp(classname, "npc_walker") || !strcmp(classname, "npc_runner") || !strcmp(classname, "npc_fred"))
+		if (!strcmp(classname, "npc_walker") || !strcmp(classname, "npc_runner"))
 			return COLLISION_GROUP_NPC_ZOMBIE;
+		else if (!strcmp(classname, "npc_fred"))
+			return COLLISION_GROUP_NPC_ZOMBIE_BOSS;
 		else if (!strcmp(classname, "npc_military") || !strcmp(classname, "npc_military_static"))
 			return COLLISION_GROUP_NPC_MILITARY;
 		else if (!strcmp(classname, "npc_bandit"))

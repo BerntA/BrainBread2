@@ -160,6 +160,8 @@ void CNPCFred::Spawn( void )
 
 	m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat( 1.0, 4.0 );
 
+	SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE_BOSS);
+
 	SetHullType(HULL_MEDIUM_TALL);
 	SetHullSizeNormal(true);
 	SetDefaultEyeOffset();

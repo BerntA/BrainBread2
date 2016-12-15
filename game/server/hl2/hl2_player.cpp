@@ -1750,7 +1750,7 @@ bool CHL2_Player::ClientCommand( const CCommand &args )
 	// Drop primary weapon:
 	if (!Q_stricmp(args[0], "DropPrimary"))
 	{
-		if (!HL2MPRules()->m_bRoundStarted && HL2MPRules()->ShouldHideHUDDuringRoundWait())
+		if ((!HL2MPRules()->m_bRoundStarted && HL2MPRules()->ShouldHideHUDDuringRoundWait()) || HL2MPRules()->m_bShouldShowScores)
 			return true;
 
 		CBaseCombatWeapon *pActiveWeapon = GetActiveWeapon();

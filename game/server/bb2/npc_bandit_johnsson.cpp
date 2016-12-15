@@ -22,12 +22,14 @@
 #include "soundenvelope.h"
 #include "hl2mp_gamerules.h"
 #include "vehicle_base.h"
+#include "particle_parse.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 class CNPCBanditJohnsson : public CNPC_Combine
 {
+	DECLARE_DATADESC();
 	DECLARE_CLASS(CNPCBanditJohnsson, CNPC_Combine);
 
 public:
@@ -68,11 +70,28 @@ public:
 	BB2_SoundTypes GetNPCType() { return TYPE_CUSTOM; }
 
 	const char *GetNPCName() { return "Johnsson"; }
+
+private:
+
+	float m_flHealthFractionToCheck;
+
+	void InputEnteredHideout(inputdata_t &inputdata);
+	void InputLeftHideout(inputdata_t &inputdata);
+
+	COutputEvent m_OnLostQuarterOfHealth;
 };
 
 LINK_ENTITY_TO_CLASS(npc_bandit_johnsson, CNPCBanditJohnsson);
 
+BEGIN_DATADESC(CNPCBanditJohnsson)
+DEFINE_FIELD(m_flHealthFractionToCheck, FIELD_FLOAT),
+DEFINE_INPUTFUNC(FIELD_VOID, "EnterHideout", InputEnteredHideout),
+DEFINE_INPUTFUNC(FIELD_VOID, "LeaveHideout", InputLeftHideout),
+DEFINE_OUTPUT(m_OnLostQuarterOfHealth, "OnLostQuarterHealth"),
+END_DATADESC()
+
 #define AE_SOLDIER_BLOCK_PHYSICS 20 // trying to block an incoming physics object...
+#define TELEPORT_PARTICLE "bb2_healing_effect"
 
 //-----------------------------------------------------------------------------
 // Purpose: Take Damage
@@ -104,6 +123,8 @@ void CNPCBanditJohnsson::Spawn(void)
 
 	// No kicking for Johnsson.
 	CapabilitiesRemove(bits_CAP_INNATE_MELEE_ATTACK1);
+
+	m_flHealthFractionToCheck = 75.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -114,6 +135,7 @@ void CNPCBanditJohnsson::Spawn(void)
 void CNPCBanditJohnsson::Precache()
 {
 	UTIL_PrecacheOther("weapon_frag");
+	PrecacheParticleSystem(TELEPORT_PARTICLE);
 	BaseClass::Precache();
 }
 
@@ -170,6 +192,20 @@ void CNPCBanditJohnsson::AnnounceEnemyKill(CBaseEntity *pEnemy)
 void CNPCBanditJohnsson::PrescheduleThink(void)
 {
 	BaseClass::PrescheduleThink();
+
+	float maxHealth = ((float)m_iTotalHP);
+	float currHealth = ((float)GetHealth());
+	if ((currHealth < (maxHealth * (m_flHealthFractionToCheck / 100.0f))) && (m_flHealthFractionToCheck > 0.0f))
+	{
+#ifdef BB2_AI
+		IPredictionSystem::SuppressHostEvents(NULL);
+#endif //BB2_AI
+
+		DispatchParticleEffect(TELEPORT_PARTICLE, GetAbsOrigin(), GetAbsAngles(), this);
+		m_flHealthFractionToCheck -= 25.0f;
+		m_OnLostQuarterOfHealth.FireOutput(this, this);
+		HL2MPRules()->EmitSoundToClient(this, "Retreat", GetNPCType(), GetGender());
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -279,4 +315,40 @@ bool CNPCBanditJohnsson::ShouldChargePlayer()
 Class_T	CNPCBanditJohnsson::Classify(void)
 {
 	return CLASS_MILITARY;
+}
+
+void CNPCBanditJohnsson::InputEnteredHideout(inputdata_t &inputdata)
+{
+	if (m_flHealthFractionToCheck <= 25)
+	{
+		bool bGiveNewWeapon = true;
+		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+		if (pWeapon && FClassnameIs(pWeapon, "weapon_minigun"))
+			bGiveNewWeapon = false;
+
+		if (bGiveNewWeapon)
+		{
+			string_t cWeaponEnt = FindPooledString("weapon_minigun");
+			if (cWeaponEnt == NULL_STRING)
+				cWeaponEnt = AllocPooledString("weapon_minigun");
+
+			GiveWeapon(cWeaponEnt);
+		}
+
+		HL2MPRules()->EmitSoundToClient(this, "EnterHideoutRage", GetNPCType(), GetGender());
+		return;
+	}
+
+	HL2MPRules()->EmitSoundToClient(this, "EnterHideout", GetNPCType(), GetGender());
+}
+
+void CNPCBanditJohnsson::InputLeftHideout(inputdata_t &inputdata)
+{
+	if (m_flHealthFractionToCheck <= 25)
+	{
+		HL2MPRules()->EmitSoundToClient(this, "LeaveHideoutRage", GetNPCType(), GetGender());
+		return;
+	}
+
+	HL2MPRules()->EmitSoundToClient(this, "LeaveHideout", GetNPCType(), GetGender());
 }

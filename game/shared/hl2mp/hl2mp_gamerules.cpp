@@ -1638,29 +1638,34 @@ void CHL2MPRules::RecalculateEndMapVotes(void)
 
 int CHL2MPRules::GetVoteTypeWithMostVotes(void)
 {
-	CUtlVector<int> pVotesCast;
-	for (int i = 0; i < MAX_PLAYERS; i++)
+	int iVotes = 0;
+	for (int i = 0; i < ENDMAP_VOTE_TYPES_MAX; i++)
 	{
-		if ((m_iEndVotePlayerChoices[i] > 0) && (m_iEndVotePlayerChoices[i] <= ENDMAP_VOTE_REFRESH))
-			pVotesCast.AddToTail(m_iEndVotePlayerChoices[i]);
+		if (m_iEndMapVotesForType.Get(i) > iVotes)
+			iVotes = m_iEndMapVotesForType.Get(i);
 	}
 
-	int iChoice = 0;
-	for (int i = 0; i < pVotesCast.Count(); i++)
+	if (iVotes > 0)
 	{
-		int votesWithType = 0;
-		for (int x = 0; x < pVotesCast.Count(); x++)
+		CUtlVector<int> pAvailableChoices;
+		for (int i = 0; i < ENDMAP_VOTE_TYPES_MAX; i++)
 		{
-			if (pVotesCast[i] == pVotesCast[x])
-				votesWithType++;
+			if (iVotes == m_iEndMapVotesForType.Get(i))
+				pAvailableChoices.AddToTail((i + 1));
 		}
 
-		if (votesWithType > iChoice)
-			iChoice = pVotesCast[i];
+		if (!pAvailableChoices.Count())
+		{
+			pAvailableChoices.Purge();
+			return 0;
+		}
+
+		int choice = pAvailableChoices[random->RandomInt(0, (pAvailableChoices.Count() - 1))];
+		pAvailableChoices.Purge();
+		return choice;
 	}
 
-	pVotesCast.Purge();
-	return iChoice; 
+	return 0; 
 }
 
 const char *CHL2MPRules::GetRandomMapForVoteSys(int mode)
@@ -2336,6 +2341,14 @@ bool CHL2MPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		(collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE && collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE))
 		return false;
 
+	if ((collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_BOSS && collisionGroup1 == COLLISION_GROUP_PLAYER_ZOMBIE) ||
+		(collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_BOSS && collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE))
+		return false;
+
+	if ((collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_BOSS && collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE) ||
+		(collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_BOSS && collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE))
+		return false;
+
 	if (collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING && (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE || collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE))
 		return false;
 
@@ -2375,6 +2388,10 @@ bool CHL2MPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 // Uncommenting this will create huge chunks of OP zombies, mutated beasts I tell ya!
 //	if (collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE && collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE)
 //		return false;
+
+	//if (collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_BOSS && collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_BOSS)
+	//	return false;
+
 	// END COLLIDE RULES BB2
 
 	//The below is added from hl2_gamerules.cpp and is required.
@@ -2433,6 +2450,7 @@ bool CHL2MPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	{
 		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_NPC ||
 			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE ||
+			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_BOSS ||
 			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING ||
 			collisionGroup0 == COLLISION_GROUP_NPC_MILITARY ||
 			collisionGroup0 == COLLISION_GROUP_NPC_MERCENARY ||

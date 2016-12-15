@@ -700,7 +700,7 @@ bool CGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	if (( collisionGroup0 == COLLISION_GROUP_IN_VEHICLE ) || ( collisionGroup1 == COLLISION_GROUP_IN_VEHICLE ))
 		return false;
 
-	if ((collisionGroup1 == COLLISION_GROUP_DOOR_BLOCKER) && ((collisionGroup0 != COLLISION_GROUP_NPC) && (collisionGroup0 != COLLISION_GROUP_NPC_ZOMBIE) && (collisionGroup0 != COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) && (collisionGroup0 != COLLISION_GROUP_NPC_MILITARY) && (collisionGroup0 != COLLISION_GROUP_NPC_MERCENARY)))
+	if ((collisionGroup1 == COLLISION_GROUP_DOOR_BLOCKER) && ((collisionGroup0 != COLLISION_GROUP_NPC) && (collisionGroup0 != COLLISION_GROUP_NPC_ZOMBIE) && (collisionGroup0 != COLLISION_GROUP_NPC_ZOMBIE_BOSS) && (collisionGroup0 != COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) && (collisionGroup0 != COLLISION_GROUP_NPC_MILITARY) && (collisionGroup0 != COLLISION_GROUP_NPC_MERCENARY)))
 		return false;
 
 	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER ) && ( collisionGroup1 == COLLISION_GROUP_PASSABLE_DOOR ) )
@@ -759,6 +759,7 @@ bool CGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 			collisionGroup0 == COLLISION_GROUP_PLAYER ||
 			collisionGroup0 == COLLISION_GROUP_NPC ||
 			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE ||
+			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_BOSS ||
 			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING ||
 			collisionGroup0 == COLLISION_GROUP_NPC_MILITARY ||
 			collisionGroup0 == COLLISION_GROUP_NPC_MERCENARY )
