@@ -129,7 +129,7 @@ acttable_t CWeaponMinigun::m_acttable[] =
 
 #ifndef CLIENT_DLL
 	// HL2
-	{ ACT_RANGE_ATTACK1, ACT_GESTURE_RANGE_ATTACK_MINIGUN, true },
+	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_MINIGUN, true },
 
 	{ ACT_IDLE, ACT_IDLE_MINIGUN, true },		// FIXME: hook to AR2 unique
 	{ ACT_IDLE_ANGRY, ACT_IDLE_MINIGUN, true },		// FIXME: hook to AR2 unique
@@ -139,7 +139,6 @@ acttable_t CWeaponMinigun::m_acttable[] =
 	{ ACT_IDLE_RELAXED, ACT_IDLE_MINIGUN, false },//never aims
 	{ ACT_IDLE_STIMULATED, ACT_IDLE_MINIGUN, false },
 	{ ACT_IDLE_AGITATED, ACT_IDLE_MINIGUN, false },//always aims
-
 
 	{ ACT_WALK_RELAXED, ACT_WALK_MINIGUN, false },//never aims
 	{ ACT_WALK_STIMULATED, ACT_WALK_MINIGUN, false },
@@ -173,7 +172,7 @@ acttable_t CWeaponMinigun::m_acttable[] =
 	{ ACT_GESTURE_RANGE_ATTACK1, ACT_GESTURE_RANGE_ATTACK_MINIGUN, false },
 	{ ACT_COVER_LOW, ACT_COVER_MINIGUN, false },		// FIXME: hook to AR2 unique
 	{ ACT_RANGE_AIM_LOW, ACT_IDLE_MINIGUN, false },
-	{ ACT_RANGE_ATTACK1_LOW, ACT_IDLE_MINIGUN, true },		// FIXME: hook to AR2 unique
+	{ ACT_RANGE_ATTACK1_LOW, ACT_RANGE_ATTACK_MINIGUN, true },		// FIXME: hook to AR2 unique
 #endif
 };
 

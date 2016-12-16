@@ -173,7 +173,12 @@ void CNPCBanditJohnsson::ClearAttackConditions()
 void CNPCBanditJohnsson::NotifyDeadFriend(CBaseEntity* pFriend)
 {
 	if (FInViewCone(pFriend) && FVisible(pFriend))
-		HL2MPRules()->EmitSoundToClient(this, "Taunt", GetNPCType(), GetGender());
+	{
+		if (m_flHealthFractionToCheck <= 25)
+			HL2MPRules()->EmitSoundToClient(this, "TauntRage", GetNPCType(), GetGender());
+		else
+			HL2MPRules()->EmitSoundToClient(this, "Taunt", GetNPCType(), GetGender());
+	}
 
 	BaseClass::NotifyDeadFriend(pFriend);
 }
@@ -184,7 +189,12 @@ void CNPCBanditJohnsson::AnnounceEnemyKill(CBaseEntity *pEnemy)
 		return;
 
 	if (pEnemy->IsPlayer())
-		HL2MPRules()->EmitSoundToClient(this, "PlayerDown", GetNPCType(), GetGender());
+	{
+		if (m_flHealthFractionToCheck <= 25)
+			HL2MPRules()->EmitSoundToClient(this, "PlayerDownRage", GetNPCType(), GetGender());
+		else
+			HL2MPRules()->EmitSoundToClient(this, "PlayerDown", GetNPCType(), GetGender());
+	}
 	else
 		BaseClass::AnnounceEnemyKill(pEnemy);
 }
@@ -197,14 +207,16 @@ void CNPCBanditJohnsson::PrescheduleThink(void)
 	float currHealth = ((float)GetHealth());
 	if ((currHealth < (maxHealth * (m_flHealthFractionToCheck / 100.0f))) && (m_flHealthFractionToCheck > 0.0f))
 	{
+		HL2MPRules()->EmitSoundToClient(this, "Retreat", GetNPCType(), GetGender());
+
 #ifdef BB2_AI
 		IPredictionSystem::SuppressHostEvents(NULL);
 #endif //BB2_AI
 
 		DispatchParticleEffect(TELEPORT_PARTICLE, GetAbsOrigin(), GetAbsAngles(), this);
 		m_flHealthFractionToCheck -= 25.0f;
+
 		m_OnLostQuarterOfHealth.FireOutput(this, this);
-		HL2MPRules()->EmitSoundToClient(this, "Retreat", GetNPCType(), GetGender());
 	}
 }
 
