@@ -331,6 +331,22 @@ Class_T	CNPCBanditJohnsson::Classify(void)
 
 void CNPCBanditJohnsson::InputEnteredHideout(inputdata_t &inputdata)
 {
+	// Remove Skill Affections:
+	if (m_pActiveSkillEffects.Count())
+	{
+		if (IsAffectedBySkillFlag(SKILL_FLAG_CRIPPLING_BLOW))
+			SetFrozen();
+
+		if (IsAffectedBySkillFlag(SKILL_FLAG_COLDSNAP) && IsMoving())
+		{
+			GetMotor()->MoveStop();
+			GetMotor()->MoveStart();
+		}
+
+		m_nMaterialOverlayFlags = 0;
+		m_pActiveSkillEffects.Purge();
+	}
+
 	if (m_flHealthFractionToCheck <= 25)
 	{
 		bool bGiveNewWeapon = true;

@@ -1102,7 +1102,7 @@ bool CHL2MP_Player::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, con
 			bCheckAttackButton = false;
 
 			// Only compensate NPCs within a reasonable distance.
-			float maxRange = pActiveWeapon->GetRange() * 6.0f;
+			float maxRange = pActiveWeapon->GetRange() * 8.0f;
 			float distance = GetAbsOrigin().DistTo(pEntity->GetAbsOrigin());
 			if (distance > maxRange)
 				return false;

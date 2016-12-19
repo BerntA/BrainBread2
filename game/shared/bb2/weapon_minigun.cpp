@@ -46,8 +46,11 @@ public:
 
 	int GetOverloadCapacity() { return 25; }
 
-	int		GetMinBurst() { return 1; }
-	int		GetMaxBurst() { return 3; }
+	int GetMinBurst() { return 1; }
+	int GetMaxBurst() { return 1; }
+
+	float GetMinRestTime() { return 0; }
+	float GetMaxRestTime() { return 0; }
 
 	int GetWeaponType(void) { return WEAPON_TYPE_SPECIAL; }
 	float GetFireRate(void) { return GetWpnData().m_flFireRate; }
