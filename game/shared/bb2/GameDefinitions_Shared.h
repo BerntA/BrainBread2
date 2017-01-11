@@ -258,6 +258,7 @@ struct DataInventoryItem_Base_t
 	int iRarity;
 	int iLevelReq;
 	int iWeight;
+	int iSkin;
 	char szModelPath[MAX_WEAPON_STRING];
 	char szSoundScriptSuccess[32];
 	char szSoundScriptFailure[32];

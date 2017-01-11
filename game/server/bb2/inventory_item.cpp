@@ -98,6 +98,8 @@ void CInventoryItem::Spawn()
 		}
 	}
 
+	m_nSkin = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].iSkin;
+
 	EnableRotationEffect();
 
 	AddSolidFlags(FSOLID_TRIGGER);

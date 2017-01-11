@@ -36,4 +36,6 @@ public:
 	virtual void StudioFrameAdvance();
 };
 
+extern ConVar bb2_render_body;
+
 #endif // C_FIRSTPERSON_BODY_H

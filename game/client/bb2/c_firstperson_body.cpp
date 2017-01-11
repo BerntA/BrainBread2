@@ -17,6 +17,8 @@
 #include "GlobalRenderEffects.h"
 #include "GameBase_Shared.h"
 
+ConVar bb2_render_body("bb2_render_body", "1", FCVAR_CHEAT, "Render firstperson body.");
+
 C_FirstpersonBody::C_FirstpersonBody()
 {
 }
@@ -43,6 +45,9 @@ bool C_FirstpersonBody::ShouldDraw()
 
 int C_FirstpersonBody::DrawModel(int flags)
 {
+	if (!bb2_render_body.GetBool())
+		return 0;
+
 	C_HL2MP_Player *pLocalPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
 	if (!pLocalPlayer)
 		return 0;

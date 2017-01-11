@@ -1204,6 +1204,7 @@ void CGameDefinitionsShared::ParseInventoryData(KeyValues *pkvData, bool bIsMapI
 			item.iSubType = sub->GetInt("SubType");
 			item.iWeight = sub->GetInt("Weight");
 			item.iRarity = sub->GetInt("Rarity");
+			item.iSkin = 0;
 			item.bIsMapItem = bIsMapItem;
 
 			Q_strncpy(item.szSoundScriptSuccess, sub->GetString("PickupSound", "ItemShared.Pickup"), 32);
@@ -1211,7 +1212,10 @@ void CGameDefinitionsShared::ParseInventoryData(KeyValues *pkvData, bool bIsMapI
 
 			KeyValues *pkvModel = sub->FindKey("model");
 			if (pkvModel)
+			{
 				Q_strncpy(item.szModelPath, pkvModel->GetString("modelname"), MAX_WEAPON_STRING);
+				item.iSkin = pkvModel->GetInt("skin");
+			}
 
 			const char *pszObjIconTexture = sub->GetString("ObjectiveIconTexture");
 
