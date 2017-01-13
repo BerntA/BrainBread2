@@ -106,6 +106,7 @@ $Project
 		$Folder "Entities"
 		{
 			$File "bb2\bb2_ammo.cpp"
+			$File "bb2\logic_inventory_checker.cpp"
 			$File "bb2\bb2_entity_counter.cpp"
 			$File "bb2\bb2_entity_counter.h"			
 			$File "bb2\game_tip.cpp"

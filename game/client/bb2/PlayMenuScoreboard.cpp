@@ -164,7 +164,9 @@ void PlayMenuScoreboard::SetupLayout(void)
 	m_pGridDetail[1]->SetPos((width / 2) + scheme()->GetProportionalScaledValue(220), scheme()->GetProportionalScaledValue(4));
 	m_pGridDetail[2]->SetPos((width / 2) + scheme()->GetProportionalScaledValue(287), scheme()->GetProportionalScaledValue(4));
 	m_pGridDetail[3]->SetPos((width / 2) + scheme()->GetProportionalScaledValue(356), scheme()->GetProportionalScaledValue(4));
-	m_pGridDetail[4]->SetPos((w / 2) - (scheme()->GetProportionalScaledValue(30) / 2), h - scheme()->GetProportionalScaledValue(20));
+
+	m_pGridDetail[4]->SetSize(scheme()->GetProportionalScaledValue(100), scheme()->GetProportionalScaledValue(20));
+	m_pGridDetail[4]->SetPos((w / 2) - (scheme()->GetProportionalScaledValue(100) / 2), h - scheme()->GetProportionalScaledValue(20));
 }
 
 void PlayMenuScoreboard::ApplySchemeSettings(vgui::IScheme *pScheme)

@@ -361,6 +361,8 @@ void CNPCBanditJohnsson::InputEnteredHideout(inputdata_t &inputdata)
 				cWeaponEnt = AllocPooledString("weapon_minigun");
 
 			GiveWeapon(cWeaponEnt);
+
+			HL2MPRules()->EmitSoundToClient(this, "PickupMinigun", GetNPCType(), GetGender());
 		}
 
 		HL2MPRules()->EmitSoundToClient(this, "EnterHideoutRage", GetNPCType(), GetGender());

@@ -7,6 +7,7 @@
 #include "cbase.h"
 #include "GameDefinitions_Workshop.h"
 #include "GameBase_Shared.h"
+#include "tier0/icommandline.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -14,6 +15,11 @@
 static bool m_bLoaded = false;
 static bool m_bDownloadListOfItems = false;
 static PublishedFileId_t m_currentFileID = 0;
+
+PublishedFileId_t GetPublishedFileIDFromCommandLine(const char *param)
+{
+	return ((PublishedFileId_t)atoll(CommandLine()->ParmValue(param, "0")));
+}
 
 CGameDefinitionsWorkshop::CGameDefinitionsWorkshop() : m_CallbackItemDownloaded(this, &CGameDefinitionsWorkshop::DownloadedItem)
 {
@@ -61,6 +67,35 @@ void CGameDefinitionsWorkshop::Initialize()
 	m_bLoaded = true;
 
 	Msg("Steam Workshop has been fully initialized!\n");
+
+	//
+	// Check command line 'links' now that workshop has been properly initialized:
+	//
+
+	if (CommandLine()->FindParm("+workshop_update_items"))
+	{
+		Msg("Trying to update downloaded workshop items...\n");
+		UpdateDownloadedItems();
+	}	
+	else if (CommandLine()->FindParm("+workshop_download_collection"))
+	{
+		PublishedFileId_t itemID = GetPublishedFileIDFromCommandLine("+workshop_download_collection");
+		if (!itemID)
+			return;
+
+		Msg("Trying to download collection: '%llu'\n", ((uint64)itemID));
+		GameBaseShared()->GetServerWorkshopData()->DownloadCollection(itemID);
+	}
+	else if (CommandLine()->FindParm("+workshop_download_item"))
+	{
+		PublishedFileId_t itemID = GetPublishedFileIDFromCommandLine("+workshop_download_item");
+		if (!itemID)
+			return;
+
+		Msg("Trying to download item: '%llu'\n", ((uint64)itemID));
+		steamgameserverapicontext->SteamUGC()->DownloadItem(itemID, true);
+		m_currentFileID = itemID;
+	}
 }
 
 void CGameDefinitionsWorkshop::DownloadThink()

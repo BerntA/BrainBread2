@@ -35,11 +35,15 @@ public:
 	void EnableButton(inputdata_t &inputData);
 	void DisableButton(inputdata_t &inputData);
 
+	void SetGlowType(inputdata_t &inputData);
+
 	void FireKeyPadOutput(CBasePlayer *pClient);
 
 	COutputEvent m_OnUse;
 
 	int ClassifyFor;
+	int m_iGlowType;
+
 	bool m_bStartGlowing;
 	bool m_bShowModel;
 	bool m_bIsEnabled;

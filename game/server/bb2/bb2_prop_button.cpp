@@ -29,6 +29,7 @@ DEFINE_OUTPUT(m_OnUse, "OnUse"),
 
 // Keyfields
 DEFINE_KEYFIELD(ClassifyFor, FIELD_INTEGER, "Filter"),
+DEFINE_KEYFIELD(m_iGlowType, FIELD_INTEGER, "GlowType"),
 DEFINE_KEYFIELD(m_bStartGlowing, FIELD_BOOLEAN, "EnableGlow"),
 DEFINE_KEYFIELD(m_bShowModel, FIELD_BOOLEAN, "ShowModel"),
 DEFINE_KEYFIELD(m_bIsEnabled, FIELD_BOOLEAN, "StartEnabled"),
@@ -43,6 +44,7 @@ DEFINE_INPUTFUNC(FIELD_VOID, "ShowGlow", ShowGlow),
 DEFINE_INPUTFUNC(FIELD_VOID, "HideGlow", HideGlow),
 DEFINE_INPUTFUNC(FIELD_VOID, "Enable", EnableButton),
 DEFINE_INPUTFUNC(FIELD_VOID, "Disable", DisableButton),
+DEFINE_INPUTFUNC(FIELD_INTEGER, "SetGlowType", SetGlowType),
 
 END_DATADESC()
 
@@ -51,6 +53,7 @@ LINK_ENTITY_TO_CLASS(bb2_prop_button, CBB2Button);
 CBB2Button::CBB2Button(void)
 {
 	ClassifyFor = 0;
+	m_iGlowType = GLOW_MODE_GLOBAL;
 	m_clrGlow = { 255, 100, 100, 255 };
 	m_bStartGlowing = false;
 	m_bShowModel = true;
@@ -84,7 +87,7 @@ void CBB2Button::Spawn(void)
 
 	// Further more effects:
 	if (m_bStartGlowing && m_bShowModel)
-		SetGlowMode(GLOW_MODE_GLOBAL);
+		SetGlowMode(m_iGlowType);
 	else
 		SetGlowMode(GLOW_MODE_NONE);
 
@@ -165,7 +168,7 @@ void CBB2Button::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 		data->deleteThis();
 	}
 	else
-		m_OnUse.FireOutput(this, this);
+		m_OnUse.FireOutput(pActivator, this);
 }
 
 void CBB2Button::ShowModel(inputdata_t &inputdata)
@@ -195,7 +198,7 @@ void CBB2Button::FireKeyPadOutput(CBasePlayer *pClient)
 
 void CBB2Button::ShowGlow(inputdata_t &inputdata)
 {
-	SetGlowMode(GLOW_MODE_GLOBAL);
+	SetGlowMode(m_iGlowType);
 }
 
 void CBB2Button::HideGlow(inputdata_t &inputdata)
@@ -211,4 +214,11 @@ void CBB2Button::EnableButton(inputdata_t &inputdata)
 void CBB2Button::DisableButton(inputdata_t &inputdata)
 {
 	m_bIsEnabled = false;
+}
+
+void CBB2Button::SetGlowType(inputdata_t &inputData)
+{
+	m_iGlowType = inputData.value.Int();
+	if (GetGlowMode() != GLOW_MODE_NONE) // Glowing is enabled? Update glow then.
+		SetGlowMode(m_iGlowType);
 }
