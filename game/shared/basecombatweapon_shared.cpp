@@ -2344,22 +2344,17 @@ void CBaseCombatWeapon::UpdateAutoFire( void )
 //-----------------------------------------------------------------------------
 void CBaseCombatWeapon::PrimaryAttack( void )
 {
-	// If my clip is empty (and I use clips) start reload
-	if ( UsesClipsForAmmo1() && !m_iClip1 ) 
-	{
-		Reload();
-		return;
-	}
-
-	// Only the player fires this way so we can cast
-	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
 	if (!pPlayer)
 		return;
 
-	SendWeaponAnim( GetPrimaryAttackActivity() );
+	// Abort here to handle burst and auto fire modes
+	if ((UsesClipsForAmmo1() && m_iClip1 <= 0) || (!UsesClipsForAmmo1() && !pPlayer->GetAmmoCount(m_iPrimaryAmmoType)))
+		return;
 
-	// player "shoot" animation
-	pPlayer->SetAnimation( PLAYER_ATTACK1 );
+	int shootAct = GetPrimaryAttackActivity();
+	SendWeaponAnim(shootAct);
+	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, shootAct);
 
 	FireBulletsInfo_t info;
 	info.m_vecSrc	 = pPlayer->Weapon_ShootPosition( );
@@ -2397,14 +2392,7 @@ void CBaseCombatWeapon::PrimaryAttack( void )
 	info.m_flDistance = MAX_TRACE_LENGTH;
 	info.m_iAmmoType = m_iPrimaryAmmoType;
 	info.m_iTracerFreq = 2;
-
-#if !defined( CLIENT_DLL )
-	// Fire the bullets
 	info.m_vecSpread = pPlayer->GetAttackSpread( this );
-#else
-	//!!!HACKHACK - what does the client want this function for? 
-	info.m_vecSpread = GetActiveWeapon()->GetBulletSpread();
-#endif // CLIENT_DLL
 
 	pPlayer->FireBullets( info );
 

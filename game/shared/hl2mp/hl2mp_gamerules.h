@@ -222,7 +222,7 @@ public:
 	bool m_bPlayersAllowedToVote[MAX_PLAYERS];
 	bool m_bPlayersVoted[MAX_PLAYERS];
 	void VoteSystemThink(void);
-	void ResetVote(void);
+	void ResetVote(bool bFullReset = false);
 	bool CanCreateVote(CBasePlayer *pVoter);
 	void CreateBanKickVote(CBasePlayer *pVoter, CBasePlayer *pTarget, bool bBan = false);
 	void CreateMapVote(CBasePlayer *pVoter, const char *map);

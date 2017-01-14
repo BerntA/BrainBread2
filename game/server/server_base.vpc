@@ -220,10 +220,13 @@ $Project
 			$File "$SRCDIR\game\shared\bb2\weapon_hatchet.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_machete.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_propane.cpp"
+			$File "$SRCDIR\game\shared\bb2\weapon_frag.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_glock17.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_remington700.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_base_sniper.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_base_sniper.h"
+			$File "$SRCDIR\game\shared\bb2\weapon_base_pistol.cpp"
+			$File "$SRCDIR\game\shared\bb2\weapon_base_pistol.h"
 			$File "$SRCDIR\game\shared\bb2\weapon_melee_chargeable.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_melee_chargeable.h"			
 		}

@@ -16,6 +16,8 @@
 #include "world.h"
 #include "tier0/icommandline.h"
 
+ConVar bb2_tutorial_mode("bb2_tutorial_mode", "0", FCVAR_CHEAT|FCVAR_GAMEDLL, "Force-enable tutorial mode for any map, useful for testing.", true, 0.0f, true, 1.0f);
+
 CGameBaseServer gServerMode;
 CGameBaseServer *GameBaseServer()
 {
@@ -263,7 +265,7 @@ float CGameBaseServer::GetDamageScaleForEntity(CBaseEntity *pAttacker, CBaseEnti
 
 bool CGameBaseServer::IsTutorialModeEnabled(void)
 {
-	return (GetWorldEntity() && GetWorldEntity()->IsTutorialMap());
+	return ((GetWorldEntity() && GetWorldEntity()->IsTutorialMap()) || bb2_tutorial_mode.GetBool());
 }
 
 bool CGameBaseServer::IsStoryMode(void)

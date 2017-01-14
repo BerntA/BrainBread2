@@ -124,6 +124,7 @@ void CHudVoteSystem::Init(void)
 {
 	ListenForGameEvent("votesys_start");
 	ListenForGameEvent("votesys_end");
+	ListenForGameEvent("round_end");
 }
 
 //-----------------------------------------------------------------------------
@@ -331,5 +332,16 @@ void CHudVoteSystem::FireGameEvent(IGameEvent *event)
 		g_pClientMode->GetViewportAnimationController()->RunAnimationCommand(this, "xpos", -GetWide(), 0.0f, 0.5f, AnimationController::INTERPOLATOR_LINEAR);
 
 		vgui::surface()->PlaySound("common/wpn_moveselect.wav");
+	}
+	else if (!strcmp(type, "round_end")) // Reset vote HUD!
+	{
+		BB2PlayerGlobals->SetVotePanelActive(false);
+		BB2PlayerGlobals->SetPlayerVoteResponse(0);
+
+		int x, y;
+		GetPos(x, y);
+
+		SetAlpha(0);
+		SetPos(-GetWide(), y);
 	}
 }

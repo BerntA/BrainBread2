@@ -675,6 +675,7 @@ void CHL2MPRules::DisplayScores(int iWinner)
 
 	m_flScoreBoardTime = gpGlobals->curtime + mp_chattime.GetFloat();
 	m_bShouldShowScores = true;
+	ResetVote(true);
 
 	IGameEvent * event = gameeventmanager->CreateEvent("round_end");
 	if (event)
@@ -1276,7 +1277,7 @@ void CHL2MPRules::VoteSystemThink(void)
 	}
 }
 
-void CHL2MPRules::ResetVote(void)
+void CHL2MPRules::ResetVote(bool bFullReset)
 {
 	m_iCurrentYesVotes = 0;
 	m_iCurrentNoVotes = 0;
@@ -1284,11 +1285,16 @@ void CHL2MPRules::ResetVote(void)
 	m_iCurrentVoteType = 0;
 	m_iUserIDToKickOrBan = 0;
 	pchMapToChangeTo[0] = 0;
+
+	if (bFullReset)
+	{
+		m_flNextVoteTime = 0.0f;
+	}
 }
 
 bool CHL2MPRules::CanCreateVote(CBasePlayer *pVoter)
 {
-	if (!pVoter)
+	if (!pVoter || g_fGameOver || m_bShouldShowScores || IsIntermission())
 		return false;
 
 	if (m_iCurrentVoteType)
@@ -1743,8 +1749,8 @@ void CHL2MPRules::GoToIntermission(int iWinner)
 
 	g_fGameOver = true;
 	m_bShouldShowScores = true;
-
 	m_flIntermissionEndTime = gpGlobals->curtime + mp_chattime.GetFloat();
+	ResetVote(true);
 
 	IGameEvent * event = gameeventmanager->CreateEvent("round_end");
 	if (event)

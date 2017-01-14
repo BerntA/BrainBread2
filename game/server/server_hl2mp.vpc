@@ -137,7 +137,6 @@ $Project "Server (HL2MP)"
 			
 			$Folder	"Weapons"
 			{
-				$File	"$SRCDIR\game\shared\hl2mp\weapon_frag.cpp"
 				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase.cpp"
 				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase.h"
 				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.cpp"

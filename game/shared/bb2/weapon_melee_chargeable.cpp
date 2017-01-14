@@ -141,7 +141,13 @@ float CHL2MPMeleeChargeable::GetChargeDamage(void)
 
 float CHL2MPMeleeChargeable::GetChargeFraction(void)
 {
-	return (clamp(((gpGlobals->curtime - m_flTimeCharged) / GetMaxChargeTime()), 0.0f, 1.0f));
+	float maxChargeTime = GetMaxChargeTime() * 2;
+	float timeToReduce = m_flTimeCharged + maxChargeTime;
+	float fraction = (clamp(((gpGlobals->curtime - m_flTimeCharged) / GetMaxChargeTime()), 0.0f, 1.0f));
+	if (fraction >= 1.0f && (gpGlobals->curtime > timeToReduce))
+		fraction -= (clamp(((gpGlobals->curtime - timeToReduce) / maxChargeTime), 0.0f, 1.0f));
+
+	return clamp(fraction, 0.0f, 1.0f);
 }
 
 void CHL2MPMeleeChargeable::ResetStates()
