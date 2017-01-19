@@ -1580,13 +1580,22 @@ void CHL2MPRules::StartEndMapVote(bool bRefresh)
 	m_bEndMapVotingEnabled = true;
 	m_flEndVoteTimeEnd = gpGlobals->curtime + bb2_vote_time_endgame.GetFloat();
 
-	Q_strncpy(pchMapOptions[0], GetRandomMapForVoteSys(MODE_OBJECTIVE), MAX_MAP_NAME);
-	Q_strncpy(pchMapOptions[1], GetRandomMapForVoteSys(MODE_ARENA), MAX_MAP_NAME);
-	Q_strncpy(pchMapOptions[2], GetRandomMapForVoteSys(MODE_ELIMINATION), MAX_MAP_NAME);
-	Q_strncpy(pchMapOptions[3], GetRandomMapForVoteSys(MODE_DEATHMATCH), MAX_MAP_NAME);
+	bool bShouldShowRandom = ShouldShowRandomMaps();
+	Q_strncpy(pchMapOptions[0], GetRandomMapForVoteSys(MODE_OBJECTIVE, bShouldShowRandom), MAX_MAP_NAME);
+	Q_strncpy(pchMapOptions[1], GetRandomMapForVoteSys(MODE_ARENA, bShouldShowRandom), MAX_MAP_NAME);
+	Q_strncpy(pchMapOptions[2], GetRandomMapForVoteSys(MODE_ELIMINATION, bShouldShowRandom), MAX_MAP_NAME);
+	Q_strncpy(pchMapOptions[3], GetRandomMapForVoteSys(MODE_DEATHMATCH, bShouldShowRandom), MAX_MAP_NAME);
+
+	int iMapChoices = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		if (strlen(pchMapOptions[i]) > 0)
+			iMapChoices++;
+	}
 
 	KeyValues *data = new KeyValues("data");
 	data->SetBool("refresh", bRefresh);
+	data->SetInt("choices", iMapChoices);
 
 	data->SetString("map1", pchMapOptions[0]);
 	data->SetString("map2", pchMapOptions[1]);
@@ -1674,35 +1683,69 @@ int CHL2MPRules::GetVoteTypeWithMostVotes(void)
 	return 0; 
 }
 
-const char *CHL2MPRules::GetRandomMapForVoteSys(int mode)
+bool CHL2MPRules::ShouldShowRandomMaps(void)
 {
-	CUtlVector<char*> pNewMapList;
+	bool bMapTypes[MODE_TOTAL];
+	for (int mapType = 0; mapType < MODE_TOTAL; mapType++)
+		bMapTypes[mapType] = false;
+
 	for (int i = 0; i < m_MapList.Count(); i++)
 	{
-		bool bAdd = false;
-		if (!Q_stristr(m_MapList[i], "bba_") && !Q_stristr(m_MapList[i], "bbe_") && !Q_stristr(m_MapList[i], "bbd_") && (mode == MODE_OBJECTIVE))
-			bAdd = true;
-		else if (Q_stristr(m_MapList[i], "bba_") && (mode == MODE_ARENA))
-			bAdd = true;
-		else if (Q_stristr(m_MapList[i], "bbe_") && (mode == MODE_ELIMINATION))
-			bAdd = true;
-		else if (Q_stristr(m_MapList[i], "bbd_") && (mode == MODE_DEATHMATCH))
-			bAdd = true;
+		if (!Q_stristr(m_MapList[i], "bba_") && !Q_stristr(m_MapList[i], "bbe_") && !Q_stristr(m_MapList[i], "bbd_"))
+			bMapTypes[0] = true;
+		else if (Q_stristr(m_MapList[i], "bba_"))
+			bMapTypes[1] = true;
+		else if (Q_stristr(m_MapList[i], "bbe_"))
+			bMapTypes[2] = true;
+		else if (Q_stristr(m_MapList[i], "bbd_"))
+			bMapTypes[3] = true;
+	}
 
-		if (bAdd)
-			pNewMapList.AddToTail(m_MapList[i]);
+	return !(bMapTypes[0] && bMapTypes[1] && bMapTypes[2] && bMapTypes[3]);
+}
+
+const char *CHL2MPRules::GetRandomMapForVoteSys(int mode, bool bRandom)
+{
+	CUtlVector<char*> pNewMapList;
+
+	for (int i = 0; i < m_MapList.Count(); i++)
+	{
+		if (!strcmp(szCurrentMap, m_MapList[i]))
+			continue;
+
+		bool bAdd = false;
+		if (bRandom)
+		{
+			bAdd = true;
+			for (int x = 0; x < 4; x++)
+			{
+				if ((strlen(pchMapOptions[x]) > 0) && !strcmp(pchMapOptions[x], m_MapList[i]))
+					bAdd = false;
+			}
+
+			if (bAdd)
+				pNewMapList.AddToTail(m_MapList[i]);
+		}
+		else
+		{
+			if (!Q_stristr(m_MapList[i], "bba_") && !Q_stristr(m_MapList[i], "bbe_") && !Q_stristr(m_MapList[i], "bbd_") && (mode == MODE_OBJECTIVE))
+				bAdd = true;
+			else if (Q_stristr(m_MapList[i], "bba_") && (mode == MODE_ARENA))
+				bAdd = true;
+			else if (Q_stristr(m_MapList[i], "bbe_") && (mode == MODE_ELIMINATION))
+				bAdd = true;
+			else if (Q_stristr(m_MapList[i], "bbd_") && (mode == MODE_DEATHMATCH))
+				bAdd = true;
+
+			if (bAdd)
+				pNewMapList.AddToTail(m_MapList[i]);
+		}
 	}
 
 	if (pNewMapList.Count() <= 0)
-		return ""; 
+		return "";
 
 	int index = random->RandomInt(0, (pNewMapList.Count() - 1));
-	if (pNewMapList.Count() > 1)
-	{
-		while (!strcmp(szCurrentMap, pNewMapList[index]))
-			index = random->RandomInt(0, (pNewMapList.Count() - 1));
-	}
-
 	char pchOut[MAX_MAP_NAME];
 	Q_strncpy(pchOut, pNewMapList[index], MAX_MAP_NAME);
 	pNewMapList.RemoveAll();

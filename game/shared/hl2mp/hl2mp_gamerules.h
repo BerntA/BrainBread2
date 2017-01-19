@@ -41,6 +41,7 @@ enum BB2_GameMode
 	MODE_ELIMINATION,
 	MODE_ARENA,
 	MODE_DEATHMATCH,
+	MODE_TOTAL = 4,
 };
 
 enum BB2_SoundTypes // Current available types ( npcs )... Custom & Unknown will remain undefined for a while.
@@ -236,7 +237,8 @@ public:
 	void ResetEndMapVoting(void);
 	void RecalculateEndMapVotes(void);
 	int GetVoteTypeWithMostVotes(void);
-	const char *GetRandomMapForVoteSys(int mode);
+	bool ShouldShowRandomMaps(void);
+	const char *GetRandomMapForVoteSys(int mode, bool bRandom = false);
 	char pchMapOptions[4][MAX_MAP_NAME];
 	float m_flEndVoteTimeEnd;
 	int m_iEndVotePlayerChoices[MAX_PLAYERS];

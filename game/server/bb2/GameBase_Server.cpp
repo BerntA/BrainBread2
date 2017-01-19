@@ -265,6 +265,9 @@ float CGameBaseServer::GetDamageScaleForEntity(CBaseEntity *pAttacker, CBaseEnti
 
 bool CGameBaseServer::IsTutorialModeEnabled(void)
 {
+	if (engine->IsDedicatedServer())
+		return false;
+
 	return ((GetWorldEntity() && GetWorldEntity()->IsTutorialMap()) || bb2_tutorial_mode.GetBool());
 }
 
