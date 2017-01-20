@@ -199,12 +199,20 @@ void CEndMapVoteMenu::Reset()
 void CEndMapVoteMenu::SetData(KeyValues *data)
 {
 	m_flVoteTimeEnd = data->GetFloat("timeleft");
+	int iMapChoices = data->GetInt("mapChoices");
 
 	// Setup the maps:
 	m_pVoteOption[0]->SetMapLink(data->GetString("map1"));
 	m_pVoteOption[1]->SetMapLink(data->GetString("map2"));
 	m_pVoteOption[2]->SetMapLink(data->GetString("map3"));
 	m_pVoteOption[3]->SetMapLink(data->GetString("map4"));
+
+	for (int i = 0; i < 4; i++)
+	{
+		bool bShouldHide = ((i + 1) > iMapChoices);
+		m_pVoteOption[i]->SetVisible(!bShouldHide);
+		m_pVoteOption[i]->SetEnabled(!bShouldHide);
+	}
 
 	// Don't do anything fancy if we just wanted to reload stuff:
 	bool bRefresh = data->GetBool("refresh");

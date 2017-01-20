@@ -1595,7 +1595,7 @@ void CHL2MPRules::StartEndMapVote(bool bRefresh)
 
 	KeyValues *data = new KeyValues("data");
 	data->SetBool("refresh", bRefresh);
-	data->SetInt("choices", iMapChoices);
+	data->SetInt("mapChoices", iMapChoices);
 
 	data->SetString("map1", pchMapOptions[0]);
 	data->SetString("map2", pchMapOptions[1]);
