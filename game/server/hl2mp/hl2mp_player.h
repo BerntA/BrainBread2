@@ -285,6 +285,8 @@ public:
 
 	bool HasPlayerUsedFirearm(void) { return m_bPlayerUsedFirearm; }
 
+	static bool IsWeaponEquippedByDefault(const char *weaponName);
+
 private:
 
 	// Player Shared Info

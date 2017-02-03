@@ -27,34 +27,40 @@ struct weaponInfoItem
 
 weaponInfoItem pszWeapons[] =
 {
-	{ "weapon_glock17", 65, false },
-	{ "weapon_rex", 35, false },
-	{ "weapon_akimbo_rex", 20, false },
-	{ "weapon_mac11", 60, false },
-	{ "weapon_mp7", 45, false },
+	{ "weapon_glock17", 70, false },
+	{ "weapon_beretta", 100, false },
+
+	{ "weapon_rex", 30, false },
+	{ "weapon_akimbo_rex", 15, false },
+
+	{ "weapon_mac11", 55, false },
+	{ "weapon_mp7", 40, false },
+
 	{ "weapon_ak47", 100, false },
-	{ "weapon_famas", 50, false },
-	{ "weapon_remington700", 15, false },
-	{ "weapon_minigun", 4, false },
-	{ "weapon_sawedoff", 25, false },
-	{ "weapon_remington", 40, false },
-	{ "weapon_winchester1894", 45, false },
+	{ "weapon_famas", 65, false },
+	{ "weapon_remington700", 10, false },
+	{ "weapon_winchester1894", 15, false },
+
+	{ "weapon_minigun", 5, false },
+	{ "weapon_sawedoff", 20, false },
+	{ "weapon_remington", 30, false },
+
 	{ "weapon_m9_bayonet", 100, true },
-	{ "weapon_fireaxe", 50, true },
+	{ "weapon_fireaxe", 55, true },
 	{ "weapon_machete", 30, true },
 	{ "weapon_sledgehammer", 25, true },
 	{ "weapon_baseballbat", 45, true },
-	{ "weapon_brick", 60, true },
-	{ "weapon_hatchet", 65, true },
+	{ "weapon_brick", 10, true },
+	{ "weapon_hatchet", 100, true },
 };
 
 const char *GetRandomWeapon(int type)
 {
-	int chance = random->RandomInt(0, 100);
+	int chance = random->RandomInt(5, 100);
 	CUtlVector<int> weaponIndexes;
 	for (int i = 0; i < _ARRAYSIZE(pszWeapons); i++)
 	{
-		if ((pszWeapons[i].melee && (type == 1)) || (!pszWeapons[i].melee && (type == 2)))
+		if ((pszWeapons[i].melee && (type == 1)) || (!pszWeapons[i].melee && (type == 2)) || CHL2MP_Player::IsWeaponEquippedByDefault(pszWeapons[i].classname))
 			continue;
 
 		if (pszWeapons[i].chance < chance)

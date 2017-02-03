@@ -58,6 +58,7 @@ public:
 
 	void Spawn(void);
 	void EquipPlayer(CHL2MP_Player *pPlayer);
+	bool ShouldEquipWeapon(const char *weaponName);
 
 private:
 
@@ -80,6 +81,8 @@ CLogicPlayerEquipper::CLogicPlayerEquipper()
 	{
 		pchWeaponLinks[i] = NULL_STRING;
 	}
+
+	m_pPlayerEquipper = this;
 }
 
 CLogicPlayerEquipper::~CLogicPlayerEquipper()
@@ -107,8 +110,6 @@ void CLogicPlayerEquipper::Spawn()
 		UTIL_Remove(this);
 		return;
 	}
-
-	m_pPlayerEquipper = this;
 }
 
 void CLogicPlayerEquipper::EquipPlayer(CHL2MP_Player *pPlayer)
@@ -126,6 +127,20 @@ void CLogicPlayerEquipper::EquipPlayer(CHL2MP_Player *pPlayer)
 	CBaseCombatWeapon *pWantedWeapon = pPlayer->GetBestWeapon();
 	if (pWantedWeapon != NULL)
 		pPlayer->Weapon_Switch(pWantedWeapon, true);
+}
+
+bool CLogicPlayerEquipper::ShouldEquipWeapon(const char *weaponName)
+{
+	for (int i = 0; i < _ARRAYSIZE(pchWeaponLinks); i++)
+	{
+		if (pchWeaponLinks[i] == NULL_STRING)
+			continue;
+
+		if (!strcmp(STRING(pchWeaponLinks[i]), weaponName))
+			return true;
+	}
+
+	return false;
 }
 
 // END
@@ -3297,6 +3312,14 @@ bool CHL2MP_Player::IsValidObserverTarget(CBaseEntity * target)
 		return false;
 
 	return ret;
+}
+
+bool CHL2MP_Player::IsWeaponEquippedByDefault(const char *weaponName)
+{
+	if (m_pPlayerEquipper && m_pPlayerEquipper->ShouldEquipWeapon(weaponName))
+		return true;
+
+	return false;
 }
 
 // -------------------------------------------------------------------------------- //
