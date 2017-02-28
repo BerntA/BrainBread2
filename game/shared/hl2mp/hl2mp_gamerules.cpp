@@ -377,6 +377,9 @@ CHL2MPRules::CHL2MPRules()
 
 	m_flServerStartTime = gpGlobals->curtime;
 
+	// Execute linked .cfg for this map, if any:
+	engine->ServerCommand(UTIL_VarArgs("exec maps/%s.cfg\n", szCurrentMap));
+
 #endif
 }
 

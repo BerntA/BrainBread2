@@ -3319,6 +3319,17 @@ bool CHL2MP_Player::IsWeaponEquippedByDefault(const char *weaponName)
 	if (m_pPlayerEquipper && m_pPlayerEquipper->ShouldEquipWeapon(weaponName))
 		return true;
 
+	if (HL2MPRules() && (HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION))
+	{
+		if (
+			!strcmp(weaponName, "weapon_glock17") ||
+			!strcmp(weaponName, "weapon_beretta") ||
+			!strcmp(weaponName, "weapon_m9_bayonet") ||
+			!strcmp(weaponName, "weapon_hatchet")
+			)
+			return true;
+	}
+
 	return false;
 }
 

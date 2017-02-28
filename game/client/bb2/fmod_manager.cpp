@@ -74,9 +74,9 @@ void CFMODManager::ExitFMOD(void)
 // Returns the full path of a specified sound file in the /sounds folder
 const char *CFMODManager::GetFullPathToSound(const char *pathToFileFromModFolder)
 {
-	char fullPath[512];
-
-	Q_snprintf(fullPath, 512, "%s/sound/%s", engine->GetGameDirectory(), pathToFileFromModFolder);
+	char fullPath[512], relativePath[256];
+	Q_snprintf(relativePath, 256, "sound/%s", pathToFileFromModFolder);
+	filesystem->RelativePathToFullPath(relativePath, "MOD", fullPath, sizeof(fullPath));
 	int iLength = strlen(fullPath);
 
 	// convert backwards slashes to forward slashes
@@ -87,7 +87,6 @@ const char *CFMODManager::GetFullPathToSound(const char *pathToFileFromModFolder
 	}
 
 	const char *results = fullPath;
-
 	return results;
 }
 
