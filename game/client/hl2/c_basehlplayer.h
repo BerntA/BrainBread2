@@ -40,7 +40,7 @@ public:
 	virtual void		ExitLadder();
 	
 	// Input handling
-	virtual bool	CreateMove( float flInputSampleTime, CUserCmd *pCmd );
+	virtual bool	CreateMove(float flInputSampleTime, CUserCmd *pCmd, bool bFakeInput);
 	void			PerformClientSideObstacleAvoidance( float flFrameTime, CUserCmd *pCmd );
 	void			PerformClientSideNPCSpeedModifiers( float flFrameTime, CUserCmd *pCmd );
 

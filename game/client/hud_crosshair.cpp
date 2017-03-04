@@ -59,6 +59,7 @@ CHudCrosshair::CHudCrosshair( const char *pElementName ) : CHudElement( pElement
 	SetParent( pParent );
 
 	m_pCrosshair = NULL;
+	m_pCursor = NULL;
 	m_clrCrosshair = Color( 0, 0, 0, 0 );
 	m_vecCrossHairOffsetAngle.Init();
 
@@ -67,6 +68,11 @@ CHudCrosshair::CHudCrosshair( const char *pElementName ) : CHudElement( pElement
 
 CHudCrosshair::~CHudCrosshair()
 {
+}
+
+void CHudCrosshair::VidInit(void)
+{
+	m_pCursor = gHUD.GetIcon("cursor_vguiscreen");
 }
 
 void CHudCrosshair::ApplySchemeSettings( IScheme *scheme )
@@ -133,11 +139,22 @@ bool CHudCrosshair::ShouldDraw( void )
 			g_pClientMode->ShouldDrawCrosshair() &&
 			!( pPlayer->GetFlags() & FL_FROZEN ) &&
 			( pPlayer->entindex() == render->GetViewEntity() ) &&
-			!pPlayer->IsInVGuiInputMode() &&
 			( pPlayer->IsAlive() );
+
+		if (!m_pCursor && pPlayer->IsInVGuiInputMode())
+			return false;
 	}
 
 	return ( bNeedsDraw && CHudElement::ShouldDraw() );
+}
+
+CHudTexture *CHudCrosshair::GetCrosshairIcon(void)
+{
+	C_BasePlayer* pPlayer = C_BasePlayer::GetLocalPlayer();
+	if (pPlayer && pPlayer->IsInVGuiInputMode() && m_pCursor)
+		return m_pCursor;
+
+	return m_pCrosshair;
 }
 
 void CHudCrosshair::GetDrawPosition ( float *pX, float *pY, bool *pbBehindCamera, QAngle angleCrosshairOffset )
@@ -230,7 +247,8 @@ void CHudCrosshair::GetDrawPosition ( float *pX, float *pY, bool *pbBehindCamera
 
 void CHudCrosshair::Paint( void )
 {
-	if ( !m_pCrosshair )
+	CHudTexture *pCrosshairIcon = GetCrosshairIcon();
+	if (!pCrosshairIcon)
 		return;
 
 	if ( !IsCurrentViewAccessAllowed() )
@@ -248,8 +266,8 @@ void CHudCrosshair::Paint( void )
 		return;
 
 	float flWeaponScale = 1.f;
-	int iTextureW = m_pCrosshair->Width();
-	int iTextureH = m_pCrosshair->Height();
+	int iTextureW = pCrosshairIcon->Width();
+	int iTextureH = pCrosshairIcon->Height();
 	C_BaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
 	if ( pWeapon )
 	{
@@ -265,7 +283,7 @@ void CHudCrosshair::Paint( void )
 	int iX = (int)(x + 0.5f);
 	int iY = (int)(y + 0.5f);
 
-	m_pCrosshair->DrawSelfCropped(
+	pCrosshairIcon->DrawSelfCropped(
 		iX - (iWidth / 2), iY - (iHeight / 2),
 		0, 0,
 		iTextureW, iTextureH,

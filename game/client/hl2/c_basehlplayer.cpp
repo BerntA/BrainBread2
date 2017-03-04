@@ -626,14 +626,14 @@ void C_BaseHLPlayer::PerformClientSideNPCSpeedModifiers( float flFrameTime, CUse
 //-----------------------------------------------------------------------------
 // Purpose: Input handling
 //-----------------------------------------------------------------------------
-bool C_BaseHLPlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
+bool C_BaseHLPlayer::CreateMove(float flInputSampleTime, CUserCmd *pCmd, bool bFakeInput)
 {
-	bool bResult = BaseClass::CreateMove( flInputSampleTime, pCmd );
+	bool bResult = BaseClass::CreateMove(flInputSampleTime, pCmd, bFakeInput);
 
 	if ( !IsInAVehicle() )
 	{
-		PerformClientSideObstacleAvoidance( TICK_INTERVAL, pCmd );
-		PerformClientSideNPCSpeedModifiers( TICK_INTERVAL, pCmd );
+		PerformClientSideObstacleAvoidance(TICK_INTERVAL, pCmd);
+		PerformClientSideNPCSpeedModifiers(TICK_INTERVAL, pCmd);
 	}
 
 	return bResult;

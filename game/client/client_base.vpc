@@ -330,6 +330,12 @@ $Project
 			$File "bb2/vote_menu.cpp"
 			$File "bb2/vote_menu.h"
 		}
+		
+		$Folder "VGUI_Screens"
+		{
+			$File "bb2/KeyPadScreen.cpp"
+			$File "bb2/KeyPadScreen.h"
+		}
 
 		$Folder "Player"
 		{

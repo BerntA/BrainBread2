@@ -128,7 +128,7 @@ public:
 	virtual Vector			GetAutoaimVector( float flScale );
 
 	// Input handling
-	virtual bool	CreateMove( float flInputSampleTime, CUserCmd *pCmd );
+	virtual bool	CreateMove(float flInputSampleTime, CUserCmd *pCmd, bool bFakeInput);
 	virtual void	AvoidPhysicsProps( CUserCmd *pCmd );
 	
 	virtual void	PlayerUse( void );

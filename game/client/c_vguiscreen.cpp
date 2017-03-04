@@ -47,6 +47,7 @@ CLIENTEFFECT_REGISTER_END()
 // This is a cache of preloaded keyvalues.
 // ----------------------------------------------------------------------------- // 
 
+CUtlVector<C_VGuiScreen*> g_pVGUIScreens;
 CUtlDict<KeyValues*, int> g_KeyValuesCache;
 
 KeyValues* CacheKeyValuesForFile( const char *pFilename )
@@ -95,18 +96,21 @@ C_VGuiScreen::C_VGuiScreen()
 {
 	m_nOldPanelName = m_nPanelName = -1;
 	m_nOldOverlayMaterial = m_nOverlayMaterial = -1;
-	m_nOldPx = m_nOldPy = -1;
 	m_nButtonState = 0;
 	m_bLoseThinkNextFrame = false;
+	m_bHandledInput = false;
 	m_bAcceptsInput = true;
 
 	m_WriteZMaterial.Init( "engine/writez", TEXTURE_GROUP_VGUI );
 	m_OverlayMaterial.Init( m_WriteZMaterial );
+
+	g_pVGUIScreens.AddToTail(this);
 }
 
 C_VGuiScreen::~C_VGuiScreen()
 {
 	DestroyVguiScreen();
+	g_pVGUIScreens.FindAndRemove(this);
 }
 
 //-----------------------------------------------------------------------------
@@ -288,12 +292,14 @@ void C_VGuiScreen::GainFocus( )
 	SetNextClientThink( CLIENT_THINK_ALWAYS );
 	m_bLoseThinkNextFrame = false;
 	m_nOldButtonState = 0;
+	m_bHandledInput = false;
 }
 
 void C_VGuiScreen::LoseFocus()
 {
 	m_bLoseThinkNextFrame = true;
 	m_nOldButtonState = 0;
+	m_bHandledInput = false;
 }
 
 void C_VGuiScreen::SetButtonState( int nButtonState )
@@ -416,33 +422,27 @@ void C_VGuiScreen::ClientThink( void )
 	int px = (int)(u * m_nPixelWidth + 0.5f);
 	int py = (int)(v * m_nPixelHeight + 0.5f);
 
-	// Generate mouse input commands
-	if ((px != m_nOldPx) || (py != m_nOldPy))
-	{
-		g_InputInternal->InternalCursorMoved( px, py );
-		m_nOldPx = px;
-		m_nOldPy = py;
-	}
+	if (m_bHandledInput && !(m_nButtonState & IN_ATTACK))
+		m_bHandledInput = false;
 
-	if (m_nButtonPressed & IN_ATTACK)
+	for (int i = 0; i < pPanel->GetChildCount(); i++)
 	{
-		g_InputInternal->SetMouseCodeState( MOUSE_LEFT, vgui::BUTTON_PRESSED );
-		g_InputInternal->InternalMousePressed(MOUSE_LEFT);
-	}
-	if (m_nButtonPressed & IN_ATTACK2)
-	{
-		g_InputInternal->SetMouseCodeState( MOUSE_RIGHT, vgui::BUTTON_PRESSED );
-		g_InputInternal->InternalMousePressed( MOUSE_RIGHT );
-	}
-	if ( (m_nButtonReleased & IN_ATTACK) || m_bLoseThinkNextFrame) // for a button release on loosing focus
-	{
-		g_InputInternal->SetMouseCodeState( MOUSE_LEFT, vgui::BUTTON_RELEASED );
-		g_InputInternal->InternalMouseReleased( MOUSE_LEFT );
-	}
-	if (m_nButtonReleased & IN_ATTACK2)
-	{
-		g_InputInternal->SetMouseCodeState( MOUSE_RIGHT, vgui::BUTTON_RELEASED );
-		g_InputInternal->InternalMouseReleased( MOUSE_RIGHT );
+		vgui::Button *child = dynamic_cast<vgui::Button*>(pPanel->GetChild(i));
+		if (child)
+		{
+			int x1, x2, y1, y2;
+			child->GetBounds(x1, y1, x2, y2);
+
+			// Generate mouse input commands
+			if ((m_nButtonState & IN_ATTACK))
+			{
+				if ((px >= x1 && px <= x1 + x2 && py >= y1 && py <= y1 + y2) && !m_bHandledInput)
+				{
+					m_bHandledInput = true;
+					child->FireActionSignal();
+				}
+			}
+		}
 	}
 
 	if ( m_bLoseThinkNextFrame == true )
@@ -629,58 +629,12 @@ bool C_VGuiScreen::IsInputOnlyToOwner( void )
 
 //-----------------------------------------------------------------------------
 //
-// Enumator class for finding vgui screens close to the local player
-//
-//-----------------------------------------------------------------------------
-class CVGuiScreenEnumerator : public IPartitionEnumerator
-{
-	DECLARE_CLASS_GAMEROOT( CVGuiScreenEnumerator, IPartitionEnumerator );
-public:
-	virtual IterationRetval_t EnumElement( IHandleEntity *pHandleEntity );
-
-	int	GetScreenCount();
-	C_VGuiScreen *GetVGuiScreen( int index );
-
-private:
-	CUtlVector< CHandle< C_VGuiScreen > > m_VguiScreens;
-};
-
-IterationRetval_t CVGuiScreenEnumerator::EnumElement( IHandleEntity *pHandleEntity )
-{
-	C_BaseEntity *pEnt = ClientEntityList().GetBaseEntityFromHandle( pHandleEntity->GetRefEHandle() );
-	if ( pEnt == NULL )
-		return ITERATION_CONTINUE;
-
-	// FIXME.. pretty expensive...
-	C_VGuiScreen *pScreen = dynamic_cast<C_VGuiScreen*>(pEnt); 
-	if ( pScreen )
-	{
-		int i = m_VguiScreens.AddToTail( );
-		m_VguiScreens[i].Set( pScreen );
-	}
-
-	return ITERATION_CONTINUE;
-}
-
-int	CVGuiScreenEnumerator::GetScreenCount()
-{
-	return m_VguiScreens.Count();
-}
-
-C_VGuiScreen *CVGuiScreenEnumerator::GetVGuiScreen( int index )
-{
-	return m_VguiScreens[index].Get();
-}	
-
-
-//-----------------------------------------------------------------------------
-//
 // Look for vgui screens, returns true if it found one ...
 //
 //-----------------------------------------------------------------------------
-C_BaseEntity *FindNearbyVguiScreen( const Vector &viewPosition, const QAngle &viewAngle, int nTeam )
+C_BaseEntity *FindNearbyVguiScreen(const Vector &viewPosition, const QAngle &viewAngle, int nTeam)
 {
-	if ( IsX360() )
+	if (IsX360())
 	{
 		// X360TBD: Turn this on if feature actually used
 		return NULL;
@@ -688,83 +642,82 @@ C_BaseEntity *FindNearbyVguiScreen( const Vector &viewPosition, const QAngle &vi
 
 	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
 
-	Assert( pLocalPlayer );
+	Assert(pLocalPlayer);
 
-	if ( !pLocalPlayer )
+	if (!pLocalPlayer)
 		return NULL;
 
 	// Get the view direction...
 	Vector lookDir;
-	AngleVectors( viewAngle, &lookDir );
+	AngleVectors(viewAngle, &lookDir);
 
 	// Create a ray used for raytracing 
 	Vector lookEnd;
-	VectorMA( viewPosition, 2.0f * VGUI_SCREEN_MODE_RADIUS, lookDir, lookEnd );
+	VectorMA(viewPosition, 2.0f * VGUI_SCREEN_MODE_RADIUS, lookDir, lookEnd);
 
 	Ray_t lookRay;
-	lookRay.Init( viewPosition, lookEnd );
-
-	// Look for vgui screens that are close to the player
-	CVGuiScreenEnumerator localScreens;
-	partition->EnumerateElementsInSphere( PARTITION_CLIENT_NON_STATIC_EDICTS, viewPosition, VGUI_SCREEN_MODE_RADIUS, false, &localScreens );
+	lookRay.Init(viewPosition, lookEnd);
 
 	Vector vecOut, vecViewDelta;
-
 	float flBestDist = 2.0f;
+
 	C_VGuiScreen *pBestScreen = NULL;
-	for (int i = localScreens.GetScreenCount(); --i >= 0; )
+	for (int i = 0; i < g_pVGUIScreens.Count(); i++)
 	{
-		C_VGuiScreen *pScreen = localScreens.GetVGuiScreen(i);
-
-		if ( pScreen->IsAttachedToViewModel() )
-			continue;
-
-		// Don't bother with screens I'm behind...
-		// Hax - don't cancel backfacing with viewmodel attached screens.
-		// we can get prediction bugs that make us backfacing for one frame and
-		// it resets the mouse position if we lose focus.
-		if ( pScreen->IsBackfacing(viewPosition) )
-			continue;
-
-		// Don't bother with screens that are turned off
-		if (!pScreen->IsActive())
-			continue;
-
-		// FIXME: Should this maybe go into a derived class of some sort?
-		// Don't bother with screens on the wrong team
-		if (!pScreen->IsVisibleToTeam(nTeam))
-			continue;
-
-		if ( !pScreen->AcceptsInput() )
-			continue;
-
-		if ( pScreen->IsInputOnlyToOwner() && pScreen->GetPlayerOwner() != pLocalPlayer )
-			continue;
-
-		// Test perpendicular distance from the screen...
-		pScreen->GetVectors( NULL, NULL, &vecOut );
-		VectorSubtract( viewPosition, pScreen->GetAbsOrigin(), vecViewDelta );
-		float flPerpDist = DotProduct(vecViewDelta, vecOut);
-		if ( (flPerpDist < 0) || (flPerpDist > VGUI_SCREEN_MODE_RADIUS) )
-			continue;
-
-		// Perform a raycast to see where in barycentric coordinates the ray hits
-		// the viewscreen; if it doesn't hit it, you're not in the mode
-		float u, v, t;
-		if (!pScreen->IntersectWithRay( lookRay, &u, &v, &t ))
-			continue;
-
-		// Barycentric test
-		if ((u < 0) || (v < 0) || (u > 1) || (v > 1))
-			continue;
-
-		if ( t < flBestDist )
+		if (g_pVGUIScreens.IsValidIndex(i))
 		{
-			flBestDist = t;
-			pBestScreen = pScreen;
+			C_VGuiScreen *pScreen = g_pVGUIScreens[i];
+
+			if (pScreen->IsAttachedToViewModel())
+				continue;
+
+			// Don't bother with screens I'm behind...
+			// Hax - don't cancel backfacing with viewmodel attached screens.
+			// we can get prediction bugs that make us backfacing for one frame and
+			// it resets the mouse position if we lose focus.
+			if (pScreen->IsBackfacing(viewPosition))
+				continue;
+
+			// Don't bother with screens that are turned off
+			if (!pScreen->IsActive())
+				continue;
+
+			// FIXME: Should this maybe go into a derived class of some sort?
+			// Don't bother with screens on the wrong team
+			if (!pScreen->IsVisibleToTeam(nTeam))
+				continue;
+
+			if (!pScreen->AcceptsInput())
+				continue;
+
+			if (pScreen->IsInputOnlyToOwner() && pScreen->GetPlayerOwner() != pLocalPlayer)
+				continue;
+
+			// Test perpendicular distance from the screen...
+			pScreen->GetVectors(NULL, NULL, &vecOut);
+			VectorSubtract(viewPosition, pScreen->GetAbsOrigin(), vecViewDelta);
+			float flPerpDist = DotProduct(vecViewDelta, vecOut);
+			if ((flPerpDist < 0) || (flPerpDist > VGUI_SCREEN_MODE_RADIUS))
+				continue;
+
+			// Perform a raycast to see where in barycentric coordinates the ray hits
+			// the viewscreen; if it doesn't hit it, you're not in the mode
+			float u, v, t;
+			if (!pScreen->IntersectWithRay(lookRay, &u, &v, &t))
+				continue;
+
+			// Barycentric test
+			if ((u < 0) || (v < 0) || (u > 1) || (v > 1))
+				continue;
+
+			if (t < flBestDist)
+			{
+				flBestDist = t;
+				pBestScreen = pScreen;
+			}
 		}
 	}
-	
+
 	return pBestScreen;
 }
 

@@ -29,11 +29,13 @@ public:
 	CHudCrosshair(const char *pElementName);
 	virtual ~CHudCrosshair();
 
+	virtual void	VidInit(void);
 	virtual void	SetCrosshairAngle(const QAngle& angle);
 	virtual void	SetCrosshair(void);
 	virtual void	DrawCrosshair(void) {}
 	virtual bool	HasCrosshair(void) { return (m_pCrosshair != NULL); }
 	virtual bool	ShouldDraw();
+	virtual CHudTexture *GetCrosshairIcon(void);
 
 	// any UI element that wants to be at the aim point can use this to figure out where to draw
 	static void	GetDrawPosition(float *pX, float *pY, bool *pbBehindCamera, QAngle angleCrosshairOffset = vec3_angle);
@@ -43,6 +45,7 @@ protected:
 
 	// Crosshair sprite and colors
 	CHudTexture		*m_pCrosshair;
+	CHudTexture		*m_pCursor;
 	Color			m_clrCrosshair;
 	QAngle			m_vecCrossHairOffsetAngle;
 

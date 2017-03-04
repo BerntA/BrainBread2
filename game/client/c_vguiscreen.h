@@ -135,8 +135,6 @@ private:
 	int	m_nButtonState;
 	int m_nButtonPressed;
 	int m_nButtonReleased;
-	int m_nOldPx;
-	int m_nOldPy;
 	int m_nOldButtonState;
 	int m_nAttachmentIndex;
 	int m_nOverlayMaterial;
@@ -146,6 +144,7 @@ private:
 	int m_nOldOverlayMaterial;
 
 	bool m_bLoseThinkNextFrame;
+	bool m_bHandledInput;
 
 	bool	m_bAcceptsInput;
 

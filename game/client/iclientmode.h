@@ -87,6 +87,7 @@ public:
 	virtual vgui::Panel *GetMessagePanel() = 0;
 	virtual void	OverrideMouseInput( float *x, float *y ) = 0;
 	virtual bool	CreateMove( float flInputSampleTime, CUserCmd *cmd ) = 0;
+	virtual bool	CreateMove(float flInputSampleTime, CUserCmd *cmd, bool bFakeInput) = 0;
 
 	virtual void	LevelInit( const char *newmap ) = 0;
 	virtual void	LevelShutdown( void ) = 0;
