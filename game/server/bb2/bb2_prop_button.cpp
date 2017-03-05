@@ -103,7 +103,7 @@ void CBB2Button::Spawn(void)
 			return;
 		}
 
-		if ((strlen(STRING(szKeyPadCode)) < 4) || (strlen(STRING(szKeyPadCode)) > 4))
+		if (strlen(STRING(szKeyPadCode)) != 4)
 		{
 			Warning("BB2_PROP_BUTTON '%s' WITH KEYPAD MODE DOES NOT HAVE A CODE CONTAINING 4 DIGITS!\nRemoving!\n", STRING(GetEntityName()));
 			UTIL_Remove(this);
