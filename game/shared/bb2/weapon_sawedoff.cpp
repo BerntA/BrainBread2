@@ -119,6 +119,7 @@ acttable_t	CWeaponSawedOff::m_acttable[] =
 	{ ACT_MP_KICK, ACT_HL2MP_GESTURE_KICK, false },
 	{ ACT_MP_BASH, ACT_HL2MP_GESTURE_BASH_SHOTGUN, false },
 	{ ACT_MP_SLIDE, ACT_HL2MP_SLIDE_SHOTGUN, false },
+	{ ACT_MP_SLIDE_IDLE, ACT_HL2MP_SLIDE_IDLE_SHOTGUN, false },
 	{ ACT_MP_WALK, ACT_HL2MP_WALK_SHOTGUN, false },
 
 	{ ACT_MP_RUN,						ACT_HL2MP_RUN_SHOTGUN,					false },

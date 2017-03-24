@@ -3436,10 +3436,9 @@ void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		ucmd->impulse = 0;
 		VectorCopy ( pl.v_angle, ucmd->viewangles );
 	}
-	else if ((pClient->m_BB2Local.m_bSliding || pClient->m_BB2Local.m_bStandToSlide) && !pClient->m_BB2Local.m_bSlideToStand) // No movement velocities from input buttons while sliding.
+	else if (pClient->IsSliding()) // No movement velocities from input buttons while sliding.
 	{
 		ucmd->forwardmove = 0;
-		ucmd->sidemove = 0;
 		ucmd->upmove = 0;
 	}
 	else

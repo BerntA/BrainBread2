@@ -71,6 +71,7 @@ acttable_t	CWeaponHands::m_acttable[] =
 	{ ACT_MP_INFECTED, ACT_HL2MP_GESTURE_INFECTED, false },
 	{ ACT_MP_KICK, ACT_HL2MP_GESTURE_KICK, false },
 	{ ACT_MP_SLIDE, ACT_HL2MP_SLIDE, false },
+	{ ACT_MP_SLIDE_IDLE, ACT_HL2MP_SLIDE_IDLE, false },
 	{ ACT_MP_WALK, ACT_HL2MP_WALK_MELEE, false },
 
 	{ ACT_MP_RUN, ACT_HL2MP_RUN_MELEE, false },

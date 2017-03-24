@@ -856,6 +856,7 @@ Activity CMultiPlayerAnimState::CalcMainActivity()
 	if ( HandleJumping( idealActivity ) || 
 		HandleDucking( idealActivity ) || 
 		HandleSwimming( idealActivity ) || 
+		HandleSliding(idealActivity) ||
 		HandleDying( idealActivity ) )
 	{
 		// intentionally blank

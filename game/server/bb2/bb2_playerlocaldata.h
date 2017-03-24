@@ -59,7 +59,6 @@ public:
 	// Slide:
 	CNetworkVar(float, m_flSlideTime);
 	CNetworkVar(bool, m_bStandToSlide);
-	CNetworkVar(bool, m_bSlideToStand);
 	CNetworkVar(bool, m_bSliding);
 };
 

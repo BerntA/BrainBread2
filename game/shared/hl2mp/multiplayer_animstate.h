@@ -224,6 +224,7 @@ protected:
 	virtual bool HandleDucking( Activity &idealActivity );
 	virtual bool HandleMoving( Activity &idealActivity );
 	virtual bool HandleSwimming( Activity &idealActivity );
+	virtual bool HandleSliding(Activity &idealActivity) { return false; }
 	virtual bool HandleDying( Activity &idealActivity );
 
 	// Gesture Slots

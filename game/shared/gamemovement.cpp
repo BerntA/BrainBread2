@@ -2410,7 +2410,7 @@ bool CGameMovement::CheckJumpButton( void )
 	if (!pPlayer)
 		return false;
 
-	if (player->pl.deadflag || pPlayer->IsSliding() || pPlayer->m_BB2Local.m_bStandToSlide)
+	if (player->pl.deadflag || pPlayer->IsSliding())
 	{
 		mv->m_nOldButtons |= IN_JUMP ;	// don't jump again until released
 		return false;
@@ -4479,9 +4479,6 @@ void CGameMovement::Slide(void)
 		mv->m_nOldButtons &= ~IN_SLIDE;
 	}
 
-	if (bInDuck || bInAir)
-		return;
-
 	CHL2MP_Player *pClient = ToHL2MPPlayer(player);
 	if (!pClient)
 		return;
@@ -4489,7 +4486,10 @@ void CGameMovement::Slide(void)
 	if (IsDead() || (pClient->GetTeamNumber() != TEAM_HUMANS))
 		return;
 
-	bool bSliding = (pClient->m_BB2Local.m_bSliding || pClient->m_BB2Local.m_bStandToSlide || pClient->m_BB2Local.m_bSlideToStand || (pClient->m_BB2Local.m_flSlideKickCooldownEnd > gpGlobals->curtime));
+	if (bInDuck || bInAir)
+		return;
+
+	bool bSliding = (pClient->m_BB2Local.m_bSliding || pClient->m_BB2Local.m_bStandToSlide || (pClient->m_BB2Local.m_flSlideKickCooldownEnd > gpGlobals->curtime));
 	if (!bSliding && (player->GetWaterLevel() >= WL_Waist))
 		return;
 
@@ -4512,7 +4512,7 @@ void CGameMovement::Slide(void)
 				return;
 
 			pClient->m_BB2Local.m_bStandToSlide = true;
-			pClient->m_BB2Local.m_bSliding = pClient->m_BB2Local.m_bSlideToStand = false;
+			pClient->m_BB2Local.m_bSliding = false;
 			pClient->m_BB2Local.m_flSlideTime = 1000.0f;
 			pClient->m_BB2Local.m_flSlideKickCooldownEnd = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flSlideCooldown;
 			pClient->m_BB2Local.m_flSlideKickCooldownStart = gpGlobals->curtime;
@@ -4530,9 +4530,6 @@ void CGameMovement::Slide(void)
 			pClient->m_BB2Local.m_bSliding = true;
 			pClient->m_BB2Local.m_flSlideTime = 1000.0f;
 
-			Vector vecSlideMax = VEC_DUCK_HULL_MAX_SCALED(player);
-			vecSlideMax.z += 4;
-
 			// HACKHACK - Fudge for collision bug - no time to fix this properly
 			if (player->GetGroundEntity() != NULL)
 			{
@@ -4546,7 +4543,7 @@ void CGameMovement::Slide(void)
 			else
 			{
 				Vector hullSizeNormal = VEC_HULL_MAX_SCALED(player) - VEC_HULL_MIN_SCALED(player);
-				Vector hullSizeCrouch = vecSlideMax - VEC_DUCK_HULL_MIN_SCALED(player);
+				Vector hullSizeCrouch = VEC_DUCK_HULL_MAX_SCALED(player) - VEC_DUCK_HULL_MIN_SCALED(player);
 				Vector viewDelta = (hullSizeNormal - hullSizeCrouch);
 				Vector out;
 				VectorAdd(mv->GetAbsOrigin(), viewDelta, out);
@@ -4596,121 +4593,22 @@ void CGameMovement::Slide(void)
 		}
 	}
 
-	if (pClient->m_BB2Local.m_bSliding && !pClient->m_BB2Local.m_bSlideToStand)
+	if (pClient->m_BB2Local.m_bSliding)
 	{
 		Vector vecVel = Vector(mv->m_vecVelocity[0], mv->m_vecVelocity[1], 0);
 		float plSpeed = vecVel.Length2D();
 		if ((plSpeed < 4.0f) || (player->GetWaterLevel() >= WL_Eyes))
 		{
-			pClient->m_BB2Local.m_bSlideToStand = true;
+			pClient->m_BB2Local.m_bSliding = false;
+			pClient->m_BB2Local.m_bStandToSlide = false;
 			pClient->m_BB2Local.m_flSlideTime = 1000.0f;
-		}
-	}
 
-	if (pClient->m_BB2Local.m_bSlideToStand)
-	{
-		if (CanStandUp())
-		{
-			float flSlideSeconds = MAX(0.0f, 1000.0f - (float)pClient->m_BB2Local.m_flSlideTime) * 0.001f;
-			if (flSlideSeconds > 0.1)
-			{
-				Vector vecSlideMax = VEC_DUCK_HULL_MAX_SCALED(player);
-				vecSlideMax.z += 4;
-
-				int i;
-				trace_t trace;
-				Vector newOrigin;
-
-				VectorCopy(mv->GetAbsOrigin(), newOrigin);
-
-				if (player->GetGroundEntity() != NULL)
-				{
-					for (i = 0; i < 3; i++)
-					{
-						newOrigin[i] += (VEC_DUCK_HULL_MIN_SCALED(player)[i] - VEC_HULL_MIN_SCALED(player)[i]);
-					}
-				}
-				else
-				{
-					// If in air an letting go of crouch, make sure we can offset origin to make
-					//  up for uncrouching
-					Vector hullSizeNormal = VEC_HULL_MAX_SCALED(player) - VEC_HULL_MIN_SCALED(player);
-					Vector hullSizeCrouch = vecSlideMax - VEC_DUCK_HULL_MIN_SCALED(player);
-					Vector viewDelta = (hullSizeNormal - hullSizeCrouch);
-					viewDelta.Negate();
-					VectorAdd(newOrigin, viewDelta, newOrigin);
-				}
-
-				pClient->m_BB2Local.m_bSliding = pClient->m_BB2Local.m_bSlideToStand = pClient->m_BB2Local.m_bStandToSlide = false;
-				pClient->m_BB2Local.m_flSlideTime = 0.0f;
-				player->SetViewOffset(GetPlayerViewOffset(false));
-
-				mv->SetAbsOrigin(newOrigin);
-
-#ifdef CLIENT_DLL
-				player->ResetLatched();
-#endif
-
-				CategorizePosition();
-			}
-			else
-			{
-				float flFraction = SimpleSpline(1.0f - (flSlideSeconds / 0.1));
-				SetSlideEyeOffset(flFraction);
-			}
-		}
-		else
-		{
-			pClient->m_BB2Local.m_bSliding = pClient->m_BB2Local.m_bSlideToStand = pClient->m_BB2Local.m_bStandToSlide = false;
-			pClient->m_BB2Local.m_flSlideTime = 0.0f;
-
-			SetDuckedEyeOffset(1.0f);
 			player->m_Local.m_flDucktime = GAMEMOVEMENT_DUCK_TIME;
 			player->m_Local.m_bDucked = true;
 			player->m_Local.m_bDucking = false;
 			player->AddFlag(FL_DUCKING);
 		}
 	}
-}
-
-bool CGameMovement::CanStandUp()
-{
-	CHL2MP_Player *pClient = ToHL2MPPlayer(player);
-	if (!pClient)
-		return false;
-
-	int i;
-	trace_t trace;
-	Vector newOrigin;
-
-	VectorCopy(mv->GetAbsOrigin(), newOrigin);
-
-	if (player->GetGroundEntity() != NULL)
-	{
-		for (i = 0; i < 3; i++)
-		{
-			newOrigin[i] += (VEC_DUCK_HULL_MIN_SCALED(player)[i] - VEC_HULL_MIN_SCALED(player)[i]);
-		}
-	}
-	else
-	{
-		// If in air an letting go of crouch, make sure we can offset origin to make
-		//  up for uncrouching
-		Vector hullSizeNormal = VEC_HULL_MAX_SCALED(player) - VEC_HULL_MIN_SCALED(player);
-		Vector hullSizeCrouch = VEC_DUCK_HULL_MAX_SCALED(player) - VEC_DUCK_HULL_MIN_SCALED(player);
-		Vector viewDelta = (hullSizeNormal - hullSizeCrouch);
-		viewDelta.Negate();
-		VectorAdd(newOrigin, viewDelta, newOrigin);
-	}
-
-	bool remember = (pClient->IsSliding() || pClient->m_BB2Local.m_bStandToSlide);
-	pClient->m_BB2Local.m_bSliding = pClient->m_BB2Local.m_bSlideToStand = pClient->m_BB2Local.m_bStandToSlide = false;
-	TracePlayerBBox(mv->GetAbsOrigin(), newOrigin, PlayerSolidMask(), player->GetCollisionGroup(), trace);
-	pClient->m_BB2Local.m_bSliding = pClient->m_BB2Local.m_bSlideToStand = pClient->m_BB2Local.m_bStandToSlide = remember;
-	if (trace.startsolid || (trace.fraction != 1.0f))
-		return false;
-
-	return true;
 }
 
 void CGameMovement::SetSlideEyeOffset(float fraction)
@@ -4740,7 +4638,7 @@ void CGameMovement::FixPlayerSlideStuck(void)
 		return;
 
 	VectorCopy(mv->GetAbsOrigin(), test);
-	for (i = 0; i < 40; i++)
+	for (i = 0; i < 36; i++)
 	{
 		Vector org = mv->GetAbsOrigin();
 		org.z += 1;
@@ -4785,7 +4683,7 @@ void CGameMovement::Duck( void )
 	if (!pClient)
 		return;
 
-	if (pClient->IsSliding() || pClient->m_BB2Local.m_bStandToSlide)
+	if (pClient->IsSliding())
 		return;
 
 	// Slow down ducked players.

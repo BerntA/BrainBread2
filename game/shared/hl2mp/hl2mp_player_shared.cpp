@@ -177,12 +177,9 @@ void CHL2MP_Player::SharedPostThinkHL2MP(void)
 	}
 }
 
-bool CHL2MP_Player::IsSliding(void)
+bool CHL2MP_Player::IsSliding(void) const
 {
-	if (m_BB2Local.m_bSliding || m_BB2Local.m_bSlideToStand)
-		return true;
-
-	return false;
+	return (m_BB2Local.m_bSliding || m_BB2Local.m_bStandToSlide);
 }
 
 void CHL2MP_Player::DoPlayerKick(void)
@@ -256,4 +253,20 @@ void CHL2MP_Player::DoPlayerKick(void)
 #ifndef CLIENT_DLL
 	lagcompensation->FinishLagCompensation(this);
 #endif
+}
+
+const Vector CHL2MP_Player::GetPlayerMins(void) const
+{
+	if (!IsObserver() && IsSliding())
+		return VEC_SLIDE_HULL_MIN_SCALED(this);
+
+	return BaseClass::GetPlayerMins();
+}
+
+const Vector CHL2MP_Player::GetPlayerMaxs(void) const
+{
+	if (!IsObserver() && IsSliding())
+		return VEC_SLIDE_HULL_MAX_SCALED(this);
+
+	return BaseClass::GetPlayerMaxs();
 }

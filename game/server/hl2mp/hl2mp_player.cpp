@@ -874,12 +874,9 @@ void CHL2MP_Player::PostThink(void)
 	if (m_BB2Local.m_flCarryWeight < 0)
 		m_BB2Local.m_flCarryWeight = 0.0f;
 
-	if (IsSliding() || m_BB2Local.m_bStandToSlide)
+	if (IsSliding())
 	{
-		if (m_BB2Local.m_bSlideToStand || m_BB2Local.m_bStandToSlide)
-			SetCollisionBounds(VEC_CROUCH_TRACE_MIN, VEC_CROUCH_TRACE_MAX);
-		else if (m_BB2Local.m_bSliding)
-			SetCollisionBounds(VEC_SLIDE_TRACE_MIN, VEC_SLIDE_TRACE_MAX);
+		SetCollisionBounds(VEC_SLIDE_TRACE_MIN, VEC_SLIDE_TRACE_MAX);
 	}
 	else if (GetFlags() & FL_DUCKING)
 	{
@@ -1687,13 +1684,19 @@ void CHL2MP_Player::RemovePowerups(void)
 	CItem *pPowerupEnt = (CItem*)CreateEntityByName("item_powerup");
 	if (pPowerupEnt)
 	{
-		Vector vecOrigin = GetAbsOrigin();
-		vecOrigin.z += 30.0f;
+		Vector vecAbsOrigin = GetAbsOrigin();
+		Vector vecStartPos = vecAbsOrigin + Vector(0, 0, 30);
+		Vector vecEndPos = vecAbsOrigin;
+		Vector vecDir = (vecEndPos - vecStartPos);
+		VectorNormalize(vecDir);
+
+		trace_t tr;
+		CTraceFilterNoNPCsOrPlayer trFilter(this, GetCollisionGroup());
+		UTIL_TraceHull(vecStartPos, vecEndPos + (vecDir * MAX_TRACE_LENGTH), GetPlayerMins(), GetPlayerMaxs(), MASK_SHOT_HULL, &trFilter, &tr);
+
+		pPowerupEnt->SetLocalOrigin(tr.endpos);
 		pPowerupEnt->SetParam(powerup);
-		pPowerupEnt->SetAbsOrigin(vecOrigin);
-		pPowerupEnt->SetAbsAngles(QAngle(0, 0, 0));
 		pPowerupEnt->Spawn();
-		UTIL_DropToFloor(pPowerupEnt, MASK_SOLID_BRUSHONLY, this);
 		pPowerupEnt->SetParam(durationLeft);
 	}
 }
@@ -2635,7 +2638,6 @@ void CHL2MP_Player::ResetSlideVars()
 {
 	m_BB2Local.m_bSliding = false;
 	m_BB2Local.m_bStandToSlide = false;
-	m_BB2Local.m_bSlideToStand = false;
 	m_BB2Local.m_flSlideTime = 0.0f;
 	m_BB2Local.m_flSlideKickCooldownEnd = 0.0f;
 	m_BB2Local.m_flSlideKickCooldownStart = 0.0f;

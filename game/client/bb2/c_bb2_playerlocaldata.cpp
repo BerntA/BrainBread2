@@ -41,7 +41,6 @@ RecvPropBool(RECVINFO(m_bPlayerJumped)),
 
 RecvPropFloat(RECVINFO(m_flSlideTime)),
 RecvPropBool(RECVINFO(m_bStandToSlide)),
-RecvPropBool(RECVINFO(m_bSlideToStand)),
 RecvPropBool(RECVINFO(m_bSliding)),
 
 END_RECV_TABLE()
@@ -51,7 +50,6 @@ DEFINE_PRED_ARRAY(m_iPlayerSkills, FIELD_INTEGER, MAX_SKILL_ARRAY, FTYPEDESC_PRI
 
 DEFINE_PRED_FIELD(m_flSlideTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
 DEFINE_PRED_FIELD(m_bStandToSlide, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE),
-DEFINE_PRED_FIELD(m_bSlideToStand, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE),
 DEFINE_PRED_FIELD(m_bSliding, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE),
 
 DEFINE_PRED_FIELD(m_bPlayerJumped, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE),
@@ -92,6 +90,5 @@ C_BB2PlayerLocalData::C_BB2PlayerLocalData()
 
 	m_flSlideTime = 0.0f;
 	m_bStandToSlide = false;
-	m_bSlideToStand = false;
 	m_bSliding = false;
 }

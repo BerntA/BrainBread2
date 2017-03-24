@@ -43,7 +43,6 @@ SendPropBool(SENDINFO(m_bPlayerJumped)),
 
 SendPropFloat(SENDINFO(m_flSlideTime), 12, SPROP_ROUNDDOWN | SPROP_CHANGES_OFTEN, 0.0f, 2048.0f),
 SendPropBool(SENDINFO(m_bStandToSlide)),
-SendPropBool(SENDINFO(m_bSlideToStand)),
 SendPropBool(SENDINFO(m_bSliding)),
 
 END_SEND_TABLE()
@@ -77,7 +76,6 @@ DEFINE_FIELD(m_bPlayerJumped, FIELD_BOOLEAN),
 
 DEFINE_FIELD(m_flSlideTime, FIELD_TIME),
 DEFINE_FIELD(m_bStandToSlide, FIELD_BOOLEAN),
-DEFINE_FIELD(m_bSlideToStand, FIELD_BOOLEAN),
 DEFINE_FIELD(m_bSliding, FIELD_BOOLEAN),
 END_DATADESC()
 
@@ -113,6 +111,5 @@ CBB2PlayerLocalData::CBB2PlayerLocalData()
 
 	m_flSlideTime = 0.0f;
 	m_bStandToSlide = false;
-	m_bSlideToStand = false;
 	m_bSliding = false;
 }

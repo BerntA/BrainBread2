@@ -225,7 +225,6 @@ protected:
 
 	// Sliding
 	virtual void Slide(void);
-	virtual bool CanStandUp();
 	void SetSlideEyeOffset(float fraction);
 	void FixPlayerSlideStuck(void);
 

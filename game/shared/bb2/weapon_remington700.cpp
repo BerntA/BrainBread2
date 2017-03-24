@@ -73,6 +73,7 @@ acttable_t CWeaponRemington700::m_acttable[] =
 	{ ACT_MP_BASH, ACT_HL2MP_GESTURE_BASH_AR2, false },
 	{ ACT_MP_KICK, ACT_HL2MP_GESTURE_KICK, false },
 	{ ACT_MP_SLIDE, ACT_HL2MP_SLIDE_RIFLE, false },
+	{ ACT_MP_SLIDE_IDLE, ACT_HL2MP_SLIDE_IDLE_RIFLE, false },
 	{ ACT_MP_WALK, ACT_HL2MP_WALK_AR2, false },
 
 	{ ACT_MP_RUN, ACT_HL2MP_RUN_AR2, false },

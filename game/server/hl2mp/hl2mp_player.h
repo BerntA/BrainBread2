@@ -144,12 +144,15 @@ public:
 
 	void OnUpdateInfected(void);
 	void SharedPostThinkHL2MP(void);
-	bool IsSliding(void);
+	bool IsSliding(void) const;
 
 	// Movement:
 	virtual float GetPlayerSpeed();
 	virtual float GetLeapLength();
 	virtual float GetJumpHeight();
+
+	virtual const Vector GetPlayerMins(void) const;
+	virtual const Vector GetPlayerMaxs(void) const;
 
 	void SetPlayerSpeed(float flSpeed) { m_BB2Local.m_flPlayerSpeed = flSpeed; }
 	void SetLeapLength(float flLength) { m_BB2Local.m_flLeapLength = flLength; }

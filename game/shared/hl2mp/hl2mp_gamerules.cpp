@@ -195,12 +195,12 @@ IMPLEMENT_NETWORKCLASS_ALIASED( HL2MPGameRulesProxy, DT_HL2MPGameRulesProxy )
 	Vector(-16, -16, 0 ),	  //VEC_CROUCH_TRACE_MIN (m_vCrouchTraceMin)
 	Vector( 16,  16,  60 ),	  //VEC_CROUCH_TRACE_MAX (m_vCrouchTraceMax)
 
-	Vector(-38, -38, 0),	  //VEC_SLIDE_HULL_MIN (m_vSlideHullMin)
-	Vector(38, 38, 36),	  //VEC_SLIDE_HULL_MAX	(m_vSlideHullMax)
+	Vector(-16, -16, 0),	  //VEC_SLIDE_HULL_MIN (m_vSlideHullMin)
+	Vector(16, 16, 36),	  //VEC_SLIDE_HULL_MAX	(m_vSlideHullMax)
 	Vector(0, 0, 28),		  //VEC_SLIDE_VIEW		(m_vSlideView)
 
-	Vector(-38, -38, 0),	  //VEC_SLIDE_TRACE_MIN (m_vSlideTraceMin)
-	Vector(38, 38, 60)	  //VEC_SLIDE_TRACE_MAX (m_vSlideTraceMax)
+	Vector(-16, -16, 0),	  //VEC_SLIDE_TRACE_MIN (m_vSlideTraceMin)
+	Vector(16, 16, 60)	  //VEC_SLIDE_TRACE_MAX (m_vSlideTraceMax)
 	);
 
 static const char *s_PreserveEnts[] =

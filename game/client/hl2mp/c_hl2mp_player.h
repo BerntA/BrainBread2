@@ -73,12 +73,15 @@ public:
 	virtual float GetLeapLength();
 	virtual float GetJumpHeight();
 
+	virtual const Vector GetPlayerMins(void) const; 
+	virtual const Vector GetPlayerMaxs(void) const;
+
 	void	HandleSpeedChanges( void );
 	void	Initialize( void );
 	void    OnDormantStateChange(void);
 	void    OnUpdateInfected(void);
 	void    SharedPostThinkHL2MP(void);
-	bool    IsSliding(void);
+	bool    IsSliding(void) const;
 
 	HL2MPPlayerState State_Get() const;
 

@@ -60,7 +60,6 @@ public:
 	// Slide
 	float m_flSlideTime;
 	bool m_bStandToSlide;
-	bool m_bSlideToStand;
 	bool m_bSliding;
 };
 

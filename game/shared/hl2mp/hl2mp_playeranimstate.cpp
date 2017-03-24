@@ -448,6 +448,17 @@ bool CHL2MPPlayerAnimState::HandleJumping( Activity &idealActivity )
 	return false;
 }
 
+bool CHL2MPPlayerAnimState::HandleSliding(Activity &idealActivity)
+{
+	if (m_pHL2MPPlayer && m_pHL2MPPlayer->IsSliding())
+	{
+		idealActivity = ACT_MP_SLIDE_IDLE;
+		return true;
+	}
+
+	return false;
+}
+
 bool CHL2MPPlayerAnimState::SetupPoseParameters( CStudioHdr *pStudioHdr )
 {
 	// Check to see if this has already been done.
