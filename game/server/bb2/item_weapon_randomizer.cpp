@@ -38,6 +38,7 @@ weaponInfoItem pszWeapons[] =
 
 	{ "weapon_ak47", 100, false },
 	{ "weapon_famas", 65, false },
+	{ "weapon_g36c", 50, false },
 	{ "weapon_remington700", 10, false },
 	{ "weapon_winchester1894", 15, false },
 

@@ -348,6 +348,7 @@ $Project
 		$Folder "Weapons"
 		{
 			$File "$SRCDIR\game\shared\bb2\weapon_ak47.cpp"
+			$File "$SRCDIR\game\shared\bb2\weapon_g36c.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_mac11.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_mp7.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_beretta.cpp"

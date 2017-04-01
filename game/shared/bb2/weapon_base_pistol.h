@@ -36,7 +36,6 @@ public:
 	virtual int GetOverloadCapacity() { return 4; }
 	virtual int GetWeaponType(void) { return WEAPON_TYPE_PISTOL; }
 	virtual const char *GetAmmoEntityLink(void) { return "ammo_pistol"; }
-	virtual Activity GetPrimaryAttackActivity(void);
 
 	virtual void ItemPostFrame(void);
 	virtual void DryFire(void);

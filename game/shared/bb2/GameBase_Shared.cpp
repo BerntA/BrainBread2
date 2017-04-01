@@ -941,6 +941,8 @@ void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pV
 				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_BERETTA");
 			else if (FClassnameIs(pWeapon, "weapon_ak47"))
 				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_AK74");
+			else if (FClassnameIs(pWeapon, "weapon_g36c"))
+				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_G36C");
 			else if (FClassnameIs(pWeapon, "weapon_m9_bayonet"))
 				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_M9PHROBIS");
 			else if (FClassnameIs(pWeapon, "weapon_fireaxe"))

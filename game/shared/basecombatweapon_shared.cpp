@@ -863,7 +863,7 @@ void CBaseCombatWeapon::SetPickupTouch(void)
 		if (CanRespawnWeapon())
 		{
 			SetThink(&CBaseEntity::SUB_Remove);
-			SetNextThink(gpGlobals->curtime + 15.0f);
+			SetNextThink(gpGlobals->curtime + (HL2MPRules()->IsFastPacedGameplay() ? 80.0f : 15.0f));
 		}
 		else
 		{
@@ -2159,10 +2159,12 @@ void CBaseCombatWeapon::WeaponIdle( void )
 	}
 }
 
-
 //=========================================================
-Activity CBaseCombatWeapon::GetPrimaryAttackActivity( void )
+Activity CBaseCombatWeapon::GetPrimaryAttackActivity(void)
 {
+	if (UsesEmptyAnimation() && m_iClip1 <= 0)
+		return ACT_VM_LASTBULLET;
+
 	return ACT_VM_PRIMARYATTACK;
 }
 
@@ -2352,10 +2354,6 @@ void CBaseCombatWeapon::PrimaryAttack( void )
 	if ((UsesClipsForAmmo1() && m_iClip1 <= 0) || (!UsesClipsForAmmo1() && !pPlayer->GetAmmoCount(m_iPrimaryAmmoType)))
 		return;
 
-	int shootAct = GetPrimaryAttackActivity();
-	SendWeaponAnim(shootAct);
-	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, shootAct);
-
 	FireBulletsInfo_t info;
 	info.m_vecSrc	 = pPlayer->Weapon_ShootPosition( );
 	info.m_vecFirstStartPos = pPlayer->GetAbsOrigin();
@@ -2398,6 +2396,10 @@ void CBaseCombatWeapon::PrimaryAttack( void )
 
 	// Do the viewkick
 	pPlayer->ViewPunch(GetViewKickAngle());
+
+	int shootAct = GetPrimaryAttackActivity();
+	SendWeaponAnim(shootAct);
+	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, shootAct);
 }
 
 #define TRACE_FREQUENCY 0.025f

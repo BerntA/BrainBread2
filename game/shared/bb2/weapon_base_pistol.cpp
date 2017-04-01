@@ -118,14 +118,6 @@ bool CHL2MPBasePistol::Deploy(void)
 	return BaseClass::Deploy();
 }
 
-Activity CHL2MPBasePistol::GetPrimaryAttackActivity(void)
-{
-	if (m_iClip1 <= 0)
-		return ACT_VM_LASTBULLET;
-
-	return ACT_VM_PRIMARYATTACK;
-}
-
 #ifdef BB2_AI
 #ifndef CLIENT_DLL
 void CHL2MPBasePistol::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator)

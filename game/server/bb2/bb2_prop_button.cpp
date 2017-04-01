@@ -32,7 +32,7 @@ DEFINE_KEYFIELD(ClassifyFor, FIELD_INTEGER, "Filter"),
 DEFINE_KEYFIELD(m_iGlowType, FIELD_INTEGER, "GlowType"),
 DEFINE_KEYFIELD(m_bStartGlowing, FIELD_BOOLEAN, "EnableGlow"),
 DEFINE_KEYFIELD(m_bShowModel, FIELD_BOOLEAN, "ShowModel"),
-DEFINE_KEYFIELD(m_bIsEnabled, FIELD_BOOLEAN, "StartEnabled"),
+DEFINE_KEYFIELD(m_iDisabled, FIELD_INTEGER, "StartDisabled"),
 DEFINE_KEYFIELD(szKeyPadCode, FIELD_STRING, "KeyPadCode"),
 DEFINE_KEYFIELD(m_bIsKeyPad, FIELD_BOOLEAN, "KeyPadMode"),
 DEFINE_KEYFIELD(m_clrGlow, FIELD_COLOR32, "GlowOverlayColor"),
@@ -59,7 +59,7 @@ CBB2Button::CBB2Button(void)
 	m_bShowModel = true;
 	szKeyPadCode = NULL_STRING;
 	m_bIsKeyPad = false;
-	m_bIsEnabled = true;
+	m_iDisabled = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -142,7 +142,7 @@ void CBB2Button::UpdateThink(void)
 // Player clicked USE on the KEYPAD or watevah... :
 void CBB2Button::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
 {
-	if (!m_bShowModel || !m_bIsEnabled)
+	if (!m_bShowModel || m_iDisabled)
 		return;
 
 	if (!pActivator)
@@ -190,7 +190,7 @@ void CBB2Button::HideModel(inputdata_t &inputdata)
 void CBB2Button::FireKeyPadOutput(CBasePlayer *pClient)
 {
 	m_OnUse.FireOutput(pClient, this);
-	m_bIsEnabled = false;
+	m_iDisabled = true;
 
 	if (pClient)
 		pClient->ShowViewPortPanel("keypad", false);
@@ -208,12 +208,12 @@ void CBB2Button::HideGlow(inputdata_t &inputdata)
 
 void CBB2Button::EnableButton(inputdata_t &inputdata)
 {
-	m_bIsEnabled = true;
+	m_iDisabled = false;
 }
 
 void CBB2Button::DisableButton(inputdata_t &inputdata)
 {
-	m_bIsEnabled = false;
+	m_iDisabled = true;
 }
 
 void CBB2Button::SetGlowType(inputdata_t &inputData)

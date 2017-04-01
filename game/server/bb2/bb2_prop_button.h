@@ -46,8 +46,8 @@ public:
 
 	bool m_bStartGlowing;
 	bool m_bShowModel;
-	bool m_bIsEnabled;
 	bool m_bIsKeyPad;
+	int m_iDisabled;
 	string_t szKeyPadCode;
 
 	color32 m_clrGlow;
