@@ -780,9 +780,18 @@ void CGameBaseShared::RemoveInventoryItem(int iPlayerIndex, Vector vecAbsOrigin,
 					CTraceFilterNoNPCsOrPlayer trFilter(pClient, iCollisionGroup);
 					UTIL_TraceLine(vecStartPos, vecEndPos + (vecDir * MAX_TRACE_LENGTH), MASK_SHOT, &trFilter, &tr);
 
-					pEntity->SetLocalOrigin(tr.endpos);
 					pEntity->SetItem(szModel, iID, pszInventoryList[i].szEntityLink, pszInventoryList[i].bIsMapItem);
 					pEntity->Spawn();
+
+					Vector endPoint = tr.endpos;
+					const model_t *pModel = modelinfo->GetModel(pEntity->GetModelIndex());
+					if (pModel)
+					{
+						Vector mins, maxs;
+						modelinfo->GetModelBounds(pModel, mins, maxs);
+						endPoint.z += maxs.z;
+					}
+					pEntity->SetLocalOrigin(endPoint);
 				}
 			}
 

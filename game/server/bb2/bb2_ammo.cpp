@@ -325,9 +325,18 @@ CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
 		CTraceFilterNoNPCsOrPlayer trFilter(pPlayer, iCollisionGroup);
 		UTIL_TraceLine(vecStartPos, vecEndPos + (vecDir * MAX_TRACE_LENGTH), MASK_SHOT, &trFilter, &tr);
 
-		pEntity->SetLocalOrigin(tr.endpos);
 		pEntity->Spawn();
 		pEntity->AddSpawnFlags(SF_NORESPAWN);
 		pEntity->SetAmmoOverrideAmount(ammoForItem);
+
+		Vector endPoint = tr.endpos;
+		const model_t *pModel = modelinfo->GetModel(pEntity->GetModelIndex());
+		if (pModel)
+		{
+			Vector mins, maxs;
+			modelinfo->GetModelBounds(pModel, mins, maxs);
+			endPoint.z += maxs.z;
+		}
+		pEntity->SetLocalOrigin(endPoint);
 	}
 }

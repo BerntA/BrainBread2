@@ -1694,10 +1694,19 @@ void CHL2MP_Player::RemovePowerups(void)
 		CTraceFilterNoNPCsOrPlayer trFilter(this, GetCollisionGroup());
 		UTIL_TraceHull(vecStartPos, vecEndPos + (vecDir * MAX_TRACE_LENGTH), GetPlayerMins(), GetPlayerMaxs(), MASK_SHOT_HULL, &trFilter, &tr);
 
-		pPowerupEnt->SetLocalOrigin(tr.endpos);
 		pPowerupEnt->SetParam(powerup);
 		pPowerupEnt->Spawn();
 		pPowerupEnt->SetParam(durationLeft);
+
+		Vector endPoint = tr.endpos;
+		const model_t *pModel = modelinfo->GetModel(pPowerupEnt->GetModelIndex());
+		if (pModel)
+		{
+			Vector mins, maxs;
+			modelinfo->GetModelBounds(pModel, mins, maxs);
+			endPoint.z += maxs.z;
+		}
+		pPowerupEnt->SetLocalOrigin(endPoint);
 	}
 }
 
