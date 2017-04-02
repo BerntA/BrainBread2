@@ -3440,6 +3440,7 @@ void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 	{
 		ucmd->forwardmove = 0;
 		ucmd->upmove = 0;
+		ucmd->sidemove = 0;
 	}
 	else
 	{

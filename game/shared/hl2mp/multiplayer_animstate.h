@@ -311,6 +311,11 @@ protected:
 	float	m_flJumpStartTime;	
 	bool	m_bFirstJumpFrame;
 
+	// Sliding
+	bool m_bSliding;
+	bool m_bFirstSlideFrame;
+	float m_flSlideGestureTime;
+
 	// Swimming.
 	bool	m_bInSwim;
 	bool	m_bFirstSwimFrame;

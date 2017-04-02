@@ -66,6 +66,11 @@ CMultiPlayerAnimState::CMultiPlayerAnimState( CBasePlayer *pPlayer, MultiPlayerM
 	m_flJumpStartTime = 0.0f;	
 	m_bFirstJumpFrame = false;
 
+	// Sliding
+	m_bSliding = false;
+	m_bFirstSlideFrame = false;
+	m_flSlideGestureTime = 0.0f;
+
 	// Swimming
 	m_bInSwim = false;
 	m_bFirstSwimFrame = true;
@@ -131,6 +136,7 @@ void CMultiPlayerAnimState::ClearAnimationState()
 	// Reset state.
 	m_bJumping = false;
 	m_bDying = false;
+	m_bSliding = false;
 	m_bCurrentFeetYawInitialized = false;
 	m_flLastAnimationStateClearTime = gpGlobals->curtime;
 	m_nSpecificMainSequence = -1;

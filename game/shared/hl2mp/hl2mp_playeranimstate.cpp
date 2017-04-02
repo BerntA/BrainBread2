@@ -255,11 +255,19 @@ void CHL2MPPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData
 
 	case PLAYERANIMEVENT_SLIDE:
 	{
+		/*
 		RestartGesture(GESTURE_SLOT_SWIM, ACT_MP_SLIDE);
 
 #ifdef CLIENT_DLL
 		BB2PlayerGlobals->BodyRestartGesture(GetHL2MPPlayer(), ACT_MP_SLIDE, 0);
 #endif
+
+		m_flSlideGestureTime = gpGlobals->curtime + 0.39f;
+		*/
+
+		m_bSliding = m_bFirstSlideFrame = true;
+		m_flSlideGestureTime = gpGlobals->curtime;
+		RestartMainSequence();
 		break;
 	}
 
@@ -450,11 +458,26 @@ bool CHL2MPPlayerAnimState::HandleJumping( Activity &idealActivity )
 
 bool CHL2MPPlayerAnimState::HandleSliding(Activity &idealActivity)
 {
-	if (m_pHL2MPPlayer && m_pHL2MPPlayer->IsSliding())
+	if (m_bSliding)
 	{
-		idealActivity = ACT_MP_SLIDE_IDLE;
-		return true;
+		if (m_bFirstSlideFrame)
+		{
+			m_bFirstSlideFrame = false;
+			RestartMainSequence();	// Reset the animation.
+		}
+
+		if ((gpGlobals->curtime - m_flSlideGestureTime > 0.2f) && (GetHL2MPPlayer() && !GetHL2MPPlayer()->IsSliding()))
+		{
+			m_bSliding = false;
+			RestartMainSequence();
+		}
+
+		if (m_bSliding)
+			idealActivity = ACT_MP_SLIDE_IDLE;
 	}
+
+	if (m_bSliding)
+		return true;
 
 	return false;
 }

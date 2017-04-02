@@ -4597,7 +4597,7 @@ void CGameMovement::Slide(void)
 	{
 		Vector vecVel = Vector(mv->m_vecVelocity[0], mv->m_vecVelocity[1], 0);
 		float plSpeed = vecVel.Length2D();
-		if ((plSpeed < 4.0f) || (player->GetWaterLevel() >= WL_Eyes))
+		if ((plSpeed < 5.0f) || (player->GetWaterLevel() >= WL_Eyes))
 		{
 			pClient->m_BB2Local.m_bSliding = false;
 			pClient->m_BB2Local.m_bStandToSlide = false;
