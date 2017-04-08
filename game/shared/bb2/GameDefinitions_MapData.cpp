@@ -279,8 +279,9 @@ void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted
 				!Q_strstr(WorkshopItem.m_rgchTags, "Arena") &&
 				!Q_strstr(WorkshopItem.m_rgchTags, "Classic") &&
 				!Q_strstr(WorkshopItem.m_rgchTags, "Objective") &&
-				!Q_strstr(WorkshopItem.m_rgchTags, "Story") &&
-				!Q_strstr(WorkshopItem.m_rgchTags, "Deathmatch"))
+				!Q_strstr(WorkshopItem.m_rgchTags, "Story Mode") &&
+				!Q_strstr(WorkshopItem.m_rgchTags, "Deathmatch") &&
+				!Q_strstr(WorkshopItem.m_rgchTags, "Custom"))
 				continue;
 
 			uint32 uAmountOfKeys = STEAM_API_INTERFACE->SteamUGC()->GetQueryUGCNumKeyValueTags(pCallback->m_handle, i);

@@ -51,7 +51,8 @@ using namespace vgui;
 
 int ScreenTransform( const Vector& point, Vector& screen );
 
-DECLARE_HUDELEMENT( CHudCrosshair );
+DECLARE_HUDELEMENT_DEPTH(CHudCrosshair, 0);
+//DECLARE_HUDELEMENT( CHudCrosshair );
 
 CHudCrosshair::CHudCrosshair( const char *pElementName ) : CHudElement( pElementName ), BaseClass( NULL, "HudCrosshair" )
 {

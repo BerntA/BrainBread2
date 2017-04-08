@@ -8,6 +8,7 @@
 #include "KeyPadScreen.h"
 #include "vgui/IVGui.h"
 #include "vgui/IScheme.h"
+#include "vgui/ISurface.h"
 
 using namespace vgui;
 
@@ -25,10 +26,17 @@ KeyPadScreen::KeyPadScreen(vgui::Panel *pParent, const char *pMetaClassName) : C
 		m_pButtonBG[i]->SetImage("keypad/button");
 
 		m_pButtons[i] = vgui::SETUP_PANEL(new Button(this, name, "", this, name));
-		m_pButtons[i]->SetPaintBorderEnabled(true);
+		m_pButtons[i]->SetPaintBorderEnabled(false);
+		m_pButtons[i]->SetPaintBackgroundEnabled(false);
 		m_pButtons[i]->SetPaintEnabled(true);
 		m_pButtons[i]->SetZPos(10);
 	}
+
+	m_pText = vgui::SETUP_PANEL(new vgui::Label(this, "TextInfo", ""));
+	m_pText->SetContentAlignment(Label::Alignment::a_center);
+	m_pText->SetZPos(15);
+
+	Q_strncpy(szTempCode, "", sizeof(szTempCode));
 }
 
 KeyPadScreen::~KeyPadScreen()
@@ -38,6 +46,8 @@ KeyPadScreen::~KeyPadScreen()
 		m_pButtonBG[i]->MarkForDeletion();
 		m_pButtons[i]->MarkForDeletion();
 	}
+
+	m_pText->MarkForDeletion();
 }
 
 bool KeyPadScreen::Init(KeyValues* pKeyValues, VGuiScreenInitData_t* pInitData)
@@ -45,7 +55,6 @@ bool KeyPadScreen::Init(KeyValues* pKeyValues, VGuiScreenInitData_t* pInitData)
 	if (!CVGuiScreenPanel::Init(pKeyValues, pInitData))
 		return false;
 
-	vgui::ivgui()->AddTickSignal(GetVPanel(), 1000);
 	return true;
 }
 
@@ -53,44 +62,46 @@ void KeyPadScreen::OnCommand(const char *command)
 {
 	BaseClass::OnCommand(command);
 
-	Msg("CMD: %s\n", command);
+	vgui::surface()->PlaySound("buttons/button24.wav");
 
-	if (!Q_stricmp(command, "Button1"))
+	int length = strlen(szTempCode);
+	if (length < 16)
 	{
+		if (!Q_stricmp(command, "Button1"))
+			szTempCode[length] += '1';
+		else if (!Q_stricmp(command, "Button2"))
+			szTempCode[length] += '2';
+		else if (!Q_stricmp(command, "Button3"))
+			szTempCode[length] += '3';
+		else if (!Q_stricmp(command, "Button4"))
+			szTempCode[length] += '4';
+		else if (!Q_stricmp(command, "Button5"))
+			szTempCode[length] += '5';
+		else if (!Q_stricmp(command, "Button6"))
+			szTempCode[length] += '6';
+		else if (!Q_stricmp(command, "Button7"))
+			szTempCode[length] += '7';
+		else if (!Q_stricmp(command, "Button8"))
+			szTempCode[length] += '8';
+		else if (!Q_stricmp(command, "Button9"))
+			szTempCode[length] += '9';
+		else if (!Q_stricmp(command, "Button11")) // 0
+			szTempCode[length] += '0';
 	}
-	else if (!Q_stricmp(command, "Button2"))
-	{
-	}
-	else if (!Q_stricmp(command, "Button3"))
-	{
-	}
-	else if (!Q_stricmp(command, "Button4"))
-	{
-	}
-	else if (!Q_stricmp(command, "Button5"))
-	{
-	}
-	else if (!Q_stricmp(command, "Button6"))
-	{
-	}
-	else if (!Q_stricmp(command, "Button7"))
-	{
-	}
-	else if (!Q_stricmp(command, "Button8"))
-	{
-	}
-	else if (!Q_stricmp(command, "Button9"))
-	{
-	}
-	else if (!Q_stricmp(command, "Button10")) // Reset
-	{
-	}
-	else if (!Q_stricmp(command, "Button11")) // 0
-	{
-	}
+
+	if (!Q_stricmp(command, "Button10")) // Reset
+		Q_strncpy(szTempCode, "", sizeof(szTempCode));
 	else if (!Q_stricmp(command, "Button12")) // Try
 	{
+		C_BaseEntity *pEnt = GetEntity();
+		if (!pEnt || (length <= 0))
+			return;
+
+		engine->ClientCmd(VarArgs("bb2_keypad_unlock %i %s\n", pEnt->entindex(), szTempCode));
+		Q_strncpy(szTempCode, "", sizeof(szTempCode));
 	}
+
+	m_pText->SetText(szTempCode);
 }
 
 void KeyPadScreen::ApplySchemeSettings(vgui::IScheme *pScheme)
@@ -98,15 +109,9 @@ void KeyPadScreen::ApplySchemeSettings(vgui::IScheme *pScheme)
 	BaseClass::ApplySchemeSettings(pScheme);
 
 	for (int i = 0; i < _ARRAYSIZE(m_pButtons); i++)
-	{
 		m_pButtons[i]->SetFont(pScheme->GetFont("Default"));
-		m_pButtons[i]->SetFgColor(Color(0, 0, 0, 255));
-	}
-}
 
-void KeyPadScreen::OnTick()
-{
-	CVGuiScreenPanel::OnTick();
+	m_pText->SetFont(pScheme->GetFont("SkillOtherText"));
 }
 
 void KeyPadScreen::PerformLayout()
@@ -144,6 +149,8 @@ void KeyPadScreen::PerformLayout()
 			m_pButtons[indexFixed]->SetSize(buttonSize, buttonSize);
 			m_pButtons[indexFixed]->SetPos(initialX, initialY);
 			m_pButtons[indexFixed]->SetText(textInfo[indexFixed]);
+			m_pButtons[indexFixed]->SetDefaultColor(Color(0, 0, 0, 255), Color(0, 0, 0, 0));
+			m_pButtons[indexFixed]->SetDepressedColor(Color(0, 0, 0, 255), Color(0, 0, 0, 0));
 
 			m_pButtonBG[indexFixed]->SetSize(buttonSize, buttonSize);
 			m_pButtonBG[indexFixed]->SetPos(initialX, initialY);
@@ -154,6 +161,12 @@ void KeyPadScreen::PerformLayout()
 
 		initialY += buttonSize;
 	}
+
+	m_pText->SetFgColor(Color(0, 0, 0, 255));
+	m_pText->SetBgColor(Color(30, 27, 25, 200));
+
+	m_pText->SetSize((buttonSize * 3), buttonSize);
+	m_pText->SetPos(240 - buttonSize - (buttonSize / 2), 80 - buttonSize - 1);
 }
 
 DECLARE_VGUI_SCREEN_FACTORY(KeyPadScreen, "KeyPadScreen");

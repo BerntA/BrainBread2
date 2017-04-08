@@ -37,41 +37,33 @@ public:
 	CKeyPadMenu(IViewPort *pViewPort);
 	virtual ~CKeyPadMenu();
 
-	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
-	virtual void PaintBackground();
-	virtual void OnThink();
-	virtual const char *GetName(void) { return PANEL_KEYPAD; }
-	virtual void SetData(KeyValues *data);
-	virtual void Reset();
-	virtual void Update() {};
-	virtual bool NeedsUpdate(void) { return false; }
-	virtual bool HasInputElements(void) { return true; }
-	virtual void ShowPanel(bool bShow);
+	void ApplySchemeSettings(vgui::IScheme *pScheme);
+	void PaintBackground();
+	const char *GetName(void) { return PANEL_KEYPAD; }
+	void SetData(KeyValues *data);
+	void Reset();
+	void Update() {};
+	bool NeedsUpdate(void) { return false; }
+	bool HasInputElements(void) { return true; }
+	void ShowPanel(bool bShow);
 
-	// both vgui::Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
 	vgui::VPANEL GetVPanel(void) { return BaseClass::GetVPanel(); }
-	virtual bool IsVisible() { return BaseClass::IsVisible(); }
-	virtual void SetParent(vgui::VPANEL parent) { BaseClass::SetParent(parent); }
-	void UpdateKeyPadCode(const char *szCode, int iEntIndex);
+	bool IsVisible() { return BaseClass::IsVisible(); }
+	void SetParent(vgui::VPANEL parent) { BaseClass::SetParent(parent); }
+
+private:
+	char szTempCode[16];
+	int iEntityIndex;
 
 protected:
+	vgui::Panel *CreateControlByName(const char *controlName);
 
-	virtual vgui::Panel *CreateControlByName(const char *controlName);
-
-	void OnCommand(const char *command);
 	void PerformLayout();
+	void OnCommand(const char *command);
 	void OnKeyCodeTyped(vgui::KeyCode code);
 
-	// BB2 HARDCODED CONTROLS
 	vgui::ImagePanel *m_pImgBackground;
-
-	// Key Pad buttons.
 	vgui::Button *m_pButtonKey[10];
-
-	bool IsKeyPadCodeCorrect(const char *szCode);
-	char szKeyPadCode[16];
-	char szTempCode[5];
-	int iEntityIndex;
 
 	IViewPort	*m_pViewPort;
 };

@@ -18,6 +18,13 @@
 
 ConVar bb2_weapon_randomizer_refresh_time("bb2_weapon_randomizer_refresh_time", "120", FCVAR_REPLICATED, "For how long can random weapons spawned by the item_weapon_randomizer stay before being refreshed? (seconds)", true, 30.0f, false, 0.0f);
 
+enum SpawnListTypes
+{
+	SPAWN_LIST_TYPE_NONE = 0,
+	SPAWN_LIST_TYPE_EXCLUDE,
+	SPAWN_LIST_TYPE_FORCE,
+};
+
 struct weaponInfoItem
 {
 	const char *classname;
@@ -55,13 +62,31 @@ weaponInfoItem pszWeapons[] =
 	{ "weapon_hatchet", 100, true },
 };
 
-const char *GetRandomWeapon(int type)
+bool CanSpawnWeapon(const char *weapon, int listType, const char *list)
+{
+	if (listType > SPAWN_LIST_TYPE_NONE)
+	{
+		char pchWeapon[MAX_WEAPON_AMMO_NAME];
+		Q_snprintf(pchWeapon, MAX_WEAPON_AMMO_NAME, "%s,", weapon);
+
+		if ((listType == SPAWN_LIST_TYPE_EXCLUDE) && Q_strstr(list, pchWeapon))
+			return false;
+
+		if ((listType == SPAWN_LIST_TYPE_FORCE) && !Q_strstr(list, pchWeapon))
+			return false;
+	}
+
+	return true;
+}
+
+const char *GetRandomWeapon(int type, int listType, const char *list)
 {
 	int chance = random->RandomInt(5, 100);
 	CUtlVector<int> weaponIndexes;
 	for (int i = 0; i < _ARRAYSIZE(pszWeapons); i++)
 	{
-		if ((pszWeapons[i].melee && (type == 1)) || (!pszWeapons[i].melee && (type == 2)) || CHL2MP_Player::IsWeaponEquippedByDefault(pszWeapons[i].classname))
+		if ((pszWeapons[i].melee && (type == 1)) || (!pszWeapons[i].melee && (type == 2)) || CHL2MP_Player::IsWeaponEquippedByDefault(pszWeapons[i].classname) ||
+			!CanSpawnWeapon(pszWeapons[i].classname, listType, list))
 			continue;
 
 		if (pszWeapons[i].chance < chance)
@@ -92,11 +117,16 @@ private:
 	int m_iItemType;
 	bool m_bShouldRefresh;
 	float m_flTimeSinceLastSpawn;
+
+	int m_iSpawnListType;
+	string_t szSpawnList;
 };
 
 BEGIN_DATADESC(CItemWeaponRandomizer)
 DEFINE_KEYFIELD(m_iItemType, FIELD_INTEGER, "WeaponType"),
 DEFINE_KEYFIELD(m_bShouldRefresh, FIELD_BOOLEAN, "ShouldRefresh"),
+DEFINE_KEYFIELD(m_iSpawnListType, FIELD_INTEGER, "SpawnType"),
+DEFINE_KEYFIELD(szSpawnList, FIELD_STRING, "SpawnList"),
 DEFINE_FIELD(m_flTimeSinceLastSpawn, FIELD_FLOAT),
 END_DATADESC()
 
@@ -107,6 +137,8 @@ CItemWeaponRandomizer::CItemWeaponRandomizer()
 	m_iItemType = 0;
 	m_bShouldRefresh = true;
 	m_flTimeSinceLastSpawn = 0.0f;
+	m_iSpawnListType = SPAWN_LIST_TYPE_NONE;
+	szSpawnList = NULL_STRING;
 }
 
 bool CItemWeaponRandomizer::ShouldRespawnEntity(CBaseEntity *pActiveEntity)
@@ -114,7 +146,6 @@ bool CItemWeaponRandomizer::ShouldRespawnEntity(CBaseEntity *pActiveEntity)
 	bool ret = BaseClass::ShouldRespawnEntity(pActiveEntity);
 	if (pActiveEntity)
 	{
-
 		CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon*> (pActiveEntity);
 		if (pWeapon && pWeapon->GetOwner())
 			ret = true;
@@ -140,9 +171,9 @@ bool CItemWeaponRandomizer::ShouldRespawnEntity(CBaseEntity *pActiveEntity)
 
 CBaseEntity *CItemWeaponRandomizer::SpawnNewEntity(void)
 {
-	const char *pszClassname = GetRandomWeapon(m_iItemType);
-	if (strlen(pszClassname) <= 0)
-		return NULL;
+	const char *pszClassname = "";
+	while (strlen(pszClassname) <= 0)
+		pszClassname = GetRandomWeapon(m_iItemType, m_iSpawnListType, STRING(szSpawnList));
 
 	CBaseCombatWeapon *pWeapon = (CBaseCombatWeapon*)CreateEntityByName(pszClassname);
 	if (pWeapon)

@@ -25,7 +25,6 @@
 #include "npc_BaseZombie.h"
 #include "filesystem.h"
 #include "ammodef.h"
-#include "bb2_prop_button.h"
 #include "engine/IEngineSound.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "spawn_point_base.h"
@@ -36,6 +35,8 @@
 #include "particle_parse.h"
 #include "world.h"
 #include "viewport_panel_names.h"
+#include "BaseKeyPadEntity.h"
+#include "items.h"
 
 #include "tier0/memdbgon.h"
 
@@ -311,6 +312,9 @@ void CHL2MP_Player::Precache(void)
 	PrecacheScriptSound("ItemShared.Deny");
 	PrecacheScriptSound("Music.Round.Start");
 	PrecacheScriptSound("Player.ArmorImpact");
+
+	PrecacheScriptSound("KeyPad.Unlock");
+	PrecacheScriptSound("KeyPad.Fail");
 
 	PrecacheParticleSystem("bb2_levelup_effect");
 	PrecacheParticleSystem("bb2_perk_activate");
@@ -1986,26 +1990,12 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 		return true;
 	}
 
-	else if (FStrEq(args[0], "bb2_keypad_unlock_output"))
+	else if (FStrEq(args[0], "bb2_keypad_unlock"))
 	{
-		if (args.ArgC() != 2)
+		if (args.ArgC() != 3)
 			return true;
 
-		if (GetTeamNumber() != TEAM_HUMANS)
-			return true;
-
-		CBaseEntity *pEnt = UTIL_EntityByIndex(atoi(args[1]));
-		if (pEnt)
-		{
-			CBB2Button *pBtn = dynamic_cast<CBB2Button*> (pEnt);
-			if (pBtn)
-			{
-				float distToButton = GetAbsOrigin().DistTo(pBtn->GetAbsOrigin());
-				if (distToButton < 125.0f)
-					pBtn->FireKeyPadOutput(this);
-			}
-		}
-
+		CBaseKeyPadEntity::UseKeyPadCode(this, UTIL_EntityByIndex(atoi(args[1])), args[2]);
 		return true;
 	}
 

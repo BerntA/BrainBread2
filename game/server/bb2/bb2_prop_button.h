@@ -13,14 +13,15 @@
 #include "baseentity.h"
 #include "baseanimating.h"
 #include "items.h"
+#include "BaseKeyPadEntity.h"
 
-class CBB2Button : public CItem
+class CPropButton : public CItem, public CBaseKeyPadEntity
 {
 public:
 	DECLARE_DATADESC();
-	DECLARE_CLASS(CBB2Button, CItem);
+	DECLARE_CLASS(CPropButton, CItem);
 
-	CBB2Button(void);
+	CPropButton(void);
 
 	void Spawn(void);
 	void Precache(void);
@@ -37,23 +38,26 @@ public:
 
 	void SetGlowType(inputdata_t &inputData);
 
-	void FireKeyPadOutput(CBasePlayer *pClient);
+	void UnlockSuccess(CHL2MP_Player *pUnlocker);
+	void UnlockFail(CHL2MP_Player *pUnlocker);
 
-	COutputEvent m_OnUse;
+	void UpdateThink();
+
+private:
 
 	int ClassifyFor;
 	int m_iGlowType;
+	int m_iDisabled;
 
 	bool m_bStartGlowing;
 	bool m_bShowModel;
 	bool m_bIsKeyPad;
-	int m_iDisabled;
-	string_t szKeyPadCode;
 
 	color32 m_clrGlow;
 
-	// Think
-	void UpdateThink();
+	COutputEvent m_OnUse;
+	COutputEvent m_OnKeyPadSuccess;
+	COutputEvent m_OnKeyPadFail;
 };
 
 #endif // BB2_PROP_BUTTON_H

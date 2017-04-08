@@ -19,13 +19,15 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-BEGIN_DATADESC(CBB2Button)
+BEGIN_DATADESC(CPropButton)
 
 // Think
 DEFINE_THINKFUNC(UpdateThink),
 
 // Out
 DEFINE_OUTPUT(m_OnUse, "OnUse"),
+DEFINE_OUTPUT(m_OnKeyPadSuccess, "OnKeyPadSuccess"),
+DEFINE_OUTPUT(m_OnKeyPadFail, "OnKeyPadFail"),
 
 // Keyfields
 DEFINE_KEYFIELD(ClassifyFor, FIELD_INTEGER, "Filter"),
@@ -48,24 +50,20 @@ DEFINE_INPUTFUNC(FIELD_INTEGER, "SetGlowType", SetGlowType),
 
 END_DATADESC()
 
-LINK_ENTITY_TO_CLASS(bb2_prop_button, CBB2Button);
+LINK_ENTITY_TO_CLASS(bb2_prop_button, CPropButton);
 
-CBB2Button::CBB2Button(void)
+CPropButton::CPropButton(void) : CBaseKeyPadEntity()
 {
 	ClassifyFor = 0;
 	m_iGlowType = GLOW_MODE_GLOBAL;
 	m_clrGlow = { 255, 100, 100, 255 };
 	m_bStartGlowing = false;
 	m_bShowModel = true;
-	szKeyPadCode = NULL_STRING;
 	m_bIsKeyPad = false;
 	m_iDisabled = false;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Spawn
-//-----------------------------------------------------------------------------
-void CBB2Button::Spawn(void)
+void CPropButton::Spawn(void)
 {
 	char *szModel = (char *)STRING(GetModelName());
 	if (!szModel || !*szModel)
@@ -94,35 +92,14 @@ void CBB2Button::Spawn(void)
 	if (!m_bShowModel)
 		AddEffects(EF_NODRAW);
 
-	if (m_bIsKeyPad)
+	if (m_bIsKeyPad && !IsKeyCodeValid(this))
 	{
-		if (szKeyPadCode == NULL_STRING)
-		{
-			Warning("BB2_PROP_BUTTON '%s' WITH KEY PAD MODE HAS NO KEY CODE SET\nRemoving!\n", STRING(GetEntityName()));
-			UTIL_Remove(this);
-			return;
-		}
-
-		if (strlen(STRING(szKeyPadCode)) != 4)
-		{
-			Warning("BB2_PROP_BUTTON '%s' WITH KEYPAD MODE DOES NOT HAVE A CODE CONTAINING 4 DIGITS!\nRemoving!\n", STRING(GetEntityName()));
-			UTIL_Remove(this);
-			return;
-		}
-
-		char szCodeCheck[16];
-		Q_strncpy(szCodeCheck, STRING(szKeyPadCode), 16);
-
-		if ((szCodeCheck[0] >= 'a' && szCodeCheck[0] <= 'z') || (szCodeCheck[1] >= 'a' && szCodeCheck[1] <= 'z') || (szCodeCheck[2] >= 'a' && szCodeCheck[2] <= 'z') || (szCodeCheck[3] >= 'a' && szCodeCheck[3] <= 'z'))
-		{
-			Warning("BB2_PROP_BUTTON '%s' WITH KEYPAD MODE CANNOT CONTAIN ANY CHARACTERS BUT ONLY DIGITS!\nRemoving!\n", STRING(GetEntityName()));
-			UTIL_Remove(this);
-		}
+		Warning("Removing BB2_PROP_BUTTON!\n");
+		UTIL_Remove(this);
 	}
 }
 
-// Precache / Preload
-void CBB2Button::Precache(void)
+void CPropButton::Precache(void)
 {
 	if (GetModelName() == NULL_STRING)
 		Warning("BB2_PROP_BUTTON '%s' has no model!\nRemoving!\n", STRING(GetEntityName()));
@@ -133,25 +110,23 @@ void CBB2Button::Precache(void)
 	}
 }
 
-void CBB2Button::UpdateThink(void)
+void CPropButton::UpdateThink(void)
 {
 	AddEffects(EF_NODRAW);
 	SetThink(NULL);
 }
 
-// Player clicked USE on the KEYPAD or watevah... :
-void CBB2Button::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
+void CPropButton::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
 {
-	if (!m_bShowModel || m_iDisabled)
-		return;
-
-	if (!pActivator)
+	if (!m_bShowModel || m_iDisabled || !pActivator)
 		return;
 
 	if (!pActivator->IsPlayer())
 		return;
 
 	CBasePlayer *pPlayer = ToHL2MPPlayer(pActivator);
+	if (!pPlayer)
+		return;
 
 	if ((ClassifyFor == 1) && (!pPlayer->IsHuman()))
 		return;
@@ -159,64 +134,70 @@ void CBB2Button::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 	if ((ClassifyFor == 2) && (!pPlayer->IsZombie()))
 		return;
 
+	m_OnUse.FireOutput(pActivator, this);
+
 	if (m_bIsKeyPad)
 	{
 		KeyValues *data = new KeyValues("data");
-		data->SetString("code", STRING(szKeyPadCode));
 		data->SetInt("entity", entindex());
 		pPlayer->ShowViewPortPanel("keypad", true, data);
 		data->deleteThis();
 	}
-	else
-		m_OnUse.FireOutput(pActivator, this);
 }
 
-void CBB2Button::ShowModel(inputdata_t &inputdata)
+void CPropButton::ShowModel(inputdata_t &inputdata)
 {
 	RemoveEffects(EF_NODRAW);
 	m_bShowModel = true;
 }
 
-void CBB2Button::HideModel(inputdata_t &inputdata)
+void CPropButton::HideModel(inputdata_t &inputdata)
 {
 	SetGlowMode(GLOW_MODE_NONE);
 	m_bShowModel = false;
 
 	// Because EF_NODRAW gets called at the same frame/time as disabling the glow effect we must delay the EF_NODRAW to be called after glow is disabled or else glow effect will not be disabled at all!!!
-	SetThink(&CBB2Button::UpdateThink);
+	SetThink(&CPropButton::UpdateThink);
 	SetNextThink(gpGlobals->curtime + 0.1f);
 }
 
-void CBB2Button::FireKeyPadOutput(CBasePlayer *pClient)
+void CPropButton::UnlockSuccess(CHL2MP_Player *pUnlocker)
 {
-	m_OnUse.FireOutput(pClient, this);
-	m_iDisabled = true;
+	CBaseKeyPadEntity::UnlockSuccess(pUnlocker);
 
-	if (pClient)
-		pClient->ShowViewPortPanel("keypad", false);
+	m_iDisabled = true;
+	pUnlocker->ShowViewPortPanel("keypad", false);
+	m_OnKeyPadSuccess.FireOutput(pUnlocker, this);
 }
 
-void CBB2Button::ShowGlow(inputdata_t &inputdata)
+void CPropButton::UnlockFail(CHL2MP_Player *pUnlocker)
+{
+	CBaseKeyPadEntity::UnlockFail(pUnlocker);
+
+	m_OnKeyPadFail.FireOutput(pUnlocker, this);
+}
+
+void CPropButton::ShowGlow(inputdata_t &inputdata)
 {
 	SetGlowMode(m_iGlowType);
 }
 
-void CBB2Button::HideGlow(inputdata_t &inputdata)
+void CPropButton::HideGlow(inputdata_t &inputdata)
 {
 	SetGlowMode(GLOW_MODE_NONE);
 }
 
-void CBB2Button::EnableButton(inputdata_t &inputdata)
+void CPropButton::EnableButton(inputdata_t &inputdata)
 {
 	m_iDisabled = false;
 }
 
-void CBB2Button::DisableButton(inputdata_t &inputdata)
+void CPropButton::DisableButton(inputdata_t &inputdata)
 {
 	m_iDisabled = true;
 }
 
-void CBB2Button::SetGlowType(inputdata_t &inputData)
+void CPropButton::SetGlowType(inputdata_t &inputData)
 {
 	m_iGlowType = inputData.value.Int();
 	if (GetGlowMode() != GLOW_MODE_NONE) // Glowing is enabled? Update glow then.

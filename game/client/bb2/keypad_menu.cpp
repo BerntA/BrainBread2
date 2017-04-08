@@ -32,50 +32,6 @@
 
 using namespace vgui;
 
-void CKeyPadMenu::PerformLayout()
-{
-	BaseClass::PerformLayout();
-
-	m_pImgBackground->SetImage("keypad/keypadbg");
-}
-
-bool CKeyPadMenu::IsKeyPadCodeCorrect(const char *szCode)
-{
-	if (!strcmp(szCode, szKeyPadCode))
-		return true;
-
-	return false;
-}
-
-void CKeyPadMenu::OnThink()
-{
-	if (strlen(szTempCode) >= 4)
-	{
-		if (IsKeyPadCodeCorrect(szTempCode))
-		{
-			vgui::surface()->PlaySound("buttons/button14.wav");
-			engine->ClientCmd_Unrestricted(VarArgs("bb2_keypad_unlock_output %i\n", iEntityIndex));
-			m_pImgBackground->SetImage("keypad/keypadcorrect");
-		}
-		else
-		{
-			vgui::surface()->PlaySound("buttons/button10.wav");
-			m_pImgBackground->SetImage("keypad/keypadfail");
-		}
-
-		Q_strncpy(szTempCode, "", sizeof(szTempCode));
-	}
-
-	MoveToCenterOfScreen();
-}
-
-void CKeyPadMenu::UpdateKeyPadCode(const char *szCode, int iEntIndex)
-{
-	Q_strncpy(szKeyPadCode, szCode, 16);
-	Q_strncpy(szTempCode, "", sizeof(szTempCode));
-	iEntityIndex = iEntIndex;
-}
-
 CKeyPadMenu::CKeyPadMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_KEYPAD)
 {
 	m_pViewPort = pViewPort;
@@ -98,8 +54,10 @@ CKeyPadMenu::CKeyPadMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_KEYPAD)
 	SetMinimizeButtonVisible(false);
 	SetMaximizeButtonVisible(false);
 
-	// Init Default 
 	m_pImgBackground = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Background"));
+	m_pImgBackground->SetImage("keypad/keypadbg");
+	m_pImgBackground->SetZPos(20);
+	m_pImgBackground->SetShouldScaleImage(true);
 
 	for (int i = 0; i < _ARRAYSIZE(m_pButtonKey); i++)
 	{
@@ -107,21 +65,14 @@ CKeyPadMenu::CKeyPadMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_KEYPAD)
 		m_pButtonKey[i]->SetPaintBorderEnabled(false);
 		m_pButtonKey[i]->SetPaintEnabled(false);
 		m_pButtonKey[i]->SetZPos(100);
-		m_pButtonKey[i]->SetReleasedSound("ui/buttonclick.wav");
+		m_pButtonKey[i]->SetReleasedSound("buttons/button24.wav");
 		m_pButtonKey[i]->SetCommand(VarArgs("Code%i", i));
 	}
 
-	m_pImgBackground->SetImage("keypad/keypadbg");
-	m_pImgBackground->SetZPos(20);
-	m_pImgBackground->SetShouldScaleImage(true);
-
-	PerformLayout();
-
 	LoadControlSettings("resource/ui/KeyPadMenu.res");
 
-	szTempCode[0] = 0;
-
 	InvalidateLayout();
+	PerformLayout();
 }
 
 CKeyPadMenu::~CKeyPadMenu()
@@ -137,8 +88,18 @@ void CKeyPadMenu::Reset()
 {
 }
 
+void CKeyPadMenu::PerformLayout()
+{
+	BaseClass::PerformLayout();
+
+	Q_strncpy(szTempCode, "", sizeof(szTempCode));
+	m_pImgBackground->SetImage("keypad/keypadbg");
+}
+
 void CKeyPadMenu::OnCommand(const char *command)
 {
+	BaseClass::OnCommand(command);
+
 	for (int i = 0; i <= 9; i++)
 	{
 		if (!Q_stricmp(command, VarArgs("Code%i", i)))
@@ -149,12 +110,17 @@ void CKeyPadMenu::OnCommand(const char *command)
 			if (length > 3)
 				continue;
 
-			const char *szValue = VarArgs("%i", i);
-			szTempCode[length] += szValue[0];
+			unsigned short num = 48 + i; // ASCII 0-9.
+			szTempCode[length] += ((char)num);
 		}
 	}
 
-	BaseClass::OnCommand(command);
+	if (strlen(szTempCode) >= 4)
+	{
+		engine->ClientCmd(VarArgs("bb2_keypad_unlock %i %s\n", iEntityIndex, szTempCode));
+		m_pImgBackground->SetImage("keypad/keypadfail");
+		Q_strncpy(szTempCode, "", sizeof(szTempCode));
+	}
 }
 
 void CKeyPadMenu::ShowPanel(bool bShow)
@@ -178,12 +144,8 @@ void CKeyPadMenu::ShowPanel(bool bShow)
 
 void CKeyPadMenu::SetData(KeyValues *data)
 {
-	int index = data->GetInt("entity");
-	const char *code = data->GetString("code");
-	if ((index <= 0) || (strlen(code) <= 0))
-		return;
-
-	UpdateKeyPadCode(code, index);
+	iEntityIndex = data->GetInt("entity");
+	MoveToCenterOfScreen();
 }
 
 void CKeyPadMenu::OnKeyCodeTyped(vgui::KeyCode code)

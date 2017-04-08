@@ -1109,6 +1109,8 @@ float IntervalDistance( float x, float x0, float x1 )
 
 CBaseEntity *CBasePlayer::FindUseEntity()
 {
+	CTraceFilterSkipClassname trFiltr(this, "player", COLLISION_GROUP_NONE);
+
 	Vector forward, up;
 	EyeVectors( &forward, NULL, &up );
 
@@ -1146,13 +1148,13 @@ CBaseEntity *CBasePlayer::FindUseEntity()
 	{
 		if ( i == 0 )
 		{
-			UTIL_TraceLine( searchCenter, searchCenter + forward * 1024, useableContents, this, COLLISION_GROUP_NONE, &tr );
+			UTIL_TraceLine(searchCenter, searchCenter + forward * 1024, useableContents, &trFiltr, &tr);
 		}
 		else
 		{
 			Vector down = forward - tangents[i]*up;
 			VectorNormalize(down);
-			UTIL_TraceHull( searchCenter, searchCenter + down * 72, -Vector(16,16,16), Vector(16,16,16), useableContents, this, COLLISION_GROUP_NONE, &tr );
+			UTIL_TraceHull(searchCenter, searchCenter + down * 72, -Vector(16, 16, 16), Vector(16, 16, 16), useableContents, &trFiltr, &tr);
 		}
 		pObject = tr.m_pEnt;
 
@@ -1254,7 +1256,7 @@ CBaseEntity *CBasePlayer::FindUseEntity()
 			// Since this has purely been a radius search to this point, we now
 			// make sure the object isn't behind glass or a grate.
 			trace_t trCheckOccluded;
-			UTIL_TraceLine( searchCenter, point, useableContents, this, COLLISION_GROUP_NONE, &trCheckOccluded );
+			UTIL_TraceLine(searchCenter, point, useableContents, &trFiltr, &trCheckOccluded);
 
 			if ( trCheckOccluded.fraction == 1.0 || trCheckOccluded.m_pEnt == pObject )
 			{
@@ -1270,7 +1272,7 @@ CBaseEntity *CBasePlayer::FindUseEntity()
 		// Haven't found anything near the player to use, nor any NPC's at distance.
 		// Check to see if the player is trying to select an NPC through a rail, fence, or other 'see-though' volume.
 		trace_t trAllies;
-		UTIL_TraceLine( searchCenter, searchCenter + forward * PLAYER_USE_RADIUS, MASK_OPAQUE_AND_NPCS, this, COLLISION_GROUP_NONE, &trAllies );
+		UTIL_TraceLine(searchCenter, searchCenter + forward * PLAYER_USE_RADIUS, MASK_OPAQUE_AND_NPCS, &trFiltr, &trAllies);
 
 		if ( trAllies.m_pEnt && IsUseableEntity( trAllies.m_pEnt, 0 ) && trAllies.m_pEnt->MyNPCPointer() && trAllies.m_pEnt->MyNPCPointer()->IsPlayerAlly( this ) )
 		{

@@ -25,7 +25,6 @@ public:
 	virtual ~KeyPadScreen();
 
 	bool Init(KeyValues *pKeyValues, VGuiScreenInitData_t *pInitData);
-	void OnTick();
 	void PerformLayout();
 
 protected:
@@ -35,6 +34,8 @@ protected:
 private:
 	vgui::Button *m_pButtons[12];
 	vgui::ImagePanel *m_pButtonBG[12];
+	vgui::Label *m_pText;
+	char szTempCode[16];
 };
 
 #endif // KEYPAD_SCREEN_H

@@ -105,6 +105,16 @@ $Project
 		
 		$Folder "Entities"
 		{
+			$Folder "Screens"
+			{
+				$File "bb2\VGUIKeyPadScreen.cpp"
+				$File "bb2\VGUIKeyPadScreen.h"
+				$File "bb2\VGUIPDAScreen.cpp"
+				$File "bb2\VGUIPDAScreen.h"
+			}
+			
+			$File "bb2\BaseKeyPadEntity.cpp"
+			$File "bb2\BaseKeyPadEntity.h"
 			$File "bb2\bb2_ammo.cpp"
 			$File "bb2\logic_inventory_checker.cpp"
 			$File "bb2\bb2_entity_counter.cpp"
