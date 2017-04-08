@@ -118,6 +118,9 @@ void KeyPadScreen::PerformLayout()
 {
 	BaseClass::PerformLayout();
 
+	int w, h;
+	GetSize(w, h);
+
 	const char *textInfo[] =
 	{
 		"1",
@@ -134,7 +137,7 @@ void KeyPadScreen::PerformLayout()
 		"V",
 	};
 
-	int initialX = 0, initialY = 80;
+	int initialY = 21;
 	int buttonSize = 20;
 
 	int indexFixed = 0;
@@ -143,7 +146,7 @@ void KeyPadScreen::PerformLayout()
 		if (indexFixed >= 12)
 			break;
 
-		initialX = 240 - buttonSize - (buttonSize / 2);
+		int initialX = 0;
 		for (int x = 0; x < 3; x++)
 		{
 			m_pButtons[indexFixed]->SetSize(buttonSize, buttonSize);
@@ -165,8 +168,8 @@ void KeyPadScreen::PerformLayout()
 	m_pText->SetFgColor(Color(0, 0, 0, 255));
 	m_pText->SetBgColor(Color(30, 27, 25, 200));
 
-	m_pText->SetSize((buttonSize * 3), buttonSize);
-	m_pText->SetPos(240 - buttonSize - (buttonSize / 2), 80 - buttonSize - 1);
+	m_pText->SetSize(w, buttonSize);
+	m_pText->SetPos(0, 0);
 }
 
 DECLARE_VGUI_SCREEN_FACTORY(KeyPadScreen, "KeyPadScreen");

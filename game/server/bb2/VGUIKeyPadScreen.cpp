@@ -30,6 +30,8 @@ void CVGuiKeyPadScreen::Spawn(void)
 
 	if (!IsKeyCodeValid(this))
 		SetRandomCode(m_iMaxChars);
+
+	SetTransparency(true);
 }
 
 void CVGuiKeyPadScreen::UnlockSuccess(CHL2MP_Player *pUnlocker)

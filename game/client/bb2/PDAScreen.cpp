@@ -44,8 +44,12 @@ void PDAScreen::OnTick()
 	if (!pPDABase)
 		return;
 
+	int w, h;
+	GetSize(w, h);
+
 	m_pText->SetText(pPDABase->GetKeyPadCode());
 	m_pText->SetFgColor(Color(0, 0, 0, 255));
+	m_pText->SetSize(w, h);
 }
 
 DECLARE_VGUI_SCREEN_FACTORY(PDAScreen, "PDAScreen");

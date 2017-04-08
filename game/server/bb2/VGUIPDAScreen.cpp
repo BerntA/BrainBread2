@@ -50,4 +50,6 @@ void CVGuiPDAScreen::UpdateState(void)
 	}
 
 	Q_strncpy(m_szKeyPadCode.GetForModify(), code, MAX_KEYCODE_SIZE);
+
+	SetTransparency(true);
 }
