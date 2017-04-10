@@ -83,20 +83,30 @@ const char *GetRandomWeapon(int type, int listType, const char *list)
 {
 	int chance = random->RandomInt(5, 100);
 	CUtlVector<int> weaponIndexes;
-	for (int i = 0; i < _ARRAYSIZE(pszWeapons); i++)
+
+	while (!weaponIndexes.Count())
 	{
-		if ((pszWeapons[i].melee && (type == 1)) || (!pszWeapons[i].melee && (type == 2)) || CHL2MP_Player::IsWeaponEquippedByDefault(pszWeapons[i].classname) ||
-			!CanSpawnWeapon(pszWeapons[i].classname, listType, list))
-			continue;
+		bool bAdded = false;
+		for (int i = 0; i < _ARRAYSIZE(pszWeapons); i++)
+		{
+			if ((pszWeapons[i].melee && (type == 1)) || (!pszWeapons[i].melee && (type == 2)) || CHL2MP_Player::IsWeaponEquippedByDefault(pszWeapons[i].classname) ||
+				!CanSpawnWeapon(pszWeapons[i].classname, listType, list))
+				continue;
 
-		if (pszWeapons[i].chance < chance)
-			continue;
+			if (pszWeapons[i].chance < chance)
+				continue;
 
-		weaponIndexes.AddToTail(i);
+			weaponIndexes.AddToTail(i);
+			bAdded = true;
+		}
+
+		if (!bAdded)
+		{
+			chance -= 5;
+			if (chance <= 0)
+				return "";
+		}
 	}
-
-	if (!weaponIndexes.Count())
-		return "";
 
 	return (pszWeapons[weaponIndexes[random->RandomInt(0, (weaponIndexes.Count() - 1))]].classname);
 }
@@ -171,9 +181,9 @@ bool CItemWeaponRandomizer::ShouldRespawnEntity(CBaseEntity *pActiveEntity)
 
 CBaseEntity *CItemWeaponRandomizer::SpawnNewEntity(void)
 {
-	const char *pszClassname = "";
-	while (strlen(pszClassname) <= 0)
-		pszClassname = GetRandomWeapon(m_iItemType, m_iSpawnListType, STRING(szSpawnList));
+	const char *pszClassname = GetRandomWeapon(m_iItemType, m_iSpawnListType, STRING(szSpawnList));
+	if (strlen(pszClassname) <= 0)
+		return NULL;
 
 	CBaseCombatWeapon *pWeapon = (CBaseCombatWeapon*)CreateEntityByName(pszClassname);
 	if (pWeapon)

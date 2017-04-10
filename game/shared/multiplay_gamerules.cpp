@@ -88,7 +88,7 @@ ConVar bb2_story_respawn_time("bb2_story_respawn_time", "10", FCVAR_REPLICATED, 
 ConVar bb2_classic_mode_enabled("bb2_classic_mode_enabled", "0", FCVAR_REPLICATED, "This will enable BrainBread Classic Mode for Objective Mode. Enabling this will prevent non Walker and Military NPCs from spawning.", true, 0.0f, true, 1.0f);
 ConVar bb2_classic_zombie_noteamchange("bb2_classic_zombie_noteamchange", "1", FCVAR_REPLICATED, "When a player zombie kills a human player the human will not become a zombie on respawn.", true, 0.0f, true, 1.0f);
 
-ConVar bb2_roundstart_freezetime("bb2_roundstart_freezetime", "8", FCVAR_REPLICATED, "How many sec until the round starts?", true, 1.0f, true, 14.0f);
+ConVar bb2_roundstart_freezetime("bb2_roundstart_freezetime", "8", FCVAR_REPLICATED, "How many sec until the round starts?", true, 1.0f, true, 30.0f);
 
 ConVar bb2_allow_profile_system( "bb2_allow_profile_system", "1", FCVAR_REPLICATED, "Allow players to load Global stats or local stats defined on the server. 1 = Global, 2 = Local!", true, 0, true, 2 );
 ConVar bb2_profile_system_status("bb2_profile_system_status", "0", FCVAR_REPLICATED | FCVAR_HIDDEN, "Is stats, achievements and level stuff enabled?", true, 0, true, 2);
