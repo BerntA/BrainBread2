@@ -789,7 +789,7 @@ void CGameBaseShared::RemoveInventoryItem(int iPlayerIndex, Vector vecAbsOrigin,
 					{
 						Vector mins, maxs;
 						modelinfo->GetModelBounds(pModel, mins, maxs);
-						endPoint.z += maxs.z;
+						endPoint.z += maxs.z + 4;
 					}
 					pEntity->SetLocalOrigin(endPoint);
 				}

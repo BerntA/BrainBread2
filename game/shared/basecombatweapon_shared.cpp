@@ -863,7 +863,7 @@ void CBaseCombatWeapon::SetPickupTouch(void)
 		if (CanRespawnWeapon())
 		{
 			SetThink(&CBaseEntity::SUB_Remove);
-			SetNextThink(gpGlobals->curtime + (HL2MPRules()->IsFastPacedGameplay() ? 80.0f : 15.0f));
+			SetNextThink(gpGlobals->curtime + (HL2MPRules()->IsFastPacedGameplay() ? 45.0f : 15.0f));
 		}
 		else
 		{

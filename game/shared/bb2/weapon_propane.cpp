@@ -184,8 +184,9 @@ void CPropaneExplosive::Precache(void)
 
 void CPropaneExplosive::RemoveProp(void)
 {
+	float flDuration = (HL2MPRules()->IsFastPacedGameplay() ? 35.0f : 15.0f);
 	SetThink(&CBaseEntity::SUB_Remove);
-	SetNextThink(gpGlobals->curtime + 12.0f);
+	SetNextThink(gpGlobals->curtime + flDuration);
 }
 
 void CPropaneExplosive::Spawn(void)
