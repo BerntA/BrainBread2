@@ -431,7 +431,8 @@ float CGameBaseShared::GetSequenceDuration(CStudioHdr *ptr, int sequence)
 			mstudioanimdesc_t &animdesc = ptr->pAnimdesc(ptr->iRelativeAnim(i, seqdesc.anim(0, 0)));
 			if (seqdesc.activity == sequence)
 			{
-				duration = (animdesc.numframes / animdesc.fps);
+				float numFrames = ((float)animdesc.numframes);
+				duration = (numFrames / animdesc.fps);
 				break;
 			}
 		}

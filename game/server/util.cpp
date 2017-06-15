@@ -667,6 +667,9 @@ CBasePlayer *UTIL_GetOtherNearestPlayer( const Vector &origin )
 		if ( !pPlayer )
 			continue;
 
+		if (!pPlayer->IsAlive() || pPlayer->IsObserver() || (pPlayer->GetTeamNumber() <= TEAM_SPECTATOR))
+			continue;
+
 		float flDist = (pPlayer->GetAbsOrigin() - origin).LengthSqr();
 		if ( flDist >= distToOtherNearest )
 		{
@@ -687,6 +690,9 @@ CBasePlayer *UTIL_GetNearestPlayer( const Vector &origin )
 	{
 		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
 		if ( !pPlayer )
+			continue;
+
+		if (!pPlayer->IsAlive() || pPlayer->IsObserver() || (pPlayer->GetTeamNumber() <= TEAM_SPECTATOR))
 			continue;
 
 		float flDist = (pPlayer->GetAbsOrigin() - origin).LengthSqr();
@@ -711,13 +717,7 @@ CBasePlayer *UTIL_GetNearestHumanPlayer( const Vector &origin )
 		if ( !pPlayer )
 			continue;
 
-		if ( !pPlayer->IsAlive() )
-			continue;
-
-		if ( pPlayer->IsObserver() )
-			continue;
-
-		if (pPlayer->GetTeamNumber() != TEAM_HUMANS)
+		if (!pPlayer->IsAlive() || pPlayer->IsObserver() || (pPlayer->GetTeamNumber() != TEAM_HUMANS))
 			continue;
 
 		float flDist = (pPlayer->GetAbsOrigin() - origin).LengthSqr();
@@ -768,6 +768,9 @@ CBasePlayer *UTIL_GetNearestVisiblePlayer( CBaseEntity *pLooker, int mask )
 	{
 		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
 		if ( !pPlayer )
+			continue;
+
+		if (!pPlayer->IsAlive() || pPlayer->IsObserver() || (pPlayer->GetTeamNumber() <= TEAM_SPECTATOR))
 			continue;
 
 		float flDist = (pPlayer->GetAbsOrigin() - pLooker->GetAbsOrigin()).LengthSqr();

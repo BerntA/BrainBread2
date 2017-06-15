@@ -263,6 +263,8 @@ public:
 	int GetPerkFlags(void) { return m_nPerkFlags; }
 	void ClearPerkFlags(void) { m_nPerkFlags = 0; }
 
+	void SetPlayerSlideState(bool value) { m_bIsInSlide = value; }
+
 	bool IsPlayerInfected(void) { return m_bIsInfected; }
 	void SetPlayerInfected(bool value) { m_bIsInfected = value; }
 
@@ -288,6 +290,9 @@ public:
 
 	bool HasPlayerUsedFirearm(void) { return m_bPlayerUsedFirearm; }
 
+	void AddAssociatedAmmoEnt(CBaseEntity *pEnt);
+	void CleanupAssociatedAmmoEntities(void);
+
 	static bool IsWeaponEquippedByDefault(const char *weaponName);
 
 private:
@@ -310,6 +315,7 @@ private:
 	int m_iModelType;
 	CNetworkVar(int, m_iSpawnInterpCounter);
 	CNetworkVar(int, m_nPerkFlags);
+	CNetworkVar(bool, m_bIsInSlide);
 
 	float m_flSpawnProtection;
 	float m_flZombieVisionLockTime;
@@ -324,6 +330,7 @@ private:
 
 	// Weapon Pickup Fixes
 	CUtlVector<WeaponPickupItem_t> pszWeaponPenaltyList;
+	CUtlVector<EHANDLE> m_pAssociatedAmmoEntities;
 
 	HL2MPPlayerState m_iPlayerState;
 	CHL2MPPlayerStateInfo *m_pCurStateInfo;

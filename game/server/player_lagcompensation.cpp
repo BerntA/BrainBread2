@@ -1044,7 +1044,7 @@ void CLagCompensationManager::BacktrackEntity( CAI_BaseNPC *pEntity, float flTar
 		}
 
 		Vector delta = record->m_vecOrigin - prevOrg;
-		if (delta.LengthSqr() > m_flTeleportDistanceSqr)
+		if (delta.Length2DSqr() > m_flTeleportDistanceSqr)
 		{
 			// lost track, moved too far (may have teleported)
 			return; 
@@ -1507,7 +1507,7 @@ void CLagCompensationManager::FinishLagCompensation( CBasePlayer *player )
 			Vector delta = pNPC->GetLocalOrigin() - change->m_vecOrigin;
 			
 			// If it moved really far, just leave the player in the new spot!!!
-			if (delta.LengthSqr() < m_flTeleportDistanceSqr)
+			if (delta.Length2DSqr() < m_flTeleportDistanceSqr)
 			{
 				RestoreEntityTo( pNPC, restore->m_vecOrigin + delta );
 			}

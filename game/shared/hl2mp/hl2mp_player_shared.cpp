@@ -179,7 +179,12 @@ void CHL2MP_Player::SharedPostThinkHL2MP(void)
 
 bool CHL2MP_Player::IsSliding(void) const
 {
-	return (m_BB2Local.m_bSliding || m_BB2Local.m_bStandToSlide);
+#ifdef CLIENT_DLL
+	if (!IsLocalPlayer())
+		return m_bIsInSlide;
+#endif
+
+	return (m_bIsInSlide || m_BB2Local.m_bSliding || m_BB2Local.m_bStandToSlide);
 }
 
 void CHL2MP_Player::DoPlayerKick(void)

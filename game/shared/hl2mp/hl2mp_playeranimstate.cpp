@@ -176,7 +176,6 @@ void CHL2MPPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData
 	{
 	case PLAYERANIMEVENT_ATTACK_PRIMARY:
 		{
-			// Weapon primary fire.
 			if ( m_pHL2MPPlayer->GetFlags() & FL_DUCKING )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_CROUCH_PRIMARYFIRE );
 			else
@@ -257,11 +256,9 @@ void CHL2MPPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData
 	{
 		/*
 		RestartGesture(GESTURE_SLOT_SWIM, ACT_MP_SLIDE);
-
 #ifdef CLIENT_DLL
 		BB2PlayerGlobals->BodyRestartGesture(GetHL2MPPlayer(), ACT_MP_SLIDE, 0);
 #endif
-
 		m_flSlideGestureTime = gpGlobals->curtime + 0.39f;
 		*/
 
@@ -305,7 +302,9 @@ void CHL2MPPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData
 		}
 	}
 
-	if (GetHL2MPPlayer() && (nData > 0) && (event == PLAYERANIMEVENT_ATTACK_PRIMARY || event == PLAYERANIMEVENT_ATTACK_SECONDARY || event == PLAYERANIMEVENT_RELOAD || event == PLAYERANIMEVENT_RELOAD_LOOP || event == PLAYERANIMEVENT_RELOAD_END))
+	if (GetHL2MPPlayer() && (nData > 0) &&
+		(event == PLAYERANIMEVENT_ATTACK_PRIMARY || event == PLAYERANIMEVENT_ATTACK_SECONDARY || event == PLAYERANIMEVENT_RELOAD || event == PLAYERANIMEVENT_RELOAD_LOOP || event == PLAYERANIMEVENT_RELOAD_END || event == PLAYERANIMEVENT_BASH)
+		)
 	{
 		CBaseViewModel *pvm = GetHL2MPPlayer()->GetViewModel();
 		if (pvm)

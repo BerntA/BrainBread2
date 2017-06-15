@@ -1393,7 +1393,7 @@ void CBasePlayer::CheckIsPlayerStuck(void)
 	trace_t tr;
 	CTraceFilterOnlyNPCsAndPlayer traceFilter(this, GetCollisionGroup());
 	Vector vecPlayerOrigin = GetAbsOrigin();
-	UTIL_TraceHull(vecPlayerOrigin, (vecPlayerOrigin + Vector(0, 0, 36)), VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX, PlayerSolidMask(), &traceFilter, &tr);
+	UTIL_TraceHull(vecPlayerOrigin, vecPlayerOrigin, GetPlayerMins(), GetPlayerMaxs(), PlayerSolidMask(), &traceFilter, &tr);
 	if (tr.startsolid)
 	{
 		float flDefaultLength = 48.0f;
@@ -1409,7 +1409,7 @@ void CBasePlayer::CheckIsPlayerStuck(void)
 
 		for (int i = 0; i < _ARRAYSIZE(vecTestPos); ++i)
 		{
-			UTIL_TraceHull(vecTestPos[i], (vecTestPos[i] + Vector(0, 0, 36)), VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX, PlayerSolidMask(), this, GetCollisionGroup(), &tr);
+			UTIL_TraceHull(vecTestPos[i], vecTestPos[i], GetPlayerMins(), GetPlayerMaxs(), PlayerSolidMask(), this, GetCollisionGroup(), &tr);
 			if (!tr.startsolid)
 			{
 				SetAbsOrigin(vecTestPos[i]);

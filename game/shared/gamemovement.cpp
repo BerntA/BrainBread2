@@ -4511,6 +4511,7 @@ void CGameMovement::Slide(void)
 			if (tr.startsolid)
 				return;
 
+			pClient->SetPlayerSlideState(true);
 			pClient->m_BB2Local.m_bStandToSlide = true;
 			pClient->m_BB2Local.m_bSliding = false;
 			pClient->m_BB2Local.m_flSlideTime = 1000.0f;
@@ -4602,6 +4603,7 @@ void CGameMovement::Slide(void)
 			pClient->m_BB2Local.m_bSliding = false;
 			pClient->m_BB2Local.m_bStandToSlide = false;
 			pClient->m_BB2Local.m_flSlideTime = 1000.0f;
+			pClient->SetPlayerSlideState(false);
 
 			player->m_Local.m_flDucktime = GAMEMOVEMENT_DUCK_TIME;
 			player->m_Local.m_bDucked = true;

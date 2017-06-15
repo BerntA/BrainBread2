@@ -206,6 +206,7 @@ SendPropDataTable("hl2mpnonlocaldata", 0, &REFERENCE_SEND_TABLE(DT_HL2MPNonLocal
 
 SendPropInt(SENDINFO(m_iSpawnInterpCounter), 4),
 SendPropInt(SENDINFO(m_nPerkFlags), PERK_MAX_BITS, SPROP_UNSIGNED),
+SendPropBool(SENDINFO(m_bIsInSlide)),
 END_SEND_TABLE()
 
 BEGIN_DATADESC(CHL2MP_Player)
@@ -248,6 +249,7 @@ CHL2MP_Player::CHL2MP_Player()
 	m_iSkill_Level = 0;
 	m_nPerkFlags = 0;
 	m_nMaterialOverlayFlags = 0;
+	m_bIsInSlide = false;
 
 	m_iSpawnInterpCounter = 0;
 
@@ -279,6 +281,7 @@ CHL2MP_Player::CHL2MP_Player()
 
 CHL2MP_Player::~CHL2MP_Player(void)
 {
+	CleanupAssociatedAmmoEntities();
 	m_PlayerAnimState->Release();
 }
 
@@ -561,6 +564,7 @@ void CHL2MP_Player::Spawn(void)
 
 	ResetSlideVars();
 	OnSetGibHealth();
+	CleanupAssociatedAmmoEntities();
 
 	if (!IsObserver())
 	{
@@ -2381,6 +2385,7 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 
 	// Drop our weps, give snacks to the living...:
 	DropAllWeapons(); 
+	CleanupAssociatedAmmoEntities();
 
 	m_iTotalDeaths++;
 	m_iRoundDeaths++;
@@ -2640,6 +2645,7 @@ void CHL2MP_Player::ResetSlideVars()
 	m_BB2Local.m_flSlideTime = 0.0f;
 	m_BB2Local.m_flSlideKickCooldownEnd = 0.0f;
 	m_BB2Local.m_flSlideKickCooldownStart = 0.0f;
+	m_bIsInSlide = false;
 }
 
 void CHL2MP_Player::CheckCanRespawnAsHuman()
@@ -2815,6 +2821,26 @@ void CHL2MP_Player::State_PreThink_ACTIVE()
 void CHL2MP_Player::HandleAnimEvent(animevent_t *pEvent)
 {
 	BaseClass::HandleAnimEvent(pEvent);
+}
+
+void CHL2MP_Player::AddAssociatedAmmoEnt(CBaseEntity *pEnt)
+{
+	EHANDLE m_hHandle = pEnt;
+	m_pAssociatedAmmoEntities.AddToTail(m_hHandle);
+}
+
+void CHL2MP_Player::CleanupAssociatedAmmoEntities(void)
+{
+	for (int i = 0; i < m_pAssociatedAmmoEntities.Count(); i++)
+	{
+		CBaseEntity *pEnt = m_pAssociatedAmmoEntities[i].Get();
+		if (!pEnt)
+			continue;
+
+		UTIL_Remove(pEnt);
+	}
+
+	m_pAssociatedAmmoEntities.RemoveAll();
 }
 
 //-----------------------------------------------------------------------------

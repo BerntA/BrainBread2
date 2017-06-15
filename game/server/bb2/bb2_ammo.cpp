@@ -338,5 +338,7 @@ CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
 			endPoint.z += maxs.z;
 		}
 		pEntity->SetLocalOrigin(endPoint);
+
+		pPlayer->AddAssociatedAmmoEnt(pEntity);
 	}
 }

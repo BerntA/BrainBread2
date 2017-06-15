@@ -107,6 +107,8 @@ public:
 
 	int GetPerkFlags(void) { return m_nPerkFlags; }
 	bool IsPerkFlagActive(int nFlag) { return (m_nPerkFlags & nFlag) != 0; }
+	
+	void SetPlayerSlideState(bool value) { m_bIsInSlide = value; }
 
 	void SetZombieVision(bool state);
 	bool IsZombieVisionOn(void) { return m_bIsZombieVisionEnabled; }
@@ -130,6 +132,7 @@ private:
 	int	  m_iSpawnInterpCounterCache;
 
 	int m_nPerkFlags;
+	bool m_bIsInSlide;
 
 	void ReleaseFlashlight( void );
 	Beam_t	*m_pFlashlightBeam;
