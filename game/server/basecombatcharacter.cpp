@@ -2146,7 +2146,7 @@ int CBaseCombatCharacter::OnTakeDamage(const CTakeDamageInfo &info)
 	CBaseEntity *pAttacker = damageCopy.GetAttacker();
 	if (pAttacker && this->IsNPC())
 	{
-		float flDamageScale = GameBaseServer()->GetDamageScaleForEntity(pAttacker, this);
+		float flDamageScale = GameBaseServer()->GetDamageScaleForEntity(pAttacker, this, damageCopy.GetDamageType(), damageCopy.GetDamageCustom());
 		damageCopy.ScaleDamage(flDamageScale);
 	}
 

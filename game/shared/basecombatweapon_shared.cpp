@@ -719,14 +719,23 @@ void CBaseCombatWeapon::Drop( const Vector &vecVelocity )
 	SetOwnerEntity( NULL );
 	SetOwner( NULL );
 
-	// If we're not allowing to spawn due to the gamerules,
-	// remove myself when I'm dropped by an NPC.
-	if ( pOwner && pOwner->IsNPC() )
+	if ( pOwner )
 	{
-		if ( g_pGameRules->IsAllowedToSpawn( this ) == false )
+		if (pOwner->IsNPC())
 		{
-			UTIL_Remove( this );
-			return;
+			// If we're not allowing to spawn due to the gamerules,
+			// remove myself when I'm dropped by an NPC.
+			if (g_pGameRules->IsAllowedToSpawn(this) == false)
+			{
+				UTIL_Remove(this);
+				return;
+			}
+		}
+		else if (pOwner->IsPlayer())
+		{
+			CHL2MP_Player *pPlayerOwner = ToHL2MPPlayer(pOwner);
+			if (pPlayerOwner)
+				pPlayerOwner->CheckShouldEnableFlashlightOnSwitch();
 		}
 	}
 #endif
@@ -1578,9 +1587,15 @@ void CBaseCombatWeapon::StartHolsterSequence()
 	ResetAllParticles();
 
 	// We will stay active in the pre frame until we're done so we don't override the visibility state or animation state as we change to the new active weapon.
-	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	CHL2MP_Player *pOwner = ToHL2MPPlayer(GetOwner());
 	if (pOwner)
+	{
 		pOwner->m_flNextAttack = flHolsterTime + 0.05f;
+
+#ifndef CLIENT_DLL
+		pOwner->CheckShouldEnableFlashlightOnSwitch();
+#endif
+	}
 }
 
 const char *CBaseCombatWeapon::GetParticleEffect(int iType, bool bThirdperson)

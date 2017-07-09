@@ -25,6 +25,7 @@
 #include "ServerSettingsPanel.h"
 #include "vgui_base_panel.h"
 #include "AnimatedMenuButton.h"
+#include <vgui_controls/Tooltip.h>
 
 namespace vgui
 {
@@ -52,6 +53,8 @@ namespace vgui
 		vgui::RichText *m_pMapDescription;
 
 		vgui::AnimatedMenuButton *m_pPlayButton;
+
+		vgui::TextTooltip *m_pGamemodeToolTip;
 
 	private:
 		CPanelAnimationVar(float, m_flLoadMapTimer, "LoadMapTimer", "0.0f");

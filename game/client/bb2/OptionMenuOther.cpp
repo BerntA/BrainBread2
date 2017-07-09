@@ -135,7 +135,7 @@ OptionMenuOther::OptionMenuOther(vgui::Panel *parent, char const *panelName) : B
 
 	for (int i = 0; i < _ARRAYSIZE(m_pCrosshairColorSlider); i++)
 	{
-		m_pCrosshairColorSlider[i] = vgui::SETUP_PANEL(new vgui::GraphicalOverlay(this, "CrosshairSlider", szSliderOptions[i], szCVARS[i], 0, 255, false, true));
+		m_pCrosshairColorSlider[i] = vgui::SETUP_PANEL(new vgui::GraphicalOverlay(this, "CrosshairSlider", szSliderOptions[i], szCVARS[i], 0, 255, false, GraphicalOverlay::RawValueType::TYPE_INT));
 		m_pCrosshairColorSlider[i]->SetZPos(60);
 	}
 

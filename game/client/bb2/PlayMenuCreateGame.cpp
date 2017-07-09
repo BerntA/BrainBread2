@@ -73,6 +73,11 @@ PlayMenuCreateGame::PlayMenuCreateGame(vgui::Panel *parent, char const *panelNam
 
 	m_pTitles[1]->SetText("#GameUI_CreateGame_ServerInfo");
 
+	m_pGamemodeToolTip = new vgui::TextTooltip(this, "");
+	m_pGamemodeToolTip->SetTooltipDelay(200);
+	m_pGamemodeToolTip->SetEnabled(true);
+	m_pGamemodeToolTip->SetTooltipFormatToMultiLine();
+
 	m_pMapDescription = vgui::SETUP_PANEL(new vgui::RichText(this, "TextMapDesc"));
 	m_pMapDescription->SetZPos(310);
 	m_pMapDescription->SetText("");
@@ -80,6 +85,7 @@ PlayMenuCreateGame::PlayMenuCreateGame(vgui::Panel *parent, char const *panelNam
 
 	m_pExtraInfo = vgui::SETUP_PANEL(new vgui::Label(this, "InfoLabel", ""));
 	m_pExtraInfo->SetZPos(315);
+	m_pExtraInfo->SetTooltip(m_pGamemodeToolTip, "#GameUI_ServerBrowser_InfoGamemode");
 
 	m_pMapPanel = vgui::SETUP_PANEL(new vgui::MapSelectionPanel(this, "MapPanel"));
 	m_pMapPanel->SetZPos(250);

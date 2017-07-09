@@ -1117,7 +1117,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 		RemoveAllClientGibs();
 
 		if (pClient && (pClient->GetTeamNumber() >= TEAM_HUMANS))
-			GameBaseClient->CloseGamePanels();
+			GameBaseClient->CloseGamePanels(true);
 	}
 	else if ( Q_strcmp( "client_sound_transmit", eventname ) == 0 )
 	{

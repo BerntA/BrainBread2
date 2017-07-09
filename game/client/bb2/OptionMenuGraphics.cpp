@@ -125,7 +125,7 @@ OptionMenuGraphics::OptionMenuGraphics(vgui::Panel *parent, char const *panelNam
 
 	for (int i = 0; i < _ARRAYSIZE(m_pSlider); i++)
 	{
-		m_pSlider[i] = vgui::SETUP_PANEL(new vgui::GraphicalOverlay(this, "Slider", szSliderOptions[i], szSliderCVARS[i], flSliderMins[i], flSliderMax[i], false, true));
+		m_pSlider[i] = vgui::SETUP_PANEL(new vgui::GraphicalOverlay(this, "Slider", szSliderOptions[i], szSliderCVARS[i], flSliderMins[i], flSliderMax[i], false, GraphicalOverlay::RawValueType::TYPE_INT));
 		m_pSlider[i]->SetZPos(60);
 	}
 

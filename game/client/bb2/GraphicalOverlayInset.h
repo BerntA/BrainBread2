@@ -27,13 +27,21 @@
 namespace vgui
 {
 	class GraphicalOverlay;
-
 	class GraphicalOverlay : public vgui::Panel
 	{
 		DECLARE_CLASS_SIMPLE(GraphicalOverlay, vgui::Panel);
 
 	public:
-		GraphicalOverlay(vgui::Panel *parent, char const *panelName, const char *labelText, const char *conVarLink, float flRangeMin, float flRangeMax, bool bNegative = false, bool bDisplayRawValue = false);
+
+		enum RawValueType
+		{
+			TYPE_PERCENT = 0,
+			TYPE_FLOAT,
+			TYPE_FLOAT_SMALL,
+			TYPE_INT,
+		};
+
+		GraphicalOverlay(vgui::Panel *parent, char const *panelName, const char *labelText, const char *conVarLink, float flRangeMin, float flRangeMax, bool bNegative = false, int iDisplayRawValue = TYPE_PERCENT);
 		~GraphicalOverlay();
 
 		void SetEnabled(bool state);
@@ -43,7 +51,7 @@ namespace vgui
 		void UpdateNobPosition(void);
 		char szConVar[64];
 
-		bool m_bRawValue;
+		int m_iRawValue;
 		bool m_bNegative;
 		float m_flMax;
 		float m_flMin;

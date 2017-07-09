@@ -57,7 +57,7 @@ public:
 	void SendToolTip(const char *message, int type = 0, int index = -1, const char *arg1 = "", const char *arg2 = "", const char *arg3 = "", const char *arg4 = "");
 	void SendToolTip(const char *message, const char *keybind, float duration, int type = 0, int index = -1, const char *arg1 = "", const char *arg2 = "", const char *arg3 = "", const char *arg4 = "");
 	void SendAchievement(const char *szAchievement, int iReceipentID = 0);
-	float GetDamageScaleForEntity(CBaseEntity *pAttacker, CBaseEntity *pVictim);
+	float GetDamageScaleForEntity(CBaseEntity *pAttacker, CBaseEntity *pVictim, int damageType, int customDamageType);
 
 	bool IsTutorialModeEnabled(void);
 	bool IsStoryMode(void);

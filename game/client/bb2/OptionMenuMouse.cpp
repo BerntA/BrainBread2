@@ -131,7 +131,7 @@ OptionMenuMouse::OptionMenuMouse(vgui::Panel *parent, char const *panelName) : B
 
 	for (int i = 0; i < _ARRAYSIZE(m_pSlider); i++)
 	{
-		m_pSlider[i] = vgui::SETUP_PANEL(new vgui::GraphicalOverlay(this, "GraphSlider", szSliderOptions[i], szCVARS[i], flRangeMin[i], flRangeMax[i], bNegatives[i], true));
+		m_pSlider[i] = vgui::SETUP_PANEL(new vgui::GraphicalOverlay(this, "GraphSlider", szSliderOptions[i], szCVARS[i], flRangeMin[i], flRangeMax[i], bNegatives[i], GraphicalOverlay::RawValueType::TYPE_FLOAT));
 		m_pSlider[i]->SetZPos(60);
 	}
 

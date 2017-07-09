@@ -96,9 +96,16 @@ OptionMenuPerformance::OptionMenuPerformance(vgui::Panel *parent, char const *pa
 		100.0f,
 	};
 
+	int sliderValueTypes[] =
+	{
+		GraphicalOverlay::RawValueType::TYPE_INT,
+		GraphicalOverlay::RawValueType::TYPE_FLOAT_SMALL,
+		GraphicalOverlay::RawValueType::TYPE_INT,
+	};
+
 	for (int i = 0; i < _ARRAYSIZE(m_pSlider); i++)
 	{
-		m_pSlider[i] = vgui::SETUP_PANEL(new vgui::GraphicalOverlay(this, "GraphSlider", szSliderOptions[i], szCVARS[i], 0.0f, flRangeMax[i], false, true));
+		m_pSlider[i] = vgui::SETUP_PANEL(new vgui::GraphicalOverlay(this, "GraphSlider", szSliderOptions[i], szCVARS[i], 0.0f, flRangeMax[i], false, sliderValueTypes[i]));
 		m_pSlider[i]->SetZPos(60);
 	}
 

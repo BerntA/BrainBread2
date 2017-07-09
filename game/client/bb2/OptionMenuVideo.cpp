@@ -134,15 +134,15 @@ OptionMenuVideo::OptionMenuVideo(vgui::Panel *parent, char const *panelName) : B
 		20.0f,
 	};
 
-	bool bSliderRawValues[] =
+	int iSliderRawValues[] =
 	{
-		false,
-		true,
+		GraphicalOverlay::RawValueType::TYPE_PERCENT,
+		GraphicalOverlay::RawValueType::TYPE_INT,
 	};
 
 	for (int i = 0; i < _ARRAYSIZE(m_pSensSlider); i++)
 	{
-		m_pSensSlider[i] = vgui::SETUP_PANEL(new vgui::GraphicalOverlay(this, "GraphSlider", szSliderNames[i], szSliderCVARS[i], flSliderLimitMin[i], flSliderLimitMax[i], false, bSliderRawValues[i]));
+		m_pSensSlider[i] = vgui::SETUP_PANEL(new vgui::GraphicalOverlay(this, "GraphSlider", szSliderNames[i], szSliderCVARS[i], flSliderLimitMin[i], flSliderLimitMax[i], false, iSliderRawValues[i]));
 		m_pSensSlider[i]->SetZPos(60);
 	}
 

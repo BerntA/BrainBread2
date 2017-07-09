@@ -293,6 +293,8 @@ public:
 	void AddAssociatedAmmoEnt(CBaseEntity *pEnt);
 	void CleanupAssociatedAmmoEntities(void);
 
+	void CheckShouldEnableFlashlightOnSwitch(void);
+
 	static bool IsWeaponEquippedByDefault(const char *weaponName);
 
 private:
@@ -322,6 +324,7 @@ private:
 	float m_flUpdateTime;
 	bool m_bHasFullySpawned;
 	bool m_bHasJoinedGame;
+	bool m_bEnableFlashlighOnSwitch;
 
 	bool m_bIsServerAdmin;
 

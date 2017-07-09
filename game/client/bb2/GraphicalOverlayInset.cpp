@@ -34,7 +34,7 @@ using namespace vgui;
 #define SLIDER_GUI_TALL 4
 #define SLIDER_XPOS_OFFSET scheme()->GetProportionalScaledValue(2)
 
-GraphicalOverlay::GraphicalOverlay(vgui::Panel *parent, char const *panelName, const char *labelText, const char *conVarLink, float flRangeMin, float flRangeMax, bool bNegative, bool bDisplayRawValue) : vgui::Panel(parent, panelName)
+GraphicalOverlay::GraphicalOverlay(vgui::Panel *parent, char const *panelName, const char *labelText, const char *conVarLink, float flRangeMin, float flRangeMax, bool bNegative, int iDisplayRawValue) : vgui::Panel(parent, panelName)
 {
 	SetParent(parent);
 	SetName(panelName);
@@ -71,7 +71,7 @@ GraphicalOverlay::GraphicalOverlay(vgui::Panel *parent, char const *panelName, c
 	m_pValue->SetZPos(15);
 	m_pValue->SetText("");
 
-	m_bRawValue = bDisplayRawValue;
+	m_iRawValue = iDisplayRawValue;
 	m_bNegative = bNegative;
 	m_flMin = flRangeMin;
 	m_flMax = flRangeMax;
@@ -99,7 +99,22 @@ void GraphicalOverlay::PerformLayout(void)
 		m_pSlider->SetValue((int)percent);
 		m_flOldVarVar = slider_var->GetFloat();
 		m_iOldSliderVal = m_pSlider->GetValue();
-		m_pValue->SetText(m_bRawValue ? VarArgs("%.1f", slider_var->GetFloat()) : VarArgs("%i", m_pSlider->GetValue()));
+
+		switch (m_iRawValue)
+		{
+		case RawValueType::TYPE_FLOAT:
+			m_pValue->SetText(VarArgs("%.3f", slider_var->GetFloat()));
+			break;
+		case RawValueType::TYPE_FLOAT_SMALL:
+			m_pValue->SetText(VarArgs("%.1f", slider_var->GetFloat()));
+			break;
+		case RawValueType::TYPE_INT:
+			m_pValue->SetText(VarArgs("%i", slider_var->GetInt()));
+			break;
+		default: // Percent fallback.
+			m_pValue->SetText(VarArgs("%i", m_pSlider->GetValue()));
+			break;
+		}
 	}
 
 	int w = 0,
@@ -166,7 +181,21 @@ void GraphicalOverlay::OnUpdate(bool bInGame)
 			engine->ClientCmd_Unrestricted("host_writeconfig\n");
 		}
 
-		m_pValue->SetText(m_bRawValue ? VarArgs("%.1f", pMyVar->GetFloat()) : VarArgs("%i", m_pSlider->GetValue()));
+		switch (m_iRawValue)
+		{
+		case RawValueType::TYPE_FLOAT:
+			m_pValue->SetText(VarArgs("%.3f", pMyVar->GetFloat()));
+			break;
+		case RawValueType::TYPE_FLOAT_SMALL:
+			m_pValue->SetText(VarArgs("%.1f", pMyVar->GetFloat()));
+			break;
+		case RawValueType::TYPE_INT:
+			m_pValue->SetText(VarArgs("%i", pMyVar->GetInt()));
+			break;
+		default: // Percent fallback.
+			m_pValue->SetText(VarArgs("%i", m_pSlider->GetValue()));
+			break;
+		}
 	}
 }
 

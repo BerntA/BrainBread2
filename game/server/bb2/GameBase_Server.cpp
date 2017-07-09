@@ -204,7 +204,7 @@ void CGameBaseServer::NewPlayerConnection(CHL2MP_Player *pClient)
 	}
 }
 
-float CGameBaseServer::GetDamageScaleForEntity(CBaseEntity *pAttacker, CBaseEntity *pVictim)
+float CGameBaseServer::GetDamageScaleForEntity(CBaseEntity *pAttacker, CBaseEntity *pVictim, int damageType, int customDamageType)
 {
 	if (!pAttacker || !pVictim)
 		return 1.0f;
@@ -226,12 +226,22 @@ float CGameBaseServer::GetDamageScaleForEntity(CBaseEntity *pAttacker, CBaseEnti
 	}
 	else if (pAttacker->IsPlayer())
 	{
+		// NO SCALING FOR KICKING.
+		if (customDamageType == DMG_CLUB)
+			return 1.0f;
+
 		CBasePlayer *pOwner = ToBasePlayer(pAttacker);
 		if (pOwner)
 			pActiveWep = pOwner->GetActiveWeapon();
 
 		if (pActiveWep)
+		{
+			// IF our wep is not a melee wep and our dmg type is not a firearm type, return no scaling, assuming a bash attack or triggered attack of some kind.
+			if (!pActiveWep->IsMeleeWeapon() && !(damageType & (DMG_BULLET | DMG_BUCKSHOT | DMG_BLAST | DMG_BURN)))
+				return 1.0f;
+
 			pchWeaponClassname = pActiveWep->GetClassname();
+		}
 	}
 
 	if (pchWeaponClassname != NULL)

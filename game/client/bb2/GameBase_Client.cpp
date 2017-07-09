@@ -147,7 +147,7 @@ public:
 	// Prevents issues where you'd be able to open up new panels as they were fading out. In some cases this would crash the client.
 	bool CanOpenPanel(void);
 	// Due to the fade out function not all panels get fully closed when we rush out of a game, that's why we have to handle proper forcing here!
-	void CloseGamePanels(void);
+	void CloseGamePanels(bool bInGamePanelsOnly = false);
 	// Swap between quest previews within the Game Panel GUI.
 	void SelectQuestPreview(int index);
 	// Check if a baseviewport panel is visible:.
@@ -532,7 +532,7 @@ void CGameBaseClient::RunClientEffect(int iEffect, int iState)
 		}
 		case PLAYER_EFFECT_DEATH:
 		{
-			CloseGamePanels();
+			CloseGamePanels(true);
 			pClient->SetZombieVision(false);
 			break;
 		}
@@ -605,7 +605,7 @@ bool CGameBaseClient::CanOpenPanel(void)
 }
 
 // Due to the fade out function not all panels get fully closed when we rush out of a game, that's why we have to handle proper forcing here!
-void CGameBaseClient::CloseGamePanels(void)
+void CGameBaseClient::CloseGamePanels(bool bInGamePanelsOnly)
 {
 	if (GamePanel)
 		GamePanel->ForceClose();
@@ -630,7 +630,9 @@ void CGameBaseClient::CloseGamePanels(void)
 			gViewPortInterface->ShowPanel(pBasePanel->GetName(), false);
 	}
 
-	RefreshVGUI();
+	// Refresh GameUI / MainMenu components:
+	if (!bInGamePanelsOnly)
+		RefreshVGUI();
 }
 
 // Run a map directly, called when you write map *** or create a game.
@@ -822,20 +824,23 @@ void CGameBaseClient::LoadGameLocalization(void)
 	const char *currentSelectedLanguage = steamapicontext->SteamApps()->GetCurrentGameLanguage();
 	char pchPathToLocalizedFile[80];
 
-	// Load default localization:
-	const char *localizationFiles[] = { "resource/chat_", "resource/gameui_", "resource/hl2_", "resource/replay_", "resource/valve_", "resource/youtube_" };
-	for (int i = 0; i < _ARRAYSIZE(localizationFiles); ++i)
-	{
-		Q_snprintf(pchPathToLocalizedFile, 80, "%s%s.txt", localizationFiles[i], currentSelectedLanguage);
-		g_pVGuiLocalize->AddFile(pchPathToLocalizedFile, "GAME");
-	}
+	// NOT NEEDED ANYMORE, LATEST SDK 2013 UPD, FIXED THIS ISSUE:
+	// CLOSED CAPTS. STILL NEED A HACK HACK THOUGH.
 
-	// Load game localization:
-	Q_snprintf(pchPathToLocalizedFile, 80, "resource/brainbread2_%s.txt", currentSelectedLanguage);
-	if (filesystem->FileExists(pchPathToLocalizedFile, "MOD"))
-		g_pVGuiLocalize->AddFile(pchPathToLocalizedFile, "MOD");
-	else
-		g_pVGuiLocalize->AddFile("resource/brainbread2_english.txt", "MOD");
+	//// Load default localization:
+	//const char *localizationFiles[] = { "resource/chat_", "resource/gameui_", "resource/hl2_", "resource/replay_", "resource/valve_", "resource/youtube_" };
+	//for (int i = 0; i < _ARRAYSIZE(localizationFiles); ++i)
+	//{
+	//	Q_snprintf(pchPathToLocalizedFile, 80, "%s%s.txt", localizationFiles[i], currentSelectedLanguage);
+	//	g_pVGuiLocalize->AddFile(pchPathToLocalizedFile, "GAME");
+	//}
+
+	//// Load game localization:
+	//Q_snprintf(pchPathToLocalizedFile, 80, "resource/brainbread2_%s.txt", currentSelectedLanguage);
+	//if (filesystem->FileExists(pchPathToLocalizedFile, "MOD"))
+	//	g_pVGuiLocalize->AddFile(pchPathToLocalizedFile, "MOD");
+	//else
+	//	g_pVGuiLocalize->AddFile("resource/brainbread2_english.txt", "MOD");
 
 	// Load subtitle localization:
 	Q_snprintf(pchPathToLocalizedFile, 80, "resource/closecaption_%s.dat", currentSelectedLanguage);

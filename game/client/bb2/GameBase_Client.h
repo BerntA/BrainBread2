@@ -80,7 +80,7 @@ public:
 	virtual void LoadGameLocalization(void) = 0;
 	virtual void OnUpdate(void) = 0;
 	virtual bool CanOpenPanel(void) = 0;
-	virtual void CloseGamePanels(void) = 0;
+	virtual void CloseGamePanels(bool bInGamePanelsOnly = false) = 0;
 	virtual bool IsInGame(void) = 0;
 	bool IsExtremeGore() { return bb2_extreme_gore.GetBool(); }
 	virtual void ResetMapConVar(void) = 0;

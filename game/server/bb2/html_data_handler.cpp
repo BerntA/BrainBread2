@@ -13,6 +13,7 @@
 
 #ifndef OSX
 #include "../../../thirdparty/curl/curl.h"
+#include <string>
 #endif
 
 ConVar bb2_enable_ban_list("bb2_enable_ban_list", "1", FCVAR_REPLICATED, "Enable or Disable the official ban list?", true, 0.0f, true, 1.0f);
@@ -110,6 +111,8 @@ void RecreateSoundScriptsManifest(void)
 
 #ifndef OSX
 int g_iActiveItemType = 0;
+std::string htmlData;
+
 const char *pchDataURLs[5] =
 {
 	"http://reperio-studios.eu/gamedata/brainbread2/developers.txt",
@@ -119,15 +122,10 @@ const char *pchDataURLs[5] =
 	"http://reperio-studios.eu/gamedata/brainbread2/blacklistedservers.txt",
 };
 
-static size_t rcvData(void *ptr, size_t size, size_t nmemb, void *userdata)
+size_t writeCallback(char* buf, size_t size, size_t nmemb, void* up)
 {
-	KeyValues *pkvData = new KeyValues("HTMLData");
-	if (pkvData->LoadFromBuffer("ReperioData", ((char*)ptr), filesystem, "MOD"))
-	{
-		for (KeyValues *sub = pkvData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-			GameBaseServer()->AddItemToSharedList(sub->GetString(), g_iActiveItemType);
-	}
-	pkvData->deleteThis();
+	for (size_t c = 0; c < size*nmemb; c++)
+		htmlData.push_back(buf[c]);
 
 	return size * nmemb;
 }
@@ -138,11 +136,24 @@ void ParseHTML(const char *url)
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, rcvData);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &writeCallback);
+	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+
 	if (curl_easy_perform(curl) != CURLE_OK)
 		Msg("Unable to parse the url: '%s'!\n", url);
+	else
+	{
+		KeyValues *pkvData = new KeyValues("HTMLData");
+		if (pkvData->LoadFromBuffer("ReperioData", htmlData.c_str(), filesystem, "MOD"))
+		{
+			for (KeyValues *sub = pkvData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+				GameBaseServer()->AddItemToSharedList(sub->GetString(), g_iActiveItemType);
+		}
+		pkvData->deleteThis();
+	}
 
 	curl_easy_cleanup(curl);
+	htmlData.clear();
 }
 #endif
 

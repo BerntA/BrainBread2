@@ -262,6 +262,7 @@ CHL2MP_Player::CHL2MP_Player()
 	m_bHasTriedToLoadStats = false;
 	m_bIsServerAdmin = false;
 	m_bPlayerUsedFirearm = false;
+	m_bEnableFlashlighOnSwitch = false;
 
 	m_flUpdateTime = 0.0f;
 	m_flNextResupplyTime = 0.0f;
@@ -561,6 +562,7 @@ void CHL2MP_Player::Spawn(void)
 	// Misc
 	m_flNextResupplyTime = 0.0f;
 	m_nMaterialOverlayFlags = 0;
+	m_bEnableFlashlighOnSwitch = false;
 
 	ResetSlideVars();
 	OnSetGibHealth();
@@ -766,10 +768,19 @@ void CHL2MP_Player::SetupCustomization(void)
 bool CHL2MP_Player::Weapon_Switch(CBaseCombatWeapon *pWeapon, bool bWantDraw, int viewmodelindex)
 {
 	bool bRet = BaseClass::Weapon_Switch(pWeapon, bWantDraw, viewmodelindex);
-
 	if (bRet == true)
 	{
-		FlashlightTurnOff();
+		if (bWantDraw && m_bEnableFlashlighOnSwitch)
+		{
+			m_bEnableFlashlighOnSwitch = false;
+			FlashlightTurnOn();
+		}
+		else
+		{
+			RemoveEffects(EF_DIMLIGHT);
+			if (IsAlive())
+				EmitSound("HL2Player.FlashlightOff");
+		}
 	}
 
 	return bRet;
@@ -817,6 +828,7 @@ void CHL2MP_Player::OnZombieInfectionComplete(void)
 	m_iNumPerkKills = 0;
 	m_nPerkFlags = 0;
 	m_BB2Local.m_bCanActivatePerk = false;
+	m_bEnableFlashlighOnSwitch = false;
 
 	RefreshSpeed();
 }
@@ -2353,7 +2365,7 @@ void CHL2MP_Player::FlashlightTurnOn(void)
 void CHL2MP_Player::FlashlightTurnOff(void)
 {
 	RemoveEffects(EF_DIMLIGHT);
-
+	m_bEnableFlashlighOnSwitch = false;
 	if (IsAlive())
 	{
 		EmitSound("HL2Player.FlashlightOff");
@@ -2465,7 +2477,7 @@ int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	CBaseEntity *pAttacker = damageCopy.GetAttacker();
 	if (pAttacker)
 	{
-		float flDamageScale = GameBaseServer()->GetDamageScaleForEntity(pAttacker, this);
+		float flDamageScale = GameBaseServer()->GetDamageScaleForEntity(pAttacker, this, damageCopy.GetDamageType(), damageCopy.GetDamageCustom());
 		damageCopy.ScaleDamage(flDamageScale);
 	}
 
@@ -2841,6 +2853,14 @@ void CHL2MP_Player::CleanupAssociatedAmmoEntities(void)
 	}
 
 	m_pAssociatedAmmoEntities.RemoveAll();
+}
+
+void CHL2MP_Player::CheckShouldEnableFlashlightOnSwitch(void)
+{
+	if (!IsAlive())
+		return;
+
+	m_bEnableFlashlighOnSwitch = (FlashlightIsOn() >= 1);
 }
 
 //-----------------------------------------------------------------------------
