@@ -293,6 +293,9 @@ public:
 	void AddAssociatedAmmoEnt(CBaseEntity *pEnt);
 	void CleanupAssociatedAmmoEntities(void);
 
+	void OnDroppedAmmoNow(void) { m_flLastTimeDroppedAmmo = gpGlobals->curtime; }
+	float GetLastTimeDroppedAmmo(void) { return m_flLastTimeDroppedAmmo; }
+
 	void CheckShouldEnableFlashlightOnSwitch(void);
 
 	static bool IsWeaponEquippedByDefault(const char *weaponName);
@@ -322,6 +325,7 @@ private:
 	float m_flSpawnProtection;
 	float m_flZombieVisionLockTime;
 	float m_flUpdateTime;
+	float m_flLastTimeDroppedAmmo;
 	bool m_bHasFullySpawned;
 	bool m_bHasJoinedGame;
 	bool m_bEnableFlashlighOnSwitch;

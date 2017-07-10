@@ -1355,6 +1355,12 @@ void CHL2MPRules::CreateBanKickVote(CBasePlayer *pVoter, CBasePlayer *pTarget, b
 		return;
 	}
 
+	if (!m_bRoundStarted)
+	{
+		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_WAIT_GAME", 1, pVoter->entindex());
+		return;
+	}
+
 	CHL2MP_Player *pTargetClient = ToHL2MPPlayer(pTarget);
 	if (pTargetClient)
 	{
@@ -1390,6 +1396,12 @@ void CHL2MPRules::CreateMapVote(CBasePlayer *pVoter, const char *map)
 	if (bb2_vote_disable_map.GetBool())
 	{
 		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_MAP_DISABLED", 1, pVoter->entindex());
+		return;
+	}
+
+	if (!m_bRoundStarted)
+	{
+		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_WAIT_GAME", 1, pVoter->entindex());
 		return;
 	}
 

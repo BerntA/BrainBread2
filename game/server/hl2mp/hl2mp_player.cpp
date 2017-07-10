@@ -268,6 +268,7 @@ CHL2MP_Player::CHL2MP_Player()
 	m_flNextResupplyTime = 0.0f;
 	m_flLastInfectionTwitchTime = 0.0f;
 	m_flLastTimeRanCommand = 0.0f;
+	m_flLastTimeDroppedAmmo = 0.0f;
 
 	m_iTotalPing = 0;
 	m_iTimesCheckedPing = 0;
@@ -561,6 +562,7 @@ void CHL2MP_Player::Spawn(void)
 
 	// Misc
 	m_flNextResupplyTime = 0.0f;
+	m_flLastTimeDroppedAmmo = 0.0f;
 	m_nMaterialOverlayFlags = 0;
 	m_bEnableFlashlighOnSwitch = false;
 

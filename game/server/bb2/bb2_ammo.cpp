@@ -15,6 +15,7 @@
 #include "ammodef.h"
 #include "npcevent.h"
 #include "eventlist.h"
+#include "GameBase_Server.h"
 
 int GetAmmoCountMultiplier(int wepType)
 {
@@ -282,6 +283,8 @@ void CAmmoTrapper::Precache(void)
 	PrecacheModel("models/items/ammo_winchester.mdl");
 }
 
+#define AMMO_DROP_WAIT_TIME 1.0f
+
 CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
 {
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_GetCommandClient());
@@ -310,6 +313,16 @@ CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
 	if (ammoForItem > ammoCount)
 		ammoForItem = ammoCount;
 
+	float timeSinceLastDrop = gpGlobals->curtime - pPlayer->GetLastTimeDroppedAmmo();
+	if (timeSinceLastDrop < AMMO_DROP_WAIT_TIME)
+	{
+		char pchTime[16];
+		Q_snprintf(pchTime, 16, "%.1f", fabs((AMMO_DROP_WAIT_TIME - timeSinceLastDrop)));
+		GameBaseServer()->SendToolTip("#TOOLTIP_AMMO_DROP_DENY", 1, pPlayer->entindex(), pchTime);
+		return;
+	}
+
+	pPlayer->OnDroppedAmmoNow();
 	pPlayer->RemoveAmmo(ammoForItem, pWeapon->m_iPrimaryAmmoType);
 	CAmmoItemBase *pEntity = (CAmmoItemBase*)CreateEntityByName(classNew);
 	if (pEntity)
