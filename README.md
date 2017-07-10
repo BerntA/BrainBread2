@@ -14,3 +14,22 @@ Use the VPC scripts to generate the necessary project file(s).
 * Windows: You can use VS2010 or VS2013 to compile this project, however newer versions of Visual Studio might work as well.
 * Linux: Use gcc compiler, make sure that you have the latest version of libcurl.
 * OSX: Use XCode.
+
+### Future Implementations & Improvements
+- [ ] Draw a bar when holding +use on for example doors, when trying to lock/unlock them.
+- [ ] Add skill tree templates for fast switching between skill choices.
+- [ ] Improve movement mechanics, such as view tilting and camera movement when reloading weapons.
+- [ ] New GUI for the inventory and quest system.
+- [ ] Fix tiny HUD / GUI text for some languages like Russian, Chinese, etc...
+
+### Current Bugs
+* Writing 'connect ip:port' in the console while in-game will bug if the server is password protected, you have to open the main menu in order to write in the desired password. (assuming you're using the console when the main menu isn't up)
+* Very rare and random crash which occurs when you click OK on the motd in-game, when you're about to enter the game. (spawn)
+* Engine related render crash, due to too many frames being rendered, happens in Termoil sometimes.
+* Unable to freeroam in spectator mode.
+* Sometimes viewmodels will randomly go invisible until you respawn/get a new weapon of the same type.
+* Very rarely some players will suddenly become invisible.
+* When recording via hltv, the objective HUD will be hidden.
+* Changing resolution while the motd is up will create unforeseen consequences.
+* Spectating starts inside the player, you have to refresh the spectate mode to fix this issue at this time.
+* Sometimes thirdperson gestures will not play. EX: Melee anims, swinging, etc...

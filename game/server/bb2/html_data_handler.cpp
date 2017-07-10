@@ -13,7 +13,6 @@
 
 #ifndef OSX
 #include "../../../thirdparty/curl/curl.h"
-#include <string>
 #endif
 
 ConVar bb2_enable_ban_list("bb2_enable_ban_list", "1", FCVAR_REPLICATED, "Enable or Disable the official ban list?", true, 0.0f, true, 1.0f);
@@ -111,7 +110,7 @@ void RecreateSoundScriptsManifest(void)
 
 #ifndef OSX
 int g_iActiveItemType = 0;
-std::string htmlData;
+CUtlStringList htmlDataList;
 
 const char *pchDataURLs[5] =
 {
@@ -124,9 +123,7 @@ const char *pchDataURLs[5] =
 
 size_t writeCallback(char* buf, size_t size, size_t nmemb, void* up)
 {
-	for (size_t c = 0; c < size*nmemb; c++)
-		htmlData.push_back(buf[c]);
-
+	htmlDataList.AddToTail(buf);
 	return size * nmemb;
 }
 
@@ -143,8 +140,14 @@ void ParseHTML(const char *url)
 		Msg("Unable to parse the url: '%s'!\n", url);
 	else
 	{
+		char pchTemp[4096];
+		pchTemp[0] = 0;
+
+		for (int i = 0; i < htmlDataList.Count(); i++)
+			Q_strncat(pchTemp, htmlDataList[i], sizeof(pchTemp));
+
 		KeyValues *pkvData = new KeyValues("HTMLData");
-		if (pkvData->LoadFromBuffer("ReperioData", htmlData.c_str(), filesystem, "MOD"))
+		if (pkvData->LoadFromBuffer("ReperioData", pchTemp, filesystem, "MOD"))
 		{
 			for (KeyValues *sub = pkvData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
 				GameBaseServer()->AddItemToSharedList(sub->GetString(), g_iActiveItemType);
@@ -152,8 +155,8 @@ void ParseHTML(const char *url)
 		pkvData->deleteThis();
 	}
 
+	htmlDataList.RemoveAll();
 	curl_easy_cleanup(curl);
-	htmlData.clear();
 }
 #endif
 
