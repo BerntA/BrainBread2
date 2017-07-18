@@ -11,9 +11,14 @@ Now anyone can feel free to contribute to this development, now that BrainBread 
 
 ### Compiling
 Use the VPC scripts to generate the necessary project file(s).
+[Source SDK 2013 Compiling Help](https://developer.valvesoftware.com/wiki/Source_SDK_2013)
 * Windows: You can use VS2010 or VS2013 to compile this project, however newer versions of Visual Studio might work as well.
 * Linux: Use gcc compiler, make sure that you have the latest version of libcurl.
 * OSX: Use XCode.
+
+### Contributing
+Feel free to post issues, pull requests and such.
+However, if you create a pull request, be sure to test your changes properly before submitting the request!
 
 ### Future Implementations & Improvements
 - [ ] Draw a bar when holding +use on for example doors, when trying to lock/unlock them.
@@ -21,6 +26,7 @@ Use the VPC scripts to generate the necessary project file(s).
 - [ ] Improve movement mechanics, such as view tilting and camera movement when reloading weapons.
 - [ ] New GUI for the inventory and quest system.
 - [ ] Fix tiny HUD / GUI text for some languages like Russian, Chinese, etc...
+- [ ] Restrict zombie rage in Objective mode to each round, meaning you can only activate this once per round.
 
 ### Current Bugs
 * Writing 'connect ip:port' in the console while in-game will bug if the server is password protected, you have to open the main menu in order to write in the desired password. (assuming you're using the console when the main menu isn't up)
@@ -33,3 +39,4 @@ Use the VPC scripts to generate the necessary project file(s).
 * Changing resolution while the motd is up will create unforeseen consequences.
 * Spectating starts inside the player, you have to refresh the spectate mode to fix this issue at this time.
 * Sometimes thirdperson gestures will not play. EX: Melee anims, swinging, etc...
+* When you intersect with another player, look downwards and shoot, you will take damage from your own bullets.
