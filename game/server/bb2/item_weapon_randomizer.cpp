@@ -42,6 +42,7 @@ weaponInfoItem pszWeapons[] =
 
 	{ "weapon_mac11", 55, false },
 	{ "weapon_mp7", 40, false },
+	{ "weapon_microuzi", 45, false },
 
 	{ "weapon_ak47", 100, false },
 	{ "weapon_famas", 65, false },

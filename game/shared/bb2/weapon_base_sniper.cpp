@@ -57,18 +57,23 @@ void CHL2MPSniperRifle::SetZoomLevel(int level)
 		int extraFOV = GetFOVForZoom(m_iCurrentZoomLevel);
 		pOwner->SetFOV(this, pOwner->GetDefaultFOV() + extraFOV, 0.3f);
 
-		if (!pViewMDL->IsEffectActive(EF_NODRAW))
+		if (ShouldHideViewmodelOnZoom() && !pViewMDL->IsEffectActive(EF_NODRAW))
 			pViewMDL->AddEffects(EF_NODRAW);
 
-		WeaponSound(SPECIAL1); // Zoom-In.
+		if (ShouldPlayZoomSounds())
+			WeaponSound(SPECIAL1); // Zoom-In.
 		return;
 	}
 
 	if (oldLevel)
 	{
 		pOwner->SetFOV(this, 0, 0.3f);
-		pViewMDL->RemoveEffects(EF_NODRAW);
-		WeaponSound(SPECIAL2); // Zoom-Out.
+
+		if (ShouldHideViewmodelOnZoom())
+			pViewMDL->RemoveEffects(EF_NODRAW);
+
+		if (ShouldPlayZoomSounds())
+			WeaponSound(SPECIAL2); // Zoom-Out.
 	}
 }
 

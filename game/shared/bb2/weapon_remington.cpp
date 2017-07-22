@@ -45,7 +45,7 @@ private:
 public:
 
 	virtual int				GetMinBurst() { return 1; }
-	virtual int				GetMaxBurst() { return 3; }
+	virtual int				GetMaxBurst() { return 1; }
 
 	int GetOverloadCapacity() { return 4; }
 	int GetWeaponType(void) { return WEAPON_TYPE_SHOTGUN; }

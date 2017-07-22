@@ -119,11 +119,6 @@ ConVar sv_weapon_relocation_time( "sv_weapon_relocation_time", "10", FCVAR_GAMED
 ConVar sv_item_relocation_time("sv_item_relocation_time", "10", FCVAR_GAMEDLL | FCVAR_NOTIFY);
 ConVar sv_report_client_settings("sv_report_client_settings", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY );
 
-//BB2_MISC_FIXES: Here we add darkness mode so that it now works.
-#ifdef HL2_EPISODIC  
-ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REPLICATED );
-#endif // HL2_EPISODIC
-
 extern ConVar mp_chattime;
 
 #define WEAPON_MAX_DISTANCE_FROM_SPAWN 64
@@ -3213,30 +3208,12 @@ CBaseEntity *CHL2MPRules::GetNearbyBreakableDoorEntity(CBaseEntity *pChecker)
 #ifndef CLIENT_DLL
 
 //-----------------------------------------------------------------------------
-// Returns whether or not Alyx cares about light levels in order to see.
-//-----------------------------------------------------------------------------
-bool CHL2MPRules::IsAlyxInDarknessMode()
-{
-	return false;
-}
-
-
-//-----------------------------------------------------------------------------
-// This takes the long way around to see if a prop should emit a DLIGHT when it
-// ignites, to avoid having Alyx-related code in props.cpp.
+// Should props emit DLIGHT when on fire?
 //-----------------------------------------------------------------------------
 bool CHL2MPRules::ShouldBurningPropsEmitLight()
 {
-#ifdef HL2_EPISODIC
-	return IsAlyxInDarknessMode();
-#else
 	return false;
-#endif // HL2_EPISODIC
 }
-
-#endif//CLIENT_DLL
-
-#ifndef CLIENT_DLL
 
 //-----------------------------------------------------------------------------
 // Purpose: MULTIPLAYER BODY QUE HANDLING

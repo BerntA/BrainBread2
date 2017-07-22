@@ -1943,8 +1943,15 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 float CBaseEntity::FirePenetrativeBullet(const FireBulletsInfo_t &info, Vector &vecStart, Vector &vecDir, CBaseEntity *pAttacker, CBaseEntity *pIgnore, int dmgType)
 {
 	trace_t tr;
+	CBulletsTraceFilter traceFilter(COLLISION_GROUP_NONE);
+	traceFilter.SetPassEntity(this);
+	traceFilter.AddEntityToIgnore(info.m_pAdditionalIgnoreEnt);
+
+	if (pIgnore != NULL)
+		traceFilter.AddEntityToIgnore(pIgnore);
+
 	Vector vecEnd = vecStart + vecDir * MAX_TRACE_LENGTH;
-	AI_TraceLine(vecStart, vecEnd, MASK_SHOT, pIgnore, COLLISION_GROUP_NONE, &tr);
+	AI_TraceLine(vecStart, vecEnd, MASK_SHOT, &traceFilter, &tr);
 
 #ifdef GAME_DLL
 	CTakeDamageInfo triggerInfo(pAttacker, pAttacker, info.m_flDamage, dmgType);

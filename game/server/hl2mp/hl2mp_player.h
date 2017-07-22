@@ -329,6 +329,7 @@ private:
 	bool m_bHasFullySpawned;
 	bool m_bHasJoinedGame;
 	bool m_bEnableFlashlighOnSwitch;
+	bool m_bHasActivatedZombieRage;
 
 	bool m_bIsServerAdmin;
 

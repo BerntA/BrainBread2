@@ -53,6 +53,8 @@ public:
 
 	virtual bool Reload(void);
 	virtual bool CanPerformMeleeAttacks();
+	virtual bool ShouldPlayZoomSounds() { return true; }
+	virtual bool ShouldHideViewmodelOnZoom() { return true; }
 
 	int	GetMinBurst() { return 1; }
 	int	GetMaxBurst() { return 1; }

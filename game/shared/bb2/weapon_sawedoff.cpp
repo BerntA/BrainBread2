@@ -51,7 +51,7 @@ private:
 public:
 
 	virtual int				GetMinBurst() { return 1; }
-	virtual int				GetMaxBurst() { return 3; }
+	virtual int				GetMaxBurst() { return 1; }
 
 	int GetOverloadCapacity() { return 1; }
 	int GetWeaponType(void) { return WEAPON_TYPE_SHOTGUN; }
@@ -65,12 +65,16 @@ public:
 	void ItemPostFrame( void );
 	void PrimaryAttack( void );
 	void SecondaryAttack( void );
+	void DoubleAttack(void);
 	void DryFire( void );
 	float GetFireRate( void ) { return GetWpnData().m_flFireRate; }
 	void AffectedByPlayerSkill(int skill);
 
 	const char *GetMuzzleflashAttachment(bool bPrimaryAttack)
 	{
+		if (m_bFiredPrimary && m_bFiredSecondary)
+			return "muzzle";
+
 		if (bPrimaryAttack)
 			return "left_muzzle";
 
@@ -367,7 +371,7 @@ void CWeaponSawedOff::PrimaryAttack( void )
 
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	WeaponSound(SINGLE);
-	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
+	SendWeaponAnim( ACT_VM_SHOOT_LEFT );
 
 	// Don't fire again until fire animation has completed
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
@@ -375,7 +379,7 @@ void CWeaponSawedOff::PrimaryAttack( void )
 	m_iClip1 -= 1;
 
 	// player "shoot" animation
-	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, ACT_VM_PRIMARYATTACK);
+	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, ACT_VM_SHOOT_LEFT);
 
 	Vector	vecSrc		= pPlayer->Weapon_ShootPosition( );
 	Vector	vecAiming	= pPlayer->GetAutoaimVector( AUTOAIM_10DEGREES );	
@@ -407,7 +411,7 @@ void CWeaponSawedOff::SecondaryAttack( void )
 
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	WeaponSound(SINGLE);
-	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
+	SendWeaponAnim( ACT_VM_SHOOT_RIGHT );
 
 	// Don't fire again until fire animation has completed
 	//m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration() + 0.1f;
@@ -415,7 +419,7 @@ void CWeaponSawedOff::SecondaryAttack( void )
 	m_iClip1 -= 1;
 
 	// player "shoot" animation
-	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, ACT_VM_PRIMARYATTACK);
+	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, ACT_VM_SHOOT_RIGHT);
 
 	Vector	vecSrc = pPlayer->Weapon_ShootPosition();
 	Vector	vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
@@ -423,6 +427,47 @@ void CWeaponSawedOff::SecondaryAttack( void )
 	FireBulletsInfo_t info(GetWpnData().m_iPellets, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
 	info.m_pAttacker = pPlayer;
 	info.m_bPrimaryAttack = false;
+	info.m_vecFirstStartPos = pPlayer->GetAbsOrigin();
+	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
+	// Fire the bullets, and force the first shot to be perfectly accuracy
+	pPlayer->FireBullets(info);
+
+#ifdef BB2_AI
+#ifndef CLIENT_DLL
+	pPlayer->SetMuzzleFlashTime(gpGlobals->curtime + 1.0);
+	CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2);
+#endif
+#endif //BB2_AI
+
+	pPlayer->ViewPunch(GetViewKickAngle());
+}
+
+void CWeaponSawedOff::DoubleAttack(void)
+{
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
+	if (!pPlayer)
+		return;
+
+	// MUST call sound before removing a round from the clip of a CMachineGun
+	WeaponSound(WPN_DOUBLE);
+	SendWeaponAnim(ACT_VM_SHOOT_BOTH);
+
+	// Don't fire again until fire animation has completed
+	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
+	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
+	m_iClip1 -= 2;
+
+	// player "shoot" animation
+	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, ACT_VM_SHOOT_BOTH);
+
+	Vector	vecSrc = pPlayer->Weapon_ShootPosition();
+	Vector	vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
+
+	FireBulletsInfo_t info((GetWpnData().m_iPellets * 2), vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
+	info.m_pAttacker = pPlayer;
+	info.m_vecFirstStartPos = pPlayer->GetAbsOrigin();
+	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
+
 	// Fire the bullets, and force the first shot to be perfectly accuracy
 	pPlayer->FireBullets(info);
 
@@ -465,6 +510,31 @@ void CWeaponSawedOff::ItemPostFrame( void )
 
 	if (!m_bInReload && IsViewModelSequenceFinished() && (m_flNextBashAttack <= gpGlobals->curtime) && !(pOwner->m_nButtons & IN_BASH) && !(pOwner->m_nButtons & IN_ATTACK) && !(pOwner->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 		WeaponIdle();
+
+	if (
+		(pOwner->m_nButtons & IN_ATTACK) && (pOwner->m_nButtons & IN_ATTACK2) &&
+		(m_flNextPrimaryAttack <= gpGlobals->curtime) && (m_flNextSecondaryAttack <= gpGlobals->curtime &&
+		(m_iClip1 >= 2))
+		)
+	{
+		if (m_bFiredPrimary || m_bFiredSecondary)
+			DryFire();
+		else if (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
+		{
+			WeaponSound(EMPTY);
+			m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + 0.2;
+			return;
+		}
+		else
+		{
+			// If the firing button was just pressed, reset the firing time
+			if (pOwner->m_afButtonPressed & (IN_ATTACK|IN_ATTACK2))
+				m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime;
+
+			m_bFiredPrimary = m_bFiredSecondary = true;
+			DoubleAttack();
+		}
+	}
 
 	if ((pOwner->m_nButtons & IN_ATTACK) && m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{

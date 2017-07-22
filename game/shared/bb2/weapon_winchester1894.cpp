@@ -15,16 +15,16 @@
 #include "hl2mp_player.h"
 #endif
 
-#include "weapon_hl2mpbasehlmpcombatweapon.h"
+#include "weapon_base_sniper.h"
 
 #ifdef CLIENT_DLL
 #define CWeaponWinchester1894 C_WeaponWinchester1894
 #endif
 
-class CWeaponWinchester1894 : public CBaseHL2MPCombatWeapon
+class CWeaponWinchester1894 : public CHL2MPSniperRifle
 {
 public:
-	DECLARE_CLASS(CWeaponWinchester1894, CBaseHL2MPCombatWeapon);
+	DECLARE_CLASS(CWeaponWinchester1894, CHL2MPSniperRifle);
 
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
@@ -44,9 +44,10 @@ private:
 
 public:
 
-	virtual int				GetMinBurst() { return 1; }
-	virtual int				GetMaxBurst() { return 3; }
-
+	bool ShouldDrawCrosshair(void) { return true; }
+	bool ShouldPlayZoomSounds() { return false; }
+	bool ShouldHideViewmodelOnZoom() { return false; }
+	int GetMaxZoomLevel(void) { return 1; }
 	int GetOverloadCapacity() { return 3; }
 	int GetWeaponType(void) { return WEAPON_TYPE_RIFLE; }
 	const char *GetAmmoEntityLink(void) { return "ammo_trapper"; }
@@ -285,11 +286,11 @@ bool CWeaponWinchester1894::StartReload(void)
 	if (j <= 0)
 		return false;
 
+	SetZoomLevel(0);
 	SendWeaponAnim(ACT_SHOTGUN_RELOAD_START);
-
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-
 	m_bInReload = true;
+
 	return true;
 }
 
@@ -520,6 +521,9 @@ void CWeaponWinchester1894::ItemPostFrame(void)
 			PrimaryAttack();
 		}
 	}
+
+	if ((pOwner->m_afButtonPressed & IN_ATTACK2) && m_flNextPrimaryAttack <= gpGlobals->curtime)
+		SecondaryAttack();
 
 	if ((pOwner->m_nButtons & IN_RELOAD) && UsesClipsForAmmo1() && !m_bInReload && HasAnyAmmo() && m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{

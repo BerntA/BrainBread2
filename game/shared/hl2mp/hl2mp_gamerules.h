@@ -146,7 +146,6 @@ public:
 
 	DECLARE_SERVERCLASS_NOBASE(); // This makes datatables able to access our private vars.
 	
-	virtual bool IsAlyxInDarknessMode();
 	virtual bool ShouldBurningPropsEmitLight();
 			
 #endif

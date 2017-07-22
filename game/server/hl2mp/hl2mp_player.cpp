@@ -263,6 +263,7 @@ CHL2MP_Player::CHL2MP_Player()
 	m_bIsServerAdmin = false;
 	m_bPlayerUsedFirearm = false;
 	m_bEnableFlashlighOnSwitch = false;
+	m_bHasActivatedZombieRage = false;
 
 	m_flUpdateTime = 0.0f;
 	m_flNextResupplyTime = 0.0f;
@@ -657,7 +658,7 @@ void CHL2MP_Player::PerformPlayerUpdate(void)
 				m_BB2Local.m_bCanActivatePerk = (!GetPerkFlags() && (m_iNumPerkKills >= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iKillsRequiredToPerk)
 					&& ((GetSkillValue(PLAYER_SKILL_HUMAN_REALITY_PHASE) > 0) || (GetSkillValue(PLAYER_SKILL_HUMAN_BLOOD_RAGE) > 0) || (GetSkillValue(PLAYER_SKILL_HUMAN_GUNSLINGER) > 0)));
 			}
-			else if (IsZombie())
+			else if (IsZombie() && !m_bHasActivatedZombieRage)
 			{
 				m_BB2Local.m_bCanActivatePerk = (!GetPerkFlags() && (m_BB2Local.m_iZombieCredits >= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iZombieCreditsRequiredToRage));
 			}
@@ -1548,7 +1549,14 @@ bool CHL2MP_Player::EnterRageMode(bool bForce) // Zombie 'Perk' thing. (lasts un
 		if (!HL2MPRules()->CanUseSkills() || (m_BB2Local.m_iZombieCredits < GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iZombieCreditsRequiredToRage))
 			return false;
 
+		if (m_bHasActivatedZombieRage)
+		{
+			GameBaseServer()->SendToolTip("#TOOLTIP_RAGEMODE_DENY", 0, this->entindex());
+			return false;
+		}
+
 		m_BB2Local.m_iZombieCredits -= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iZombieCreditsRequiredToRage;
+		m_bHasActivatedZombieRage = true;
 	}
 
 	m_BB2Local.m_bCanActivatePerk = false;
@@ -2650,6 +2658,8 @@ void CHL2MP_Player::Reset()
 
 	m_BB2Local.m_bHasPlayerEscaped = false;
 	m_BB2Local.m_bCanRespawnAsHuman = false;
+
+	m_bHasActivatedZombieRage = false;
 }
 
 void CHL2MP_Player::ResetSlideVars()

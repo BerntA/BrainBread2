@@ -14116,35 +14116,6 @@ void CAI_BaseNPC::CalculateForcedInteractionPosition( void )
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::PlayerHasIlluminatedNPC( CBasePlayer *pPlayer, float flDot )
 {
-#ifdef HL2_EPISODIC
-	if ( IsActiveDynamicInteraction() )
-	{
-		ScriptedNPCInteraction_t *pInteraction = GetRunningDynamicInteraction();
-		if ( pInteraction->iLoopBreakTriggerMethod & SNPCINT_LOOPBREAK_ON_FLASHLIGHT_ILLUM )
-		{
-			// Only do this in alyx darkness mode
-			#ifdef BB2_AI
-				if ( HL2MPRules()->IsAlyxInDarknessMode() )
-				{
-					// Can only break when we're in the action anim
-					if ( m_hCine->IsPlayingAction() )
-					{
-						m_hCine->StopActionLoop( true );
-					}
-				}
-			#else
-				if ( HL2GameRules()->IsAlyxInDarknessMode() )
-				{
-					// Can only break when we're in the action anim
-					if ( m_hCine->IsPlayingAction() )
-					{
-						m_hCine->StopActionLoop( true );
-					}
-				}
-			#endif //BB2_AI
-		}
-	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
