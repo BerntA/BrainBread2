@@ -2280,7 +2280,6 @@ void CHL2MPRules::DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info)
 			pKillerPlayer->m_iZombKills++;
 			pKillerPlayer->m_BB2Local.m_iZombieCredits += GetZombieCredits(pVictim);
 			pKillerPlayer->CheckCanRespawnAsHuman();
-			pKillerPlayer->CheckCanRage();
 		}
 		else // Humans gain EXP from killing.
 			pKillerPlayer->CanLevelUp(experience, pVictim);

@@ -20,6 +20,7 @@ SendPropInt(SENDINFO(m_iSkill_XPLeft), 16, SPROP_UNSIGNED),
 SendPropInt(SENDINFO(m_iSkill_Talents), 7, SPROP_UNSIGNED),
 
 SendPropInt(SENDINFO(m_iZombieCredits), 12, SPROP_UNSIGNED),
+SendPropFloat(SENDINFO(m_flZombieRageThresholdDamage)),
 
 SendPropArray3(SENDINFO_ARRAY3(m_iPlayerSkills), SendPropInt(SENDINFO_ARRAY(m_iPlayerSkills), 4, SPROP_UNSIGNED)),
 SendPropInt(SENDINFO(m_iPerkTeamBonus), 6, SPROP_UNSIGNED),
@@ -53,6 +54,7 @@ DEFINE_FIELD(m_iSkill_XPLeft, FIELD_INTEGER),
 DEFINE_FIELD(m_iSkill_Talents, FIELD_INTEGER),
 
 DEFINE_FIELD(m_iZombieCredits, FIELD_INTEGER),
+DEFINE_FIELD(m_flZombieRageThresholdDamage, FIELD_FLOAT),
 
 DEFINE_ARRAY(m_iPlayerSkills, FIELD_INTEGER, MAX_SKILL_ARRAY),
 DEFINE_FIELD(m_iPerkTeamBonus, FIELD_INTEGER),
@@ -86,6 +88,7 @@ CBB2PlayerLocalData::CBB2PlayerLocalData()
 	m_iSkill_Talents = 0;
 
 	m_iZombieCredits = 0;
+	m_flZombieRageThresholdDamage = 0.0f;
 
 	for (int i = 0; i < MAX_SKILL_ARRAY; i++)
 		m_iPlayerSkills.Set(i, 0);

@@ -59,8 +59,6 @@ struct DataGamemodeItem_Shared_t
 	int iXPGameWinDeathmatch;
 
 	int iKillsRequiredToPerk;
-	int iZombieCreditsRequiredToRage;
-	int iZombieKillsRequiredToRage;
 
 	int iDefaultZombieCredits;
 	float flAmmoResupplyTime;
@@ -183,6 +181,10 @@ struct DataPlayerItem_ZombieRageMode_t
 	float flSpeed;
 	float flJump;
 	float flLeap;
+	float flDuration; // How long shall the rage last?
+	float flRequiredDamageThreshold; // Damage required to activate zomb rage.
+	float flTimeUntilBarDepletes; // Time until bar will start to decrease, attack frequently or else you risk losing the threshold you built up!
+	float flDepletionRate; // The rate of the depletion, once started.
 };
 
 struct DataPlayerItem_Shared_WeaponInfo_t

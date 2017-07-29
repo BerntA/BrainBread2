@@ -636,14 +636,15 @@ CON_COMMAND(admin_kick_id, "Admin Kick Command")
 		return;
 	}
 
-	if (args.ArgC() != 3)
+	if (args.ArgC() < 3)
 	{
 		ClientPrint(pClient, HUD_PRINTCONSOLE, "Please specify the <userID> and the <reason>!");
 		return;
 	}
 
 	int userID = atoi(args[1]);
-	const char *reason = args[2];
+	const char *reason = args.ArgS();
+	reason += strlen(args[1]); // strip away userID.
 
 	char pchCommand[80];
 	Q_snprintf(pchCommand, 80, "kickid %i \"%s\"\n", userID, reason);
@@ -662,7 +663,7 @@ CON_COMMAND(admin_ban_id, "Admin Ban Command")
 		return;
 	}
 
-	if (args.ArgC() != 4)
+	if (args.ArgC() < 4)
 	{
 		ClientPrint(pClient, HUD_PRINTCONSOLE, "Please specify the <ban time in minutes> <userID> and the <reason>!");
 		return;
@@ -670,7 +671,9 @@ CON_COMMAND(admin_ban_id, "Admin Ban Command")
 
 	int banTime = atoi(args[1]);
 	int userID = atoi(args[2]);
-	const char *reason = args[3];
+	const char *reason = args.ArgS();
+	reason += strlen(args[1]);
+	reason += strlen(args[2]);
 
 	char pchCommand[80];
 	Q_snprintf(pchCommand, 80, "banid %i %i \"%s\"\n", banTime, userID, reason);
@@ -721,9 +724,9 @@ CON_COMMAND(admin_spectate, "Admin Spectate Command")
 		return;
 	}
 
-	if (HL2MPRules()->GetCurrentGamemode() != MODE_DEATHMATCH)
+	if (!HL2MPRules()->IsFastPacedGameplay())
 	{
-		ClientPrint(pClient, HUD_PRINTCONSOLE, "This command may only be used in Deathmatch mode!");
+		ClientPrint(pClient, HUD_PRINTCONSOLE, "This command may only be used in Deathmatch & Elimination mode!");
 		return;
 	}
 
@@ -745,9 +748,9 @@ CON_COMMAND(admin_joinhuman, "Admin Join Human Command")
 		return;
 	}
 
-	if (HL2MPRules()->GetCurrentGamemode() != MODE_DEATHMATCH)
+	if (!HL2MPRules()->IsFastPacedGameplay())
 	{
-		ClientPrint(pClient, HUD_PRINTCONSOLE, "This command may only be used in Deathmatch mode!");
+		ClientPrint(pClient, HUD_PRINTCONSOLE, "This command may only be used in Deathmatch & Elimination mode!");
 		return;
 	}
 

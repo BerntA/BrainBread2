@@ -18,6 +18,7 @@ RecvPropInt(RECVINFO(m_iSkill_XPLeft)),
 RecvPropInt(RECVINFO(m_iSkill_Talents)), 
 
 RecvPropInt(RECVINFO(m_iZombieCredits)),
+RecvPropFloat(RECVINFO(m_flZombieRageThresholdDamage)),
 
 RecvPropArray3(RECVINFO_ARRAY(m_iPlayerSkills), RecvPropInt(RECVINFO(m_iPlayerSkills[0]))),
 RecvPropInt(RECVINFO(m_iPerkTeamBonus)),
@@ -66,6 +67,7 @@ C_BB2PlayerLocalData::C_BB2PlayerLocalData()
 	m_iSkill_Talents = 0;
 
 	m_iZombieCredits = 0;
+	m_flZombieRageThresholdDamage = 0.0f;
 
 	memset(m_iPlayerSkills, 0, sizeof(m_iPlayerSkills));
 

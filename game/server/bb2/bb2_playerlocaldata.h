@@ -32,6 +32,7 @@ public:
 
 	// Zombie Skills
 	CNetworkVar(int, m_iZombieCredits);
+	CNetworkVar(float, m_flZombieRageThresholdDamage);
 
 	// Shared Skills
 	CNetworkArray(int, m_iPlayerSkills, MAX_SKILL_ARRAY);

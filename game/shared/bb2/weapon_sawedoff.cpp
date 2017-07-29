@@ -43,16 +43,12 @@ public:
 #endif //BB2_AI
 
 private:
-
 	CNetworkVar(bool, m_bInReload);
-	CNetworkVar(bool, m_bFiredPrimary);
-	CNetworkVar(bool, m_bFiredSecondary);
 
 public:
 
-	virtual int				GetMinBurst() { return 1; }
-	virtual int				GetMaxBurst() { return 1; }
-
+	int GetMinBurst() { return 1; }
+	int GetMaxBurst() { return 1; }
 	int GetOverloadCapacity() { return 1; }
 	int GetWeaponType(void) { return WEAPON_TYPE_SHOTGUN; }
 	const char *GetAmmoEntityLink(void) { return "ammo_slugs"; }
@@ -63,23 +59,13 @@ public:
 	bool Holster( CBaseCombatWeapon *pSwitchingTo = NULL );
 	void Drop(const Vector &vecVelocity);
 	void ItemPostFrame( void );
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
-	void DoubleAttack(void);
+	void PerformAttack(bool bDouble = false);
+	void PrimaryAttack(void) { }
+	void SecondaryAttack() { }
 	void DryFire( void );
 	float GetFireRate( void ) { return GetWpnData().m_flFireRate; }
 	void AffectedByPlayerSkill(int skill);
-
-	const char *GetMuzzleflashAttachment(bool bPrimaryAttack)
-	{
-		if (m_bFiredPrimary && m_bFiredSecondary)
-			return "muzzle";
-
-		if (bPrimaryAttack)
-			return "left_muzzle";
-
-		return "right_muzzle";
-	}
+	const char *GetMuzzleflashAttachment(bool bPrimaryAttack);
 
 	DECLARE_ACTTABLE();
 
@@ -94,20 +80,14 @@ IMPLEMENT_NETWORKCLASS_ALIASED( WeaponSawedOff, DT_WeaponSawedOff )
 	BEGIN_NETWORK_TABLE( CWeaponSawedOff, DT_WeaponSawedOff )
 #ifdef CLIENT_DLL
 	RecvPropBool( RECVINFO( m_bInReload ) ),
-	RecvPropBool( RECVINFO( m_bFiredPrimary ) ),
-	RecvPropBool(RECVINFO(m_bFiredSecondary)),
 #else
 	SendPropBool(SENDINFO(m_bInReload)),
-	SendPropBool(SENDINFO(m_bFiredPrimary)),
-	SendPropBool(SENDINFO(m_bFiredSecondary)),
 #endif
 	END_NETWORK_TABLE()
 
 #ifdef CLIENT_DLL
 	BEGIN_PREDICTION_DATA( CWeaponSawedOff )
 	DEFINE_PRED_FIELD( m_bInReload, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_bFiredPrimary, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_bFiredSecondary, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	END_PREDICTION_DATA()
 #endif
 
@@ -270,10 +250,22 @@ void CWeaponSawedOff::AffectedByPlayerSkill(int skill)
 	case PLAYER_SKILL_HUMAN_GUNSLINGER:
 	case PLAYER_SKILL_HUMAN_MAGAZINE_REFILL:
 	{
-		m_bFiredPrimary = m_bFiredSecondary = false;
 		break;
 	}
 	}
+}
+
+const char *CWeaponSawedOff::GetMuzzleflashAttachment(bool bPrimaryAttack)
+{
+	if (bPrimaryAttack)
+	{
+		if (m_iClip1 >= 1)
+			return "left_muzzle";
+		else
+			return "right_muzzle";
+	}
+
+	return "muzzle";
 }
 
 //-----------------------------------------------------------------------------
@@ -299,7 +291,6 @@ bool CWeaponSawedOff::Reload( void )
 		return false;
 
 	m_bInReload = true;
-	m_bFiredPrimary = m_bFiredSecondary = false;
 
 	int iReloadActivity = ACT_VM_RELOAD0;
 	if (m_iClip1 <= 0 && iAmmo > 1)
@@ -318,7 +309,6 @@ bool CWeaponSawedOff::Reload( void )
 	pOwner->DoAnimationEvent(PLAYERANIMEVENT_RELOAD, iReloadActivity);
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
 	return true;
 }
 
@@ -354,121 +344,42 @@ void CWeaponSawedOff::DryFire( void )
 	WeaponSound(EMPTY);
 	SendWeaponAnim( ACT_VM_DRYFIRE );
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//
-//
-//-----------------------------------------------------------------------------
-void CWeaponSawedOff::PrimaryAttack( void )
+void CWeaponSawedOff::PerformAttack(bool bDouble)
 {
-	// Only the player fires this way so we can cast
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
 	if (!pPlayer)
 		return;
 
 	// MUST call sound before removing a round from the clip of a CMachineGun
-	WeaponSound(SINGLE);
-	SendWeaponAnim( ACT_VM_SHOOT_LEFT );
+	WeaponSound((bDouble ? WPN_DOUBLE : SINGLE));
+
+	Activity shootActivity = ACT_VM_SHOOT_LEFT;
+	if (bDouble)
+		shootActivity = ACT_VM_SHOOT_BOTH;
+	else if (m_iClip1 <= 1)
+		shootActivity = ACT_VM_SHOOT_RIGHT;
+
+	SendWeaponAnim(shootActivity);
 
 	// Don't fire again until fire animation has completed
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-	//m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration() + 0.1f;
-	m_iClip1 -= 1;
 
-	// player "shoot" animation
-	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, ACT_VM_SHOOT_LEFT);
+	if (bDouble)
+		m_iClip1 -= 2;
+	else
+		m_iClip1 -= 1;
 
-	Vector	vecSrc		= pPlayer->Weapon_ShootPosition( );
-	Vector	vecAiming	= pPlayer->GetAutoaimVector( AUTOAIM_10DEGREES );	
-
-	FireBulletsInfo_t info(GetWpnData().m_iPellets, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
-	info.m_pAttacker = pPlayer;
-	info.m_vecFirstStartPos = pPlayer->GetAbsOrigin();
-	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
-
-	// Fire the bullets, and force the first shot to be perfectly accuracy
-	pPlayer->FireBullets( info );
-
-#ifdef BB2_AI
-#ifndef CLIENT_DLL
-	pPlayer->SetMuzzleFlashTime( gpGlobals->curtime + 1.0 );
-	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2 );
-#endif
-#endif //BB2_AI
-
-	pPlayer->ViewPunch( GetViewKickAngle() );
-}
-
-void CWeaponSawedOff::SecondaryAttack( void )
-{
-	// Only the player fires this way so we can cast
-	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
-	if (!pPlayer)
-		return;
-
-	// MUST call sound before removing a round from the clip of a CMachineGun
-	WeaponSound(SINGLE);
-	SendWeaponAnim( ACT_VM_SHOOT_RIGHT );
-
-	// Don't fire again until fire animation has completed
-	//m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration() + 0.1f;
-	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
-	m_iClip1 -= 1;
-
-	// player "shoot" animation
-	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, ACT_VM_SHOOT_RIGHT);
+	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, shootActivity);
 
 	Vector	vecSrc = pPlayer->Weapon_ShootPosition();
 	Vector	vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
 
-	FireBulletsInfo_t info(GetWpnData().m_iPellets, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
-	info.m_pAttacker = pPlayer;
-	info.m_bPrimaryAttack = false;
-	info.m_vecFirstStartPos = pPlayer->GetAbsOrigin();
-	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
-	// Fire the bullets, and force the first shot to be perfectly accuracy
-	pPlayer->FireBullets(info);
-
-#ifdef BB2_AI
-#ifndef CLIENT_DLL
-	pPlayer->SetMuzzleFlashTime(gpGlobals->curtime + 1.0);
-	CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2);
-#endif
-#endif //BB2_AI
-
-	pPlayer->ViewPunch(GetViewKickAngle());
-}
-
-void CWeaponSawedOff::DoubleAttack(void)
-{
-	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
-	if (!pPlayer)
-		return;
-
-	// MUST call sound before removing a round from the clip of a CMachineGun
-	WeaponSound(WPN_DOUBLE);
-	SendWeaponAnim(ACT_VM_SHOOT_BOTH);
-
-	// Don't fire again until fire animation has completed
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
-	m_iClip1 -= 2;
-
-	// player "shoot" animation
-	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, ACT_VM_SHOOT_BOTH);
-
-	Vector	vecSrc = pPlayer->Weapon_ShootPosition();
-	Vector	vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
-
-	FireBulletsInfo_t info((GetWpnData().m_iPellets * 2), vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
+	FireBulletsInfo_t info(GetWpnData().m_iPellets * (bDouble ? 2 : 1), vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, !bDouble);
 	info.m_pAttacker = pPlayer;
 	info.m_vecFirstStartPos = pPlayer->GetAbsOrigin();
 	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
-
-	// Fire the bullets, and force the first shot to be perfectly accuracy
 	pPlayer->FireBullets(info);
 
 #ifdef BB2_AI
@@ -496,7 +407,7 @@ void CWeaponSawedOff::ItemPostFrame( void )
 
 	if (m_bInReload)
 	{
-		if (IsViewModelSequenceFinished() && (m_flNextSecondaryAttack <= gpGlobals->curtime) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
+		if (IsViewModelSequenceFinished() && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 		{
 			int iAmmo = pOwner->GetAmmoCount(m_iPrimaryAmmoType);
 			if (m_iClip1 <= 0 && iAmmo > 1)
@@ -508,75 +419,42 @@ void CWeaponSawedOff::ItemPostFrame( void )
 		}
 	}
 
-	if (!m_bInReload && IsViewModelSequenceFinished() && (m_flNextBashAttack <= gpGlobals->curtime) && !(pOwner->m_nButtons & IN_BASH) && !(pOwner->m_nButtons & IN_ATTACK) && !(pOwner->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
+	if (!m_bInReload && IsViewModelSequenceFinished() && (m_flNextBashAttack <= gpGlobals->curtime) && !(pOwner->m_nButtons & IN_BASH) && !(pOwner->m_nButtons & IN_ATTACK) && !(pOwner->m_nButtons & IN_ATTACK2) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 		WeaponIdle();
 
-	if (
-		(pOwner->m_nButtons & IN_ATTACK) && (pOwner->m_nButtons & IN_ATTACK2) &&
-		(m_flNextPrimaryAttack <= gpGlobals->curtime) && (m_flNextSecondaryAttack <= gpGlobals->curtime &&
-		(m_iClip1 >= 2))
-		)
+	if (m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
-		if (m_bFiredPrimary || m_bFiredSecondary)
-			DryFire();
-		else if (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
+		if ((pOwner->m_nButtons & (IN_ATTACK | IN_ATTACK2)))
 		{
-			WeaponSound(EMPTY);
-			m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + 0.2;
-			return;
-		}
-		else
-		{
-			// If the firing button was just pressed, reset the firing time
-			if (pOwner->m_afButtonPressed & (IN_ATTACK|IN_ATTACK2))
-				m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime;
-
-			m_bFiredPrimary = m_bFiredSecondary = true;
-			DoubleAttack();
-		}
-	}
-
-	if ((pOwner->m_nButtons & IN_ATTACK) && m_flNextPrimaryAttack <= gpGlobals->curtime)
-	{
-		if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !pOwner->GetAmmoCount(m_iPrimaryAmmoType)) || m_bFiredPrimary)
+			if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !pOwner->GetAmmoCount(m_iPrimaryAmmoType)))
+			{
 				DryFire();
-		// Fire underwater?
-		else if (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
+				return;
+			}
+			else if (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
+			{
+				WeaponSound(EMPTY);
+				m_flNextPrimaryAttack = gpGlobals->curtime + 0.2;
+				return;
+			}
+		}
+
+		if ((pOwner->m_nButtons & IN_ATTACK2) && (m_iClip1 >= 2))
 		{
-			WeaponSound(EMPTY);
-			m_flNextPrimaryAttack = gpGlobals->curtime + 0.2;
+			if (pOwner->m_afButtonPressed & IN_ATTACK2)
+				m_flNextPrimaryAttack = gpGlobals->curtime;
+
+			PerformAttack(true);
 			return;
 		}
-		else 
+
+		if (pOwner->m_nButtons & IN_ATTACK)
 		{
-			// If the firing button was just pressed, reset the firing time
 			if (pOwner->m_afButtonPressed & IN_ATTACK)
 				m_flNextPrimaryAttack = gpGlobals->curtime;
 
-			m_bFiredPrimary = true;
-			PrimaryAttack();
-		}
-	}
-
-	if ( (pOwner->m_nButtons & IN_ATTACK2) && m_flNextSecondaryAttack <= gpGlobals->curtime)
-	{
-		if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !pOwner->GetAmmoCount(m_iPrimaryAmmoType)) || m_bFiredSecondary)
-				DryFire();
-		// Fire underwater?
-		else if (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
-		{
-			WeaponSound(EMPTY);
-			m_flNextSecondaryAttack = gpGlobals->curtime + 0.2;
+			PerformAttack();
 			return;
-		}
-		else
-		{
-			// If the firing button was just pressed, reset the firing time
-			if (pOwner->m_afButtonPressed & IN_ATTACK2)
-				m_flNextSecondaryAttack = gpGlobals->curtime;
-
-			m_bFiredSecondary = true;
-			SecondaryAttack();
 		}
 	}
 
@@ -587,21 +465,14 @@ void CWeaponSawedOff::ItemPostFrame( void )
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Constructor
-//-----------------------------------------------------------------------------
 CWeaponSawedOff::CWeaponSawedOff( void )
 {
 	m_bReloadsSingly = true;
-	m_bFiredPrimary = false;
-	m_bFiredSecondary = false;
 }
 
 void CWeaponSawedOff::StartHolsterSequence()
 {
 	m_bInReload = false;
-	m_bFiredPrimary = false;
-	m_bFiredSecondary = false;
 
 	BaseClass::StartHolsterSequence();
 }
@@ -609,8 +480,6 @@ void CWeaponSawedOff::StartHolsterSequence()
 bool CWeaponSawedOff::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
 	m_bInReload = false;
-	m_bFiredPrimary = false;
-	m_bFiredSecondary = false;
 
 	return BaseClass::Holster( pSwitchingTo );
 }
@@ -618,8 +487,6 @@ bool CWeaponSawedOff::Holster( CBaseCombatWeapon *pSwitchingTo )
 void CWeaponSawedOff::Drop(const Vector &vecVelocity)
 {
 	m_bInReload = false;
-	m_bFiredPrimary = false;
-	m_bFiredSecondary = false;
 
 	BaseClass::Drop(vecVelocity);
 }

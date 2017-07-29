@@ -33,6 +33,7 @@ public:
 
 	// Zombie Skills
 	int m_iZombieCredits;
+	float m_flZombieRageThresholdDamage;
 
 	// Shared Skills
 	int m_iPlayerSkills[MAX_SKILL_ARRAY];

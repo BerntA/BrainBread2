@@ -163,6 +163,10 @@ bool CGameDefinitionsShared::LoadData(void)
 			pszZombieRageModeData.flSpeed = pkvSkills->GetFloat("Speed", 25.0f);
 			pszZombieRageModeData.flJump = pkvSkills->GetFloat("Jump", 5.0f);
 			pszZombieRageModeData.flLeap = pkvSkills->GetFloat("Leap", 5.0f);
+			pszZombieRageModeData.flDuration = pkvSkills->GetFloat("Duration", 15.0f);
+			pszZombieRageModeData.flRequiredDamageThreshold = pkvSkills->GetFloat("DamageRequired", 250.0f);
+			pszZombieRageModeData.flTimeUntilBarDepletes = pkvSkills->GetFloat("TimeUntilBarDepletes", 3.0f);
+			pszZombieRageModeData.flDepletionRate = pkvSkills->GetFloat("DepletionRate", 10.0f);
 		}
 
 		pkvSkills = pkvParseData->FindKey("MiscSkillInfo");
@@ -360,8 +364,6 @@ bool CGameDefinitionsShared::LoadData(void)
 		pszGamemodeData.iXPGameWinDeathmatch = pkvParseData->GetInt("game_win_deathmatch", 500);
 
 		pszGamemodeData.iKillsRequiredToPerk = pkvParseData->GetInt("perk_kills_required", 50);
-		pszGamemodeData.iZombieCreditsRequiredToRage = pkvParseData->GetInt("rage_credits_required", 10);
-		pszGamemodeData.iZombieKillsRequiredToRage = pkvParseData->GetInt("rage_kills_required", 3);
 
 		pszGamemodeData.iDefaultZombieCredits = pkvParseData->GetInt("zombie_credits_start", 10);
 		pszGamemodeData.flAmmoResupplyTime = pkvParseData->GetFloat("ammo_resupply_time", 30.0f);

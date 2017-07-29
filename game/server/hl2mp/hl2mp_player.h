@@ -194,6 +194,7 @@ public:
 	bool PerformLevelUp(int iXP);
 	bool ActivatePerk(int skill);
 	bool EnterRageMode(bool bForce = false);
+	void LeaveRageMode(void);
 	float GetExtraPerkData(int type);
 
 	Vector GetAttackSpread(CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget = NULL);
@@ -313,6 +314,10 @@ private:
 	bool m_bIsInfected;
 	float m_flLastInfectionTwitchTime;
 
+	float m_flZombieRageTime;
+	float m_flZombieAttackTime;
+	float m_flZombieDamageThresholdDepletion;
+
 	CHL2MPPlayerAnimState *m_PlayerAnimState;
 	CNetworkQAngle(m_angEyeAngles);
 
@@ -329,7 +334,6 @@ private:
 	bool m_bHasFullySpawned;
 	bool m_bHasJoinedGame;
 	bool m_bEnableFlashlighOnSwitch;
-	bool m_bHasActivatedZombieRage;
 
 	bool m_bIsServerAdmin;
 
@@ -357,10 +361,6 @@ private:
 	float m_flLastTimeCheckedPing;
 	float m_flTimeUntilEndCheckPing;
 	bool m_bFinishedPingCheck;
-
-	// Zombie
-	// Monitor amount of kills since spawn, allow auto rage when X kills have been reached in certain gamemodes.
-	int m_iZombCurrentKills;
 
 protected:
 	virtual void HandlePainSound(int iMajor, int iDamageTypeBits);

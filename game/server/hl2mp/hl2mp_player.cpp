@@ -241,7 +241,6 @@ CHL2MP_Player::CHL2MP_Player()
 	m_iRoundScore = 0;
 	m_iRoundDeaths = 0;
 	m_iZombKills = 0;
-	m_iZombCurrentKills = 0;
 	m_nGroupID = 0;
 	m_iZombDeaths = 0;
 	m_iNumPerkKills = 0;
@@ -263,13 +262,13 @@ CHL2MP_Player::CHL2MP_Player()
 	m_bIsServerAdmin = false;
 	m_bPlayerUsedFirearm = false;
 	m_bEnableFlashlighOnSwitch = false;
-	m_bHasActivatedZombieRage = false;
 
 	m_flUpdateTime = 0.0f;
 	m_flNextResupplyTime = 0.0f;
 	m_flLastInfectionTwitchTime = 0.0f;
 	m_flLastTimeRanCommand = 0.0f;
 	m_flLastTimeDroppedAmmo = 0.0f;
+	m_flZombieRageTime = m_flZombieAttackTime = m_flZombieDamageThresholdDepletion = 0.0f;
 
 	m_iTotalPing = 0;
 	m_iTimesCheckedPing = 0;
@@ -560,6 +559,8 @@ void CHL2MP_Player::Spawn(void)
 	m_iNumPerkKills = 0;
 	m_nPerkFlags = 0;
 	m_BB2Local.m_bCanActivatePerk = false;
+	m_BB2Local.m_flZombieRageThresholdDamage = 0.0f;
+	m_flZombieRageTime = m_flZombieAttackTime = m_flZombieDamageThresholdDepletion = 0.0f;
 
 	// Misc
 	m_flNextResupplyTime = 0.0f;
@@ -658,9 +659,9 @@ void CHL2MP_Player::PerformPlayerUpdate(void)
 				m_BB2Local.m_bCanActivatePerk = (!GetPerkFlags() && (m_iNumPerkKills >= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iKillsRequiredToPerk)
 					&& ((GetSkillValue(PLAYER_SKILL_HUMAN_REALITY_PHASE) > 0) || (GetSkillValue(PLAYER_SKILL_HUMAN_BLOOD_RAGE) > 0) || (GetSkillValue(PLAYER_SKILL_HUMAN_GUNSLINGER) > 0)));
 			}
-			else if (IsZombie() && !m_bHasActivatedZombieRage)
+			else if (IsZombie())
 			{
-				m_BB2Local.m_bCanActivatePerk = (!GetPerkFlags() && (m_BB2Local.m_iZombieCredits >= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iZombieCreditsRequiredToRage));
+				m_BB2Local.m_bCanActivatePerk = (!GetPerkFlags() && (m_BB2Local.m_flZombieRageThresholdDamage >= GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flRequiredDamageThreshold));
 			}
 		}
 	}
@@ -686,6 +687,19 @@ void CHL2MP_Player::DispatchDamageText(CBaseEntity *pVictim, int damage)
 	WRITE_FLOAT(absPos.z);
 	WRITE_SHORT(damage);
 	MessageEnd();
+
+	if (!IsPerkFlagActive(PERK_ZOMBIE_RAGE) && pVictim->IsPlayer() && !pVictim->IsZombie(true) && IsZombie(true) && (damage < 0))
+	{
+		m_flZombieAttackTime = gpGlobals->curtime;
+
+		float maxThreshold = GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flRequiredDamageThreshold;
+		if (m_BB2Local.m_flZombieRageThresholdDamage < maxThreshold)
+			m_BB2Local.m_flZombieRageThresholdDamage += abs(damage);
+
+		m_BB2Local.m_flZombieRageThresholdDamage = clamp(m_BB2Local.m_flZombieRageThresholdDamage, 0.0f, maxThreshold);
+
+		CheckCanRage();
+	}
 }
 
 void CHL2MP_Player::PickupObject(CBaseEntity *pObject, bool bLimitMassAndSize)
@@ -957,7 +971,33 @@ void CHL2MP_Player::PostThink(void)
 	}
 
 	if (IsZombie())
+	{
+		if (IsAlive())
+		{
+			if (IsPerkFlagActive(PERK_ZOMBIE_RAGE))
+			{
+				if (m_flZombieRageTime < gpGlobals->curtime)
+					LeaveRageMode();
+			}
+			else
+			{
+				float timeSinceAttack = gpGlobals->curtime - m_flZombieAttackTime;
+				if ((m_BB2Local.m_flZombieRageThresholdDamage > 0.0f) && (timeSinceAttack >= GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flTimeUntilBarDepletes))
+				{
+					m_flZombieDamageThresholdDepletion += gpGlobals->frametime * GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flDepletionRate;
+					if (m_flZombieDamageThresholdDepletion >= 1.0f)
+					{
+						m_BB2Local.m_flZombieRageThresholdDamage -= m_flZombieDamageThresholdDepletion;
+						m_flZombieDamageThresholdDepletion = 0.0f;
+						if (m_BB2Local.m_flZombieRageThresholdDamage < 0)
+							m_BB2Local.m_flZombieRageThresholdDamage = 0.0f;
+					}
+				}
+			}
+		}
+
 		return;
+	}
 
 	if (IsAlive())
 	{
@@ -1546,20 +1586,13 @@ bool CHL2MP_Player::EnterRageMode(bool bForce) // Zombie 'Perk' thing. (lasts un
 
 	if (!bForce)
 	{
-		if (!HL2MPRules()->CanUseSkills() || (m_BB2Local.m_iZombieCredits < GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iZombieCreditsRequiredToRage))
+		if (!HL2MPRules()->CanUseSkills() || (m_BB2Local.m_flZombieRageThresholdDamage < GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flRequiredDamageThreshold))
 			return false;
-
-		if (m_bHasActivatedZombieRage)
-		{
-			GameBaseServer()->SendToolTip("#TOOLTIP_RAGEMODE_DENY", 0, this->entindex());
-			return false;
-		}
-
-		m_BB2Local.m_iZombieCredits -= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iZombieCreditsRequiredToRage;
-		m_bHasActivatedZombieRage = true;
 	}
 
 	m_BB2Local.m_bCanActivatePerk = false;
+	m_BB2Local.m_flZombieRageThresholdDamage = 0.0f;
+	m_flZombieRageTime = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flDuration;
 
 	if (HL2MPRules()->CanUseSkills())
 	{
@@ -1587,6 +1620,40 @@ bool CHL2MP_Player::EnterRageMode(bool bForce) // Zombie 'Perk' thing. (lasts un
 	AddPerkFlag(PERK_ZOMBIE_RAGE);
 	DispatchParticleEffect("bb2_perk_activate", PATTACH_ROOTBONE_FOLLOW, this, -1, true);
 	return true;
+}
+
+void CHL2MP_Player::LeaveRageMode(void)
+{
+	if (!IsZombie() || !IsAlive() || !IsPerkFlagActive(PERK_ZOMBIE_RAGE))
+		return;
+
+	m_BB2Local.m_bCanActivatePerk = false;
+	m_BB2Local.m_flZombieRageThresholdDamage = 0.0f;
+	m_flZombieRageTime = m_flZombieAttackTime = m_flZombieDamageThresholdDepletion = 0.0f;
+	m_nPerkFlags &= ~PERK_ZOMBIE_RAGE;
+
+	if (HL2MPRules()->CanUseSkills())
+	{
+		int health = round(GetSkillValue("Health", PLAYER_SKILL_ZOMBIE_HEALTH, TEAM_DECEASED));
+		SetMaxHealth(health);
+		SetPlayerSpeed(GetSkillValue("Speed", PLAYER_SKILL_ZOMBIE_SPEED, TEAM_DECEASED));
+		SetLeapLength(GetSkillValue("Leap", PLAYER_SKILL_ZOMBIE_LEAP, TEAM_DECEASED));
+		SetJumpHeight(GetSkillValue("Jump", PLAYER_SKILL_ZOMBIE_JUMP, TEAM_DECEASED));
+		SetHealthRegenAmount(GetSkillValue("HealthRegen", PLAYER_SKILL_ZOMBIE_HEALTH_REGEN, TEAM_DECEASED));
+	}
+	else
+	{
+		SetMaxHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).iHealth);
+		SetPlayerSpeed(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flSpeed);
+		SetLeapLength(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flLeapLength);
+		SetJumpHeight(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flJumpHeight);
+		SetHealthRegenAmount(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flHealthRegenerationRate);
+	}
+
+	if (GetMaxHealth() < GetHealth())
+		SetHealth(GetMaxHealth());
+
+	RefreshSpeed();
 }
 
 // If we're active in some external mode, ex rage mode / perk and use the skill tree then we might want to sum extra values to the skill values, 
@@ -2658,8 +2725,6 @@ void CHL2MP_Player::Reset()
 
 	m_BB2Local.m_bHasPlayerEscaped = false;
 	m_BB2Local.m_bCanRespawnAsHuman = false;
-
-	m_bHasActivatedZombieRage = false;
 }
 
 void CHL2MP_Player::ResetSlideVars()
@@ -2686,12 +2751,8 @@ void CHL2MP_Player::CheckCanRage()
 	if ((HL2MPRules() && (HL2MPRules()->GetCurrentGamemode() != MODE_ELIMINATION)) || !GameBaseShared()->GetSharedGameDetails() || GetPerkFlags())
 		return;
 
-	m_iZombCurrentKills++;
-	if (m_iZombCurrentKills >= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iZombieKillsRequiredToRage)
-	{
-		m_iZombCurrentKills = 0;
+	if (m_BB2Local.m_flZombieRageThresholdDamage >= GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flRequiredDamageThreshold)
 		EnterRageMode(true);
-	}
 }
 
 void CHL2MP_Player::CheckChatText(char *p, int bufsize)
@@ -3353,7 +3414,6 @@ void CHL2MP_Player::SetPlayerClass(int iTeam)
 	if (HL2MPRules()->GetCurrentGamemode() != MODE_ELIMINATION)
 		SetSelectedTeam(iTeam);
 
-	m_iZombCurrentKills = 0;
 	m_iDMKills = 0;
 	m_flDMTimeSinceLastKill = 0.0f;
 }

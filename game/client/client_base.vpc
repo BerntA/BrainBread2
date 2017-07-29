@@ -220,6 +220,7 @@ $Project
 			$File "bb2/hud_scope_view.cpp"
 			$File "bb2/hud_timeview.cpp"
 			$File "bb2/hud_weapon_charger.cpp"
+			$File "bb2/hud_zombie_rage.cpp"
 		}
 		
 		$Folder "Shaders"
