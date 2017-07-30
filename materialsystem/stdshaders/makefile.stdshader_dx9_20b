@@ -1,85 +1,85 @@
 default:  fxctmp9_tmp\example_model_ps20b.inc shaders\fxc\example_model_ps20b.vcs fxctmp9_tmp\example_model_vs20.inc shaders\fxc\example_model_vs20.vcs fxctmp9_tmp\SDK_Bloom_ps20.inc shaders\fxc\SDK_Bloom_ps20.vcs fxctmp9_tmp\SDK_Bloom_ps20b.inc shaders\fxc\SDK_Bloom_ps20b.vcs fxctmp9_tmp\SDK_screenspaceeffect_vs20.inc shaders\fxc\SDK_screenspaceeffect_vs20.vcs fxctmp9_tmp\SDK_bloomadd_ps20.inc shaders\fxc\SDK_bloomadd_ps20.vcs fxctmp9_tmp\SDK_bloomadd_ps20b.inc shaders\fxc\SDK_bloomadd_ps20b.vcs fxctmp9_tmp\PassThrough_vs20.inc shaders\fxc\PassThrough_vs20.vcs fxctmp9_tmp\post_zombievision_ps20.inc shaders\fxc\post_zombievision_ps20.vcs fxctmp9_tmp\post_nightvision_ps20.inc shaders\fxc\post_nightvision_ps20.vcs
 
-fxctmp9_tmp\example_model_ps20b.inc shaders\fxc\example_model_ps20b.vcs: example_model_ps20b.fxc common_fxc.h common_flashlight_fxc.h common_vertexlitgeneric_dx9.h common_hlsl_cpp_consts.h common_pragmas.h common_ps_fxc.h shader_constant_register_map.h
+fxctmp9_tmp\example_model_ps20b.inc shaders\fxc\example_model_ps20b.vcs: example_model_ps20b.fxc common_fxc.h common_vertexlitgeneric_dx9.h common_hlsl_cpp_consts.h common_pragmas.h shader_constant_register_map.h common_ps_fxc.h common_flashlight_fxc.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." example_model_ps20b.fxc-----example_model_ps20b
 	echo example_model_ps20b.fxc>> filestocopy.txt
 	echo common_fxc.h>> filestocopy.txt
-	echo common_flashlight_fxc.h>> filestocopy.txt
 	echo common_vertexlitgeneric_dx9.h>> filestocopy.txt
 	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 	echo common_pragmas.h>> filestocopy.txt
-	echo common_ps_fxc.h>> filestocopy.txt
 	echo shader_constant_register_map.h>> filestocopy.txt
+	echo common_ps_fxc.h>> filestocopy.txt
+	echo common_flashlight_fxc.h>> filestocopy.txt
 
-fxctmp9_tmp\example_model_vs20.inc shaders\fxc\example_model_vs20.vcs: example_model_vs20.fxc common_vs_fxc.h common_hlsl_cpp_consts.h common_pragmas.h common_fxc.h
+fxctmp9_tmp\example_model_vs20.inc shaders\fxc\example_model_vs20.vcs: example_model_vs20.fxc common_vs_fxc.h common_pragmas.h common_hlsl_cpp_consts.h common_fxc.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." example_model_vs20.fxc-----example_model_vs20
 	echo example_model_vs20.fxc>> filestocopy.txt
 	echo common_vs_fxc.h>> filestocopy.txt
-	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 	echo common_pragmas.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 	echo common_fxc.h>> filestocopy.txt
 
-fxctmp9_tmp\SDK_Bloom_ps20.inc shaders\fxc\SDK_Bloom_ps20.vcs: SDK_Bloom_ps2x.fxc common_ps_fxc.h common_hlsl_cpp_consts.h common_pragmas.h common_fxc.h
+fxctmp9_tmp\SDK_Bloom_ps20.inc shaders\fxc\SDK_Bloom_ps20.vcs: SDK_Bloom_ps2x.fxc common_fxc.h common_ps_fxc.h common_pragmas.h common_hlsl_cpp_consts.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." SDK_Bloom_ps2x.fxc-----SDK_Bloom_ps20
 	echo SDK_Bloom_ps2x.fxc>> filestocopy.txt
-	echo common_ps_fxc.h>> filestocopy.txt
-	echo common_hlsl_cpp_consts.h>> filestocopy.txt
-	echo common_pragmas.h>> filestocopy.txt
 	echo common_fxc.h>> filestocopy.txt
+	echo common_ps_fxc.h>> filestocopy.txt
+	echo common_pragmas.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 
-fxctmp9_tmp\SDK_Bloom_ps20b.inc shaders\fxc\SDK_Bloom_ps20b.vcs: SDK_Bloom_ps2x.fxc common_ps_fxc.h common_hlsl_cpp_consts.h common_pragmas.h common_fxc.h
+fxctmp9_tmp\SDK_Bloom_ps20b.inc shaders\fxc\SDK_Bloom_ps20b.vcs: SDK_Bloom_ps2x.fxc common_fxc.h common_ps_fxc.h common_pragmas.h common_hlsl_cpp_consts.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." SDK_Bloom_ps2x.fxc-----SDK_Bloom_ps20b
 	echo SDK_Bloom_ps2x.fxc>> filestocopy.txt
-	echo common_ps_fxc.h>> filestocopy.txt
-	echo common_hlsl_cpp_consts.h>> filestocopy.txt
-	echo common_pragmas.h>> filestocopy.txt
 	echo common_fxc.h>> filestocopy.txt
+	echo common_ps_fxc.h>> filestocopy.txt
+	echo common_pragmas.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 
-fxctmp9_tmp\SDK_screenspaceeffect_vs20.inc shaders\fxc\SDK_screenspaceeffect_vs20.vcs: SDK_screenspaceeffect_vs20.fxc common_fxc.h common_pragmas.h common_hlsl_cpp_consts.h common_vs_fxc.h
+fxctmp9_tmp\SDK_screenspaceeffect_vs20.inc shaders\fxc\SDK_screenspaceeffect_vs20.vcs: SDK_screenspaceeffect_vs20.fxc common_vs_fxc.h common_pragmas.h common_hlsl_cpp_consts.h common_fxc.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." SDK_screenspaceeffect_vs20.fxc-----SDK_screenspaceeffect_vs20
 	echo SDK_screenspaceeffect_vs20.fxc>> filestocopy.txt
-	echo common_fxc.h>> filestocopy.txt
+	echo common_vs_fxc.h>> filestocopy.txt
 	echo common_pragmas.h>> filestocopy.txt
 	echo common_hlsl_cpp_consts.h>> filestocopy.txt
-	echo common_vs_fxc.h>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
 
-fxctmp9_tmp\SDK_bloomadd_ps20.inc shaders\fxc\SDK_bloomadd_ps20.vcs: SDK_bloomadd_ps2x.fxc common_ps_fxc.h common_fxc.h common_pragmas.h common_hlsl_cpp_consts.h
+fxctmp9_tmp\SDK_bloomadd_ps20.inc shaders\fxc\SDK_bloomadd_ps20.vcs: SDK_bloomadd_ps2x.fxc common_ps_fxc.h common_pragmas.h common_hlsl_cpp_consts.h common_fxc.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." SDK_bloomadd_ps2x.fxc-----SDK_bloomadd_ps20
 	echo SDK_bloomadd_ps2x.fxc>> filestocopy.txt
 	echo common_ps_fxc.h>> filestocopy.txt
-	echo common_fxc.h>> filestocopy.txt
 	echo common_pragmas.h>> filestocopy.txt
 	echo common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
 
-fxctmp9_tmp\SDK_bloomadd_ps20b.inc shaders\fxc\SDK_bloomadd_ps20b.vcs: SDK_bloomadd_ps2x.fxc common_ps_fxc.h common_fxc.h common_pragmas.h common_hlsl_cpp_consts.h
+fxctmp9_tmp\SDK_bloomadd_ps20b.inc shaders\fxc\SDK_bloomadd_ps20b.vcs: SDK_bloomadd_ps2x.fxc common_ps_fxc.h common_pragmas.h common_hlsl_cpp_consts.h common_fxc.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." SDK_bloomadd_ps2x.fxc-----SDK_bloomadd_ps20b
 	echo SDK_bloomadd_ps2x.fxc>> filestocopy.txt
 	echo common_ps_fxc.h>> filestocopy.txt
-	echo common_fxc.h>> filestocopy.txt
 	echo common_pragmas.h>> filestocopy.txt
 	echo common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
 
-fxctmp9_tmp\PassThrough_vs20.inc shaders\fxc\PassThrough_vs20.vcs: PassThrough_vs20.fxc common_pragmas.h common_vs_fxc.h common_hlsl_cpp_consts.h common_fxc.h
+fxctmp9_tmp\PassThrough_vs20.inc shaders\fxc\PassThrough_vs20.vcs: PassThrough_vs20.fxc common_vs_fxc.h common_pragmas.h common_hlsl_cpp_consts.h common_fxc.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." PassThrough_vs20.fxc-----PassThrough_vs20
 	echo PassThrough_vs20.fxc>> filestocopy.txt
-	echo common_pragmas.h>> filestocopy.txt
 	echo common_vs_fxc.h>> filestocopy.txt
+	echo common_pragmas.h>> filestocopy.txt
 	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 	echo common_fxc.h>> filestocopy.txt
 
-fxctmp9_tmp\post_zombievision_ps20.inc shaders\fxc\post_zombievision_ps20.vcs: post_zombievision_ps20.fxc common_fxc.h common_hlsl_cpp_consts.h common_pragmas.h common_ps_fxc.h
+fxctmp9_tmp\post_zombievision_ps20.inc shaders\fxc\post_zombievision_ps20.vcs: post_zombievision_ps20.fxc common_fxc.h common_ps_fxc.h common_pragmas.h common_hlsl_cpp_consts.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." post_zombievision_ps20.fxc-----post_zombievision_ps20
 	echo post_zombievision_ps20.fxc>> filestocopy.txt
 	echo common_fxc.h>> filestocopy.txt
-	echo common_hlsl_cpp_consts.h>> filestocopy.txt
-	echo common_pragmas.h>> filestocopy.txt
 	echo common_ps_fxc.h>> filestocopy.txt
+	echo common_pragmas.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 
-fxctmp9_tmp\post_nightvision_ps20.inc shaders\fxc\post_nightvision_ps20.vcs: post_nightvision_ps20.fxc common_pragmas.h common_hlsl_cpp_consts.h common_fxc.h common_ps_fxc.h
+fxctmp9_tmp\post_nightvision_ps20.inc shaders\fxc\post_nightvision_ps20.vcs: post_nightvision_ps20.fxc common_hlsl_cpp_consts.h common_pragmas.h common_ps_fxc.h common_fxc.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." post_nightvision_ps20.fxc-----post_nightvision_ps20
 	echo post_nightvision_ps20.fxc>> filestocopy.txt
-	echo common_pragmas.h>> filestocopy.txt
 	echo common_hlsl_cpp_consts.h>> filestocopy.txt
-	echo common_fxc.h>> filestocopy.txt
+	echo common_pragmas.h>> filestocopy.txt
 	echo common_ps_fxc.h>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
 
