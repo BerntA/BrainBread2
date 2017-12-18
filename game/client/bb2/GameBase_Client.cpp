@@ -14,6 +14,7 @@
 
 // ADD INCLUDES FOR OTHER MENUS: (NON-BASEVIEWPORT/INTERFACE)
 #include "LoadingPanel.h"
+#include "AddonInstallerPanel.h"
 #include "MainMenu.h"
 #include "fmod_manager.h"
 #include "NotePanel.h"
@@ -114,6 +115,7 @@ private:
 	CVotePanel *VotePanel;
 	CMainMenu *MainMenu;
 	CLoadingPanel *LoadingPanel;
+	CAddonInstallerPanel *ClientWorkshopInstallerPanel;
 	// GameUI accessor
 	IGameUI *GameUI;
 
@@ -207,6 +209,7 @@ IGameBaseClient *GameBaseClient = (IGameBaseClient *)&g_GameBaseClient;
 CGameBaseClient::CGameBaseClient(void)
 {
 	LoadingPanel = NULL;
+	ClientWorkshopInstallerPanel = NULL;
 	MainMenu = NULL;
 	NotePanel = NULL;
 	VotePanel = NULL;
@@ -242,6 +245,10 @@ void CGameBaseClient::Initialize(void)
 	LoadingPanel->SetVisible(false);
 	GameUI->SetLoadingBackgroundDialog(LoadingPanel->GetVPanel());
 
+	VPANEL GameUiDll = enginevgui->GetPanel(PANEL_GAMEUIDLL);
+	ClientWorkshopInstallerPanel = new CAddonInstallerPanel(GameUiDll);
+	ClientWorkshopInstallerPanel->SetVisible(false);
+
 	// Create our leaderboard handler.
 	pLeaderboardHandler = new CLeaderboardHandler();
 
@@ -266,6 +273,12 @@ void CGameBaseClient::Destroy(void)
 	{
 		LoadingPanel->SetParent((vgui::Panel *)NULL);
 		delete LoadingPanel;
+	}
+
+	if (ClientWorkshopInstallerPanel)
+	{
+		ClientWorkshopInstallerPanel->SetParent((vgui::Panel *)NULL);
+		delete ClientWorkshopInstallerPanel;
 	}
 
 	if (NotePanel)
@@ -557,6 +570,7 @@ const char *CGameBaseClient::GetLoadingImage()
 void CGameBaseClient::ResetMapConVar(void)
 {
 	bb2_loading_image.SetValue(NULL);
+	bb2_active_workshop_item.SetValue(0);
 }
 
 // Are we in-game?

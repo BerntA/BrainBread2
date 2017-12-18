@@ -40,6 +40,7 @@ struct gameMapItem_t
 
 	float flScore;
 	int iMapVerification;
+	PublishedFileId_t workshopID;
 
 	char pszImagePreview[MAX_MAP_PREVIEW_IMAGES][MAX_WEAPON_STRING];
 	int numImagePreviews;
@@ -59,6 +60,7 @@ struct gameMapItem_t
 	char pszMapName[32];
 	int iMapVerification;
 	unsigned long long ulFileSize;
+	PublishedFileId_t workshopID;
 };
 #endif
 
@@ -73,11 +75,13 @@ public:
 	void CleanupMapData(void);
 
 	void FetchMapData(void);
+	gameMapItem_t *GetMapData(const char *pszMap);
 	int GetMapIndex(const char *pszMap);
 	bool IsMapWhiteListed(const char *pszMap);
 
 #ifndef CLIENT_DLL
 	bool VerifyMapFile(const char *map, unsigned long long mapSize);
+	CUtlVector<PublishedFileId_t> pszWorkshopItemList;
 #else
 	void GetMapInfo(const char *map, gameMapItem_t &item, KeyValues *pkvData = NULL);
 	void GetMapImageData(const char *map, gameMapItem_t &item);

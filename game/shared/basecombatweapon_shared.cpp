@@ -2550,13 +2550,17 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 
 	Activity activity = pvm->GetSequenceActivity(pvm->GetSequence());
 
-	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT, &traceFilter, &traceHit);
+	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT, &traceFilter, &traceHit); // Try a simple trace first, allowing headshots.
 	if (traceHit.fraction == 1.0)
 	{
-		if (m_iMeleeAttackType == MELEE_TYPE_BASH_SLASH || m_iMeleeAttackType == MELEE_TYPE_SLASH)
+		UTIL_TraceHull(swingStart, swingEnd, Vector(-3, -3, -3), Vector(3, 3, 3), MASK_SHOT_HULL, &traceFilter, &traceHit); // Try a small hull.
+		if (traceHit.fraction == 1.0)
 		{
-			swingEnd = swingStart + (forward * (GetRange() / 2.0f));
-			UTIL_TraceHull(swingEnd, swingEnd, GetMeleeBoundsMin(), GetMeleeBoundsMax(), MASK_SHOT_HULL, &traceFilter, &traceHit);
+			if (m_iMeleeAttackType == MELEE_TYPE_BASH_SLASH || m_iMeleeAttackType == MELEE_TYPE_SLASH) // Try a big hull, if we're allowed to.
+			{
+				swingEnd = swingStart + (forward * (GetRange() / 2.0f));
+				UTIL_TraceHull(swingEnd, swingEnd, GetMeleeBoundsMin(), GetMeleeBoundsMax(), MASK_SHOT_HULL, &traceFilter, &traceHit);
+			}
 		}
 	}
 

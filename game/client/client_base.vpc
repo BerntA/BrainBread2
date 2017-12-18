@@ -138,6 +138,8 @@ $Project
 				$File "bb2/console_dialog.h"
 				$File "bb2/LoadingPanel.cpp"
 				$File "bb2/LoadingPanel.h"
+				$File "bb2/AddonInstallerPanel.cpp"
+				$File "bb2/AddonInstallerPanel.h"
 				$File "bb2/MainMenu.cpp"
 				$File "bb2/MainMenu.h"
 				$File "bb2/MenuContextHandler.cpp"

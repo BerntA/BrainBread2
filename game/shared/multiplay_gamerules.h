@@ -111,6 +111,8 @@ extern ConVar bb2_afk_kick_time;
 extern ConVar bb2_enable_high_ping_kicker;
 extern ConVar bb2_high_ping_limit;
 
+extern ConVar bb2_active_workshop_item;
+
 //=========================================================
 // CMultiplayRules - rules for the basic half life multiplayer
 // competition

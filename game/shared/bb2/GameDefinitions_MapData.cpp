@@ -52,6 +52,9 @@ CGameDefinitionsMapData::CGameDefinitionsMapData()
 CGameDefinitionsMapData::~CGameDefinitionsMapData()
 {
 	pszGameMaps.Purge();
+#ifndef CLIENT_DLL
+	pszWorkshopItemList.Purge();
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -134,6 +137,9 @@ void CGameDefinitionsMapData::CleanupMapData(void)
 void CGameDefinitionsMapData::FetchMapData(void)
 {
 	pszGameMaps.Purge();
+#ifndef CLIENT_DLL
+	pszWorkshopItemList.Purge();
+#endif
 
 	// Fetch the official map list!
 	KeyValues *pkvOfficialMapData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/game/officialmaps");
@@ -154,6 +160,7 @@ void CGameDefinitionsMapData::FetchMapData(void)
 #endif
 
 				mapItem.iMapVerification = MAP_VERIFIED_OFFICIAL;
+				mapItem.workshopID = 0;
 				Q_strncpy(mapItem.pszMapName, sub->GetName(), 32);
 
 				pszGameMaps.AddToTail(mapItem);
@@ -162,6 +169,24 @@ void CGameDefinitionsMapData::FetchMapData(void)
 
 		pkvOfficialMapData->deleteThis();
 	}
+
+#ifndef CLIENT_DLL
+	KeyValues *pkvWorkshopData = new KeyValues("WorkshopItemList");
+	if (pkvWorkshopData->LoadFromFile(filesystem, "workshop/appworkshop_346330.acf", "MOD"))
+	{
+		KeyValues *pkvInstalledItems = pkvWorkshopData->FindKey("WorkshopItemsInstalled");
+		if (pkvInstalledItems)
+		{
+			for (KeyValues *sub = pkvInstalledItems->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+			{
+				PublishedFileId_t itemID = ((PublishedFileId_t)atoll(sub->GetName()));
+				if (itemID)
+					pszWorkshopItemList.AddToTail(itemID);
+			}
+		}
+	}
+	pkvWorkshopData->deleteThis();
+#endif
 
 #ifdef CLIENT_DLL
 	// Add other unknown custom maps (non workshop)...
@@ -186,6 +211,7 @@ void CGameDefinitionsMapData::FetchMapData(void)
 					GetMapInfo(mapName, mapItem, pkvMapData);
 					mapItem.flScore = 0.0f;
 					mapItem.iMapVerification = MAP_VERIFIED_UNKNOWN;
+					mapItem.workshopID = 0;
 					Q_strncpy(mapItem.pszMapName, mapName, 32);
 					pszGameMaps.AddToTail(mapItem);
 				}
@@ -219,20 +245,31 @@ void CGameDefinitionsMapData::FetchMapData(void)
 		queryHandler = NULL;
 	}
 
-	AccountID_t steamAccountID = NULL;
 #ifdef CLIENT_DLL
+	AccountID_t steamAccountID = NULL;
 	steamAccountID = STEAM_API_INTERFACE->SteamUser()->GetSteamID().GetAccountID();
 	queryHandler = STEAM_API_INTERFACE->SteamUGC()->CreateQueryUserUGCRequest(steamAccountID, k_EUserUGCList_Subscribed, k_EUGCMatchingUGCType_Items, k_EUserUGCListSortOrder_TitleAsc, (AppId_t)382990, (AppId_t)346330, 1);
 #else
-	steamAccountID = STEAM_API_INTERFACE->SteamGameServer()->GetSteamID().GetAccountID();
-	queryHandler = STEAM_API_INTERFACE->SteamUGC()->CreateQueryAllUGCRequest(k_EUGCQuery_RankedByVote, k_EUGCMatchingUGCType_Items, (AppId_t)382990, (AppId_t)346330, 1);
-	STEAM_API_INTERFACE->SteamUGC()->AddRequiredTag(queryHandler, "Whitelisted");
+	// Fetches ALL data, not what we want!
+	//steamAccountID = STEAM_API_INTERFACE->SteamGameServer()->GetSteamID().GetAccountID();
+	//queryHandler = STEAM_API_INTERFACE->SteamUGC()->CreateQueryAllUGCRequest(k_EUGCQuery_RankedByVote, k_EUGCMatchingUGCType_Items, (AppId_t)382990, (AppId_t)346330, 1);
+	//STEAM_API_INTERFACE->SteamUGC()->AddRequiredTag(queryHandler, "Whitelisted");
+	queryHandler = STEAM_API_INTERFACE->SteamUGC()->CreateQueryUGCDetailsRequest(&pszWorkshopItemList[0], pszWorkshopItemList.Count());
 #endif
 
 	STEAM_API_INTERFACE->SteamUGC()->SetReturnKeyValueTags(queryHandler, true);
 
 	SteamAPICall_t apiCallback = STEAM_API_INTERFACE->SteamUGC()->SendQueryUGCRequest(queryHandler);
 	m_SteamCallResultUGCQuery.Set(apiCallback, this, &CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll);
+}
+
+gameMapItem_t *CGameDefinitionsMapData::GetMapData(const char *pszMap)
+{
+	int index = GetMapIndex(pszMap);
+	if (index != -1)
+		return &pszGameMaps[index];
+
+	return NULL;
 }
 
 int CGameDefinitionsMapData::GetMapIndex(const char *pszMap)
@@ -302,21 +339,31 @@ void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted
 				if (strlen(mapSizeValue) <= 0)
 					continue;
 
-				if (GetMapIndex(mapNameValue) != -1)
-					continue;
-
 				unsigned long long mapFileSize = (unsigned long long)atoll(mapSizeValue);
-				gameMapItem_t mapItem;
-				mapItem.ulFileSize = mapFileSize;
-				mapItem.iMapVerification = iVerification;
-				Q_strncpy(mapItem.pszMapName, mapNameValue, 32);
-				pszGameMaps.AddToTail(mapItem);
+
+				int iExistingMapIndex = GetMapIndex(mapNameValue);
+				if (iExistingMapIndex != -1)
+				{
+					pszGameMaps[iExistingMapIndex].ulFileSize = mapFileSize;
+					pszGameMaps[iExistingMapIndex].iMapVerification = iVerification;
+					pszGameMaps[iExistingMapIndex].workshopID = WorkshopItem.m_nPublishedFileId;
+				}
+				else
+				{
+					gameMapItem_t mapItem;
+					mapItem.ulFileSize = mapFileSize;
+					mapItem.iMapVerification = iVerification;
+					mapItem.workshopID = WorkshopItem.m_nPublishedFileId;
+					Q_strncpy(mapItem.pszMapName, mapNameValue, 32);
+					pszGameMaps.AddToTail(mapItem);
+				}
 #else
 				int iExistingMapIndex = GetMapIndex(mapNameValue);
 				if (iExistingMapIndex != -1)
 				{
 					pszGameMaps[iExistingMapIndex].flScore = WorkshopItem.m_flScore;
 					pszGameMaps[iExistingMapIndex].iMapVerification = iVerification;
+					pszGameMaps[iExistingMapIndex].workshopID = WorkshopItem.m_nPublishedFileId;
 				}
 				else
 				{
@@ -325,9 +372,11 @@ void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted
 					Q_strncpy(mapItem.pszMapDescription, WorkshopItem.m_rgchDescription, 256);
 					Q_strncpy(mapItem.pszMapExtraInfo, "", 256);
 					mapItem.iMapVerification = iVerification;
+					mapItem.workshopID = WorkshopItem.m_nPublishedFileId;
 					mapItem.bExclude = false;
 					mapItem.flScore = WorkshopItem.m_flScore;
 					Q_strncpy(mapItem.pszMapName, mapNameValue, 32);
+					GetMapImageData(mapItem.pszMapName, mapItem);
 					pszGameMaps.AddToTail(mapItem);
 				}
 #endif
@@ -344,6 +393,7 @@ void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted
 
 #ifndef CLIENT_DLL
 	GameBaseServer()->LoadServerTags();
+	GameBaseServer()->CheckMapData();
 #endif
 }
 

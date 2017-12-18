@@ -26,9 +26,80 @@ using namespace vgui;
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
+CLoadingPanel::CLoadingPanel(vgui::VPANEL parent) : BaseClass(NULL, "LoadingPanel")
+{
+	ClearVitalParentControls();
+
+	SetParent(parent);
+	SetTitleBarVisible(false);
+	SetMinimizeButtonVisible(false);
+	SetMaximizeButtonVisible(false);
+	SetCloseButtonVisible(false);
+	SetSizeable(false);
+	SetMoveable(false);
+	SetProportional(true);
+	SetVisible(true);
+	SetKeyBoardInputEnabled(false);
+	SetMouseInputEnabled(false);
+	SetScheme("ClientScheme");
+
+	SetZPos(100);
+
+	vgui::ivgui()->AddTickSignal(GetVPanel(), 1);
+
+	InvalidateLayout();
+
+	// Initialize images
+	m_pImgLoadingBackground = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "LoadingImage"));
+	m_pImgLoadingBackground->SetImage("mainmenu/backgroundart");
+	m_pImgLoadingBackground->SetShouldScaleImage(true);
+	m_pImgLoadingBackground->SetZPos(110);
+
+	// Loading Tips
+	m_pTextLoadingTip = vgui::SETUP_PANEL(new vgui::Label(this, "TextTip", ""));
+	m_pTextLoadingTip->SetZPos(130);
+	m_pTextLoadingTip->SetText("");
+
+	m_pTextProgress = vgui::SETUP_PANEL(new vgui::Label(this, "TextProgress", ""));
+	m_pTextProgress->SetZPos(150);
+	m_pTextProgress->SetText("");
+
+	m_pImgTipIcon = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "TipIco"));
+	m_pImgTipIcon->SetImage("loading/icons/tip");
+	m_pImgTipIcon->SetShouldScaleImage(true);
+	m_pImgTipIcon->SetZPos(120);
+
+	m_pTipBackground = vgui::SETUP_PANEL(new vgui::Divider(this, "TipBG"));
+	m_pTipBackground->SetZPos(120);
+	m_pTipBackground->SetBorder(NULL);
+
+	m_pProgressBar = vgui::SETUP_PANEL(new ImageProgressBar(this, "ProgressBar", "vgui/loading/progress_bar", "vgui/loading/progress_bg"));
+	m_pProgressBar->SetProgressDirection(ProgressBar::PROGRESS_EAST);
+	m_pProgressBar->SetZPos(135);
+
+	// Map Data Details
+	for (int i = 0; i < _ARRAYSIZE(m_pTextMapDetail); i++)
+	{
+		m_pTextMapDetail[i] = vgui::SETUP_PANEL(new vgui::Label(this, "TextMapDetail", ""));
+		m_pTextMapDetail[i]->SetZPos(130);
+		m_pTextMapDetail[i]->SetText("");
+	}
+
+	colMapString = Color(0, 0, 0, 0);
+	colStatsStatus = Color(0, 0, 0, 0);
+
+	m_pMapRating = vgui::SETUP_PANEL(new ImageProgressBar(this, "MapRating", "vgui/loading/rating_full", "vgui/loading/rating_empty"));
+	m_pMapRating->SetProgressDirection(ProgressBar::PROGRESS_EAST);
+	m_pMapRating->SetZPos(135);
+
+	PerformLayout();
+}
+
+CLoadingPanel::~CLoadingPanel()
+{
+	ClearVitalParentControls();
+}
+
 void CLoadingPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
@@ -54,7 +125,6 @@ void CLoadingPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
 	m_pTextMapDetail[3]->SetFont(pScheme->GetFont("LoadingFontSmall"));
 }
 
-// The panel background image should be square, not rounded.
 void CLoadingPanel::PaintBackground()
 {
 	SetBgColor(Color(0, 0, 0, 0));
@@ -150,83 +220,6 @@ void CLoadingPanel::OnThink()
 {
 	SetupLayout();
 	BaseClass::OnThink();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Constructor
-//-----------------------------------------------------------------------------
-CLoadingPanel::CLoadingPanel(vgui::VPANEL parent) : BaseClass(NULL, "LoadingPanel")
-{
-	SetParent(parent);
-	SetTitleBarVisible(false);
-	SetMinimizeButtonVisible(false);
-	SetMaximizeButtonVisible(false);
-	SetCloseButtonVisible(false);
-	SetSizeable(false);
-	SetMoveable(false);
-	SetProportional(true);
-	SetVisible(true);
-	SetKeyBoardInputEnabled(false);
-	SetMouseInputEnabled(false);
-	SetScheme("ClientScheme");
-
-	SetZPos(100);
-
-	vgui::ivgui()->AddTickSignal(GetVPanel(), 1);
-
-	InvalidateLayout();
-
-	// Initialize images
-	m_pImgLoadingBackground = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "LoadingImage"));
-	m_pImgLoadingBackground->SetImage("mainmenu/backgroundart");
-	m_pImgLoadingBackground->SetShouldScaleImage(true);
-	m_pImgLoadingBackground->SetZPos(110);
-
-	// Loading Tips
-	m_pTextLoadingTip = vgui::SETUP_PANEL(new vgui::Label(this, "TextTip", ""));
-	m_pTextLoadingTip->SetZPos(130);
-	m_pTextLoadingTip->SetText("");
-
-	m_pTextProgress = vgui::SETUP_PANEL(new vgui::Label(this, "TextProgress", ""));
-	m_pTextProgress->SetZPos(150);
-	m_pTextProgress->SetText("");
-
-	m_pImgTipIcon = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "TipIco"));
-	m_pImgTipIcon->SetImage("loading/icons/tip");
-	m_pImgTipIcon->SetShouldScaleImage(true);
-	m_pImgTipIcon->SetZPos(120);
-
-	m_pTipBackground = vgui::SETUP_PANEL(new vgui::Divider(this, "TipBG"));
-	m_pTipBackground->SetZPos(120);
-	m_pTipBackground->SetBorder(NULL);
-
-	m_pProgressBar = vgui::SETUP_PANEL(new ImageProgressBar(this, "ProgressBar", "vgui/loading/progress_bar", "vgui/loading/progress_bg"));
-	m_pProgressBar->SetProgressDirection(ProgressBar::PROGRESS_EAST);
-	m_pProgressBar->SetZPos(135);
-
-	// Map Data Details
-	for (int i = 0; i < _ARRAYSIZE(m_pTextMapDetail); i++)
-	{
-		m_pTextMapDetail[i] = vgui::SETUP_PANEL(new vgui::Label(this, "TextMapDetail", ""));
-		m_pTextMapDetail[i]->SetZPos(130);
-		m_pTextMapDetail[i]->SetText("");
-	}
-
-	colMapString = Color(0, 0, 0, 0);
-	colStatsStatus = Color(0, 0, 0, 0);
-
-	m_pMapRating = vgui::SETUP_PANEL(new ImageProgressBar(this, "MapRating", "vgui/loading/rating_full", "vgui/loading/rating_empty"));
-	m_pMapRating->SetProgressDirection(ProgressBar::PROGRESS_EAST);
-	m_pMapRating->SetZPos(135);
-
-	PerformLayout();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Destructor
-//-----------------------------------------------------------------------------
-CLoadingPanel::~CLoadingPanel()
-{
 }
 
 const char *CLoadingPanel::GetLoadingTip(const char *text)
@@ -360,10 +353,10 @@ void CLoadingPanel::OnTick()
 		m_bCanUpdateImage = false;
 		m_bDisconnected = false;
 		m_bLoadedMapData = false;
+		ClearVitalParentControls();
 	}
 	else
 	{
-		SetLoadingAttributes();
 		Activate();
 		RequestFocus();
 		MoveToFront();
@@ -371,6 +364,7 @@ void CLoadingPanel::OnTick()
 		if (!m_bCanUpdateImage)
 		{
 			m_bCanUpdateImage = true;
+			FindVitalParentControls();
 
 			int iMapIndex = -1;
 			if (GameBaseShared()->GetSharedMapData())
@@ -388,7 +382,6 @@ void CLoadingPanel::OnTick()
 			if (panel)
 			{
 				int NbChilds = vgui::ipanel()->GetChildCount(panel);
-
 				for (int i = 0; i < NbChilds; ++i)
 				{
 					VPANEL gameUIPanel = vgui::ipanel()->GetChild(panel, i);
@@ -446,17 +439,19 @@ void CLoadingPanel::OnTick()
 				}
 			}
 		}
+
+		SetLoadingAttributes();
 	}
 }
 
-// Get Loading Progress from the engine and the loading string:
-void CLoadingPanel::SetLoadingAttributes(void)
+void CLoadingPanel::FindVitalParentControls()
 {
+	ClearVitalParentControls();
+
 	vgui::VPANEL panel = GetVParent();
 	if (panel)
 	{
 		int NbChilds = vgui::ipanel()->GetChildCount(panel);
-
 		for (int i = 0; i < NbChilds; ++i)
 		{
 			VPANEL gameUIPanel = vgui::ipanel()->GetChild(panel, i);
@@ -470,23 +465,61 @@ void CLoadingPanel::SetLoadingAttributes(void)
 					// Get Progress Value:
 					if (!strcmp(myPanel->GetName(), "Progress"))
 					{
-						ProgressBar *pBar = dynamic_cast<ProgressBar*> (myPanel);
+						ProgressBar *pBar = dynamic_cast<ProgressBar*>(myPanel);
 						if (pBar)
-							m_pProgressBar->SetProgress(pBar->GetProgress());
+							m_pParentProgressBar = pBar;
 					}
 					// Get Progress String:
 					else if (!strcmp(myPanel->GetName(), "InfoLabel"))
 					{
 						Label *pLabel = dynamic_cast<Label*>(myPanel);
 						if (pLabel)
-						{
-							char szString[256];
-							pLabel->GetText(szString, 256);
-							m_pTextProgress->SetText(szString);
-							m_bDisconnected = (!engine->IsDrawingLoadingImage() && IsVisible());
-						}
+							m_pParentProgressText = pLabel;
+					}
+					// Get Cancel Button:
+					else if (!strcmp(myPanel->GetName(), "CancelButton"))
+					{
+						Button *pCancelButton = dynamic_cast<Button*>(myPanel);
+						if (pCancelButton)
+							m_pParentCancelButton = pCancelButton;
 					}
 				}
+			}
+		}
+	}
+}
+
+void CLoadingPanel::SetLoadingAttributes(void)
+{
+	m_bDisconnected = (!engine->IsDrawingLoadingImage() && IsVisible());
+
+	if (m_pParentProgressBar)
+		m_pProgressBar->SetProgress(m_pParentProgressBar->GetProgress());
+
+	if (m_pParentProgressText)
+	{
+		char szString[256];
+		m_pParentProgressText->GetText(szString, 256);
+		m_pTextProgress->SetText(szString);
+	}
+
+	if (m_bDisconnected)
+	{
+		unsigned long long workshopID = ((unsigned long long)atoll(bb2_active_workshop_item.GetString()));
+		if (workshopID > 0)
+		{
+			bb2_active_workshop_item.SetValue(0);
+
+			char szString[256];
+			m_pTextProgress->GetText(szString, 256);
+			Q_strlower(szString);
+			if (Q_strstr(szString, ".bsp"))
+			{
+				char pchOpenCommand[128];
+				Q_snprintf(pchOpenCommand, 128, "workshop_client_install \"%llu\"\n", workshopID);
+				SafelyCloseLoadingScreen();
+				engine->ClientCmd_Unrestricted(pchOpenCommand);
+				return;
 			}
 		}
 	}

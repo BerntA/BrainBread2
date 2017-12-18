@@ -132,6 +132,8 @@ ConVar bb2_afk_kick_time("bb2_afk_kick_time", "90", FCVAR_REPLICATED, "If a play
 ConVar bb2_enable_high_ping_kicker("bb2_enable_high_ping_kicker", "1", FCVAR_REPLICATED, "When a player connects, check his average ping after 30 sec, if the average ping is higher than bb2_high_ping_limit he will be kicked.", true, 0.0f, true, 1.0f);
 ConVar bb2_high_ping_limit("bb2_high_ping_limit", "200", FCVAR_REPLICATED, "If the players average ping exceeds this value then kick the player.", true, 100.0f, true, 600.0f);
 
+ConVar bb2_active_workshop_item("bb2_active_workshop_item", "0", FCVAR_REPLICATED|FCVAR_HIDDEN, "Fetch the active workshop map item ID running on the server.");
+
 #ifdef GAME_DLL
 ConVar tv_delaymapchange("tv_delaymapchange", "0", FCVAR_NONE, "Delays map change until broadcast is complete");
 ConVar tv_delaymapchange_protect("tv_delaymapchange_protect", "1", FCVAR_NONE, "Protect against doing a manual map change if HLTV is broadcasting and has not caught up with a major game event such as round_end");

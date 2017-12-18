@@ -5,6 +5,12 @@
 //
 //========================================================================================//
 
+#ifndef CUSTOM_LOADING_PANEL_H
+#define CUSTOM_LOADING_PANEL_H
+#ifdef _WIN32
+#pragma once
+#endif
+
 #include "cbase.h"
 #include <vgui/VGUI.h>
 #include "vgui_controls/Frame.h"
@@ -43,6 +49,25 @@ protected:
 	virtual void OnTick();
 	virtual void OnScreenSizeChanged(int iOldWide, int iOldTall);
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
+	virtual void FindVitalParentControls();
+	virtual bool SafelyCloseLoadingScreen()
+	{
+		if (m_pParentCancelButton == NULL)
+			return false;
+
+		m_pParentCancelButton->FireActionSignal();
+		return true;
+	}
+	virtual void ClearVitalParentControls()
+	{
+		m_pParentCancelButton = NULL;
+		m_pParentProgressBar = NULL;
+		m_pParentProgressText = NULL;
+	}
+
+	vgui::Button *m_pParentCancelButton;
+	vgui::ProgressBar *m_pParentProgressBar;
+	vgui::Label *m_pParentProgressText;
 
 private:
 	void SetupLayout(void);
@@ -66,3 +91,5 @@ private:
 	const char *GetLoadingTip(const char *text);
 	char *ReplaceBracketsWithInfo(char *text);
 };
+
+#endif // CUSTOM_LOADING_PANEL_H

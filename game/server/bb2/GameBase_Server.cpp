@@ -115,6 +115,23 @@ void CGameBaseServer::LoadServerTags(void)
 	engine->ServerCommand(pszTagCommand);
 }
 
+void CGameBaseServer::CheckMapData(void)
+{
+	bb2_active_workshop_item.SetValue(0);
+	if (GameBaseShared()->GetSharedMapData())
+	{
+		gameMapItem_t *currentMapData = GameBaseShared()->GetSharedMapData()->GetMapData(HL2MPRules()->szCurrentMap);
+		if (currentMapData)
+		{
+			bAllowStatsForMap = ((HL2MPRules()->m_ulMapSize > 0) && (HL2MPRules()->m_ulMapSize == currentMapData->ulFileSize) && (currentMapData->iMapVerification >= MAP_VERIFIED_WHITELISTED));
+
+			char pchWorkshopID[80];
+			Q_snprintf(pchWorkshopID, 80, "%llu", currentMapData->workshopID);
+			bb2_active_workshop_item.SetValue(pchWorkshopID);
+		}
+	}
+}
+
 // Send a message to all the clients in-game.
 void CGameBaseServer::GameAnnouncement(const char *format, const char *arg1, const char *arg2)
 {
@@ -475,6 +492,7 @@ void CGameBaseServer::PostInit()
 
 	LoadSharedData();
 	LoadServerTags();
+	CheckMapData();
 }
 
 // Are you allowed to store your skills?
@@ -524,12 +542,9 @@ void CGameBaseServer::OnUpdate(int iClientsInGame)
 	if ((m_flPostLoadTimer > 0) && (m_flPostLoadTimer < engine->Time()))
 	{
 		m_flPostLoadTimer = 0.0f;
+
 		if (GameBaseShared()->GetSharedMapData())
-		{
 			GameBaseShared()->GetSharedMapData()->FetchMapData();
-			bAllowStatsForMap = (HL2MPRules() && (GameBaseShared()->GetSharedMapData()->VerifyMapFile(HL2MPRules()->szCurrentMap, HL2MPRules()->m_ulMapSize) &&
-				GameBaseShared()->GetSharedMapData()->IsMapWhiteListed(HL2MPRules()->szCurrentMap)));
-		}
 
 		if (GameBaseShared()->GetServerWorkshopData())
 			GameBaseShared()->GetServerWorkshopData()->Initialize();
