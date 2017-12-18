@@ -237,7 +237,7 @@ void CScoreBoardSectionPanel::UpdateScoreInfo()
 
 		if (itemID == -1)
 		{
-			vgui::ScoreboardItem *scoreboardItem = new vgui::ScoreboardItem(this, "ScoreItem", playerData);
+			vgui::ScoreboardItem *scoreboardItem = vgui::SETUP_PANEL(new vgui::ScoreboardItem(this, "ScoreItem", playerData));
 			scoreboardItem->SetZPos(25);
 			m_pItems.AddToTail(scoreboardItem);
 		}

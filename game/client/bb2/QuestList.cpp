@@ -76,12 +76,12 @@ void QuestList::CreateList(void)
 	int iPositioning = 0;
 	for (int i = 0; i < GameBaseShared()->GetSharedQuestData()->GetQuestList().Count(); i++)
 	{
-		CQuestItem *data = GameBaseShared()->GetSharedQuestData()->GetQuestList()[i];
+		const CQuestItem *data = GameBaseShared()->GetSharedQuestData()->GetQuestList()[i];
 
 		if ((data->bIsSideQuest != m_bSideQuest) || !data->bIsActive)
 			continue;
 
-		QuestItem *pItem = new QuestItem(this, "QuestItem", data->szTitle, data->m_iQuestStatus, data->m_iQuestIndex);
+		QuestItem *pItem = vgui::SETUP_PANEL(new QuestItem(this, "QuestItem", data->szTitle, data->m_iQuestStatus, data->m_iQuestIndex));
 		pItem->SetZPos(10);
 		pItem->SetSize(w, scheme()->GetProportionalScaledValue(14));
 		pItem->SetPos(0, (iPositioning * scheme()->GetProportionalScaledValue(14)));

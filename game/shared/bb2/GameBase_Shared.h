@@ -30,7 +30,9 @@
 #endif
 
 #define MAX_INVENTORY_ITEM_COUNT 12
-#define MAX_OBJECTIVE_EXPERIENCE 25
+#define MAX_OBJECTIVE_EXPERIENCE 0.05f
+
+#define DELAYED_USE_TIME 1.5f
 
 // Min. required distance in order to activate/use an inv. item.
 #define MAX_ENTITY_LINK_RANGE 140.0f
@@ -230,7 +232,7 @@ enum PlayerArmorTypes
 	TYPE_LIGHT,
 	TYPE_MED,
 	TYPE_HEAVY,
-	TYPE_SUPER_HEAVY,
+	TYPE_SUPER_HEAVY, // Never got implemented... =(
 };
 
 enum ExplosiveTypes_t
@@ -279,7 +281,7 @@ public:
 	// Misc
 	const char *GetTimeString(int iHoursPlayed);
 	void GetFileContent(const char *path, char *buf, int size);
-	float GetDropOffDamage(Vector vecStart, Vector vecEnd, float damage, float minDist);
+	float GetDropOffDamage(const Vector &vecStart, const Vector &vecEnd, float damage, float minDist);
 	float GetSequenceDuration(CStudioHdr *ptr, int sequence);
 
 	// Bleeding Dispatches
@@ -296,9 +298,9 @@ public:
 	// Inventory
 	CUtlVector<InventoryServerItem_t> &GetServerInventory() { return pszInventoryList; }
 	void AddInventoryItem(int iPlayerIndex, uint iItemID, const char *szEntLink, bool bIsMapItem);
-	void RemoveInventoryItem(int iPlayerIndex, Vector vecAbsOrigin, int iType = -1, uint iItemID = 0, bool bDeleteItem = false);
+	void RemoveInventoryItem(int iPlayerIndex, const Vector &vecAbsOrigin, int iType = -1, uint iItemID = 0, bool bDeleteItem = false, int forceIndex = -1);
 	void RemoveInventoryItems(void);
-	bool UseInventoryItem(int iPlayerIndex, uint iItemID, bool bIsMapItem, bool bAutoConsume = false, bool bDelayedUse = false);
+	bool UseInventoryItem(int iPlayerIndex, uint iItemID, bool bIsMapItem, bool bAutoConsume = false, bool bDelayedUse = false, int forceIndex = -1);
 	int GetInventoryItemCountForPlayer(int iPlayerIndex);
 	int GetInventoryItemForPlayer(int iPlayerIndex, uint iItemID, bool bIsMapItem);
 	bool HasObjectiveGlowItems(CHL2MP_Player *pClient);

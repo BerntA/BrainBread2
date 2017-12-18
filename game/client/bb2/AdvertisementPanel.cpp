@@ -82,13 +82,13 @@ const char *AdvertisementPanel::GetAdvertisementURL(int iIndex)
 	switch (iIndex)
 	{
 	case 0:
-		return "http://reperio-studios.eu/"; // Forums
+		return "http://brainbread2.eu/"; // BB2 Site
 	case 1:
 		return "http://steamcommunity.com/app/346330"; // Steam Community
 	case 2:
 		return "http://steamcommunity.com/games/brainbread2/"; // Steam Group
 	default:
-		return "http://reperio-studios.eu/"; // Forums (default)
+		return "http://brainbread2.eu/"; // BB2 Site (default)
 	}
 }
 

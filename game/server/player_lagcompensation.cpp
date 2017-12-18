@@ -638,23 +638,26 @@ void CLagCompensationManager::StartLagCompensation( CBasePlayer *player, CUserCm
 
 #ifdef BB2_AI
 	// also iterate all monsters 
-	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs(); 
-	int nAIs = g_AI_Manager.NumAIs(); 
+	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
+	int nAIs = g_AI_Manager.NumAIs();
 
-	for ( int i = 0; i < nAIs; i++ ) 
-	{ 
-		CAI_BaseNPC *pNPC = ppAIs[i]; 
+	for (int i = 0; i < nAIs; i++)
+	{
+		CAI_BaseNPC *pNPC = ppAIs[i];
 		// Custom checks for if things should lag compensate 
-		if ( !pNPC || !player->WantsLagCompensationOnEntity( pNPC, cmd, pEntityTransmitBits ) ) 
-			continue; 
+		if (!pNPC)
+			continue;
 
 		// Only compensate 'valid' npcs.
-		if ((pNPC->IRelationType(player) == D_LI) || (pNPC->Classify() == CLASS_NONE) || (pNPC->GetCollisionGroup() == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) || (Q_strstr(pNPC->GetClassname(), "static")))
+		if (!pNPC->IsMoving() || (pNPC->GetSleepState() != AISS_AWAKE) || (pNPC->Classify() == CLASS_NONE) || (pNPC->GetCollisionGroup() == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) || (pNPC->IRelationType(player) == D_LI))
 			continue;
-		
+
+		if (!player->WantsLagCompensationOnEntity(pNPC, cmd, pEntityTransmitBits))
+			continue;
+
 		// Move NPC back in time 
-		BacktrackEntity( pNPC, TICKS_TO_TIME( targettick ) ); 
-	} 
+		BacktrackEntity(pNPC, TICKS_TO_TIME(targettick));
+	}
 #endif //BB2_AI
 }
 

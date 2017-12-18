@@ -29,6 +29,8 @@ using namespace vgui;
 
 #define ITEM_TRANSIT_TIME 1.0f
 
+CHudObjective *m_pObjectiveHUD = NULL;
+
 DECLARE_HUDELEMENT(CHudObjective);
 
 //------------------------------------------------------------------------
@@ -45,6 +47,8 @@ CHudObjective::CHudObjective(const char * pElementName) : CHudElement(pElementNa
 	SetBounds(0, 0, screenWide, screenTall);
 
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
+
+	m_pObjectiveHUD = this;
 }
 
 //-----------------------------------------------------------------------------
@@ -417,7 +421,7 @@ void CHudCaptureProgressBar::Paint()
 	int x, y;
 	GetPos(x, y);
 
-	CHudObjective *pElement = GET_HUDELEMENT(CHudObjective);
+	CHudObjective *pElement = m_pObjectiveHUD;
 	if (pElement)
 	{
 		y = (pElement->GetYPosOffset() + YRES(2));

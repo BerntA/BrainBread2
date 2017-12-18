@@ -66,17 +66,15 @@ void CItemPowerup::Spawn(void)
 		return;
 	}
 
-	int indexPowerup = GameBaseShared()->GetSharedGameDetails()->GetIndexForPowerup(STRING(czPowerupName));
-	if (indexPowerup == -1)
+	const DataPlayerItem_Player_PowerupItem_t *data = GameBaseShared()->GetSharedGameDetails()->GetPlayerPowerupData(STRING(czPowerupName));
+	if (data == NULL)
 	{
 		Warning("Powerup '%s' is invalid, removing!\n", STRING(GetEntityName()));
 		UTIL_Remove(this);
 		return;
 	}
 
-	DataPlayerItem_Player_PowerupItem_t data = GameBaseShared()->GetSharedGameDetails()->GetPlayerPowerupData(STRING(czPowerupName));
-
-	SetModel(data.pchModelPath);
+	SetModel(data->pchModelPath);
 	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
 	BaseClass::Spawn();
 
@@ -84,7 +82,7 @@ void CItemPowerup::Spawn(void)
 
 	AddSpawnFlags(SF_NORESPAWN);
 
-	m_flPowerUpDuration = data.flPerkDuration;
+	m_flPowerUpDuration = data->flPerkDuration;
 }
 
 bool CItemPowerup::MyTouch(CBasePlayer *pPlayer)
@@ -93,14 +91,17 @@ bool CItemPowerup::MyTouch(CBasePlayer *pPlayer)
 	if (!pClient)
 		return false;
 
-	DataPlayerItem_Player_PowerupItem_t data = GameBaseShared()->GetSharedGameDetails()->GetPlayerPowerupData(STRING(czPowerupName));
-	if (!pClient->CanEnablePowerup(data.iFlag, m_flPowerUpDuration))
+	const DataPlayerItem_Player_PowerupItem_t *data = GameBaseShared()->GetSharedGameDetails()->GetPlayerPowerupData(STRING(czPowerupName));
+	if (!data)
+		return false;
+
+	if (!pClient->CanEnablePowerup(data->iFlag, m_flPowerUpDuration))
 		return false;
 
 	Vector vecOrigin = pClient->GetAbsOrigin();
 	CRecipientFilter filter;
 	filter.AddRecipientsByPAS(vecOrigin);
-	EmitSound(filter, entindex(), data.pchActivationSoundScript);
+	EmitSound(filter, entindex(), data->pchActivationSoundScript);
 	return true;
 }
 

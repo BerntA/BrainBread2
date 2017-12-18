@@ -37,15 +37,15 @@ namespace vgui
 		DECLARE_CLASS_SIMPLE(AchievementItem, vgui::Panel);
 
 	public:
-		AchievementItem(vgui::Panel *parent, char const *panelName, const char *pszAchievementID);
+		AchievementItem(vgui::Panel *parent, char const *panelName, const char *pszAchievementID, int achIndex);
 		virtual ~AchievementItem();
 
 		void SetSize(int wide, int tall);
 		void OnUpdate(void);
+		int GetAchievementIndex(void) { return m_iAchievementIndex; }
 
 	protected:
-		virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
-
+		void ApplySchemeSettings(vgui::IScheme *pScheme);
 		void SetAchievementIcon(void);
 
 	private:
@@ -61,6 +61,7 @@ namespace vgui
 
 		bool m_bAchieved;
 		float m_flAchievementCheckTime;
+		int m_iAchievementIndex;
 	};
 
 	class ProfileMenuAchievementPanel : public vgui::CVGUIBasePanel
@@ -71,9 +72,11 @@ namespace vgui
 		ProfileMenuAchievementPanel(vgui::Panel *parent, char const *panelName);
 		~ProfileMenuAchievementPanel();
 
+		void CreateAchievementList(void);
 		void SetupLayout(void);
 		void OnUpdate(bool bInGame);
 		void Redraw(void);
+		void Cleanup(void);
 
 	private:
 

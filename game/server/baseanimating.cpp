@@ -3618,14 +3618,14 @@ void CBaseAnimating::EnableRotationEffect(void)
 
 void CBaseAnimating::OnRotationEffect(void)
 {
-	QAngle currAngles = GetAbsAngles();
+	QAngle currAngles = GetLocalAngles();
 
 	if (currAngles.y < 360)
 		currAngles.y += 2;
 	else
 		currAngles.y = 0;
 
-	SetAbsAngles(currAngles);
+	SetLocalAngles(currAngles);
 
 	SetNextThink(gpGlobals->curtime + 0.1f);
 }

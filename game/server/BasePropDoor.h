@@ -174,6 +174,7 @@ private:
 	// }
 
 	int		m_nHardwareType;
+	float	m_flLastTimeUsed;
 	
 	DoorState_t m_eDoorState;	// Holds whether the door is open, closed, opening, or closing.
 

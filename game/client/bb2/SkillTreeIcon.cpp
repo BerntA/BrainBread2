@@ -32,6 +32,9 @@
 
 using namespace vgui;
 
+static CHudTexture *m_pLevelIconBG = NULL;
+static CHudTexture *m_pLevelIconFG = NULL;
+
 SkillTreeIcon::SkillTreeIcon(vgui::Panel *parent, char const *panelName, const char *name, const char *description, const char *command, const char *iconTexture) : vgui::Panel(parent, panelName)
 {
 	SetParent(parent);
@@ -85,6 +88,9 @@ void SkillTreeIcon::PerformLayout()
 
 	m_pMousePanel->SetSize(w, h);
 	m_pMousePanel->SetPos(0, 0);
+
+	m_pLevelIconBG = gHUD.GetIcon("level_min");
+	m_pLevelIconFG = gHUD.GetIcon("level_max");
 }
 
 void SkillTreeIcon::ApplySchemeSettings(vgui::IScheme *pScheme)
@@ -98,17 +104,15 @@ void SkillTreeIcon::Paint()
 
 	Color col = Color(255, 255, 255, 255);
 
-	CHudTexture *pHudIcon = gHUD.GetIcon("level_min");
-	if (pHudIcon)
+	if (m_pLevelIconBG)
 	{
 		surface()->DrawSetColor(col);
-		surface()->DrawSetTexture(pHudIcon->textureId);
+		surface()->DrawSetTexture(m_pLevelIconBG->textureId);
 		surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
 	}
 
-	pHudIcon = gHUD.GetIcon("level_max");
-	if (pHudIcon)
-		pHudIcon->DrawCircularProgression(col, 0, 0, GetWide(), GetTall(), flProgress);
+	if (m_pLevelIconFG)
+		m_pLevelIconFG->DrawCircularProgression(col, 0, 0, GetWide(), GetTall(), flProgress);
 }
 
 void SkillTreeIcon::OnMousePressed(vgui::MouseCode code)

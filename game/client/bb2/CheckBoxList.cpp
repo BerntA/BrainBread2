@@ -75,7 +75,7 @@ void CheckBoxList::AddItemToList(const char *szText, int index)
 	GetSize(w, h);
 	iSize = checkBoxList.Count();
 
-	GraphicalCheckBox *pCheckBox = new GraphicalCheckBox(this, "CheckBox", szText, "Default");
+	GraphicalCheckBox *pCheckBox = vgui::SETUP_PANEL(new GraphicalCheckBox(this, "CheckBox", szText, "Default"));
 	pCheckBox->SetZPos(10);
 	pCheckBox->SetSize(w - scheme()->GetProportionalScaledValue(11), scheme()->GetProportionalScaledValue(10));
 	pCheckBox->SetPos(0, 1 + (iSize * scheme()->GetProportionalScaledValue(12)));

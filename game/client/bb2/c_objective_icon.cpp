@@ -25,6 +25,8 @@
 #include "vgui_entitypanel.h"
 #include "view.h"
 
+CUtlVector<C_ObjectiveIcon*> m_pObjectiveIcons;
+
 IMPLEMENT_CLIENTCLASS_DT(C_ObjectiveIcon, DT_ObjectiveIcon, CObjectiveIcon)
 RecvPropBool(RECVINFO(m_bShouldBeHidden)),
 RecvPropInt(RECVINFO(m_iTeamNumber)),
@@ -38,11 +40,7 @@ ConVar bb2_objective_icon_size("bb2_objective_icon_size", "16", FCVAR_CLIENTDLL 
 C_ObjectiveIcon::C_ObjectiveIcon()
 {
 	pMaterialLink = NULL;
-}
-
-void C_ObjectiveIcon::Spawn(void)
-{
-	BaseClass::Spawn();
+	m_pObjectiveIcons.AddToTail(this);
 }
 
 C_ObjectiveIcon::~C_ObjectiveIcon()
@@ -52,6 +50,13 @@ C_ObjectiveIcon::~C_ObjectiveIcon()
 		pMaterialLink->DecrementReferenceCount();
 		pMaterialLink = NULL;
 	}
+
+	m_pObjectiveIcons.FindAndRemove(this);
+}
+
+void C_ObjectiveIcon::Spawn(void)
+{
+	BaseClass::Spawn();
 }
 
 bool C_ObjectiveIcon::ShouldDraw()
@@ -78,59 +83,56 @@ void RenderObjectiveIcons(void)
 
 	CMatRenderContextPtr pRenderContext(materials);
 	int iTeam = pPlayer->GetTeamNumber();
+	int iNumObjIcons = m_pObjectiveIcons.Count();
+	float flSize = bb2_objective_icon_size.GetFloat();
 
-	for (C_BaseEntity *pEntity = ClientEntityList().FirstBaseEntity(); pEntity; pEntity = ClientEntityList().NextBaseEntity(pEntity))
+	for (int i = 0; i < iNumObjIcons; i++)
 	{
-		C_ObjectiveIcon *pIcon = dynamic_cast<C_ObjectiveIcon*> (pEntity);
-		if (pIcon)
-		{
-			int iconTeamLink = pIcon->GetTeamLink();
-			if ((iconTeamLink != iTeam && (iconTeamLink > 0)) || pIcon->IsHidden() || (strlen(pIcon->GetTexture()) <= 0))
-				continue;
+		C_ObjectiveIcon *pIcon = m_pObjectiveIcons[i];
+		if (!pIcon)
+			continue;
 
-			IMaterial *renderTexture = pIcon->GetIconMaterial();
-			if (renderTexture != NULL)
-			{
-				Vector vOrigin = pIcon->WorldSpaceCenter();
+		IMaterial *renderTexture = pIcon->GetIconMaterial();
+		int iconTeamLink = pIcon->GetTeamLink();
+		if ((iconTeamLink != iTeam && (iconTeamLink > 0)) || pIcon->IsHidden() || (renderTexture == NULL))
+			continue;
 
-				// Align it so it never points up or down.
-				Vector vUp(0, 0, 1);
-				Vector vRight = CurrentViewRight();
-				if (fabs(vRight.z) > 0.95)	// don't draw it edge-on
-					continue;
+		Vector vOrigin = pIcon->WorldSpaceCenter();
 
-				vRight.z = 0;
-				VectorNormalize(vRight);
+		// Align it so it never points up or down.
+		Vector vUp(0, 0, 1);
+		Vector vRight = CurrentViewRight();
+		if (fabs(vRight.z) > 0.95)	// don't draw it edge-on
+			continue;
 
-				float flSize = bb2_objective_icon_size.GetFloat();
+		vRight.z = 0;
+		VectorNormalize(vRight);
 
-				pRenderContext->Bind(renderTexture);
-				IMesh *pMesh = pRenderContext->GetDynamicMesh();
-				CMeshBuilder meshBuilder;
-				meshBuilder.Begin(pMesh, MATERIAL_QUADS, 1);
+		pRenderContext->Bind(renderTexture);
+		IMesh *pMesh = pRenderContext->GetDynamicMesh();
+		CMeshBuilder meshBuilder;
+		meshBuilder.Begin(pMesh, MATERIAL_QUADS, 1);
 
-				meshBuilder.Color3f(1.0, 1.0, 1.0);
-				meshBuilder.TexCoord2f(0, 0, 0);
-				meshBuilder.Position3fv((vOrigin + (vRight * -flSize) + (vUp * flSize)).Base());
-				meshBuilder.AdvanceVertex();
+		meshBuilder.Color3f(1.0, 1.0, 1.0);
+		meshBuilder.TexCoord2f(0, 0, 0);
+		meshBuilder.Position3fv((vOrigin + (vRight * -flSize) + (vUp * flSize)).Base());
+		meshBuilder.AdvanceVertex();
 
-				meshBuilder.Color3f(1.0, 1.0, 1.0);
-				meshBuilder.TexCoord2f(0, 1, 0);
-				meshBuilder.Position3fv((vOrigin + (vRight * flSize) + (vUp * flSize)).Base());
-				meshBuilder.AdvanceVertex();
+		meshBuilder.Color3f(1.0, 1.0, 1.0);
+		meshBuilder.TexCoord2f(0, 1, 0);
+		meshBuilder.Position3fv((vOrigin + (vRight * flSize) + (vUp * flSize)).Base());
+		meshBuilder.AdvanceVertex();
 
-				meshBuilder.Color3f(1.0, 1.0, 1.0);
-				meshBuilder.TexCoord2f(0, 1, 1);
-				meshBuilder.Position3fv((vOrigin + (vRight * flSize) + (vUp * -flSize)).Base());
-				meshBuilder.AdvanceVertex();
+		meshBuilder.Color3f(1.0, 1.0, 1.0);
+		meshBuilder.TexCoord2f(0, 1, 1);
+		meshBuilder.Position3fv((vOrigin + (vRight * flSize) + (vUp * -flSize)).Base());
+		meshBuilder.AdvanceVertex();
 
-				meshBuilder.Color3f(1.0, 1.0, 1.0);
-				meshBuilder.TexCoord2f(0, 0, 1);
-				meshBuilder.Position3fv((vOrigin + (vRight * -flSize) + (vUp * -flSize)).Base());
-				meshBuilder.AdvanceVertex();
-				meshBuilder.End();
-				pMesh->Draw();
-			}
-		}
+		meshBuilder.Color3f(1.0, 1.0, 1.0);
+		meshBuilder.TexCoord2f(0, 0, 1);
+		meshBuilder.Position3fv((vOrigin + (vRight * -flSize) + (vUp * -flSize)).Base());
+		meshBuilder.AdvanceVertex();
+		meshBuilder.End();
+		pMesh->Draw();
 	}
 }

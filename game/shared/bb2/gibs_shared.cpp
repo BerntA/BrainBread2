@@ -52,9 +52,9 @@ gibSharedDataItem GIB_SHARED_DATA[8] =
 };
 
 #ifdef CLIENT_DLL
-void DispatchClientSideGib(C_ClientRagdollGib *pVictim, const Vector& velocity, const char *gib)
+void DispatchClientSideGib(C_ClientRagdollGib *pVictim, const Vector& velocity, const char *gib, int gibType)
 #else
-void DispatchClientSideGib(CBaseCombatCharacter *pVictim, const char *gib)
+void DispatchClientSideGib(CBaseCombatCharacter *pVictim, const char *gib, int gibType)
 #endif
 {
 	if (!pVictim)
@@ -79,7 +79,7 @@ void DispatchClientSideGib(CBaseCombatCharacter *pVictim, const char *gib)
 	vecNewVelocity = velocity;
 #endif
 
-	if (Q_strstr(gib, "head"))
+	if (gibType == GIB_NO_HEAD)
 	{
 		te->ClientSideGib(filter, -1, modelIndex, 0, pVictim->m_nSkin, pVictim->GetAbsOrigin(), pVictim->GetAbsAngles(), vecNewVelocity, 0, 0, CLIENT_GIB_RAGDOLL_NORMAL_PHYSICS, 0);
 		return;
@@ -113,17 +113,17 @@ bool C_ClientRagdollGib::CanGibEntity(const Vector &velocity, int hitgroup, int 
 	if (!bIsNPC && !bIsPlayer)
 		return false;
 
-	gibSharedDataItem gibInfo = GIB_SHARED_DATA[hitgroup];
+	gibSharedDataItem *gibInfo = &GIB_SHARED_DATA[hitgroup];
 
-	if (bIsNPC && !GameBaseShared()->GetNPCData()->DoesNPCHaveGibForLimb(pchNPCName, STRING(GetModelName()), gibInfo.gibFlag))
+	if (bIsNPC && !GameBaseShared()->GetNPCData()->DoesNPCHaveGibForLimb(pchNPCName, STRING(GetModelName()), gibInfo->gibFlag))
 		return false;
 
-	if (bIsPlayer && !GameBaseShared()->GetSharedGameDetails()->DoesPlayerHaveGibForLimb(STRING(GetModelName()), gibInfo.gibFlag))
+	if (bIsPlayer && !GameBaseShared()->GetSharedGameDetails()->DoesPlayerHaveGibForLimb(STRING(GetModelName()), gibInfo->gibFlag))
 		return false;
 
-	int nGibFlag = gibInfo.gibFlag;
+	int nGibFlag = gibInfo->gibFlag;
 	bool bCanPopHead = ((damageType == DMG_BUCKSHOT) || (damageType == DMG_BULLET) || (damageType == DMG_BLAST));
-	const char *pszHitGroup = gibInfo.bodygroup, *pszAttachmentPoint = gibInfo.attachmentName, *pszSoundScript = gibInfo.soundscript;
+	const char *pszHitGroup = gibInfo->bodygroup, *pszAttachmentPoint = gibInfo->attachmentName, *pszSoundScript = gibInfo->soundscript;
 
 	// Spit out the rest of the gibs:
 	if (damageType == DMG_BLAST)
@@ -150,7 +150,7 @@ bool C_ClientRagdollGib::CanGibEntity(const Vector &velocity, int hitgroup, int 
 			SetBodygroup(gib_bodygroup, 1);
 
 			if (bCanDispatch)
-				DispatchClientSideGib(this, velocity, pszGib);
+				DispatchClientSideGib(this, velocity, pszGib, iGibFlag);
 
 			if (strlen(pszAttachmentPoint) > 0)
 			{
@@ -186,7 +186,7 @@ bool C_ClientRagdollGib::CanGibEntity(const Vector &velocity, int hitgroup, int 
 	SetBodygroup(gib_bodygroup, 1);
 
 	if (bCanDispatch)
-		DispatchClientSideGib(this, velocity, pszGib);
+		DispatchClientSideGib(this, velocity, pszGib, nGibFlag);
 
 	if (strlen(pszAttachmentPoint) > 0)
 	{
@@ -241,16 +241,16 @@ bool CBaseCombatCharacter::CanGibEntity(const CTakeDamageInfo &info)
 	if (iHitGroup < 0 || iHitGroup >= _ARRAYSIZE(GIB_SHARED_DATA))
 		return false;
 
-	gibSharedDataItem gibInfo = GIB_SHARED_DATA[iHitGroup];
+	gibSharedDataItem *gibInfo = &GIB_SHARED_DATA[iHitGroup];
 
 	float flGibHealth = GetExplodeFactor();
 	float flDamage = info.GetDamage();
 
 	bool bCanPopHead = ((info.GetDamageType() & DMG_BUCKSHOT) || (info.GetDamageType() & DMG_BULLET) || (info.GetDamageType() & DMG_BLAST));
-	bool bCanExplode = gibInfo.bCanExplode;
-	int nGibFlag = gibInfo.gibFlag;
+	bool bCanExplode = gibInfo->bCanExplode;
+	int nGibFlag = gibInfo->gibFlag;
 
-	const char *pszFriendlyName = NULL, *pszHitGroup = gibInfo.bodygroup, *pszAttachmentPoint = gibInfo.attachmentName, *pszSoundScript = gibInfo.soundscript;
+	const char *pszFriendlyName = NULL, *pszHitGroup = gibInfo->bodygroup, *pszAttachmentPoint = gibInfo->attachmentName, *pszSoundScript = gibInfo->soundscript;
 	if (IsNPC() && MyNPCPointer())
 		pszFriendlyName = MyNPCPointer()->GetFriendlyName();
 
@@ -301,7 +301,7 @@ bool CBaseCombatCharacter::CanGibEntity(const CTakeDamageInfo &info)
 			SetBodygroup(gib_bodygroup, 1);
 
 			if (bCanDispatch)
-				DispatchClientSideGib(this, pszGib);
+				DispatchClientSideGib(this, pszGib, iGibFlag);
 		}
 
 		if (strlen(pszSoundScript) > 0)
@@ -338,7 +338,7 @@ bool CBaseCombatCharacter::CanGibEntity(const CTakeDamageInfo &info)
 		SetBodygroup(gib_bodygroup, 1);
 
 		if (bCanDispatch)
-			DispatchClientSideGib(this, pszGib);
+			DispatchClientSideGib(this, pszGib, nGibFlag);
 
 		if ((strlen(pszAttachmentPoint) > 0) && (iHitGroup != HITGROUP_HEAD))
 		{

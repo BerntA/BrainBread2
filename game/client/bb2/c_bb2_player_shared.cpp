@@ -23,6 +23,8 @@ static ConVar bb2_legs_origin_shift_y("bb2_legs_origin_shift_y", "0", FCVAR_CHEA
 static ConVar bb2_legs_origin_shift_x_crouch("bb2_legs_origin_shift_x_crouch", "-28", FCVAR_CHEAT, "Shift the legs forward or backward.");
 static ConVar bb2_legs_origin_shift_y_crouch("bb2_legs_origin_shift_y_crouch", "-6", FCVAR_CHEAT, "Shift the legs to the right or left.");
 
+static CHudNPCHealthBar *pHealthBarHUD = NULL;
+
 void CBB2PlayerShared::Initialize()
 {
 	m_pPlayerHands = NULL;
@@ -63,6 +65,8 @@ void CBB2PlayerShared::CreateEntities()
 		return;
 
 	m_bHasCreated = true;
+
+	pHealthBarHUD = GET_HUDELEMENT(CHudNPCHealthBar);
 
 	m_pPlayerBody = new C_FirstpersonBody();
 	m_pPlayerBody->InitializeAsClientEntity(GetPlayerBodyModel(pLocal), RENDER_GROUP_OPAQUE_ENTITY);
@@ -348,9 +352,8 @@ void CBB2PlayerShared::CreateNPCHealthbars(void)
 				{
 					if (strlen(pNPC->GetNPCName()) > 0)
 					{
-						CHudNPCHealthBar *pHealthBarHUD = GET_HUDELEMENT(CHudNPCHealthBar);
 						if (pHealthBarHUD)
-							pHealthBarHUD->AddHealthBarItem(pNPC->entindex(), pNPC->IsBoss(), pNPC->m_iHealth, pNPC->m_iMaxHealth, pNPC->GetNPCName());
+							pHealthBarHUD->AddHealthBarItem(pNPC, pNPC->entindex(), pNPC->IsBoss(), pNPC->m_iHealth, pNPC->m_iMaxHealth, pNPC->GetNPCName());
 					}
 				}
 			}

@@ -39,6 +39,7 @@ void CGameBaseServer::Init()
 	bFoundCheats = false;
 	bFoundIllegalPlugin = false;
 	m_bShouldChangeMap = false;
+	bAllowStatsForMap = false;
 	szNextMap[0] = 0;
 
 	m_pSharedDataList.Purge();
@@ -48,6 +49,7 @@ void CGameBaseServer::Release()
 {
 	bFoundIllegalPlugin = false;
 	m_bShouldChangeMap = false;
+	bAllowStatsForMap = false;
 	szNextMap[0] = 0;
 	m_pSharedDataList.Purge();
 }
@@ -468,6 +470,7 @@ void CGameBaseServer::PostInit()
 {
 	bFoundCheats = false;
 	m_bShouldChangeMap = false;
+	bAllowStatsForMap = false;
 	m_flLastProfileSystemStatusUpdateCheck = 0.0f;
 
 	LoadSharedData();
@@ -486,11 +489,7 @@ int CGameBaseServer::CanStoreSkills()
 	// We won't allow profile saving or score saving if we're having cheats enabled.
 	// profile_local will allow the connected player to read a keyvalue file from the server's folder which contains the stats for the steam id of the connected player.
 	// Global stats only works on dedicated servers!
-	if ((profileType == PROFILE_GLOBAL) && (HasIllegalConVarValues() || IsServerBlacklisted() || bFoundIllegalPlugin ||
-		(HL2MPRules() && 
-		(!GameBaseShared()->GetSharedMapData()->VerifyMapFile(HL2MPRules()->szCurrentMap, HL2MPRules()->m_ulMapSize) ||
-		!GameBaseShared()->GetSharedMapData()->IsMapWhiteListed(HL2MPRules()->szCurrentMap)))
-		))
+	if ((profileType == PROFILE_GLOBAL) && (HasIllegalConVarValues() || IsServerBlacklisted() || bFoundIllegalPlugin || !bAllowStatsForMap))
 		return PROFILE_NONE;
 
 	if (IsTutorialModeEnabled())
@@ -526,7 +525,11 @@ void CGameBaseServer::OnUpdate(int iClientsInGame)
 	{
 		m_flPostLoadTimer = 0.0f;
 		if (GameBaseShared()->GetSharedMapData())
+		{
 			GameBaseShared()->GetSharedMapData()->FetchMapData();
+			bAllowStatsForMap = (HL2MPRules() && (GameBaseShared()->GetSharedMapData()->VerifyMapFile(HL2MPRules()->szCurrentMap, HL2MPRules()->m_ulMapSize) &&
+				GameBaseShared()->GetSharedMapData()->IsMapWhiteListed(HL2MPRules()->szCurrentMap)));
+		}
 
 		if (GameBaseShared()->GetServerWorkshopData())
 			GameBaseShared()->GetServerWorkshopData()->Initialize();

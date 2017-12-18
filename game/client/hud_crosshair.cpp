@@ -19,6 +19,8 @@
 #include "hl2mp_gamerules.h"
 #include "vgui_controls/AnimationController.h"
 #include "GameBase_Client.h"
+#include "GameBase_Shared.h"
+#include "in_buttons.h"
 
 #ifdef SIXENSE
 #include "sixense/in_sixense.h"
@@ -31,14 +33,12 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+CHudCrosshair *m_pCrosshairHUD = NULL;
+
 static void OnCrosshairIconChanged(IConVar *var, const char *pOldValue, float flOldValue)
 {
-	C_BasePlayer *pBasePlayer = C_BasePlayer::GetLocalPlayer();
-	if (pBasePlayer)
-	{
-		if (pBasePlayer->GetActiveWeapon())
-			pBasePlayer->GetActiveWeapon()->DrawCrosshair();
-	}
+	if (m_pCrosshairHUD)
+		m_pCrosshairHUD->SetCrosshair();
 }
 
 ConVar crosshair("crosshair", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Set the crosshair icon to use, see hud_crosshairs for available crosshairs.", OnCrosshairIconChanged);
@@ -61,19 +61,26 @@ CHudCrosshair::CHudCrosshair( const char *pElementName ) : CHudElement( pElement
 
 	m_pCrosshair = NULL;
 	m_pCursor = NULL;
+	m_pDelayedUse = NULL;
 	m_clrCrosshair = Color( 0, 0, 0, 0 );
 	m_vecCrossHairOffsetAngle.Init();
+	m_bHoldingUseButton = false;
 
 	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_CROSSHAIR | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD );
+
+	m_pCrosshairHUD = this;
 }
 
 CHudCrosshair::~CHudCrosshair()
 {
+	m_pCrosshairHUD = NULL;
 }
 
 void CHudCrosshair::VidInit(void)
 {
 	m_pCursor = gHUD.GetIcon("cursor_vguiscreen");
+	m_pDelayedUse = gHUD.GetIcon("delayed_use");
+	SetCrosshair();
 }
 
 void CHudCrosshair::ApplySchemeSettings( IScheme *scheme )
@@ -266,6 +273,28 @@ void CHudCrosshair::Paint( void )
 	if( bBehindCamera )
 		return;
 
+	if (m_bHoldingUseButton)
+	{
+		float timeElapsed = gpGlobals->curtime - m_flTimePressedUse;
+		float minimumHoldTime = DELAYED_USE_TIME * 0.25f;
+		if ((timeElapsed > minimumHoldTime) && m_pDelayedUse)
+		{
+			timeElapsed -= minimumHoldTime;
+			float fract = 1.0f - clamp((timeElapsed / (DELAYED_USE_TIME - minimumHoldTime)), 0.0f, 1.0f);
+			if (fract > 0.0f)
+			{
+				m_pDelayedUse->DrawCircularProgression(
+					Color(255, 255, 255, 255),
+					x + use_offset_x,
+					y + use_offset_y,
+					m_pDelayedUse->GetOrigWide(),
+					m_pDelayedUse->GetOrigTall(),
+					fract
+					);
+			}
+		}
+	}
+
 	float flWeaponScale = 1.f;
 	int iTextureW = pCrosshairIcon->Width();
 	int iTextureH = pCrosshairIcon->Height();
@@ -301,10 +330,31 @@ void CHudCrosshair::SetCrosshairAngle( const QAngle& angle )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose: Set which crosshair + colors to use.
 //-----------------------------------------------------------------------------
 void CHudCrosshair::SetCrosshair(void)
 {
+	m_bHoldingUseButton = false;
 	m_pCrosshair = gHUD.GetIcon(VarArgs("crosshair_%i", crosshair.GetInt()));
 	m_clrCrosshair = Color(crosshair_color_red.GetInt(), crosshair_color_green.GetInt(), crosshair_color_blue.GetInt(), crosshair_color_alpha.GetInt());
+}
+
+void CHudCrosshair::ProcessInput()
+{
+	if (gHUD.m_iKeyBits & IN_USE)
+	{
+		if (!m_bHoldingUseButton)
+		{
+			m_bHoldingUseButton = true;
+			m_flTimePressedUse = gpGlobals->curtime;
+		}
+	}
+	else
+	{
+		if (m_bHoldingUseButton)
+		{
+			m_bHoldingUseButton = false;
+			m_flTimePressedUse = 0.0f;
+		}
+	}
 }

@@ -84,6 +84,7 @@ private:
 	bool bIsServerBlacklisted;
 	bool bFoundCheats;
 	bool bFoundIllegalPlugin;
+	bool bAllowStatsForMap;
 	float m_flPostLoadTimer;
 
 	CUtlVector<sharedDataItem_t> m_pSharedDataList;

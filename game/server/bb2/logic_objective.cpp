@@ -244,7 +244,10 @@ void CLogicObjective::SendObjectiveParameters(int iStatus, bool bEntCountUpdate,
 					if (pClient->GetTeamNumber() != GetTeamLink())
 						continue;
 
-					pClient->CanLevelUp(MAX_OBJECTIVE_EXPERIENCE, NULL);
+					float xpToGet = ((float)pClient->m_BB2Local.m_iSkill_XPLeft) * MAX_OBJECTIVE_EXPERIENCE; // Give X % of XP needed as a reward.
+					xpToGet = round(xpToGet);
+
+					pClient->CanLevelUp(xpToGet, NULL);
 					if (GetTeamLink() == TEAM_DECEASED)
 						pClient->m_BB2Local.m_iZombieCredits += 5;
 				}

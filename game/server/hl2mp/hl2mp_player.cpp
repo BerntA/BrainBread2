@@ -342,7 +342,7 @@ void CHL2MP_Player::HandleFirstTimeConnection(bool bForceDefault)
 	// We only init this if we don't init the skills / global stats.
 	if (bShouldLoadDefaultStats)
 	{
-		int iLevel = GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().iLevel;
+		int iLevel = GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iLevel;
 		if (iLevel < 1)
 			iLevel = 1;
 
@@ -351,7 +351,7 @@ void CHL2MP_Player::HandleFirstTimeConnection(bool bForceDefault)
 
 		m_iSkill_Level = iLevel;
 		m_BB2Local.m_iSkill_Talents = ((iLevel > 100) ? 100 : (iLevel - 1));
-		m_BB2Local.m_iSkill_XPLeft = (GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().iXPIncreasePerLevel * iLevel);
+		m_BB2Local.m_iSkill_XPLeft = (GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iXPIncreasePerLevel * iLevel);
 
 		OnLateStatsLoadEnterGame();
 		m_bHasTriedToLoadStats = true;
@@ -641,7 +641,7 @@ void CHL2MP_Player::PerformPlayerUpdate(void)
 				bool bCanCheckPlayer = (IsAlive() && pPlr->IsAlive() && (pPlr->GetTeamNumber() >= TEAM_HUMANS) && (GetTeamNumber() >= TEAM_HUMANS) && (GetTeamNumber() == pPlr->GetTeamNumber()));
 				if (bCanCheckPlayer)
 				{
-					if (GetAbsOrigin().DistTo(pPlr->GetAbsOrigin()) <= MAX_TEAMMATE_DISTANCE)
+					if (GetLocalOrigin().DistTo(pPlr->GetLocalOrigin()) <= MAX_TEAMMATE_DISTANCE)
 					{
 						if (pPlr->FVisible(this, MASK_VISIBLE))
 							iPlayersFound++;
@@ -656,12 +656,12 @@ void CHL2MP_Player::PerformPlayerUpdate(void)
 		{
 			if (IsHuman())
 			{
-				m_BB2Local.m_bCanActivatePerk = (!GetPerkFlags() && (m_iNumPerkKills >= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iKillsRequiredToPerk)
+				m_BB2Local.m_bCanActivatePerk = (!GetPerkFlags() && (m_iNumPerkKills >= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iKillsRequiredToPerk)
 					&& ((GetSkillValue(PLAYER_SKILL_HUMAN_REALITY_PHASE) > 0) || (GetSkillValue(PLAYER_SKILL_HUMAN_BLOOD_RAGE) > 0) || (GetSkillValue(PLAYER_SKILL_HUMAN_GUNSLINGER) > 0)));
 			}
 			else if (IsZombie())
 			{
-				m_BB2Local.m_bCanActivatePerk = (!GetPerkFlags() && (m_BB2Local.m_flZombieRageThresholdDamage >= GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flRequiredDamageThreshold));
+				m_BB2Local.m_bCanActivatePerk = (!GetPerkFlags() && (m_BB2Local.m_flZombieRageThresholdDamage >= GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flRequiredDamageThreshold));
 			}
 		}
 	}
@@ -692,7 +692,7 @@ void CHL2MP_Player::DispatchDamageText(CBaseEntity *pVictim, int damage)
 	{
 		m_flZombieAttackTime = gpGlobals->curtime;
 
-		float maxThreshold = GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flRequiredDamageThreshold;
+		float maxThreshold = GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flRequiredDamageThreshold;
 		if (m_BB2Local.m_flZombieRageThresholdDamage < maxThreshold)
 			m_BB2Local.m_flZombieRageThresholdDamage += abs(damage);
 
@@ -982,9 +982,9 @@ void CHL2MP_Player::PostThink(void)
 			else
 			{
 				float timeSinceAttack = gpGlobals->curtime - m_flZombieAttackTime;
-				if ((m_BB2Local.m_flZombieRageThresholdDamage > 0.0f) && (timeSinceAttack >= GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flTimeUntilBarDepletes))
+				if ((m_BB2Local.m_flZombieRageThresholdDamage > 0.0f) && (timeSinceAttack >= GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flTimeUntilBarDepletes))
 				{
-					m_flZombieDamageThresholdDepletion += gpGlobals->frametime * GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flDepletionRate;
+					m_flZombieDamageThresholdDepletion += gpGlobals->frametime * GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flDepletionRate;
 					if (m_flZombieDamageThresholdDepletion >= 1.0f)
 					{
 						m_BB2Local.m_flZombieRageThresholdDamage -= m_flZombieDamageThresholdDepletion;
@@ -1101,7 +1101,7 @@ void CHL2MP_Player::FireBullets(const FireBulletsInfo_t &info)
 		int m_iNewDamage = (m_iDefDamage + GetSkillWeaponDamage((float)m_iDefDamage, pWeapon->GetWpnData().m_flSkillDamageFactor, pWeapon->GetWeaponType()));
 
 		if (m_iTeamBonusDamage > 0)
-			m_iNewDamage += ((m_iNewDamage / 100) * (m_iTeamBonusDamage * GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().iTeamBonusDamageIncrease));
+			m_iNewDamage += ((m_iNewDamage / 100) * (m_iTeamBonusDamage * GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iTeamBonusDamageIncrease));
 
 		float flPierceDMG = 0.0f;
 		if (IsPerkFlagActive(PERK_HUMAN_GUNSLINGER))
@@ -1109,8 +1109,9 @@ void CHL2MP_Player::FireBullets(const FireBulletsInfo_t &info)
 
 		if (IsPerkFlagActive(PERK_POWERUP_CRITICAL))
 		{
-			DataPlayerItem_Player_PowerupItem_t data = GameBaseShared()->GetSharedGameDetails()->GetPlayerPowerupData(PERK_POWERUP_CRITICAL);
-			flPierceDMG = (((float)m_iNewDamage / 100.0f) * data.flExtraFactor);
+			const DataPlayerItem_Player_PowerupItem_t *data = GameBaseShared()->GetSharedGameDetails()->GetPlayerPowerupData(PERK_POWERUP_CRITICAL);
+			if (data)
+				flPierceDMG = (((float)m_iNewDamage / 100.0f) * data->flExtraFactor);
 		}
 
 		modinfo.m_iPlayerDamage += (m_iNewDamage + flPierceDMG);
@@ -1412,7 +1413,7 @@ bool CHL2MP_Player::PerformLevelUp(int iXP)
 		iXPToGive -= m_BB2Local.m_iSkill_XPLeft;
 
 		// We increase xp needed for next level for the client.
-		m_BB2Local.m_iSkill_XPLeft += GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().iXPIncreasePerLevel;
+		m_BB2Local.m_iSkill_XPLeft += GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iXPIncreasePerLevel;
 
 		// You only receive talent points until level 100.
 		if (MAX_LEVEL_FOR_TALENTS > m_iSkill_Level)
@@ -1474,7 +1475,7 @@ bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 	{
 		int iExperienceToGive = iXP;
 		if (pVictim && (iXP > 1))
-			iExperienceToGive += (m_BB2Local.m_iPerkTeamBonus * GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().iTeamBonusXPIncrease);
+			iExperienceToGive += (m_BB2Local.m_iPerkTeamBonus * GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iTeamBonusXPIncrease);
 
 		// While this one goes for leveling... Because we also want to reset it or else we will actually only need 5 kills per level. 
 		m_BB2Local.m_iSkill_XPCurrent += iExperienceToGive;
@@ -1541,7 +1542,7 @@ bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 
 bool CHL2MP_Player::ActivatePerk(int skill)
 {
-	if (!IsHuman() || !IsAlive() || (GetSkillValue(skill) <= 0) || (GetPerkFlags() != 0) || (m_iNumPerkKills < GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iKillsRequiredToPerk) || (!HL2MPRules()->CanUseSkills()))
+	if (!IsHuman() || !IsAlive() || (GetSkillValue(skill) <= 0) || (GetPerkFlags() != 0) || (m_iNumPerkKills < GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iKillsRequiredToPerk) || (!HL2MPRules()->CanUseSkills()))
 		return false;
 
 	m_iNumPerkKills = 0;
@@ -1552,7 +1553,7 @@ bool CHL2MP_Player::ActivatePerk(int skill)
 	case PLAYER_SKILL_HUMAN_REALITY_PHASE:
 	{
 		SetPlayerSpeed(GetSkillCombination(GetSkillValue("Speed", PLAYER_SKILL_HUMAN_SPEED, TEAM_HUMANS), GetSkillValue(PLAYER_SKILL_HUMAN_REALITY_PHASE, TEAM_HUMANS)));
-		m_BB2Local.m_flPerkTimer = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().flPerkTime;
+		m_BB2Local.m_flPerkTimer = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->flPerkTime;
 		RefreshSpeed();
 		AddPerkFlag(PERK_HUMAN_REALITYPHASE);
 		SetCollisionGroup(COLLISION_GROUP_PLAYER_REALITY_PHASE);
@@ -1562,14 +1563,14 @@ bool CHL2MP_Player::ActivatePerk(int skill)
 
 	case PLAYER_SKILL_HUMAN_GUNSLINGER:
 	{
-		m_BB2Local.m_flPerkTimer = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().flPerkTime;
+		m_BB2Local.m_flPerkTimer = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->flPerkTime;
 		AddPerkFlag(PERK_HUMAN_GUNSLINGER);
 		break;
 	}
 
 	case PLAYER_SKILL_HUMAN_BLOOD_RAGE:
 	{
-		m_BB2Local.m_flPerkTimer = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().flPerkTime;
+		m_BB2Local.m_flPerkTimer = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->flPerkTime;
 		AddPerkFlag(PERK_HUMAN_BLOODRAGE);
 		break;
 	}
@@ -1579,40 +1580,40 @@ bool CHL2MP_Player::ActivatePerk(int skill)
 	return true;
 }
 
-bool CHL2MP_Player::EnterRageMode(bool bForce) // Zombie 'Perk' thing. (lasts until death)
+bool CHL2MP_Player::EnterRageMode(bool bForce) // Zombie 'Perk' thing. 
 {
 	if (!IsZombie() || !IsAlive() || (GetPerkFlags() != 0))
 		return false;
 
 	if (!bForce)
 	{
-		if (!HL2MPRules()->CanUseSkills() || (m_BB2Local.m_flZombieRageThresholdDamage < GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flRequiredDamageThreshold))
+		if (!HL2MPRules()->CanUseSkills() || (m_BB2Local.m_flZombieRageThresholdDamage < GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flRequiredDamageThreshold))
 			return false;
 	}
 
 	m_BB2Local.m_bCanActivatePerk = false;
 	m_BB2Local.m_flZombieRageThresholdDamage = 0.0f;
-	m_flZombieRageTime = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flDuration;
+	m_flZombieRageTime = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flDuration;
 
 	if (HL2MPRules()->CanUseSkills())
 	{
-		int health = round(GetSkillValue("Health", PLAYER_SKILL_ZOMBIE_HEALTH, TEAM_DECEASED)) + (int)GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flHealth;
+		int health = round(GetSkillValue("Health", PLAYER_SKILL_ZOMBIE_HEALTH, TEAM_DECEASED)) + (int)GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flHealth;
 		SetHealth(health);
 		SetMaxHealth(health);
-		SetPlayerSpeed(GetSkillValue("Speed", PLAYER_SKILL_ZOMBIE_SPEED, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flSpeed);
-		SetLeapLength(GetSkillValue("Leap", PLAYER_SKILL_ZOMBIE_LEAP, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flLeap);
-		SetJumpHeight(GetSkillValue("Jump", PLAYER_SKILL_ZOMBIE_JUMP, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flJump);
-		SetHealthRegenAmount(GetSkillValue("HealthRegen", PLAYER_SKILL_ZOMBIE_HEALTH_REGEN, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flHealthRegen);
+		SetPlayerSpeed(GetSkillValue("Speed", PLAYER_SKILL_ZOMBIE_SPEED, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flSpeed);
+		SetLeapLength(GetSkillValue("Leap", PLAYER_SKILL_ZOMBIE_LEAP, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flLeap);
+		SetJumpHeight(GetSkillValue("Jump", PLAYER_SKILL_ZOMBIE_JUMP, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flJump);
+		SetHealthRegenAmount(GetSkillValue("HealthRegen", PLAYER_SKILL_ZOMBIE_HEALTH_REGEN, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flHealthRegen);
 	}
 	else
 	{
-		int health = GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).iHealth + (int)GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flHealth;
+		int health = GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->iHealth + (int)GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flHealth;
 		SetHealth(health);
 		SetMaxHealth(health);
-		SetPlayerSpeed(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flSpeed + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flSpeed);
-		SetLeapLength(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flLeapLength + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flLeap);
-		SetJumpHeight(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flJumpHeight + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flJump);
-		SetHealthRegenAmount(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flHealthRegenerationRate + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flHealthRegen);
+		SetPlayerSpeed(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->flSpeed + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flSpeed);
+		SetLeapLength(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->flLeapLength + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flLeap);
+		SetJumpHeight(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->flJumpHeight + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flJump);
+		SetHealthRegenAmount(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->flHealthRegenerationRate + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flHealthRegen);
 	}
 
 	RefreshSpeed();
@@ -1643,11 +1644,11 @@ void CHL2MP_Player::LeaveRageMode(void)
 	}
 	else
 	{
-		SetMaxHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).iHealth);
-		SetPlayerSpeed(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flSpeed);
-		SetLeapLength(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flLeapLength);
-		SetJumpHeight(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flJumpHeight);
-		SetHealthRegenAmount(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flHealthRegenerationRate);
+		SetMaxHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->iHealth);
+		SetPlayerSpeed(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->flSpeed);
+		SetLeapLength(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->flLeapLength);
+		SetJumpHeight(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->flJumpHeight);
+		SetHealthRegenAmount(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->flHealthRegenerationRate);
 	}
 
 	if (GetMaxHealth() < GetHealth())
@@ -1665,16 +1666,16 @@ float CHL2MP_Player::GetExtraPerkData(int type)
 		switch (type)
 		{
 		case PLAYER_SKILL_ZOMBIE_SPEED:
-			return GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flSpeed;
+			return GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flSpeed;
 
 		case PLAYER_SKILL_ZOMBIE_JUMP:
-			return GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flJump;
+			return GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flJump;
 
 		case PLAYER_SKILL_ZOMBIE_LEAP:
-			return GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flLeap;
+			return GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flLeap;
 
 		case PLAYER_SKILL_ZOMBIE_HEALTH_REGEN:
-			return GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flHealthRegen;
+			return GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flHealthRegen;
 		}
 	}
 
@@ -1686,25 +1687,28 @@ bool CHL2MP_Player::CanEnablePowerup(int powerupFlag, float duration)
 	if (GetPerkFlags() || !HL2MPRules()->IsPowerupsAllowed())
 		return false;
 
-	DataPlayerItem_Player_PowerupItem_t data = GameBaseShared()->GetSharedGameDetails()->GetPlayerPowerupData(powerupFlag);
+	const DataPlayerItem_Player_PowerupItem_t *data = GameBaseShared()->GetSharedGameDetails()->GetPlayerPowerupData(powerupFlag);
+	if (!data)
+		return false;
+
 	AddPerkFlag(powerupFlag);
 	m_BB2Local.m_flPerkTimer = gpGlobals->curtime + duration;
 
 	int currHP = GetHealth();
-	float healthIncrease = ((float)GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).iHealth / 100.0f) * data.flHealth;
-	float speedIncrease = (GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).flSpeed / 100.0f) * data.flSpeed;
-	float jumpIncrease = (GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).flJumpHeight / 100.0f) * data.flJumpHeight;
-	float leapIncrease = (GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).flLeapLength / 100.0f) * data.flLeapLength;
-	float healthRegenRate = (GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).flHealthRegenerationRate / 100.0f) * data.flHealthRegenerationRate;
+	float healthIncrease = ((float)GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->iHealth / 100.0f) * data->flHealth;
+	float speedIncrease = (GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->flSpeed / 100.0f) * data->flSpeed;
+	float jumpIncrease = (GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->flJumpHeight / 100.0f) * data->flJumpHeight;
+	float leapIncrease = (GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->flLeapLength / 100.0f) * data->flLeapLength;
+	float healthRegenRate = (GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->flHealthRegenerationRate / 100.0f) * data->flHealthRegenerationRate;
 	if (healthRegenRate <= 0)
-		healthRegenRate = data.flHealthRegenerationRate;
+		healthRegenRate = data->flHealthRegenerationRate;
 
 	SetHealth(healthIncrease + currHP);
-	SetMaxHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).iHealth + healthIncrease);
-	SetPlayerSpeed(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).flSpeed + speedIncrease);
-	SetLeapLength(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).flLeapLength + leapIncrease);
-	SetJumpHeight(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).flJumpHeight + jumpIncrease);
-	SetHealthRegenAmount(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).flHealthRegenerationRate + healthRegenRate);
+	SetMaxHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->iHealth + healthIncrease);
+	SetPlayerSpeed(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->flSpeed + speedIncrease);
+	SetLeapLength(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->flLeapLength + leapIncrease);
+	SetJumpHeight(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->flJumpHeight + jumpIncrease);
+	SetHealthRegenAmount(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->flHealthRegenerationRate + healthRegenRate);
 	m_fTimeLastHurt = 0.0f;
 	m_flHealthRegenWaitTime = 0.2f;
 
@@ -1729,11 +1733,11 @@ void CHL2MP_Player::ResetPerksAndPowerups(void)
 		float currMaxHealth = (float)GetMaxHealth();
 
 		m_fTimeLastHurt = gpGlobals->curtime;
-		SetMaxHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).iHealth);
-		SetPlayerSpeed(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).flSpeed);
-		SetLeapLength(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).flLeapLength);
-		SetJumpHeight(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).flJumpHeight);
-		SetHealthRegenAmount(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).flHealthRegenerationRate);
+		SetMaxHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->iHealth);
+		SetPlayerSpeed(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->flSpeed);
+		SetLeapLength(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->flLeapLength);
+		SetJumpHeight(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->flJumpHeight);
+		SetHealthRegenAmount(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->flHealthRegenerationRate);
 
 		if (GetHealth() > GetMaxHealth())
 			SetHealth(GetMaxHealth());
@@ -1741,7 +1745,7 @@ void CHL2MP_Player::ResetPerksAndPowerups(void)
 		if (IsPerkFlagActive(PERK_POWERUP_PAINKILLER))
 		{
 			float percentLost = (currHealth / currMaxHealth);
-			float newHealth = ((float)GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).iHealth * percentLost);
+			float newHealth = ((float)GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->iHealth * percentLost);
 
 			if (newHealth <= 0.0f)
 				SetHealth(1);
@@ -1905,7 +1909,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 	{
 		bool bIsTutorial = GameBaseServer()->IsTutorialModeEnabled();
 
-		if (sv_cheats->GetBool() || bIsTutorial)
+		if (ShouldRunRateLimitedCommand(args) && (sv_cheats->GetBool() || bIsTutorial))
 		{
 			m_bWantsToDeployAsHuman = true;
 			HandleCommand_JoinTeam(TEAM_HUMANS, bIsTutorial);
@@ -1919,7 +1923,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 	{
 		bool bIsTutorial = GameBaseServer()->IsTutorialModeEnabled();
 
-		if (sv_cheats->GetBool() || bIsTutorial)
+		if (ShouldRunRateLimitedCommand(args) && (sv_cheats->GetBool() || bIsTutorial))
 		{
 			m_bWantsToDeployAsHuman = true;
 			HandleCommand_JoinTeam(TEAM_DECEASED, bIsTutorial);
@@ -1933,14 +1937,14 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 
 	else if (FStrEq(args[0], "player_vote_yes"))
 	{
-		if (HL2MPRules())
+		if (HL2MPRules() && ShouldRunRateLimitedCommand(args))
 			HL2MPRules()->PlayerVote(this, true);
 		return true;
 	}
 
 	else if (FStrEq(args[0], "player_vote_no"))
 	{
-		if (HL2MPRules())
+		if (HL2MPRules() && ShouldRunRateLimitedCommand(args))
 			HL2MPRules()->PlayerVote(this, false);
 		return true;
 	}
@@ -1953,7 +1957,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 		m_bHasJoinedGame = true;
 
 		// BB2 Warn : Hack - Give the zombie plrs snacks...		
-		m_BB2Local.m_iZombieCredits = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iDefaultZombieCredits;
+		m_BB2Local.m_iZombieCredits = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iDefaultZombieCredits;
 
 		if (HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION)
 		{
@@ -1974,7 +1978,8 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 
 	else if (FStrEq(args[0], "giveall"))
 	{
-		GameBaseShared()->GetAchievementManager()->WriteToAchievement(this, "ACH_SECRET_GIVEALL");
+		if (ShouldRunRateLimitedCommand(args))
+			GameBaseShared()->GetAchievementManager()->WriteToAchievement(this, "ACH_SECRET_GIVEALL");
 		return true;
 	}
 
@@ -1983,7 +1988,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 		if (args.ArgC() != 2)
 			return true;
 
-		if (HL2MPRules()->GetCurrentGamemode() != MODE_ELIMINATION)
+		if ((HL2MPRules()->GetCurrentGamemode() != MODE_ELIMINATION) || !ShouldRunRateLimitedCommand(args))
 			return true;
 
 		int iTeam = (atoi(args[1]) == 1) ? TEAM_DECEASED : TEAM_HUMANS;
@@ -2035,7 +2040,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 		if (args.ArgC() != 2)
 			return true;
 
-		if (!IsHuman() || !IsAlive() || !HL2MPRules()->IsTeamplay())
+		if (!IsHuman() || !IsAlive() || !HL2MPRules()->IsTeamplay() || !ShouldRunRateLimitedCommand(args))
 			return true;
 
 		if ((LastTimePlayerTalked() + VOICE_COMMAND_EMIT_DELAY) < gpGlobals->curtime)
@@ -2043,16 +2048,12 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 			NotePlayerTalked();
 
 			int iCommand = atoi(args[1]);
-			for (int i = VOICE_COMMAND_AGREE; i < VOICE_COMMAND_EXIT; i++)
+			if (iCommand >= 0 && iCommand < VOICE_COMMAND_EXIT)
 			{
-				if (i == iCommand)
-				{
-					char pszVoiceMessage[128];
-					Q_snprintf(pszVoiceMessage, 128, "%s", GetVoiceCommandChatMessage(i));
-					Host_Say(edict(), pszVoiceMessage, true, CHAT_CMD_VOICE);
-					HL2MPRules()->EmitSoundToClient(this, GetVoiceCommandString(i), BB2_SoundTypes::TYPE_PLAYER, GetSoundsetGender());
-					break;
-				}
+				char pszVoiceMessage[128];
+				Q_strncpy(pszVoiceMessage, GetVoiceCommandChatMessage(iCommand), 128);
+				Host_Say(edict(), pszVoiceMessage, true, CHAT_CMD_VOICE);
+				HL2MPRules()->EmitSoundToClient(this, GetVoiceCommandString(iCommand), BB2_SoundTypes::TYPE_PLAYER, GetSoundsetGender());
 			}
 		}
 
@@ -2061,7 +2062,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 
 	else if (FStrEq(args[0], "bb_inventory_item_drop"))
 	{
-		if (args.ArgC() != 3)
+		if ((args.ArgC() != 3) || !ShouldRunRateLimitedCommand(args))
 			return true;
 
 		uint iID = (uint)atol(args[1]);
@@ -2073,7 +2074,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 
 	else if (FStrEq(args[0], "bb_inventory_item_use"))
 	{
-		if (args.ArgC() != 3)
+		if ((args.ArgC() != 3) || !ShouldRunRateLimitedCommand(args))
 			return true;
 
 		uint iID = (uint)atol(args[1]);
@@ -2085,7 +2086,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 
 	else if (FStrEq(args[0], "bb2_keypad_unlock"))
 	{
-		if (args.ArgC() != 3)
+		if ((args.ArgC() != 3) || !ShouldRunRateLimitedCommand(args))
 			return true;
 
 		CBaseKeyPadEntity::UseKeyPadCode(this, UTIL_EntityByIndex(atoi(args[1])), args[2]);
@@ -2094,7 +2095,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 
 	else if (FStrEq(args[0], "bb2_skill_progress_human"))
 	{
-		if ((args.ArgC() != 3) || !HL2MPRules()->CanUseSkills())
+		if ((args.ArgC() != 3) || !HL2MPRules()->CanUseSkills() || !ShouldRunRateLimitedCommand(args))
 			return true;
 
 		bool m_bCanApplyChanges = ((GetTeamNumber() == TEAM_HUMANS) && IsAlive());
@@ -2179,7 +2180,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 
 	else if (FStrEq(args[0], "bb2_skill_progress_zombie"))
 	{
-		if ((args.ArgC() != 3) || !HL2MPRules()->CanUseSkills())
+		if ((args.ArgC() != 3) || !HL2MPRules()->CanUseSkills() || !ShouldRunRateLimitedCommand(args))
 			return true;
 
 		bool m_bCanApplyChanges = ((GetTeamNumber() == TEAM_DECEASED) && IsAlive());
@@ -2751,7 +2752,7 @@ void CHL2MP_Player::CheckCanRage()
 	if ((HL2MPRules() && (HL2MPRules()->GetCurrentGamemode() != MODE_ELIMINATION)) || !GameBaseShared()->GetSharedGameDetails() || GetPerkFlags())
 		return;
 
-	if (m_BB2Local.m_flZombieRageThresholdDamage >= GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flRequiredDamageThreshold)
+	if (m_BB2Local.m_flZombieRageThresholdDamage >= GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flRequiredDamageThreshold)
 		EnterRageMode(true);
 }
 
@@ -3250,7 +3251,7 @@ bool CHL2MP_Player::HandleLocalProfile(bool bSave)
 		// Load Base
 		m_iSkill_Level = pkvProfile->GetInt("Level", 1);
 		m_BB2Local.m_iSkill_XPCurrent = pkvProfile->GetInt("XPCurrent");
-		m_BB2Local.m_iSkill_XPLeft = pkvProfile->GetInt("XPLeft", 5);
+		m_BB2Local.m_iSkill_XPLeft = pkvProfile->GetInt("XPLeft", (GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iXPIncreasePerLevel * m_iSkill_Level));
 		m_BB2Local.m_iSkill_Talents = pkvProfile->GetInt("Talents");
 		m_BB2Local.m_iZombieCredits = pkvProfile->GetInt("ZombiePoints");
 
@@ -3282,7 +3283,7 @@ void CHL2MP_Player::SetZombie()
 	if (IsAlive())
 	{
 		SetPlayerModel(TEAM_DECEASED);
-		ApplyArmor(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).iArmor, GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).iArmorType);
+		ApplyArmor(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->iArmor, GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->iArmorType);
 
 		if (HL2MPRules()->CanUseSkills())
 		{
@@ -3296,12 +3297,12 @@ void CHL2MP_Player::SetZombie()
 		}
 		else
 		{
-			SetHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).iHealth);
-			SetMaxHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).iHealth);
-			SetPlayerSpeed(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flSpeed);
-			SetLeapLength(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flLeapLength);
-			SetJumpHeight(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flJumpHeight);
-			SetHealthRegenAmount(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED).flHealthRegenerationRate);
+			SetHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->iHealth);
+			SetMaxHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->iHealth);
+			SetPlayerSpeed(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->flSpeed);
+			SetLeapLength(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->flLeapLength);
+			SetJumpHeight(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->flJumpHeight);
+			SetHealthRegenAmount(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_DECEASED)->flHealthRegenerationRate);
 		}
 
 		GiveItem("weapon_zombhands");
@@ -3323,7 +3324,7 @@ void CHL2MP_Player::SetHuman()
 		m_BB2Local.m_bCanRespawnAsHuman = false;
 
 		SetPlayerModel(TEAM_HUMANS);
-		ApplyArmor(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).iArmor, GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).iArmorType);
+		ApplyArmor(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->iArmor, GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->iArmorType);
 
 		if (HL2MPRules()->CanUseSkills())
 		{
@@ -3337,12 +3338,12 @@ void CHL2MP_Player::SetHuman()
 		}
 		else // Load non-skill affected values in DM mode...
 		{
-			SetHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).iHealth);
-			SetMaxHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).iHealth);
-			SetPlayerSpeed(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).flSpeed);
-			SetLeapLength(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).flLeapLength);
-			SetJumpHeight(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).flJumpHeight);
-			SetHealthRegenAmount(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS).flHealthRegenerationRate);
+			SetHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->iHealth);
+			SetMaxHealth(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->iHealth);
+			SetPlayerSpeed(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->flSpeed);
+			SetLeapLength(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->flLeapLength);
+			SetJumpHeight(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->flJumpHeight);
+			SetHealthRegenAmount(GameBaseShared()->GetSharedGameDetails()->GetPlayerGameModeData(TEAM_HUMANS)->flHealthRegenerationRate);
 		}
 
 		GiveItem("weapon_hands");

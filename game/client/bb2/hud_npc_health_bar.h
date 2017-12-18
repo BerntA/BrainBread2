@@ -27,6 +27,8 @@ struct HealthBarItem_t
 	bool m_bFadingIn;
 	bool m_bFadingOut;
 	float m_flLerp;
+	Vector vecMins;
+	Vector vecMaxs;
 };
 
 //-----------------------------------------------------------------------------
@@ -44,7 +46,7 @@ public:
 	void Reset(void);
 	void OnThink(void);
 	void VidInit(void);
-	void AddHealthBarItem(int index, bool bIsBoss, int currHealth, int maxHealth, const char *name);
+	void AddHealthBarItem(C_BaseEntity *pEntity, int index, bool bIsBoss, int currHealth, int maxHealth, const char *name);
 
 protected:
 

@@ -138,12 +138,13 @@ float CBaseHL2MPBludgeonWeapon::GetDamageForActivity(Activity hitActivity)
 
 		if (pClient->IsPerkFlagActive(PERK_POWERUP_CRITICAL))
 		{
-			DataPlayerItem_Player_PowerupItem_t data = GameBaseShared()->GetSharedGameDetails()->GetPlayerPowerupData(PERK_POWERUP_CRITICAL);
-			flNewDamage += ((flNewDamage / 100.0f) * data.flExtraFactor);
+			const DataPlayerItem_Player_PowerupItem_t *data = GameBaseShared()->GetSharedGameDetails()->GetPlayerPowerupData(PERK_POWERUP_CRITICAL);
+			if (data)
+				flNewDamage += ((flNewDamage / 100.0f) * data->flExtraFactor);
 		}
 
 		if (iTeamBonus > 0)
-			flNewDamage += ((flNewDamage / 100) * (iTeamBonus * GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().iTeamBonusDamageIncrease));
+			flNewDamage += ((flNewDamage / 100) * (iTeamBonus * GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iTeamBonusDamageIncrease));
 	}
 
 	bool bSpecialAttack = (hitActivity >= ACT_VM_SPECIALATTACK0 && hitActivity <= ACT_VM_SPECIALATTACK10);

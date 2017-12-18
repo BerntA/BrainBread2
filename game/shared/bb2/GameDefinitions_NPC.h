@@ -60,6 +60,9 @@ public:
 		pszLimbList.Purge();
 	}
 
+	// An index of -1 or out of -1 will return a random item if available.
+	const NPCModelItem_t *GetModelItem(int index = -1);
+
 	char szNPCName[MAX_MAP_NAME_SAVE];
 	int iHealth;
 	int iSlashDamage;
@@ -104,6 +107,7 @@ public:
 	bool LoadNPCData(void);
 	bool Precache(void);
 
+	CNPCDataItem *GetNPCData(const char *name);
 	int GetHealth(const char *name);
 	int GetSlashDamage(const char *name);
 	int GetDoubleSlashDamage(const char *name);
@@ -125,6 +129,7 @@ public:
 	// Override Logic
 	void LoadNPCOverrideData(KeyValues *pkvData = NULL);
 	int GetOverridedModelIndexForNPC(const char *name);
+	const CNPCOverrideModelData *GetOverridedModelDataForNPC(const char *name);
 
 private:
 

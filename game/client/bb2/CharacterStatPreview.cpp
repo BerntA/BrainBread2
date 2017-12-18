@@ -47,10 +47,10 @@ CharacterStatPreview::CharacterStatPreview(vgui::Panel *parent, char const *pane
 
 	SetScheme("BaseScheme");
 
-	m_pLabelHeader = new Label(this, "Header", "");
+	m_pLabelHeader = vgui::SETUP_PANEL(new Label(this, "Header", ""));
 	m_pLabelHeader->SetZPos(20);
 
-	m_pImageDivider = new ImagePanel(this, "HeaderDivider");
+	m_pImageDivider = vgui::SETUP_PANEL(new ImagePanel(this, "HeaderDivider"));
 	m_pImageDivider->SetShouldScaleImage(true);
 	m_pImageDivider->SetZPos(15);
 	m_pImageDivider->SetImage("base/quest/sub_divider");
@@ -59,7 +59,7 @@ CharacterStatPreview::CharacterStatPreview(vgui::Panel *parent, char const *pane
 
 	for (int i = 0; i < _ARRAYSIZE(m_pTextDetails); i++)
 	{
-		m_pTextDetails[i] = new MultiLabel(this, "MultiText", "DefaultBold");
+		m_pTextDetails[i] = vgui::SETUP_PANEL(new MultiLabel(this, "MultiText", "DefaultBold"));
 		m_pTextDetails[i]->SetZPos(30);
 	}
 

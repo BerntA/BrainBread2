@@ -398,7 +398,7 @@ void CGameBaseShared::GetFileContent(const char *path, char *buf, int size)
 // Purpose:
 // Used by firebullets in baseentity_shared. Returns the new damage to take depending on how far away the victim is from the start pos.
 ///////////////////////////////////////////////
-float CGameBaseShared::GetDropOffDamage(Vector vecStart, Vector vecEnd, float damage, float minDist)
+float CGameBaseShared::GetDropOffDamage(const Vector &vecStart, const Vector &vecEnd, float damage, float minDist)
 {
 	// If min dist is zero we don't want drop off!
 	if (minDist <= 0)
@@ -409,9 +409,7 @@ float CGameBaseShared::GetDropOffDamage(Vector vecStart, Vector vecEnd, float da
 	if (distanceTraveled <= minDist)
 		return damage;
 
-	float scale = (minDist / distanceTraveled);
-
-	return (scale * damage);
+	return ((minDist / distanceTraveled) * damage);
 }
 
 ////////////////////////////////////////////////
@@ -450,19 +448,20 @@ void CGameBaseShared::DispatchBleedout(CBaseEntity *pEntity)
 	if (!pEntity)
 		return;
 
-	Vector vecStart, vecEnd, vecDown;
-	vecStart = pEntity->GetAbsOrigin() + Vector(0, 0, 12);
-	vecEnd = pEntity->GetAbsOrigin();
-	vecDown = (vecEnd - vecStart);
+	Vector vecDown;
+	AngleVectors(pEntity->GetLocalAngles(), NULL, NULL, &vecDown);
 	VectorNormalize(vecDown);
+	vecDown *= -1;
 
+	Vector vecStart = pEntity->GetLocalOrigin();
+	Vector vecEnd = vecStart + vecDown * MAX_TRACE_LENGTH;
 	Vector mins = Vector(-60, -60, 0);
 	Vector maxs = Vector(60, 60, 12);
 
 	trace_t tr;
 	CTraceFilterNoNPCsOrPlayer filter(pEntity, COLLISION_GROUP_DEBRIS);
 
-	UTIL_TraceHull(vecStart, vecEnd + (vecDown * MAX_TRACE_LENGTH), mins, maxs, MASK_SOLID_BRUSHONLY, &filter, &tr);
+	UTIL_TraceHull(vecStart, vecEnd, mins, maxs, MASK_SOLID_BRUSHONLY, &filter, &tr);
 	if (tr.DidHitWorld() && !tr.allsolid && !tr.IsDispSurface() && (tr.fraction != 1.0f) && (tr.plane.normal.z == 1.0f))
 	{
 		QAngle qAngle(0, 0, 0);
@@ -525,9 +524,7 @@ KeyValues *CGameBaseShared::GetInventoryItemByID(KeyValues *pkvDetails, uint iID
 ///////////////////////////////////////////////
 const char *CGameBaseShared::GetInventoryItemRarity(int iRarity)
 {
-	int iItemRarity = iRarity;
-
-	switch (iItemRarity)
+	switch (iRarity)
 	{
 	case RARITY_COMMON:
 		return "common";
@@ -546,9 +543,7 @@ const char *CGameBaseShared::GetInventoryItemRarity(int iRarity)
 ///////////////////////////////////////////////
 const char *CGameBaseShared::GetInventoryItemType(int iType)
 {
-	int iItemType = iType;
-
-	switch (iItemType)
+	switch (iType)
 	{
 	case TYPE_MISC:
 		return "Misc";
@@ -608,8 +603,9 @@ void CGameBaseShared::AddInventoryItem(int iPlayerIndex, uint iItemID, const cha
 		WRITE_STRING(pInvItem.szEntityLink);
 		MessageEnd();
 
-		int iType = GetSharedGameDetails()->GetInventorySharedDataValue("Type", iItemID, bIsMapItem);
-		int iSubType = GetSharedGameDetails()->GetInventorySharedDataValue("SubType", iItemID, bIsMapItem);
+		const DataInventoryItem_Base_t *itemData = GetSharedGameDetails()->GetInventoryData(iItemID, bIsMapItem);
+		int iType = itemData ? itemData->iType : 0;
+		int iSubType = itemData ? itemData->iSubType : 0;
 
 		ComputePlayerWeight(pClient);
 		if ((iType == TYPE_OBJECTIVE) && ((iSubType == TYPE_REMOVABLE_GLOW) || (iSubType == TYPE_VITAL)))
@@ -630,23 +626,28 @@ void CGameBaseShared::AddInventoryItem(int iPlayerIndex, uint iItemID, const cha
 // Purpose:
 // Tries to use the inventory item, if it succeed we call OnSuccess if not OnFailure kinda.
 ///////////////////////////////////////////////
-bool CGameBaseShared::UseInventoryItem(int iPlayerIndex, uint iItemID, bool bIsMapItem, bool bAutoConsume, bool bDelayedUse)
+bool CGameBaseShared::UseInventoryItem(int iPlayerIndex, uint iItemID, bool bIsMapItem, bool bAutoConsume, bool bDelayedUse, int forceIndex)
 {
 	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_PlayerByIndex(iPlayerIndex));
 	if (!pClient)
 		return false;
 
-	int plrInvItemIndex = GetInventoryItemForPlayer(iPlayerIndex, iItemID, bIsMapItem);
+	int plrInvItemIndex = -1;
+	if ((forceIndex != -1) && (forceIndex >= 0) && (forceIndex < pszInventoryList.Count()))
+		plrInvItemIndex = forceIndex;
+	else
+		plrInvItemIndex = GetInventoryItemForPlayer(iPlayerIndex, iItemID, bIsMapItem);
+
 	if ((plrInvItemIndex == -1) && !bAutoConsume)
 		return false;
 
-	// Does this item actually exist?
-	if (!GetSharedGameDetails()->DoesInventoryItemExist(iItemID, bIsMapItem))
+	const DataInventoryItem_Base_t *itemData = GetSharedGameDetails()->GetInventoryData(iItemID, bIsMapItem);
+	if (itemData == NULL)
 		return false;
 
 	bool bShouldRemoveItem = true;
-	int iType = GetSharedGameDetails()->GetInventorySharedDataValue("Type", iItemID, bIsMapItem);
-	int iSubType = GetSharedGameDetails()->GetInventorySharedDataValue("SubType", iItemID, bIsMapItem);
+	int iType = itemData->iType;
+	int iSubType = itemData->iSubType;
 
 	//
 	// We have to check which kind of item was used before we make an appropriate action.
@@ -748,11 +749,19 @@ bool CGameBaseShared::UseInventoryItem(int iPlayerIndex, uint iItemID, bool bIsM
 // Purpose:
 // Remove items with the linked player index, then creates them on the server. (happens when a player disconnect or drops an item...)
 ///////////////////////////////////////////////
-void CGameBaseShared::RemoveInventoryItem(int iPlayerIndex, Vector vecAbsOrigin, int iType, uint iItemID, bool bDeleteItem)
+void CGameBaseShared::RemoveInventoryItem(int iPlayerIndex, const Vector &vecAbsOrigin, int iType, uint iItemID, bool bDeleteItem, int forceIndex)
 {
 	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_PlayerByIndex(iPlayerIndex));
 
-	for (int i = (pszInventoryList.Count() - 1); i >= 0; i--)
+	bool bOnlyDoOneIteration = false;
+	int i = (pszInventoryList.Count() - 1);
+	if ((forceIndex != -1) && (forceIndex >= 0) && (forceIndex <= i))
+	{
+		i = forceIndex;
+		bOnlyDoOneIteration = true;
+	}
+
+	for (; i >= 0; i--)
 	{
 		if (pszInventoryList[i].m_iPlayerIndex == iPlayerIndex)
 		{
@@ -781,10 +790,11 @@ void CGameBaseShared::RemoveInventoryItem(int iPlayerIndex, Vector vecAbsOrigin,
 					CTraceFilterNoNPCsOrPlayer trFilter(pClient, iCollisionGroup);
 					UTIL_TraceLine(vecStartPos, vecEndPos + (vecDir * MAX_TRACE_LENGTH), MASK_SHOT, &trFilter, &tr);
 
+					Vector endPoint = tr.endpos;
+					pEntity->SetLocalOrigin(endPoint);
 					pEntity->SetItem(szModel, iID, pszInventoryList[i].szEntityLink, pszInventoryList[i].bIsMapItem);
 					pEntity->Spawn();
-
-					Vector endPoint = tr.endpos;
+		 
 					const model_t *pModel = modelinfo->GetModel(pEntity->GetModelIndex());
 					if (pModel)
 					{
@@ -811,7 +821,7 @@ void CGameBaseShared::RemoveInventoryItem(int iPlayerIndex, Vector vecAbsOrigin,
 			ComputePlayerWeight(pClient);
 
 			// We only want to remove 1 item at a time if Id is above 0.
-			if (iItemID > 0)
+			if ((iItemID > 0) || bOnlyDoOneIteration)
 				break;
 		}
 	}
@@ -852,7 +862,6 @@ void CGameBaseShared::RemoveInventoryItems(void)
 int CGameBaseShared::GetInventoryItemCountForPlayer(int iPlayerIndex)
 {
 	int iCount = 0;
-
 	for (int i = (pszInventoryList.Count() - 1); i >= 0; i--)
 	{
 		if (pszInventoryList[i].m_iPlayerIndex == iPlayerIndex)
@@ -883,18 +892,19 @@ int CGameBaseShared::GetInventoryItemForPlayer(int iPlayerIndex, uint iItemID, b
 ///////////////////////////////////////////////
 bool CGameBaseShared::HasObjectiveGlowItems(CHL2MP_Player *pClient)
 {
-	bool bFound = false;
-
 	if (!pClient)
-		return bFound;
+		return false;
 
+	bool bFound = false;
 	for (int i = (pszInventoryList.Count() - 1); i >= 0; i--)
 	{
 		if (pszInventoryList[i].m_iPlayerIndex == pClient->entindex())
 		{
-			int iType = GetSharedGameDetails()->GetInventorySharedDataValue("Type", pszInventoryList[i].m_iItemID, pszInventoryList[i].bIsMapItem);
-			int iSubType = GetSharedGameDetails()->GetInventorySharedDataValue("SubType", pszInventoryList[i].m_iItemID, pszInventoryList[i].bIsMapItem);
-			if ((iType == TYPE_OBJECTIVE) && ((iSubType == TYPE_REMOVABLE_GLOW) || (iSubType == TYPE_VITAL)))
+			const DataInventoryItem_Base_t *itemData = GetSharedGameDetails()->GetInventoryData(pszInventoryList[i].m_iItemID, pszInventoryList[i].bIsMapItem);
+			if (!itemData)
+				continue;
+
+			if ((itemData->iType == TYPE_OBJECTIVE) && ((itemData->iSubType == TYPE_REMOVABLE_GLOW) || (itemData->iSubType == TYPE_VITAL)))
 			{
 				bFound = true;
 				break;
@@ -1116,7 +1126,11 @@ void CGameBaseShared::ComputePlayerWeight(CHL2MP_Player *pPlayer)
 		if (pszInventoryList[i].m_iPlayerIndex != pPlayer->entindex())
 			continue;
 
-		m_flWeight += (float)GetSharedGameDetails()->GetInventorySharedDataValue("Weight", pszInventoryList[i].m_iItemID, pszInventoryList[i].bIsMapItem);
+		const DataInventoryItem_Base_t *itemData = GetSharedGameDetails()->GetInventoryData(pszInventoryList[i].m_iItemID, pszInventoryList[i].bIsMapItem);
+		if (!itemData)
+			continue;
+
+		m_flWeight += ((float)itemData->iWeight);
 	}
 
 	for (int i = 0; i < MAX_WEAPONS; i++)

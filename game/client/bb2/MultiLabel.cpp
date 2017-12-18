@@ -94,7 +94,7 @@ void MultiLabel::SetTextColorSegmented(const char *szText[], Color textColor[], 
 	{
 		MultiLabel_Item_t labelItem;
 
-		vgui::Label *m_pLabel = new vgui::Label(this, "Label", szText[items]);
+		vgui::Label *m_pLabel = vgui::SETUP_PANEL(new vgui::Label(this, "Label", szText[items]));
 		Color colLabel;
 		m_pLabel->SetVisible(true);
 		m_pLabel->SetText(szText[items]);

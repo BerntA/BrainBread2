@@ -219,22 +219,24 @@ void CharacterPreviewPanel::SetupModel(void)
 	if (survivorIndex == -1)
 		return;
 
-	DataPlayerItem_Survivor_Shared_t modelInfo = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(survivorIndex);
+	const DataPlayerItem_Survivor_Shared_t *modelInfo = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(survivorIndex);
+	if (modelInfo == NULL)
+		return;
 
-	vecCameraPosition = modelInfo.vecPosition;
-	angCameraAngle = modelInfo.angAngles;
+	vecCameraPosition = modelInfo->vecPosition;
+	angCameraAngle = modelInfo->angAngles;
 
 	m_flAngleY = angCameraAngle.y;
 	m_flOriginX = vecCameraPosition.x;
 	m_iOriginalCursorXPos = 0;
 	m_bWantsToRotate = false;
 
-	const char *pszModelName = (m_iTeam == TEAM_HUMANS) ? modelInfo.szHumanModelPath : modelInfo.szZombieModelPath;
+	const char *pszModelName = (m_iTeam == TEAM_HUMANS) ? modelInfo->szHumanModelPath : modelInfo->szZombieModelPath;
 	if (!pszModelName || !pszModelName[0])
 		return;
 
 	m_hModel = new CClientModelPanelModel;
-	m_hModel->PrepareModel((m_iTeam == TEAM_HUMANS) ? modelInfo.m_pClientModelPtrHuman : modelInfo.m_pClientModelPtrZombie);
+	m_hModel->PrepareModel((m_iTeam == TEAM_HUMANS) ? modelInfo->m_pClientModelPtrHuman : modelInfo->m_pClientModelPtrZombie);
 	m_hModel->AddToLeafSystem(RENDER_GROUP_OPAQUE_ENTITY);
 	m_hModel->SetRenderMode(kRenderNormal);
 	m_hModel->DontRecordInTools();
@@ -259,7 +261,7 @@ void CharacterPreviewPanel::SetupModel(void)
 		m_hModel->SetBodygroup(accessoryGroup, bodygroupAccessoryValues[i]);
 	}
 
-	const char *pchSequence = modelInfo.szSequence;
+	const char *pchSequence = modelInfo->szSequence;
 	if (m_iTeam == TEAM_DECEASED)
 		pchSequence = "melee_idle";
 

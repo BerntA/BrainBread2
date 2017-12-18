@@ -21,8 +21,17 @@ enum MapVerifications
 };
 
 #ifdef CLIENT_DLL
+#define MAX_MAP_PREVIEW_IMAGES 5
 struct gameMapItem_t
 {
+	gameMapItem_t()
+	{
+		numLoadingScreens = 0;
+		numImagePreviews = 0;
+		for (int i = 0; i < MAX_MAP_PREVIEW_IMAGES; i++)
+			Q_strncpy(pszImagePreview[i], "", MAX_WEAPON_STRING);
+	}
+
 	char pszMapName[32];
 	char pszMapTitle[32];
 	char pszMapDescription[256];
@@ -31,6 +40,18 @@ struct gameMapItem_t
 
 	float flScore;
 	int iMapVerification;
+
+	char pszImagePreview[MAX_MAP_PREVIEW_IMAGES][MAX_WEAPON_STRING];
+	int numImagePreviews;
+	int numLoadingScreens;
+
+	const char *GetImagePreview(int index)
+	{
+		if (index < 0 || index >= MAX_MAP_PREVIEW_IMAGES)
+			return "steam_default_avatar";
+
+		return pszImagePreview[index];
+	}
 };
 #else
 struct gameMapItem_t
@@ -59,6 +80,7 @@ public:
 	bool VerifyMapFile(const char *map, unsigned long long mapSize);
 #else
 	void GetMapInfo(const char *map, gameMapItem_t &item, KeyValues *pkvData = NULL);
+	void GetMapImageData(const char *map, gameMapItem_t &item);
 #endif
 
 	void OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted_t *pCallback, bool bIOFailure);

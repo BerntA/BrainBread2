@@ -91,7 +91,7 @@ private:
 	C_BaseCombatWeapon *FindNextWeaponInWeaponSelection(int iCurrentSlot, int iCurrentPosition);
 	C_BaseCombatWeapon *FindPrevWeaponInWeaponSelection(int iCurrentSlot, int iCurrentPosition);
 
-	void DrawLargeWeaponBox( C_BaseCombatWeapon *pWeapon, bool bSelected, int x, int y, int wide, int tall, Color color, float alpha, int number, CHudTexture *weaponTexture );
+	void DrawLargeWeaponBox( C_BaseCombatWeapon *pWeapon, bool bSelected, int x, int y, int wide, int tall, Color color, float alpha, int number, const CHudTexture *weaponTexture );
 	void ActivateFastswitchWeaponDisplay( C_BaseCombatWeapon *pWeapon );
 	void ActivateWeaponHighlight( C_BaseCombatWeapon *pWeapon );
 	float GetWeaponBoxAlpha( bool bSelected );
@@ -114,7 +114,7 @@ private:
 		m_iSelectedSlideDir = dir;
 	}
 
-	void DrawBox(int x, int y, int wide, int tall, Color color, float normalizedAlpha, int number, CHudTexture *weaponTexture, bool bSelected = false);
+	void DrawBox(int x, int y, int wide, int tall, Color color, float normalizedAlpha, int number, const CHudTexture *weaponTexture, bool bSelected = false);
 
 	CPanelAnimationVar( vgui::HFont, m_hNumberFont, "NumberFont", "HudSelectionNumbers" );
 	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "HudSelectionText" );
@@ -174,8 +174,6 @@ private:
 	int						m_iSelectedSlot;
 	C_BaseCombatWeapon		*m_pLastWeapon;
 	CPanelAnimationVar( float, m_flHorizWeaponSelectOffsetPoint, "WeaponBoxOffset", "0" );
-
-	CHudTexture *pWeaponTexture[4];
 };
 
 DECLARE_HUDELEMENT( CHudWeaponSelection );
@@ -190,10 +188,6 @@ CHudWeaponSelection::CHudWeaponSelection( const char *pElementName ) : CBaseHudW
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 	m_bFadingOut = false;
-
-	for ( int i = 0; i <= 4; i++ )
-		pWeaponTexture[i] = NULL;
-
 	SetHiddenBits( HIDEHUD_ZOMBIEMODE | HIDEHUD_ROUNDSTARTING );
 }
 
@@ -482,12 +476,6 @@ void CHudWeaponSelection::Paint()
 				C_BaseCombatWeapon *pWeapon = GetWeaponInSlot(i, 0);
 				if (pWeapon)
 				{
-					const char *szWep = pWeapon->GetClassname();
-					if (strncmp(szWep, "weapon_", 7) == 0)
-						szWep += 7;
-
-					pWeaponTexture[i] = gHUD.GetIcon(szWep);
-
 					bool bSelected = (pWeapon == pSelectedWeapon);
 					DrawLargeWeaponBox(pWeapon,
 						bSelected,
@@ -497,7 +485,7 @@ void CHudWeaponSelection::Paint()
 						largeBoxTall,
 						bSelected ? selectedColor : m_BoxColor,
 						GetWeaponBoxAlpha(bSelected),
-						true, pWeaponTexture[i]);
+						true, pWeapon->GetSpriteActive());
 
 					// move down to the next bucket
 					ypos -= (largeBoxTall + m_flBoxGap);
@@ -512,14 +500,8 @@ void CHudWeaponSelection::Paint()
 				CBaseCombatWeapon *pWeaponSmallSlow = GetFirstPos(i);
 				if (pWeaponSmallSlow)
 				{
-					const char *szWep = pWeaponSmallSlow->GetClassname();
-					if (strncmp(szWep, "weapon_", 7) == 0)
-						szWep += 7;
-
-					pWeaponTexture[i] = gHUD.GetIcon(szWep);
-
 					// draw has weapon in slot
-					DrawBox(xpos, ypos, m_flSmallBoxSize, m_flSmallBoxHeight, m_BoxColor, m_flAlphaOverride, i + 1, pWeaponTexture[i]);
+					DrawBox(xpos, ypos, m_flSmallBoxSize, m_flSmallBoxHeight, m_BoxColor, m_flAlphaOverride, i + 1, pWeaponSmallSlow->GetSpriteActive());
 
 					ypos -= (m_flSmallBoxHeight + m_flBoxGap);
 				}
@@ -537,7 +519,7 @@ void CHudWeaponSelection::Paint()
 //-----------------------------------------------------------------------------
 // Purpose: draws a single weapon selection box
 //-----------------------------------------------------------------------------
-void CHudWeaponSelection::DrawLargeWeaponBox( C_BaseCombatWeapon *pWeapon, bool bSelected, int xpos, int ypos, int boxWide, int boxTall, Color selectedColor, float alpha, int number, CHudTexture *weaponTexture )
+void CHudWeaponSelection::DrawLargeWeaponBox( C_BaseCombatWeapon *pWeapon, bool bSelected, int xpos, int ypos, int boxWide, int boxTall, Color selectedColor, float alpha, int number, const CHudTexture *weaponTexture )
 {
 	Color col = bSelected ? m_SelectedFgColor : GetFgColor();
 
@@ -641,7 +623,7 @@ void CHudWeaponSelection::DrawLargeWeaponBox( C_BaseCombatWeapon *pWeapon, bool 
 //-----------------------------------------------------------------------------
 // Purpose: draws a selection box
 //-----------------------------------------------------------------------------
-void CHudWeaponSelection::DrawBox(int x, int y, int wide, int tall, Color color, float normalizedAlpha, int number, CHudTexture *weaponTexture, bool bSelected)
+void CHudWeaponSelection::DrawBox(int x, int y, int wide, int tall, Color color, float normalizedAlpha, int number, const CHudTexture *weaponTexture, bool bSelected)
 {
 	// I've removed the square frame around the selected weapon for now...
 	//if ( bSelected )

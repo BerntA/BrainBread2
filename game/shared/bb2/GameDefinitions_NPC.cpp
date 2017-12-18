@@ -211,6 +211,15 @@ int CGameDefinitionsNPC::GetIndex(const char *name)
 	return -1;
 }
 
+CNPCDataItem *CGameDefinitionsNPC::GetNPCData(const char *name)
+{
+	int index = GetIndex(name);
+	if (index != -1)
+		return pszNPCItems[index];
+
+	return NULL;
+}
+
 int CGameDefinitionsNPC::GetHealth(const char *name)
 {
 	int index = GetIndex(name);
@@ -511,4 +520,31 @@ int CGameDefinitionsNPC::GetOverridedModelIndexForNPC(const char *name)
 	}
 
 	return -1;
+}
+
+const CNPCOverrideModelData *CGameDefinitionsNPC::GetOverridedModelDataForNPC(const char *name)
+{
+	int index = GetOverridedModelIndexForNPC(name);
+	if (index == -1)
+		return NULL;
+
+	return m_pModelOverrideItems[index];
+}
+
+const NPCModelItem_t *CNPCDataItem::GetModelItem(int index)
+{
+	const CNPCOverrideModelData *overrideData = GameBaseShared()->GetNPCData()->GetOverridedModelDataForNPC(szNPCName);
+
+	int mdlCount = overrideData ? overrideData->pszModelList.Count() : pszModelList.Count();
+	if (mdlCount <= 0)
+		return NULL;
+
+	int actualIndex = index;
+	if (actualIndex == -1)
+		actualIndex = random->RandomInt(0, (mdlCount - 1));
+
+	if (actualIndex < 0 || actualIndex >= mdlCount)
+		return NULL;
+
+	return (overrideData ? &overrideData->pszModelList[actualIndex] : &pszModelList[actualIndex]);
 }

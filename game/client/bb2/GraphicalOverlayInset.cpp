@@ -36,6 +36,8 @@ using namespace vgui;
 
 GraphicalOverlay::GraphicalOverlay(vgui::Panel *parent, char const *panelName, const char *labelText, const char *conVarLink, float flRangeMin, float flRangeMax, bool bNegative, int iDisplayRawValue) : vgui::Panel(parent, panelName)
 {
+	m_pCVARLink = NULL;
+
 	SetParent(parent);
 	SetName(panelName);
 
@@ -80,6 +82,7 @@ GraphicalOverlay::GraphicalOverlay(vgui::Panel *parent, char const *panelName, c
 	m_pSlider->SetTickCaptions("", "");
 
 	Q_strncpy(szConVar, conVarLink, 64);
+	m_pCVARLink = cvar->FindVar(szConVar);
 
 	PerformLayout();
 }
@@ -92,24 +95,23 @@ void GraphicalOverlay::PerformLayout(void)
 {
 	BaseClass::PerformLayout();
 
-	ConVar *slider_var = cvar->FindVar(szConVar);
-	if (slider_var)
+	if (m_pCVARLink)
 	{
-		float percent = ((fabs(slider_var->GetFloat()) - m_flMin) * (100 / (m_flMax - m_flMin)));
+		float percent = ((fabs(m_pCVARLink->GetFloat()) - m_flMin) * (100 / (m_flMax - m_flMin)));
 		m_pSlider->SetValue((int)percent);
-		m_flOldVarVar = slider_var->GetFloat();
+		m_flOldVarVar = m_pCVARLink->GetFloat();
 		m_iOldSliderVal = m_pSlider->GetValue();
 
 		switch (m_iRawValue)
 		{
 		case RawValueType::TYPE_FLOAT:
-			m_pValue->SetText(VarArgs("%.3f", slider_var->GetFloat()));
+			m_pValue->SetText(VarArgs("%.3f", m_pCVARLink->GetFloat()));
 			break;
 		case RawValueType::TYPE_FLOAT_SMALL:
-			m_pValue->SetText(VarArgs("%.1f", slider_var->GetFloat()));
+			m_pValue->SetText(VarArgs("%.1f", m_pCVARLink->GetFloat()));
 			break;
 		case RawValueType::TYPE_INT:
-			m_pValue->SetText(VarArgs("%i", slider_var->GetInt()));
+			m_pValue->SetText(VarArgs("%i", m_pCVARLink->GetInt()));
 			break;
 		default: // Percent fallback.
 			m_pValue->SetText(VarArgs("%i", m_pSlider->GetValue()));
@@ -159,24 +161,23 @@ void GraphicalOverlay::UpdateNobPosition(void)
 
 void GraphicalOverlay::OnUpdate(bool bInGame)
 {
-	ConVar *pMyVar = cvar->FindVar(szConVar);
-	if (pMyVar)
+	if (m_pCVARLink)
 	{
 		if (m_iOldSliderVal != m_pSlider->GetValue())
 		{
 			UpdateNobPosition();
 			float percent = m_flMin + (((float)m_pSlider->GetValue() / 100.0f) * (m_flMax - m_flMin));
-			pMyVar->SetValue(m_bNegative ? -percent : percent);
+			m_pCVARLink->SetValue(m_bNegative ? -percent : percent);
 			engine->ClientCmd_Unrestricted("host_writeconfig\n");
 			m_iOldSliderVal = m_pSlider->GetValue();
-			m_flOldVarVar = pMyVar->GetFloat();
+			m_flOldVarVar = m_pCVARLink->GetFloat();
 		}
-		else if (m_flOldVarVar != pMyVar->GetFloat())
+		else if (m_flOldVarVar != m_pCVARLink->GetFloat())
 		{
-			float percent = ((fabs(pMyVar->GetFloat()) - m_flMin) * (100 / (m_flMax - m_flMin)));
+			float percent = ((fabs(m_pCVARLink->GetFloat()) - m_flMin) * (100 / (m_flMax - m_flMin)));
 			m_pSlider->SetValue((int)percent);
 			m_iOldSliderVal = m_pSlider->GetValue();
-			m_flOldVarVar = pMyVar->GetFloat();
+			m_flOldVarVar = m_pCVARLink->GetFloat();
 			UpdateNobPosition();
 			engine->ClientCmd_Unrestricted("host_writeconfig\n");
 		}
@@ -184,13 +185,13 @@ void GraphicalOverlay::OnUpdate(bool bInGame)
 		switch (m_iRawValue)
 		{
 		case RawValueType::TYPE_FLOAT:
-			m_pValue->SetText(VarArgs("%.3f", pMyVar->GetFloat()));
+			m_pValue->SetText(VarArgs("%.3f", m_pCVARLink->GetFloat()));
 			break;
 		case RawValueType::TYPE_FLOAT_SMALL:
-			m_pValue->SetText(VarArgs("%.1f", pMyVar->GetFloat()));
+			m_pValue->SetText(VarArgs("%.1f", m_pCVARLink->GetFloat()));
 			break;
 		case RawValueType::TYPE_INT:
-			m_pValue->SetText(VarArgs("%i", pMyVar->GetInt()));
+			m_pValue->SetText(VarArgs("%i", m_pCVARLink->GetInt()));
 			break;
 		default: // Percent fallback.
 			m_pValue->SetText(VarArgs("%i", m_pSlider->GetValue()));

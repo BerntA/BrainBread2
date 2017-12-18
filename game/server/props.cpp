@@ -3532,6 +3532,7 @@ BEGIN_DATADESC(CBasePropDoor)
 	DEFINE_FIELD( m_hMaster, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_hBlocker, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_bFirstBlocked, FIELD_BOOLEAN ),
+	DEFINE_FIELD(m_flLastTimeUsed, FIELD_TIME),
 	//DEFINE_FIELD(m_hDoorList, FIELD_CLASSPTR),	// Reconstructed
 	
 	DEFINE_INPUTFUNC(FIELD_VOID, "Open", InputOpen),
@@ -3612,6 +3613,8 @@ void CBasePropDoor::Spawn()
 
 	// Fills out the m_Soundxxx members.
 	CalcDoorSounds();
+
+	m_flLastTimeUsed = 0.0f;
 }
 
 
@@ -3892,6 +3895,10 @@ void CBasePropDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 //-----------------------------------------------------------------------------
 void CBasePropDoor::OnUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
+	// Prevent door +use spamming.
+	if ((gpGlobals->curtime - m_flLastTimeUsed) < 2.0f)
+		return;
+
 	// If we're blocked while closing, open away from our blocker. This will
 	// liberate whatever bit of detritus is stuck in us.
 	if ( IsDoorBlocked() && IsDoorClosing() )
@@ -3936,6 +3943,8 @@ void CBasePropDoor::OnUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TY
 		m_hActivator = pActivator;
 		DoorOpen( m_hActivator );
 	}
+
+	m_flLastTimeUsed = gpGlobals->curtime;
 }
 
 //-----------------------------------------------------------------------------

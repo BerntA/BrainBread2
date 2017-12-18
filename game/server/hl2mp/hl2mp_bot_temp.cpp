@@ -126,6 +126,10 @@ CBasePlayer *BotPutInServer( bool bFrozen, int iTeam )
 //-----------------------------------------------------------------------------
 void Bot_RunAll( void )
 {
+	// Don't check this func if cheats are off!
+	if (!sv_cheats || (sv_cheats && !sv_cheats->GetBool()))
+		return;
+
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CHL2MP_Player *pPlayer = ToHL2MPPlayer( UTIL_PlayerByIndex( i ) );

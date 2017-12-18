@@ -1,6 +1,8 @@
 //=========       Copyright © Reperio Studios 2015 @ Bernt Andreas Eide!       ============//
 //
 // Purpose: Combo Image List - An image selection combo box. (includes tga to vtf conversions and such)
+// DISCLAIMER: This file also contains the old custom spray importer and handler, utilizes a custom vtflib shipped by VTFEdit, however it doesn't work for linux / OSX, sprays were scrapped due to this + previously
+// sprays could inject your PC with some random BS due to some minor security issue (fixed now)...
 //
 //========================================================================================//
 
@@ -180,7 +182,7 @@ void ComboImageList::InitCrosshairList(void)
 			const char *character = ReadAndAllocStringValue(sub, "character");
 			if (character && strlen(character) > 0)
 			{
-				Label *panel = new Label(m_pComboBox, "Label", character);
+				Label *panel = vgui::SETUP_PANEL(new Label(m_pComboBox, "Label", character));
 				panel->SetZPos(25);
 				panel->SetContentAlignment(Label::Alignment::a_center);
 				panel->SetText(character);
@@ -203,7 +205,7 @@ void ComboImageList::InitSprayList(void)
 		char fileNameWithoutExtension[32];
 		Q_strncpy(fileNameWithoutExtension, pFilename, strlen(pFilename) - 3);
 
-		ImagePanel *panel = new ImagePanel(m_pComboBox, "Image");
+		ImagePanel *panel = vgui::SETUP_PANEL(new ImagePanel(m_pComboBox, "Image"));
 		panel->SetZPos(25);
 		panel->SetShouldScaleImage(true);
 		panel->SetImage(VarArgs("logos/%s", fileNameWithoutExtension));

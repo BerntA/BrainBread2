@@ -114,11 +114,11 @@ CUtlStringList htmlDataList;
 
 const char *pchDataURLs[5] =
 {
-	"http://reperio-studios.eu/gamedata/brainbread2/developers.txt",
-	"http://reperio-studios.eu/gamedata/brainbread2/donators.txt",
-	"http://reperio-studios.eu/gamedata/brainbread2/testers.txt",
-	"http://reperio-studios.eu/gamedata/brainbread2/bans.txt",
-	"http://reperio-studios.eu/gamedata/brainbread2/blacklistedservers.txt",
+	"http://hl2world.net/hl2world/misc/bb2/developers.txt",
+	"http://hl2world.net/hl2world/misc/bb2/donators.txt",
+	"http://hl2world.net/hl2world/misc/bb2/testers.txt",
+	"http://hl2world.net/hl2world/misc/bb2/bans.txt",
+	"http://hl2world.net/hl2world/misc/bb2/blacklistedservers.txt",
 };
 
 size_t writeCallback(char* buf, size_t size, size_t nmemb, void* up)
@@ -134,7 +134,7 @@ void ParseHTML(const char *url)
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &writeCallback);
-	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+	//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
 	if (curl_easy_perform(curl) != CURLE_OK)
 		Msg("Unable to parse the url: '%s'!\n", url);

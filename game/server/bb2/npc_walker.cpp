@@ -344,7 +344,8 @@ void CNPCWalker::PrescheduleThink( void )
 			m_flNextTimeToCheckCollisionChange = gpGlobals->curtime + 1.0f; // Change to the new collision group as fast as possible.
 			trace_t tr;
 			CTraceFilterOnlyNPCsAndPlayer filter(this, COLLISION_GROUP_NPC_ZOMBIE);
-			UTIL_TraceHull(GetAbsOrigin(), GetAbsOrigin() + Vector(0, 0, 36), WorldAlignMins(), WorldAlignMaxs(), MASK_NPCSOLID, &filter, &tr);
+			Vector vecCheckPos = GetLocalOrigin() + Vector(0, 0, 10);
+			UTIL_TraceHull(vecCheckPos, vecCheckPos, WorldAlignMins(), WorldAlignMaxs(), MASK_NPCSOLID, &filter, &tr);
 			if (!tr.startsolid)
 			{
 				SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE);

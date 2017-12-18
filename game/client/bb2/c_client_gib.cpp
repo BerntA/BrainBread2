@@ -267,9 +267,16 @@ void C_ClientSideGibBase::DoBloodSpray(trace_t *pTrace)
 
 	if (m_iGibType > CLIENT_GIB_PROP)
 	{
-		DispatchParticleEffect(GameBaseShared()->GetSharedGameDetails()->GetBloodParticle(GameBaseClient->IsExtremeGore()), pTrace->endpos, this->GetAbsAngles(), Vector(0, 0, 0), Vector(0, 0, 0), false, this, PATTACH_ABSORIGIN_FOLLOW);
+		QAngle angles = GetLocalAngles();
+		DispatchParticleEffect(GameBaseShared()->GetSharedGameDetails()->GetBloodParticle(GameBaseClient->IsExtremeGore()), pTrace->endpos, angles, Vector(0, 0, 0), Vector(0, 0, 0), false, this, PATTACH_ABSORIGIN_FOLLOW);
+
 		trace_t tr;
-		UTIL_TraceLine(pTrace->endpos + Vector(0, 0, 50), pTrace->endpos - Vector(0, 0, 200), MASK_ALL, this, COLLISION_GROUP_NONE, &tr);
+		Vector vecInitial = pTrace->endpos, vecDown;
+		AngleVectors(angles, NULL, NULL, &vecDown);
+		VectorNormalize(vecDown);
+		vecDown *= -1;
+
+		UTIL_TraceLine(vecInitial, vecInitial + vecDown * MAX_TRACE_LENGTH, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
 		UTIL_DecalTrace(&tr, GameBaseClient->IsExtremeGore() ? "ExtremeBlood" : "Blood");
 	}
 }

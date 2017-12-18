@@ -90,11 +90,11 @@ void CLogicInventoryChecker::InputCheckForItem(inputdata_t &inData)
 
 			// Auto-Use item.
 			if (m_iAction == 1)
-				GameBaseShared()->UseInventoryItem(pActivator->entindex(), m_iItemID, m_bIsMapItem);
+				GameBaseShared()->UseInventoryItem(pActivator->entindex(), m_iItemID, m_bIsMapItem, false, false, i);
 			else if (m_iAction == 2) // Auto-Drop Item.
-				GameBaseShared()->RemoveInventoryItem(pActivator->entindex(), pActivator->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID);
+				GameBaseShared()->RemoveInventoryItem(pActivator->entindex(), pActivator->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID, false, i);
 			else if (m_iAction == 3) // Delete item.
-				GameBaseShared()->RemoveInventoryItem(pActivator->entindex(), pActivator->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID, true);
+				GameBaseShared()->RemoveInventoryItem(pActivator->entindex(), pActivator->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID, true, i);
 
 			bFound = true;
 		}

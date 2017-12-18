@@ -299,6 +299,7 @@ public:
 
 #ifndef CLIENT_DLL
 	virtual bool CanHitThisTarget(int index);
+	virtual void StruckTarget(int index) { m_pEnemiesStruck.AddToTail(index); }
 	virtual int GetMeleeSkillFlags(void) { return 0; }
 
 	float m_flLastTraceTime;
@@ -506,12 +507,10 @@ public:
 
 	virtual void			RestartParticleEffect( void ) {}
 
-	virtual void			Redraw(void);
 	virtual void			ViewModelDrawn( CBaseViewModel *pViewModel );
 	// Get the position that bullets are seen coming out. Note: the returned values are different
 	// for first person and third person.
 	bool					GetShootPosition( Vector &vOrigin, QAngle &vAngles );
-	virtual void			DrawCrosshair( void );
 	virtual bool			ShouldDrawCrosshair( void ) { return true; }
 	
 	// Weapon state checking

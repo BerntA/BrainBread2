@@ -21,11 +21,11 @@ Feel free to post issues, pull requests and such.
 However, if you create a pull request, be sure to test your changes properly before submitting the request!
 
 ### Future Implementations & Improvements
-- [ ] Draw a bar when holding +use on for example doors, when trying to lock/unlock them.
 - [ ] Add skill tree templates for fast switching between skill choices.
 - [ ] Improve movement mechanics, such as view tilting and camera movement when reloading weapons.
 - [ ] New GUI for the inventory and quest system.
 - [ ] Fix tiny HUD / GUI text for some languages like Russian, Chinese, etc...
+- [ ] Allow players to actually use unique player models similar to GoldSource, change how player models are rendered @ client.
 
 ### Current Bugs
 * Writing 'connect ip:port' in the console while in-game will bug if the server is password protected, you have to open the main menu in order to write in the desired password. (assuming you're using the console when the main menu isn't up)

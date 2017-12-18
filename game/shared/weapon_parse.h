@@ -136,6 +136,10 @@ public:
 	float m_flBurstFireRate;
 	float m_flWeaponChargeTime;
 
+	// Client Ammo Properties:
+	int m_iAmmoHUDIndex;
+	bool m_bShowAsMagsLeft;
+
 	// Weapon Skill Stuff:
 	float m_flSkillDamageFactor;
 	float m_flSkillFireRateFactor;

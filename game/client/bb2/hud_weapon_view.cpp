@@ -36,20 +36,19 @@ public:
 	CHudWeaponView(const char * pElementName);
 
 	virtual void Init(void);
+	virtual void VidInit(void);
 	virtual void Reset(void);
 	virtual bool ShouldDraw(void);
 
 protected:
 
-	virtual void UpdatePlayer(C_HL2MP_Player *pClient, C_BaseCombatWeapon *pWeapon);
 	virtual void Paint();
 	virtual void ApplySchemeSettings(vgui::IScheme *scheme);
 
 private:
 
-	wchar_t szCurrWep[64];
-	char pchActiveWeaponClassname[64];
-	CHudTexture *MaxIconAnim;
+	CHudTexture *m_pCooldownBG;
+	CHudTexture *m_pCooldownFG;
 
 	CPanelAnimationVar(vgui::HFont, m_hTextFont, "TextFont", "HUD_STATUS");
 };
@@ -66,7 +65,7 @@ CHudWeaponView::CHudWeaponView(const char * pElementName) : CHudElement(pElement
 	SetParent(pParent);
 
 	// Initialize Textures:
-	MaxIconAnim = NULL;
+	m_pCooldownBG = m_pCooldownFG = NULL;
 
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_INVEHICLE | HIDEHUD_ZOMBIEMODE | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
 }
@@ -79,6 +78,12 @@ void CHudWeaponView::Init()
 	Reset();
 }
 
+void CHudWeaponView::VidInit(void)
+{
+	m_pCooldownBG = gHUD.GetIcon("melee_cd_bg");
+	m_pCooldownFG = gHUD.GetIcon("melee_cd_fg");
+}
+
 //------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------
@@ -86,7 +91,6 @@ void CHudWeaponView::Reset(void)
 {
 	SetFgColor(Color(255, 255, 255, 255));
 	SetAlpha(255);
-	Q_strncpy(pchActiveWeaponClassname, "", 64);
 }
 
 //------------------------------------------------------------------------
@@ -108,7 +112,6 @@ bool CHudWeaponView::ShouldDraw(void)
 	if (!pWeapon->VisibleInWeaponSelection())
 		return false;
 
-	UpdatePlayer(pPlayer, pWeapon);
 	return true;
 }
 
@@ -117,42 +120,48 @@ bool CHudWeaponView::ShouldDraw(void)
 //------------------------------------------------------------------------
 void CHudWeaponView::Paint()
 {
+	C_BaseCombatWeapon *pActiveWep = GetActiveWeapon();
+	if (!pActiveWep)
+		return;
+
 	surface()->DrawSetColor(GetFgColor());
 	surface()->DrawSetTextColor(GetFgColor());
 	surface()->DrawSetTextFont(m_hTextFont);
 
 	int iTextXPos = 0, iTextYPos = 0;
-	if (MaxIconAnim)
+	const CHudTexture *pWeaponIcon = pActiveWep->GetSpriteActive();
+	if (pWeaponIcon)
 	{
 		// Draw Icon
 		surface()->DrawSetColor(GetFgColor());
-		surface()->DrawSetTexture(MaxIconAnim->textureId);
+		surface()->DrawSetTexture(pWeaponIcon->textureId);
 
 		int xpos, ypos, wide, tall, textX, textY;
-		wide = MaxIconAnim->GetOrigWide();
-		tall = MaxIconAnim->GetOrigTall();
-		xpos = MaxIconAnim->GetOrigPosX();
-		ypos = MaxIconAnim->GetOrigPosY();
+		wide = pWeaponIcon->GetOrigWide();
+		tall = pWeaponIcon->GetOrigTall();
+		xpos = pWeaponIcon->GetOrigPosX();
+		ypos = pWeaponIcon->GetOrigPosY();
 
 		surface()->DrawTexturedRect(xpos, ypos, xpos + wide, ypos + tall);
 
 		// Draw Text
-		textX = xpos + ((wide / 2) - (UTIL_ComputeStringWidth(m_hTextFont, szCurrWep) / 2));
+		wchar_t unicode[MAX_WEAPON_STRING * 2];
+		g_pVGuiLocalize->ConvertANSIToUnicode(pActiveWep->GetWpnData().szPrintName, unicode, sizeof(unicode));
+		textX = xpos + ((wide / 2) - (UTIL_ComputeStringWidth(m_hTextFont, unicode) / 2));
 		textY = ypos - surface()->GetFontTall(m_hTextFont) - scheme()->GetProportionalScaledValue(1);
 		surface()->DrawSetTextPos(textX, textY);
-		surface()->DrawUnicodeString(szCurrWep);
+		surface()->DrawUnicodeString(unicode);
 		iTextXPos = textX;
 		iTextYPos = textY;
 	}
 
-	C_BaseCombatWeapon *pActiveWep = GetActiveWeapon();
-	if (pActiveWep && pActiveWep->IsMeleeWeapon() && (pActiveWep->m_flMeleeCooldown > 0.0f))
+	if (pActiveWep->IsMeleeWeapon() && (pActiveWep->m_flMeleeCooldown > 0.0f))
 	{
 		float timeToUse = (pActiveWep->m_flNextSecondaryAttack - pActiveWep->m_flMeleeCooldown);
 		float percentage = ((pActiveWep->m_flNextSecondaryAttack - gpGlobals->curtime) / timeToUse);
 		percentage = 1.0f - clamp(percentage, 0.0f, 1.0f);
 
-		CHudTexture *pCooldownIcon = gHUD.GetIcon("melee_cd_bg");
+		CHudTexture *pCooldownIcon = m_pCooldownBG;
 		if (pCooldownIcon)
 		{
 			iTextXPos -= pCooldownIcon->GetOrigWide();
@@ -161,7 +170,7 @@ void CHudWeaponView::Paint()
 			surface()->DrawTexturedRect(pCooldownIcon->GetOrigPosX() + iTextXPos, pCooldownIcon->GetOrigPosY() + iTextYPos, iTextXPos + pCooldownIcon->GetOrigPosX() + pCooldownIcon->GetOrigWide(), iTextYPos + pCooldownIcon->GetOrigPosY() + pCooldownIcon->GetOrigTall());
 		}
 
-		pCooldownIcon = gHUD.GetIcon("melee_cd_fg");
+		pCooldownIcon = m_pCooldownFG;
 		if (pCooldownIcon)
 			pCooldownIcon->DrawCircularProgression(GetFgColor(), pCooldownIcon->GetOrigPosX() + iTextXPos, pCooldownIcon->GetOrigPosY() + iTextYPos, pCooldownIcon->GetOrigWide(), pCooldownIcon->GetOrigTall(), percentage);
 	}
@@ -173,27 +182,4 @@ void CHudWeaponView::ApplySchemeSettings(vgui::IScheme *scheme)
 
 	SetPaintBackgroundEnabled(false);
 	SetPaintBorderEnabled(false);
-}
-
-void CHudWeaponView::UpdatePlayer(C_HL2MP_Player *pClient, C_BaseCombatWeapon *pWeapon)
-{
-	if (!pClient || !pWeapon)
-		return;
-
-	if (pWeapon->GetSlot() > 4)
-	{
-		MaxIconAnim = NULL;
-		return;
-	}
-
-	const char *szWep = pWeapon->GetClassname();
-	if (strncmp(szWep, "weapon_", 7) == 0)
-		szWep += 7;
-
-	if (strcmp(szWep, pchActiveWeaponClassname))
-	{
-		Q_strncpy(pchActiveWeaponClassname, szWep, 64);
-		MaxIconAnim = gHUD.GetIcon(szWep);
-		g_pVGuiLocalize->ConvertANSIToUnicode(pWeapon->GetWpnData().szPrintName, szCurrWep, sizeof(szCurrWep));
-	}
 }

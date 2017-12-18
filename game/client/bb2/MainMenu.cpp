@@ -265,17 +265,18 @@ void CMainMenu::ApplyChanges(void)
 
 void CMainMenu::OnThink()
 {
+	bool bIsInGame = GameBaseClient->IsInGame();
 	for (int i = 0; i < GetChildCount(); ++i)
 	{
 		CVGUIBasePanel *pChild = ToBasePanel(GetChild(i));
 		if (pChild)
-			pChild->OnUpdate(GameBaseClient->IsInGame());
+			pChild->OnUpdate(bIsInGame);
 	}
 
 	m_pOverlayImage->OnUpdate();
 	m_pGameBanner->SetAlpha(m_pAdvertisementPanel->GetAlpha());
 
-	if (GameBaseClient->IsInGame())
+	if (bIsInGame)
 	{
 		if (HasActivePanel() || !m_pContextMenuMain->IsVisible())
 		{
@@ -308,7 +309,7 @@ void CMainMenu::OnThink()
 
 	m_pLabelVersion->SetAlpha(m_pContextMenuMain->GetAlpha());
 	m_pLabelPlayerCount->SetAlpha(m_pContextMenuMain->GetAlpha());
-	m_pPasswordDialog->OnUpdate(GameBaseClient->IsInGame());
+	m_pPasswordDialog->OnUpdate(bIsInGame);
 
 	if (m_flMainMenuCloseTimer > 0 && (m_flMainMenuCloseTimer < engine->Time()))
 	{

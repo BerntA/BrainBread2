@@ -44,6 +44,7 @@ public:
 	bool		IsHeavyDamage(const CTakeDamageInfo &info);
 
 	virtual	bool		AllowedToIgnite(void) { return true; }
+	virtual bool		UsesNavMesh(void) { return true; }
 
 	Class_T Classify(void);
 

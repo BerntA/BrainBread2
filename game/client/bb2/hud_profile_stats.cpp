@@ -28,6 +28,23 @@ using namespace vgui;
 
 #include "tier0/memdbgon.h" 
 
+enum SharedHUDTextureIcons
+{
+	SHARED_HUD_ICON_XPCIRCLE = 0,
+	SHARED_HUD_ICON_INFECTION_NO,
+	SHARED_HUD_ICON_INFECTION_FULL,
+	SHARED_HUD_ICON_ARMOR_NONE,
+	SHARED_HUD_ICON_ARMOR_LIGHT,
+	SHARED_HUD_ICON_ARMOR_MEDIUM,
+	SHARED_HUD_ICON_ARMOR_HEAVY,
+	SHARED_HUD_ICON_KICK_CD_BG,
+	SHARED_HUD_ICON_KICK_CD_FG,
+	SHARED_HUD_ICON_SLIDE_CD_BG,
+	SHARED_HUD_ICON_SLIDE_CD_FG,
+
+	SHARED_HUD_ICON_COUNT
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: Base
 //-----------------------------------------------------------------------------
@@ -41,6 +58,7 @@ public:
 	~CHudProfileStats();
 
 	virtual void Init(void);
+	virtual void VidInit(void);
 	virtual void Reset(void);
 	virtual bool ShouldDraw(void);
 
@@ -85,6 +103,9 @@ private:
 
 	// Bonus icon
 	int m_nTexture_Bonus;
+
+	// HUD Texture Icons:
+	CHudTexture *m_pSharedHUDIcons[SHARED_HUD_ICON_COUNT];
 
 	CPanelAnimationVarAliasType(float, level_x, "level_x", "0", "proportional_float");
 	CPanelAnimationVarAliasType(float, level_y, "level_y", "0", "proportional_float");
@@ -201,6 +222,9 @@ CHudProfileStats::CHudProfileStats(const char * pElementName) : CHudElement(pEle
 	m_nTexture_PerkHint = surface()->CreateNewTextureID();
 	surface()->DrawSetTextureFile(m_nTexture_PerkHint, "vgui/hud/icons/icon_tip", true, false);
 
+	for (int i = 0; i < SHARED_HUD_ICON_COUNT; i++)
+		m_pSharedHUDIcons[i] = NULL;
+
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_INVEHICLE | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
 }
 
@@ -214,6 +238,30 @@ CHudProfileStats::~CHudProfileStats()
 void CHudProfileStats::Init()
 {
 	Reset();
+}
+
+//------------------------------------------------------------------------
+// Purpose: Load shared icon textures:
+//-----------------------------------------------------------------------
+void CHudProfileStats::VidInit(void)
+{
+	const char *iconTextures[SHARED_HUD_ICON_COUNT] =
+	{
+		"xp_circle_max",
+		"infection_circle_empty",
+		"infection_circle_max",
+		"armor_none",
+		"armor_light",
+		"armor_medium",
+		"armor_heavy",
+		"kick_cd_bg",
+		"kick_cd_fg",
+		"slide_cd_bg",
+		"slide_cd_fg",
+	};
+
+	for (int i = 0; i < SHARED_HUD_ICON_COUNT; i++)
+		m_pSharedHUDIcons[i] = gHUD.GetIcon(iconTextures[i]);
 }
 
 //------------------------------------------------------------------------
@@ -290,7 +338,7 @@ void CHudProfileStats::Paint()
 		CHudTexture *pHudIcon = NULL;
 		if (!m_bIsZombie && bSkillsEnabled)
 		{
-			pHudIcon = gHUD.GetIcon("xp_circle_max");
+			pHudIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_XPCIRCLE];
 			if (pHudIcon && (m_iLevel < MAX_PLAYER_LEVEL))
 			{
 				flXPTextX = pHudIcon->GetOrigPosX() + (pHudIcon->GetOrigWide() / 2);
@@ -301,7 +349,7 @@ void CHudProfileStats::Paint()
 
 			if (bCanBeInfected)
 			{
-				pHudIcon = gHUD.GetIcon("infection_circle_empty");
+				pHudIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_INFECTION_NO];
 				if (pHudIcon)
 				{
 					surface()->DrawSetColor(GetFgColor());
@@ -311,13 +359,13 @@ void CHudProfileStats::Paint()
 
 				if (g_PR->IsInfected(pPlayer->entindex()))
 				{
-					float flInfectionTime = GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().flInfectionDuration; // Max time in sec.
+					float flInfectionTime = GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->flInfectionDuration; // Max time in sec.
 					float flTimeElapsed = pPlayer->m_BB2Local.m_flInfectionTimer - gpGlobals->curtime; // Elapsed time in sec.
 					if (flTimeElapsed < 0)
 						flTimeElapsed = 0.0f;
 
 					float flFraction = 1.0f - (flTimeElapsed / flInfectionTime); // Reverse the fraction.
-					pHudIcon = gHUD.GetIcon("infection_circle_max");
+					pHudIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_INFECTION_FULL];
 					if (pHudIcon)
 					{
 						flXPTextX = pHudIcon->GetOrigPosX() + (pHudIcon->GetOrigWide() / 2);
@@ -339,19 +387,16 @@ void CHudProfileStats::Paint()
 		switch (pPlayer->m_BB2Local.m_iActiveArmorType)
 		{
 		case TYPE_LIGHT:
-			pHudIcon = gHUD.GetIcon("armor_light");
+			pHudIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_ARMOR_LIGHT];
 			break;
 		case TYPE_MED:
-			pHudIcon = gHUD.GetIcon("armor_medium");
+			pHudIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_ARMOR_MEDIUM];
 			break;
 		case TYPE_HEAVY:
-			pHudIcon = gHUD.GetIcon("armor_heavy");
-			break;
-		case TYPE_SUPER_HEAVY: // Never got implemented. =(
-			pHudIcon = gHUD.GetIcon("armor_super_heavy");
+			pHudIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_ARMOR_HEAVY];
 			break;
 		default:
-			pHudIcon = gHUD.GetIcon("armor_none");
+			pHudIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_ARMOR_NONE];
 			break;
 		}
 
@@ -601,63 +646,43 @@ void CHudProfileStats::Paint()
 		if (!bSkillsEnabled && pPlayer->GetPerkFlags())
 		{
 			int perkFlag = 0;
-			const char *powerup = NULL;
 			if (pPlayer->IsPerkFlagActive(PERK_POWERUP_CRITICAL))
-			{
-				powerup = "critical";
 				perkFlag = PERK_POWERUP_CRITICAL;
-			}
 			else if (pPlayer->IsPerkFlagActive(PERK_POWERUP_CHEETAH))
-			{
-				powerup = "cheetah";
 				perkFlag = PERK_POWERUP_CHEETAH;
-			}
 			else if (pPlayer->IsPerkFlagActive(PERK_POWERUP_NANITES))
-			{
-				powerup = "nanites";
 				perkFlag = PERK_POWERUP_NANITES;
-			}
 			else if (pPlayer->IsPerkFlagActive(PERK_POWERUP_PAINKILLER))
-			{
-				powerup = "painkiller";
 				perkFlag = PERK_POWERUP_PAINKILLER;
-			}
 			else if (pPlayer->IsPerkFlagActive(PERK_POWERUP_PREDATOR))
-			{
-				powerup = "predator";
 				perkFlag = PERK_POWERUP_PREDATOR;
-			}
 
-			if (powerup == NULL || perkFlag == 0)
-				return;
-
-			DataPlayerItem_Player_PowerupItem_t data = GameBaseShared()->GetSharedGameDetails()->GetPlayerPowerupData(perkFlag);
-
-			CHudTexture *pPowerupIcon = NULL;
-			float duration = pPlayer->m_BB2Local.m_flPerkTimer - gpGlobals->curtime;
-			if (duration < 0.0f)
-				duration = 0.0f;
-
-			float percent = (duration / data.flPerkDuration);
-			percent = clamp(percent, 0.0f, 1.0f);
-
-			char pchActive[64];
-			char pchInactive[64];
-
-			Q_snprintf(pchActive, 64, "powerup_%s_active", powerup);
-			Q_snprintf(pchInactive, 64, "powerup_%s_inactive", powerup);
-
-			pPowerupIcon = gHUD.GetIcon(pchInactive);
-			if (pPowerupIcon)
+			if (perkFlag != 0)
 			{
-				surface()->DrawSetColor(GetFgColor());
-				surface()->DrawSetTexture(pPowerupIcon->textureId);
-				surface()->DrawTexturedRect(powerup_x, powerup_y, powerup_x + powerup_w, powerup_y + powerup_h);
-			}
+				const DataPlayerItem_Player_PowerupItem_t *data = GameBaseShared()->GetSharedGameDetails()->GetPlayerPowerupData(perkFlag);
+				if (data)
+				{
+					CHudTexture *pPowerupIcon = NULL;
+					float duration = pPlayer->m_BB2Local.m_flPerkTimer - gpGlobals->curtime;
+					if (duration < 0.0f)
+						duration = 0.0f;
 
-			pPowerupIcon = gHUD.GetIcon(pchActive);
-			if (pPowerupIcon)
-				pPowerupIcon->DrawCircularProgression(GetFgColor(), powerup_x, powerup_y, powerup_w, powerup_h, percent);
+					float percent = (duration / data->flPerkDuration);
+					percent = clamp(percent, 0.0f, 1.0f);
+
+					pPowerupIcon = data->pIconPowerupInactive;
+					if (pPowerupIcon)
+					{
+						surface()->DrawSetColor(GetFgColor());
+						surface()->DrawSetTexture(pPowerupIcon->textureId);
+						surface()->DrawTexturedRect(powerup_x, powerup_y, powerup_x + powerup_w, powerup_y + powerup_h);
+					}
+
+					pPowerupIcon = data->pIconPowerupActive;
+					if (pPowerupIcon)
+						pPowerupIcon->DrawCircularProgression(GetFgColor(), powerup_x, powerup_y, powerup_w, powerup_h, percent);
+				}
+			}
 		}
 
 		float cdxpos = 0.0f, cdypos = 0.0f;
@@ -675,7 +700,7 @@ void CHudProfileStats::Paint()
 			float percentage = 1.0f - ((flEndTime - gpGlobals->curtime) / timeToTake);
 			percentage = clamp(percentage, 0.0f, 1.0f);			
 
-			CHudTexture *pCooldownIcon = gHUD.GetIcon("kick_cd_bg");
+			CHudTexture *pCooldownIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_KICK_CD_BG];
 			if (pCooldownIcon)
 			{
 				surface()->DrawSetColor(GetFgColor());
@@ -683,7 +708,7 @@ void CHudProfileStats::Paint()
 				surface()->DrawTexturedRect(pCooldownIcon->GetOrigPosX() + cdxpos, pCooldownIcon->GetOrigPosY() + cdypos, cdxpos + pCooldownIcon->GetOrigPosX() + pCooldownIcon->GetOrigWide(), cdypos + pCooldownIcon->GetOrigPosY() + pCooldownIcon->GetOrigTall());
 			}
 
-			pCooldownIcon = gHUD.GetIcon("slide_cd_bg");
+			pCooldownIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_SLIDE_CD_BG];
 			if (pCooldownIcon)
 			{
 				surface()->DrawSetColor(GetFgColor());
@@ -691,11 +716,11 @@ void CHudProfileStats::Paint()
 				surface()->DrawTexturedRect(pCooldownIcon->GetOrigPosX() + cdxpos, pCooldownIcon->GetOrigPosY() + cdypos, cdxpos + pCooldownIcon->GetOrigPosX() + pCooldownIcon->GetOrigWide(), cdypos + pCooldownIcon->GetOrigPosY() + pCooldownIcon->GetOrigTall());
 			}
 
-			pCooldownIcon = gHUD.GetIcon("kick_cd_fg");
+			pCooldownIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_KICK_CD_FG];
 			if (pCooldownIcon)
 				pCooldownIcon->DrawCircularProgression(GetFgColor(), pCooldownIcon->GetOrigPosX() + cdxpos, pCooldownIcon->GetOrigPosY() + cdypos, pCooldownIcon->GetOrigWide(), pCooldownIcon->GetOrigTall(), percentage);
 
-			pCooldownIcon = gHUD.GetIcon("slide_cd_fg");
+			pCooldownIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_SLIDE_CD_FG];
 			if (pCooldownIcon)
 				pCooldownIcon->DrawCircularProgression(GetFgColor(), pCooldownIcon->GetOrigPosX() + cdxpos, pCooldownIcon->GetOrigPosY() + cdypos, pCooldownIcon->GetOrigWide(), pCooldownIcon->GetOrigTall(), percentage);
 		}

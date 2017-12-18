@@ -589,25 +589,25 @@ int CHL2MPRules::GetRewardFromRoundWin(CHL2MP_Player *pPlayer, int winnerTeam, b
 	{
 		if ((pPlayer->HasPlayerEscaped() || ((pPlayer->GetTeamNumber() == winnerTeam) && pPlayer->HasFullySpawned() && pPlayer->IsAlive())) && gameOver)
 		{
-			iXPToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iXPGameWinObjective;
+			iXPToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPGameWinObjective;
 		}
 	}
 	else if (GetCurrentGamemode() == MODE_ELIMINATION)
 	{
 		if ((pPlayer->GetSelectedTeam() == winnerTeam) && (GetTeamSize(TEAM_HUMANS) > 0) && (GetTeamSize(TEAM_DECEASED) > 0))
 		{
-			iXPToGive = (gameOver ? GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iXPGameWinElimination : GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iXPRoundWinElimination);
+			iXPToGive = (gameOver ? GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPGameWinElimination : GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPRoundWinElimination);
 		}
 	}
 	else if (GetCurrentGamemode() == MODE_ARENA)
 	{
 		if ((winnerTeam == TEAM_HUMANS) && pPlayer->HasFullySpawned())
 		{
-			iXPToGive = (gameOver ? GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iXPGameWinArena : GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iXPRoundWinArena);
+			iXPToGive = (gameOver ? GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPGameWinArena : GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPRoundWinArena);
 			GameBaseShared()->GetAchievementManager()->WriteToAchievement(pPlayer, "ACH_GM_ARENA_WIN");
 
 			if (timeLeft <= 0)
-				iXPToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iXPRoundWinArena;
+				iXPToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPRoundWinArena;
 		}
 	}
 	else if (GetCurrentGamemode() == MODE_DEATHMATCH)
@@ -645,11 +645,11 @@ int CHL2MPRules::GetRewardFromRoundWin(CHL2MP_Player *pPlayer, int winnerTeam, b
 
 		// Did you 'win'?
 		if (playerIndexFirst == pPlayer->entindex())
-			iXPToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iXPGameWinDeathmatch;
+			iXPToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPGameWinDeathmatch;
 		else if (playerIndexSecond == pPlayer->entindex())
-			iXPToGive = (GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iXPGameWinDeathmatch / 2);
+			iXPToGive = (GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPGameWinDeathmatch / 2);
 		else
-			iXPToGive = (GameBaseShared()->GetSharedGameDetails()->GetGamemodeData().iXPGameWinDeathmatch / 4);
+			iXPToGive = (GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPGameWinDeathmatch / 4);
 	}
 
 	if (iXPToGive != 0)
@@ -2563,7 +2563,7 @@ bool CHL2MPRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 	if ( pPlayer->ClientCommand( args ) )
 		return true;
 
-	if (pPlayer && FStrEq(args[0], "player_vote_endmap_choice") && (args.ArgC() == 2) && m_bEndMapVotingEnabled)
+	if (pPlayer && FStrEq(args[0], "player_vote_endmap_choice") && (args.ArgC() == 2) && m_bEndMapVotingEnabled && pPlayer->ShouldRunRateLimitedCommand(args))
 	{
 		m_iEndVotePlayerChoices[pPlayer->entindex()] = atoi(args[1]);
 		RecalculateEndMapVotes();
@@ -3190,7 +3190,7 @@ CBaseEntity *CHL2MPRules::GetNearbyBreakableDoorEntity(CBaseEntity *pChecker)
 			if (pDoor->m_iHealth <= 0)
 				continue;
 
-			float dist = vecPos.DistTo(pDoor->GetAbsOrigin());
+			float dist = vecPos.DistTo(pDoor->GetLocalOrigin());
 			if (dist > 100.0f)
 				continue;
 

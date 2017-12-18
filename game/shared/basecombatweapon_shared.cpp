@@ -2476,8 +2476,60 @@ void CBaseCombatWeapon::MeleeAttackUpdate(void)
 #endif
 }
 
+#ifndef CLIENT_DLL
+class CTraceFilterMeleeNew : public CTraceFilterSimple
+{
+public:
+	DECLARE_CLASS(CTraceFilterMeleeNew, CTraceFilterSimple);
+
+	CTraceFilterMeleeNew(IHandleEntity *pHandleEntity, int collisionGroup, CBaseCombatWeapon *pWeapon, int traceType) :
+		BaseClass(pHandleEntity, collisionGroup), traceTypeToUse((TraceType_t)traceType)
+	{
+		m_hWeaponLink = pWeapon;
+	}
+
+	virtual TraceType_t	GetTraceType() const
+	{
+		return traceTypeToUse;
+	}
+
+	virtual bool ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask)
+	{
+		CBaseCombatWeapon *pWeaponActive = m_hWeaponLink.Get();
+		if (pWeaponActive)
+		{
+			int entityIndexHit = -1;
+			int ownerIndex = pWeaponActive->GetOwner() ? pWeaponActive->GetOwner()->entindex() : -1;
+			CBaseEntity *pEntity = EntityFromEntityHandle(pHandleEntity);
+			if (pEntity)
+			{
+				entityIndexHit = pEntity->entindex();
+				if (entityIndexHit == ownerIndex || entityIndexHit == pWeaponActive->entindex())
+					return false;
+
+				if (!pWeaponActive->CanHitThisTarget(entityIndexHit))
+					return false;
+			}
+
+			bool ret = BaseClass::ShouldHitEntity(pHandleEntity, contentsMask);
+			if (ret && (entityIndexHit >= 0))
+				pWeaponActive->StruckTarget(entityIndexHit);
+
+			return ret;
+		}
+
+		return BaseClass::ShouldHitEntity(pHandleEntity, contentsMask);
+	}
+
+protected:
+	CHandle<CBaseCombatWeapon> m_hWeaponLink;
+	const TraceType_t traceTypeToUse;
+};
+#endif
+
 void CBaseCombatWeapon::MeleeAttackTrace(void)
 {
+#ifndef CLIENT_DLL
 	CHL2MP_Player *pOwner = ToHL2MPPlayer(GetOwner());
 	if (!pOwner)
 		return;
@@ -2487,18 +2539,16 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 		return;
 
 	trace_t traceHit;
-	CTraceFilterSkipTwoEntities traceFilter(this, pOwner, COLLISION_GROUP_NONE);
-	CBaseEntity *pHitEnt = NULL;
-
-#ifndef CLIENT_DLL
-	Activity activity = pvm->GetSequenceActivity(pvm->GetSequence());
-#endif
-
 	Vector swingStart = pOwner->Weapon_ShootPosition();
 	Vector forward;
-	pOwner->EyeVectors(&forward, NULL, NULL);
+	AngleVectors(pOwner->EyeAngles(), &forward);
 	VectorNormalize(forward);
 	Vector swingEnd = swingStart + (forward * GetRange());
+
+	IPredictionSystem::SuppressHostEvents(NULL);
+	CTraceFilterMeleeNew traceFilter(pOwner, COLLISION_GROUP_NONE, this, CanHitThisTarget(0) ? TRACE_EVERYTHING : TRACE_ENTITIES_ONLY);
+
+	Activity activity = pvm->GetSequenceActivity(pvm->GetSequence());
 
 	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT, &traceFilter, &traceHit);
 	if (traceHit.fraction == 1.0)
@@ -2506,11 +2556,9 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 		if (m_iMeleeAttackType == MELEE_TYPE_BASH_SLASH || m_iMeleeAttackType == MELEE_TYPE_SLASH)
 		{
 			swingEnd = swingStart + (forward * (GetRange() / 2.0f));
-			UTIL_TraceHull(swingStart, swingEnd, GetMeleeBoundsMin(), GetMeleeBoundsMax(), MASK_SHOT_HULL, &traceFilter, &traceHit);
+			UTIL_TraceHull(swingEnd, swingEnd, GetMeleeBoundsMin(), GetMeleeBoundsMax(), MASK_SHOT_HULL, &traceFilter, &traceHit);
 		}
 	}
-
-	pHitEnt = traceHit.m_pEnt;
 
 	if (traceHit.fraction == 1.0f)
 	{
@@ -2519,16 +2567,15 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 	}
 	else
 	{
+		CBaseEntity *pHitEnt = traceHit.m_pEnt;
 		if (pHitEnt != NULL)
 		{
-			AddViewKick();
+			if (m_pEnemiesStruck.Count() <= 1)
+				AddViewKick();
 
-#ifndef CLIENT_DLL
-			int index = pHitEnt->entindex();
-			if (!CanHitThisTarget(index))
-				return;
-
-			m_pEnemiesStruck.AddToTail(index);
+			bool bHitWorld = traceHit.DidHitWorld();
+			if (bHitWorld)
+				StruckTarget(0);
 
 			CTakeDamageInfo info(GetOwner(), GetOwner(), GetDamageForActivity(activity), GetMeleeDamageType());
 			CalculateMeleeDamageForce(&info, forward, traceHit.endpos);
@@ -2551,7 +2598,6 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 					pHitEnt->SetAbsVelocity(pHitEnt->GetAbsVelocity() + vecExtraVelocity);
 				}
 			}
-#endif
 
 			IPhysicsSurfaceProps *physprops = MoveHelper()->GetSurfaceProps();
 			if (physprops)
@@ -2575,6 +2621,7 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 
 		UTIL_ImpactTrace(&traceHit, GetMeleeDamageType());
 	}
+#endif
 }
 
 #ifndef CLIENT_DLL
@@ -2641,17 +2688,11 @@ float CBaseCombatWeapon::GetDamageForActivity(Activity hitActivity)
 
 Vector CBaseCombatWeapon::GetMeleeBoundsMax(void)
 {
-	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
-	if (!pOwner)
-		return Vector(16, 16, 16);
+	float range = abs((GetRange() / 2.0f));
+	if (range <= 10.0f)
+		return Vector(10, 10, 12);
 
-	Vector forward, right;
-	pOwner->EyeVectors(&forward, &right, NULL);
-	VectorNormalize(forward);
-	VectorNormalize(right);
-
-	float range = (GetRange() / 2.0f);
-	return (Vector(1, 1, 12) + (forward * range) + (right * 20.0f));
+	return Vector(range, range, 12);
 }
 
 Vector CBaseCombatWeapon::GetMeleeBoundsMin(void)

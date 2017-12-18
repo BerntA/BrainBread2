@@ -221,36 +221,6 @@ ShadowType_t C_BaseCombatWeapon::ShadowCastType()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: This weapon is the active weapon, and it should now draw anything
-//			it wants to. This gets called every frame.
-//-----------------------------------------------------------------------------
-void C_BaseCombatWeapon::Redraw()
-{
-	if ( g_pClientMode->ShouldDrawCrosshair() )
-	{
-		DrawCrosshair();
-	}
-
-	// ammo drawing has been moved into hud_ammo.cpp
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Draw the weapon's crosshair
-//-----------------------------------------------------------------------------
-void C_BaseCombatWeapon::DrawCrosshair()
-{
-	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
-	if (!player)
-		return;
-
-	CHudCrosshair *crosshair = GET_HUDELEMENT(CHudCrosshair);
-	if (!crosshair)
-		return;
-
-	crosshair->SetCrosshair();
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: This weapon is the active weapon, and the viewmodel for it was just drawn.
 //-----------------------------------------------------------------------------
 void C_BaseCombatWeapon::ViewModelDrawn( C_BaseViewModel *pViewModel )

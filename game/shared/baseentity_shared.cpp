@@ -1872,7 +1872,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 						surfacedata_t *p_penetrsurf = physprops->GetSurfaceData(tr.surface.surfaceProps);
 						if (p_penetrsurf)
 						{
-							DataPenetrationItem_t *penetrationInfo = GetPenetrationDataForMaterial(p_penetrsurf->game.material);
+							const DataPenetrationItem_t *penetrationInfo = GetPenetrationDataForMaterial(p_penetrsurf->game.material);
 							if (penetrationInfo)
 							{
 								Vector vecNewStart = tr.endpos + vecDir * penetrationInfo->depth;

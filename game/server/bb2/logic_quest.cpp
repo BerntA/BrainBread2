@@ -252,7 +252,10 @@ void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, 
 			if (pClient->GetTeamNumber() != TEAM_HUMANS)
 				continue;
 
-			pClient->CanLevelUp(MAX_QUEST_EXPERIENCE, NULL);
+			float xpToGet = ((float)pClient->m_BB2Local.m_iSkill_XPLeft) * MAX_QUEST_EXPERIENCE; // Give X % of XP needed as a reward.
+			xpToGet = round(xpToGet);
+
+			pClient->CanLevelUp(((int)xpToGet), NULL);
 		}
 
 		GetLinkedQuestData()->pObjectives[iObjectiveToProgress].m_bObjectiveCompleted = true;

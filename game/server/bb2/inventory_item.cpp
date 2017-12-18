@@ -20,6 +20,7 @@ DEFINE_KEYFIELD(m_iItemID, FIELD_INTEGER, "ItemID"),
 DEFINE_KEYFIELD(szEntityLink, FIELD_STRING, "EntityLink"),
 DEFINE_KEYFIELD(m_bIsMapItem, FIELD_BOOLEAN, "MapItem"),
 DEFINE_KEYFIELD(m_bExcludeFromInventory, FIELD_BOOLEAN, "ExcludeItem"),
+DEFINE_FIELD(m_bHasDoneLateUpdate, FIELD_BOOLEAN),
 DEFINE_OUTPUT(m_OnUse, "OnUse"),
 END_DATADESC()
 
@@ -35,6 +36,7 @@ CInventoryItem::CInventoryItem()
 	szEntityLink = NULL_STRING;
 	m_pObjIcon = NULL;
 	m_bExcludeFromInventory = false;
+	m_bHasDoneLateUpdate = false;
 }
 
 CInventoryItem::~CInventoryItem()
@@ -63,29 +65,29 @@ void CInventoryItem::Spawn()
 		return;
 	}
 
-	int index = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemIndex(m_iItemID, m_bIsMapItem);
-	if (index == -1)
+	const DataInventoryItem_Base_t *data = GameBaseShared()->GetSharedGameDetails()->GetInventoryData(m_iItemID, m_bIsMapItem);
+	if (data == NULL)
 	{
 		Warning("Item '%s' doesn't exist!\nRemoving!\n", STRING(GetEntityName()));
 		UTIL_Remove(this);
 		return;
 	}
 
-	if (GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].bGlobalGlow)
+	if (data->bGlobalGlow)
 	{
-		Color glowColor = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].clGlowColor;
+		Color glowColor = data->clGlowColor;
 		color32 col32 = { (byte)glowColor.r(), (byte)glowColor.g(), (byte)glowColor.b(), (byte)glowColor.a() };
 		m_GlowColor = col32;
 		SetGlowMode(GLOW_MODE_GLOBAL);
 	}
 
-	bool bRenderObjIcon = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].bEnableObjectiveIcon;
+	bool bRenderObjIcon = data->bEnableObjectiveIcon;
 	if (bRenderObjIcon)
 	{
 		CObjectiveIcon *pObjIcon = (CObjectiveIcon*)CreateEntityByName("objective_icon");
 		if (pObjIcon)
 		{
-			const char *szTexture = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].szObjectiveIconTexture;
+			const char *szTexture = data->szObjectiveIconTexture;
 
 			Vector vecOrigin = this->GetAbsOrigin();
 			vecOrigin.z += OBJECTIVE_ICON_EXTRA_HEIGHT;
@@ -98,7 +100,7 @@ void CInventoryItem::Spawn()
 		}
 	}
 
-	m_nSkin = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].iSkin;
+	m_nSkin = data->iSkin;
 
 	EnableRotationEffect();
 
@@ -121,8 +123,8 @@ void CInventoryItem::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 	if (!HL2MPRules()->m_bRoundStarted && HL2MPRules()->ShouldHideHUDDuringRoundWait())
 		return;
 
-	int index = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemIndex(m_iItemID, m_bIsMapItem);
-	if (index == -1)
+	const DataInventoryItem_Base_t *data = GameBaseShared()->GetSharedGameDetails()->GetInventoryData(m_iItemID, m_bIsMapItem);
+	if (data == NULL)
 		return;
 
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(pActivator);
@@ -137,24 +139,23 @@ void CInventoryItem::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 
 	CSingleUserRecipientFilter filter(pPlayer);
 
-	bool bAutoConsume = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].bAutoConsume;
-
+	bool bAutoConsume = data->bAutoConsume;
 	if (!bAutoConsume && !m_bExcludeFromInventory && (GameBaseShared()->GetInventoryItemCountForPlayer(pActivator->entindex()) >= MAX_INVENTORY_ITEM_COUNT))
 	{
 		GameBaseServer()->SendToolTip("#TOOLTIP_INVENTORY_FULL", 0, pActivator->entindex());
-		EmitSound(filter, pPlayer->entindex(), GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].szSoundScriptFailure);
+		EmitSound(filter, pPlayer->entindex(), data->szSoundScriptFailure);
 		return;
 	}
 
 	const char *szLink = (szEntityLink == NULL_STRING) ? "" : STRING(szEntityLink);
 
-	int iRequiredLevel = GameBaseShared()->GetSharedGameDetails()->GetInventorySharedDataValue("LevelReq", m_iItemID, m_bIsMapItem);
+	int iRequiredLevel = data->iLevelReq;
 	if (pPlayer->GetPlayerLevel() < iRequiredLevel)
 	{
 		char pchArg1[16];
 		Q_snprintf(pchArg1, 16, "%i", iRequiredLevel);
 		GameBaseServer()->SendToolTip("#TOOLTIP_ITEM_DENY_LEVEL", 0, pActivator->entindex(), pchArg1);
-		EmitSound(filter, pPlayer->entindex(), GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].szSoundScriptFailure);
+		EmitSound(filter, pPlayer->entindex(), data->szSoundScriptFailure);
 		return;
 	}
 
@@ -170,12 +171,12 @@ void CInventoryItem::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 	{
 		if (!GameBaseShared()->UseInventoryItem(pActivator->entindex(), m_iItemID, m_bIsMapItem, true))
 		{
-			EmitSound(filter, pPlayer->entindex(), GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].szSoundScriptFailure);
+			EmitSound(filter, pPlayer->entindex(), data->szSoundScriptFailure);
 			return;
 		}
 	}
 
-	EmitSound(filter, pPlayer->entindex(), GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].szSoundScriptSuccess);
+	EmitSound(filter, pPlayer->entindex(), data->szSoundScriptSuccess);
 	m_OnUse.FireOutput(this, this);
 	UTIL_Remove(this);
 }
@@ -191,8 +192,8 @@ void CInventoryItem::DelayedUse(CBaseEntity *pActivator)
 	if (!HL2MPRules()->m_bRoundStarted && HL2MPRules()->ShouldHideHUDDuringRoundWait())
 		return;
 
-	int index = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemIndex(m_iItemID, m_bIsMapItem);
-	if (index == -1)
+	const DataInventoryItem_Base_t *data = GameBaseShared()->GetSharedGameDetails()->GetInventoryData(m_iItemID, m_bIsMapItem);
+	if (data == NULL)
 		return;
 
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(pActivator);
@@ -205,29 +206,29 @@ void CInventoryItem::DelayedUse(CBaseEntity *pActivator)
 		return;
 	}
 
-	bool bAutoConsume = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].bAutoConsume;
+	bool bAutoConsume = data->bAutoConsume;
 	if (!bAutoConsume)
 		return;
 
 	CSingleUserRecipientFilter filter(pPlayer);
 
-	int iRequiredLevel = GameBaseShared()->GetSharedGameDetails()->GetInventorySharedDataValue("LevelReq", m_iItemID, m_bIsMapItem);
+	int iRequiredLevel = data->iLevelReq;
 	if (pPlayer->GetPlayerLevel() < iRequiredLevel)
 	{
 		char pchArg1[16];
 		Q_snprintf(pchArg1, 16, "%i", iRequiredLevel);
 		GameBaseServer()->SendToolTip("#TOOLTIP_ITEM_DENY_LEVEL", 0, pActivator->entindex(), pchArg1);
-		EmitSound(filter, pPlayer->entindex(), GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].szSoundScriptFailure);
+		EmitSound(filter, pPlayer->entindex(), data->szSoundScriptFailure);
 		return;
 	}
 
 	if (!GameBaseShared()->UseInventoryItem(pActivator->entindex(), m_iItemID, m_bIsMapItem, true, true))
 	{
-		EmitSound(filter, pPlayer->entindex(), GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].szSoundScriptFailure);
+		EmitSound(filter, pPlayer->entindex(), data->szSoundScriptFailure);
 		return;
 	}
 
-	EmitSound(filter, pPlayer->entindex(), GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].szSoundScriptSuccess);
+	EmitSound(filter, pPlayer->entindex(), data->szSoundScriptSuccess);
 	m_OnUse.FireOutput(this, this);
 	UTIL_Remove(this);
 }
@@ -255,6 +256,9 @@ void CInventoryItem::OnRotationEffect(void)
 {
 	BaseClass::OnRotationEffect();
 
+	if ((EnablePhysics() == false) && m_bHasDoneLateUpdate)
+		return;
+
 	CBaseEntity *pEnt = m_pObjIcon.Get();
 	if (pEnt)
 	{
@@ -262,6 +266,8 @@ void CInventoryItem::OnRotationEffect(void)
 		vecOrigin.z += OBJECTIVE_ICON_EXTRA_HEIGHT;
 		pEnt->SetAbsOrigin(vecOrigin);
 	}
+
+	m_bHasDoneLateUpdate = true;
 }
 
 CON_COMMAND_F(bb2_create_inventory_item, "Create some inventory item.", FCVAR_CHEAT)
@@ -287,7 +293,8 @@ CON_COMMAND_F(bb2_create_inventory_item, "Create some inventory item.", FCVAR_CH
 		return;
 	}
 
-	if (!GameBaseShared()->GetSharedGameDetails()->DoesInventoryItemExist(iItemID, bMapItem))
+	const DataInventoryItem_Base_t *data = GameBaseShared()->GetSharedGameDetails()->GetInventoryData(iItemID, bMapItem);
+	if (data == NULL)
 	{
 		Warning("This item doesn't exist!\nInvalid itemID!\n");
 		return;
@@ -301,7 +308,7 @@ CON_COMMAND_F(bb2_create_inventory_item, "Create some inventory item.", FCVAR_CH
 
 		pItem->SetAbsOrigin(vecOrigin);
 		pItem->SetAbsAngles(QAngle(0, 0, 0));
-		pItem->SetItem(GameBaseShared()->GetSharedGameDetails()->GetInventoryItemModel(iItemID, bMapItem), iItemID, NULL, bMapItem);
+		pItem->SetItem(data->szModelPath, iItemID, NULL, bMapItem);
 		pItem->Spawn();
 		UTIL_DropToFloor(pItem, MASK_SOLID_BRUSHONLY, pPlayer);
 	}

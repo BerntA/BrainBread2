@@ -44,14 +44,17 @@ CInventoryItemRandomizer::CInventoryItemRandomizer()
 CBaseEntity *CInventoryItemRandomizer::SpawnNewEntity(void)
 {
 	int itemIndex = -1;
+	int itemCount = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList().Count();
+	if (itemCount <= 0)
+		return NULL;
 
 	if (!m_iOverrideID)
 	{
 		bool bCanLoopThrough = false;
-
-		for (int i = 0; i < GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList().Count(); i++)
+		for (int i = 0; i < itemCount; i++)
 		{
-			if (GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[i].bAutoConsume && !GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[i].bIsMapItem)
+			const DataInventoryItem_Base_t *data = &GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[i];
+			if (data->bAutoConsume && !data->bIsMapItem)
 			{
 				bCanLoopThrough = true;
 				break;
@@ -63,19 +66,18 @@ CBaseEntity *CInventoryItemRandomizer::SpawnNewEntity(void)
 
 		while (itemIndex == -1)
 		{
-			int index = random->RandomInt(0, (GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList().Count() - 1));
-			bool bAutoConsume = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].bAutoConsume;
-			bool bMapItemCheck = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index].bIsMapItem;
-			if (bAutoConsume && !bMapItemCheck)
+			int index = random->RandomInt(0, (itemCount - 1));
+			const DataInventoryItem_Base_t *data = &GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index];
+			if (data->bAutoConsume && !data->bIsMapItem)
 				itemIndex = index;
 		}
 	}
 	else
 	{
-		for (int i = 0; i < GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList().Count(); i++)
+		for (int i = 0; i < itemCount; i++)
 		{
-			if (GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[i].bAutoConsume && (GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[i].iItemID == m_iOverrideID)
-				&& (!GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[i].bIsMapItem))
+			const DataInventoryItem_Base_t *data = &GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[i];
+			if (data->bAutoConsume && (data->iItemID == m_iOverrideID) && !data->bIsMapItem)
 			{
 				itemIndex = i;
 				break;
@@ -86,7 +88,8 @@ CBaseEntity *CInventoryItemRandomizer::SpawnNewEntity(void)
 			return NULL;
 	}
 
-	int iItemID = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[itemIndex].iItemID;
+	Assert(itemIndex >= 0 && itemIndex < itemCount);
+	const DataInventoryItem_Base_t *data = &GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[itemIndex];
 	CInventoryItem *pItem = (CInventoryItem *)CreateEntityByName("inventory_item");
 	if (pItem)
 	{
@@ -95,7 +98,7 @@ CBaseEntity *CInventoryItemRandomizer::SpawnNewEntity(void)
 
 		pItem->SetAbsOrigin(vecOrigin);
 		pItem->SetAbsAngles(QAngle(0, 0, 0));
-		pItem->SetItem(GameBaseShared()->GetSharedGameDetails()->GetInventoryItemModel(iItemID, false), iItemID, NULL, false);
+		pItem->SetItem(data->szModelPath, data->iItemID, NULL, false);
 		pItem->Spawn();
 		UTIL_DropToFloor(pItem, MASK_SOLID_BRUSHONLY, this);
 	}

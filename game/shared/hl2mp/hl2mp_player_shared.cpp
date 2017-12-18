@@ -168,7 +168,7 @@ void CHL2MP_Player::SharedPostThinkHL2MP(void)
 	{
 		ViewPunch(QAngle(2, 2, 0));
 
-		float cooldown = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flKickCooldown;
+		float cooldown = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flKickCooldown;
 		m_BB2Local.m_flSlideKickCooldownEnd = cooldown;
 		m_BB2Local.m_flSlideKickCooldownStart = gpGlobals->curtime;
 
@@ -189,9 +189,9 @@ bool CHL2MP_Player::IsSliding(void) const
 
 void CHL2MP_Player::DoPlayerKick(void)
 {
-	float damage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flKickDamage;
-	float knockbackForce = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flKickKnockbackForce;
-	float range = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flKickRange;
+	float damage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flKickDamage;
+	float knockbackForce = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flKickKnockbackForce;
+	float range = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flKickRange;
 
 	if (GetSkillValue(PLAYER_SKILL_HUMAN_POWER_KICK) > 0)
 	{

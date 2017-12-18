@@ -1185,10 +1185,10 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		if (pAttacker && pClient->IsHuman() && !pClient->IsPlayerInfected() && (pAttacker->Classify() == CLASS_ZOMBIE) && (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE) && !GameBaseServer()->IsTutorialModeEnabled() && !GameBaseServer()->IsStoryMode())
 		{
 			float flHealthLeft = (float)m_iHealth - info.GetDamage();
-			float m_flHP = (((float)GetMaxHealth()) / 100.0f) * (float)GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().iInfectionStartPercent; // % of the health.
+			float m_flHP = (((float)GetMaxHealth()) / 100.0f) * (float)GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iInfectionStartPercent; // % of the health.
 			if (m_flHP > flHealthLeft)
 			{
-				pClient->m_BB2Local.m_flInfectionTimer = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().flInfectionDuration;
+				pClient->m_BB2Local.m_flInfectionTimer = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->flInfectionDuration;
 				pClient->SetPlayerInfected(true);
 				SetCollisionGroup(COLLISION_GROUP_PLAYER_ZOMBIE);
 				SetAnimation(PLAYER_IDLE);

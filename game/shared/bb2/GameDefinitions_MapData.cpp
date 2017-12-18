@@ -363,6 +363,7 @@ bool CGameDefinitionsMapData::VerifyMapFile(const char *map, unsigned long long 
 #else
 void CGameDefinitionsMapData::GetMapInfo(const char *map, gameMapItem_t &item, KeyValues *pkvData)
 {
+	GetMapImageData(map, item);
 	bool bShouldDelete = false;
 	KeyValues *pkvInfo = pkvData;
 	if (!pkvInfo)
@@ -404,5 +405,40 @@ void CGameDefinitionsMapData::GetMapInfo(const char *map, gameMapItem_t &item, K
 
 	if (bShouldDelete)
 		pkvInfo->deleteThis();
+}
+
+void CGameDefinitionsMapData::GetMapImageData(const char *map, gameMapItem_t &item)
+{
+	int numImagePreviews = 0, numLoadingScreens = 0;
+	FileFindHandle_t findHandle;
+
+	const char *pFilename = filesystem->FindFirstEx("materials/vgui/maps/*.vmt", "MOD", &findHandle);
+	while (pFilename)
+	{
+		if (numImagePreviews >= MAX_MAP_PREVIEW_IMAGES)
+			break;
+
+		if (!filesystem->IsDirectory(pFilename, "MOD") && Q_stristr(pFilename, map))
+		{
+			Q_snprintf(item.pszImagePreview[numImagePreviews], MAX_WEAPON_STRING, "maps/%s_%i", map, numImagePreviews);
+			numImagePreviews++;
+		}
+
+		pFilename = filesystem->FindNext(findHandle);
+	}
+	filesystem->FindClose(findHandle);
+
+	pFilename = filesystem->FindFirstEx("materials/vgui/loading/*.vmt", "MOD", &findHandle);
+	while (pFilename)
+	{
+		if (!filesystem->IsDirectory(pFilename, "MOD") && Q_stristr(pFilename, map))
+			numLoadingScreens++;		
+
+		pFilename = filesystem->FindNext(findHandle);
+	}
+	filesystem->FindClose(findHandle);
+
+	item.numImagePreviews = numImagePreviews;
+	item.numLoadingScreens = numLoadingScreens;
 }
 #endif

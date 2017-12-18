@@ -311,13 +311,13 @@ CON_COMMAND(dev_reset_stats, "Reset Stats")
 	}
 
 	// BB2 SKILL TREE - Base
-	int iLevel = GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().iLevel;
+	int iLevel = GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iLevel;
 	if (iLevel < 1)
 		iLevel = 1;
 
 	pPlayer->SetPlayerLevel(iLevel);
 	pPlayer->m_BB2Local.m_iSkill_Talents = ((iLevel > 100) ? 100 : (iLevel - 1));
-	pPlayer->m_BB2Local.m_iSkill_XPLeft = (GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().iXPIncreasePerLevel * iLevel);
+	pPlayer->m_BB2Local.m_iSkill_XPLeft = (GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iXPIncreasePerLevel * iLevel);
 	pPlayer->m_BB2Local.m_iSkill_XPCurrent = 0;
 	pPlayer->m_BB2Local.m_iZombieCredits = 0;
 
@@ -361,13 +361,13 @@ CON_COMMAND(bb2_perform_prestige, "If your level is high enough you can reset al
 	}
 
 	// BB2 SKILL TREE - Base
-	int iLevel = GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().iLevel;
+	int iLevel = GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iLevel;
 	if (iLevel < 1)
 		iLevel = 1;
 
 	pPlayer->SetPlayerLevel(iLevel);
 	pPlayer->m_BB2Local.m_iSkill_Talents = ((iLevel > 100) ? 100 : (iLevel - 1));
-	pPlayer->m_BB2Local.m_iSkill_XPLeft = (GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData().iXPIncreasePerLevel * iLevel);
+	pPlayer->m_BB2Local.m_iSkill_XPLeft = (GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iXPIncreasePerLevel * iLevel);
 	pPlayer->m_BB2Local.m_iSkill_XPCurrent = 0;
 	pPlayer->m_BB2Local.m_iZombieCredits = 0;
 

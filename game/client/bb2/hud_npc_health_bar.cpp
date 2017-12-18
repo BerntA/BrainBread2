@@ -107,7 +107,7 @@ void CHudNPCHealthBar::OnThink(void)
 		{
 			// Are we within distance?
 			bool bCanShow = false;
-			float flDistance = pClient->GetAbsOrigin().DistTo(pObject->GetAbsOrigin());
+			float flDistance = pClient->GetLocalOrigin().DistTo(pObject->GetLocalOrigin());
 
 			if (pszNPCHealthBarList[i].m_bIsBoss)
 			{
@@ -224,8 +224,8 @@ void CHudNPCHealthBar::Paint()
 		}
 
 		wchar_t unicode[32];
-		Vector vecNewPos = pObject->GetAbsOrigin();
-		vecNewPos.z += 90;
+		Vector vecNewPos = pObject->GetLocalOrigin();
+		vecNewPos.z += pszNPCHealthBarList[i].vecMaxs.z + 6.0f;
 
 		int xpos, ypos;
 		GetVectorInScreenSpace(vecNewPos, xpos, ypos, NULL);
@@ -289,7 +289,7 @@ void CHudNPCHealthBar::Paint()
 //------------------------------------------------------------------------
 // Purpose: Add an item to our health bar item list.
 //------------------------------------------------------------------------
-void CHudNPCHealthBar::AddHealthBarItem(int index, bool bIsBoss, int currHealth, int maxHealth, const char *name)
+void CHudNPCHealthBar::AddHealthBarItem(C_BaseEntity *pEntity, int index, bool bIsBoss, int currHealth, int maxHealth, const char *name)
 {
 	int iIndex = index;
 	bool bBoss = bIsBoss;
@@ -304,13 +304,6 @@ void CHudNPCHealthBar::AddHealthBarItem(int index, bool bIsBoss, int currHealth,
 		return;
 	}
 
-	C_BaseEntity *pObject = ClientEntityList().GetBaseEntity(iIndex);
-	if (!pObject)
-	{
-		DevMsg(2, "Tried to add a health bar item for an npc that doesn't exist!\n");
-		return;
-	}
-
 	HealthBarItem_t pItem;
 	pItem.m_bIsBoss = bBoss;
 	pItem.m_iCurrentHealth = iCurrHP;
@@ -321,6 +314,7 @@ void CHudNPCHealthBar::AddHealthBarItem(int index, bool bIsBoss, int currHealth,
 	pItem.m_bFadingIn = false;
 	pItem.m_bFadingOut = false;
 	pItem.m_flLerp = 1000.0f;
+	pEntity->GetRenderBounds(pItem.vecMins, pItem.vecMaxs);
 	Q_strncpy(pItem.szName, name, MAX_PLAYER_NAME_LENGTH);
 
 	pszNPCHealthBarList.AddToTail(pItem);

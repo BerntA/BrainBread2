@@ -26,6 +26,7 @@ CNPCBaseProperties::CNPCBaseProperties()
 	m_flRange = 50.0f;
 	m_bGender = false;
 	pszModelName[0] = 0;
+	m_pNPCData = NULL;
 
 	ListenForGameEvent("player_connection");
 	ListenForGameEvent("round_started");
@@ -33,42 +34,50 @@ CNPCBaseProperties::CNPCBaseProperties()
 
 bool CNPCBaseProperties::ParseNPC(int index)
 {
-	bool bParsed = (GameBaseShared()->GetNPCData() && GameBaseShared()->GetNPCData()->DoesNPCExist(GetNPCName()));
-	if (bParsed)
+	if (!GameBaseShared() || !GameBaseShared()->GetNPCData())
+		return false;
+
+	CNPCDataItem *npcData = GameBaseShared()->GetNPCData()->GetNPCData(GetNPCName());
+	if (npcData)
 	{
+		m_pNPCData = npcData;
 		m_iEntIndex = index;
 
-		Q_strncpy(pszModelName, GameBaseShared()->GetNPCData()->GetModel(GetNPCName()), MAX_WEAPON_STRING);
+		const NPCModelItem_t *modelItem = npcData->GetModelItem();
+		Assert(modelItem != NULL);
+
+		Q_strncpy(pszModelName, modelItem ? modelItem->szModelPath : "", MAX_WEAPON_STRING);
 		m_bGender = (Q_stristr(pszModelName, "female")) ? false : true;
 
-		m_iXPToGive = GameBaseShared()->GetNPCData()->GetXP(GetNPCName());
-		m_iTotalHP = GameBaseShared()->GetNPCData()->GetHealth(GetNPCName());
-		m_iDamageOneHand = GameBaseShared()->GetNPCData()->GetSlashDamage(GetNPCName());
-		m_iDamageBothHands = GameBaseShared()->GetNPCData()->GetDoubleSlashDamage(GetNPCName());
-		m_iDamageKick = GameBaseShared()->GetNPCData()->GetKickDamage(GetNPCName());
-		m_iModelSkin = GameBaseShared()->GetNPCData()->GetSkin(GetNPCName(), pszModelName);
-		m_flRange = GameBaseShared()->GetNPCData()->GetRange(GetNPCName());
+		m_iXPToGive = npcData->iXP;
+		m_iTotalHP = npcData->iHealth;
+		m_iDamageOneHand = npcData->iSlashDamage;
+		m_iDamageBothHands = npcData->iDoubleSlashDamage;
+		m_iDamageKick = npcData->iKickDamage;
+		m_iModelSkin = modelItem ? random->RandomInt(modelItem->iSkinMin, modelItem->iSkinMax) : 0;
+		m_flRange = npcData->flRange;
 	}
 	else
 		Warning("Can't load the npc data!\nRemoving npc!\n");
 
-	return bParsed;
+	return (npcData != NULL);
 }
 
 float CNPCBaseProperties::GetScaleValue(bool bDamageScale)
 {
-	return (bb2_npc_scaling.GetInt() * GameBaseShared()->GetNPCData()->GetScale(GetNPCName(), bDamageScale));
+	return (bb2_npc_scaling.GetInt() * (bDamageScale ? m_pNPCData->flDamageScale : m_pNPCData->flHealthScale));
 }
 
 void CNPCBaseProperties::UpdateNPCScaling()
 {
-	if ((!bb2_enable_scaling.GetBool() && (HL2MPRules()->GetCurrentGamemode() != MODE_ARENA)) || (HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION))
+	if ((!bb2_enable_scaling.GetBool() && (HL2MPRules()->GetCurrentGamemode() != MODE_ARENA)) || (HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION) || (m_pNPCData == NULL))
 	{
 		m_flDamageScaleValue = 0.0f;
 		m_flHealthScaleValue = 0.0f;
 		return;
 	}
 
+	m_pNPCData = GameBaseShared()->GetNPCData()->GetNPCData(GetNPCName());
 	float flDamageScaleAmount = 0.0f, flHealthScaleAmount = 0.0f;
 	int iNumPlayers = 0;
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
@@ -89,19 +98,19 @@ void CNPCBaseProperties::UpdateNPCScaling()
 	flDamageScaleAmount = (iNumPlayers * GetScaleValue(true));
 	flHealthScaleAmount = (iNumPlayers * GetScaleValue(false));
 
-	float defaultTotalHP = GameBaseShared()->GetNPCData()->GetHealth(GetNPCName());
+	float defaultTotalHP = m_pNPCData->iHealth;
 	float flTotal = (flHealthScaleAmount * (float)((float)defaultTotalHP / 100)) + defaultTotalHP;
 	m_iTotalHP = (int)flTotal;
 
-	float damageSingle = GameBaseShared()->GetNPCData()->GetSlashDamage(GetNPCName());
-	float damageBoth = GameBaseShared()->GetNPCData()->GetDoubleSlashDamage(GetNPCName());
-	float damageKick = GameBaseShared()->GetNPCData()->GetKickDamage(GetNPCName());
+	float damageSingle = m_pNPCData->iSlashDamage;
+	float damageBoth = m_pNPCData->iDoubleSlashDamage;
+	float damageKick = m_pNPCData->iKickDamage;
 
 	m_iDamageOneHand = (flDamageScaleAmount * (float)(damageSingle / 100)) + damageSingle;
 	m_iDamageBothHands = (flDamageScaleAmount * (float)(damageBoth / 100)) + damageBoth;
 	m_iDamageKick = (flDamageScaleAmount * (float)(damageKick / 100)) + damageKick;
 
-	float defaultXP = (float)GameBaseShared()->GetNPCData()->GetXP(GetNPCName());
+	float defaultXP = ((float)m_pNPCData->iXP);
 	float newXPValue = ((flHealthScaleAmount + flDamageScaleAmount) * (defaultXP / 100.0f)) + defaultXP;
 	m_iXPToGive = (int)newXPValue;
 

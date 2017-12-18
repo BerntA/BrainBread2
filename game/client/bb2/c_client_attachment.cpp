@@ -173,8 +173,6 @@ void C_ClientAttachment::ClientThink(void)
 	if (!bb2_render_weapon_attachments.GetBool() && !attachment_debugging.GetBool())
 		return;
 
-	StudioFrameAdvance();
-
 	if (m_flUpdateTime < gpGlobals->curtime)
 	{
 		m_flUpdateTime = gpGlobals->curtime + UPDATE_TIME;

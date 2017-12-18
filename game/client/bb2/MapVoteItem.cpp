@@ -63,12 +63,12 @@ MapVoteItem::MapVoteItem(vgui::Panel *parent, char const *panelName, int type, c
 	m_pButton->SetMouseInputEnabled(true);
 	m_pButton->SetKeyBoardInputEnabled(true);
 
-	m_pBackground = new vgui::Divider(this, "Divider1");
+	m_pBackground = vgui::SETUP_PANEL(new vgui::Divider(this, "Divider1"));
 	m_pBackground->SetZPos(35);
 	m_pBackground->SetBorder(NULL);
 	m_pBackground->SetPaintBorderEnabled(false);
 
-	m_pVoteBG = new vgui::Divider(this, "Divider2");
+	m_pVoteBG = vgui::SETUP_PANEL(new vgui::Divider(this, "Divider2"));
 	m_pVoteBG->SetZPos(45);
 	m_pVoteBG->SetBorder(NULL);
 	m_pVoteBG->SetPaintBorderEnabled(false);
@@ -134,8 +134,8 @@ void MapVoteItem::SetMapLink(const char *map)
 		int iMapIndex = GameBaseShared()->GetSharedMapData()->GetMapIndex(pchMapLink);
 		if (iMapIndex != -1)
 		{
-			gameMapItem_t mapItem = GameBaseShared()->GetSharedMapData()->pszGameMaps[iMapIndex];
-			m_pLabelTitle->SetText(VarArgs("%s - %s", mapItem.pszMapTitle, GetGamemodeNameForPrefix(pchMapLink)));
+			gameMapItem_t *mapItem = &GameBaseShared()->GetSharedMapData()->pszGameMaps[iMapIndex];
+			m_pLabelTitle->SetText(VarArgs("%s - %s", mapItem->pszMapTitle, GetGamemodeNameForPrefix(pchMapLink)));
 			m_pMapImage->SetImage(VarArgs("loading/%s_0", pchMapLink));
 		}
 	}

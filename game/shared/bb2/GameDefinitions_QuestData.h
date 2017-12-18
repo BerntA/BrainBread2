@@ -19,7 +19,7 @@
 #endif
 
 #define MAX_QUEST_OBJECTIVES 10
-#define MAX_QUEST_EXPERIENCE 50
+#define MAX_QUEST_EXPERIENCE 0.1f
 
 enum QuestStatus
 {

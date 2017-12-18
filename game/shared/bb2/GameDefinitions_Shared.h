@@ -103,6 +103,11 @@ struct DataPlayerItem_Player_PowerupItem_t
 	float flHealthRegenerationRate;
 	float flPerkDuration;
 	float flExtraFactor;
+
+#ifdef CLIENT_DLL
+	CHudTexture *pIconPowerupActive;
+	CHudTexture *pIconPowerupInactive;
+#endif
 };
 
 struct DataPlayerItem_MiscSkillInfo_t
@@ -331,6 +336,12 @@ struct DataPenetrationItem_t
 	float depth;
 };
 
+struct DataLoadingTipsItem_t
+{
+	char pchToken[MAX_MAP_NAME];
+	char pchIconPath[MAX_MAP_NAME];
+};
+
 class CGameDefinitionsShared
 {
 public:
@@ -342,18 +353,18 @@ public:
 	bool Precache(void);
 
 	// Gamemode Data:
-	DataGamemodeItem_Shared_t GetGamemodeData(void) { return pszGamemodeData; }
+	const DataGamemodeItem_Shared_t *GetGamemodeData(void) { return &pszGamemodeData; }
 
 	// Player Data:
-	DataPlayerItem_Shared_t GetPlayerSharedData(void) const;
-	DataPlayerItem_Player_Shared_t GetPlayerGameModeData(int iTeam) const;
-	DataPlayerItem_MiscSkillInfo_t GetPlayerMiscSkillData(void) const;
-	DataPlayerItem_Humans_Skills_t GetPlayerHumanSkillData(void) const;
-	DataPlayerItem_Zombies_Skills_t GetPlayerZombieSkillData(void) const;
-	DataPlayerItem_ZombieRageMode_t GetPlayerZombieRageData(void) const;
-	DataPlayerItem_Survivor_Shared_t GetSurvivorDataForIndex(int index) const;
-	DataPlayerItem_Player_PowerupItem_t GetPlayerPowerupData(const char *powerupName) const;
-	DataPlayerItem_Player_PowerupItem_t GetPlayerPowerupData(int powerupFlag) const;
+	const DataPlayerItem_Shared_t *GetPlayerSharedData(void);
+	const DataPlayerItem_Player_Shared_t *GetPlayerGameModeData(int iTeam);
+	const DataPlayerItem_MiscSkillInfo_t *GetPlayerMiscSkillData(void);
+	const DataPlayerItem_Humans_Skills_t *GetPlayerHumanSkillData(void);
+	const DataPlayerItem_Zombies_Skills_t *GetPlayerZombieSkillData(void);
+	const DataPlayerItem_ZombieRageMode_t *GetPlayerZombieRageData(void);
+	const DataPlayerItem_Survivor_Shared_t *GetSurvivorDataForIndex(int index);
+	const DataPlayerItem_Player_PowerupItem_t *GetPlayerPowerupData(const char *powerupName);
+	const DataPlayerItem_Player_PowerupItem_t *GetPlayerPowerupData(int powerupFlag);
 	CUtlVector<DataPlayerItem_Survivor_Shared_t> &GetSurvivorDataList(void) { return pszPlayerSurvivorData; }
 	float GetPlayerSharedValue(const char *name, int iTeam);
 	float GetPlayerSkillValue(int iSkillType, int iTeam, int iSubType);
@@ -371,13 +382,13 @@ public:
 	// Inventory Data
 	void ParseInventoryData(KeyValues *pkvData = NULL, bool bIsMapItem = false);
 	void RemoveMapInventoryItems(void);
-	int GetInventorySharedDataValue(const char *name, uint itemID, bool bIsMapItem);
 	int GetInventoryMiscDataValue(uint itemID);
 	int GetInventoryArmorDataValue(const char *name, uint itemID);
 	bool DoesInventoryItemExist(uint itemID, bool bIsMapItem);
 	int GetInventoryItemIndex(uint itemID, bool bIsMapItem);
-	CUtlVector<DataInventoryItem_Base_t> &GetInventoryItemList(void) { return pszItemSharedData; }
 	const char *GetInventoryItemModel(uint itemID, bool bIsMapItem);
+	const DataInventoryItem_Base_t *GetInventoryData(uint itemID, bool bIsMapItem);
+	CUtlVector<DataInventoryItem_Base_t> &GetInventoryItemList(void) { return pszItemSharedData; }
 
 	// Sound Data
 #ifdef CLIENT_DLL
@@ -390,6 +401,7 @@ public:
 	const char *GetSoundPrefixForChoosenItem(int iType, const char *survivorLink, const char *friendlyName);
 	int GetSelectedSoundsetItemID(vgui::ComboList *pList, int iType, const char *survivorLink, const char *script);
 	const char *GetPlayerSoundsetPrefix(int iType, const char *survivorLink, const char *script);
+	const DataLoadingTipsItem_t *GetRandomLoadingTip(void);
 #endif
 
 	// Particle Data
@@ -400,7 +412,7 @@ public:
 	const char *GetGibParticleForLimb(const char *limb, bool bExtremeGore = false);
 
 	// Explosion Data
-	int GetExplosiveDataIndex(int type);
+	const DataExplosiveItem_t *GetExplosiveDataForType(int type);
 	const char *GetExplosionParticle(int type);
 	CUtlVector<DataExplosiveItem_t> &GetExplosiveData(void) { return pszExplosionData; }
 
@@ -426,6 +438,7 @@ private:
 
 	// Sound Data
 #ifdef CLIENT_DLL
+	CUtlVector<DataLoadingTipsItem_t> pszLoadingTipData;
 	CUtlVector<DataSoundPrefixItem_t> pszSoundPrefixesData;
 	int GetNextIndexForSoundSet(int iType, const char *survivorLink);
 #endif
@@ -451,7 +464,7 @@ extern int GetGamemodeForMap(const char *map);
 
 #define CURRENT_ACHIEVEMENT_NUMBER 73
 
-extern achievementStatItem_t GAME_STAT_AND_ACHIEVEMENT_DATA[CURRENT_ACHIEVEMENT_NUMBER];
-extern DataPenetrationItem_t *GetPenetrationDataForMaterial(unsigned short material);
+extern const achievementStatItem_t GAME_STAT_AND_ACHIEVEMENT_DATA[CURRENT_ACHIEVEMENT_NUMBER];
+extern const DataPenetrationItem_t *GetPenetrationDataForMaterial(unsigned short material);
 
 #endif // GAME_DEFINITIONS_SHARED_H

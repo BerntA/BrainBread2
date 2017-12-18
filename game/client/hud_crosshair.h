@@ -33,6 +33,7 @@ public:
 	virtual void	SetCrosshairAngle(const QAngle& angle);
 	virtual void	SetCrosshair(void);
 	virtual void	DrawCrosshair(void) {}
+	virtual void	ProcessInput();
 	virtual bool	HasCrosshair(void) { return (m_pCrosshair != NULL); }
 	virtual bool	ShouldDraw();
 	virtual CHudTexture *GetCrosshairIcon(void);
@@ -46,10 +47,16 @@ protected:
 	// Crosshair sprite and colors
 	CHudTexture		*m_pCrosshair;
 	CHudTexture		*m_pCursor;
+	CHudTexture		*m_pDelayedUse;
 	Color			m_clrCrosshair;
 	QAngle			m_vecCrossHairOffsetAngle;
+	bool m_bHoldingUseButton;
+	float m_flTimePressedUse;
 
 	CPanelAnimationVar(bool, m_bHideCrosshair, "never_draw", "false");
+
+	CPanelAnimationVarAliasType(float, use_offset_x, "use_offset_x", "0", "proportional_float");
+	CPanelAnimationVarAliasType(float, use_offset_y, "use_offset_y", "0", "proportional_float");
 };
 
 // Enable/disable crosshair rendering.

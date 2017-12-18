@@ -97,16 +97,15 @@ void CGrenadeFrag::Spawn( void )
 
 	SetModel( GRENADE_MODEL );
 
-	int index = GameBaseShared()->GetSharedGameDetails()->GetExplosiveDataIndex(EXPLOSIVE_TYPE_GRENADE);
-	if (index != -1)
+	const DataExplosiveItem_t *data = GameBaseShared()->GetSharedGameDetails()->GetExplosiveDataForType(EXPLOSIVE_TYPE_GRENADE);
+	if (data)
 	{
-		DataExplosiveItem_t expInfo = GameBaseShared()->GetSharedGameDetails()->GetExplosiveData()[index];
 		if (GetOwnerEntity() && GetOwnerEntity()->IsPlayer())
-			m_flDamage = expInfo.flPlayerDamage;
+			m_flDamage = data->flPlayerDamage;
 		else
-			m_flDamage = expInfo.flNPCDamage;
+			m_flDamage = data->flNPCDamage;
 
-		m_DmgRadius = expInfo.flRadius;
+		m_DmgRadius = data->flRadius;
 	}
 
 	m_takedamage	= DAMAGE_YES;

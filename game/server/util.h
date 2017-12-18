@@ -240,9 +240,6 @@ CBasePlayer *UTIL_GetMostDistantPlayer(CBasePlayer *pIgnore, const Vector &origi
 CBasePlayer *UTIL_GetNearestVisiblePlayer(CBaseEntity *pLooker, int mask = MASK_SOLID_BRUSHONLY); 
 #endif //BB2_AI
 
-//Helper function for player usage.
-CBasePlayer *UTIL_GetOtherNearestPlayer( const Vector &origin );
-
 // get the local player on a listen server
 CBasePlayer *UTIL_GetListenServerHost( void );
 

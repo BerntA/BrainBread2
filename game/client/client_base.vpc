@@ -490,7 +490,6 @@ $Project
 	{
 		$File	"hl2\C_Func_Monitor.cpp"
 		$File	"history_resource.cpp"
-		$File	"hud_weapon.cpp"
 		$File	"train.cpp"
 		$File	"$SRCDIR\game\shared\weapon_parse_default.cpp"
 		$File	"$SRCDIR\game\shared\achievement_saverestore.cpp"

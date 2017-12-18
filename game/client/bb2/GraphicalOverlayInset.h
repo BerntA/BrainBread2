@@ -50,6 +50,7 @@ namespace vgui
 	private:
 		void UpdateNobPosition(void);
 		char szConVar[64];
+		ConVar *m_pCVARLink;
 
 		int m_iRawValue;
 		bool m_bNegative;

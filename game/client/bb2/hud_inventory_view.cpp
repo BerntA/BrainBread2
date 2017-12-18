@@ -95,12 +95,11 @@ void CHudInventoryView::Paint()
 	int itemsDrawn = 0;
 	for (int i = 0; i < GameBaseShared()->GetGameInventory().Count(); i++)
 	{
-		int inventoryIndex = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemIndex(GameBaseShared()->GetGameInventory()[i].m_iItemID, GameBaseShared()->GetGameInventory()[i].bIsMapItem);
-		if (inventoryIndex == -1)
+		const DataInventoryItem_Base_t *data = GameBaseShared()->GetSharedGameDetails()->GetInventoryData(GameBaseShared()->GetGameInventory()[i].m_iItemID, GameBaseShared()->GetGameInventory()[i].bIsMapItem);
+		if (!data)
 			continue;
 
-		DataInventoryItem_Base_t data = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[inventoryIndex];
-		if (data.iHUDTextureID == -1)
+		if (data->iHUDTextureID == -1)
 			continue;
 
 		if (itemsDrawn == 6)
@@ -110,7 +109,7 @@ void CHudInventoryView::Paint()
 		}
 
 		surface()->DrawSetColor(GetFgColor());
-		surface()->DrawSetTexture(data.iHUDTextureID);
+		surface()->DrawSetTexture(data->iHUDTextureID);
 		surface()->DrawTexturedRect(xpos, ypos, item_width + xpos, item_height + ypos);
 		itemsDrawn++;
 		ypos += item_height + height_spacing;

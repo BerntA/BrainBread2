@@ -2305,7 +2305,7 @@ float CBaseCombatCharacter::GetIdealSpeed() const
 
 	if (IsAffectedBySkillFlag(SKILL_FLAG_COLDSNAP))
 	{
-		speed *= (GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flSlowDownPercent / 100.0f);
+		speed *= (GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flSlowDownPercent / 100.0f);
 	}
 
 	return speed;
@@ -2317,7 +2317,7 @@ float CBaseCombatCharacter::GetIdealAccel() const
 
 	if (IsAffectedBySkillFlag(SKILL_FLAG_COLDSNAP))
 	{
-		speed *= (GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flSlowDownPercent / 100.0f);
+		speed *= (GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flSlowDownPercent / 100.0f);
 	}
 
 	return speed;
@@ -2360,9 +2360,9 @@ void CBaseCombatCharacter::OnAffectedBySkill(const CTakeDamageInfo &info)
 		nFlag = SKILL_FLAG_BLEED;
 		nOverlayFlag = MAT_OVERLAY_BLEEDING;
 
-		duration = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flBleedDuration;
+		duration = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flBleedDuration;
 		damage = 10.0f;
-		timeBetweenDamage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flBleedFrequency;
+		timeBetweenDamage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flBleedFrequency;
 
 		if (pKillerWeapon)
 			damage = (info.GetDamage() / 100.0f) * pKillerWeapon->GetWpnData().m_flSkillBleedFactor;
@@ -2372,23 +2372,23 @@ void CBaseCombatCharacter::OnAffectedBySkill(const CTakeDamageInfo &info)
 		nFlag = SKILL_FLAG_BLAZINGAMMO;
 		nOverlayFlag = MAT_OVERLAY_BURNING;
 
-		duration = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flBurnDuration;
-		damage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flBurnDamage;
-		timeBetweenDamage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flBurnFrequency;
+		duration = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flBurnDuration;
+		damage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flBurnDamage;
+		timeBetweenDamage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flBurnFrequency;
 	}
 	else if (skillFlag & SKILL_FLAG_COLDSNAP)
 	{
 		nFlag = SKILL_FLAG_COLDSNAP;
 		nOverlayFlag = MAT_OVERLAY_COLDSNAP;
 
-		duration = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flSlowDownDuration;
+		duration = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flSlowDownDuration;
 	}
 	else if (skillFlag & SKILL_FLAG_CRIPPLING_BLOW)
 	{
 		nFlag = SKILL_FLAG_CRIPPLING_BLOW;
 		nOverlayFlag = MAT_OVERLAY_CRIPPLED;
 
-		duration = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flStunDuration;
+		duration = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flStunDuration;
 	}
 
 	if (!nFlag)

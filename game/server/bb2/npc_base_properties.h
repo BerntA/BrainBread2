@@ -27,6 +27,7 @@
 
 extern ConVar ai_show_active_military_activities;
 
+class CNPCDataItem;
 abstract_class CNPCBaseProperties : public CGameEventListener
 {
 public:
@@ -75,6 +76,8 @@ protected:
 	float m_flHealthScaleValue;
 
 	char pszModelName[MAX_WEAPON_STRING];
+
+	CNPCDataItem *m_pNPCData;
 };
 
 #endif // NPC_BASE_PROPERTIES_H

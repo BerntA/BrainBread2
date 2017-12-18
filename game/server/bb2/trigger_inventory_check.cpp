@@ -86,11 +86,11 @@ void CTriggerInventoryCheck::StartTouch(CBaseEntity *pOther)
 
 				// Auto-Use item.
 				if (m_iAction == 1)
-					GameBaseShared()->UseInventoryItem(pPlayer->entindex(), m_iItemID, m_bIsMapItem);
+					GameBaseShared()->UseInventoryItem(pPlayer->entindex(), m_iItemID, m_bIsMapItem, false, false, i);
 				else if (m_iAction == 2) // Auto-Drop Item.
-					GameBaseShared()->RemoveInventoryItem(pPlayer->entindex(), pPlayer->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID);
+					GameBaseShared()->RemoveInventoryItem(pPlayer->entindex(), pPlayer->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID, false, i);
 				else if (m_iAction == 3) // Delete item.
-					GameBaseShared()->RemoveInventoryItem(pPlayer->entindex(), pPlayer->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID, true);
+					GameBaseShared()->RemoveInventoryItem(pPlayer->entindex(), pPlayer->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID, true, i);
 
 				m_OnFoundItem.FireOutput(pPlayer, this);
 			}

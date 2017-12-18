@@ -216,12 +216,11 @@ void CPropaneExplosive::Spawn(void)
 
 	CollisionProp()->UseTriggerBounds(true, 10.0f);
 
-	int index = GameBaseShared()->GetSharedGameDetails()->GetExplosiveDataIndex(EXPLOSIVE_TYPE_PROPANE);
-	if (index != -1)
+	const DataExplosiveItem_t *data = GameBaseShared()->GetSharedGameDetails()->GetExplosiveDataForType(EXPLOSIVE_TYPE_PROPANE);
+	if (data)
 	{
-		DataExplosiveItem_t expInfo = GameBaseShared()->GetSharedGameDetails()->GetExplosiveData()[index];
-		m_flDamage = expInfo.flPlayerDamage;
-		m_DmgRadius = expInfo.flRadius;
+		m_flDamage = data->flPlayerDamage;
+		m_DmgRadius = data->flRadius;
 	}
 
 	color32 col32 = { 70, 130, 180, 255 };

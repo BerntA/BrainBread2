@@ -276,8 +276,10 @@ void ProfileMenuCharacterPanel::ShowInfoForCharacter(int index, bool bLoadSelf)
 		}
 	}
 
-	DataPlayerItem_Survivor_Shared_t data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(index);
-	m_pSelectedModel->LoadModel(data.szSurvivorName, TEAM_HUMANS);
+	const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(index);
+	Assert(data != NULL);
+
+	m_pSelectedModel->LoadModel(data->szSurvivorName, TEAM_HUMANS);
 	m_pSelectedModel->SetProperties(m_iCustomizationNum[0], m_iCustomizationNum[1], m_iCustomizationNum[2], m_iCustomizationNum[3], m_iCustomizationNum[4]);
 
 	ConVarRef human_voiceset("bb2_sound_player_human");
@@ -285,10 +287,10 @@ void ProfileMenuCharacterPanel::ShowInfoForCharacter(int index, bool bLoadSelf)
 
 	// Load other stuff:
 	m_pSoundSetComboHuman->GetComboBox()->RemoveAll();
-	GameBaseShared()->GetSharedGameDetails()->AddSoundScriptItems(m_pSoundSetComboHuman, BB2_SoundTypes::TYPE_PLAYER, data.szSurvivorName);
+	GameBaseShared()->GetSharedGameDetails()->AddSoundScriptItems(m_pSoundSetComboHuman, BB2_SoundTypes::TYPE_PLAYER, data->szSurvivorName);
 
 	m_pSoundSetComboZombie->GetComboBox()->RemoveAll();
-	GameBaseShared()->GetSharedGameDetails()->AddSoundScriptItems(m_pSoundSetComboZombie, BB2_SoundTypes::TYPE_DECEASED, data.szSurvivorName);
+	GameBaseShared()->GetSharedGameDetails()->AddSoundScriptItems(m_pSoundSetComboZombie, BB2_SoundTypes::TYPE_DECEASED, data->szSurvivorName);
 
 	for (int i = 2; i < (_ARRAYSIZE(m_pInfo) - 1); i++)
 	{
@@ -301,15 +303,15 @@ void ProfileMenuCharacterPanel::ShowInfoForCharacter(int index, bool bLoadSelf)
 		m_pArrowLeft[i]->SetVisible(false);
 	}
 
-	m_pInfo[7]->SetText(data.szFriendlyDescription);
+	m_pInfo[7]->SetText(data->szFriendlyDescription);
 
 	m_pSoundSetComboHuman->SetVisible((m_pSoundSetComboHuman->GetComboBox()->GetItemCount() > 0));
 	if (m_pSoundSetComboHuman->IsVisible())
-		m_pSoundSetComboHuman->GetComboBox()->ActivateItem(GameBaseShared()->GetSharedGameDetails()->GetSelectedSoundsetItemID(m_pSoundSetComboHuman, BB2_SoundTypes::TYPE_PLAYER, data.szSurvivorName, human_voiceset.GetString()));
+		m_pSoundSetComboHuman->GetComboBox()->ActivateItem(GameBaseShared()->GetSharedGameDetails()->GetSelectedSoundsetItemID(m_pSoundSetComboHuman, BB2_SoundTypes::TYPE_PLAYER, data->szSurvivorName, human_voiceset.GetString()));
 
 	m_pSoundSetComboZombie->SetVisible((m_pSoundSetComboZombie->GetComboBox()->GetItemCount() > 0));
 	if (m_pSoundSetComboZombie->IsVisible())
-		m_pSoundSetComboZombie->GetComboBox()->ActivateItem(GameBaseShared()->GetSharedGameDetails()->GetSelectedSoundsetItemID(m_pSoundSetComboZombie, BB2_SoundTypes::TYPE_DECEASED, data.szSurvivorName, zombie_voiceset.GetString()));
+		m_pSoundSetComboZombie->GetComboBox()->ActivateItem(GameBaseShared()->GetSharedGameDetails()->GetSelectedSoundsetItemID(m_pSoundSetComboZombie, BB2_SoundTypes::TYPE_DECEASED, data->szSurvivorName, zombie_voiceset.GetString()));
 
 	int x, y;
 	m_pDivider[1]->GetPos(x, y);
@@ -317,11 +319,11 @@ void ProfileMenuCharacterPanel::ShowInfoForCharacter(int index, bool bLoadSelf)
 
 	int customArray[MAX_CUSTOMIZABLE_ITEMS] =
 	{
-		data.iSkins,
-		data.iSpecialHeadItems,
-		data.iSpecialBodyItems,
-		data.iSpecialRightLegItems,
-		data.iSpecialLeftLegItems,
+		data->iSkins,
+		data->iSpecialHeadItems,
+		data->iSpecialBodyItems,
+		data->iSpecialRightLegItems,
+		data->iSpecialLeftLegItems,
 	};
 
 	int w, h;
@@ -353,7 +355,8 @@ void ProfileMenuCharacterPanel::ShowInfoForCharacter(int index, bool bLoadSelf)
 
 void ProfileMenuCharacterPanel::ApplyChanges(void)
 {
-	DataPlayerItem_Survivor_Shared_t data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(m_iCurrentSelectedItem);
+	const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(m_iCurrentSelectedItem);
+	Assert(data != NULL);
 
 	ConVarRef survivor_choice("bb2_survivor_choice");
 	ConVarRef human_voiceset("bb2_sound_player_human");
@@ -365,7 +368,7 @@ void ProfileMenuCharacterPanel::ApplyChanges(void)
 	ConVarRef extra_rightleg("bb2_survivor_choice_extra_leg_right");
 	ConVarRef extra_leftleg("bb2_survivor_choice_extra_leg_left");
 
-	survivor_choice.SetValue(data.szSurvivorName);
+	survivor_choice.SetValue(data->szSurvivorName);
 
 	char pchFriendlyName[64];
 	int activeSet = m_pSoundSetComboHuman->GetComboBox()->GetActiveItem();
@@ -374,7 +377,7 @@ void ProfileMenuCharacterPanel::ApplyChanges(void)
 	else
 	{
 		m_pSoundSetComboHuman->GetComboBox()->GetItemText(activeSet, pchFriendlyName, 64);
-		human_voiceset.SetValue(GameBaseShared()->GetSharedGameDetails()->GetSoundPrefixForChoosenItem(BB2_SoundTypes::TYPE_PLAYER, data.szSurvivorName, pchFriendlyName));
+		human_voiceset.SetValue(GameBaseShared()->GetSharedGameDetails()->GetSoundPrefixForChoosenItem(BB2_SoundTypes::TYPE_PLAYER, data->szSurvivorName, pchFriendlyName));
 	}
 
 	activeSet = m_pSoundSetComboZombie->GetComboBox()->GetActiveItem();
@@ -383,7 +386,7 @@ void ProfileMenuCharacterPanel::ApplyChanges(void)
 	else
 	{
 		m_pSoundSetComboZombie->GetComboBox()->GetItemText(activeSet, pchFriendlyName, 64);
-		zombie_voiceset.SetValue(GameBaseShared()->GetSharedGameDetails()->GetSoundPrefixForChoosenItem(BB2_SoundTypes::TYPE_DECEASED, data.szSurvivorName, pchFriendlyName));
+		zombie_voiceset.SetValue(GameBaseShared()->GetSharedGameDetails()->GetSoundPrefixForChoosenItem(BB2_SoundTypes::TYPE_DECEASED, data->szSurvivorName, pchFriendlyName));
 	}
 
 	extra_skin.SetValue(m_iCustomizationNum[0]);
@@ -419,15 +422,16 @@ void ProfileMenuCharacterPanel::OnCommand(const char* pcCommand)
 {
 	BaseClass::OnCommand(pcCommand);
 
-	DataPlayerItem_Survivor_Shared_t data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(m_iCurrentSelectedItem);
+	const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(m_iCurrentSelectedItem);
+	Assert(data != NULL);
 
 	int customArray[MAX_CUSTOMIZABLE_ITEMS] =
 	{
-		data.iSkins,
-		data.iSpecialHeadItems,
-		data.iSpecialBodyItems,
-		data.iSpecialRightLegItems,
-		data.iSpecialLeftLegItems,
+		data->iSkins,
+		data->iSpecialHeadItems,
+		data->iSpecialBodyItems,
+		data->iSpecialRightLegItems,
+		data->iSpecialLeftLegItems,
 	};
 
 	bool bUpdated = false;

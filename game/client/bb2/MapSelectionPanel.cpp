@@ -233,37 +233,31 @@ void MapSelectionPanel::Redraw(int index)
 		Cleanup();
 
 		int mapCount = GameBaseShared()->GetSharedMapData()->pszGameMaps.Count();
-		int startIndex = index;
-		int offset = index;
-
-		for (int i = 0; i < _ARRAYSIZE(m_pMapItems); i++)
+		int startIndex = 0;
+		int mapChoice = -1;
+		for (int i = index; i < mapCount; i++)
 		{
-			if (offset >= mapCount)
+			if (startIndex >= _ARRAYSIZE(m_pMapItems))
 				break;
 
-			bool bFoundMap = false;
-			for (int mapIndex = offset; mapIndex < mapCount; mapIndex++)
-			{
-				if (!GameBaseShared()->GetSharedMapData()->pszGameMaps[mapIndex].bExclude)
-				{
-					offset = mapIndex;
-					bFoundMap = true;
-					break;
-				}
-			}
+			if (GameBaseShared()->GetSharedMapData()->pszGameMaps[i].bExclude)
+				continue;
 
-			if (!bFoundMap)
-				break;
+			if (mapChoice == -1)
+				mapChoice = i;
 
-			m_pMapItems[i] = new MapSelectionItem(this, "MapItem", offset);
-			m_pMapItems[i]->SetZPos(10);
-			m_pMapItems[i]->SetPos(scheme()->GetProportionalScaledValue(32) + (scheme()->GetProportionalScaledValue(104) * i), 0);
-			m_pMapItems[i]->SetSize(scheme()->GetProportionalScaledValue(100), scheme()->GetProportionalScaledValue(100));
-			m_pMapItems[i]->AddActionSignalTarget(this);
-			offset++;
+			m_pMapItems[startIndex] = vgui::SETUP_PANEL(new MapSelectionItem(this, "MapItem", i));
+			m_pMapItems[startIndex]->SetZPos(10);
+			m_pMapItems[startIndex]->SetPos(scheme()->GetProportionalScaledValue(32) + (scheme()->GetProportionalScaledValue(104) * startIndex), 0);
+			m_pMapItems[startIndex]->SetSize(scheme()->GetProportionalScaledValue(100), scheme()->GetProportionalScaledValue(100));
+			m_pMapItems[startIndex]->AddActionSignalTarget(this);
+			startIndex++;
 		}
 
-		ShowMap(startIndex);
+		if (mapChoice == -1)
+			return;
+
+		ShowMap(mapChoice);
 	}
 }
 

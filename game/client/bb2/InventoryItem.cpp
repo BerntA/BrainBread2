@@ -36,21 +36,21 @@ InventoryItem::InventoryItem(vgui::Panel *parent, char const *panelName, float f
 	SetScheme("BaseScheme");
 	SetProportional(true);
 
-	m_pBackground = new ImagePanel(this, "Background");
+	m_pBackground = vgui::SETUP_PANEL(new ImagePanel(this, "Background"));
 	m_pBackground->SetZPos(-1);
 	m_pBackground->SetShouldScaleImage(true);
 	m_pBackground->SetImage("base/inventory/background");
 
-	m_pHeaderImage = new ImagePanel(this, "Header");
+	m_pHeaderImage = vgui::SETUP_PANEL(new ImagePanel(this, "Header"));
 	m_pHeaderImage->SetZPos(10);
 	m_pHeaderImage->SetShouldScaleImage(true);
 
-	m_pTitle = new Label(this, "Title", "");
+	m_pTitle = vgui::SETUP_PANEL(new Label(this, "Title", ""));
 	m_pTitle->SetZPos(55);
 	m_pTitle->SetContentAlignment(Label::a_center);
 	m_pTitle->SetText("Common");
 
-	m_pType = new Label(this, "Type", "");
+	m_pType = vgui::SETUP_PANEL(new Label(this, "Type", ""));
 	m_pType->SetZPos(55);
 	m_pType->SetContentAlignment(Label::a_northwest);
 	m_pType->SetText("Weapon");

@@ -233,7 +233,7 @@ void PlayMenuScoreboard::AddScoreItem(const char *pszNickName, const char *pszSt
 	float wide = (((float)w) * 0.60f);
 	int width = (int)wide;
 
-	m_pScoreItem[iIndex] = new vgui::LeaderboardItem(this, "ScoreItem", pszNickName, pszSteamID, plLevel, plKills, plDeaths);
+	m_pScoreItem[iIndex] = vgui::SETUP_PANEL(new vgui::LeaderboardItem(this, "ScoreItem", pszNickName, pszSteamID, plLevel, plKills, plDeaths));
 	m_pScoreItem[iIndex]->SetSize(width, scheme()->GetProportionalScaledValue(34));
 	m_pScoreItem[iIndex]->SetPos((w / 2) - (width / 2), scheme()->GetProportionalScaledValue(27) + (iIndex * scheme()->GetProportionalScaledValue(36)));
 	m_pScoreItem[iIndex]->MoveToFront();

@@ -43,6 +43,7 @@
 #include "filters.h"
 #include "hl2mp_gamerules.h"
 #include "hl2mp_player.h"
+#include "GameBase_Shared.h"
 #include "tier0/icommandline.h"
 
 #ifdef HL2_EPISODIC
@@ -1881,7 +1882,7 @@ void CHL2_Player::PlayerUse ( void )
 			usedSomething = true;
 		}
 
-		if ((flSec > 1.5f))
+		if ((flSec > DELAYED_USE_TIME))
 		{
 			m_flPlayerUseTime = gpGlobals->curtime;
 			pUseEntity->DelayedUse(this);

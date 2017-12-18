@@ -132,10 +132,10 @@ void DrawHumanIndicators(void)
 		if (!bAlive || (iTeam != TEAM_HUMANS))
 			continue;
 
-		Vector vecLocalPlayerPos = pPlayer->GetAbsOrigin();
+		Vector vecLocalPlayerPos = pPlayer->GetLocalOrigin();
 		Vector vecPosition = g_PR->GetPosition(i);
 		if (pOther && !pOther->IsDormant())
-			vecPosition = pOther->GetAbsOrigin();
+			vecPosition = pOther->GetLocalOrigin();
 
 		vecPosition.z += (36.0f + (bb2_human_indication_icon_size.GetFloat() / 2.0f));
 

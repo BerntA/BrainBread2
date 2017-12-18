@@ -655,35 +655,9 @@ CBasePlayer *UTIL_GetLocalPlayer( void )
 	return NULL;
 }
 
-//This is a new function designed to get the nearest player to a player that called the command, this is used for our respawn where killed code to try and respawn at a near-by player.
-CBasePlayer *UTIL_GetOtherNearestPlayer( const Vector &origin )
-{
-	float distToOtherNearest = 128.0f;
-	CBasePlayer *pOtherNearest = NULL;
-
-	for (int i = 1; i <= gpGlobals->maxClients; i++ )
-	{
-		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
-		if ( !pPlayer )
-			continue;
-
-		if (!pPlayer->IsAlive() || pPlayer->IsObserver() || (pPlayer->GetTeamNumber() <= TEAM_SPECTATOR))
-			continue;
-
-		float flDist = (pPlayer->GetAbsOrigin() - origin).LengthSqr();
-		if ( flDist >= distToOtherNearest )
-		{
-			pOtherNearest = pPlayer;
-			distToOtherNearest = flDist;
-		}
-	}
-
-	return pOtherNearest;
-}
-
 CBasePlayer *UTIL_GetNearestPlayer( const Vector &origin )
 {
-	float distToNearest = 99999999999999999999999999999999999999.0f;
+	float distToNearest = FLT_MAX;
 	CBasePlayer *pNearest = NULL;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++ )
@@ -695,7 +669,7 @@ CBasePlayer *UTIL_GetNearestPlayer( const Vector &origin )
 		if (!pPlayer->IsAlive() || pPlayer->IsObserver() || (pPlayer->GetTeamNumber() <= TEAM_SPECTATOR))
 			continue;
 
-		float flDist = (pPlayer->GetAbsOrigin() - origin).LengthSqr();
+		float flDist = (pPlayer->GetLocalOrigin() - origin).LengthSqr();
 		if ( flDist < distToNearest )
 		{
 			pNearest = pPlayer;
@@ -708,7 +682,7 @@ CBasePlayer *UTIL_GetNearestPlayer( const Vector &origin )
 
 CBasePlayer *UTIL_GetNearestHumanPlayer( const Vector &origin )
 {
-	float distToNearest = 99999999999999999999999999999999999999.0f;
+	float distToNearest = FLT_MAX;
 	CBasePlayer *pNearest = NULL;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++ )
@@ -720,7 +694,7 @@ CBasePlayer *UTIL_GetNearestHumanPlayer( const Vector &origin )
 		if (!pPlayer->IsAlive() || pPlayer->IsObserver() || (pPlayer->GetTeamNumber() != TEAM_HUMANS))
 			continue;
 
-		float flDist = (pPlayer->GetAbsOrigin() - origin).LengthSqr();
+		float flDist = (pPlayer->GetLocalOrigin() - origin).LengthSqr();
 		if ( flDist < distToNearest )
 		{
 			pNearest = pPlayer;
@@ -745,7 +719,7 @@ CBasePlayer *UTIL_GetMostDistantPlayer(CBasePlayer *pIgnore, const Vector &origi
 		if (!pPlayer->IsAlive() || pPlayer->IsObserver() || (pPlayer->GetTeamNumber() != TEAM_HUMANS) || (pPlayer == pIgnore))
 			continue;
 
-		float flDist = (pPlayer->GetAbsOrigin() - origin).LengthSqr();
+		float flDist = (pPlayer->GetLocalOrigin() - origin).LengthSqr();
 		if (flDist > distance)
 		{
 			pPlayerInTheDistantHorizon = pPlayer;
@@ -761,7 +735,7 @@ CBasePlayer *UTIL_GetNearestVisiblePlayer( CBaseEntity *pLooker, int mask )
 	if (!pLooker)
 		return NULL;
 
-	float distToNearest = 99999999999999999999999999999999999999.0f;
+	float distToNearest = FLT_MAX;
 	CBasePlayer *pNearest = NULL;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++ )
@@ -773,7 +747,7 @@ CBasePlayer *UTIL_GetNearestVisiblePlayer( CBaseEntity *pLooker, int mask )
 		if (!pPlayer->IsAlive() || pPlayer->IsObserver() || (pPlayer->GetTeamNumber() <= TEAM_SPECTATOR))
 			continue;
 
-		float flDist = (pPlayer->GetAbsOrigin() - pLooker->GetAbsOrigin()).LengthSqr();
+		float flDist = (pPlayer->GetLocalOrigin() - pLooker->GetLocalOrigin()).LengthSqr();
 		if ( flDist < distToNearest && pLooker->FVisible( pPlayer, mask ) )
 		{
 			pNearest = pPlayer;

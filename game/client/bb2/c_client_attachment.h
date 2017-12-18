@@ -35,6 +35,7 @@ public:
 	virtual int DrawModel(int flags);
 	virtual CollideType_t GetCollideType(void) { return ENTITY_SHOULD_NOT_COLLIDE; }
 	virtual bool IsClientCreated(void) const { return true; }
+	virtual ShadowType_t ShadowCastType() { return ShadowType_t::SHADOWS_NONE; }
 
 	virtual void SetPlayerLink(C_BaseEntity *pLink)
 	{

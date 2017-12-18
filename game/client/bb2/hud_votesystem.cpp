@@ -44,6 +44,9 @@ private:
 
 	int m_nTextureAnswer[2];
 
+	CHudTexture *m_pStopWatchBG;
+	CHudTexture *m_pStopWatchFG;
+
 	CPanelAnimationVar(vgui::HFont, m_hTextFont, "TextFont", "Default");
 
 	// Positions
@@ -104,6 +107,8 @@ CHudVoteSystem::CHudVoteSystem(const char *pElementName) : CHudElement(pElementN
 	surface()->DrawSetTextureFile(m_nTextureAnswer[0], "vgui/hud/vote_yes", true, false);
 	surface()->DrawSetTextureFile(m_nTextureAnswer[1], "vgui/hud/vote_no", true, false);
 
+	m_pStopWatchBG = m_pStopWatchFG = NULL;
+
 	SetHiddenBits(0);
 }
 
@@ -132,6 +137,8 @@ void CHudVoteSystem::Init(void)
 //-----------------------------------------------------------------------------
 void CHudVoteSystem::VidInit(void)
 {
+	m_pStopWatchBG = gHUD.GetIcon("stopwatch_bg");
+	m_pStopWatchFG = gHUD.GetIcon("stopwatch_fg");
 }
 
 void CHudVoteSystem::Reset(void)
@@ -227,7 +234,7 @@ void CHudVoteSystem::Paint()
 	float percentage = (timeLeft / timeToTake);
 	percentage = 1.0f - clamp(percentage, 0.0f, 1.0f);
 
-	CHudTexture *pStopwatchIcon = gHUD.GetIcon("stopwatch_bg");
+	CHudTexture *pStopwatchIcon = m_pStopWatchBG;
 	if (pStopwatchIcon)
 	{
 		surface()->DrawSetColor(fgColor);
@@ -240,7 +247,7 @@ void CHudVoteSystem::Paint()
 			);
 	}
 
-	pStopwatchIcon = gHUD.GetIcon("stopwatch_fg");
+	pStopwatchIcon = m_pStopWatchFG;
 	if (pStopwatchIcon)
 		pStopwatchIcon->DrawCircularProgression(fgColor, pStopwatchIcon->GetOrigPosX(), pStopwatchIcon->GetOrigPosY(), pStopwatchIcon->GetOrigWide(), pStopwatchIcon->GetOrigTall(), percentage);
 

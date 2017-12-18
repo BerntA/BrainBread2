@@ -311,39 +311,23 @@ char *CLoadingPanel::ReplaceBracketsWithInfo(char *text)
 	return p;
 }
 
-// Reads the Tips.txt file and picks a random string for display.
+// Display a random loading tip + 'help' icon:
 void CLoadingPanel::SetRandomLoadingTip(void)
 {
 	m_pTextLoadingTip->SetText(""); // Clear string...
 
-	KeyValues *kvLoadingTips = new KeyValues("LoadingTipData");
-	if (kvLoadingTips->LoadFromFile(filesystem, "data/settings/Tips.txt", "MOD"))
+	if (GameBaseShared() && GameBaseShared()->GetSharedGameDetails())
 	{
-		int iAmountTips = 0;
-		for (KeyValues *sub = kvLoadingTips->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-			iAmountTips++;
-
-		int iRandomTip = random->RandomInt(1, iAmountTips);
-		int iCurrTip = 1;
-		for (KeyValues *sub = kvLoadingTips->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+		const DataLoadingTipsItem_t *tipData = GameBaseShared()->GetSharedGameDetails()->GetRandomLoadingTip();
+		if (tipData)
 		{
-			if (iCurrTip == iRandomTip)
-			{
-				char pchLoadingTip[256];
-				g_pVGuiLocalize->ConvertUnicodeToANSI(g_pVGuiLocalize->Find(sub->GetString()), pchLoadingTip, 256);
+			char pchLoadingTip[256];
+			g_pVGuiLocalize->ConvertUnicodeToANSI(g_pVGuiLocalize->Find(tipData->pchToken), pchLoadingTip, 256);
 
-				m_pTextLoadingTip->SetText(GetLoadingTip(pchLoadingTip));
-				m_pImgTipIcon->SetImage(sub->GetName());
-				break;
-			}
-
-			iCurrTip++;
+			m_pTextLoadingTip->SetText(GetLoadingTip(pchLoadingTip));
+			m_pImgTipIcon->SetImage(tipData->pchIconPath);
 		}
 	}
-	else
-		m_pTextLoadingTip->SetText("");
-
-	kvLoadingTips->deleteThis();
 }
 
 void CLoadingPanel::OnTick()
@@ -421,60 +405,38 @@ void CLoadingPanel::OnTick()
 				}
 			}
 
-			int iRandomImages = -1;
-			char pszLoadingImage[80];
-
-			FileFindHandle_t findHandle;
-			const char *pFilename = filesystem->FindFirstEx("materials/vgui/loading/*.vmt", "MOD", &findHandle);
-			while (pFilename)
-			{
-				if (pFilename && (strlen(pFilename) > 4) && Q_stristr(pFilename, GameBaseClient->GetLoadingImage()))
-					iRandomImages++;
-
-				pFilename = filesystem->FindNext(findHandle);
-			}
-			filesystem->FindClose(findHandle);
-
-			Q_snprintf(pszLoadingImage, 80, "materials/vgui/loading/%s_0.vmt", GameBaseClient->GetLoadingImage());
-			if ((iRandomImages != -1) && filesystem->FileExists(pszLoadingImage))
-			{
-				int iRandomImage = random->RandomInt(0, iRandomImages);
-				Q_snprintf(pszLoadingImage, 80, "materials/vgui/loading/%s_%i.vmt", GameBaseClient->GetLoadingImage(), iRandomImage);
-				while (!filesystem->FileExists(pszLoadingImage))
-				{
-					iRandomImage = random->RandomInt(0, iRandomImages);
-					Q_snprintf(pszLoadingImage, 80, "materials/vgui/loading/%s_%i.vmt", GameBaseClient->GetLoadingImage(), iRandomImage);
-				}
-
-				m_pImgLoadingBackground->SetImage(VarArgs("loading/%s_%i", GameBaseClient->GetLoadingImage(), iRandomImage));
-			}
-
 			SetRandomLoadingTip();
 
 			// Load the map details!
-			if (iMapIndex != -1)
+			if (iMapIndex >= 0 && iMapIndex < GameBaseShared()->GetSharedMapData()->pszGameMaps.Count())
 			{
-				gameMapItem_t mapItem = GameBaseShared()->GetSharedMapData()->pszGameMaps[iMapIndex];
-				if (!mapItem.bExclude)
+				gameMapItem_t *mapItem = &GameBaseShared()->GetSharedMapData()->pszGameMaps[iMapIndex];
+				if (!mapItem->bExclude)
 				{
-					int gamemodeForMap = GetGamemodeForMap(mapItem.pszMapName);
+					if (mapItem->numLoadingScreens)
+					{
+						int iRandomImage = random->RandomInt(0, (mapItem->numLoadingScreens - 1));
+						m_pImgLoadingBackground->SetImage(VarArgs("loading/%s_%i", GameBaseClient->GetLoadingImage(), iRandomImage));
+					}
+
+					int gamemodeForMap = GetGamemodeForMap(mapItem->pszMapName);
 					m_bLoadedMapData = ((gamemodeForMap == MODE_ARENA) || (gamemodeForMap == MODE_OBJECTIVE));
 					m_pTextMapDetail[3]->SetVisible(m_bLoadedMapData);
 
-					m_pTextMapDetail[0]->SetText(mapItem.pszMapTitle);
-					m_pTextMapDetail[1]->SetText(GetGamemodeNameForPrefix(mapItem.pszMapName));
+					m_pTextMapDetail[0]->SetText(mapItem->pszMapTitle);
+					m_pTextMapDetail[1]->SetText(GetGamemodeNameForPrefix(mapItem->pszMapName));
 					m_pTextMapDetail[1]->SetContentAlignment(Label::Alignment::a_east);
 					m_pTextMapDetail[2]->SetContentAlignment(Label::Alignment::a_east);
 					m_pTextMapDetail[3]->SetContentAlignment(Label::Alignment::a_east);
 
 					colMapString = Color(0, 255, 0, 255);
-					if (mapItem.iMapVerification == MAP_VERIFIED_WHITELISTED)
+					if (mapItem->iMapVerification == MAP_VERIFIED_WHITELISTED)
 					{
 						m_pMapRating->SetVisible(true);
-						m_pMapRating->SetProgress(mapItem.flScore);
+						m_pMapRating->SetProgress(mapItem->flScore);
 						m_pTextMapDetail[2]->SetText("#LoadingUI_CustomMap");
 					}
-					else if (mapItem.iMapVerification == MAP_VERIFIED_UNKNOWN)
+					else if (mapItem->iMapVerification == MAP_VERIFIED_UNKNOWN)
 					{
 						colMapString = Color(255, 0, 0, 255);
 						m_pTextMapDetail[2]->SetText("#LoadingUI_CustomMap");

@@ -132,7 +132,7 @@ void CHudZombieRage::Paint()
 	if (!pPlayer)
 		return;
 
-	float requiredDamageThreshold = GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData().flRequiredDamageThreshold;
+	float requiredDamageThreshold = GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flRequiredDamageThreshold;
 	float plrDamageThreshold = clamp(pPlayer->m_BB2Local.m_flZombieRageThresholdDamage, 0.0f, requiredDamageThreshold);
 	bool bInRageMode = pPlayer->IsPerkFlagActive(PERK_ZOMBIE_RAGE);
 

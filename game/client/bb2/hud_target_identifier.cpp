@@ -132,14 +132,14 @@ void CHudTargetIdentifier::Paint()
 		if (pClient->IsDormant())
 			continue;
 
-		if (pClient->GetAbsOrigin().DistTo(pMe->GetAbsOrigin()) < MAX_TEAMMATE_DISTANCE)
+		if (pClient->GetLocalOrigin().DistTo(pMe->GetLocalOrigin()) < MAX_TEAMMATE_DISTANCE)
 		{
 			int xpos, ypos, strLen;
 			wchar_t unicode[256];
 			g_pVGuiLocalize->ConvertANSIToUnicode(g_PR->GetPlayerName(i), unicode, sizeof(unicode));
 
 			strLen = UTIL_ComputeStringWidth(m_hTextFontDef, unicode);
-			Vector vecNewPos = pClient->GetAbsOrigin();
+			Vector vecNewPos = pClient->GetLocalOrigin();
 			vecNewPos.z += 80;
 
 			GetVectorInScreenSpace(vecNewPos, xpos, ypos, NULL);

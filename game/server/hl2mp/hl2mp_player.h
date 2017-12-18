@@ -298,6 +298,7 @@ public:
 	float GetLastTimeDroppedAmmo(void) { return m_flLastTimeDroppedAmmo; }
 
 	void CheckShouldEnableFlashlightOnSwitch(void);
+	bool ShouldRunRateLimitedCommand(const CCommand &args);
 
 	static bool IsWeaponEquippedByDefault(const char *weaponName);
 
@@ -346,8 +347,6 @@ private:
 
 	HL2MPPlayerState m_iPlayerState;
 	CHL2MPPlayerStateInfo *m_pCurStateInfo;
-
-	bool ShouldRunRateLimitedCommand(const CCommand &args);
 
 	// This lets us rate limit the commands the players can execute so they don't overflow things like reliable buffers.
 	CUtlDict<float, int>	m_RateLimitLastCommandTimes;

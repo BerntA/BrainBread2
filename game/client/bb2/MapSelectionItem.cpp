@@ -136,33 +136,18 @@ void MapSelectionItem::SetupItem(void)
 
 	if (GameBaseShared()->GetSharedMapData() && (m_iMapItemIndexLink >= 0) && (m_iMapItemIndexLink < GameBaseShared()->GetSharedMapData()->pszGameMaps.Count()))
 	{
-		gameMapItem_t mapItem = GameBaseShared()->GetSharedMapData()->pszGameMaps[m_iMapItemIndexLink];
+		gameMapItem_t *mapItem = &GameBaseShared()->GetSharedMapData()->pszGameMaps[m_iMapItemIndexLink];
 
-		FileFindHandle_t findHandle;
-		const char *pFilename = filesystem->FindFirstEx("materials/vgui/maps/*.vmt", "MOD", &findHandle);
-		while (pFilename)
+		m_iAmountOfImages = mapItem->numImagePreviews;
+		if (m_iAmountOfImages > 1)
 		{
-			if (pFilename && (strlen(pFilename) > 4) && Q_stristr(pFilename, mapItem.pszMapName))
-				m_iAmountOfImages++;
-
-			pFilename = filesystem->FindNext(findHandle);
+			m_iLastImage = random->RandomInt(0, (m_iAmountOfImages - 1));
+			m_pPreview->SetImage(mapItem->GetImagePreview(m_iLastImage));
 		}
-		filesystem->FindClose(findHandle);
-
-		char previewImg[64];
-		if (m_iAmountOfImages == 0)
-		{
-			Q_snprintf(previewImg, 64, "maps/%s_0", mapItem.pszMapName);
-			m_pPreview->SetImage(previewImg);
-		}
-		else if (m_iAmountOfImages < 0)
-			m_pPreview->SetImage("steam_default_avatar");
+		else if (m_iAmountOfImages == 1)
+			m_pPreview->SetImage(mapItem->GetImagePreview(0));
 		else
-		{
-			m_iLastImage = random->RandomInt(0, m_iAmountOfImages);
-			Q_snprintf(previewImg, 64, "maps/%s_%i", mapItem.pszMapName, m_iLastImage);
-			m_pPreview->SetImage(previewImg);
-		}
+			m_pPreview->SetImage("steam_default_avatar");
 	}
 	else
 		m_pPreview->SetImage("steam_default_avatar");
@@ -170,7 +155,7 @@ void MapSelectionItem::SetupItem(void)
 
 void MapSelectionItem::OnUpdate(void)
 {
-	if (m_iAmountOfImages > 0)
+	if (m_iAmountOfImages > 1)
 	{
 		if (m_iLastFaded == 0)
 		{
@@ -197,22 +182,18 @@ void MapSelectionItem::OnUpdate(void)
 
 void MapSelectionItem::SelectNewImage(bool bPreview)
 {
-	int iNewImage = random->RandomInt(0, m_iAmountOfImages);
+	int iNewImage = random->RandomInt(0, (m_iAmountOfImages - 1));
 	while (iNewImage == m_iLastImage)
-		iNewImage = random->RandomInt(0, m_iAmountOfImages);
+		iNewImage = random->RandomInt(0, (m_iAmountOfImages - 1));
 
 	m_iLastImage = iNewImage;
 
 	if (GameBaseShared()->GetSharedMapData() && (m_iMapItemIndexLink >= 0) && (m_iMapItemIndexLink < GameBaseShared()->GetSharedMapData()->pszGameMaps.Count()))
 	{
-		gameMapItem_t mapItem = GameBaseShared()->GetSharedMapData()->pszGameMaps[m_iMapItemIndexLink];
-
-		char previewImg[64];
-		Q_snprintf(previewImg, 64, "maps/%s_%i", mapItem.pszMapName, m_iLastImage);
-
+		gameMapItem_t *mapItem = &GameBaseShared()->GetSharedMapData()->pszGameMaps[m_iMapItemIndexLink];
 		if (bPreview)
-			m_pPreview->SetImage(previewImg);
+			m_pPreview->SetImage(mapItem->GetImagePreview(m_iLastImage));
 		else
-			m_pPreviewFade->SetImage(previewImg);
+			m_pPreviewFade->SetImage(mapItem->GetImagePreview(m_iLastImage));
 	}
 }

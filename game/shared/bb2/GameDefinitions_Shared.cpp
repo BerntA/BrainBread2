@@ -69,6 +69,7 @@ void CGameDefinitionsShared::Cleanup(void)
 			vgui::surface()->DestroyTextureID(pszItemSharedData[i].iHUDTextureID);
 	}
 
+	pszLoadingTipData.Purge();
 	pszSoundPrefixesData.Purge();
 #endif
 
@@ -344,6 +345,18 @@ bool CGameDefinitionsShared::LoadData(void)
 			item.flExtraFactor = sub->GetFloat("ExtraFactor", 0.0f);
 			item.flPerkDuration = sub->GetFloat("Duration", 10.0f);
 
+#ifdef CLIENT_DLL
+			char pchPowerupIcon[64];
+
+			Q_snprintf(pchPowerupIcon, 64, "powerup_%s_active", powerupName);
+			Q_strlower(pchPowerupIcon);
+			item.pIconPowerupActive = gHUD.GetIcon(pchPowerupIcon);
+
+			Q_snprintf(pchPowerupIcon, 64, "powerup_%s_inactive", powerupName);
+			Q_strlower(pchPowerupIcon);
+			item.pIconPowerupInactive = gHUD.GetIcon(pchPowerupIcon);
+#endif
+
 			pszPlayerPowerupData.AddToTail(item);
 		}
 
@@ -583,6 +596,22 @@ bool CGameDefinitionsShared::LoadData(void)
 		pFilename = filesystem->FindNext(findHandle);
 	}
 	filesystem->FindClose(findHandle);
+
+	pkvParseData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/settings/Tips");
+	if (pkvParseData)
+	{
+		for (KeyValues *sub = pkvParseData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+		{
+			DataLoadingTipsItem_t item;
+			Q_strncpy(item.pchToken, sub->GetString(), MAX_MAP_NAME);
+			Q_strncpy(item.pchIconPath, sub->GetName(), MAX_MAP_NAME);
+			pszLoadingTipData.AddToTail(item);
+		}
+
+		pkvParseData->deleteThis();
+	}
+	else
+		Warning("Failed to parse: data/settings/Tips!\n");
 #endif
 
 	pFilename = filesystem->FindFirstEx("data/characters/*.txt", "MOD", &findHandle);
@@ -795,70 +824,70 @@ bool CGameDefinitionsShared::Precache(void)
 }
 
 // Player Data:
-DataPlayerItem_Shared_t CGameDefinitionsShared::GetPlayerSharedData(void) const
+const DataPlayerItem_Shared_t *CGameDefinitionsShared::GetPlayerSharedData(void)
 {
-	return pszPlayerSharedData;
+	return &pszPlayerSharedData;
 }
 
-DataPlayerItem_Player_Shared_t CGameDefinitionsShared::GetPlayerGameModeData(int iTeam) const
+const DataPlayerItem_Player_Shared_t *CGameDefinitionsShared::GetPlayerGameModeData(int iTeam)
 {
 	Assert(pszPlayerData.Count() > 0);
 
 	for (int i = 0; i < pszPlayerData.Count(); i++)
 	{
 		if (HL2MPRules() && (HL2MPRules()->GetCurrentGamemode() == pszPlayerData[i].iGameMode) && (iTeam == pszPlayerData[i].iTeam))
-			return pszPlayerData[i];
+			return &pszPlayerData[i];
 	}
-
-	return pszPlayerData[0];
+	
+	return &pszPlayerData[0];
 }
 
-DataPlayerItem_MiscSkillInfo_t CGameDefinitionsShared::GetPlayerMiscSkillData(void) const
+const DataPlayerItem_MiscSkillInfo_t *CGameDefinitionsShared::GetPlayerMiscSkillData(void)
 {
-	return pszPlayerMiscSkillData;
+	return &pszPlayerMiscSkillData;
 }
 
-DataPlayerItem_Humans_Skills_t CGameDefinitionsShared::GetPlayerHumanSkillData(void) const
+const DataPlayerItem_Humans_Skills_t *CGameDefinitionsShared::GetPlayerHumanSkillData(void) 
 {
-	return pszHumanSkillData;
+	return &pszHumanSkillData;
 }
 
-DataPlayerItem_Zombies_Skills_t CGameDefinitionsShared::GetPlayerZombieSkillData(void) const
+const DataPlayerItem_Zombies_Skills_t *CGameDefinitionsShared::GetPlayerZombieSkillData(void)
 {
-	return pszZombieSkillData;
+	return &pszZombieSkillData;
 }
 
-DataPlayerItem_ZombieRageMode_t CGameDefinitionsShared::GetPlayerZombieRageData(void) const
+const DataPlayerItem_ZombieRageMode_t *CGameDefinitionsShared::GetPlayerZombieRageData(void)
 {
-	return pszZombieRageModeData;
+	return &pszZombieRageModeData;
 }
 
-DataPlayerItem_Survivor_Shared_t CGameDefinitionsShared::GetSurvivorDataForIndex(int index) const
+const DataPlayerItem_Survivor_Shared_t *CGameDefinitionsShared::GetSurvivorDataForIndex(int index)
 {
 	if (index >= 0 && index < pszPlayerSurvivorData.Count())
-		return pszPlayerSurvivorData[index];
+		return &pszPlayerSurvivorData[index];
 
-	return pszPlayerSurvivorData[0];
+	return &pszPlayerSurvivorData[0];
 }
 
-DataPlayerItem_Player_PowerupItem_t CGameDefinitionsShared::GetPlayerPowerupData(const char *powerupName) const
+const DataPlayerItem_Player_PowerupItem_t *CGameDefinitionsShared::GetPlayerPowerupData(const char *powerupName)
 {
 	int index = GetIndexForPowerup(powerupName);
 	if (index != -1)
-		return pszPlayerPowerupData[index];
+		return &pszPlayerPowerupData[index];
 
-	return pszPlayerPowerupData[0];
+	return NULL;
 }
 
-DataPlayerItem_Player_PowerupItem_t CGameDefinitionsShared::GetPlayerPowerupData(int powerupFlag) const
+const DataPlayerItem_Player_PowerupItem_t *CGameDefinitionsShared::GetPlayerPowerupData(int powerupFlag)
 {
 	for (int i = 0; i < pszPlayerPowerupData.Count(); ++i)
 	{
 		if (pszPlayerPowerupData[i].iFlag == powerupFlag)
-			return pszPlayerPowerupData[i];
+			return &pszPlayerPowerupData[i];
 	}
 
-	return pszPlayerPowerupData[0];
+	return NULL;
 }
 
 float CGameDefinitionsShared::GetPlayerSharedValue(const char *name, int iTeam)
@@ -1158,11 +1187,10 @@ bool CGameDefinitionsShared::DoesPlayerHaveGibForLimb(const char *model, int gib
 
 float CGameDefinitionsShared::GetPlayerFirearmDamageScale(const char *weapon, int entityType, int team)
 {
-	float flScale = 1.0f;
-
 	if (!HL2MPRules())
-		return flScale;
+		return 1.0f;
 
+	float flScale = 1.0f;
 	int currentGamemode = HL2MPRules()->GetCurrentGamemode();
 
 	for (int i = 0; i < pszPlayerWeaponData.Count(); i++)
@@ -1271,26 +1299,6 @@ void CGameDefinitionsShared::RemoveMapInventoryItems(void)
 	}
 }
 
-int CGameDefinitionsShared::GetInventorySharedDataValue(const char *name, uint itemID, bool bIsMapItem)
-{
-	int index = GetInventoryItemIndex(itemID, bIsMapItem);
-	if (index != -1)
-	{
-		if (!strcmp(name, "Type"))
-			return pszItemSharedData[index].iType;
-		else if (!strcmp(name, "SubType"))
-			return pszItemSharedData[index].iSubType;
-		else if (!strcmp(name, "Rarity"))
-			return pszItemSharedData[index].iRarity;
-		else if (!strcmp(name, "LevelReq"))
-			return pszItemSharedData[index].iLevelReq;
-		else if (!strcmp(name, "Weight"))
-			return pszItemSharedData[index].iWeight;
-	}
-
-	return 0;
-}
-
 int CGameDefinitionsShared::GetInventoryMiscDataValue(uint itemID)
 {
 	for (int i = 0; i < pszItemMiscData.Count(); ++i)
@@ -1320,8 +1328,7 @@ int CGameDefinitionsShared::GetInventoryArmorDataValue(const char *name, uint it
 
 bool CGameDefinitionsShared::DoesInventoryItemExist(uint itemID, bool bIsMapItem)
 {
-	int index = GetInventoryItemIndex(itemID, bIsMapItem);
-	return (index != -1);
+	return (GetInventoryItemIndex(itemID, bIsMapItem) != -1);
 }
 
 int CGameDefinitionsShared::GetInventoryItemIndex(uint itemID, bool bIsMapItem)
@@ -1342,6 +1349,15 @@ const char *CGameDefinitionsShared::GetInventoryItemModel(uint itemID, bool bIsM
 		return "";
 
 	return pszItemSharedData[index].szModelPath;
+}
+
+const DataInventoryItem_Base_t *CGameDefinitionsShared::GetInventoryData(uint itemID, bool bIsMapItem)
+{
+	int index = GetInventoryItemIndex(itemID, bIsMapItem);
+	if (index == -1)
+		return NULL;
+
+	return &pszItemSharedData[index];
 }
 
 // Sound Data
@@ -1487,8 +1503,8 @@ int CGameDefinitionsShared::GetSelectedSoundsetItemID(vgui::ComboList *pList, in
 {
 	for (int list = 0; list < pList->GetComboBox()->GetItemCount(); list++)
 	{
-		char friendlyName[64];
-		pList->GetComboBox()->GetItemText(list, friendlyName, 64);
+		char friendlyName[MAX_MAP_NAME];
+		pList->GetComboBox()->GetItemText(list, friendlyName, MAX_MAP_NAME);
 
 		for (int i = 0; i < pszSoundPrefixesData.Count(); i++)
 		{
@@ -1523,6 +1539,15 @@ const char *CGameDefinitionsShared::GetPlayerSoundsetPrefix(int iType, const cha
 		return "Pantsman";
 
 	return "Default";
+}
+
+const DataLoadingTipsItem_t *CGameDefinitionsShared::GetRandomLoadingTip(void)
+{
+	int numTips = pszLoadingTipData.Count();
+	if (numTips <= 0)
+		return NULL;
+
+	return (&pszLoadingTipData[random->RandomInt(0, (numTips - 1))]);
 }
 #endif
 
@@ -1577,24 +1602,24 @@ const char *CGameDefinitionsShared::GetGibParticleForLimb(const char *limb, bool
 	return "blood_impact_red_01";
 }
 
-int CGameDefinitionsShared::GetExplosiveDataIndex(int type)
+const DataExplosiveItem_t *CGameDefinitionsShared::GetExplosiveDataForType(int type)
 {
 	for (int i = 0; i < pszExplosionData.Count(); i++)
 	{
 		if (pszExplosionData[i].iType == type)
-			return i;
+			return &pszExplosionData[i];
 	}
 
-	return -1;
+	return NULL;
 }
 
 const char *CGameDefinitionsShared::GetExplosionParticle(int type)
 {
-	int index = GetExplosiveDataIndex(type);
-	if (index == -1)
+	const DataExplosiveItem_t *data = GetExplosiveDataForType(type);
+	if (data == NULL)
 		return "";
 
-	return pszExplosionData[index].szParticle;
+	return data->szParticle;
 }
 
 // Other Misc Extern Globals:
@@ -1715,7 +1740,7 @@ int GetGamemodeForMap(const char *map)
 	return mode;
 }
 
-achievementStatItem_t GAME_STAT_AND_ACHIEVEMENT_DATA[CURRENT_ACHIEVEMENT_NUMBER] =
+const achievementStatItem_t GAME_STAT_AND_ACHIEVEMENT_DATA[CURRENT_ACHIEVEMENT_NUMBER] =
 {
 	{ "ACH_TUTORIAL_COMPLETE", "", 0, ACHIEVEMENT_TYPE_MAP, 0, false },
 
@@ -1839,7 +1864,7 @@ DataPenetrationItem_t PENETRATION_DATA_LIST[PENETRATION_DATA_SIZE] =
 	{ CHAR_TEX_DIRT, 6.0f },
 };
 
-DataPenetrationItem_t *GetPenetrationDataForMaterial(unsigned short material)
+const DataPenetrationItem_t *GetPenetrationDataForMaterial(unsigned short material)
 {
 	for (int i = 0; i < PENETRATION_DATA_SIZE; i++)
 	{

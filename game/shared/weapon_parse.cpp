@@ -360,6 +360,9 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 	m_flBurstFireRate = 0.2f;
 	m_flWeaponChargeTime = 3.0f;
 
+	m_iAmmoHUDIndex = 0;
+	m_bShowAsMagsLeft = true;
+
 	m_flSkillDamageFactor = 6.0f;
 	m_flSkillFireRateFactor = 3.0f;
 	m_flSkillBleedFactor = 10.0f;
@@ -468,6 +471,10 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 	m_iZoomModeFOV[0] = pPropertiesField ? pPropertiesField->GetInt("zoom_mode_1") : 0;
 	m_iZoomModeFOV[1] = pPropertiesField ? pPropertiesField->GetInt("zoom_mode_2") : 0;
 	m_iZoomModeFOV[2] = pPropertiesField ? pPropertiesField->GetInt("zoom_mode_3") : 0;
+
+	KeyValues *pClientAmmoHUDField = pKeyValuesData->FindKey("AmmoData");
+	m_iAmmoHUDIndex = pClientAmmoHUDField ? pClientAmmoHUDField->GetInt("index") : 0;
+	m_bShowAsMagsLeft = pClientAmmoHUDField ? pClientAmmoHUDField->GetBool("magazine_style", true) : true;
 
 	KeyValues *pSkillField = pKeyValuesData->FindKey("Skills");
 	m_flSkillDamageFactor = pSkillField ? pSkillField->GetFloat("DamageFactor", 6.0f) : 6.0f;

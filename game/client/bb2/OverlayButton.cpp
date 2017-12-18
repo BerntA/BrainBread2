@@ -58,7 +58,7 @@ OverlayButton::OverlayButton(vgui::Panel *parent, char const *panelName, const c
 	m_pButton->AddActionSignalTarget(this);
 	m_pButton->SetCommand(command);
 
-	m_pOverlay = new vgui::ImagePanel(this, "Divider");
+	m_pOverlay = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Divider"));
 	m_pOverlay->SetZPos(20);
 	m_pOverlay->SetShouldScaleImage(true);
 	m_pOverlay->SetFgColor(Color(255, 255, 255, 255));

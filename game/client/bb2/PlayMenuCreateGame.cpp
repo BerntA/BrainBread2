@@ -199,10 +199,10 @@ void PlayMenuCreateGame::OnCommand(const char* pcCommand)
 		int mapIndex = m_pMapPanel->GetSelectedMapIndex();
 		if (mapIndex != -1)
 		{
-			gameMapItem_t mapItem = GameBaseShared()->GetSharedMapData()->pszGameMaps[mapIndex];
-			m_pTitles[0]->SetText(mapItem.pszMapTitle);
-			m_pMapDescription->SetText(mapItem.pszMapDescription);
-			m_pExtraInfo->SetText(mapItem.pszMapExtraInfo);
+			gameMapItem_t *mapItem = &GameBaseShared()->GetSharedMapData()->pszGameMaps[mapIndex];
+			m_pTitles[0]->SetText(mapItem->pszMapTitle);
+			m_pMapDescription->SetText(mapItem->pszMapDescription);
+			m_pExtraInfo->SetText(mapItem->pszMapExtraInfo);
 		}
 	}
 	else if (!Q_stricmp(pcCommand, "Activate"))

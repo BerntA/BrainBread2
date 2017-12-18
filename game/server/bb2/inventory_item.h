@@ -40,6 +40,7 @@ private:
 	bool m_bExcludeFromInventory;
 	uint m_iItemID;
 	bool m_bIsMapItem;
+	bool m_bHasDoneLateUpdate;
 
 	string_t szModel;
 	string_t szEntityLink;

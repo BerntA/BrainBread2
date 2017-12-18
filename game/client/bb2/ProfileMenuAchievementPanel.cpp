@@ -43,23 +43,21 @@
 
 using namespace vgui;
 
-int GetUserAchievementListIndex(const char *pszAch)
+bool HasAchievementInList(CUtlVector<AchievementItem*> &list, int index)
 {
-	int index = -1;
-	for (int i = 0; i < CURRENT_ACHIEVEMENT_NUMBER; i++)
+	for (int i = 0; i < list.Count(); i++)
 	{
-		if (!strcmp(GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement, pszAch))
-		{
-			index = i;
-			break;
-		}
+		if (list[i]->GetAchievementIndex() == index)
+			return true;
 	}
 
-	return index;
+	return false;
 }
 
-AchievementItem::AchievementItem(vgui::Panel *parent, char const *panelName, const char *pszAchievementID) : vgui::Panel(parent, panelName)
+AchievementItem::AchievementItem(vgui::Panel *parent, char const *panelName, const char *pszAchievementID, int achIndex) : vgui::Panel(parent, panelName)
 {
+	m_iAchievementIndex = achIndex;
+
 	SetMouseInputEnabled(true);
 	SetKeyBoardInputEnabled(true);
 	SetProportional(true);
@@ -131,23 +129,22 @@ void AchievementItem::OnUpdate(void)
 				SetAchievementIcon();
 			}
 
-			int achIndex = GetUserAchievementListIndex(pszAchievementStringID);
-			if (achIndex != -1)
+			if (m_iAchievementIndex >= 0 && m_iAchievementIndex < CURRENT_ACHIEVEMENT_NUMBER)
 			{
-				bool bBoolean = (strlen(GAME_STAT_AND_ACHIEVEMENT_DATA[achIndex].szStat) <= 0);
+				bool bBoolean = (strlen(GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].szStat) <= 0);
 				float flProgress = 0.0f;
 				if (!bBoolean)
 				{
 					int iValue = 0;
-					if (steamapicontext->SteamUserStats()->GetStat(GAME_STAT_AND_ACHIEVEMENT_DATA[achIndex].szStat, &iValue))
+					if (steamapicontext->SteamUserStats()->GetStat(GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].szStat, &iValue))
 					{
-						if (iValue > GAME_STAT_AND_ACHIEVEMENT_DATA[achIndex].maxValue)
-							iValue = GAME_STAT_AND_ACHIEVEMENT_DATA[achIndex].maxValue;
+						if (iValue > GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].maxValue)
+							iValue = GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].maxValue;
 
-						flProgress = ((float)iValue / (float)GAME_STAT_AND_ACHIEVEMENT_DATA[achIndex].maxValue);
+						flProgress = ((float)iValue / (float)GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].maxValue);
 					}
 
-					m_pLabelProgress->SetText(VarArgs("%i / %i", iValue, GAME_STAT_AND_ACHIEVEMENT_DATA[achIndex].maxValue));
+					m_pLabelProgress->SetText(VarArgs("%i / %i", iValue, GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].maxValue));
 				}
 				else if (m_bAchieved)
 				{
@@ -280,15 +277,30 @@ ProfileMenuAchievementPanel::ProfileMenuAchievementPanel(vgui::Panel *parent, ch
 {
 	SetParent(parent);
 	SetName(panelName);
-
 	SetMouseInputEnabled(true);
 	SetKeyBoardInputEnabled(true);
 	SetProportional(true);
-
-	pszAchievementList.Purge();
-
 	SetScheme("BaseScheme");
 
+	m_pScrollBar = vgui::SETUP_PANEL(new vgui::ScrollBar(this, "ScrollBar", true));
+	m_pScrollBar->SetZPos(20);
+	m_pScrollBar->MoveToFront();
+	m_pScrollBar->AddActionSignalTarget(this);
+
+	CreateAchievementList();
+
+	InvalidateLayout();
+	PerformLayout();
+}
+
+ProfileMenuAchievementPanel::~ProfileMenuAchievementPanel()
+{
+	Cleanup();
+}
+
+void ProfileMenuAchievementPanel::CreateAchievementList(void)
+{
+	bool bOnlyAddHiddenAchievements = (pszAchievementList.Count() > 0);
 	for (int i = 0; i < CURRENT_ACHIEVEMENT_NUMBER; i++)
 	{
 		if (GAME_STAT_AND_ACHIEVEMENT_DATA[i].hidden)
@@ -308,30 +320,27 @@ ProfileMenuAchievementPanel::ProfileMenuAchievementPanel(vgui::Panel *parent, ch
 				continue;
 		}
 
-		AchievementItem *pAchItem = new AchievementItem(this, "AchievementItem", GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement);
+		if (bOnlyAddHiddenAchievements)
+		{
+			if (!GAME_STAT_AND_ACHIEVEMENT_DATA[i].hidden)
+				continue;
+
+			if (HasAchievementInList(pszAchievementList, i))
+				continue;
+		}
+
+		AchievementItem *pAchItem = vgui::SETUP_PANEL(new AchievementItem(this, "AchievementItem", GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement, i));
 		pAchItem->SetZPos(10);
 		pAchItem->MoveToFront();
 		pszAchievementList.AddToTail(pAchItem);
 	}
-
-	m_pScrollBar = vgui::SETUP_PANEL(new vgui::ScrollBar(this, "ScrollBar", true));
-	m_pScrollBar->SetZPos(20);
-	m_pScrollBar->MoveToFront();
-	m_pScrollBar->AddActionSignalTarget(this);
-
-	InvalidateLayout();
-
-	PerformLayout();
-}
-
-ProfileMenuAchievementPanel::~ProfileMenuAchievementPanel()
-{
-	pszAchievementList.Purge();
 }
 
 void ProfileMenuAchievementPanel::SetupLayout(void)
 {
 	BaseClass::SetupLayout();
+
+	CreateAchievementList();
 
 	int w, h;
 	GetSize(w, h);
@@ -414,4 +423,12 @@ void ProfileMenuAchievementPanel::OnSliderMoved(int value)
 		return;
 
 	Redraw();
+}
+
+void ProfileMenuAchievementPanel::Cleanup(void)
+{
+	for (int i = 0; i < pszAchievementList.Count(); i++)
+		delete pszAchievementList[i];
+
+	pszAchievementList.Purge();
 }

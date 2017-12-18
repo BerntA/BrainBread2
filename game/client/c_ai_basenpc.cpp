@@ -211,7 +211,7 @@ int C_AI_BaseNPC::DrawModel(int flags)
 		{
 			Vector mins, maxs;
 			GetRenderBounds(mins, maxs);
-			Vector vOrigin = GetAbsOrigin() + Vector(0, 0, maxs.z + 16.0f);
+			Vector vOrigin = GetLocalOrigin() + Vector(0, 0, maxs.z + 16.0f);
 			DrawDizzyIcon(vOrigin);
 		}
 

@@ -287,7 +287,7 @@ void QuestDetailPanel::ChooseQuestItem(int index)
 
 		if (bShouldShow)
 		{
-			GraphicalCheckBox *pCheckBox = new vgui::GraphicalCheckBox(this, "CheckBox", szOutput, "DefaultBold", true);
+			GraphicalCheckBox *pCheckBox = vgui::SETUP_PANEL(new vgui::GraphicalCheckBox(this, "CheckBox", szOutput, "DefaultBold", true));
 			pCheckBox->SetSize(w, scheme()->GetProportionalScaledValue(10));
 			pCheckBox->SetPos(x + scheme()->GetProportionalScaledValue(4), (y + scheme()->GetProportionalScaledValue(5)) + (i * scheme()->GetProportionalScaledValue(13)));
 			pCheckBox->SetCheckedStatus(pQuestItem->pObjectives[i].m_bObjectiveCompleted);

@@ -3153,7 +3153,7 @@ void CGameMovement::CheckVelocity( void )
 				{
 					float maxSlideSpeed = 350.0f;
 					if (GameBaseShared()->GetSharedGameDetails())
-						maxSlideSpeed = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flSlideSpeed;
+						maxSlideSpeed = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flSlideSpeed;
 
 					if (mv->m_vecVelocity[i] > maxSlideSpeed)
 					{
@@ -4515,7 +4515,7 @@ void CGameMovement::Slide(void)
 			pClient->m_BB2Local.m_bStandToSlide = true;
 			pClient->m_BB2Local.m_bSliding = false;
 			pClient->m_BB2Local.m_flSlideTime = 1000.0f;
-			pClient->m_BB2Local.m_flSlideKickCooldownEnd = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flSlideCooldown;
+			pClient->m_BB2Local.m_flSlideKickCooldownEnd = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flSlideCooldown;
 			pClient->m_BB2Local.m_flSlideKickCooldownStart = gpGlobals->curtime;
 			pClient->DoAnimationEvent(PLAYERANIMEVENT_SLIDE);
 			pClient->EmitSound("Player.Slide");
@@ -4559,7 +4559,7 @@ void CGameMovement::Slide(void)
 
 			CategorizePosition();
 
-			float flSpeed = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData().flSlideLength;
+			float flSpeed = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flSlideLength;
 			if (pClient->GetSkillValue(PLAYER_SKILL_HUMAN_SLIDE) > 0)
 			{
 				float skillPercent = pClient->GetSkillValue(PLAYER_SKILL_HUMAN_SLIDE, TEAM_HUMANS);
