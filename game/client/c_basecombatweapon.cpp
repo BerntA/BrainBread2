@@ -30,7 +30,6 @@
 C_BaseCombatWeapon *GetActiveWeapon( void )
 {
 	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
-
 	if ( !player )
 		return NULL;
 
@@ -44,9 +43,7 @@ void C_BaseCombatWeapon::SetDormant( bool bDormant )
 {
 	// If I'm going from active to dormant and I'm carried by another player, holster me.
 	if ( !IsDormant() && bDormant && GetOwner() && !IsCarriedByLocalPlayer() )
-	{
-		Holster( NULL );
-	}
+		FullHolster();
 
 	BaseClass::SetDormant( bDormant );
 }
@@ -78,17 +75,12 @@ void C_BaseCombatWeapon::NotifyShouldTransmit( ShouldTransmitState_t state )
 	}
 }
 
-
 //-----------------------------------------------------------------------------
-// Purpose: To wrap PORTAL mod specific functionality into one place
+// Purpose: 
 //-----------------------------------------------------------------------------
 static inline bool ShouldDrawLocalPlayerViewModel( void )
 {
-#if defined( PORTAL )
-	return false;
-#else
 	return !C_BasePlayer::ShouldDrawLocalPlayer();
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -108,17 +100,6 @@ void C_BaseCombatWeapon::OnRestore()
 
 int C_BaseCombatWeapon::GetWorldModelIndex( void )
 {
-	if ( GameRules() )
-	{
-		const char *pBaseName = modelinfo->GetModelName( modelinfo->GetModel( m_iWorldModelIndex ) );
-		const char *pTranslatedName = GameRules()->TranslateEffectForVisionFilter( "weapons", pBaseName );
-
-		if ( pTranslatedName != pBaseName )
-		{
-			return modelinfo->GetModelIndex( pTranslatedName );
-		}
-	}
-
 	return m_iWorldModelIndex;
 }
 
@@ -140,7 +121,7 @@ void C_BaseCombatWeapon::OnDataChanged( DataUpdateType_t updateType )
 
 	// check if weapon is carried by local player
 	bool bIsLocalPlayer = pPlayer && pPlayer == pOwner;
-	if ( bIsLocalPlayer && ShouldDrawLocalPlayerViewModel() )		// TODO: figure out the purpose of the ShouldDrawLocalPlayer() test.
+	if ( bIsLocalPlayer && ShouldDrawLocalPlayerViewModel() )		
 	{
 		// If I was just picked up, or created & immediately carried, add myself to this client's list of weapons
 		if ( (m_iState != WEAPON_NOT_CARRIED ) && (m_iOldState == WEAPON_NOT_CARRIED) )

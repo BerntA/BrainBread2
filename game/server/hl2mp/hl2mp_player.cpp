@@ -1064,11 +1064,8 @@ void CHL2MP_Player::PostThink(void)
 
 void CHL2MP_Player::DropAllWeapons(void)
 {
-	for (int i = 0; i < 4; i++)
-	{
-		if (Weapon_GetSlot(i) != NULL)
-			Weapon_DropSlot(i);
-	}
+	for (int i = 0; i < MAX_WEAPON_SLOTS; i++)
+		Weapon_DropSlot(i);
 }
 
 void CHL2MP_Player::PlayerDeathThink()
@@ -1221,7 +1218,7 @@ CBaseCombatWeapon *CHL2MP_Player::GetBestWeapon()
 {
 	int iWeight = 0;
 	CBaseCombatWeapon *pWantedWeapon = NULL;
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < MAX_WEAPONS; i++)
 	{
 		CBaseCombatWeapon *pUserWeapon = GetWeapon(i);
 		if (!pUserWeapon)
@@ -1254,17 +1251,11 @@ bool CHL2MP_Player::BumpWeapon(CBaseCombatWeapon *pWeapon)
 		return false;
 
 	bool bHasWeapon = false;
-	for (int i = 0; i < 4; i++)
+	CBaseCombatWeapon *pIdenticalWep = Weapon_GetSlot(pWeapon->GetSlot());
+	if (pIdenticalWep)
 	{
-		CBaseCombatWeapon *pMyWeapon = Weapon_GetSlot(i);
-		if (pMyWeapon)
-		{
-			if (FClassnameIs(pWeapon, pMyWeapon->GetClassname()))
-			{
-				bHasWeapon = true;
-				break;
-			}
-		}
+		if (FClassnameIs(pWeapon, pIdenticalWep->GetClassname()))
+			bHasWeapon = true;
 	}
 
 	// Don't let the player fetch weapons through walls (use MASK_SOLID so that you can't pickup through windows)

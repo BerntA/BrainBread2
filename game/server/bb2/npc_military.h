@@ -34,6 +34,7 @@ public:
 	void		Event_Killed( const CTakeDamageInfo &info );
 	void		OnListened();
 	virtual int OnTakeDamage( const CTakeDamageInfo &info );
+	virtual bool UsesNavMesh(void) { return true; }
 
 	void		ClearAttackConditions( void );
 

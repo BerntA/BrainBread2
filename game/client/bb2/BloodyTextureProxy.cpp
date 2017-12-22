@@ -103,9 +103,9 @@ void C_BloodyTextureProxy::OnBind(void* pC_BaseEntity)
 			{
 				if (pViewModel->IsPlayerHands())
 				{
-					for (int i = 0; i < 4; i++)
+					for (int i = 0; i < MAX_WEAPONS; i++)
 					{
-						C_BaseCombatWeapon *pWeapon = pPlayer->GetAllWeapons(i);
+						C_BaseCombatWeapon *pWeapon = pPlayer->GetWeapon(i);
 						if (!pWeapon)
 							continue;
 

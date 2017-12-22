@@ -986,8 +986,6 @@ private:
 
 	int						m_iPlayerSound;// the index of the sound list slot reserved for this player
 	int						m_iTargetVolume;// ideal sound volume. 
-	
-	int						m_rgItems[MAX_ITEMS];
 
 	// these are time-sensitive things that we keep track of
 	float					m_flSwimTime;		// how long player has been underwater

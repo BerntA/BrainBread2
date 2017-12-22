@@ -381,6 +381,10 @@ bool CGameDefinitionsShared::LoadData(void)
 		pszGamemodeData.iDefaultZombieCredits = pkvParseData->GetInt("zombie_credits_start", 10);
 		pszGamemodeData.flAmmoResupplyTime = pkvParseData->GetFloat("ammo_resupply_time", 30.0f);
 
+		pszGamemodeData.iMaxAmmoReplenishWithinInterval = pkvParseData->GetInt("max_ammo_replenishes", 4);
+		pszGamemodeData.flMaxAmmoReplensihInterval = pkvParseData->GetFloat("ammo_replenish_interval", 60.0f);
+		pszGamemodeData.flAmmoReplenishPenalty = pkvParseData->GetFloat("ammo_replenish_penalty", 120.0f);
+
 		pkvParseData->deleteThis();
 	}
 	else

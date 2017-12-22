@@ -175,6 +175,9 @@ C_HL2MP_Player* C_HL2MP_Player::GetLocalHL2MPPlayer()
 void C_HL2MP_Player::Initialize( void )
 {
 	CStudioHdr *hdr = GetModelPtr();
+	if (hdr == NULL)
+		return;
+
 	for ( int i = 0; i < hdr->GetNumPoseParameters() ; i++ )
 	{
 		SetPoseParameter( hdr, i, 0.0 );

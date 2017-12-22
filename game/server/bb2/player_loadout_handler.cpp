@@ -51,7 +51,7 @@ void CPlayerLoadoutHandler::SaveLoadoutData()
 		for (int wep = 0; wep < PLAYER_MAX_CARRY_WEPS; wep++)
 		{
 			const char *weaponClassname = "";
-			CBaseCombatWeapon *pWeapon = pPlayer->GetWeapon(wep);
+			CBaseCombatWeapon *pWeapon = pPlayer->Weapon_GetSlot(wep);
 			if (pWeapon && pWeapon->VisibleInWeaponSelection())
 			{
 				weaponClassname = pWeapon->GetClassname();
@@ -63,6 +63,14 @@ void CPlayerLoadoutHandler::SaveLoadoutData()
 				item.iSecondaryClip[wep] = pWeapon->m_iClip2;
 
 				item.bIsBloody[wep] = pWeapon->m_bIsBloody;
+			}
+			else
+			{
+				item.iPrimaryAmmo[wep] = 0;
+				item.iSecondaryAmmo[wep] = 0;
+				item.iPrimaryClip[wep] = 0;
+				item.iSecondaryClip[wep] = 0;
+				item.bIsBloody[wep] = false;
 			}
 
 			Q_strncpy(item.pchWeapon[wep], weaponClassname, MAX_WEAPON_STRING);

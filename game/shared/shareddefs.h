@@ -123,12 +123,8 @@ public:
 #define TIME_TO_UNDUCK		0.2
 #define TIME_TO_UNDUCK_MS	200.0f
 
-#define MAX_WEAPON_SLOTS		6	// hud item selection slots
-#define MAX_WEAPON_POSITIONS	20	// max number of items within a slot
-#define MAX_ITEM_TYPES			6	// hud item selection slots
-#define MAX_WEAPONS				48	// Max number of weapons available
-
-#define MAX_ITEMS				5	// hard coded item types
+#define MAX_WEAPON_SLOTS		4	// hud item selection slots
+#define MAX_WEAPONS				10	// Max number of weapons available
 
 #define WEAPON_NOCLIP			-1	// clip sizes set to this tell the weapon it doesn't use a clip
 
@@ -218,14 +214,6 @@ enum CastVote
 #define HIDEHUD_INWEPSELECTION ( 1<<13 ) // Hide when we're selecting weapons.
 
 #define HIDEHUD_BITCOUNT			14
-
-//===================================================================================================================
-// suit usage bits
-#define bits_SUIT_DEVICE_SPRINT		0x00000001
-#define bits_SUIT_DEVICE_FLASHLIGHT	0x00000002
-#define bits_SUIT_DEVICE_BREATHER	0x00000004
-
-#define MAX_SUIT_DEVICES			3
 
 // BB2 
 #define MAX_TEAMMATE_DISTANCE 500.0f

@@ -31,10 +31,13 @@ bool CanReplenishAmmo(const char *ammoClassname, CBasePlayer *pPlayer, int amoun
 		return false;
 
 	bool bReceived = false;
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < MAX_WEAPONS; i++)
 	{
 		CBaseCombatWeapon *pWeapon = pPlayer->GetWeapon(i);
 		if (!pWeapon)
+			continue;
+
+		if (pWeapon->IsMeleeWeapon() || !(pWeapon->UsesPrimaryAmmo() || pWeapon->UsesSecondaryAmmo()))
 			continue;
 
 		if (strcmp(pWeapon->GetAmmoEntityLink(), ammoClassname))
@@ -291,7 +294,7 @@ CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
 	if (!pPlayer)
 		return;
 
-	if (!pPlayer->IsHuman() || !pPlayer->IsAlive())
+	if (!pPlayer->IsHuman() || !pPlayer->IsAlive() || !HL2MPRules()->IsTeamplay())
 		return;
 
 	CBaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();

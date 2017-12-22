@@ -1079,6 +1079,8 @@ void CHL2MPRules::GameModeSharedThink(void)
 					GoToIntermission();
 					return;
 				}
+
+				GameAnnouncer->Think((round(flTimeLeft)));
 			}
 
 			// Check if we should respawn some people:

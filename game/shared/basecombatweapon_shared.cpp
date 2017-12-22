@@ -489,14 +489,6 @@ int CBaseCombatWeapon::GetSlot( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int CBaseCombatWeapon::GetPosition( void ) const
-{
-	return GetWpnData().iPosition;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 const char *CBaseCombatWeapon::GetName( void ) const
 {
 	return GetWpnData().szClassName;
@@ -2417,7 +2409,7 @@ void CBaseCombatWeapon::PrimaryAttack( void )
 	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, shootAct);
 }
 
-#define TRACE_FREQUENCY 0.025f
+#define TRACE_FREQUENCY 0.0225f
 
 void CBaseCombatWeapon::MeleeAttackStart(int type)
 {
@@ -2430,7 +2422,7 @@ void CBaseCombatWeapon::MeleeAttackStart(int type)
 	MeleeAttackTrace();
 #else
 	m_pEnemiesStruck.Purge();
-	m_flLastTraceTime = gpGlobals->curtime;
+	m_flLastTraceTime = 0.0f;
 
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
 	if (pPlayer)

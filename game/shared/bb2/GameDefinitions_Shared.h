@@ -62,6 +62,10 @@ struct DataGamemodeItem_Shared_t
 
 	int iDefaultZombieCredits;
 	float flAmmoResupplyTime;
+
+	int iMaxAmmoReplenishWithinInterval;
+	float flMaxAmmoReplensihInterval;
+	float flAmmoReplenishPenalty;
 };
 
 struct DataPlayerItem_Shared_t

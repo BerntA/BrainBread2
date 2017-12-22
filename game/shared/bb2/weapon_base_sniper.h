@@ -34,7 +34,7 @@ public:
 	virtual int GetZoomLevel(void) { return m_iCurrentZoomLevel; }
 	virtual void SetZoomLevel(int level);
 	virtual int GetMaxZoomLevel(void) { return 3; }
-	virtual bool ShouldDrawCrosshair(void) { return false; }
+	virtual bool ShouldDrawCrosshair(void) { return (GetZoomLevel() <= 0); }
 	virtual int GetOverloadCapacity() { return 2; }
 	virtual int GetWeaponType(void) { return WEAPON_TYPE_SNIPER; }
 	virtual const char *GetAmmoEntityLink(void) { return "ammo_sniper"; }

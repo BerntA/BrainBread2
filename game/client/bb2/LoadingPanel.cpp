@@ -85,6 +85,7 @@ CLoadingPanel::CLoadingPanel(vgui::VPANEL parent) : BaseClass(NULL, "LoadingPane
 		m_pTextMapDetail[i]->SetText("");
 	}
 
+	m_flLastTimeCheckedDownload = 0.0f;
 	colMapString = Color(0, 0, 0, 0);
 	colStatsStatus = Color(0, 0, 0, 0);
 
@@ -335,6 +336,7 @@ void CLoadingPanel::OnTick()
 
 		if (m_bCanUpdateImage)
 		{
+			m_flLastTimeCheckedDownload = 0.0f;
 			m_pTextProgress->SetText("");
 			m_pProgressBar->SetProgress(0.0f);
 			m_pImgLoadingBackground->SetImage("mainmenu/backgroundart"); // Reset loading img to default.
@@ -503,7 +505,19 @@ void CLoadingPanel::SetLoadingAttributes(void)
 		m_pTextProgress->SetText(szString);
 	}
 
-	if (m_bDisconnected)
+	bool bIsDownloadingMap = false;
+	if (engine->Time() > m_flLastTimeCheckedDownload)
+	{
+		m_flLastTimeCheckedDownload = engine->Time() + 0.15f;
+
+		char szString[256];
+		m_pTextProgress->GetText(szString, 256);
+		Q_strlower(szString);
+		if (Q_strstr(szString, ".bsp") && !Q_strstr(szString, ".bsp]"))
+			bIsDownloadingMap = true;
+	}
+
+	if (m_bDisconnected || bIsDownloadingMap)
 	{
 		unsigned long long workshopID = ((unsigned long long)atoll(bb2_active_workshop_item.GetString()));
 		if (workshopID > 0)
@@ -513,7 +527,7 @@ void CLoadingPanel::SetLoadingAttributes(void)
 			char szString[256];
 			m_pTextProgress->GetText(szString, 256);
 			Q_strlower(szString);
-			if (Q_strstr(szString, ".bsp"))
+			if (Q_strstr(szString, ".bsp") && !Q_strstr(szString, ".bsp]"))
 			{
 				char pchOpenCommand[128];
 				Q_snprintf(pchOpenCommand, 128, "workshop_client_install \"%llu\"\n", workshopID);

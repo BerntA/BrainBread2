@@ -44,6 +44,7 @@
 #include "hl2mp_gamerules.h"
 #include "hl2mp_player.h"
 #include "GameBase_Shared.h"
+#include "GameBase_Server.h"
 #include "tier0/icommandline.h"
 
 #ifdef HL2_EPISODIC
@@ -290,6 +291,10 @@ CHL2_Player::CHL2_Player()
 
 	m_flArmorReductionTime = 0.0f;
 	m_iArmorReductionFrom = 0;
+
+	m_flLastTimeReplenishedAmmo = 0.0f;
+	m_flNextAmmoReplenishTime = 0.0f;
+	m_iNumAmmoReplenishes = 0;
 }
 
 IMPLEMENT_SERVERCLASS_ST(CHL2_Player, DT_HL2_Player)
@@ -588,7 +593,8 @@ void CHL2_Player::PostThink( void )
 			return;
 
 		float flTime = 1.0f;
-		if (pClient->GetSkillValue(PLAYER_SKILL_HUMAN_RESOURCEFUL) > 0)
+		int iResourcefulSkillValue = pClient->GetSkillValue(PLAYER_SKILL_HUMAN_RESOURCEFUL);
+		if (iResourcefulSkillValue > 0)
 			flTime -= ((1.0f / 100.0f) * pClient->GetSkillValue(PLAYER_SKILL_HUMAN_RESOURCEFUL, TEAM_HUMANS));
 
 		flTime = clamp(flTime, 0.1f, 1.0f);
@@ -609,21 +615,70 @@ void CHL2_Player::PostThink( void )
 				{
 					if (!strcmp(aimTarget->GetClassname(), "bbc_ammo_box"))
 					{
-						// Check through all available weapons that the user currently holds, give max ammo clip every sec.
-						for (int i = 0; i <= 10; i++)
+						int timeLeft = ((int)(m_flNextAmmoReplenishTime - gpGlobals->curtime));
+						if (timeLeft > 0)
 						{
-							CBaseCombatWeapon *pWeapon = this->Weapon_GetSlot(i);
+							char pchArg1[16];
+							Q_snprintf(pchArg1, 16, "%d:%02d", (timeLeft / 60), (timeLeft % 60));
+							GameBaseServer()->SendToolTip("#TOOLTIP_AMMOBOX_WAIT", "", 2.0f, 3, entindex(), pchArg1);
+							return;
+						}
 
+						bool bDidReplenish = false;
+						
+						// Check through all available weapons that the user currently holds, give max ammo clip every sec.
+						for (int i = 0; i < MAX_WEAPONS; i++)
+						{
+							CBaseCombatWeapon *pWeapon = GetWeapon(i);
 							if (pWeapon != NULL)
 							{
 								bool bCanCheckSecondary = (pWeapon->GetPrimaryAmmoType() != pWeapon->GetSecondaryAmmoType());
 
 								if (pWeapon->UsesPrimaryAmmo())
-									GiveAmmo(pWeapon->GetMaxClip1(), pWeapon->GetPrimaryAmmoType(), false);
+								{
+									if (GiveAmmo(pWeapon->GetMaxClip1(), pWeapon->GetPrimaryAmmoType(), false))
+										bDidReplenish = true;
+								}
 
 								if (bCanCheckSecondary && pWeapon->UsesSecondaryAmmo())
-									GiveAmmo(pWeapon->GetMaxClip2(), pWeapon->GetSecondaryAmmoType(), false);
+								{
+									if (GiveAmmo(pWeapon->GetMaxClip2(), pWeapon->GetSecondaryAmmoType(), false))
+										bDidReplenish = true;
+								}
 							}
+						}
+
+						// We received some ammo, check if we should be punished:
+						if (bDidReplenish && !GameBaseServer()->IsTutorialModeEnabled())
+						{
+							float timeSinceLastReplenish = gpGlobals->curtime - m_flLastTimeReplenishedAmmo;
+							if (timeSinceLastReplenish <= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flMaxAmmoReplensihInterval)
+							{
+								m_iNumAmmoReplenishes++;
+								if (m_iNumAmmoReplenishes >= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iMaxAmmoReplenishWithinInterval)
+								{
+									float penaltyTime = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flAmmoReplenishPenalty;
+									m_flNextAmmoReplenishTime = gpGlobals->curtime + penaltyTime;
+									m_iNumAmmoReplenishes = 0;
+									m_flLastTimeReplenishedAmmo = 0.0f;
+
+									// Reduce the penalty if we have this skill!
+									if (iResourcefulSkillValue > 0) // Reduces the value by max 1 min.
+									{
+										float fraction = ((float)iResourcefulSkillValue) / 10.0f;
+										m_flNextAmmoReplenishTime -= clamp((fraction * (penaltyTime / 2.0f)), 0.0f, 60.0f);
+									}
+
+									return;
+								}
+							}
+							else
+							{
+								m_flNextAmmoReplenishTime = 0.0f;
+								m_iNumAmmoReplenishes = 0;
+							}
+
+							m_flLastTimeReplenishedAmmo = gpGlobals->curtime;
 						}
 					}
 				}
@@ -778,6 +833,10 @@ void CHL2_Player::Spawn(void)
 #endif 
 
 	GetPlayerProxy();
+
+	m_flLastTimeReplenishedAmmo = 0.0f;
+	m_flNextAmmoReplenishTime = 0.0f;
+	m_iNumAmmoReplenishes = 0;
 }
 
 //-----------------------------------------------------------------------------

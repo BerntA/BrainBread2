@@ -271,6 +271,10 @@ private:
 	float				m_flTimeUseSuspended;
 	float				m_flTimeNextLadderHint;	// Next time we're eligible to display a HUD hint about a ladder.
 	
+	float				m_flLastTimeReplenishedAmmo; // From a bbc_ammo_box!
+	float				m_flNextAmmoReplenishTime; // Penalty
+	int					m_iNumAmmoReplenishes; // Ammo replenishes throughout a minute, if this value > X we will be punished for camping the ammo box!
+	
 	friend class CHL2GameMovement;
 };
 

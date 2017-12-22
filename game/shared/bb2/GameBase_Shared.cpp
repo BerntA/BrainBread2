@@ -1139,7 +1139,7 @@ void CGameBaseShared::ComputePlayerWeight(CHL2MP_Player *pPlayer)
 		if (!pWeapon)
 			continue;
 
-		if ((pWeapon->GetSlot() >= 4) || !pWeapon->VisibleInWeaponSelection())
+		if ((pWeapon->GetSlot() >= MAX_WEAPON_SLOTS) || !pWeapon->VisibleInWeaponSelection())
 			continue;
 
 		m_flWeight += pWeapon->GetWpnData().m_flPhysicalWeight;

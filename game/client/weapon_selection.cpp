@@ -558,9 +558,6 @@ void CBaseHudWeaponSelection::CancelWeaponSelection( void )
 //-----------------------------------------------------------------------------
 C_BaseCombatWeapon *CBaseHudWeaponSelection::GetFirstPos( int iSlot )
 {
-	int iLowestPosition = MAX_WEAPON_POSITIONS;
-	C_BaseCombatWeapon *pFirstWeapon = NULL;
-
 	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
 	if ( !player )
 		return NULL;
@@ -571,34 +568,25 @@ C_BaseCombatWeapon *CBaseHudWeaponSelection::GetFirstPos( int iSlot )
 		if ( !pWeapon )
 			continue;
 
-		if ( ( pWeapon->GetSlot() == iSlot ) && (pWeapon->VisibleInWeaponSelection()) )
-		{
-			// If this weapon is lower in the slot than the current lowest, it's our new winner
-			if ( pWeapon->GetPosition() <= iLowestPosition )
-			{
-				iLowestPosition = pWeapon->GetPosition();
-				pFirstWeapon = pWeapon;
-			}
-		}
+		if ((pWeapon->GetSlot() == iSlot) && (pWeapon->VisibleInWeaponSelection()))
+			return pWeapon;
 	}
 
-	return pFirstWeapon;
+	return NULL;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-C_BaseCombatWeapon *CBaseHudWeaponSelection::GetNextActivePos( int iSlot, int iSlotPos )
+C_BaseCombatWeapon *CBaseHudWeaponSelection::GetNextActivePos(int iSlot)
 {
-	if ( iSlotPos >= MAX_WEAPON_POSITIONS || iSlot >= MAX_WEAPON_SLOTS )
+	if (iSlot >= MAX_WEAPON_SLOTS)
 		return NULL;
-
-	int iLowestPosition = MAX_WEAPON_POSITIONS;
-	C_BaseCombatWeapon *pNextWeapon = NULL;
 
 	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
 	if ( !player )
 		return NULL;
+
 	for ( int i = 0; i < MAX_WEAPONS; i++ )
 	{
 		C_BaseCombatWeapon *pWeapon = player->GetWeapon( i );
@@ -606,15 +594,8 @@ C_BaseCombatWeapon *CBaseHudWeaponSelection::GetNextActivePos( int iSlot, int iS
 			continue;
 
 		if ( CanBeSelectedInHUD( pWeapon ) && pWeapon->GetSlot() == iSlot )
-		{
-			// If this weapon is lower in the slot than the current lowest, and above our desired position, it's our new winner
-			if ( pWeapon->GetPosition() <= iLowestPosition && pWeapon->GetPosition() >= iSlotPos )
-			{
-				iLowestPosition = pWeapon->GetPosition();
-				pNextWeapon = pWeapon;
-			}
-		}
+			return pWeapon;
 	}
 
-	return pNextWeapon;
+	return NULL;
 }

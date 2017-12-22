@@ -44,6 +44,7 @@ void CGameAnnouncer::Reset(void)
 {
 	m_bFirstBlood = false;
 	m_flIsBusy = 0.0f;
+	m_iLastTime = 0;
 	m_pAnnouncerList.Purge();
 
 	if (HL2MPRules() && !HL2MPRules()->CanUseGameAnnouncer())
@@ -242,4 +243,42 @@ void CGameAnnouncer::DeathNotice(const CTakeDamageInfo &info, CBaseEntity *pVict
 	pPlayerKiller->m_flDMTimeSinceLastKill = gpGlobals->curtime;
 	pPlayerVictim->m_hLastKiller = pPlayerKiller;
 	RemoveItemsForPlayer(pPlayerVictim->entindex());
+}
+
+void CGameAnnouncer::Think(int timeleft)
+{
+	if (HL2MPRules() && !HL2MPRules()->CanUseGameAnnouncer())
+		return;
+
+	if (timeleft <= 0 || (m_iLastTime == timeleft))
+		return;
+
+	// Time in seconds:
+	const char *soundScript = NULL;
+	switch (timeleft)
+	{
+	case 300:
+		soundScript = "Countdown5Min";
+		break;
+	case 180:
+		soundScript = "Countdown3Min";
+		break;
+	case 60:
+		soundScript = "Countdown1Min";
+		break;
+	case 30:
+		soundScript = "Countdown30Sec";
+		break;
+	case 10:
+		soundScript = "Countdown10Sec";
+		break;
+	case 5:
+		soundScript = "Countdown5Sec";
+		break;
+	}
+
+	m_iLastTime = timeleft;
+
+	if (soundScript != NULL)
+		HL2MPRules()->EmitSoundToClient(NULL, soundScript, BB2_SoundTypes::TYPE_ANNOUNCER, false);
 }

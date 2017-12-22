@@ -38,9 +38,6 @@ public:
 	~CLoadingPanel();
 
 	void SetRandomLoadingTip(void);
-	bool m_bCanUpdateImage;
-	bool m_bDisconnected;
-	bool m_bLoadedMapData;
 
 protected:
 	virtual void OnThink();
@@ -68,6 +65,11 @@ protected:
 	vgui::Button *m_pParentCancelButton;
 	vgui::ProgressBar *m_pParentProgressBar;
 	vgui::Label *m_pParentProgressText;
+
+	bool m_bCanUpdateImage;
+	bool m_bDisconnected;
+	bool m_bLoadedMapData;
+	float m_flLastTimeCheckedDownload;
 
 private:
 	void SetupLayout(void);

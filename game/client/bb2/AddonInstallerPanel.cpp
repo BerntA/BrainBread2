@@ -220,7 +220,7 @@ void CAddonInstallerPanel::OnWorkshopItemInstalled(ItemInstalled_t *pParam)
 
 	// Load the addon:
 
-	char pszFullPath[1024];
+	char pszFullPath[1024], pszMapToEnter[MAX_MAP_NAME]; pszMapToEnter[0] = 0;
 	Q_snprintf(pszFullPath, 1024, "../../workshop/content/346330/%llu/", m_ulWorkshopItemID);
 
 	filesystem->AddSearchPath(pszFullPath, "MOD", PATH_ADD_TO_HEAD);
@@ -228,10 +228,15 @@ void CAddonInstallerPanel::OnWorkshopItemInstalled(ItemInstalled_t *pParam)
 
 	if (GameBaseShared() && GameBaseShared()->GetSharedMapData())
 	{
-		for (int i = 0; i < m_pTempMapItems.Count(); i++)
+		int mapCount = m_pTempMapItems.Count();
+		if (mapCount)
 		{
-			GameBaseShared()->GetSharedMapData()->GetMapImageData(m_pTempMapItems[i].pszMapName, m_pTempMapItems[i]);
-			GameBaseShared()->GetSharedMapData()->pszGameMaps.AddToTail(m_pTempMapItems[i]);
+			Q_strncpy(pszMapToEnter, m_pTempMapItems[0].pszMapName, MAX_MAP_NAME);
+			for (int i = 0; i < mapCount; i++)
+			{
+				GameBaseShared()->GetSharedMapData()->GetMapImageData(m_pTempMapItems[i].pszMapName, m_pTempMapItems[i]);
+				GameBaseShared()->GetSharedMapData()->pszGameMaps.AddToTail(m_pTempMapItems[i]);
+			}
 		}
 
 		m_pTempMapItems.Purge();
@@ -239,6 +244,7 @@ void CAddonInstallerPanel::OnWorkshopItemInstalled(ItemInstalled_t *pParam)
 
 	m_ulWorkshopItemID = 0;
 	ShowAddonPanel(false, 0);
+	GameBaseClient->Changelevel(pszMapToEnter);
 	engine->ClientCmd_Unrestricted("retry\n");
 }
 

@@ -47,6 +47,7 @@ public:
 	bool IsBoss() { return true; }
 	bool CanAlwaysSeePlayers() { return true; }
     bool AllowedToIgnite( void ) { return false; }
+	virtual bool UsesNavMesh(void) { return true; }
 	virtual Class_T Classify(void);
 
 	void MoanSound( envelopePoint_t *pEnvelope, int iEnvelopeSize );

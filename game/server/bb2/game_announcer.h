@@ -22,10 +22,12 @@ public:
 	void RemoveItemsForPlayer(int index);
 	bool HandleClientAnnouncerSound(const CTakeDamageInfo &info, CBaseEntity *pVictim, CBaseEntity *pKiller);
 	void DeathNotice(const CTakeDamageInfo &info, CBaseEntity *pVictim, CBaseEntity *pKiller);
+	void Think(int timeleft);
 
 private:
 	bool m_bFirstBlood;
 	float m_flIsBusy;
+	int m_iLastTime;
 };
 
 extern CGameAnnouncer *GameAnnouncer;

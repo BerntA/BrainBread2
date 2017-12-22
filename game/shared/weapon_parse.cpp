@@ -73,14 +73,7 @@ itemFlags_t g_ItemFlags[8] =
 extern itemFlags_t g_ItemFlags[8];
 #endif
 
-
 static CUtlDict< FileWeaponInfo_t*, unsigned short > m_WeaponInfoDatabase;
-
-#ifdef _DEBUG
-// used to track whether or not two weapons have been mistakenly assigned the wrong slot
-bool g_bUsedWeaponSlots[MAX_WEAPON_SLOTS][MAX_WEAPON_POSITIONS] = { 0 };
-
-#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -109,11 +102,8 @@ WEAPON_FILE_INFO_HANDLE LookupWeaponInfoSlot( const char *name )
 	return m_WeaponInfoDatabase.Find( name );
 }
 
-
-
 // FIXME, handle differently?
 static FileWeaponInfo_t gNullWeaponInfo;
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -153,10 +143,6 @@ void ResetFileWeaponInfoDatabase( void )
 		delete m_WeaponInfoDatabase[ i ];
 	}
 	m_WeaponInfoDatabase.RemoveAll();
-
-#ifdef _DEBUG
-	memset(g_bUsedWeaponSlots, 0, sizeof(g_bUsedWeaponSlots));
-#endif
 }
 #endif
 
@@ -315,7 +301,6 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 	szViewModel[0] = 0;
 	szWorldModel[0] = 0;
 	iSlot = 0;
-	iPosition = 0;
 	iMaxClip1 = 0;
 	iMaxClip2 = 0;
 	iDefaultClip1 = 0;
@@ -381,7 +366,6 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 	Q_strncpy( szViewModel, pKeyValuesData->GetString( "viewmodel" ), MAX_WEAPON_STRING );
 	Q_strncpy( szWorldModel, pKeyValuesData->GetString( "playermodel" ), MAX_WEAPON_STRING );
 	iSlot = pKeyValuesData->GetInt( "bucket", 0 );
-	iPosition = pKeyValuesData->GetInt( "bucket_position", 0 );
 	
 	iMaxClip1 = pKeyValuesData->GetInt( "clip_size", WEAPON_NOCLIP );					// Max primary clips gun can hold (assume they don't use clips by default)
 	iMaxClip2 = pKeyValuesData->GetInt( "clip2_size", WEAPON_NOCLIP );					// Max secondary clips gun can hold (assume they don't use clips by default)
@@ -416,24 +400,6 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 
 	m_flSpecialDamage = pKeyValuesData->GetFloat("damage_special", 0.0f);
 	m_flSpecialDamage2 = pKeyValuesData->GetFloat("damage_special2", 0.0f);
-
-#if defined(_DEBUG) && defined(HL2_CLIENT_DLL)
-	// make sure two weapons aren't in the same slot & position
-	if ( iSlot >= MAX_WEAPON_SLOTS ||
-		iPosition >= MAX_WEAPON_POSITIONS )
-	{
-		Warning( "Invalid weapon slot or position [slot %d/%d max], pos[%d/%d max]\n",
-			iSlot, MAX_WEAPON_SLOTS - 1, iPosition, MAX_WEAPON_POSITIONS - 1 );
-	}
-	else
-	{
-		if (g_bUsedWeaponSlots[iSlot][iPosition])
-		{
-			Warning( "Duplicately assigned weapon slots in selection hud:  %s (%d, %d)\n", szPrintName, iSlot, iPosition );
-		}
-		g_bUsedWeaponSlots[iSlot][iPosition] = true;
-	}
-#endif
 
 	// Primary ammo used
 	const char *pAmmo = pKeyValuesData->GetString( "primary_ammo", "None" );
