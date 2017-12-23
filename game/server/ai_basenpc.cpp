@@ -3125,6 +3125,28 @@ bool CAI_BaseNPC::ShouldAlwaysThink()
 	return HasSpawnFlags(SF_NPC_ALWAYSTHINK);
 }
 
+bool CAI_BaseNPC::SpawnRunSchedule(CBaseEntity *pTarget, Activity act, bool pathcorner)
+{
+	if (!pTarget)
+		return false;
+
+	if (GetSleepState() > AISS_AWAKE)
+		Wake();
+
+	ForceDecisionThink();
+	SetState(NPC_STATE_COMBAT);
+
+	bool ret;
+	if (pathcorner)
+		ret = ScheduledFollowPath(SCHED_IDLE_WALK, pTarget, act);
+	else
+		ret = ScheduledMoveToGoalEntity(SCHED_IDLE_WALK, pTarget, act);
+
+	if (ret)
+		SetScriptedScheduleIgnoreConditions(DEATH_INTERRUPTABILITY);
+
+	return ret;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Return true if the Player should be running the auto-move-out-of-way
@@ -7885,7 +7907,7 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 		}
 
 		// Take down players with important stuff first!
-		if (!bUnreachable && GameBaseShared()->HasObjectiveGlowItems(ToHL2MPPlayer(pEnemy)))
+		if (!bUnreachable && pEnemy->IsPlayer() && GameBaseShared()->HasObjectiveGlowItems(ToHL2MPPlayer(pEnemy)))
 		{
 			// Pick this fella if can be seen, within range and such.
 			if (GetSenses()->DidSeeEntity(pEnemy) && (EnemyDistance(pEnemy) < GetSenses()->GetDistLook()) && FVisible(pEnemy))

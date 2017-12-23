@@ -35,6 +35,7 @@ AI_EnemyInfo_t::AI_EnemyInfo_t(void)
 	timeValidEnemy = 0;
 	timeLastReceivedDamageFrom = 0;
 	timeAtFirstHand = AI_INVALID_TIME;
+	classification = CLASS_NONE;
 	bDangerMemory = 0;
 	bEludedMe = 0;
 	bUnforgettable = 0;
@@ -139,6 +140,7 @@ BEGIN_SIMPLE_DATADESC( AI_EnemyInfo_t )
 	DEFINE_FIELD( timeValidEnemy, 	FIELD_TIME ),
 	DEFINE_FIELD( timeLastReceivedDamageFrom, 	FIELD_TIME ),
 	DEFINE_FIELD( timeAtFirstHand,	FIELD_TIME ),
+	DEFINE_FIELD(classification, FIELD_INTEGER),
 	DEFINE_FIELD( bDangerMemory, 	FIELD_BOOLEAN ),
 	DEFINE_FIELD( bEludedMe, 		FIELD_BOOLEAN ),
 	DEFINE_FIELD( bUnforgettable,	FIELD_BOOLEAN ),
@@ -247,6 +249,17 @@ bool CAI_Enemies::ShouldDiscardMemory( AI_EnemyInfo_t *pMemory )
 		CAI_BaseNPC *pEnemyNPC = pEnemy->MyNPCPointer();
 		if ( pEnemyNPC && pEnemyNPC->GetState() == NPC_STATE_DEAD )
 			return true;
+		
+		// If this player is now a zombie or a human, check if we're still an enemy:
+		// If we're dead, remove us:
+		if (pEnemy->IsPlayer())
+		{
+			if ((pMemory->classification != CLASS_NONE) && (pEnemy->Classify() != pMemory->classification))
+				return true;
+
+			if ((pEnemy->GetTeamNumber() <= TEAM_SPECTATOR) || !pEnemy->IsAlive())
+				return true;
+		}
 	}
 	else
 	{
@@ -379,6 +392,7 @@ bool CAI_Enemies::UpdateMemory(CAI_Network* pAINet, CBaseEntity *pEnemy, const V
 		pAddMemory->timeValidEnemy = gpGlobals->curtime + reactionDelay;
 
 	pAddMemory->bEludedMe = false;
+	pAddMemory->classification = (pEnemy ? pEnemy->Classify() : CLASS_NONE);
 
 	// I'm either remembering a postion of an enmey of just a danger position
 	pAddMemory->hEnemy = pEnemy;

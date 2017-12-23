@@ -14,35 +14,34 @@
 #pragma once
 #endif
 
-#include "cbase.h"
 #include "baseentity.h"
-#include "triggers.h"
-#include "props.h"
 #include "player.h"
-#include "saverestore_utlvector.h"
-#include "GameEventListener.h"
 
 //
 // Spawnflags
 //
 enum
 {
-	SF_STARTACTIVE = 0x01,		// Start active
+	SF_STARTACTIVE = 0x01, // Start active
+	SF_FASTSPAWN = 0x02,
 };
 
-class CZombieVolume : public CTriggerMultiple
+class CZombieVolume : public CBaseEntity
 {
 public:
+
+	DECLARE_CLASS(CZombieVolume, CBaseEntity);
 	DECLARE_DATADESC();
-	DECLARE_CLASS(CZombieVolume, CTriggerMultiple);
 
 	CZombieVolume(void);
 
 	void Spawn(void);
-	void Think();
+	void VolumeThink();
 
 	void InputStartSpawn(inputdata_t &inputData);
 	void InputStopSpawn(inputdata_t &inputData);
+
+private:
 
 	// Hammer Variables...
 	int ZombieSpawnNum;
@@ -57,13 +56,17 @@ public:
 	// Timer
 	float m_flNextSpawnWave;
 
+	// Schedule logic
+	string_t goalEntity;
+	int goalActivity;
+	int goalType;
+
 	COutputEvent m_OnWaveSpawned;
 	COutputEvent m_OnForceSpawned;
 	COutputEvent m_OnForceStop;
 
-private:
+protected:
 
-	// Custom
 	void TraceZombieBBox(const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm, CBaseEntity *pEntity);
 	void SpawnWave();
 	const char *GetZombieClassnameToSpawn();

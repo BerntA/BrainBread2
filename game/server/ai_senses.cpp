@@ -409,44 +409,19 @@ int CAI_Senses::LookForHighPriorityEntities(int iDistance)
 		float distSq = (iDistance * iDistance);
 		const Vector &origin = GetAbsOrigin();
 
-		if (GetOuter() && GetOuter()->CanAlwaysSeePlayers())
+		bool bShouldAlwaysSeePlayers = (GetOuter() && GetOuter()->CanAlwaysSeePlayers());
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
-			for (int i = 1; i <= gpGlobals->maxClients; i++)
+			CBaseEntity *pPlayer = UTIL_PlayerByIndex(i);
+			if (pPlayer)
 			{
-				CBaseEntity *pPlayer = UTIL_PlayerByIndex(i);
-
-				if (pPlayer)
+				if (bShouldAlwaysSeePlayers)
 				{
-					if (Look(pPlayer)) //Look
-					{
+					if (Look(pPlayer))
 						nSeen++;
-					}
 				}
-			}
-		}
-		else
-		{
-			for (int i = 1; i <= gpGlobals->maxClients; i++)
-			{
-				CBaseEntity *pPlayer = UTIL_PlayerByIndex(i);
-
-				if (pPlayer)
-				{
-					if (origin.DistToSqr(pPlayer->GetAbsOrigin()) < distSq && Look(pPlayer))
-					{
-						nSeen++;
-					}
-#ifdef PORTAL
-					else
-					{
-						CProp_Portal *pPortal = GetOuter()->FInViewConeThroughPortal( pPlayer );
-						if ( pPortal && UTIL_Portal_DistanceThroughPortalSqr( pPortal, origin, pPlayer->GetAbsOrigin() ) < distSq && LookThroughPortal( pPortal, pPlayer ) )
-						{
-							nSeen++;
-						}
-					}
-#endif
-				}
+				else if ((origin.DistToSqr(pPlayer->GetAbsOrigin()) < distSq) && Look(pPlayer))
+					nSeen++;
 			}
 		}
 

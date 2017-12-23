@@ -40,6 +40,7 @@ struct AI_EnemyInfo_t
 	float			timeValidEnemy;		// First time can be selected (reaction delay)
 	float			timeLastReceivedDamageFrom;
 	float			timeAtFirstHand;	// Time at which the enemy was seen firsthand
+	int				classification;		// What classification did the enemy have at the time?
 	bool			bDangerMemory;		// Memory of danger position w/o Enemy pointer
 	bool			bEludedMe;			// True if enemy not at last known location 
 	bool			bUnforgettable;

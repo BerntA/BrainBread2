@@ -49,12 +49,19 @@ private:
 	string_t szClassname;
 	string_t szWeapon;
 	bool m_bCanDropWeapons;
+
+	string_t goalEntity;
+	int goalActivity;
+	int goalType;
 };
 
 BEGIN_DATADESC(CNPCAutoSpawner)
 DEFINE_KEYFIELD(szClassname, FIELD_STRING, "npc_classname"),
 DEFINE_KEYFIELD(szWeapon, FIELD_STRING, "weapon_classname"),
 DEFINE_KEYFIELD(m_bCanDropWeapons, FIELD_BOOLEAN, "allow_weapondrop"),
+DEFINE_KEYFIELD(goalEntity, FIELD_STRING, "goal_target"),
+DEFINE_KEYFIELD(goalActivity, FIELD_INTEGER, "goal_activity"),
+DEFINE_KEYFIELD(goalType, FIELD_INTEGER, "goal_type"),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(npc_auto_spawner, CNPCAutoSpawner);
@@ -63,6 +70,9 @@ CNPCAutoSpawner::CNPCAutoSpawner()
 {
 	szClassname = NULL_STRING;
 	szWeapon = NULL_STRING;
+	goalEntity = NULL_STRING;
+	goalActivity = ACT_WALK;
+	goalType = 0;
 }
 
 void CNPCAutoSpawner::Spawn()
@@ -95,6 +105,16 @@ CBaseEntity *CNPCAutoSpawner::SpawnNewEntity(void)
 
 		if (!m_bCanDropWeapons)
 			pSoldier->AddSpawnFlags(SF_NPC_NO_WEAPON_DROP);
+	}
+
+	if ((goalEntity != NULL_STRING) && pEntity->MyNPCPointer())
+	{
+		CBaseEntity *pTarget = gEntList.FindEntityByName(NULL, STRING(goalEntity));
+		if (!pTarget)
+			pTarget = gEntList.FindEntityByClassname(NULL, STRING(goalEntity));
+
+		if (pTarget)
+			pEntity->MyNPCPointer()->SpawnRunSchedule(pTarget, ((Activity)goalActivity), (goalType >= 1));
 	}
 
 	return pEntity;

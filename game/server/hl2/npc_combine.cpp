@@ -390,7 +390,7 @@ void CNPC_Combine::Spawn( void )
 
 	if (!IsBoss())
 	{
-		m_flDistTooFar = 512.0;
+		m_flDistTooFar = 300.0;
 		GetSenses()->SetDistLook(512.0);
 	}
 

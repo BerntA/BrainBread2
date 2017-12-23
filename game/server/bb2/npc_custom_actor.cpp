@@ -32,7 +32,7 @@ CBasePlayer *GetNearestMatchingPlayer(CAI_BaseNPC *pLooker, bool bVisibleMask = 
 	if (!pLooker)
 		return NULL;
 
-	float distToNearest = 99999999999999999999999999999999999999.0f;
+	float distToNearest = FLT_MAX;
 	CBasePlayer *pNearest = NULL;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
@@ -662,21 +662,15 @@ void CNPC_CustomActor::PickupItem(CBaseEntity *pItem)
 //-----------------------------------------------------------------------------
 bool CNPC_CustomActor::IgnorePlayerPushing(void)
 {
-	if (!m_bIsAlly)
-		return true;
-
-	// If the NPC's on a func_tank that the player cannot man, ignore player pushing
+	// Friendly NPCs will have no-collide with players! Therefore we don't normally care about pushing, however for func_tanks, we might want to do pushing:
 	if (m_FuncTankBehavior.IsMounted())
 	{
 		CFuncTank *pTank = m_FuncTankBehavior.GetFuncTank();
-		if (pTank && !pTank->IsControllable())
-			return true;
+		if (pTank && pTank->IsControllable())
+			return false;
 	}
 
-	if (IsCurSchedule(SCHED_RELOAD) || IsCurSchedule(SCHED_HIDE_AND_RELOAD))
-		return true;
-
-	return false;
+	return true;
 }
 
 //-----------------------------------------------------------------------------

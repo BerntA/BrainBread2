@@ -10,16 +10,10 @@
 
 #include "cbase.h"
 #include "ZombieVolume.h"
-#include "triggers.h"
-#include "props.h"
-#include "saverestore_utlvector.h"
+#include "ai_basenpc.h"
 #include "hl2mp_gamerules.h"
 #include "hl2mp_player.h"
-#include "hl2_player.h"
-#include "hl2mp_player_shared.h"
 #include "GameBase_Server.h"
-#include "items.h"
-#include "player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -63,7 +57,7 @@ bool IsAllowedToSpawn(CBaseEntity *pEntity)
 BEGIN_DATADESC(CZombieVolume)
 
 // Think
-DEFINE_THINKFUNC(Think),
+DEFINE_THINKFUNC(VolumeThink),
 
 // Inputs
 DEFINE_INPUTFUNC(FIELD_VOID, "ForceSpawn", InputStartSpawn),
@@ -81,6 +75,10 @@ DEFINE_KEYFIELD(SpawnInterval, FIELD_FLOAT, "SpawnInterval"),
 DEFINE_KEYFIELD(m_flRandomSpawnPercent, FIELD_FLOAT, "RandomSpawnChance"),
 DEFINE_KEYFIELD(m_bSpawnNoMatterWhat, FIELD_BOOLEAN, "AutoSpawn"),
 
+DEFINE_KEYFIELD(goalEntity, FIELD_STRING, "goal_target"),
+DEFINE_KEYFIELD(goalActivity, FIELD_INTEGER, "goal_activity"),
+DEFINE_KEYFIELD(goalType, FIELD_INTEGER, "goal_type"),
+
 DEFINE_FIELD(m_flNextSpawnWave, FIELD_TIME),
 DEFINE_FIELD(m_iSpawnNum, FIELD_INTEGER),
 
@@ -97,11 +95,20 @@ CZombieVolume::CZombieVolume(void)
 	m_iTypeToSpawn = 0;
 	m_flNextSpawnWave = 0.0f;
 	m_bSpawnNoMatterWhat = false;
+	m_spawnflags = 0;
+
+	goalEntity = NULL_STRING;
+	goalActivity = ACT_WALK;
+	goalType = 0;
 }
 
 void CZombieVolume::Spawn()
 {
-	BaseClass::Spawn();
+	Precache();
+	SetSolid(SOLID_NONE);
+	SetMoveType(MOVETYPE_NONE);
+	SetModel(STRING(GetModelName()));
+	m_nRenderMode = kRenderEnvironmental;
 
 	if (ZombieSpawnNum > 50)
 		ZombieSpawnNum = 50;
@@ -114,12 +121,12 @@ void CZombieVolume::Spawn()
 		m_flNextSpawnWave = gpGlobals->curtime + SpawnInterval;
 		m_iSpawnNum = 0;
 
-		SetThink(&CZombieVolume::Think);
+		SetThink(&CZombieVolume::VolumeThink);
 		SetNextThink(gpGlobals->curtime + bb2_spawn_frequency.GetFloat());
 	}
 }
 
-void CZombieVolume::Think()
+void CZombieVolume::VolumeThink()
 {
 	if (m_flNextSpawnWave <= gpGlobals->curtime)
 	{
@@ -128,11 +135,7 @@ void CZombieVolume::Think()
 		m_iSpawnNum = 0;
 	}
 
-	bool bAllowedToSpawn = IsAllowedToSpawn(this);
-	if (m_bSpawnNoMatterWhat)
-		bAllowedToSpawn = true;
-
-	if (bAllowedToSpawn)
+	if (m_bSpawnNoMatterWhat || IsAllowedToSpawn(this))
 	{
 		if ((HL2MPRules()->CanSpawnZombie()) && (m_iSpawnNum < ZombieSpawnNum))
 			SpawnWave();
@@ -146,7 +149,7 @@ void CZombieVolume::InputStartSpawn(inputdata_t &inputData)
 	m_flNextSpawnWave = gpGlobals->curtime + SpawnInterval;
 	m_iSpawnNum = 0;
 
-	SetThink(&CZombieVolume::Think);
+	SetThink(&CZombieVolume::VolumeThink);
 	SetNextThink(gpGlobals->curtime + bb2_spawn_frequency.GetFloat());
 
 	m_OnForceSpawned.FireOutput(this, this);
@@ -179,43 +182,44 @@ void CZombieVolume::SpawnWave()
 	float triggerWidth = CollisionProp()->OBBSize().x;
 	float triggerHeight = CollisionProp()->OBBSize().y;
 
-	float xPos = triggerWidth / 2;
-	float yPos = triggerHeight / 2;
+	float xPos = triggerWidth / 2.0f;
+	float yPos = triggerHeight / 2.0f;
 
 	// Start filling MULTIPOS
 	Vector newPos;
+	Vector vecVolumePos = GetAbsOrigin();
 	int randomPlusOrMinus = random->RandomInt(1, 2);
-	float RandomXPlus = random->RandomFloat(GetAbsOrigin().x, (GetAbsOrigin().x + xPos));
-	float RandomYPlus = random->RandomFloat(GetAbsOrigin().y, (GetAbsOrigin().y + yPos));
-	float RandomXMinus = random->RandomFloat((GetAbsOrigin().x - xPos), GetAbsOrigin().x);
-	float RandomYMinus = random->RandomFloat((GetAbsOrigin().y - yPos), GetAbsOrigin().y);
+	float RandomXPlus = random->RandomFloat(vecVolumePos.x, (vecVolumePos.x + xPos));
+	float RandomYPlus = random->RandomFloat(vecVolumePos.y, (vecVolumePos.y + yPos));
+	float RandomXMinus = random->RandomFloat((vecVolumePos.x - xPos), vecVolumePos.x);
+	float RandomYMinus = random->RandomFloat((vecVolumePos.y - yPos), vecVolumePos.y);
 
 	switch (randomPlusOrMinus)
 	{
 	case 1:
 	{
-		newPos = Vector(RandomXPlus, RandomYPlus, GetAbsOrigin().z);
+		newPos = Vector(RandomXPlus, RandomYPlus, vecVolumePos.z);
 		break;
 	}
 	case 2:
 	{
-		newPos = Vector(RandomXMinus, RandomYMinus, GetAbsOrigin().z);
+		newPos = Vector(RandomXMinus, RandomYMinus, vecVolumePos.z);
 		break;
 	}
 	default:
 	{
-		newPos = Vector(RandomXPlus, RandomYPlus, GetAbsOrigin().z);
+		newPos = Vector(RandomXPlus, RandomYPlus, vecVolumePos.z);
 		break;
 	}
 	}
 
-	Vector vecAbsStart, vecAbsEnd, vecDown;
+	Vector vecDown;
 	AngleVectors(GetAbsAngles(), NULL, NULL, &vecDown);
+	VectorNormalize(vecDown);
+	vecDown *= -1;
 
-	vecAbsStart = newPos;
-	vecAbsEnd = vecAbsStart - (vecDown * MAX_TRACE_LENGTH);
 	trace_t tr;
-	TraceZombieBBox(vecAbsStart, vecAbsEnd, MASK_NPCSOLID, COLLISION_GROUP_NPC, tr, this);
+	TraceZombieBBox(newPos, newPos + vecDown * MAX_TRACE_LENGTH, MASK_NPCSOLID, COLLISION_GROUP_NPC, tr, this);
 
 	// We hit an entity which means there is already something in this part of the volume! Ignore and continue to next part of the volume!
 	CBaseEntity *pEntity = tr.m_pEnt;
@@ -236,13 +240,27 @@ void CZombieVolume::SpawnWave()
 
 	if (bCouldSpawn)
 	{
-		CBaseEntity *npcZombie = CreateEntityByName(GetZombieClassnameToSpawn());
+		CAI_BaseNPC *npcZombie = (CAI_BaseNPC*)CreateEntityByName(GetZombieClassnameToSpawn());
 		if (npcZombie)
 		{
+			QAngle randomAngle = QAngle(0, random->RandomFloat(-180.0f, 180.0f), 0);
 			npcZombie->SetAbsOrigin(tr.endpos);
-			npcZombie->SetAbsAngles(GetAbsAngles());
+			npcZombie->SetAbsAngles(randomAngle);
+			if (HasSpawnFlags(SF_FASTSPAWN))
+				npcZombie->SpawnDirectly(); // Skip zombie fade-in + rise stuff, use fast spawn for npcs which spawn in a hidden place, will make them spawn faster + more efficient.
+
 			npcZombie->Spawn();
 			//UTIL_DropToFloor(npcZombie, MASK_NPCSOLID);
+
+			if (goalEntity != NULL_STRING)
+			{
+				CBaseEntity *pTarget = gEntList.FindEntityByName(NULL, STRING(goalEntity));
+				if (!pTarget)
+					pTarget = gEntList.FindEntityByClassname(NULL, STRING(goalEntity));
+
+				if (pTarget)
+					npcZombie->SpawnRunSchedule(pTarget, ((Activity)goalActivity), (goalType >= 1));
+			}
 		}
 
 		m_iSpawnNum++;
@@ -251,7 +269,7 @@ void CZombieVolume::SpawnWave()
 
 const char *CZombieVolume::GetZombieClassnameToSpawn()
 {
-	const char *pszTypes[] = 
+	const char *pszTypes[] =
 	{
 		"npc_runner",
 	};

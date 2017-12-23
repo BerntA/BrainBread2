@@ -617,6 +617,8 @@ public:
 	virtual void		PlayerPenetratingVPhysics( void );
 
 	virtual bool		ShouldAlwaysThink();
+	virtual void		SpawnDirectly(void) { } // Used for npcs spawning inside volumes, we want to spawn them fast + efficiently.
+	virtual bool		SpawnRunSchedule(CBaseEntity *pTarget, Activity act, bool pathcorner);
 	void				ForceGatherConditions()	{ m_bForceConditionsGather = true; SetEfficiency( AIE_NORMAL ); }	// Force an NPC out of PVS to call GatherConditions on next think
 
 	virtual float		LineOfSightDist( const Vector &vecDir = vec3_invalid, float zEye = FLT_MAX );

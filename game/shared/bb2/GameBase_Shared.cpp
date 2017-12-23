@@ -1058,6 +1058,8 @@ void CGameBaseShared::OnGameOver(float timeLeft, int iWinner)
 			pAchievement = "ACH_MAP_SWAMPTROUBLE";
 		else if (!strcmp(currMap, "bba_salvage"))
 			pAchievement = "ACH_MAP_SALVAGE";
+		else if (!strcmp(currMap, "bba_carnage"))
+			pAchievement = "ACH_MAP_CARNAGE";
 	}
 
 	if (GetAchievementManager() && !bTimeOut)

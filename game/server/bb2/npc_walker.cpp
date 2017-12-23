@@ -83,9 +83,11 @@ class CNPCWalker : public CAI_BlendingHost<CNPC_BaseZombie>
 public:
 	CNPCWalker()
 	{
+		m_bFastSpawn = false;
 	}
 
 	void Spawn( void );
+	void SpawnDirectly(void);
 	void Precache( void );
 	Class_T Classify( void );
 
@@ -168,6 +170,7 @@ private:
 	bool m_bIsRunner;
 	bool m_bIsReady;
 	bool m_bCheckCollisionGroupChange;
+	bool m_bFastSpawn;
 	float m_flNextTimeToCheckCollisionChange;
 
 	Vector m_vPositionCharged;
@@ -298,37 +301,47 @@ void CNPCWalker::FadeIn()
 void CNPCWalker::Spawn( void )
 {
 	m_bIsRunner = FClassnameIs(this, "npc_runner");
-	m_bIsReady = false;
-	m_bCheckCollisionGroupChange = false;
+
 	Precache();
-
 	SetBloodColor( BLOOD_COLOR_RED );
-
 	m_flFieldOfView = -1.0;
 
 	CapabilitiesClear();
-
 	CapabilitiesAdd(bits_CAP_MOVE_GROUND | bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_MOVE_CLIMB | bits_CAP_MOVE_CRAWL);
 
 	BaseClass::Spawn();
 
+	m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat( 1.0, 4.0 );
+
 	m_flNextTimeToCheckCollisionChange = 0.0f;
 	SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE_SPAWNING);
 
-	m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat( 1.0, 4.0 );
+	if (m_bFastSpawn)
+	{
+		m_bIsReady = m_bCheckCollisionGroupChange = true;
+	}
+	else
+	{
+		m_bIsReady = m_bCheckCollisionGroupChange = false;
 
-	SetRenderMode( kRenderTransAlpha );
-	SetRenderColorA( 0 );
+		SetRenderMode(kRenderTransAlpha);
+		SetRenderColorA(0);
+
+		SetState(NPC_STATE_IDLE);
+		SetActivity((Activity)ACT_RISE_IDLE);
+		SetSchedule(SCHED_WALKER_RISE_IDLE);
+	}
 
 	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
-
-	SetState(NPC_STATE_IDLE);
-	SetActivity((Activity)ACT_RISE_IDLE);
-	SetSchedule(SCHED_WALKER_RISE_IDLE);
 
 	// Reduce zombies view dist:
 	m_flDistTooFar = 128.0;
 	GetSenses()->SetDistLook(256.0);
+}
+
+void CNPCWalker::SpawnDirectly(void)
+{
+	m_bFastSpawn = true;
 }
 
 //-----------------------------------------------------------------------------
