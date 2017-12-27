@@ -74,7 +74,7 @@ public:
 	void ParseDataForMap(const char *map);
 	void CleanupMapData(void);
 
-	void FetchMapData(void);
+	bool FetchMapData(void);
 	gameMapItem_t *GetMapData(const char *pszMap);
 	int GetMapIndex(const char *pszMap);
 	bool IsMapWhiteListed(const char *pszMap);

@@ -315,13 +315,7 @@ bool CGameBaseServer::IsClassicMode(void)
 
 bool CGameBaseServer::IsUsingDBSystem(void)
 {
-// At this time you can't disable the DB sys.
-//#ifdef LINUX
-//	if (CommandLine()->FindParm("-nodbsys") != 0)
-//		return false;
-//#endif
-
-	return true;
+	return engine->IsDedicatedServer();
 }
 
 void CGameBaseServer::IterateAddonsPath(const char *path)
@@ -491,8 +485,8 @@ void CGameBaseServer::PostInit()
 	m_flLastProfileSystemStatusUpdateCheck = 0.0f;
 
 	LoadSharedData();
-	LoadServerTags();
 	CheckMapData();
+	LoadServerTags();
 }
 
 // Are you allowed to store your skills?
@@ -544,7 +538,14 @@ void CGameBaseServer::OnUpdate(int iClientsInGame)
 		m_flPostLoadTimer = 0.0f;
 
 		if (GameBaseShared()->GetSharedMapData())
-			GameBaseShared()->GetSharedMapData()->FetchMapData();
+		{
+			// If we didn't fetch workshop data, but only regular map data via data/maps/*, load tags and check stuff right away.
+			if (!GameBaseShared()->GetSharedMapData()->FetchMapData())
+			{
+				CheckMapData();
+				LoadServerTags();
+			}
+		}
 
 		if (GameBaseShared()->GetServerWorkshopData())
 			GameBaseShared()->GetServerWorkshopData()->Initialize();

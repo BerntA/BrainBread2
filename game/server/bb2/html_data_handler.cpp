@@ -121,6 +121,15 @@ const char *pchDataURLs[5] =
 	"http://hl2world.net/hl2world/misc/bb2/blacklistedservers.txt",
 };
 
+const char *pchDataErrMessages[5] =
+{
+	"developer tags",
+	"donator tags",
+	"tester tags",
+	"ban data",
+	"blacklist data",
+};
+
 size_t writeCallback(char* buf, size_t size, size_t nmemb, void* up)
 {
 	htmlDataList.AddToTail(buf);
@@ -137,7 +146,10 @@ void ParseHTML(const char *url)
 	//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
 	if (curl_easy_perform(curl) != CURLE_OK)
-		Msg("Unable to parse the url: '%s'!\n", url);
+	{
+		int idx = clamp(g_iActiveItemType, 0, (int)(_ARRAYSIZE(pchDataErrMessages) - 1));
+		Msg("Unable to parse the %s!\n", pchDataErrMessages[idx]);
+	}
 	else
 	{
 		char pchTemp[4096];

@@ -2734,7 +2734,10 @@ void CHL2MP_Player::CheckCanRespawnAsHuman()
 	if ((HL2MPRules() && !HL2MPRules()->CanUseSkills()) || GameBaseServer()->IsTutorialModeEnabled())
 		return;
 
-	if ((m_iZombKills >= 3) || (bb2_allow_mercy.GetInt() && (m_iZombDeaths >= bb2_allow_mercy.GetInt())))
+	int killsRequired = bb2_zombie_kills_required.GetInt();
+	int deathMercy = bb2_allow_mercy.GetInt();
+
+	if ((killsRequired && (m_iZombKills >= killsRequired)) || (deathMercy && (m_iZombDeaths >= deathMercy)))
 		m_BB2Local.m_bCanRespawnAsHuman = true;
 }
 

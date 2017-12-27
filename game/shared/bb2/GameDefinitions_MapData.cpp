@@ -134,7 +134,7 @@ void CGameDefinitionsMapData::CleanupMapData(void)
 //-----------------------------------------------------------------------------
 // Purpose: Load official maps, custom maps and workshop maps. Parse data.
 //-----------------------------------------------------------------------------
-void CGameDefinitionsMapData::FetchMapData(void)
+bool CGameDefinitionsMapData::FetchMapData(void)
 {
 	pszGameMaps.Purge();
 #ifndef CLIENT_DLL
@@ -236,7 +236,7 @@ void CGameDefinitionsMapData::FetchMapData(void)
 #else
 		Warning("Server SteamAPI Interface is unavailable!\n");
 #endif
-		return;
+		return false;
 	}
 
 	if (queryHandler)
@@ -254,6 +254,10 @@ void CGameDefinitionsMapData::FetchMapData(void)
 	//steamAccountID = STEAM_API_INTERFACE->SteamGameServer()->GetSteamID().GetAccountID();
 	//queryHandler = STEAM_API_INTERFACE->SteamUGC()->CreateQueryAllUGCRequest(k_EUGCQuery_RankedByVote, k_EUGCMatchingUGCType_Items, (AppId_t)382990, (AppId_t)346330, 1);
 	//STEAM_API_INTERFACE->SteamUGC()->AddRequiredTag(queryHandler, "Whitelisted");
+
+	if (pszWorkshopItemList.Count() <= 0)
+		return false;
+
 	queryHandler = STEAM_API_INTERFACE->SteamUGC()->CreateQueryUGCDetailsRequest(&pszWorkshopItemList[0], pszWorkshopItemList.Count());
 #endif
 
@@ -261,6 +265,8 @@ void CGameDefinitionsMapData::FetchMapData(void)
 
 	SteamAPICall_t apiCallback = STEAM_API_INTERFACE->SteamUGC()->SendQueryUGCRequest(queryHandler);
 	m_SteamCallResultUGCQuery.Set(apiCallback, this, &CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll);
+
+	return true;
 }
 
 gameMapItem_t *CGameDefinitionsMapData::GetMapData(const char *pszMap)
@@ -392,8 +398,8 @@ void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted
 	}
 
 #ifndef CLIENT_DLL
-	GameBaseServer()->LoadServerTags();
 	GameBaseServer()->CheckMapData();
+	GameBaseServer()->LoadServerTags();
 #endif
 }
 

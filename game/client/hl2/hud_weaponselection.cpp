@@ -647,7 +647,7 @@ void CHudWeaponSelection::OpenSelection( void )
 	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("OpenWeaponSelectionMenu");
 	m_iSelectedSlot = -1;
 
-	CBasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 	if (pPlayer)
 		pPlayer->m_bIsSelectingWeapons = true;
 }
@@ -661,7 +661,7 @@ void CHudWeaponSelection::HideSelection( void )
 	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("CloseWeaponSelectionMenu");
 	m_bFadingOut = false;
 
-	CBasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 	if (pPlayer)
 		pPlayer->m_bIsSelectingWeapons = false;
 }
@@ -886,16 +886,7 @@ void CHudWeaponSelection::FastWeaponSwitch( int iWeaponSlot )
 
 	// see where we should start selection
 	C_BaseCombatWeapon *pActiveWeapon = pPlayer->GetActiveWeapon();
-	C_BaseCombatWeapon *pNextWeapon = NULL;
-
-	// search for the weapon after the current one
-	pNextWeapon = FindNextWeaponInWeaponSelection(iWeaponSlot);
-	// make sure it's in the same bucket
-	if ( !pNextWeapon || pNextWeapon->GetSlot() != iWeaponSlot )
-	{
-		// just look for any weapon in this slot
-		pNextWeapon = FindNextWeaponInWeaponSelection(iWeaponSlot);
-	}
+	C_BaseCombatWeapon *pNextWeapon = GetNextActivePos(iWeaponSlot);
 
 	// see if we found a weapon that's different from the current and in the selected slot
 	if ( pNextWeapon && pNextWeapon != pActiveWeapon && pNextWeapon->GetSlot() == iWeaponSlot )
@@ -927,7 +918,7 @@ void CHudWeaponSelection::SelectWeaponSlot( int iSlot )
 		return;
 
 	// Don't try and read past our possible number of slots
-	if ( iSlot > MAX_WEAPON_SLOTS )
+	if (iSlot >= MAX_WEAPON_SLOTS)
 		return;
 
 	// Make sure the player's allowed to switch weapons
@@ -936,13 +927,7 @@ void CHudWeaponSelection::SelectWeaponSlot( int iSlot )
 
 	if (hud_fastswitch.GetInt() <= 0)
 	{
-		C_BaseCombatWeapon *pActiveWeapon = GetSelectedWeapon();
-
-		// find the weapon in this slot
-		pActiveWeapon = GetNextActivePos(iSlot);
-		if (!pActiveWeapon)
-			pActiveWeapon = GetNextActivePos(iSlot);
-
+		C_BaseCombatWeapon *pActiveWeapon = GetNextActivePos(iSlot);
 		if (pActiveWeapon != NULL)
 		{
 			if (!IsInSelectionMode())

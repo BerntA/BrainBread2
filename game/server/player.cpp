@@ -684,8 +684,8 @@ int CBasePlayer::ShouldTransmit( const CCheckTransmitInfo *pInfo )
 	return BaseClass::ShouldTransmit( pInfo );
 }
 
-#define ABS_MAX_LAG_COMP_DIST 4500.0f
-#define ABS_MAX_LAG_COMP_HEIGHT 600.0f
+#define ABS_MAX_LAG_COMP_DIST 3200.0f
+#define ABS_MAX_LAG_COMP_HEIGHT 500.0f
 
 bool CBasePlayer::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits) const
 {

@@ -116,7 +116,8 @@ ConVar bb2_vote_time_endgame("bb2_vote_time_endgame", "10", FCVAR_REPLICATED, "W
 ConVar bb2_vote_frequency_time("bb2_vote_frequency_time", "60", FCVAR_REPLICATED, "The time in seconds until players can vote again.", true, 10.0f, true, 120.0f);
 ConVar bb2_ban_time("bb2_ban_time", "30", FCVAR_REPLICATED, "For how many minutes will a player be banned if a ban vote passes?", true, 0.0f, false, 0.0f);
 
-ConVar bb2_allow_mercy( "bb2_allow_mercy", "0", FCVAR_REPLICATED, "If this command's value is higher than 0 and the death count of a zombie player exceed this value he will respawn as a human on death.", true, 0.0f, false, 0.0f );
+ConVar bb2_allow_mercy( "bb2_allow_mercy", "0", FCVAR_REPLICATED, "If greater than 0, zombies will respawn as humans when they have died this many times.", true, 0.0f, true, 10.0f );
+ConVar bb2_zombie_kills_required("bb2_zombie_kills_required", "3", FCVAR_REPLICATED, "If greater than 0, zombies can respawn as humans when they've killed at least this many hostiles. Click a certain button to respawn, whenever you're ready!", true, 0.0f, true, 10.0f);
 
 ConVar bb2_spawn_frequency( "bb2_spawn_frequency", "1.0", FCVAR_REPLICATED, "When a wave has been spawned this is the time between each zombie to spawn. Shouldn't be too low due to lag.", true, 0.1f, false, 0.0f );
 

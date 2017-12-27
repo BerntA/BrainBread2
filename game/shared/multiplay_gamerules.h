@@ -92,6 +92,7 @@ extern ConVar bb2_zombie_max;
 extern ConVar bb2_npc_scaling;
 extern ConVar bb2_allow_latejoin;
 extern ConVar bb2_allow_mercy;
+extern ConVar bb2_zombie_kills_required;
 extern ConVar bb2_spawn_frequency;
 extern ConVar bb2_roundstart_freezetime;
 extern ConVar bb2_vote_disable_kick;

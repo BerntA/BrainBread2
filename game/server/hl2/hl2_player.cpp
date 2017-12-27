@@ -1404,6 +1404,9 @@ bool CHL2_Player::PassesDamageFilter( const CTakeDamageInfo &info )
 		return false;
 	}
 
+	if (pAttacker && (pAttacker->Classify() == CLASS_MILITARY_VEHICLE) && IsHuman())
+		return false;
+
 	return BaseClass::PassesDamageFilter( info );
 }
 
