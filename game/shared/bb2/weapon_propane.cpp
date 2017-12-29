@@ -211,7 +211,7 @@ void CPropaneExplosive::Spawn(void)
 	{
 		Vector mins, maxs;
 		modelinfo->GetModelBounds(pModel, mins, maxs);
-		this->SetCollisionBounds(mins * 2, maxs * 2);
+		this->SetCollisionBounds(mins, maxs);
 	}
 
 	CollisionProp()->UseTriggerBounds(true, 10.0f);
