@@ -570,6 +570,9 @@ void CNPCSimpleTalker::SayHelloToPlayer( CBaseEntity *pPlayer )
 	CAI_PlayerAlly *pTalker;
 	for ( int i = 0; i < g_AI_Manager.NumAIs(); i++ )
 	{
+		if (ppAIs[i] == NULL)
+			continue;
+
 		pTalker = dynamic_cast<CAI_PlayerAlly *>(ppAIs[i]);
 
 		if( pTalker && FVisible( pTalker ) )
@@ -596,6 +599,9 @@ void CNPCSimpleTalker::DeferAllIdleSpeech( float flDelay, CAI_BaseNPC *pIgnore )
 
 	for ( int i = 0; i < g_AI_Manager.NumAIs(); i++ )
 	{
+		if (ppAIs[i] == NULL)
+			continue;
+
 		if( ppAIs[i] != pIgnore )
 		{
 			pTalker = dynamic_cast<CNPCSimpleTalker *>(ppAIs[i]);

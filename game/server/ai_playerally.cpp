@@ -211,6 +211,9 @@ void CAI_AllySpeechManager::OnSpokeConcept( CAI_PlayerAlly *pPlayerAlly, AIConce
 			CAI_PlayerAlly *pTalker;
 			for ( int i = 0; i < g_AI_Manager.NumAIs(); i++ )
 			{
+				if (ppAIs[i] == NULL)
+					continue;
+
 				pTalker = dynamic_cast<CAI_PlayerAlly *>(ppAIs[i]);
 
 				if ( pTalker && pTalker != pPlayerAlly && 
@@ -1300,6 +1303,8 @@ CBaseEntity *CAI_PlayerAlly::FindSpeechTarget( int flags )
 		for ( i = 0; i < g_AI_Manager.NumAIs(); i++ )
 		{
 			CAI_BaseNPC *pNPC = (g_AI_Manager.AccessAIs())[i];
+			if (pNPC == NULL)
+				continue;
 
 			distSq = ( vAbsOrigin - pNPC->GetAbsOrigin() ).LengthSqr();
 			

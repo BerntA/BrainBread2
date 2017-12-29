@@ -1163,6 +1163,7 @@ void CHL2MP_Player::NoteWeaponFired(void)
 	}
 }
 
+#define MAX_MELEE_LAGCOMP_DIST 500.0f
 bool CHL2MP_Player::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits) const
 {
 	bool bCheckAttackButton = true;
@@ -1170,14 +1171,16 @@ bool CHL2MP_Player::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, con
 	CBaseCombatWeapon *pActiveWeapon = GetActiveWeapon();
 	if (pActiveWeapon)
 	{
+		if (!pActiveWeapon->WantsLagCompensation(pEntity))
+			return false;
+
 		if (pActiveWeapon->m_iMeleeAttackType > 0)
 		{
 			bCheckAttackButton = false;
 
 			// Only compensate NPCs within a reasonable distance.
-			float maxRange = pActiveWeapon->GetRange() * 8.0f;
 			float distance = GetAbsOrigin().DistTo(pEntity->GetAbsOrigin());
-			if (distance > maxRange)
+			if (distance > MAX_MELEE_LAGCOMP_DIST)
 				return false;
 		}
 	}

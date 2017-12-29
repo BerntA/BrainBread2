@@ -447,44 +447,32 @@ float ChangeDistance( float flInterval, float flGoalDistance, float flGoalVeloci
 //=============================================================================
 
 #ifdef BB2_AI
-#define MAX_AIS	256 
+#define MAX_AIS	150 
 #endif //BB2_AI
 
 class CAI_Manager
 {
 public:
 	CAI_Manager();
-	
-	CAI_BaseNPC **	AccessAIs();
+
+	CAI_BaseNPC **AccessAIs();
 	int				NumAIs();
+	int				GetNewAIIndex();
 
-	#ifdef BB2_AI
-		int AddAI( CAI_BaseNPC *pAI ); 
-	#else
-		void AddAI( CAI_BaseNPC *pAI );
-	#endif //BB2_AI
+	int AddAI(CAI_BaseNPC *pAI);
+	void RemoveAI(CAI_BaseNPC *pAI);
+	bool FindAI(CAI_BaseNPC *pAI)	{ return (m_AIs.Find(pAI) != m_AIs.InvalidIndex()); }
 
-	void RemoveAI( CAI_BaseNPC *pAI );
-
-	bool FindAI( CAI_BaseNPC *pAI )	{ return ( m_AIs.Find( pAI ) != m_AIs.InvalidIndex() ); }
-	
 private:
-	#ifndef BB2_AI
-	enum
-	{
-		MAX_AIS = 256
-	};
-	#endif //BB2_AI
-	
-	typedef CUtlVector<CAI_BaseNPC *> CAIArray;
-	
-	CAIArray m_AIs;
 
+	typedef CUtlVector<CAI_BaseNPC *> CAIArray;
+	CAIArray m_AIs;
 };
 
 //-------------------------------------
 
 extern CAI_Manager g_AI_Manager;
+extern bool g_bFirstTimeSpawnedNPC;
 
 //=============================================================================
 //
@@ -2169,6 +2157,7 @@ public:
 	void				InputSetSpeedModifierSpeed( inputdata_t &inputdata );
 
 	virtual bool		ShouldProbeCollideAgainstEntity( CBaseEntity *pEntity );
+	virtual bool		IsStaticNPC(void) { return false; } // NPC never actually moves, jumps, etc...
 
 	bool				m_bPlayerAvoidState;
 	void				GetPlayerAvoidBounds( Vector *pMins, Vector *pMaxs );

@@ -1661,6 +1661,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	ClearMultiDamage();
 	g_MultiDamage.SetDamageType( nDamageType | DMG_NEVERGIB );
 
+	Vector vecDirOrig = info.m_vecDirShooting;
 	Vector vecDir;
 	Vector vecEnd;
 	
@@ -1681,12 +1682,25 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	if ( IsPlayer() )
 	{
 		iSeed = CBaseEntity::GetPredictionRandomSeed( info.m_bUseServerRandomSeed ) & 255;
+
+#ifndef CLIENT_DLL
+		CBasePlayer *pPlayerFirer = ToBasePlayer(this);
+		if (pPlayerFirer && !pPlayerFirer->IsBot())
+		{
+			Vector vecNewEnd = pPlayerFirer->GetLagCompPos();
+			if (vecNewEnd != vec3_invalid)
+			{
+				vecDirOrig = vecNewEnd;
+				VectorNormalize(vecDirOrig);
+			}
+		}
+#endif
 	}
 
 	//-----------------------------------------------------
 	// Set up our shot manipulator.
 	//-----------------------------------------------------
-	CShotManipulator Manipulator( info.m_vecDirShooting );
+	CShotManipulator Manipulator(vecDirOrig);
 
 	bool bDoImpacts = false;
 	bool bDoTracers = false;

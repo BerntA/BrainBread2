@@ -934,6 +934,7 @@ enum
 #define BB2_GLOWS
 #define BB2_SIMPLE_LADDERS
 #define BB2_USE_NAVMESH
+#define BB2_LAGCOMP_HIT_MAX 4 // When figuring out which entities to hit, this is the max amount for now! During 1 comp. tick.
 
 enum
 {

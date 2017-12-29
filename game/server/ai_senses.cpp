@@ -465,6 +465,9 @@ int CAI_Senses::LookForNPCs( int iDistance )
 			
 			for ( i = 0; i < g_AI_Manager.NumAIs(); i++ )
 			{
+				if (ppAIs[i] == NULL)
+					continue;
+
 				if ( ppAIs[i] != GetOuter() && ( ppAIs[i]->ShouldNotDistanceCull() || origin.DistToSqr(ppAIs[i]->GetAbsOrigin()) < distSq ) )
 				{
 					if ( Look( ppAIs[i] ) )

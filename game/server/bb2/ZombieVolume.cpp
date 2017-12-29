@@ -166,6 +166,13 @@ void CZombieVolume::TraceZombieBBox(const Vector& start, const Vector& end, unsi
 	Vector ZombieMins = Vector(-50, -50, 0);
 	Vector ZombieMax = Vector(50, 50, 82);
 
+	// Here the zombies will spawn standing up, not lying down, use a smaller hull!
+	if (HasSpawnFlags(SF_FASTSPAWN))
+	{
+		ZombieMins = Vector(-16, -16, 0);
+		ZombieMax = Vector(16, 16, 82);
+	}
+
 	Ray_t ray;
 	ray.Init(start, end, ZombieMins, ZombieMax);
 	UTIL_TraceRay(ray, fMask, pEntity, collisionGroup, &pm);

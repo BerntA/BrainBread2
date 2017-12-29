@@ -808,7 +808,15 @@ private:
 
 public:
 	
+	virtual const Vector &GetLagCompPos(void)
+	{
+		return m_vecLagCompHitEndPosition;
+	}
 
+	virtual void SetLagCompVecPos(Vector position)
+	{
+		m_vecLagCompHitEndPosition = position;
+	}
 
 	// Used by gamemovement to check if the entity is stuck.
 	int m_StuckLast;
@@ -1150,6 +1158,8 @@ protected:
 
 	// BB2
 	virtual void HandlePainSound(int iMajor, int iDamageTypeBits) {};
+
+	Vector m_vecLagCompHitEndPosition;
 
 public:
 

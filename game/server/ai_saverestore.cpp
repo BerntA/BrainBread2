@@ -65,6 +65,9 @@ public:
 
 		for ( i = 0; i < g_AI_Manager.NumAIs(); i++ )
 		{
+			if (ppAIs[i] == NULL)
+				continue;
+
 			if ( ppAIs[i]->GetEnemies() )
 				nMemories++;
 		}
@@ -73,6 +76,9 @@ public:
 		
 		for ( i = 0; i < g_AI_Manager.NumAIs(); i++ )
 		{
+			if (ppAIs[i] == NULL)
+				continue;
+
 			if ( ppAIs[i]->GetEnemies() )
 			{
 				CBaseEntity *p = ppAIs[i];
@@ -110,6 +116,9 @@ public:
 
 		for ( i = 0; i < g_AI_Manager.NumAIs(); i++ )
 		{
+			if (ppAIs[i] == NULL)
+				continue;
+
 			ppAIs[i]->InitSquad();
 		}
 		
@@ -155,7 +164,7 @@ public:
 			pRestore->EndBlock();
 		}
 		
-		if ( g_AI_Manager.NumAIs() && g_pBigAINet->NumNodes() == 0 && !g_pAINetworkManager->NetworksLoaded() )
+		if (g_bFirstTimeSpawnedNPC && g_pBigAINet->NumNodes() == 0 && !g_pAINetworkManager->NetworksLoaded())
 		{
 			Msg( "***\n");
 			Msg( "ERROR: Loaded save game with no node graph. Load map and build node graph first!\n");

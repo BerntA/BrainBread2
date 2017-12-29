@@ -140,6 +140,9 @@ void CAI_AllyManager::CountAllies( int *pTotal, int *pMedics )
 
 	for ( int i = 0; i < nAIs; i++ )
 	{
+		if (ppAIs[i] == NULL)
+			continue;
+
 		if ( ppAIs[i]->IsAlive() && ppAIs[i]->IsPlayerAlly() )
 		{
 			// Vital allies do not count.

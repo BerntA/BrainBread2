@@ -1128,7 +1128,7 @@ void CAI_NetworkManager::DelayedInit( void )
 
 	m_fInitalized = true;
 
-	if ( g_AI_Manager.NumAIs() != 0 && g_pBigAINet->NumNodes() == 0 )
+	if (g_bFirstTimeSpawnedNPC && g_pBigAINet->NumNodes() == 0)
 		DevMsg( "WARNING: Level contains NPCs but has no path nodes\n" );
 }
 

@@ -304,7 +304,7 @@ int CNPC_BaseZombie::MeleeAttack1Conditions ( float flDot, float flDist )
 	GetVectors( &forward, NULL, NULL );
 
 	trace_t	tr;
-	CTraceFilterNav traceFilter( this, false, this, COLLISION_GROUP_NONE );
+	CTraceFilterNav traceFilter( this, false, this, GetCollisionGroup() );
 	AI_TraceHull( WorldSpaceCenter(), WorldSpaceCenter() + forward * GetClawAttackRange(), vecMins, vecMaxs, MASK_NPCSOLID, &traceFilter, &tr );
 
 	if( tr.fraction == 1.0 || !tr.m_pEnt )
@@ -585,7 +585,7 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack( float flDist, int iDamage, QAngle &qaV
 		trace_t	tr;
 		AI_TraceHull( WorldSpaceCenter(), GetEnemy()->WorldSpaceCenter(), -Vector(8,8,8), Vector(8,8,8), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
 
-		if ( tr.fraction < 1.0f )
+		if (tr.fraction < 1.0f)
 			return NULL;
 
 		// CheckTraceHullAttack() can damage player in vehicle as side effect of melee attack damaging physics objects, which the car forwards to the player
@@ -1052,15 +1052,7 @@ int CNPC_BaseZombie::SelectSchedule ( void )
 	case NPC_STATE_COMBAT:
 		if ( HasCondition( COND_NEW_ENEMY ) && GetEnemy() )
 		{
-			float flDist;
-
-			flDist = ( GetLocalOrigin() - GetEnemy()->GetLocalOrigin() ).Length();
-
-			//// If the enemy is within range, ambush!
-			//if ((flDist <= GetAmbushDist()) && MustCloseToAttack())
-			//{
-			//	return SCHED_ZOMBIE_MOVE_TO_AMBUSH;
-			//}
+			// TODO
 		}
 
 		if (HasCondition(COND_LOST_ENEMY) || (HasCondition(COND_ENEMY_UNREACHABLE) && MustCloseToAttack()))
@@ -1203,21 +1195,13 @@ void CNPC_BaseZombie::StartTask( const Task_t *pTask )
 		CBaseEntity *pObstruction = m_hBlockingEntity.Get();
 		if (pObstruction)
 		{
-			Vector vecGoalPos;
-			Vector vecDir;
-
-			vecDir = GetLocalOrigin() - pObstruction->GetLocalOrigin();
-			VectorNormalize(vecDir);
-			vecDir.z = 0;
-
 			AI_NavGoal_t goal(pObstruction->WorldSpaceCenter());
 			goal.pTarget = pObstruction;
 			GetNavigator()->SetGoal(goal);
-
 			TaskComplete();
 		}
 		else
-			TaskFail(FAIL_NO_ROUTE);
+			TaskFail(FAIL_NO_TARGET);
 
 		break;
 	}
@@ -1541,7 +1525,7 @@ DEFINE_SCHEDULE
 	"	Tasks"
 	"		 TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHED_CHASE_ENEMY_FAILED"
 	"		 TASK_SET_TOLERANCE_DISTANCE	24"
-	"		 TASK_GET_CHASE_PATH_TO_ENEMY	600"
+	"		 TASK_GET_CHASE_PATH_TO_ENEMY	900"
 	"		 TASK_RUN_PATH					0"
 	"		 TASK_WAIT_FOR_MOVEMENT			0"
 	"		 TASK_FACE_ENEMY				0"

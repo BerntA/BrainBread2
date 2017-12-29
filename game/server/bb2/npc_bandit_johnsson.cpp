@@ -64,6 +64,7 @@ public:
 	bool CanAlwaysSeePlayers() { return true; }
 	bool GetGender() { return true; } // force male
 	bool UsesNavMesh(void) { return true; }
+	bool ShouldAlwaysThink() { return true; }
 	int AllowEntityToBeGibbed(void) { return GIB_NO_GIBS; }
 
 	Class_T Classify(void);

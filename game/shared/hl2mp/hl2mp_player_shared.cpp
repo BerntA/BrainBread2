@@ -211,6 +211,14 @@ void CHL2MP_Player::DoPlayerKick(void)
 	Vector swingStart = Weapon_ShootPosition();
 	Vector forward;
 	EyeVectors(&forward, NULL, NULL);
+
+#ifndef CLIENT_DLL
+	Vector vecLagCompPos = GetLagCompPos();
+	if (vecLagCompPos != vec3_invalid)
+		forward = vecLagCompPos;
+#endif
+
+	VectorNormalize(forward);
 	Vector swingEnd = swingStart + forward * range;
 
 	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT, this, COLLISION_GROUP_NONE, &traceHit);
@@ -220,8 +228,6 @@ void CHL2MP_Player::DoPlayerKick(void)
 	{
 		if (pHitEnt != NULL)
 		{
-			VectorNormalize(forward);
-
 #ifndef CLIENT_DLL
 			CTakeDamageInfo info(this, this, damage, DMG_CLUB);
 			info.SetSkillFlags(0);

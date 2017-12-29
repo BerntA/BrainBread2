@@ -1373,6 +1373,8 @@ void CHL2_Player::CheckFlashlight( void )
 	for ( int i = 0; i < g_AI_Manager.NumAIs(); i++ )
 	{
 		CAI_BaseNPC *pNPC = g_AI_Manager.AccessAIs()[i];
+		if (pNPC == NULL)
+			continue;
 
 		float flDot;
 
@@ -1484,11 +1486,14 @@ void CHL2_Player::NotifyFriendsOfDamage( CBaseEntity *pAttackerEntity )
 	if ( pAttacker )
 	{
 		const Vector &origin = GetAbsOrigin();
+		const float NEAR_Z = 12 * 12;
+		const float NEAR_XY_SQ = Square(50 * 12);
 		for ( int i = 0; i < g_AI_Manager.NumAIs(); i++ )
 		{
-			const float NEAR_Z = 12*12;
-			const float NEAR_XY_SQ = Square( 50*12 );
 			CAI_BaseNPC *pNpc = g_AI_Manager.AccessAIs()[i];
+			if (!pNpc)
+				continue;
+
 			if ( pNpc->IsPlayerAlly() )
 			{
 				const Vector &originNpc = pNpc->GetAbsOrigin();
@@ -1663,6 +1668,9 @@ void CHL2_Player::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo
 
 	for ( int i = 0; i < g_AI_Manager.NumAIs(); i++ )
 	{
+		if (ppAIs[i] == NULL)
+			continue;
+
 		if ( ppAIs[i] && ppAIs[i]->IRelationType(this) == D_LI )
 		{
 			ppAIs[i]->OnPlayerKilledOther( pVictim, info );

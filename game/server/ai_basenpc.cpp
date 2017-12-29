@@ -234,7 +234,9 @@ CAI_Manager g_AI_Manager;
 
 CAI_Manager::CAI_Manager()
 {
-	m_AIs.EnsureCapacity( MAX_AIS );
+	m_AIs.EnsureCapacity(MAX_AIS);
+	for (int i = 0; i < MAX_AIS; i++)
+		m_AIs.AddToTail((CAI_BaseNPC*)NULL);
 }
 
 //-------------------------------------
@@ -255,27 +257,42 @@ int CAI_Manager::NumAIs()
 
 //-------------------------------------
 
-#ifdef BB2_AI
-int CAI_Manager::AddAI( CAI_BaseNPC *pAI ) 
- {
- 	m_AIs.AddToTail( pAI );
-	return NumAIs()-1; // return the index it was added to 
- }
-#else
-void CAI_Manager::AddAI( CAI_BaseNPC *pAI )
+int CAI_Manager::GetNewAIIndex()
 {
-	m_AIs.AddToTail( pAI );
+	for (int i = 0; i < MAX_AIS; i++)
+	{
+		if (m_AIs[i] == NULL)
+			return i;
+	}
+
+	return -1;
 }
-#endif //BB2_AI
 
 //-------------------------------------
 
-void CAI_Manager::RemoveAI( CAI_BaseNPC *pAI )
-{
-	int i = m_AIs.Find( pAI );
+int CAI_Manager::AddAI( CAI_BaseNPC *pAI ) 
+ {
+	 int index = GetNewAIIndex();
+	 if ((index <= -1) || (index >= MAX_AIS))
+	 {
+		 Warning("Invalid AI Index returned, out of AIs!\n");
+		 return -1;
+	 }
 
-	if ( i != -1 )
-		m_AIs.FastRemove( i );
+	 m_AIs[index] = pAI;
+	 return index;
+ }
+
+//-------------------------------------
+
+void CAI_Manager::RemoveAI(CAI_BaseNPC *pAI)
+{
+	int index = pAI->GetAIIndex();
+	if ((index <= -1) || (index >= MAX_AIS))
+		index = m_AIs.Find(pAI);
+
+	if (index != -1)
+		m_AIs[index] = NULL;
 }
 
 
@@ -297,6 +314,7 @@ string_t CAI_BaseNPC::gm_iszPlayerSquad;
 int		CAI_BaseNPC::gm_iNextThinkRebalanceTick;
 float	CAI_BaseNPC::gm_flTimeLastSpawn;
 int		CAI_BaseNPC::gm_nSpawnedThisFrame;
+bool	g_bFirstTimeSpawnedNPC = false;
 
 CSimpleSimTimer CAI_BaseNPC::m_AnyUpdateEnemyPosTimer;
 
@@ -1019,10 +1037,10 @@ void CAI_BaseNPC::NotifyFriendsOfDamage( CBaseEntity *pAttackerEntity )
 	if ( pAttacker )
 	{
 		const Vector &origin = GetAbsOrigin();
+		const float NEAR_Z = 10 * 12;
+		const float NEAR_XY_SQ = Square(50 * 12);
 		for ( int i = 0; i < g_AI_Manager.NumAIs(); i++ )
 		{
-			const float NEAR_Z		= 10*12;
-			const float NEAR_XY_SQ	= Square( 50*12 );
 			CAI_BaseNPC *pNpc = g_AI_Manager.AccessAIs()[i];
 			if ( pNpc && pNpc != this )
 			{
@@ -3668,6 +3686,9 @@ void CAI_BaseNPC::RebalanceThinks()
 		for ( i = 0; i < g_AI_Manager.NumAIs(); i++ )
 		{
 			CAI_BaseNPC *pCandidate = g_AI_Manager.AccessAIs()[i];
+			if (!pCandidate)
+				continue;
+
 			if ( pCandidate->CanThinkRebalance() &&
 				( pCandidate->GetNextThinkTick() >= iMinTickRebalance && 
 				pCandidate->GetNextThinkTick() < iMaxTickRebalance ) )
@@ -3758,6 +3779,9 @@ void CAI_BaseNPC::RebalanceThinks()
 			DevMsg( "New distribution is:\n");
 			for ( i = 0; i < g_AI_Manager.NumAIs(); i++ )
 			{
+				if (g_AI_Manager.AccessAIs()[i] == NULL)
+					continue;
+
 				DevMsg( "   %d\n", g_AI_Manager.AccessAIs()[i]->GetNextThinkTick() );
 			}
 		}
@@ -11548,15 +11572,21 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 	m_interuptSchedule			= NULL;
 	m_nDebugPauseIndex			= 0;
 
-	#ifdef BB2_AI
-		SetAIIndex( g_AI_Manager.AddAI( this ) ); 
-		lagcompensation->RemoveNpcData( GetAIIndex() ); // make sure we're not inheriting anyone else's data 
-	#else
-		g_AI_Manager.AddAI( this );
-	#endif //BB2_AI
-	
-	if ( g_AI_Manager.NumAIs() == 1 )
+	SetAIIndex(g_AI_Manager.AddAI(this));
+	if (GetAIIndex() <= -1)
 	{
+		UTIL_Remove(this);
+		return;
+	}
+
+#ifdef BB2_AI
+	lagcompensation->RemoveNpcData(GetAIIndex()); // make sure we're not inheriting anyone else's data 
+#endif
+
+	if (g_bFirstTimeSpawnedNPC == false)
+	{
+		g_bFirstTimeSpawnedNPC = true;
+
 		m_AnyUpdateEnemyPosTimer.Force();
 		gm_flTimeLastSpawn = -1;
 		gm_nSpawnedThisFrame = 0;
@@ -11576,12 +11606,16 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 //-----------------------------------------------------------------------------
 CAI_BaseNPC::~CAI_BaseNPC(void)
 {
-	g_AI_Manager.RemoveAI( this );
+	int iAIIndex = GetAIIndex();
+	if (iAIIndex >= 0)
+	{
+		g_AI_Manager.RemoveAI(this);
 
-	#ifdef BB2_AI
-	// this should stop a crash occuring when our death immediately creates a new NPC (eg headcrab from zombie) 
-	lagcompensation->RemoveNpcData( GetAIIndex() ); 
+#ifdef BB2_AI
+		// this should stop a crash occuring when our death immediately creates a new NPC (eg headcrab from zombie) 
+		lagcompensation->RemoveNpcData(iAIIndex);
 #endif //BB2_AI
+	}
 
 	delete m_pLockedBestSound;
 
@@ -12895,6 +12929,9 @@ void CAI_BaseNPC::CascadePlayerPush( const Vector &push, const Vector &pushOrigi
 	for ( int i = 0; i < g_AI_Manager.NumAIs(); i++ )
 	{
 		CAI_BaseNPC *pOther = g_AI_Manager.AccessAIs()[i];
+		if (pOther == NULL)
+			continue;
+
 		if ( pOther != this && pOther->IRelationType(this) == D_LI && !pOther->HasCondition( COND_PLAYER_PUSHING ) )
 		{
 			const Vector &friendOrigin = pOther->GetAbsOrigin();

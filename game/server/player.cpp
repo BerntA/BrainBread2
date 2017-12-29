@@ -595,6 +595,8 @@ CBasePlayer::CBasePlayer( )
 
 	m_flLastUserCommandTime = 0.f;
 	m_flMovementTimeForUserCmdProcessingRemaining = 0.0f;
+
+	m_vecLagCompHitEndPosition = vec3_invalid;
 }
 
 CBasePlayer::~CBasePlayer( )
@@ -684,9 +686,6 @@ int CBasePlayer::ShouldTransmit( const CCheckTransmitInfo *pInfo )
 	return BaseClass::ShouldTransmit( pInfo );
 }
 
-#define ABS_MAX_LAG_COMP_DIST 3200.0f
-#define ABS_MAX_LAG_COMP_HEIGHT 500.0f
-
 bool CBasePlayer::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits) const
 {
 	if (HL2MPRules()->IsTeamplay())
@@ -712,15 +711,12 @@ bool CBasePlayer::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const
 		maxspeed = pPlayer->MaxSpeed();
 	else
 		maxspeed = 300;
+
 	float maxDistance = 1.5 * maxspeed * sv_maxunlag.GetFloat();
 
 	// If the ent is within this distance, lag compensate them in case they're running past us.
 	if (vHisOrigin.DistTo(vMyOrigin) < maxDistance)
 		return true;
-
-	// If the ent is way too far away, don't care.
-	if ((vHisOrigin.DistTo(vMyOrigin) > ABS_MAX_LAG_COMP_DIST) || (abs(vMyOrigin.z - vHisOrigin.z) > ABS_MAX_LAG_COMP_HEIGHT))
-		return false;
 
 	// If their origin is not within a 45 degree cone in front of us, no need to lag compensate.
 	Vector vForward;
@@ -1924,18 +1920,15 @@ void CBasePlayer::PlayerDeathThink(void)
 		// We only allow zombies to become humans again in the classic gamemode.
 		if (IsZombie() && (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE))
 		{
-			if (pClient->m_iZombKills >= 3)
+			if ((bb2_zombie_kills_required.GetInt() >= 1) && (pClient->m_iZombKills >= bb2_zombie_kills_required.GetInt()))
 			{
 				pClient->m_iZombKills = 0;
 				pClient->HandleCommand_JoinTeam(TEAM_HUMANS, true);
 			}
-			else if (bb2_allow_mercy.GetInt() >= 1)
+			else if ((bb2_allow_mercy.GetInt() >= 1) && (pClient->m_iZombDeaths >= bb2_allow_mercy.GetInt()))
 			{
-				if ((pClient->m_iZombDeaths >= bb2_allow_mercy.GetInt()))
-				{
-					pClient->m_iZombDeaths = 0;
-					pClient->HandleCommand_JoinTeam(TEAM_HUMANS, true);
-				}
+				pClient->m_iZombDeaths = 0;
+				pClient->HandleCommand_JoinTeam(TEAM_HUMANS, true);
 			}
 		}
 		else

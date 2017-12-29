@@ -138,6 +138,9 @@ private:
 		for ( int i = 0; i < g_AI_Manager.NumAIs(); i++ )
 		{
 			CAI_BaseNPC *pNpc = (g_AI_Manager.AccessAIs())[i];
+			if (pNpc == NULL)
+				continue;
+
 			if ( Affects( pNpc ) )
 			{
 				CAI_StandoffBehavior *pBehavior;

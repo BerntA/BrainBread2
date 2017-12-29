@@ -231,15 +231,7 @@ void CBaseCombatWeapon::Spawn( void )
 #endif
 
 	// Bloat the box for player pickup
-	const model_t *pModel = modelinfo->GetModel(this->GetModelIndex());
-	if (pModel)
-	{
-		Vector mins, maxs;
-		modelinfo->GetModelBounds(pModel, mins, maxs);
-		this->SetCollisionBounds(mins*2, maxs*2);
-	}
-
-	CollisionProp()->UseTriggerBounds( true, 20.0f );
+	CollisionProp()->UseTriggerBounds(true, 32.0f);
 
 	// Use more efficient bbox culling on the client. Otherwise, it'll setup bones for most
 	// characters even when they're not in the frustum.
@@ -2534,6 +2526,11 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 	Vector swingStart = pOwner->Weapon_ShootPosition();
 	Vector forward;
 	AngleVectors(pOwner->EyeAngles(), &forward);
+
+	Vector vecLagCompPos = pOwner->GetLagCompPos();
+	if (vecLagCompPos != vec3_invalid)
+		forward = vecLagCompPos;
+
 	VectorNormalize(forward);
 	Vector swingEnd = swingStart + (forward * GetRange());
 
@@ -2551,7 +2548,7 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 			if (m_iMeleeAttackType == MELEE_TYPE_BASH_SLASH || m_iMeleeAttackType == MELEE_TYPE_SLASH) // Try a big hull, if we're allowed to.
 			{
 				swingEnd = swingStart + (forward * (GetRange() / 2.0f));
-				UTIL_TraceHull(swingEnd, swingEnd, GetMeleeBoundsMin(), GetMeleeBoundsMax(), MASK_SHOT_HULL, &traceFilter, &traceHit);
+				UTIL_TraceHull(swingStart, swingEnd, GetMeleeBoundsMin(), GetMeleeBoundsMax(), MASK_SHOT_HULL, &traceFilter, &traceHit);
 			}
 		}
 	}
@@ -2621,6 +2618,14 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 }
 
 #ifndef CLIENT_DLL
+bool CBaseCombatWeapon::WantsLagCompensation(const CBaseEntity *pEntity)
+{
+	if (pEntity && (m_iMeleeAttackType.Get() > 0) && m_pEnemiesStruck.Count())
+		return CanHitThisTarget(pEntity->entindex());
+
+	return true;
+}
+
 bool CBaseCombatWeapon::CanHitThisTarget(int index)
 {
 	for (int i = 0; i < m_pEnemiesStruck.Count(); i++)

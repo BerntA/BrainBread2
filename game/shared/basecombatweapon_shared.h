@@ -298,6 +298,7 @@ public:
 	virtual int GetMeleeDamageType(void) { return DMG_SLASH; }
 
 #ifndef CLIENT_DLL
+	virtual bool WantsLagCompensation(const CBaseEntity *pEntity);
 	virtual bool CanHitThisTarget(int index);
 	virtual void StruckTarget(int index) { m_pEnemiesStruck.AddToTail(index); }
 	virtual int GetMeleeSkillFlags(void) { return 0; }

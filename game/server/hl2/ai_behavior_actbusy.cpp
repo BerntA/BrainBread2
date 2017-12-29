@@ -746,6 +746,9 @@ int CAI_ActBusyBehavior::CountEnemiesInSafeZone()
 
 	for ( int i = 0; i < nAIs; i++ )
 	{
+		if (ppAIs[i] == NULL)
+			continue;
+
 		if( GetOuter()->IRelationType(ppAIs[i]) < D_LI )
 		{
 			if( IsInSafeZone(ppAIs[i]) )

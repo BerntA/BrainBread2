@@ -334,6 +334,9 @@ void CAI_PlaneSolver::GenerateObstacleNpcs( const AILocalMoveGoal_t &goal, float
 		for ( int i = 0; i < g_AI_Manager.NumAIs(); i++ )
 		{
 			CAI_BaseNPC *pAI = ppAIs[i];
+			if (pAI == NULL)
+				continue;
+
 			if ( pAI != m_pNpc && pAI->IsAlive() && ( !goal.pPath || pAI != goal.pPath->GetTarget() ) )
 			{
 				Vector mins, maxs;

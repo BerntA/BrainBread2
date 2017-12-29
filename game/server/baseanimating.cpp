@@ -3032,6 +3032,41 @@ void CBaseAnimating::DrawServerHitboxes( float duration /*= 0.0f*/, bool monocol
 	}
 }
 
+void CBaseAnimating::DrawServerHitboxes(Vector offset, float duration, bool monocolor)
+{
+	CStudioHdr *pStudioHdr = GetModelPtr();
+	if (!pStudioHdr)
+		return;
+
+	mstudiohitboxset_t *set = pStudioHdr->pHitboxSet(m_nHitboxSet);
+	if (!set)
+		return;
+
+	Vector position;
+	QAngle angles;
+
+	int r = 0;
+	int g = 0;
+	int b = 255;
+
+	for (int i = 0; i < set->numhitboxes; i++)
+	{
+		mstudiobbox_t *pbox = set->pHitbox(i);
+
+		GetBonePosition(pbox->bone, position, angles);
+
+		if (!monocolor)
+		{
+			int j = (pbox->group % 8);
+
+			r = (int)(255.0f * hullcolor[j][0]);
+			g = (int)(255.0f * hullcolor[j][1]);
+			b = (int)(255.0f * hullcolor[j][2]);
+		}
+
+		NDebugOverlay::BoxAngles((position + offset), pbox->bbmin * GetModelScale(), pbox->bbmax * GetModelScale(), angles, r, g, b, 0, duration);
+	}
+}
 
 void CBaseAnimating::DrawRawSkeleton( matrix3x4_t boneToWorld[], int boneMask, bool noDepthTest, float duration, bool monocolor )
 {

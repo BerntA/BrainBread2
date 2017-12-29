@@ -2720,6 +2720,8 @@ void CHL2MPRules::RestartGame()
 	}
 
 	GameBaseShared()->RemoveInventoryItems();
+
+	g_bFirstTimeSpawnedNPC = false;
 }
 
 void CHL2MPRules::CleanUpMap()
@@ -3193,7 +3195,7 @@ CBaseEntity *CHL2MPRules::GetNearbyBreakableDoorEntity(CBaseEntity *pChecker)
 				continue;
 
 			float dist = vecPos.DistTo(pDoor->GetLocalOrigin());
-			if (dist > 100.0f)
+			if (dist > 140.0f)
 				continue;
 
 			if (pDoor->IsDoorClosed() || pDoor->IsDoorLocked())
