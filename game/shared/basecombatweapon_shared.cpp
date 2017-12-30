@@ -2541,17 +2541,7 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 
 	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT, &traceFilter, &traceHit); // Try a simple trace first, allowing headshots.
 	if (traceHit.fraction == 1.0)
-	{
-		UTIL_TraceHull(swingStart, swingEnd, Vector(-3, -3, -3), Vector(3, 3, 3), MASK_SHOT_HULL, &traceFilter, &traceHit); // Try a small hull.
-		if (traceHit.fraction == 1.0)
-		{
-			if (m_iMeleeAttackType == MELEE_TYPE_BASH_SLASH || m_iMeleeAttackType == MELEE_TYPE_SLASH) // Try a big hull, if we're allowed to.
-			{
-				swingEnd = swingStart + (forward * (GetRange() / 2.0f));
-				UTIL_TraceHull(swingStart, swingEnd, GetMeleeBoundsMin(), GetMeleeBoundsMax(), MASK_SHOT_HULL, &traceFilter, &traceHit);
-			}
-		}
-	}
+		UTIL_TraceHull(swingStart, swingEnd, Vector(-5, -5, -5), Vector(5, 5, 5), MASK_SHOT_HULL, &traceFilter, &traceHit); // Try a small hull.
 
 	if (traceHit.fraction == 1.0f)
 	{
@@ -2691,9 +2681,9 @@ Vector CBaseCombatWeapon::GetMeleeBoundsMax(void)
 {
 	float range = abs((GetRange() / 2.0f));
 	if (range <= 10.0f)
-		return Vector(10, 10, 12);
+		return Vector(10, 10, 10);
 
-	return Vector(range, range, 12);
+	return Vector(range, range, 10);
 }
 
 Vector CBaseCombatWeapon::GetMeleeBoundsMin(void)

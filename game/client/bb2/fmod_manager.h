@@ -32,6 +32,7 @@ public:
 
 private:
 	ConVar *m_pVarMusicVolume;
+	ConVar *m_pVarMuteSoundFocus;
 
 	const char *GetFullPathToSound(const char *pathToFileFromModFolder);
 	const char *GetCurrentSoundName(void);
@@ -40,6 +41,8 @@ private:
 	char szTransitSound[MAX_WEAPON_STRING];
 
 	bool bShouldPlayInSequence;
+	bool bShouldMuteFMOD;
+	bool bIsFMODMuted;
 
 	bool m_bFadeIn;
 	bool m_bFadeOut;

@@ -2063,6 +2063,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 		bool bMapItem = (atoi(args[2]) >= 1);
 
 		GameBaseShared()->RemoveInventoryItem(entindex(), GetAbsOrigin(), (bMapItem ? 1 : 0), iID);
+		m_flLastTimeRanCommand = gpGlobals->curtime;
 		return true;
 	}
 
@@ -2075,6 +2076,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 		bool bMapItem = (atoi(args[2]) >= 1);
 
 		GameBaseShared()->UseInventoryItem(entindex(), iID, bMapItem);
+		m_flLastTimeRanCommand = gpGlobals->curtime;
 		return true;
 	}
 
@@ -2084,6 +2086,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 			return true;
 
 		CBaseKeyPadEntity::UseKeyPadCode(this, UTIL_EntityByIndex(atoi(args[1])), args[2]);
+		m_flLastTimeRanCommand = gpGlobals->curtime;
 		return true;
 	}
 
@@ -2169,6 +2172,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 		WRITE_BYTE(1);
 		MessageEnd();
 
+		m_flLastTimeRanCommand = gpGlobals->curtime;
 		return true;
 	}
 
@@ -2255,6 +2259,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 		WRITE_BYTE(1);
 		MessageEnd();
 
+		m_flLastTimeRanCommand = gpGlobals->curtime;
 		return true;
 	}
 

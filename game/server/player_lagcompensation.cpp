@@ -1,9 +1,8 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//=========       Copyright © Reperio Studios 2013-2018 @ Bernt Andreas Eide!       ============//
 //
-// Purpose: 
+// Purpose: Accurate, Stable and FAST lag compensation logic!
 //
-// $NoKeywords: $
-//=============================================================================//
+//========================================================================================//
 
 #include "cbase.h"
 #include "usercmd.h"
@@ -31,7 +30,7 @@
 
 static ConVar sv_lagcompensation_teleport_dist("sv_lagcompensation_teleport_dist", "64", FCVAR_DEVELOPMENTONLY | FCVAR_CHEAT, "How far a player got moved by game code before we can't lag compensate their position back");
 #define LAG_COMPENSATION_EPS_SQR ( 0.1f * 0.1f )
-#define HITBOX_MAX_DEVIATION 8.20f // How far can we move off the nearest hitbox and still call it a successful hit? 7-9 units is fair..
+#define HITBOX_MAX_DEVIATION 8.3f // How far can we move off the nearest hitbox and still call it a successful hit? 7-9 units is fair..
 
 ConVar sv_unlag("sv_unlag", "1", FCVAR_DEVELOPMENTONLY, "Enables player lag compensation");
 ConVar sv_maxunlag("sv_maxunlag", "1.0", FCVAR_DEVELOPMENTONLY, "Maximum lag compensation in seconds", true, 0.0f, true, 1.0f);
@@ -613,12 +612,7 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 		VectorNormalize(vecAimDir);
 		vecWepPos = vecStart + (vecAimDir * pActiveWeapon->GetRange() * 0.5f);
 		bCanUseBiggerHull = (meleeAttackType == MELEE_TYPE_SLASH) || (meleeAttackType == MELEE_TYPE_BASH_SLASH);
-		if (bCanUseBiggerHull)
-		{
-			traceCheckHullMins = pActiveWeapon->GetMeleeBoundsMin();
-			traceCheckHullMaxs = pActiveWeapon->GetMeleeBoundsMax();
-		}
-		else if (meleeAttackType > 0)
+		if (meleeAttackType > 0)
 		{
 			traceCheckHullMins = Vector(-5, -5, -5);
 			traceCheckHullMaxs = Vector(5, 5, 5);
@@ -651,27 +645,43 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 			if (vecNearestPosToHitbox != vec3_invalid)
 				entry->endDirection = vecNearestPosToHitbox - tr.startpos;
 			else
+			{
 				entry->endDirection = (tr.endpos - tr.startpos) + entry->differencePos;
-		}
-		else if (bCanUseBiggerHull && IsBoxIntersectingBox(
-			vecWepPos + traceCheckHullMins,
-			vecWepPos + traceCheckHullMaxs,
-			entry->lagCompedPos + entry->boundsMin,
-			entry->lagCompedPos + entry->boundsMax)
-			)
-		{
-			if (sv_lagflushbonecache.GetBool())
-				pEntity->InvalidateBoneCache();
+				if (bCanUseBiggerHull)
+				{
+					Vector vecAutoCorrector = (entry->lagCompedPos - vecStart);
+					vecAutoCorrector.z += (0.55f * (entry->boundsMax - entry->boundsMin).z);
+					entry->endDirection = vecAutoCorrector + entry->differencePos;
+				}
+			}
 
-			if (sv_showlagcompensation.GetInt() >= 1)
-				pEntity->DrawServerHitboxes((entry->lagCompedPos - entry->originalPos), 2.0f, true);
-
-			entry->endDirection = vecForward + entry->differencePos; // TODO : Is this accurate enough? Add some fair noise using lagComp pos ?? Hull takes care of this?
+			continue;
 		}
-		else
+		else if (bCanUseBiggerHull)
 		{
-			list.Remove(i);
+			Vector newEntryBoundsForMelee = (0.5f * (entry->boundsMax - entry->boundsMin)) + HITBOX_MAX_DEVIATION * Vector(1, 1, 1);
+			Vector newEntryMins = -1.0f * newEntryBoundsForMelee;
+			Vector newEntryMaxs = newEntryBoundsForMelee;
+			if (IsBoxIntersectingBox(
+				vecWepPos + pActiveWeapon->GetMeleeBoundsMin(),
+				vecWepPos + pActiveWeapon->GetMeleeBoundsMax(),
+				entry->lagCompedPos + newEntryMins,
+				entry->lagCompedPos + newEntryMaxs))
+			{
+				if (sv_lagflushbonecache.GetBool())
+					pEntity->InvalidateBoneCache();
+
+				if (sv_showlagcompensation.GetInt() >= 1)
+					pEntity->DrawServerHitboxes((entry->lagCompedPos - entry->originalPos), 2.0f, true);
+
+				Vector vecAutoCorrector = (entry->lagCompedPos - vecStart);
+				vecAutoCorrector.z += (0.55f * (entry->boundsMax - entry->boundsMin).z);
+				entry->endDirection = vecAutoCorrector + entry->differencePos;
+				continue;
+			}
 		}
+
+		list.Remove(i);
 	}
 
 	// Sort the list if possible. From near to far, focus on the nearest ents first!
@@ -693,19 +703,19 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 			continue;
 
 		VectorNormalize(entry->endDirection);
-		Vector vecStart = entry->callerPos;
-		Vector vecEndPos = vecStart + entry->endDirection * MAX_TRACE_LENGTH;
+		Vector vecStartPos = entry->callerPos;
+		Vector vecEndPos = vecStartPos + entry->endDirection * MAX_TRACE_LENGTH;
 
-		UTIL_TraceLine(vecStart, vecEndPos, MASK_SHOT, player, COLLISION_GROUP_NONE, &trace); // A simple trace against hitboxes.
-		if (trace.m_pEnt != pEntity) // Nothing? Try a hull.
-			UTIL_TraceHull(vecStart, vecEndPos, traceCheckHullMins, traceCheckHullMaxs, MASK_SHOT_HULL, player, COLLISION_GROUP_NONE, &trace);
+		CTraceFilterOnlyNPCsAndPlayer filter(player, COLLISION_GROUP_NONE);
+
+		UTIL_TraceLine(vecStartPos, vecEndPos, MASK_SHOT, &filter, &trace); // A simple trace against hitboxes.
+		if ((trace.fraction == 1.0f) || (trace.m_pEnt != pEntity)) // Nothing? Try a hull.
+			UTIL_TraceHull(vecStartPos, vecEndPos, traceCheckHullMins, traceCheckHullMaxs, MASK_SHOT_HULL, &filter, &trace);
 
 		// Draw hitboxes + hit pos.
 		if (sv_showlagcompensation.GetInt() >= 1)
 		{
-			Vector dirFix = (vecEndPos - vecStart);
-			VectorNormalize(dirFix);
-			NDebugOverlay::BoxDirection(trace.endpos, -Vector(5, 5, 5), Vector(5, 5, 5), dirFix, 100, 255, 255, 20, 4.0f);
+			NDebugOverlay::BoxDirection(trace.endpos, -Vector(5, 5, 5), Vector(5, 5, 5), entry->endDirection, 100, 255, 255, 20, 4.0f);
 			pEntity->DrawServerHitboxes(4.0f, true);
 		}
 

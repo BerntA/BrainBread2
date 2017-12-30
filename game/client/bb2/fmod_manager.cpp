@@ -36,6 +36,8 @@ CFMODManager::CFMODManager()
 	m_bIsPlayingSound = false;
 	m_bShouldLoop = false;
 	bShouldPlayInSequence = false;
+	bShouldMuteFMOD = false;
+	bIsFMODMuted = false;
 }
 
 CFMODManager::~CFMODManager()
@@ -59,6 +61,7 @@ void CFMODManager::InitFMOD(void)
 		DevMsg("FMOD initialized successfully.\n");
 
 	m_pVarMusicVolume = cvar->FindVar("snd_musicvolume");
+	m_pVarMuteSoundFocus = cvar->FindVar("snd_mute_losefocus");
 }
 
 void CFMODManager::ExitFMOD(void)
@@ -96,12 +99,15 @@ const char *CFMODManager::GetCurrentSoundName(void)
 	return szActiveSound;
 }
 
-// Handles all fade-related sound stuffs
-// Called every frame when the client is in-game
+// Handles all fade-related sound stuffs.
+// Called every frame.
 void CFMODManager::FadeThink(void)
 {
 	// Do we wish to play the in game soundtracks? If not, play on demand. (forced from main menu (transit only))
 	bShouldPlayInSequence = GameBaseClient->IsInGame();
+	bShouldMuteFMOD = (engine->IsPaused() || (m_pVarMuteSoundFocus && m_pVarMuteSoundFocus->GetBool() && !engine->IsActiveApp()));
+	if (pChannel && (bShouldMuteFMOD != bIsFMODMuted))
+		pChannel->setMute(bShouldMuteFMOD);
 
 	// Fading out uses this volume as 100%...
 	if (m_pVarMusicVolume)
@@ -161,7 +167,7 @@ void CFMODManager::FadeThink(void)
 			m_flLerp = 1000.0f;
 		}
 
-		//Msg("Time Left : %i sec\nTime Elapsed : %i sec\n", (int)(m_flSoundLength / 1000), (int)flSec);
+		// Msg("Time Left : %i sec\nTime Elapsed : %i sec\n", (int)(m_flSoundLength / 1000), (int)flSec);
 	}
 
 	// Update our timer which we use to interpolate the fade in and out *delay* from 0 to 100% volume.
@@ -180,6 +186,11 @@ void CFMODManager::FadeThink(void)
 		if (m_flSoundLength < 0)
 			m_flSoundLength = 0;
 	}
+
+	if (pSystem)
+		pSystem->update();
+
+	bIsFMODMuted = bShouldMuteFMOD;
 }
 
 void CFMODManager::PlayLoadingMusic(const char *szSoundPath)

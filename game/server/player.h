@@ -741,7 +741,11 @@ public:
 	void	DeactivateMovementConstraint( );
 
 	// talk control
-	void	NotePlayerTalked() { m_fLastPlayerTalkTime = gpGlobals->curtime; }
+	void NotePlayerTalked() 
+	{ 
+		m_fLastPlayerTalkTime = gpGlobals->curtime; 
+		m_flLastTimeRanCommand = gpGlobals->curtime; 
+	}
 	float	LastTimePlayerTalked() { return m_fLastPlayerTalkTime; }
 
 	void	DisableButtons( int nButtons );
