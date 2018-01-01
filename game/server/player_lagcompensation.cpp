@@ -631,7 +631,7 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 
 		float rangeMax = maxrange;
 		float extraDeviation = MELEE_BBOX_MAX_DEVIATION;
-		if (rangeMax < MAX_MELEE_LAGCOMP_DIST)
+		if (rangeMax <= MAX_MELEE_LAGCOMP_DIST)
 			rangeMax += extraDeviation;
 
 		Vector vecCurrentForward = vecForward * rangeMax;
@@ -706,6 +706,7 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 
 	Vector vecWantedLagPosVec = vec3_invalid;
 	trace_t trace;
+	CTraceFilterOnlyNPCsAndPlayer filter(player, COLLISION_GROUP_NONE);
 
 	numEnts = list.Count();
 	for (int i = 0; i < numEnts; i++)
@@ -722,11 +723,18 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 		Vector vecStartPos = entry->callerPos;
 		Vector vecEndPos = vecStartPos + entry->endDirection * MAX_TRACE_LENGTH;
 
-		CTraceFilterOnlyNPCsAndPlayer filter(player, COLLISION_GROUP_NONE);
-
-		UTIL_TraceLine(vecStartPos, vecEndPos, MASK_SHOT, &filter, &trace); // A simple trace against hitboxes.
-		if ((trace.fraction == 1.0f) || (trace.m_pEnt != pEntity)) // Nothing? Try a hull.
-			UTIL_TraceHull(vecStartPos, vecEndPos, traceCheckHullMins, traceCheckHullMaxs, MASK_SHOT_HULL, &filter, &trace);
+		if (maxrange <= MAX_MELEE_LAGCOMP_DIST) // Melee will not allow 'bullet pene'. <.<
+		{
+			UTIL_TraceLine(vecStartPos, vecEndPos, MASK_SHOT, player, COLLISION_GROUP_NONE, &trace); // A simple trace against hitboxes.
+			if ((trace.fraction == 1.0f) || (trace.m_pEnt != pEntity)) // Nothing? Try a hull.
+				UTIL_TraceHull(vecStartPos, vecEndPos, traceCheckHullMins, traceCheckHullMaxs, MASK_SHOT_HULL, player, COLLISION_GROUP_NONE, &trace);
+		}
+		else
+		{
+			UTIL_TraceLine(vecStartPos, vecEndPos, MASK_SHOT, &filter, &trace); // A simple trace against hitboxes.
+			if ((trace.fraction == 1.0f) || (trace.m_pEnt != pEntity)) // Nothing? Try a hull.
+				UTIL_TraceHull(vecStartPos, vecEndPos, traceCheckHullMins, traceCheckHullMaxs, MASK_SHOT_HULL, &filter, &trace);
+		}
 
 		// Draw hitboxes + hit pos.
 		if (sv_showlagcompensation.GetInt() >= 1)

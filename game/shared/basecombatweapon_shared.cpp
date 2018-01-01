@@ -2466,15 +2466,10 @@ class CTraceFilterMeleeNew : public CTraceFilterSimple
 public:
 	DECLARE_CLASS(CTraceFilterMeleeNew, CTraceFilterSimple);
 
-	CTraceFilterMeleeNew(IHandleEntity *pHandleEntity, int collisionGroup, CBaseCombatWeapon *pWeapon, int traceType) :
-		BaseClass(pHandleEntity, collisionGroup), traceTypeToUse((TraceType_t)traceType)
+	CTraceFilterMeleeNew(IHandleEntity *pHandleEntity, int collisionGroup, CBaseCombatWeapon *pWeapon) :
+		BaseClass(pHandleEntity, collisionGroup)
 	{
 		m_hWeaponLink = pWeapon;
-	}
-
-	virtual TraceType_t	GetTraceType() const
-	{
-		return traceTypeToUse;
 	}
 
 	virtual bool ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask)
@@ -2507,7 +2502,6 @@ public:
 
 protected:
 	CHandle<CBaseCombatWeapon> m_hWeaponLink;
-	const TraceType_t traceTypeToUse;
 };
 #endif
 
@@ -2539,7 +2533,7 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 	Vector swingEnd = swingStart + (forward * range);
 
 	IPredictionSystem::SuppressHostEvents(NULL);
-	CTraceFilterMeleeNew traceFilter(pOwner, COLLISION_GROUP_NONE, this, CanHitThisTarget(0) ? TRACE_EVERYTHING : TRACE_ENTITIES_ONLY);
+	CTraceFilterMeleeNew traceFilter(pOwner, COLLISION_GROUP_NONE, this);
 
 	Activity activity = pvm->GetSequenceActivity(pvm->GetSequence());
 
@@ -2551,13 +2545,16 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 		ImpactWater(swingStart, swingEnd);
 	else
 	{
+		bool bHitWorld = traceHit.DidHitWorld();
+		if (bHitWorld && !CanHitThisTarget(0))
+			return;
+
 		CBaseEntity *pHitEnt = traceHit.m_pEnt;
 		if (pHitEnt != NULL)
 		{
 			if (m_pEnemiesStruck.Count() <= 1)
 				AddViewKick();
 
-			bool bHitWorld = traceHit.DidHitWorld();
 			if (bHitWorld)
 				StruckTarget(0);
 

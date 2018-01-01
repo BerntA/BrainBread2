@@ -1144,21 +1144,16 @@ class CTraceFilterWeaponsAndItems : public CTraceFilterSimple
 public:
 	DECLARE_CLASS(CTraceFilterWeaponsAndItems, CTraceFilterSimple);
 
-	CTraceFilterWeaponsAndItems(CBasePlayer *player, IHandleEntity *pHandleEntity, int collisionGroup) : BaseClass(pHandleEntity, collisionGroup)
+	CTraceFilterWeaponsAndItems(IHandleEntity *pHandleEntity, int collisionGroup) : BaseClass(pHandleEntity, collisionGroup)
 	{
-		m_hPlayer = player;
 	}
 
 	virtual bool ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask)
 	{
-		CBasePlayer *player = m_hPlayer.Get();
 		CBaseEntity *pEntity = EntityFromEntityHandle(pHandleEntity);
 		if (pEntity)
 		{
 			if (pEntity->IsCombatCharacter())
-				return false;
-
-			if (player && !player->IsUseableEntity(pEntity, 0))
 				return false;
 
 			if (pEntity->IsBaseCombatWeapon() || pEntity->IsCombatItem())
@@ -1167,9 +1162,6 @@ public:
 
 		return BaseClass::ShouldHitEntity(pHandleEntity, contentsMask);
 	}
-
-protected:
-	CHandle<CBasePlayer> m_hPlayer;
 };
 #endif
 
@@ -1353,9 +1345,10 @@ CBaseEntity *CBasePlayer::FindUseEntity()
 	if (!pNearest)
 	{
 		trace_t trWeaponsAndItems;
-		CTraceFilterWeaponsAndItems wepItemFilter(this, this, COLLISION_GROUP_NONE);
+		CTraceFilterWeaponsAndItems wepItemFilter(this, COLLISION_GROUP_NONE);
 		UTIL_TraceLine(searchCenter, searchCenter + forward * PLAYER_USE_RADIUS, MASK_SHOT, &wepItemFilter, &trWeaponsAndItems);
-		pNearest = trWeaponsAndItems.m_pEnt;
+		if (trWeaponsAndItems.m_pEnt && IsUseableEntity(trWeaponsAndItems.m_pEnt, 0))
+			pNearest = trWeaponsAndItems.m_pEnt;
 	}
 
 	if ( sv_debug_player_use.GetBool() )
