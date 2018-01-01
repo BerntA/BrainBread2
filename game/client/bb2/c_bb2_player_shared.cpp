@@ -92,6 +92,17 @@ void CBB2PlayerShared::CreateEntities()
 
 	// Misc
 	m_flUpdateTime = 0.0f;
+
+	// Run default idle anim on body: (prevent T-pose)
+	m_pPlayerBody->m_flAnimTime = gpGlobals->curtime;
+	m_pPlayerBody->SetCycle(0);
+
+	int startActivity = (pLocal->GetTeamNumber() == TEAM_DECEASED) ? ACT_HL2MP_IDLE : ACT_HL2MP_IDLE_MELEE;
+	int animDesired = pLocal->SelectWeightedSequence(startActivity);
+	if (animDesired < 0)
+		animDesired = 0;
+
+	m_pPlayerBody->ResetSequence(animDesired);
 }
 
 void CBB2PlayerShared::OnNewModel()
@@ -116,6 +127,7 @@ void CBB2PlayerShared::OnNewModel()
 		{
 			m_pPlayerHands->SetWeaponModel(GetPlayerHandModel(pOwner), NULL);
 			m_pPlayerHands->m_nSkin = pOwner->GetSkin();
+			m_pPlayerHands->m_nBody = pOwner->GetBody();
 		}
 	}
 }
@@ -131,6 +143,9 @@ void CBB2PlayerShared::UpdatePlayerBody(C_HL2MP_Player *pOwner)
 		OnNewModel();
 		m_pPlayerBody->UpdateVisibility();
 	}
+
+	m_pPlayerBody->m_nSkin = pOwner->GetSkin();
+	m_pPlayerBody->m_nBody = pOwner->GetBody();
 }
 
 void CBB2PlayerShared::UpdatePlayerHands(C_BaseViewModel *pParent, C_HL2MP_Player *pOwner)
@@ -155,6 +170,9 @@ void CBB2PlayerShared::UpdatePlayerHands(C_BaseViewModel *pParent, C_HL2MP_Playe
 
 	if ((m_pPlayerHands->GetMoveParent() != pParent) && bCanFollow)
 		m_pPlayerHands->AttachmentFollow(pParent);
+
+	m_pPlayerHands->m_nSkin = pOwner->GetSkin();
+	m_pPlayerHands->m_nBody = pOwner->GetBody();
 
 	m_pPlayerHands->StudioFrameAdvance();
 }

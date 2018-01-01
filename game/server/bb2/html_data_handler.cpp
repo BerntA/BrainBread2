@@ -114,11 +114,11 @@ CUtlStringList htmlDataList;
 
 const char *pchDataURLs[5] =
 {
-	"http://hl2world.net/hl2world/misc/bb2/developers.txt",
-	"http://hl2world.net/hl2world/misc/bb2/donators.txt",
-	"http://hl2world.net/hl2world/misc/bb2/testers.txt",
-	"http://hl2world.net/hl2world/misc/bb2/bans.txt",
-	"http://hl2world.net/hl2world/misc/bb2/blacklistedservers.txt",
+	"https://hl2world.net/hl2world/bb2data/developers.txt",
+	"https://hl2world.net/hl2world/bb2data/donators.txt",
+	"https://hl2world.net/hl2world/bb2data/testers.txt",
+	"https://hl2world.net/hl2world/bb2data/bans.txt",
+	"https://hl2world.net/hl2world/bb2data/blacklistedservers.txt",
 };
 
 const char *pchDataErrMessages[5] =

@@ -31,6 +31,7 @@
 static ConVar sv_lagcompensation_teleport_dist("sv_lagcompensation_teleport_dist", "64", FCVAR_DEVELOPMENTONLY | FCVAR_CHEAT, "How far a player got moved by game code before we can't lag compensate their position back");
 #define LAG_COMPENSATION_EPS_SQR ( 0.1f * 0.1f )
 #define HITBOX_MAX_DEVIATION 8.3f // How far can we move off the nearest hitbox and still call it a successful hit? 7-9 units is fair..
+#define MELEE_BBOX_MAX_DEVIATION 12.0f
 
 ConVar sv_unlag("sv_unlag", "1", FCVAR_DEVELOPMENTONLY, "Enables player lag compensation");
 ConVar sv_maxunlag("sv_maxunlag", "1.0", FCVAR_DEVELOPMENTONLY, "Maximum lag compensation in seconds", true, 0.0f, true, 1.0f);
@@ -127,7 +128,7 @@ public:
 	// called after entities think
 	virtual void FrameUpdatePostEntityThink();
 
-	void StartLagCompensation(CBasePlayer *player, CUserCmd *cmd);
+	void StartLagCompensation(CBasePlayer *player, CUserCmd *cmd, float maxrange = MAX_TRACE_LENGTH);
 	void FinishLagCompensation(CBasePlayer *player);
 
 #ifdef BB2_AI	
@@ -142,8 +143,9 @@ public:
 
 private:
 	void DoFastBacktrack(CBasePlayer *player, CBaseCombatCharacter *pEntity, float flTargetTime, CUtlVector<LagCompEntry> &list);
-	void AnalyzeFastBacktracks(CBasePlayer *player, CUtlVector<LagCompEntry> &list);
-	Vector GetNearestHitboxPos(CBaseCombatCharacter *pEntity, const Vector &from);
+	void AnalyzeFastBacktracks(CBasePlayer *player, CUtlVector<LagCompEntry> &list, float maxrange);
+	Vector GetNearestHitboxPos(CBaseCombatCharacter *pEntity, const Vector &from, Vector &chestHBOXPos);
+	Vector GetChestHitboxPos(CBaseCombatCharacter *pEntity);
 
 	void ClearHistory()
 	{
@@ -310,7 +312,7 @@ void CLagCompensationManager::FrameUpdatePostEntityThink()
 }
 
 // Called during player movement to set up/restore after lag compensation
-void CLagCompensationManager::StartLagCompensation(CBasePlayer *player, CUserCmd *cmd)
+void CLagCompensationManager::StartLagCompensation(CBasePlayer *player, CUserCmd *cmd, float maxrange)
 {
 	if (!player || !cmd)
 		return;
@@ -426,7 +428,7 @@ void CLagCompensationManager::StartLagCompensation(CBasePlayer *player, CUserCmd
 	}
 #endif //BB2_AI
 
-	AnalyzeFastBacktracks(player, potentialEntries);
+	AnalyzeFastBacktracks(player, potentialEntries, maxrange);
 
 	potentialEntries.Purge();
 }
@@ -581,7 +583,7 @@ int __cdecl SortLagCompEntriesPredicate(const LagCompEntry *data1, const LagComp
 	return 1;
 }
 
-void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVector<LagCompEntry> &list)
+void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVector<LagCompEntry> &list, float maxrange)
 {
 	VPROF_BUDGET("AnalyzeFastBacktracks", "CLagCompensationManager");
 
@@ -598,9 +600,8 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 
 	Vector vecForward = player->GetAutoaimVector(1.0f);
 	Vector vecStart = player->Weapon_ShootPosition();
-	vecForward *= MAX_TRACE_LENGTH;
+	VectorNormalize(vecForward);
 
-	Vector vecWepPos = vec3_origin;
 	Vector traceCheckHullMins = Vector(-3, -3, -3);
 	Vector traceCheckHullMaxs = Vector(3, 3, 3);
 	bool bCanUseBiggerHull = false;
@@ -608,9 +609,6 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 	if (pActiveWeapon)
 	{
 		int meleeAttackType = pActiveWeapon->m_iMeleeAttackType.Get();
-		Vector vecAimDir = vecForward;
-		VectorNormalize(vecAimDir);
-		vecWepPos = vecStart + (vecAimDir * pActiveWeapon->GetRange() * 0.5f);
 		bCanUseBiggerHull = (meleeAttackType == MELEE_TYPE_SLASH) || (meleeAttackType == MELEE_TYPE_BASH_SLASH);
 		if (meleeAttackType > 0)
 		{
@@ -631,8 +629,16 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 			continue;
 		}
 
+		float rangeMax = maxrange;
+		float extraDeviation = MELEE_BBOX_MAX_DEVIATION;
+		if (rangeMax < MAX_MELEE_LAGCOMP_DIST)
+			rangeMax += extraDeviation;
+
+		Vector vecCurrentForward = vecForward * rangeMax;
+		Vector vecWepPos = vecStart + (vecCurrentForward * 0.5f);
+
 		CBaseTrace tr;
-		IntersectRayWithBox(vecStart, vecForward, entry->lagCompedPos + entry->boundsMin, entry->lagCompedPos + entry->boundsMax, 0.0f, &tr);
+		IntersectRayWithBox(vecStart, vecCurrentForward, entry->lagCompedPos + entry->boundsMin, entry->lagCompedPos + entry->boundsMax, 0.0f, &tr);
 		if (tr.fraction < 1.0f)
 		{
 			if (sv_lagflushbonecache.GetBool())
@@ -641,7 +647,8 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 			if (sv_showlagcompensation.GetInt() >= 1)
 				pEntity->DrawServerHitboxes((entry->lagCompedPos - entry->originalPos), 2.0f, true);
 
-			Vector vecNearestPosToHitbox = GetNearestHitboxPos(pEntity, (tr.endpos + entry->differencePos));
+			Vector chestHitboxPos = vec3_invalid;
+			Vector vecNearestPosToHitbox = GetNearestHitboxPos(pEntity, (tr.endpos + entry->differencePos), chestHitboxPos);
 			if (vecNearestPosToHitbox != vec3_invalid)
 				entry->endDirection = vecNearestPosToHitbox - tr.startpos;
 			else
@@ -649,9 +656,14 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 				entry->endDirection = (tr.endpos - tr.startpos) + entry->differencePos;
 				if (bCanUseBiggerHull)
 				{
-					Vector vecAutoCorrector = (entry->lagCompedPos - vecStart);
-					vecAutoCorrector.z += (0.55f * (entry->boundsMax - entry->boundsMin).z);
-					entry->endDirection = vecAutoCorrector + entry->differencePos;
+					if (chestHitboxPos != vec3_invalid)
+						entry->endDirection = (chestHitboxPos - tr.startpos);
+					else
+					{
+						Vector vecAutoCorrector = (entry->lagCompedPos - tr.startpos);
+						vecAutoCorrector.z += (0.55f * (entry->boundsMax - entry->boundsMin).z);
+						entry->endDirection = vecAutoCorrector + entry->differencePos;
+					}
 				}
 			}
 
@@ -659,14 +671,11 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 		}
 		else if (bCanUseBiggerHull)
 		{
-			Vector newEntryBoundsForMelee = (0.5f * (entry->boundsMax - entry->boundsMin)) + HITBOX_MAX_DEVIATION * Vector(1, 1, 1);
-			Vector newEntryMins = -1.0f * newEntryBoundsForMelee;
-			Vector newEntryMaxs = newEntryBoundsForMelee;
 			if (IsBoxIntersectingBox(
-				vecWepPos + pActiveWeapon->GetMeleeBoundsMin(),
-				vecWepPos + pActiveWeapon->GetMeleeBoundsMax(),
-				entry->lagCompedPos + newEntryMins,
-				entry->lagCompedPos + newEntryMaxs))
+				vecWepPos + pActiveWeapon->GetMeleeBoundsMin() + Vector(-extraDeviation, -extraDeviation, 0),
+				vecWepPos + pActiveWeapon->GetMeleeBoundsMax() + Vector(extraDeviation, extraDeviation, 0),
+				entry->lagCompedPos + entry->boundsMin,
+				entry->lagCompedPos + entry->boundsMax))
 			{
 				if (sv_lagflushbonecache.GetBool())
 					pEntity->InvalidateBoneCache();
@@ -674,9 +683,16 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 				if (sv_showlagcompensation.GetInt() >= 1)
 					pEntity->DrawServerHitboxes((entry->lagCompedPos - entry->originalPos), 2.0f, true);
 
-				Vector vecAutoCorrector = (entry->lagCompedPos - vecStart);
-				vecAutoCorrector.z += (0.55f * (entry->boundsMax - entry->boundsMin).z);
-				entry->endDirection = vecAutoCorrector + entry->differencePos;
+				Vector chestHitboxPos = GetChestHitboxPos(pEntity);
+				if (chestHitboxPos != vec3_invalid)
+					entry->endDirection = chestHitboxPos - vecStart;
+				else
+				{
+					Vector vecAutoCorrector = (entry->lagCompedPos - vecStart);
+					vecAutoCorrector.z += (0.55f * (entry->boundsMax - entry->boundsMin).z);
+					entry->endDirection = vecAutoCorrector + entry->differencePos;
+				}
+
 				continue;
 			}
 		}
@@ -729,7 +745,7 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 	player->SetLagCompVecPos(vecWantedLagPosVec);
 }
 
-Vector CLagCompensationManager::GetNearestHitboxPos(CBaseCombatCharacter *pEntity, const Vector &from)
+Vector CLagCompensationManager::GetNearestHitboxPos(CBaseCombatCharacter *pEntity, const Vector &from, Vector &chestHBOXPos)
 {
 	if (!pEntity)
 		return vec3_invalid;
@@ -757,6 +773,9 @@ Vector CLagCompensationManager::GetNearestHitboxPos(CBaseCombatCharacter *pEntit
 
 		pEntity->GetBonePosition(pbox->bone, tempPos, tempAngles);
 
+		if (pbox->group == HITGROUP_CHEST)
+			chestHBOXPos = tempPos;
+
 		float distFromIntersectionPnt = (tempPos - from).Length();
 		if (distFromIntersectionPnt < nearestDist)
 		{
@@ -776,6 +795,38 @@ Vector CLagCompensationManager::GetNearestHitboxPos(CBaseCombatCharacter *pEntit
 		return vec3_invalid;
 
 	return vecNearest;
+}
+
+Vector CLagCompensationManager::GetChestHitboxPos(CBaseCombatCharacter *pEntity)
+{
+	if (!pEntity)
+		return vec3_invalid;
+
+	CStudioHdr *pStudioHdr = pEntity->GetModelPtr();
+	if (!pStudioHdr)
+		return vec3_invalid;
+
+	mstudiohitboxset_t *set = pStudioHdr->pHitboxSet(pEntity->m_nHitboxSet);
+	if (!set)
+		return vec3_invalid;
+
+	Vector tempPos;
+	QAngle tempAngles;
+
+	for (int i = 0; i < set->numhitboxes; i++)
+	{
+		mstudiobbox_t *pbox = set->pHitbox(i);
+		if (!pbox)
+			continue;
+
+		if (pbox->group != HITGROUP_CHEST)
+			continue;
+
+		pEntity->GetBonePosition(pbox->bone, tempPos, tempAngles);
+		return tempPos;
+	}
+
+	return vec3_invalid;
 }
 
 void CLagCompensationManager::FinishLagCompensation(CBasePlayer *player)

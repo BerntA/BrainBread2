@@ -1107,9 +1107,75 @@ float IntervalDistance( float x, float x0, float x1 )
 	return 0;
 }
 
+class CTraceFilterPlayerUse : public CTraceFilterSimple
+{
+public:
+	DECLARE_CLASS(CTraceFilterPlayerUse, CTraceFilterSimple);
+
+	CTraceFilterPlayerUse(IHandleEntity *pHandleEntity, int collisionGroup, int team) : BaseClass(pHandleEntity, collisionGroup)
+	{ 
+		iWantedTeam = team;
+	}
+
+	virtual bool ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask)
+	{
+		CBaseEntity *pEntity = EntityFromEntityHandle(pHandleEntity);
+		if (pEntity)
+		{
+			if (pEntity->IsPlayer() && (pEntity->GetTeamNumber() == iWantedTeam))
+				return false;
+
+#ifndef CLIENT_DLL
+			if (pEntity->IsNPC() && pEntity->MyNPCPointer() && pEntity->MyNPCPointer()->IsStaticNPC())
+				return false;
+#endif
+		}
+
+		return BaseClass::ShouldHitEntity(pHandleEntity, contentsMask);
+	}
+
+protected:
+	int iWantedTeam;
+};
+
+#ifndef CLIENT_DLL
+class CTraceFilterWeaponsAndItems : public CTraceFilterSimple
+{
+public:
+	DECLARE_CLASS(CTraceFilterWeaponsAndItems, CTraceFilterSimple);
+
+	CTraceFilterWeaponsAndItems(CBasePlayer *player, IHandleEntity *pHandleEntity, int collisionGroup) : BaseClass(pHandleEntity, collisionGroup)
+	{
+		m_hPlayer = player;
+	}
+
+	virtual bool ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask)
+	{
+		CBasePlayer *player = m_hPlayer.Get();
+		CBaseEntity *pEntity = EntityFromEntityHandle(pHandleEntity);
+		if (pEntity)
+		{
+			if (pEntity->IsCombatCharacter())
+				return false;
+
+			if (player && !player->IsUseableEntity(pEntity, 0))
+				return false;
+
+			if (pEntity->IsBaseCombatWeapon() || pEntity->IsCombatItem())
+				return true;
+		}
+
+		return BaseClass::ShouldHitEntity(pHandleEntity, contentsMask);
+	}
+
+protected:
+	CHandle<CBasePlayer> m_hPlayer;
+};
+#endif
+
 CBaseEntity *CBasePlayer::FindUseEntity()
 {
-	CTraceFilterSkipClassname trFiltr(this, "player", COLLISION_GROUP_NONE);
+	CTraceFilterPlayerUse trFiltr(this, COLLISION_GROUP_NONE, GetTeamNumber());
 
 	Vector forward, up;
 	EyeVectors( &forward, NULL, &up );
@@ -1126,9 +1192,6 @@ CBaseEntity *CBasePlayer::FindUseEntity()
 	useableContents = MASK_NPCSOLID_BRUSHONLY | MASK_OPAQUE_AND_NPCS;
 #endif
 
-#ifdef HL1_DLL
-	useableContents = MASK_SOLID;
-#endif
 #ifndef CLIENT_DLL
 	CBaseEntity *pFoundByTrace = NULL;
 #endif
@@ -1284,6 +1347,15 @@ CBaseEntity *CBasePlayer::FindUseEntity()
 	if ( pNearest && pNearest->MyNPCPointer() && pNearest->MyNPCPointer()->IsPlayerAlly( this ) )
 	{
 		pNearest = DoubleCheckUseNPC( pNearest, searchCenter, forward );
+	}
+
+	// Still nothing? Try a simplified weapon/item based trace.
+	if (!pNearest)
+	{
+		trace_t trWeaponsAndItems;
+		CTraceFilterWeaponsAndItems wepItemFilter(this, this, COLLISION_GROUP_NONE);
+		UTIL_TraceLine(searchCenter, searchCenter + forward * PLAYER_USE_RADIUS, MASK_SHOT, &wepItemFilter, &trWeaponsAndItems);
+		pNearest = trWeaponsAndItems.m_pEnt;
 	}
 
 	if ( sv_debug_player_use.GetBool() )

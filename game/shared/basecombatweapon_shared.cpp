@@ -231,7 +231,7 @@ void CBaseCombatWeapon::Spawn( void )
 #endif
 
 	// Bloat the box for player pickup
-	CollisionProp()->UseTriggerBounds(true, 32.0f);
+	CollisionProp()->UseTriggerBounds(true, 20.0f);
 
 	// Use more efficient bbox culling on the client. Otherwise, it'll setup bones for most
 	// characters even when they're not in the frustum.
@@ -2450,7 +2450,7 @@ void CBaseCombatWeapon::MeleeAttackUpdate(void)
 		m_flLastTraceTime = gpGlobals->curtime + TRACE_FREQUENCY;
 
 		// Move other players back to history positions based on local player's lag
-		lagcompensation->StartLagCompensation(pPlayer, pPlayer->GetCurrentCommand());
+		lagcompensation->StartLagCompensation(pPlayer, pPlayer->GetCurrentCommand(), GetRange());
 
 		MeleeAttackTrace();
 
@@ -2523,16 +2523,20 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 		return;
 
 	trace_t traceHit;
+	float range = GetRange();
 	Vector swingStart = pOwner->Weapon_ShootPosition();
 	Vector forward;
 	AngleVectors(pOwner->EyeAngles(), &forward);
 
 	Vector vecLagCompPos = pOwner->GetLagCompPos();
 	if (vecLagCompPos != vec3_invalid)
+	{
 		forward = vecLagCompPos;
+		range = MAX_TRACE_LENGTH;
+	}
 
 	VectorNormalize(forward);
-	Vector swingEnd = swingStart + (forward * GetRange());
+	Vector swingEnd = swingStart + (forward * range);
 
 	IPredictionSystem::SuppressHostEvents(NULL);
 	CTraceFilterMeleeNew traceFilter(pOwner, COLLISION_GROUP_NONE, this, CanHitThisTarget(0) ? TRACE_EVERYTHING : TRACE_ENTITIES_ONLY);
@@ -2544,10 +2548,7 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 		UTIL_TraceHull(swingStart, swingEnd, Vector(-5, -5, -5), Vector(5, 5, 5), MASK_SHOT_HULL, &traceFilter, &traceHit); // Try a small hull.
 
 	if (traceHit.fraction == 1.0f)
-	{
-		Vector testEnd = swingStart + (forward * GetRange());
-		ImpactWater(swingStart, testEnd);
-	}
+		ImpactWater(swingStart, swingEnd);
 	else
 	{
 		CBaseEntity *pHitEnt = traceHit.m_pEnt;

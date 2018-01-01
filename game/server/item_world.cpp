@@ -21,7 +21,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define ITEM_PICKUP_BOX_BLOAT		36
+#define ITEM_PICKUP_BOX_BLOAT 20.0f
 
 BEGIN_DATADESC( CItem )
 

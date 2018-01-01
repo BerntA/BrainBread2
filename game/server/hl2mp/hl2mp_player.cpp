@@ -1163,7 +1163,6 @@ void CHL2MP_Player::NoteWeaponFired(void)
 	}
 }
 
-#define MAX_MELEE_LAGCOMP_DIST 500.0f
 bool CHL2MP_Player::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits) const
 {
 	bool bCheckAttackButton = true;

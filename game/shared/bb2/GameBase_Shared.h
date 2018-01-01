@@ -33,6 +33,7 @@
 #define MAX_OBJECTIVE_EXPERIENCE 0.05f
 
 #define DELAYED_USE_TIME 1.5f
+#define MAX_MELEE_LAGCOMP_DIST 500.0f
 
 // Min. required distance in order to activate/use an inv. item.
 #define MAX_ENTITY_LINK_RANGE 140.0f
