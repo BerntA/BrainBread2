@@ -26,7 +26,7 @@
 
 ConVar bb2_gibs_spawn_blood_puddle("bb2_gibs_spawn_blood_puddle", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Spawn blood puddles with ragdolls? Eventually this may decrease performance, if the level has a lot of puddles.", true, 0.0f, true, 1.0f);
 ConVar bb2_gibs_spawn_blood("bb2_gibs_spawn_blood", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "When a gib take damage/touch stuff should it spray/spawn blood?", true, 0.0f, true, 1.0f);
-ConVar bb2_gibs_max("bb2_gibs_max", "64", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Set the max amount of gibs and ragdolls to be created on the client. When you reach the limit new gibs will fade out automatically.", true, 0.0f, true, 128.0f);
+ConVar bb2_gibs_max("bb2_gibs_max", "64", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Set the max amount of gibs and ragdolls to be created on the client. When you reach the limit new gibs will fade out automatically.", true, 0.0f, true, 256.0f);
 ConVar bb2_gibs_enable_fade("bb2_gibs_enable_fade", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Should gibs and ragdolls fade out?", true, 0.0f, true, 1.0f);
 ConVar bb2_gibs_fadeout_time("bb2_gibs_fadeout_time", "4", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Set the time in seconds before a ragdoll or gib will fade out.", true, 0.0f, true, 30.0f);
 ConVar bb2_gibs_blood_chance("bb2_gibs_blood_chance", "100", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Set the chance in % to spawn blood when you attack an entity.", true, 0.0f, true, 100.0f);

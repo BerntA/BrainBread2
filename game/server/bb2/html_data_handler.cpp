@@ -8,6 +8,7 @@
 #include "html_data_handler.h"
 #include "convar.h"
 #include "GameBase_Server.h"
+#include "GameBase_Shared.h"
 #include "filesystem.h"
 #include "KeyValues.h"
 
@@ -109,26 +110,8 @@ void RecreateSoundScriptsManifest(void)
 }
 
 #ifndef OSX
-int g_iActiveItemType = 0;
-CUtlStringList htmlDataList;
-
-const char *pchDataURLs[5] =
-{
-	"https://hl2world.net/hl2world/bb2data/developers.txt",
-	"https://hl2world.net/hl2world/bb2data/donators.txt",
-	"https://hl2world.net/hl2world/bb2data/testers.txt",
-	"https://hl2world.net/hl2world/bb2data/bans.txt",
-	"https://hl2world.net/hl2world/bb2data/blacklistedservers.txt",
-};
-
-const char *pchDataErrMessages[5] =
-{
-	"developer tags",
-	"donator tags",
-	"tester tags",
-	"ban data",
-	"blacklist data",
-};
+static int g_iActiveItemType = 0;
+static CUtlStringList htmlDataList;
 
 size_t writeCallback(char* buf, size_t size, size_t nmemb, void* up)
 {
@@ -136,8 +119,10 @@ size_t writeCallback(char* buf, size_t size, size_t nmemb, void* up)
 	return size * nmemb;
 }
 
-void ParseHTML(const char *url)
+bool ParseHTML(const char *url)
 {
+	bool result = false;
+
 	CURL* curl = curl_easy_init();
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
@@ -145,12 +130,8 @@ void ParseHTML(const char *url)
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &writeCallback);
 	//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
-	if (curl_easy_perform(curl) != CURLE_OK)
-	{
-		int idx = clamp(g_iActiveItemType, 0, (int)(_ARRAYSIZE(pchDataErrMessages) - 1));
-		Msg("Unable to parse the %s!\n", pchDataErrMessages[idx]);
-	}
-	else
+	result = (curl_easy_perform(curl) == CURLE_OK);
+	if (result)
 	{
 		char pchTemp[4096];
 		pchTemp[0] = 0;
@@ -169,6 +150,8 @@ void ParseHTML(const char *url)
 
 	htmlDataList.RemoveAll();
 	curl_easy_cleanup(curl);
+
+	return result;
 }
 #endif
 
@@ -176,14 +159,24 @@ void LoadSharedData(void)
 {
 	GameBaseServer()->LoadSharedInfo();
 
-#ifndef OSX
-	g_iActiveItemType = 0;
+#ifndef OSX		
 	if (GameBaseServer()->IsUsingDBSystem())
 	{
-		for (int i = 0; i < _ARRAYSIZE(pchDataURLs); i++)
+		KeyValues *pkvMiscData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/game/game_data_misc");
+		GameBaseServer()->SetServerBlacklisted(!pkvMiscData);
+		if (!pkvMiscData)
 		{
-			g_iActiveItemType = i;
-			ParseHTML(pchDataURLs[i]);
+			Msg("Unable to locate/read 'data/game/game_data_misc', server will be blacklisted until this issue has been resolved.\n");
+			return;
+		}
+
+		g_iActiveItemType = 0;
+		for (KeyValues *sub = pkvMiscData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+		{
+			if (!ParseHTML(sub->GetString()))
+				Msg("Unable to parse the %s!\n", sub->GetName());
+
+			g_iActiveItemType++;
 		}
 	}
 #else

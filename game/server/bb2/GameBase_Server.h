@@ -78,6 +78,7 @@ public:
 	void DoMapChange(const char *map);
 
 	bool IsServerBlacklisted(void) { return bIsServerBlacklisted; }
+	void SetServerBlacklisted(bool value) { bIsServerBlacklisted = value; }
 
 private:
 

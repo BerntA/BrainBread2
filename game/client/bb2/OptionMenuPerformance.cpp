@@ -91,7 +91,7 @@ OptionMenuPerformance::OptionMenuPerformance(vgui::Panel *parent, char const *pa
 
 	float flRangeMax[] =
 	{
-		128.0f,
+		256.0f,
 		30.0f,
 		100.0f,
 	};
