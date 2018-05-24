@@ -24,7 +24,7 @@ struct turtleEasterEgg_t
 	int turtleIndex;
 };
 
-CUtlVector<turtleEasterEgg_t> m_pTurtleList;
+static CUtlVector<turtleEasterEgg_t> m_pTurtleList;
 
 bool IsPlayerInList(CBaseEntity *pEnt, int index)
 {

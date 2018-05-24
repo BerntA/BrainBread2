@@ -11,6 +11,7 @@
 #include "c_hl2mp_player.h"
 #include "toolframework_client.h"
 #include "GameEventListener.h"
+#include "GameBase_Shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -50,7 +51,6 @@ C_BloodyTextureProxy::~C_BloodyTextureProxy()
 void C_BloodyTextureProxy::FireGameEvent(IGameEvent *event)
 {
 	const char *type = event->GetName();
-
 	if (!strcmp(type, "round_start"))
 	{
 		blendFactor->SetFloatValue(0.0f);
@@ -66,7 +66,6 @@ void C_BloodyTextureProxy::FireGameEvent(IGameEvent *event)
 bool C_BloodyTextureProxy::Init(IMaterial *pMaterial, KeyValues *pKeyValues)
 {
 	bool found;
-
 	blendFactor = pMaterial->FindVar("$detailblendfactor", &found, false);
 	if (!found)
 		return false;
@@ -102,40 +101,18 @@ void C_BloodyTextureProxy::OnBind(void* pC_BaseEntity)
 			if ((pPlayer == pLocal) || (GetSpectatorTarget() == pPlayer->entindex()))
 			{
 				if (pViewModel->IsPlayerHands())
-				{
-					for (int i = 0; i < MAX_WEAPONS; i++)
-					{
-						C_BaseCombatWeapon *pWeapon = pPlayer->GetWeapon(i);
-						if (!pWeapon)
-							continue;
-
-						if (pWeapon->m_bIsBloody)
-						{
-							bShouldDrawBlood = true;
-							break;
-						}
-					}
-				}
+					bShouldDrawBlood = pPlayer->IsMaterialOverlayFlagActive(MAT_OVERLAY_BLOOD);
 				else
 				{
 					C_BaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
 					if (pWeapon)
-					{
-						if (pWeapon->m_bIsBloody)
-							bShouldDrawBlood = true;
-						else
-						{
-							bShouldDrawBlood = false;
-							blendFactor->SetFloatValue(0.0f);
-						}
-					}
+						bShouldDrawBlood = pWeapon->m_bIsBloody;
 				}
 			}
 		}
 	}
 
-	if (bShouldDrawBlood)
-		blendFactor->SetFloatValue(1.0f);
+	blendFactor->SetFloatValue(bShouldDrawBlood ? 1.0f : 0.0f);
 
 	if (ToolsEnabled())
 		ToolFramework_RecordMaterialParams(GetMaterial());

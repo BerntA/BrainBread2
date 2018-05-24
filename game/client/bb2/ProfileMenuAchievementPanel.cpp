@@ -267,6 +267,9 @@ void AchievementItem::SetAchievementIcon(void)
 	Q_snprintf(pszAchievementImage, 80, "achievements/%s_%i", pszAchievementStringID, (m_bAchieved ? 1 : 0));
 	Q_snprintf(pszAchievementPath, 128, "materials/vgui/%s.vmt", pszAchievementImage);
 
+	Q_strlower(pszAchievementImage);
+	Q_strlower(pszAchievementPath);
+
 	if (filesystem->FileExists(pszAchievementPath, "MOD"))
 		m_pImageIcon->SetImage(pszAchievementImage);
 	else

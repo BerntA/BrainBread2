@@ -290,10 +290,11 @@ int CGameDefinitionsNPC::GetXP(const char *name)
 
 int CGameDefinitionsNPC::GetSkin(const char *name, const char *model)
 {
-	int index = GetIndex(name), overrideIndex = GetOverridedModelIndexForNPC(name);
+	int index = GetIndex(name);
 	if (index == -1)
 		return 0;
 
+	int overrideIndex = GetOverridedModelIndexForNPC(name);
 	if (overrideIndex != -1)
 	{
 		for (int i = 0; i < m_pModelOverrideItems[overrideIndex]->pszModelList.Count(); i++)
@@ -340,7 +341,7 @@ float CGameDefinitionsNPC::GetFirearmDamageScale(const char *name, const char *w
 	{
 		for (int i = 0; i < pszNPCItems[index]->pszWeaponList.Count(); i++)
 		{
-			if (!strcmp(weapon, pszNPCItems[index]->pszWeaponList[i].szWeaponClass) && (entityType >= 0 && entityType < NUM_DAMAGE_SCALES))
+			if ((entityType >= 0 && entityType < NUM_DAMAGE_SCALES) && !strcmp(weapon, pszNPCItems[index]->pszWeaponList[i].szWeaponClass))
 				return pszNPCItems[index]->pszWeaponList[i].flDamageScale[entityType];
 		}
 	}
@@ -367,10 +368,11 @@ float CGameDefinitionsNPC::GetLimbData(const char *name, const char *limb, bool 
 
 const char *CGameDefinitionsNPC::GetModel(const char *name)
 {
-	int index = GetIndex(name), overrideIndex = GetOverridedModelIndexForNPC(name);
+	int index = GetIndex(name);
 	if (index == -1)
 		return "";
 
+	int overrideIndex = GetOverridedModelIndexForNPC(name);
 	if (overrideIndex != -1)
 		return (m_pModelOverrideItems[overrideIndex]->pszModelList[random->RandomInt(0, (m_pModelOverrideItems[overrideIndex]->pszModelList.Count() - 1))].szModelPath);
 
@@ -379,11 +381,12 @@ const char *CGameDefinitionsNPC::GetModel(const char *name)
 
 const char *CGameDefinitionsNPC::GetModelForGib(const char *name, const char *gib, const char *model)
 {
-	int index = GetIndex(name), overrideIndex = GetOverridedModelIndexForNPC(name);
+	int index = GetIndex(name);
 	if (index == -1)
 		return "";
 
-    NPCModelItem_t *item = NULL;
+	NPCModelItem_t *item = NULL;
+	int overrideIndex = GetOverridedModelIndexForNPC(name);
 	if (overrideIndex == -1)
 	{
 		for (int i = 0; i < pszNPCItems[index]->pszModelList.Count(); i++)
@@ -426,17 +429,17 @@ const char *CGameDefinitionsNPC::GetModelForGib(const char *name, const char *gi
 
 bool CGameDefinitionsNPC::DoesNPCExist(const char *name)
 {
-	int index = GetIndex(name);
-	return (index != -1);
+	return (GetIndex(name) != -1);
 }
 
 bool CGameDefinitionsNPC::DoesNPCHaveGibForLimb(const char *name, const char *model, int gibID)
 {
-	int index = GetIndex(name), overrideIndex = GetOverridedModelIndexForNPC(name);
+	int index = GetIndex(name);
 	if (index == -1)
 		return false;
 
 	NPCModelItem_t *item = NULL;
+	int overrideIndex = GetOverridedModelIndexForNPC(name);
 	if (overrideIndex == -1)
 	{
 		for (int i = 0; i < pszNPCItems[index]->pszModelList.Count(); i++)
@@ -462,19 +465,19 @@ bool CGameDefinitionsNPC::DoesNPCHaveGibForLimb(const char *name, const char *mo
 
 	if (item != NULL)
 	{
-		if ((strlen(item->szGibHead) > 0) && (gibID == GIB_NO_HEAD))
+		if ((gibID == GIB_NO_HEAD) && (strlen(item->szGibHead) > 0))
 			return true;
 
-		if ((strlen(item->szGibArmLeft) > 0) && (gibID == GIB_NO_ARM_LEFT))
+		if ((gibID == GIB_NO_ARM_LEFT) && (strlen(item->szGibArmLeft) > 0))
 			return true;
 
-		if ((strlen(item->szGibArmRight) > 0) && (gibID == GIB_NO_ARM_RIGHT))
+		if ((gibID == GIB_NO_ARM_RIGHT) && (strlen(item->szGibArmRight) > 0))
 			return true;
 
-		if ((strlen(item->szGibLegLeft) > 0) && (gibID == GIB_NO_LEG_LEFT))
+		if ((gibID == GIB_NO_LEG_LEFT) && (strlen(item->szGibLegLeft) > 0))
 			return true;
 
-		if ((strlen(item->szGibLegRight) > 0) && (gibID == GIB_NO_LEG_RIGHT))
+		if ((gibID == GIB_NO_LEG_RIGHT) && (strlen(item->szGibLegRight) > 0))
 			return true;
 	}
 

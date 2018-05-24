@@ -1840,20 +1840,6 @@ bool CHL2_Player::ClientCommand( const CCommand &args )
 		return true;
 	}
 
-	if ( !Q_stricmp( args[0], "emit" ) )
-	{
-		CSingleUserRecipientFilter filter( this );
-		if ( args.ArgC() > 1 )
-		{
-			EmitSound( filter, entindex(), args[ 1 ] );
-		}
-		else
-		{
-			EmitSound( filter, entindex(), "Test.Sound" );
-		}
-		return true;
-	}
-
 	return BaseClass::ClientCommand( args );
 }
 

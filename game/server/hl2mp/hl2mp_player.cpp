@@ -1535,7 +1535,7 @@ bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 
 bool CHL2MP_Player::ActivatePerk(int skill)
 {
-	if (!IsHuman() || !IsAlive() || (GetSkillValue(skill) <= 0) || (GetPerkFlags() != 0) || (m_iNumPerkKills < GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iKillsRequiredToPerk) || (!HL2MPRules()->CanUseSkills()))
+	if (HL2MPRules()->IsGameoverOrScoresVisible() || !IsHuman() || !IsAlive() || (GetSkillValue(skill) <= 0) || (GetPerkFlags() != 0) || (m_iNumPerkKills < GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iKillsRequiredToPerk) || (!HL2MPRules()->CanUseSkills()))
 		return false;
 
 	m_iNumPerkKills = 0;
@@ -1575,7 +1575,7 @@ bool CHL2MP_Player::ActivatePerk(int skill)
 
 bool CHL2MP_Player::EnterRageMode(bool bForce) // Zombie 'Perk' thing. 
 {
-	if (!IsZombie() || !IsAlive() || (GetPerkFlags() != 0))
+	if (!IsZombie() || !IsAlive() || (GetPerkFlags() != 0) || HL2MPRules()->IsGameoverOrScoresVisible())
 		return false;
 
 	if (!bForce)
@@ -3588,7 +3588,7 @@ CON_COMMAND(classic_rejoin_zombie, "Re-join the game as a zombie!")
 	if (!pClient)
 		return;
 
-	if ((HL2MPRules()->GetCurrentGamemode() != MODE_OBJECTIVE) || GameBaseServer()->IsStoryMode())
+	if ((HL2MPRules()->GetCurrentGamemode() != MODE_OBJECTIVE) || GameBaseServer()->IsStoryMode() || HL2MPRules()->IsGameoverOrScoresVisible())
 		return;
 
 	if (pClient->IsBot() || (pClient->GetTeamNumber() != TEAM_SPECTATOR) || !pClient->HasPlayerEscaped())
@@ -3614,7 +3614,7 @@ CON_COMMAND(classic_respawn_ashuman, "Respawn as a human if possible!")
 	if (!pClient)
 		return;
 
-	if ((HL2MPRules()->GetCurrentGamemode() != MODE_OBJECTIVE) || GameBaseServer()->IsStoryMode() || GameBaseServer()->IsTutorialModeEnabled())
+	if ((HL2MPRules()->GetCurrentGamemode() != MODE_OBJECTIVE) || GameBaseServer()->IsStoryMode() || GameBaseServer()->IsTutorialModeEnabled() || HL2MPRules()->IsGameoverOrScoresVisible())
 		return;
 
 	if (pClient->IsBot() || (pClient->GetTeamNumber() != TEAM_DECEASED) || pClient->HasPlayerEscaped())

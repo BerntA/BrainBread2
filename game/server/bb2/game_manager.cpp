@@ -134,7 +134,7 @@ void CGameManager::FireGameEvent(IGameEvent *event)
 	}
 	else if (!strcmp(type, "round_end"))
 	{
-		int team = event->GetInt("team", 3);
+		int team = event->GetInt("team", TEAM_DECEASED);
 		if (team == TEAM_DECEASED) // We failed...
 		{
 			m_iCurrentTries++;

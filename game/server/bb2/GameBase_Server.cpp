@@ -16,9 +16,9 @@
 #include "world.h"
 #include "tier0/icommandline.h"
 
-ConVar bb2_tutorial_mode("bb2_tutorial_mode", "0", FCVAR_CHEAT|FCVAR_GAMEDLL, "Force-enable tutorial mode for any map, useful for testing.", true, 0.0f, true, 1.0f);
+ConVar bb2_tutorial_mode("bb2_tutorial_mode", "0", FCVAR_CHEAT | FCVAR_GAMEDLL, "Force-enable tutorial mode for any map, useful for testing.", true, 0.0f, true, 1.0f);
 
-CGameBaseServer gServerMode;
+static CGameBaseServer gServerMode;
 CGameBaseServer *GameBaseServer()
 {
 	return &gServerMode;
@@ -64,12 +64,7 @@ void CGameBaseServer::LoadSharedInfo(void)
 	if (pkvAdminData->LoadFromFile(filesystem, "data/server/admins.txt", "MOD"))
 	{
 		for (KeyValues *sub = pkvAdminData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-		{
-			sharedDataItem_t item;
-			Q_strncpy(item.szInfo, sub->GetString(), 128);
-			item.iType = DATA_SECTION_SERVER_ADMIN;
-			m_pSharedDataList.AddToTail(item);
-		}
+			AddItemToSharedList(sub->GetString(), DATA_SECTION_SERVER_ADMIN);
 	}
 	pkvAdminData->deleteThis();
 }
@@ -89,7 +84,7 @@ bool CGameBaseServer::FindItemInSharedList(const char *str, int type)
 
 	for (int i = 0; i < m_pSharedDataList.Count(); i++)
 	{
-		if ((!strcmp(str, m_pSharedDataList[i].szInfo)) && (type == m_pSharedDataList[i].iType))
+		if ((type == m_pSharedDataList[i].iType) && (!strcmp(str, m_pSharedDataList[i].szInfo)))
 			return true;
 	}
 
@@ -400,7 +395,7 @@ void CGameBaseServer::SendToolTip(const char *message, int type, int index, cons
 
 void CGameBaseServer::SendToolTip(const char *message, const char *keybind, float duration, int type, int index, const char *arg1, const char *arg2, const char *arg3, const char *arg4)
 {
-	if ((strlen(keybind) <= 0) && (type == 0))
+	if ((type == 0) && (strlen(keybind) <= 0))
 	{
 		Warning("Invalid keybind input in game_tip ent!\n");
 		return;
@@ -559,26 +554,11 @@ void CGameBaseServer::OnUpdate(int iClientsInGame)
 	}
 
 	// Check for map changes:
-	if (m_bShouldChangeMap)
+	if (m_bShouldChangeMap && (gpGlobals->curtime > m_flTimeToChangeLevel))
 	{
-		float flMilli = MAX(0.0f, 1000.0f - m_flChangeLevelTimeLerp);
-		float flSec = flMilli * 0.001f;
-		if ((flSec >= 1.0))
-		{
-			m_bShouldChangeMap = false;
-			engine->ChangeLevel(szNextMap, NULL);
-			return;
-		}
-	}
-
-	// Update level change timer:
-	float frame_msec = 1000.0f * gpGlobals->frametime;
-
-	if (m_flChangeLevelTimeLerp > 0)
-	{
-		m_flChangeLevelTimeLerp -= frame_msec;
-		if (m_flChangeLevelTimeLerp < 0)
-			m_flChangeLevelTimeLerp = 0;
+		m_bShouldChangeMap = false;
+		engine->ChangeLevel(szNextMap, NULL);
+		return;
 	}
 
 	if (GameBaseShared()->GetServerWorkshopData())
@@ -597,7 +577,7 @@ void CGameBaseServer::DoMapChange(const char *map)
 	}
 
 	m_bShouldChangeMap = true;
-	m_flChangeLevelTimeLerp = 1000.0f;
+	m_flTimeToChangeLevel = gpGlobals->curtime + 1.25f; // Wait X sec until changing lvl.
 }
 
 inline const char *CGameBaseServer::GetPublicIP(uint32 unIP) const
@@ -695,8 +675,13 @@ CON_COMMAND(admin_ban_id, "Admin Ban Command")
 	reason += strlen(args[2]);
 
 	char pchCommand[80];
+
 	Q_snprintf(pchCommand, 80, "banid %i %i \"%s\"\n", banTime, userID, reason);
 	engine->ServerCommand(pchCommand);
+	engine->ServerExecute(); // Add to ban list right away.
+
+	Q_snprintf(pchCommand, 80, "kickid %i \"%s\"\n", userID, reason);
+	engine->ServerCommand(pchCommand); // Kick afterwards.
 }
 
 CON_COMMAND(admin_changelevel, "Admin Changelevel Command")

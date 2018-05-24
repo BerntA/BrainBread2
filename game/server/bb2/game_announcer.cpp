@@ -24,7 +24,7 @@ struct announcerItem_t
 	int iPlayerIndex;
 };
 
-CUtlVector<announcerItem_t> m_pAnnouncerList;
+static CUtlVector<announcerItem_t> m_pAnnouncerList;
 
 int GetIndexForPlayerWithWeapon(const char *weapon, int playerIndex)
 {

@@ -272,6 +272,7 @@ public:
 
 	// Shared
 	int GetRewardFromRoundWin(CHL2MP_Player *pPlayer, int winnerTeam, bool gameOver);
+	virtual bool IsGameoverOrScoresVisible(void) { return (IsIntermission() || m_bShouldShowScores || g_fGameOver); }
 
 	// Zombie Limiting
 	bool CanSpawnZombie(void);

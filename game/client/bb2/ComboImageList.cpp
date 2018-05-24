@@ -177,11 +177,11 @@ void ComboImageList::InitCrosshairList(void)
 	if (pkvCrosshairList->LoadFromFile(filesystem, "scripts/hud_crosshairs.txt", "MOD"))
 	{
 		KeyValues *pkvTextureData = pkvCrosshairList->FindKey("TextureData");
-		for (KeyValues *sub = pkvTextureData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+		if (pkvTextureData)
 		{
-			const char *character = ReadAndAllocStringValue(sub, "character");
-			if (character && strlen(character) > 0)
+			for (KeyValues *sub = pkvTextureData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
 			{
+				const char *character = sub->GetString("character");
 				Label *panel = vgui::SETUP_PANEL(new Label(m_pComboBox, "Label", character));
 				panel->SetZPos(25);
 				panel->SetContentAlignment(Label::Alignment::a_center);
@@ -190,7 +190,6 @@ void ComboImageList::InitCrosshairList(void)
 			}
 		}
 	}
-
 	pkvCrosshairList->deleteThis();
 }
 

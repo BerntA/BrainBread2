@@ -757,7 +757,7 @@ bool CGameDefinitionsShared::Precache(void)
 
 		// Check if there's any gibs:
 
-		// Humans
+		// Humans:
 		if (strlen(pszPlayerSurvivorData[i].szHumanGibHead) > 0)
 			CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szHumanGibHead);
 
@@ -842,7 +842,7 @@ const DataPlayerItem_Player_Shared_t *CGameDefinitionsShared::GetPlayerGameModeD
 		if (HL2MPRules() && (HL2MPRules()->GetCurrentGamemode() == pszPlayerData[i].iGameMode) && (iTeam == pszPlayerData[i].iTeam))
 			return &pszPlayerData[i];
 	}
-	
+
 	return &pszPlayerData[0];
 }
 
@@ -851,7 +851,7 @@ const DataPlayerItem_MiscSkillInfo_t *CGameDefinitionsShared::GetPlayerMiscSkill
 	return &pszPlayerMiscSkillData;
 }
 
-const DataPlayerItem_Humans_Skills_t *CGameDefinitionsShared::GetPlayerHumanSkillData(void) 
+const DataPlayerItem_Humans_Skills_t *CGameDefinitionsShared::GetPlayerHumanSkillData(void)
 {
 	return &pszHumanSkillData;
 }
@@ -1152,36 +1152,36 @@ bool CGameDefinitionsShared::DoesPlayerHaveGibForLimb(const char *model, int gib
 	{
 		if (!strcmp(pszPlayerSurvivorData[i].szHumanModelPath, model))
 		{
-			if ((strlen(pszPlayerSurvivorData[i].szHumanGibHead) > 0) && (gibID == GIB_NO_HEAD))
+			if ((gibID == GIB_NO_HEAD) && (strlen(pszPlayerSurvivorData[i].szHumanGibHead) > 0))
 				return true;
 
-			if ((strlen(pszPlayerSurvivorData[i].szHumanGibArmLeft) > 0) && (gibID == GIB_NO_ARM_LEFT))
+			if ((gibID == GIB_NO_ARM_LEFT) && (strlen(pszPlayerSurvivorData[i].szHumanGibArmLeft) > 0))
 				return true;
 
-			if ((strlen(pszPlayerSurvivorData[i].szHumanGibArmRight) > 0) && (gibID == GIB_NO_ARM_RIGHT))
+			if ((gibID == GIB_NO_ARM_RIGHT) && (strlen(pszPlayerSurvivorData[i].szHumanGibArmRight) > 0))
 				return true;
 
-			if ((strlen(pszPlayerSurvivorData[i].szHumanGibLegLeft) > 0) && (gibID == GIB_NO_LEG_LEFT))
+			if ((gibID == GIB_NO_LEG_LEFT) && (strlen(pszPlayerSurvivorData[i].szHumanGibLegLeft) > 0))
 				return true;
 
-			if ((strlen(pszPlayerSurvivorData[i].szHumanGibLegRight) > 0) && (gibID == GIB_NO_LEG_RIGHT))
+			if ((gibID == GIB_NO_LEG_RIGHT) && (strlen(pszPlayerSurvivorData[i].szHumanGibLegRight) > 0))
 				return true;
 		}
 		else if (!strcmp(pszPlayerSurvivorData[i].szZombieModelPath, model))
 		{
-			if ((strlen(pszPlayerSurvivorData[i].szDeceasedGibHead) > 0) && (gibID == GIB_NO_HEAD))
+			if ((gibID == GIB_NO_HEAD) && (strlen(pszPlayerSurvivorData[i].szDeceasedGibHead) > 0))
 				return true;
 
-			if ((strlen(pszPlayerSurvivorData[i].szDeceasedGibArmLeft) > 0) && (gibID == GIB_NO_ARM_LEFT))
+			if ((gibID == GIB_NO_ARM_LEFT) && (strlen(pszPlayerSurvivorData[i].szDeceasedGibArmLeft) > 0))
 				return true;
 
-			if ((strlen(pszPlayerSurvivorData[i].szDeceasedGibArmRight) > 0) && (gibID == GIB_NO_ARM_RIGHT))
+			if ((gibID == GIB_NO_ARM_RIGHT) && (strlen(pszPlayerSurvivorData[i].szDeceasedGibArmRight) > 0))
 				return true;
 
-			if ((strlen(pszPlayerSurvivorData[i].szDeceasedGibLegLeft) > 0) && (gibID == GIB_NO_LEG_LEFT))
+			if ((gibID == GIB_NO_LEG_LEFT) && (strlen(pszPlayerSurvivorData[i].szDeceasedGibLegLeft) > 0))
 				return true;
 
-			if ((strlen(pszPlayerSurvivorData[i].szDeceasedGibLegRight) > 0) && (gibID == GIB_NO_LEG_RIGHT))
+			if ((gibID == GIB_NO_LEG_RIGHT) && (strlen(pszPlayerSurvivorData[i].szDeceasedGibLegRight) > 0))
 				return true;
 		}
 	}
@@ -1199,7 +1199,7 @@ float CGameDefinitionsShared::GetPlayerFirearmDamageScale(const char *weapon, in
 
 	for (int i = 0; i < pszPlayerWeaponData.Count(); i++)
 	{
-		if (!strcmp(pszPlayerWeaponData[i].szWeaponClass, weapon) && (entityType >= 0) && (entityType < NUM_DAMAGE_SCALES) && (pszPlayerWeaponData[i].iTeam == team) && (pszPlayerWeaponData[i].iGameMode == currentGamemode))
+		if ((entityType >= 0) && (entityType < NUM_DAMAGE_SCALES) && (pszPlayerWeaponData[i].iTeam == team) && (pszPlayerWeaponData[i].iGameMode == currentGamemode) && !strcmp(pszPlayerWeaponData[i].szWeaponClass, weapon))
 			return pszPlayerWeaponData[i].flDamageScale[entityType];
 	}
 
@@ -1217,7 +1217,7 @@ float CGameDefinitionsShared::GetPlayerLimbData(const char *limb, int team, bool
 
 	for (int i = 0; i < pszPlayerLimbData.Count(); i++)
 	{
-		if (!strcmp(pszPlayerLimbData[i].szLimb, limb) && (pszPlayerLimbData[i].iTeam == team) && (pszPlayerLimbData[i].iGameMode == currentGamemode))
+		if ((pszPlayerLimbData[i].iTeam == team) && (pszPlayerLimbData[i].iGameMode == currentGamemode) && !strcmp(pszPlayerLimbData[i].szLimb, limb))
 			return (bHealth ? pszPlayerLimbData[i].flHealth : pszPlayerLimbData[i].flScale);
 	}
 
@@ -1829,6 +1829,9 @@ const achievementStatItem_t GAME_STAT_AND_ACHIEVEMENT_DATA[CURRENT_ACHIEVEMENT_N
 	// Maps:
 	{ "ACH_MAP_LASTSTAND", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false },
 	{ "ACH_MAP_TERMOIL", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false },
+	{ "ACH_MAP_MECKLENBURG", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 750, false },
+	{ "ACH_MAP_COLTEC_C", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 750, false },
+	{ "ACH_MAP_IKROM", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 1000, true },
 	{ "ACH_MAP_ROOFTOP", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false },
 	{ "ACH_MAP_COLOSSEUM", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false },
 	{ "ACH_MAP_BARRACKS_ARENA", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false },
@@ -1836,7 +1839,8 @@ const achievementStatItem_t GAME_STAT_AND_ACHIEVEMENT_DATA[CURRENT_ACHIEVEMENT_N
 	{ "ACH_MAP_DEVILSCRYPT", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false },
 	{ "ACH_MAP_SWAMPTROUBLE", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false },
 	{ "ACH_MAP_SALVAGE", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 2000, false },
-	{ "ACH_MAP_CARNAGE", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 750, false },
+	{ "ACH_MAP_CARNAGE", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false },
+	{ "ACH_MAP_COLTEC_A", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false },
 
 	// Hidden:
 	{ "ACH_SECRET_WATCHYOURSTEP", "", 0, ACHIEVEMENT_TYPE_MAP, 0, true },

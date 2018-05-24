@@ -297,7 +297,7 @@ bool CGameDefinitionsMapData::IsMapWhiteListed(const char *pszMap)
 	bool bWhitelisted = false;
 	for (int i = 0; i < pszGameMaps.Count(); i++)
 	{
-		if (!strcmp(pszGameMaps[i].pszMapName, pszMap) && (pszGameMaps[i].iMapVerification >= MAP_VERIFIED_WHITELISTED))
+		if ((pszGameMaps[i].iMapVerification >= MAP_VERIFIED_WHITELISTED) && !strcmp(pszGameMaps[i].pszMapName, pszMap))
 		{
 			bWhitelisted = true;
 			break;

@@ -4,13 +4,14 @@
 //
 //========================================================================================//
 
-#include "soundenvelope.h"
-
 #ifndef ENV_FLARE_H
 #define ENV_FLARE_H
+
 #ifdef _WIN32
 #pragma once
 #endif
+
+#include "soundenvelope.h"
 
 #define	SF_FLARE_NO_DLIGHT	0x00000001
 #define	SF_FLARE_NO_SMOKE	0x00000002

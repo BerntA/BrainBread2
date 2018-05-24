@@ -93,7 +93,7 @@ private:
 
 	char szNextMap[MAX_MAP_NAME];
 	bool m_bShouldChangeMap;
-	float m_flChangeLevelTimeLerp;
+	float m_flTimeToChangeLevel;
 	float m_flLastProfileSystemStatusUpdateCheck;
 
 	// Server Blacklist - Get the IP of the server and check it via the LIBCURL data.

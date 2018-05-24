@@ -1209,8 +1209,7 @@ void CTempEnts::ClientSideGib(int modelindex, int body, int skin, const Vector& 
 	pEntity->m_nSkin = skin;
 	pEntity->SetAbsOrigin(pos);
 	pEntity->SetAbsAngles(angles);
-	pEntity->SetEffects(effects);
-	pEntity->SetForceFade(bShouldFadeRightAway);
+	pEntity->SetEffects(effects);	
 
 	if (!pEntity->Initialize(gibType))
 	{
@@ -1229,6 +1228,8 @@ void CTempEnts::ClientSideGib(int modelindex, int body, int skin, const Vector& 
 		pEntity->Release();
 		return;
 	}
+
+	pEntity->SetForceFade(bShouldFadeRightAway);
 }
 
 //-----------------------------------------------------------------------------

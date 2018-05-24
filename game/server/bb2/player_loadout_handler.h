@@ -17,7 +17,7 @@
 
 struct PlayerLoadoutItem_t
 {
-	char pchSteamID[MAX_WEAPON_STRING];
+	unsigned long long ullSteamID;
 
 	char pchActiveWeapon[MAX_WEAPON_STRING];
 	char pchLastWeapon[MAX_WEAPON_STRING];

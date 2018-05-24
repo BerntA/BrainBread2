@@ -876,7 +876,7 @@ bool CHL2MPRules::IsTeamplay(void)
 void CHL2MPRules::EmitSoundToClient(CBaseEntity *pAnnouncer, const char *szOriginalSound, int iType, bool bGenderMale, int playerIndex)
 {
 	// Disable stuff when waiting for transfer.
-	if (IsIntermission() || m_bShouldShowScores || g_fGameOver)
+	if (IsGameoverOrScoresVisible())
 		return;
 
 	int entindex = -1;
@@ -938,7 +938,7 @@ bool CHL2MPRules::CanSpawnZombie(void)
 
 void CHL2MPRules::EndRound(bool bRestart)
 {
-	if (IsIntermission() || m_bShouldShowScores || g_fGameOver)
+	if (IsGameoverOrScoresVisible())
 		return;
 
 	bool bEndGameNow = false;
@@ -1294,7 +1294,7 @@ void CHL2MPRules::ResetVote(bool bFullReset)
 
 bool CHL2MPRules::CanCreateVote(CBasePlayer *pVoter)
 {
-	if (!pVoter || g_fGameOver || m_bShouldShowScores || IsIntermission())
+	if (!pVoter || IsGameoverOrScoresVisible())
 		return false;
 
 	if (m_iCurrentVoteType)
@@ -2170,6 +2170,7 @@ void CHL2MPRules::ClientDisconnected( edict_t *pClient )
 			if (pBaseHL2MP->GetTeamNumber() == TEAM_HUMANS)
 				pBaseHL2MP->DropAllWeapons();
 
+			pBaseHL2MP->RemovePowerups();
 			pBaseHL2MP->HandleLocalProfile(true);
 			GameBaseShared()->GetAchievementManager()->SaveGlobalStats(pBaseHL2MP);
 			GameBaseShared()->RemoveInventoryItem(pBaseHL2MP->entindex(), pBaseHL2MP->GetAbsOrigin());
@@ -2191,7 +2192,7 @@ void CHL2MPRules::ClientDisconnected( edict_t *pClient )
 void CHL2MPRules::DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info)
 {
 #ifndef CLIENT_DLL
-	if (IsIntermission() || !pVictim || m_bShouldShowScores)
+	if (!pVictim || IsGameoverOrScoresVisible())
 		return;
 
 	CBaseEntity *pInflictor = info.GetInflictor();

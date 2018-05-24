@@ -9,6 +9,7 @@
 #include "triggers.h"
 #include "props.h"
 #include "saverestore_utlvector.h"
+#include "ai_basenpc.h"
 #include "hl2mp_gamerules.h"
 #include "hl2mp_player.h"
 #include "hl2mp_player_shared.h"
@@ -69,7 +70,8 @@ void CEntityCounter::FireGameEvent(IGameEvent *event)
 		if (!pAttacker || !m_isActive || !pVictim)
 			return;
 
-		if (pAttacker->IsNPC() && !bb2_allow_npc_to_score.GetBool())
+		bool bVictimIsABoss = (pVictim->IsNPC() && pVictim->MyNPCPointer() && (pVictim->MyNPCPointer()->IsBoss() || pVictim->IsHumanBoss() || pVictim->IsZombieBoss()));
+		if (!bVictimIsABoss && pAttacker->IsNPC() && !bb2_allow_npc_to_score.GetBool())
 			return;
 
 		if (!pAttacker->IsHuman(true))

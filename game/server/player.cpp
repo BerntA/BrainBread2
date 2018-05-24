@@ -5710,62 +5710,10 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 bool CBasePlayer::ClientCommand( const CCommand &args )
 {
 	const char *cmd = args[0];
-#ifdef _DEBUG
-	if( stricmp( cmd, "test_SmokeGrenade" ) == 0 )
-	{
-		if ( sv_cheats && sv_cheats->GetBool() )
-		{
-			ParticleSmokeGrenade *pSmoke = dynamic_cast<ParticleSmokeGrenade*>( CreateEntityByName(PARTICLESMOKEGRENADE_ENTITYNAME) );
-			if ( pSmoke )
-			{
-				Vector vForward;
-				AngleVectors( GetLocalAngles(), &vForward );
-				vForward.z = 0;
-				VectorNormalize( vForward );
 
-				pSmoke->SetLocalOrigin( GetLocalOrigin() + vForward * 100 );
-				pSmoke->SetFadeTime(25, 30);	// Fade out between 25 seconds and 30 seconds.
-				pSmoke->Activate();
-				pSmoke->SetLifetime(30);
-				pSmoke->FillVolume();
-
-				return true;
-			}
-		}
-	}
-	else
-#endif // _DEBUG
-	if( stricmp( cmd, "vehicleRole" ) == 0 )
+	if ( stricmp( cmd, "spectate" ) == 0 ) // join spectator team & start observer mode
 	{
-		// Get the vehicle role value.
-		if ( args.ArgC() == 2 )
-		{
-			// Check to see if a player is in a vehicle.
-			if ( IsInAVehicle() )
-			{
-				int nRole = atoi( args[1] );
-				IServerVehicle *pVehicle = GetVehicle();
-				if ( pVehicle )
-				{
-					// Only switch roles if role is empty!
-					if ( !pVehicle->GetPassenger( nRole ) )
-					{
-						LeaveVehicle();
-						GetInVehicle( pVehicle, nRole );
-					}
-				}			
-			}
-
-			return true;
-		}
-	}
-	else if ( HandleVoteCommands( args ) )
-	{
-		return true;
-	}
-	else if ( stricmp( cmd, "spectate" ) == 0 ) // join spectator team & start observer mode
-	{
-		if ( GetTeamNumber() == TEAM_SPECTATOR )
+		if ((GetTeamNumber() == TEAM_SPECTATOR) || !sv_cheats->GetBool())
 			return true;
 
 		ConVarRef mp_allowspectators( "mp_allowspectators" );
@@ -5935,6 +5883,9 @@ bool CBasePlayer::ClientCommand( const CCommand &args )
 	}
 	else if ( stricmp( cmd, "playerperf" ) == 0 )
 	{
+		if (!sv_cheats->GetBool())
+			return true;
+
 		int nRecip = entindex();
 		if ( args.ArgC() >= 2 )
 		{

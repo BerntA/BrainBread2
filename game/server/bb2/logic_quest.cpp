@@ -8,6 +8,7 @@
 #include "hl2mp_player.h"
 #include "hl2mp_gamerules.h"
 #include "logic_quest.h"
+#include "ai_basenpc.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -415,7 +416,8 @@ void CLogicQuest::FireGameEvent(IGameEvent *event)
 			if (!ShouldShowEntityCounting())
 				return;
 
-			if (pAttacker->IsNPC() && !bb2_allow_npc_to_score.GetBool())
+			bool bVictimIsABoss = (pVictim->IsNPC() && pVictim->MyNPCPointer() && (pVictim->MyNPCPointer()->IsBoss() || pVictim->IsHumanBoss() || pVictim->IsZombieBoss()));
+			if (!bVictimIsABoss && pAttacker->IsNPC() && !bb2_allow_npc_to_score.GetBool())
 				return;
 
 			if (!pAttacker->IsHuman(true))

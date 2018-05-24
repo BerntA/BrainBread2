@@ -4635,8 +4635,8 @@ C_BaseAnimating *C_BaseAnimating::CreateRagdollCopy()
 	if (MyNPCPointer())
 		Q_strncpy(pRagdoll->pchNPCName, MyNPCPointer()->GetNPCName(), 32);
 
-	pRagdoll->SetForceFade(bFadeRightAway);
 	pRagdoll->SetGibType(CLIENT_RAGDOLL);
+	pRagdoll->SetForceFade(bFadeRightAway);	
 
 	// move my current model instance to the ragdoll's so decals are preserved.
 	SnatchModelInstance( pRagdoll );

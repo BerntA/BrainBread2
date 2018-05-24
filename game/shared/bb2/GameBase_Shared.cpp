@@ -49,11 +49,8 @@ static void __MsgFunc_InventoryUpdate(bf_read &msg)
 		msg.ReadString(pszEntityLink, 80);
 
 	int itemIndex = GameBaseShared()->GetInventoryItemIndex(iItemID, bMapItem);
-	if (itemIndex == -1)
-	{
-		if (iAction == INV_ACTION_REMOVE)
-			return;
-	}
+	if ((itemIndex == -1) && (iAction == INV_ACTION_REMOVE))
+		return;
 
 	if (iAction == INV_ACTION_REMOVE)
 		GameBaseShared()->GetGameInventory().Remove(itemIndex);
@@ -68,7 +65,7 @@ static void __MsgFunc_InventoryUpdate(bf_read &msg)
 }
 #endif
 
-CGameBaseShared gGameBaseShared;
+static CGameBaseShared gGameBaseShared;
 CGameBaseShared* GameBaseShared()
 {
 	return &gGameBaseShared;
@@ -121,21 +118,18 @@ void CGameBaseShared::LoadBase()
 
 	// We load our base values and such:
 	m_pSharedGameDefinitions = new CGameDefinitionsShared();
-	if (m_pSharedGameDefinitions)
-	{
-#ifdef CLIENT_DLL
-		Msg("Client loaded the game base successfully!\n");
-#else
-		Msg("Server loaded the game base successfully!\n");
-#endif
-	}
-
 	m_pSharedGameMapData = new CGameDefinitionsMapData();
 	m_pSharedNPCData = new CGameDefinitionsNPC();
 
 #ifdef CLIENT_DLL
 	if (m_pMusicSystem)
 		m_pMusicSystem->ParseMusicData();
+#endif
+
+#ifdef CLIENT_DLL
+	Msg("Client loaded the game base successfully!\n");
+#else
+	Msg("Server loaded the game base successfully!\n");
 #endif
 }
 
@@ -183,15 +177,15 @@ void CGameBaseShared::Release()
 
 void CGameBaseShared::CheckGameVersion(void)
 {
-	const char *szResult = "Invalid";
 	KeyValues *pkvData = ReadEncryptedKVFile(filesystem, "Version", GetEncryptionKey(), true);
 	if (pkvData)
 	{
-		szResult = ReadAndAllocStringValue(pkvData, "Game");
+		Q_strncpy(pszGameVersion, pkvData->GetString("Game", "Invalid"), 32);
 		pkvData->deleteThis();
+		return;
 	}
 
-	Q_strncpy(pszGameVersion, szResult, 32);
+	Q_strncpy(pszGameVersion, "Invalid", 32);
 }
 
 ////////////////////////////////////////////////
@@ -418,8 +412,6 @@ float CGameBaseShared::GetDropOffDamage(const Vector &vecStart, const Vector &ve
 ///////////////////////////////////////////////
 float CGameBaseShared::GetSequenceDuration(CStudioHdr *ptr, int sequence)
 {
-	float duration = 0.0f;
-
 	if (ptr)
 	{
 		int sequences = ptr->GetNumSeq();
@@ -430,13 +422,12 @@ float CGameBaseShared::GetSequenceDuration(CStudioHdr *ptr, int sequence)
 			if (seqdesc.activity == sequence)
 			{
 				float numFrames = ((float)animdesc.numframes);
-				duration = (numFrames / animdesc.fps);
-				break;
+				return (numFrames / animdesc.fps);
 			}
 		}
 	}
 
-	return duration;
+	return 0.0f;
 }
 
 ////////////////////////////////////////////////
@@ -794,7 +785,7 @@ void CGameBaseShared::RemoveInventoryItem(int iPlayerIndex, const Vector &vecAbs
 					pEntity->SetLocalOrigin(endPoint);
 					pEntity->SetItem(szModel, iID, pszInventoryList[i].szEntityLink, pszInventoryList[i].bIsMapItem);
 					pEntity->Spawn();
-		 
+
 					const model_t *pModel = modelinfo->GetModel(pEntity->GetModelIndex());
 					if (pModel)
 					{
@@ -895,7 +886,6 @@ bool CGameBaseShared::HasObjectiveGlowItems(CHL2MP_Player *pClient)
 	if (!pClient)
 		return false;
 
-	bool bFound = false;
 	for (int i = (pszInventoryList.Count() - 1); i >= 0; i--)
 	{
 		if (pszInventoryList[i].m_iPlayerIndex == pClient->entindex())
@@ -905,14 +895,11 @@ bool CGameBaseShared::HasObjectiveGlowItems(CHL2MP_Player *pClient)
 				continue;
 
 			if ((itemData->iType == TYPE_OBJECTIVE) && ((itemData->iSubType == TYPE_REMOVABLE_GLOW) || (itemData->iSubType == TYPE_VITAL)))
-			{
-				bFound = true;
-				break;
-			}
+				return true;
 		}
 	}
 
-	return bFound;
+	return false;
 }
 
 ////////////////////////////////////////////////
@@ -1044,6 +1031,12 @@ void CGameBaseShared::OnGameOver(float timeLeft, int iWinner)
 			pAchievement = "ACH_MAP_LASTSTAND";
 		else if (!strcmp(currMap, "bbc_termoil"))
 			pAchievement = "ACH_MAP_TERMOIL";
+		else if (!strcmp(currMap, "bbc_mecklenburg"))
+			pAchievement = "ACH_MAP_MECKLENBURG";
+		else if (!strcmp(currMap, "bbc_coltec"))
+			pAchievement = "ACH_MAP_COLTEC_C";
+		else if (!strcmp(currMap, "bbc_ikrom"))
+			pAchievement = "ACH_MAP_IKROM";
 		else if (!strcmp(currMap, "bba_rooftop"))
 			pAchievement = "ACH_MAP_ROOFTOP";
 		else if (!strcmp(currMap, "bba_colosseum"))
@@ -1060,6 +1053,8 @@ void CGameBaseShared::OnGameOver(float timeLeft, int iWinner)
 			pAchievement = "ACH_MAP_SALVAGE";
 		else if (!strcmp(currMap, "bba_carnage"))
 			pAchievement = "ACH_MAP_CARNAGE";
+		else if (!strcmp(currMap, "bba_coltec"))
+			pAchievement = "ACH_MAP_COLTEC_A";
 	}
 
 	if (GetAchievementManager() && !bTimeOut)
@@ -1198,8 +1193,7 @@ CON_COMMAND_F(bb2_give_armor_type, "Give Temp Armor Type", FCVAR_CHEAT)
 #else
 CON_COMMAND(reload_gamebase_client, "Reload the game base content.(full reparse)")
 {
-	ConVarRef cheats("sv_cheats");
-
+	static ConVarRef cheats("sv_cheats");
 	if (!cheats.GetBool())
 		return;
 

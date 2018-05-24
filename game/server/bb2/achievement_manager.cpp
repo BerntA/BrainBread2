@@ -9,7 +9,7 @@
 #include "GameBase_Shared.h"
 #include "GameBase_Server.h"
 
-globalStatItem_t szGameStats[] =
+static globalStatItem_t szGameStats[] =
 {
 	{ "BBX_ST_XP_CURRENT", 0 },
 	{ "BBX_ST_XP_LEFT", 65 },
@@ -157,7 +157,7 @@ bool CAchievementManager::WriteToStat(CHL2MP_Player *pPlayer, const char *szStat
 	// Give us achievements if the stats related to certain achievs have been surpassed.
 	for (int i = 0; i < CURRENT_ACHIEVEMENT_NUMBER; i++)
 	{
-		if (!strcmp(szStat, GAME_STAT_AND_ACHIEVEMENT_DATA[i].szStat) && (GAME_STAT_AND_ACHIEVEMENT_DATA[i].maxValue <= iCurrentValue) && (strlen(GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement) > 0))
+		if ((GAME_STAT_AND_ACHIEVEMENT_DATA[i].maxValue <= iCurrentValue) && !strcmp(szStat, GAME_STAT_AND_ACHIEVEMENT_DATA[i].szStat) && (strlen(GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement) > 0))
 			WriteToAchievement(pPlayer, GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement);
 	}
 
@@ -217,7 +217,7 @@ bool CAchievementManager::CanWrite(CHL2MP_Player *pClient, const char *param, bo
 		return false;
 
 	// Are we using stats, and has cheats NOT been on?
-	if ((GameBaseServer()->CanStoreSkills() != PROFILE_GLOBAL))
+	if (GameBaseServer()->CanStoreSkills() != PROFILE_GLOBAL)
 		return false;
 
 	// Make sure that our interfaces have been locked and loaded.
@@ -247,17 +247,13 @@ bool CAchievementManager::CanWriteToType(const char *param, int iType)
 	if (iType <= 0)
 		return true;
 
-	bool bCanAchieve = false;
 	for (int i = 0; i < CURRENT_ACHIEVEMENT_NUMBER; i++)
 	{
-		if (!strcmp(GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement, param) && (iType == GAME_STAT_AND_ACHIEVEMENT_DATA[i].type))
-		{
-			bCanAchieve = true;
-			break;
-		}
+		if ((iType == GAME_STAT_AND_ACHIEVEMENT_DATA[i].type) && !strcmp(GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement, param))
+			return true;
 	}
 
-	return bCanAchieve;
+	return false;
 }
 
 // Get the highest value for this stat. (if it is defined for multiple achievements it will have different max values)
@@ -266,7 +262,7 @@ int CAchievementManager::GetMaxValueForStat(const char *szStat)
 	int iValue = 0;
 	for (int i = 0; i < CURRENT_ACHIEVEMENT_NUMBER; i++)
 	{
-		if (!strcmp(szStat, GAME_STAT_AND_ACHIEVEMENT_DATA[i].szStat) && (iValue < GAME_STAT_AND_ACHIEVEMENT_DATA[i].maxValue))
+		if ((iValue < GAME_STAT_AND_ACHIEVEMENT_DATA[i].maxValue) && !strcmp(szStat, GAME_STAT_AND_ACHIEVEMENT_DATA[i].szStat))
 			iValue = GAME_STAT_AND_ACHIEVEMENT_DATA[i].maxValue;
 	}
 

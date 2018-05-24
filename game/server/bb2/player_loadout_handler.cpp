@@ -47,7 +47,7 @@ void CPlayerLoadoutHandler::SaveLoadoutData()
 
 		PlayerLoadoutItem_t item;
 
-		Q_snprintf(item.pchSteamID, MAX_WEAPON_STRING, "%llu", pPlayer->GetSteamIDAsUInt64());
+		item.ullSteamID = pPlayer->GetSteamIDAsUInt64();
 		for (int wep = 0; wep < PLAYER_MAX_CARRY_WEPS; wep++)
 		{
 			const char *weaponClassname = "";
@@ -100,12 +100,10 @@ bool CPlayerLoadoutHandler::LoadDataForPlayer(CHL2MP_Player *pPlayer)
 {
 	if (CanHandle() && pPlayer)
 	{
-		char steamID[MAX_WEAPON_STRING];
-		Q_snprintf(steamID, MAX_WEAPON_STRING, "%llu", pPlayer->GetSteamIDAsUInt64());
-
+		unsigned long long steamID = pPlayer->GetSteamIDAsUInt64();
 		for (int i = (m_pLoadoutList.Count() - 1); i >= 0; i--)
 		{
-			if (!strcmp(steamID, m_pLoadoutList[i].pchSteamID))
+			if (m_pLoadoutList[i].ullSteamID == steamID)
 			{
 				pPlayer->SetHealth(m_pLoadoutList[i].iHealth);
 				pPlayer->SetMaxHealth(m_pLoadoutList[i].iMaxHealth);
@@ -156,12 +154,10 @@ void CPlayerLoadoutHandler::RemoveDataForPlayer(CBasePlayer *pPlayer)
 
 	if (pPlayer && CanHandle())
 	{
-		char steamID[MAX_WEAPON_STRING];
-		Q_snprintf(steamID, MAX_WEAPON_STRING, "%llu", pPlayer->GetSteamIDAsUInt64());
-
+		unsigned long long steamID = pPlayer->GetSteamIDAsUInt64();
 		for (int i = (m_pLoadoutList.Count() - 1); i >= 0; i--)
 		{
-			if (!strcmp(steamID, m_pLoadoutList[i].pchSteamID))
+			if (m_pLoadoutList[i].ullSteamID == steamID)
 				m_pLoadoutList.Remove(i);
 		}
 	}
