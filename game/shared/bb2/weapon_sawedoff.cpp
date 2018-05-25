@@ -7,19 +7,10 @@
 #include "cbase.h"
 #include "npcevent.h"
 #include "in_buttons.h"
-#include "baseentity_shared.h"
-#include "ammodef.h"
-
-#ifdef CLIENT_DLL
-#include "c_hl2mp_player.h"
-#include "c_baseentity.h"
-#include "GameBase_Client.h"
-#else
-#include "baseentity.h"
-#include "hl2mp_player.h"
-#endif
-
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
+
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
 
 #ifdef CLIENT_DLL
 #define CWeaponSawedOff C_WeaponSawedOff

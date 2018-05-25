@@ -6,16 +6,12 @@
 
 #include "cbase.h"
 #include "npcevent.h"
-#include "in_buttons.h"
 #include "GameBase_Shared.h"
 
 #ifdef CLIENT_DLL
-#include "c_hl2mp_player.h"
 #include "c_te_effect_dispatch.h"
 #else
-#include "hl2mp_player.h"
 #include "te_effect_dispatch.h"
-#include "grenade_frag.h"
 #endif
 
 #include "basegrenade_shared.h"

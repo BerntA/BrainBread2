@@ -41,9 +41,7 @@ bool IsAllowedToSpawn(CBaseEntity *pEntity)
 		if (pClient->Classify() != CLASS_PLAYER || !pClient->IsAlive() || pClient->IsObserver())
 			continue;
 
-		Vector vecDistance = pClient->GetAbsOrigin();
-		//Msg("Dist %f\n", pEntity->GetAbsOrigin().DistTo(vecDistance));
-		if ((pEntity->GetAbsOrigin().DistTo(vecDistance) < bb2_zombie_spawner_distance.GetFloat()) && pEntity->FVisible(pClient, MASK_VISIBLE))
+		if ((pEntity->GetLocalOrigin().DistTo(pClient->GetLocalOrigin()) < bb2_zombie_spawner_distance.GetFloat()) && pEntity->FVisible(pClient, MASK_VISIBLE))
 			return true;
 	}
 
@@ -164,13 +162,13 @@ void CZombieVolume::InputStopSpawn(inputdata_t &inputData)
 void CZombieVolume::TraceZombieBBox(const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm, CBaseEntity *pEntity)
 {
 	Vector ZombieMins = Vector(-50, -50, 0);
-	Vector ZombieMax = Vector(50, 50, 82);
+	Vector ZombieMax = Vector(50, 50, 75);
 
 	// Here the zombies will spawn standing up, not lying down, use a smaller hull!
 	if (HasSpawnFlags(SF_FASTSPAWN))
 	{
 		ZombieMins = Vector(-16, -16, 0);
-		ZombieMax = Vector(16, 16, 82);
+		ZombieMax = Vector(16, 16, 75);
 	}
 
 	Ray_t ray;
@@ -185,43 +183,14 @@ void CZombieVolume::SpawnWave()
 		return;
 
 	bool bCouldSpawn = true;
+	Vector vecBoundsMaxs = CollisionProp()->OBBMaxs(),
+		vecBoundsMins = CollisionProp()->OBBMins();
 
-	float triggerWidth = CollisionProp()->OBBSize().x;
-	float triggerHeight = CollisionProp()->OBBSize().y;
-
-	float xPos = triggerWidth / 2.0f;
-	float yPos = triggerHeight / 2.0f;
-
-	// Start filling MULTIPOS
-	Vector newPos;
-	Vector vecVolumePos = GetAbsOrigin();
-	int randomPlusOrMinus = random->RandomInt(1, 2);
-	float RandomXPlus = random->RandomFloat(vecVolumePos.x, (vecVolumePos.x + xPos));
-	float RandomYPlus = random->RandomFloat(vecVolumePos.y, (vecVolumePos.y + yPos));
-	float RandomXMinus = random->RandomFloat((vecVolumePos.x - xPos), vecVolumePos.x);
-	float RandomYMinus = random->RandomFloat((vecVolumePos.y - yPos), vecVolumePos.y);
-
-	switch (randomPlusOrMinus)
-	{
-	case 1:
-	{
-		newPos = Vector(RandomXPlus, RandomYPlus, vecVolumePos.z);
-		break;
-	}
-	case 2:
-	{
-		newPos = Vector(RandomXMinus, RandomYMinus, vecVolumePos.z);
-		break;
-	}
-	default:
-	{
-		newPos = Vector(RandomXPlus, RandomYPlus, vecVolumePos.z);
-		break;
-	}
-	}
+	Vector newPos = GetLocalOrigin() +
+		Vector(random->RandomFloat(vecBoundsMins.x, vecBoundsMaxs.x), random->RandomFloat(vecBoundsMins.y, vecBoundsMaxs.y), 0);
 
 	Vector vecDown;
-	AngleVectors(GetAbsAngles(), NULL, NULL, &vecDown);
+	AngleVectors(GetLocalAngles(), NULL, NULL, &vecDown);
 	VectorNormalize(vecDown);
 	vecDown *= -1;
 

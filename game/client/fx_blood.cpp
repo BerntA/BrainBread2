@@ -507,7 +507,7 @@ DECLARE_CLIENT_EFFECT( "bloodspray", BloodSprayCallback );
 void BloodImpactCallback( const CEffectData & data )
 {
 	float lastTime = gpGlobals->curtime - m_flLastBloodParticleDispatchTime;
-	if (lastTime < 0.1f)
+	if (lastTime <= 0.1f)
 		return;
 
 	if (random->RandomInt(0, 100) > bb2_gibs_blood_chance.GetInt())

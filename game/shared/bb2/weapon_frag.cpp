@@ -10,10 +10,8 @@
 #include "GameBase_Shared.h"
 
 #ifdef CLIENT_DLL
-	#include "c_hl2mp_player.h"
 	#include "c_te_effect_dispatch.h"
 #else
-	#include "hl2mp_player.h"
 	#include "te_effect_dispatch.h"
 	#include "grenade_frag.h"
 #endif
@@ -126,7 +124,7 @@ BEGIN_NETWORK_TABLE( CWeaponFrag, DT_WeaponFrag )
 	RecvPropFloat(RECVINFO(m_flLongestHoldTime)),
 #else
 	SendPropBool( SENDINFO( m_bRedraw ) ),
-	SendPropInt( SENDINFO( m_AttackPaused ) ),
+	SendPropInt( SENDINFO( m_AttackPaused ), 2, SPROP_UNSIGNED),
 	SendPropFloat(SENDINFO(m_flSoonestThrowTime)),
 	SendPropFloat(SENDINFO(m_flLongestHoldTime)),
 #endif
@@ -337,21 +335,18 @@ void CWeaponFrag::OnThrewGrenade(bool bCheckRemove)
 	m_flNextSecondaryAttack = gpGlobals->curtime + RETHROW_DELAY;
 	m_flTimeWeaponIdle = FLT_MAX; //NOTE: This is set once the animation has finished up!
 
-#ifdef BB2_AI		
-	// Make a sound designed to scare snipers back into their holes!
+#ifdef BB2_AI			
 	CBaseCombatCharacter *pOwner = GetOwner();
 	if (pOwner)
 	{
 		Vector vecSrc = pOwner->Weapon_ShootPosition();
-		Vector	vecDir;
-
+		Vector vecDir;
 		AngleVectors(pOwner->EyeAngles(), &vecDir);
 
 		trace_t tr;
-
 		UTIL_TraceLine(vecSrc, vecSrc + vecDir * 1024, MASK_SOLID_BRUSHONLY, pOwner, COLLISION_GROUP_NONE, &tr);
 
-		CSoundEnt::InsertSound(SOUND_DANGER_SNIPERONLY, tr.endpos, 384, 0.2, pOwner);
+		CSoundEnt::InsertSound(SOUND_DANGER, tr.endpos, 384, 0.2, pOwner);
 	}
 #endif //BB2_AI
 

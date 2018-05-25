@@ -5,22 +5,12 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "weapon_hl2mpbasehlmpcombatweapon.h"
-#include "weapon_hl2mpbasebasebludgeon.h"
 #include "weapon_melee_chargeable.h"
-#include "gamerules.h"
-#include "ammodef.h"
-#include "mathlib/mathlib.h"
-#include "in_buttons.h"
-#include "vstdlib/random.h"
-#include "npcevent.h"
-#include "GameBase_Shared.h"
 
 #if defined( CLIENT_DLL )
 #include "c_hl2mp_player.h"
 #else
 #include "hl2mp_player.h"
-#include "ai_basenpc.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
