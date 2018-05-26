@@ -6,7 +6,6 @@
 
 #include "cbase.h"
 #include "smart_trigger.h"
-#include "triggers.h"
 #include "hl2mp_player.h"
 #include "player.h"
 

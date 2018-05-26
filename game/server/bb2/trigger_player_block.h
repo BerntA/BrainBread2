@@ -10,8 +10,6 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-#include "baseentity_shared.h"
 #include "triggers.h"
 
 class CTriggerPlayerBlock : public CBaseTrigger

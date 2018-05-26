@@ -10,7 +10,6 @@
 #include "game_music.h"
 #include "GameBase_Shared.h"
 #include "inetchannelinfo.h"
-#include "baseentity.h"
 #include "ai_basenpc.h"
 #include "movevars_shared.h"
 #include "world.h"

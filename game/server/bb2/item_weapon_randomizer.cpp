@@ -10,7 +10,6 @@
 #include "hl2mp_player.h"
 #include "GameBase_Server.h"
 #include "GameBase_Shared.h"
-#include "objective_icon.h"
 #include "basecombatweapon_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

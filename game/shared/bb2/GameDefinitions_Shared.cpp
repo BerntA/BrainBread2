@@ -809,6 +809,7 @@ bool CGameDefinitionsShared::Precache(void)
 	PrecacheParticleSystem("Rocket");
 	PrecacheParticleSystem("water_splash_01"); // TFO Rain Effects
 	PrecacheParticleSystem("bb2_item_spawn");
+	PrecacheParticleSystem("blood_mist");
 
 	// Impacts
 	PrecacheParticleSystem("impact_concrete");

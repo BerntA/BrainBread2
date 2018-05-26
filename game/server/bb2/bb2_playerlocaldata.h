@@ -10,7 +10,6 @@
 #pragma once
 #endif
 
-#include "cbase.h"
 #include "baseentity.h"
 #include "networkvar.h"
 #include "skills_shareddefs.h"

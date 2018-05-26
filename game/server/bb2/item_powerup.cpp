@@ -6,14 +6,9 @@
 
 #include "cbase.h"
 #include "gamerules.h"
-#include "baseanimating.h"
 #include "items.h"
 #include "hl2_player.h"
-#include "basecombatweapon.h"
 #include "hl2mp_gamerules.h"
-#include "player.h"
-#include "npcevent.h"
-#include "eventlist.h"
 #include "GameBase_Shared.h"
 
 class CItemPowerup : public CItem

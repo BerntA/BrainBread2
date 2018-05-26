@@ -6,7 +6,6 @@
 
 #include "cbase.h"
 #include "trigger_achievement.h"
-#include "triggers.h"
 #include "hl2mp_player.h"
 #include "GameBase_Server.h"
 

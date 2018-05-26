@@ -10,8 +10,6 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-#include "dt_recv.h"
 #include "c_baseentity.h"
 #include "skills_shareddefs.h"
 

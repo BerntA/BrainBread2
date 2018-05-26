@@ -14,6 +14,8 @@
 
 using namespace FMOD;
 
+#define FMOD_FADE_TIME 1.5f
+
 System			*pSystem;
 Sound			*pSound;
 SoundGroup		*pSoundGroup;
@@ -35,9 +37,7 @@ CFMODManager::CFMODManager()
 	m_bFadeOut = false;
 	m_bIsPlayingSound = false;
 	m_bShouldLoop = false;
-	bShouldPlayInSequence = false;
-	bShouldMuteFMOD = false;
-	bIsFMODMuted = false;
+	m_flTime = m_flFadeOutTime = 0.0f;
 }
 
 CFMODManager::~CFMODManager()
@@ -54,7 +54,6 @@ void CFMODManager::InitFMOD(void)
 		DevMsg("FMOD system successfully created.\n");
 
 	result = pSystem->init(100, FMOD_INIT_NORMAL, 0);   // Initialize FMOD system.
-
 	if (result != FMOD_OK)
 		Warning("FMOD ERROR: Failed to initialize properly!\n");
 	else
@@ -67,7 +66,6 @@ void CFMODManager::InitFMOD(void)
 void CFMODManager::ExitFMOD(void)
 {
 	result = pSystem->release();
-
 	if (result != FMOD_OK)
 		Warning("FMOD ERROR: System did not terminate properly!\n");
 	else
@@ -104,10 +102,16 @@ const char *CFMODManager::GetCurrentSoundName(void)
 void CFMODManager::FadeThink(void)
 {
 	// Do we wish to play the in game soundtracks? If not, play on demand. (forced from main menu (transit only))
-	bShouldPlayInSequence = GameBaseClient->IsInGame();
-	bShouldMuteFMOD = (engine->IsPaused() || (m_pVarMuteSoundFocus && m_pVarMuteSoundFocus->GetBool() && !engine->IsActiveApp()));
-	if (pChannel && (bShouldMuteFMOD != bIsFMODMuted))
-		pChannel->setMute(bShouldMuteFMOD);
+	bool bShouldPlayInSequence = GameBaseClient->IsInGame();
+	bool bShouldMuteFMOD = (engine->IsPaused() || (m_pVarMuteSoundFocus && m_pVarMuteSoundFocus->GetBool() && !engine->IsActiveApp()));
+	bool bIsMuted = false;
+
+	if (pChannel)
+	{
+		pChannel->getMute(&bIsMuted);
+		if (bIsMuted != bShouldMuteFMOD)
+			pChannel->setMute(bShouldMuteFMOD);
+	}
 
 	// Fading out uses this volume as 100%...
 	if (m_pVarMusicVolume)
@@ -119,9 +123,8 @@ void CFMODManager::FadeThink(void)
 
 	if (m_bFadeIn || m_bFadeOut)
 	{
-		float flMilli = MAX(0.0f, 1000.0f - m_flLerp);
-		float flSec = flMilli * 0.001f;
-		if ((flSec >= 1.0))
+		float timeFraction = clamp(((engine->Time() - m_flTime) / FMOD_FADE_TIME), 0.0f, 1.0f);
+		if (timeFraction >= 1.0f)
 		{
 			if (m_bFadeIn)
 			{
@@ -132,65 +135,29 @@ void CFMODManager::FadeThink(void)
 			if (m_bFadeOut)
 			{
 				m_bFadeOut = false;
-
 				Q_strncpy(szActiveSound, "", MAX_WEAPON_STRING); // clear active sound.
 
 				// find the next sound, if we have a transit sound, prio that one.
 				if (strlen(szTransitSound) > 0)
-				{
 					PlayAmbientSound(szTransitSound, m_bShouldLoop);
-				}
-				else if (bShouldPlayInSequence) // If there's no transit sound and we're in game (no bg map) then continue playing the soundtrack!
-				{
+				else if (bShouldPlayInSequence) // If there's no transit sound and we're in game (no bg map) then continue playing the soundtrack!				
 					GetMusicSystem->RunAmbientSoundTrack();
-				}
 			}
 		}
 		else
-		{
-			float flFrac = SimpleSpline(flSec / 1.0);
-			pChannel->setVolume((m_bFadeIn ? flFrac : (1.0f - flFrac)) * m_flVolume);
-		}
+			pChannel->setVolume((m_bFadeIn ? timeFraction : (1.0f - timeFraction)) * m_flVolume);
 	}
 
 	// Update our volume and count down to the point where we need to fade out.
 	if (m_bIsPlayingSound)
 	{
 		pChannel->setVolume(m_flVolume);
-
-		float flMilli = MAX(0.0f, m_flTimeConstant - m_flSoundLength);
-		float flSec = flMilli * 0.001f;
-		if ((flSec >= m_flFadeOutTime))
-		{
-			m_bFadeOut = true;
-			m_bIsPlayingSound = false;
-			m_flLerp = 1000.0f;
-		}
-
-		// Msg("Time Left : %i sec\nTime Elapsed : %i sec\n", (int)(m_flSoundLength / 1000), (int)flSec);
-	}
-
-	// Update our timer which we use to interpolate the fade in and out *delay* from 0 to 100% volume.
-	float frame_msec = 1000.0f * gpGlobals->frametime;
-
-	if (m_flLerp > 0)
-	{
-		m_flLerp -= frame_msec;
-		if (m_flLerp < 0)
-			m_flLerp = 0;
-	}
-
-	if (m_flSoundLength > 0)
-	{
-		m_flSoundLength -= frame_msec;
-		if (m_flSoundLength < 0)
-			m_flSoundLength = 0;
+		if (engine->Time() >= m_flFadeOutTime)
+			StopAmbientSound(true);
 	}
 
 	if (pSystem)
 		pSystem->update();
-
-	bIsFMODMuted = bShouldMuteFMOD;
 }
 
 void CFMODManager::PlayLoadingMusic(const char *szSoundPath)
@@ -203,7 +170,6 @@ void CFMODManager::PlayLoadingMusic(const char *szSoundPath)
 	Q_strncpy(szTransitSound, "", MAX_WEAPON_STRING); // clear transit sound.
 
 	result = pSystem->createStream(GetFullPathToSound(szSoundPath), FMOD_DEFAULT, 0, &pSound);
-
 	if (result != FMOD_OK)
 	{
 		Warning("FMOD: Failed to create stream of sound '%s' ! (ERROR NUMBER: %i)\n", szSoundPath, result);
@@ -211,7 +177,6 @@ void CFMODManager::PlayLoadingMusic(const char *szSoundPath)
 	}
 
 	result = pSystem->playSound(FMOD_CHANNEL_REUSE, pSound, false, &pChannel);
-
 	if (result != FMOD_OK)
 	{
 		Warning("FMOD: Failed to play sound '%s' ! (ERROR NUMBER: %i)\n", szSoundPath, result);
@@ -225,11 +190,10 @@ void CFMODManager::PlayLoadingMusic(const char *szSoundPath)
 bool CFMODManager::PlayAmbientSound(const char *szSoundPath, bool bLoop)
 {
 	// We don't want to play the same sound or any other before it is done!
-	if (!strcmp(szSoundPath, szActiveSound) || m_bFadeOut || m_bFadeIn || m_bIsPlayingSound)
+	if (m_bFadeOut || m_bFadeIn || m_bIsPlayingSound || !strcmp(szSoundPath, szActiveSound))
 		return false;
 
 	result = pSystem->createStream(GetFullPathToSound(szSoundPath), FMOD_DEFAULT, 0, &pSound);
-
 	if (result != FMOD_OK)
 	{
 		Warning("FMOD: Failed to create stream of sound '%s' ! (ERROR NUMBER: %i)\n", szSoundPath, result);
@@ -237,24 +201,23 @@ bool CFMODManager::PlayAmbientSound(const char *szSoundPath, bool bLoop)
 	}
 
 	result = pSystem->playSound(FMOD_CHANNEL_REUSE, pSound, false, &pChannel);
-
 	if (result != FMOD_OK)
 	{
 		Warning("FMOD: Failed to play sound '%s' ! (ERROR NUMBER: %i)\n", szSoundPath, result);
 		return false;
 	}
 
-	pChannel->setVolume(0.0); // we fade in no matter what, we will now go ahead and play a new file (.wav).
+	pChannel->setVolume(0.0f); // we fade in no matter what, we will now go ahead and play a new file (.wav).
 
 	// Get the length of the sound and set the timer to countdown.
 	uint lengthOfSound;
 	pSound->getLength(&lengthOfSound, FMOD_TIMEUNIT_MS);
+	float flLengthOfSound = ((float)lengthOfSound);
+	flLengthOfSound /= 1000.0f;
+	flLengthOfSound = floor(flLengthOfSound);
 
-	m_flLerp = 1000.0f; // Fade Time.
-	m_flSoundLength = ((float)lengthOfSound);
-	m_flTimeConstant = m_flSoundLength;
-	m_flFadeOutTime = ((m_flSoundLength - 1000.0f) / 1000); // We fade out 1 sec before the sound is over.
-
+	m_flTime = engine->Time();
+	m_flFadeOutTime = m_flTime + flLengthOfSound - FMOD_FADE_TIME; // We fade out X sec before the sound is over.	
 	Q_strncpy(szActiveSound, szSoundPath, MAX_WEAPON_STRING);
 
 	// WE only loop transit sounds.
@@ -262,21 +225,20 @@ bool CFMODManager::PlayAmbientSound(const char *szSoundPath, bool bLoop)
 		Q_strncpy(szTransitSound, "", MAX_WEAPON_STRING); // clear transit sound.
 
 	m_bFadeIn = true;
-
 	return true;
 }
 
 // Abruptly stops playing current ambient sound.
-void CFMODManager::StopAmbientSound(void)
+void CFMODManager::StopAmbientSound(bool force)
 {
 	// If the active sound is NULL then don't care.
-	if (!szActiveSound || (strlen(szActiveSound) <= 0))
+	if (!force && (!szActiveSound || (strlen(szActiveSound) <= 0)))
 		return;
 
 	m_bIsPlayingSound = false;
 	m_bFadeIn = false;
 	m_bFadeOut = true;
-	m_flLerp = 1000.0f;
+	m_flTime = engine->Time();
 }
 
 // We store a transit char which will be looked up right before the sound is fully faded out. (swapping) 
@@ -302,6 +264,5 @@ bool CFMODManager::TransitionAmbientSound(const char *szSoundPath, bool bLoop)
 		return false;
 
 	StopAmbientSound();
-
 	return true;
 }

@@ -5,7 +5,6 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "baseentity.h"
 #include "game_tip.h"
 #include "GameBase_Server.h"
 

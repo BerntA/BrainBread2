@@ -10,20 +10,7 @@
 #pragma once
 #endif
 
-#include "ai_basenpc.h"
-#include "ai_basehumanoid.h"
-#include "ai_behavior.h"
-#include "ai_behavior_assault.h"
-#include "ai_behavior_standoff.h"
-#include "ai_behavior_follow.h"
-#include "ai_behavior_functank.h"
-#include "ai_behavior_rappel.h"
-#include "ai_behavior_actbusy.h"
-#include "ai_sentence.h"
-#include "ai_baseactor.h"
-#include "hl2mp_gamerules.h"
 #include "GameEventListener.h"
-#include "hl2mp_player.h"
 
 extern ConVar ai_show_active_military_activities;
 

@@ -11,7 +11,6 @@
 
 #ifndef CLIENT_DLL
 #include "items.h"
-#include "baseentity.h"
 #include "GameBase_Server.h"
 #include "html_data_handler.h"
 #else

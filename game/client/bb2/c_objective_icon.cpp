@@ -5,27 +5,11 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "baseplayer_shared.h"
 #include "c_objective_icon.h"
-#include "c_baseanimating.h"
-#include "c_baseentity.h"
-#include "c_hl2mp_player.h"
-#include "c_baseplayer.h"
-#include "iclientmode.h"
-#include "c_basehlplayer.h"
-#include "hud.h"
-#include "hudelement.h"
-#include "vgui/ISurface.h"
-#include "hud_macros.h"
-#include "vgui_controls/Panel.h"
-#include "usermessages.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include "c_playerresource.h"
-#include "vgui_entitypanel.h"
 #include "view.h"
+#include "baseentity_shared.h"
 
-CUtlVector<C_ObjectiveIcon*> m_pObjectiveIcons;
+static CUtlVector<C_ObjectiveIcon*> m_pObjectiveIcons;
 
 IMPLEMENT_CLIENTCLASS_DT(C_ObjectiveIcon, DT_ObjectiveIcon, CObjectiveIcon)
 RecvPropBool(RECVINFO(m_bShouldBeHidden)),

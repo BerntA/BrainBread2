@@ -9,6 +9,8 @@
 #include "filesystem.h"
 #include "GameBase_Shared.h"
 #include "GameBase_Server.h"
+#include "hl2mp_player.h"
+#include "hl2mp_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

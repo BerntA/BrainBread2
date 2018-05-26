@@ -5,16 +5,12 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "doors.h"
-#include "simtimer.h"
 #include "npc_BaseZombie.h"
 #include "ai_hull.h"
 #include "ai_navigator.h"
 #include "ai_memory.h"
-#include "gib.h"
 #include "soundenvelope.h"
 #include "engine/IEngineSound.h"
-#include "ammodef.h"
 #include "hl2mp_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

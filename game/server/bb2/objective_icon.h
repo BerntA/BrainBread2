@@ -11,8 +11,6 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-#include "baseentity.h"
 #include "baseanimating.h"
 #include "props.h"
 #include "basecombatcharacter.h"

@@ -5,8 +5,6 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "baseentity.h"
-#include "npc_vehicledriver.h"
 #include "ai_basenpc.h"
 #include "hl2_shared_misc.h"
 #include "baseanimating.h"

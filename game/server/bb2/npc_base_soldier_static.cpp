@@ -16,22 +16,15 @@
 #include "ai_senses.h"
 #include "ai_tacticalservices.h"
 #include "soundent.h"
-#include "game.h"
 #include "npcevent.h"
 #include "activitylist.h"
 #include "player.h"
-#include "basecombatweapon.h"
-#include "basegrenade_shared.h"
-#include "vstdlib/random.h"
 #include "engine/IEngineSound.h"
-#include "globals.h"
 #include "grenade_frag.h"
 #include "ndebugoverlay.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "ammodef.h"
 #include "hl2mp_gamerules.h"
-#include <KeyValues.h>
-#include "filesystem.h"
 #include "GameBase_Shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

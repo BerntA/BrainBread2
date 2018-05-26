@@ -6,16 +6,9 @@
 
 #include "cbase.h"
 #include "items.h"
-#include "in_buttons.h"
 #include "gamerules.h"
-#include "baseanimating.h"
 #include "hl2_player.h"
-#include "basecombatweapon.h"
 #include "hl2mp_gamerules.h"
-#include "player.h"
-#include "ammodef.h"
-#include "npcevent.h"
-#include "eventlist.h"
 #include "GameBase_Server.h"
 
 struct turtleEasterEgg_t

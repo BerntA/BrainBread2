@@ -6,29 +6,18 @@
 
 #include "cbase.h"
 #include "vgui_base_frame.h"
-#include "hud.h"
-#include "hudelement.h"
-#include "hud_macros.h"
 #include "iclientmode.h"
-#include "c_basehlplayer.h"
 #include "vgui_controls/Panel.h"
 #include "vgui_controls/AnimationController.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include <vgui/IInput.h>
-#include "ienginevgui.h"
-#include "c_baseplayer.h" 
-#include "hud_numericdisplay.h"
 #include "vgui_controls/Button.h"
 #include "vgui_controls/ImagePanel.h"
-#include <vgui/IVGui.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/RichText.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
+
+#define BASE_FRAME_UPD_FREQ 0.5f
 
 void CVGUIBaseFrame::OnShowPanel(bool bShow)
 {
@@ -45,7 +34,7 @@ void CVGUIBaseFrame::OnShowPanel(bool bShow)
 
 		if (!m_bDisableInput)
 			engine->ClientCmd_Unrestricted("gameui_preventescapetoshow\n");
-		m_flUpdateTime = 1000.0f;
+		m_flUpdateTime = 0.0f;
 
 		if (m_bOpenBuildMode)
 			ActivateBuildMode();
@@ -92,22 +81,11 @@ void CVGUIBaseFrame::OnThink()
 	}
 
 	// Update Us:
-	float flMilli = MAX(0.0f, 1000.0f - m_flUpdateTime);
-	float flSec = flMilli * 0.001f;
-	if ((flSec >= 1.0))
+	if (engine->Time() > m_flUpdateTime)
 	{
-		m_flUpdateTime = 1000.0f;
+		m_flUpdateTime = engine->Time() + BASE_FRAME_UPD_FREQ;
 		m_pBackground->SetSize(ScreenWidth(), ScreenHeight());
 		UpdateLayout();
-	}
-
-	float frame_msec = 1000.0f * gpGlobals->frametime;
-
-	if (m_flUpdateTime > 0)
-	{
-		m_flUpdateTime -= frame_msec;
-		if (m_flUpdateTime < 0)
-			m_flUpdateTime = 0;
 	}
 }
 
@@ -139,11 +117,10 @@ CVGUIBaseFrame::CVGUIBaseFrame(vgui::VPANEL parent, const char *panelName, bool 
 	m_pBackground->SetAlpha(0);
 
 	SetScheme("BaseScheme");
-	PerformLayout();
 
+	PerformLayout();
 	InvalidateLayout();
 
-	m_flUpdateTime = 1000.0f;
 	m_flFadeFrequency = flFadeTime;
 	m_bFadeOut = false;
 	SetVisible(false);

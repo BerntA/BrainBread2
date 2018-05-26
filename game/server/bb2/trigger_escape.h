@@ -10,13 +10,7 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-#include "baseentity.h"
 #include "triggers.h"
-#include "props.h"
-#include "player.h"
-#include "saverestore_utlvector.h"
-#include "GameEventListener.h"
 
 class CTriggerEscape : public CTriggerMultiple
 {

@@ -10,7 +10,6 @@
 #pragma once
 #endif
 
-#include "cbase.h"
 #include "GameDefinitions_Shared.h"
 
 // Everything here is original values we need when we scale up or down the npcs depending on the player count in the server! We also use these when npcs spawn.

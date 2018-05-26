@@ -11,8 +11,6 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-
 enum AchievementTypes
 {
 	ACHIEVEMENT_TYPE_DEFAULT = 0,

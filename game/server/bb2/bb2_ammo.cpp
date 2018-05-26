@@ -5,16 +5,10 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "gamerules.h"
-#include "baseanimating.h"
 #include "items.h"
 #include "hl2_player.h"
-#include "basecombatweapon.h"
 #include "hl2mp_gamerules.h"
-#include "player.h"
 #include "ammodef.h"
-#include "npcevent.h"
-#include "eventlist.h"
 #include "GameBase_Server.h"
 
 int GetAmmoCountMultiplier(int wepType)

@@ -10,10 +10,7 @@
 #pragma once
 #endif
 
-#include "cbase.h"
 #include "triggers.h"
-#include "baseentity.h"
-#include "baseentity_shared.h"
 
 class CTriggerAchievement : public CTriggerMultiple
 {
@@ -26,6 +23,7 @@ public:
 	void Spawn(void);
 	void Touch(CBaseEntity *pOther);
 
+protected:
 	bool m_bRemoveOnTrigger;
 	bool m_bGiveToAll;
 	int m_iFilter;

@@ -10,7 +10,6 @@
 #pragma once
 #endif
 
-#include "cbase.h"
 #include "c_baseentity.h"
 #include "c_baseanimating.h"
 #include "c_hl2mp_player.h"

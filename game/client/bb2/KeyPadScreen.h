@@ -10,7 +10,6 @@
 #pragma once
 #endif
 
-#include "cbase.h"
 #include "c_vguiscreen.h"
 #include "vgui_controls/Label.h"
 #include "vgui_controls/Button.h"

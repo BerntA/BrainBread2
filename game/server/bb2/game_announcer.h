@@ -11,7 +11,6 @@
 #pragma once
 #endif
 
-#include "cbase.h"
 #include "baseentity.h"
 
 class CGameAnnouncer;

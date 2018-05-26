@@ -10,7 +10,6 @@
 #pragma once
 #endif
 
-#include "cbase.h"
 #include "achievement_shareddefs.h"
 
 #ifdef CLIENT_DLL

@@ -10,7 +10,6 @@
 #pragma once
 #endif
 
-#include "cbase.h"
 #include "baseanimating.h"
 #include "props.h"
 #include "items.h"

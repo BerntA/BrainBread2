@@ -11,14 +11,7 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-#include "baseplayer_shared.h"
-#include "c_baseanimating.h"
-#include "c_baseentity.h"
 #include "c_hl2mp_player.h"
-#include "c_baseplayer.h"
-#include "iclientmode.h"
-#include "c_basehlplayer.h"
 
 class C_ObjectiveIcon : public C_BaseEntity
 {

@@ -11,8 +11,6 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-#include "c_baseanimating.h"
 #include "baseviewmodel_shared.h"
 #include "c_baseviewmodel.h"
 

@@ -12,16 +12,12 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-
 #ifdef CLIENT_DLL
 class C_ClientRagdollGib;
 
-#include "c_baseentity.h"
 #include "c_baseanimating.h"
 #include "c_basetempentity.h"
 #else
-#include "baseentity.h"
 #include "baseanimating.h"
 #include "props.h"
 #include "basetempentity.h"

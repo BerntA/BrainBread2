@@ -15,7 +15,6 @@
 #endif
 
 #include "baseentity.h"
-#include "player.h"
 
 //
 // Spawnflags

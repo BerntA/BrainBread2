@@ -6,15 +6,9 @@
 
 #include "cbase.h"
 #include "bb2_prop_button.h"
-#include "gamerules.h"
-#include "baseanimating.h"
 #include "hl2_player.h"
 #include "basecombatweapon.h"
 #include "hl2mp_gamerules.h"
-#include "player.h"
-#include "ammodef.h"
-#include "npcevent.h"
-#include "eventlist.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

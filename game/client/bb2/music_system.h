@@ -47,12 +47,15 @@ public:
 	CMusicData()
 	{
 		m_iActiveIndex = 0;
-		m_pLoadingTracks.Purge();
-		m_pAmbientTracks.Purge();
-		m_pMusicEvents.Purge();
+		Cleanup();
 	}
 
 	~CMusicData()
+	{
+		Cleanup();
+	}
+
+	void Cleanup(void)
 	{
 		m_pLoadingTracks.Purge();
 		m_pAmbientTracks.Purge();
@@ -113,53 +116,51 @@ public:
 
 	bool PlayRandomMusic(int type, bool reset = false)
 	{
-		bool bRet = false;
-
 		if (bb2_music_system_shuffle.GetBool() && (m_pAmbientTracks.Count() > 1) && (type == MUSIC_TYPE_AMBIENT_TRACK))
 		{
 			int iCurrentIndexInAmbientList = m_iActiveIndex;
 			while (iCurrentIndexInAmbientList == m_iActiveIndex)
-			{
 				iCurrentIndexInAmbientList = random->RandomInt(0, (m_pAmbientTracks.Count() - 1));
-			}
+
 			m_iActiveIndex = iCurrentIndexInAmbientList;
 		}
 		else
 		{
-			if (reset)
-				m_iActiveIndex = 0;
-
-			if (m_iActiveIndex >= m_pAmbientTracks.Count())
+			if (reset || (m_iActiveIndex >= m_pAmbientTracks.Count()))
 				m_iActiveIndex = 0;
 		}
 
 		switch (type)
 		{
+
 		case MUSIC_TYPE_LOADING_TRACK:
+		{
 			if (HasLoadingMusic())
 			{
 				int index = random->RandomInt(0, (m_pLoadingTracks.Count() - 1));
 				FMODManager()->SetSoundVolume(m_pLoadingTracks[index].flVolume);
 				FMODManager()->PlayLoadingMusic(m_pLoadingTracks[index].pchFilePath);
-
-				bRet = true;
+				return true;
 			}
 			break;
+		}
 
 		case MUSIC_TYPE_AMBIENT_TRACK:
+		{
 			if (HasAmbientMusic())
 			{
 				FMODManager()->SetSoundVolume(m_pAmbientTracks[m_iActiveIndex].flVolume);
 				FMODManager()->TransitionAmbientSound(m_pAmbientTracks[m_iActiveIndex].pchFilePath);
 				if (!bb2_music_system_shuffle.GetBool())
 					m_iActiveIndex++;
-
-				bRet = true;
+				return true;
 			}
 			break;
 		}
 
-		return bRet;
+		}
+
+		return false;
 	}
 
 	bool RunMusicEvent(const char *eventName)

@@ -10,9 +10,6 @@
 #pragma once
 #endif
 
-#include "c_baseentity.h"
-#include "c_baseanimating.h"
-#include "baseentity_shared.h"
 #include "takedamageinfo.h"
 #include "c_hl2mp_player.h"
 

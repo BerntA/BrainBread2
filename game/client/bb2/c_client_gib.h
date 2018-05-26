@@ -11,9 +11,6 @@
 #endif
 
 #include "gibs_shared.h"
-#include "c_baseentity.h"
-#include "c_baseanimating.h"
-#include "baseentity_shared.h"
 #include "takedamageinfo.h"
 
 class C_ClientSideGibBase : public C_BaseAnimating

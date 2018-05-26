@@ -12,7 +12,6 @@
 #include "ai_senses.h"
 #include "ai_navigator.h"
 #include "ai_memory.h"
-#include "gib.h"
 #include "soundenvelope.h"
 #include "engine/IEngineSound.h"
 #include "ammodef.h"

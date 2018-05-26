@@ -10,13 +10,7 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-#include "baseentity.h"
 #include "triggers.h"
-#include "props.h"
-#include "player.h"
-#include "saverestore_utlvector.h"
-#include "GameEventListener.h"
 
 class CSmartTrigger : public CTriggerMultiple
 {
@@ -29,7 +23,7 @@ public:
 	void Spawn( void );
 	void Touch( CBaseEntity *pOther );
 
-	// Hammer Variables...
+protected:
 	int m_iFilter;
 	bool TouchOnlyOnce;
 };

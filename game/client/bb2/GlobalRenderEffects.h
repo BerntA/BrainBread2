@@ -11,10 +11,8 @@
 #pragma once
 #endif
 
-#include "cbase.h"
 #include "model_types.h"
 #include "filesystem.h"
-#include "c_baseentity.h"
 #include "baseclientrendertargets.h"
 #include "materialsystem/imaterialsystem.h"
 #include "rendertexture.h"

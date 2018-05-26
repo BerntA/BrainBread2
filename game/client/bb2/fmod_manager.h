@@ -26,7 +26,7 @@ public:
 
 	bool PlayAmbientSound(const char *szSoundPath, bool bLoop = false);
 	void PlayLoadingMusic(const char *szSoundPath);
-	void StopAmbientSound(void);
+	void StopAmbientSound(bool force = false);
 	bool TransitionAmbientSound(const char *szSoundPath, bool bLoop = false);
 	void SetSoundVolume(float vol) { m_flSoundVolume = vol; }
 
@@ -40,10 +40,6 @@ private:
 	char szActiveSound[MAX_WEAPON_STRING];
 	char szTransitSound[MAX_WEAPON_STRING];
 
-	bool bShouldPlayInSequence;
-	bool bShouldMuteFMOD;
-	bool bIsFMODMuted;
-
 	bool m_bFadeIn;
 	bool m_bFadeOut;
 	bool m_bIsPlayingSound;
@@ -51,12 +47,8 @@ private:
 
 	float m_flVolume; // Main Volume (100% vol)
 	float m_flSoundVolume; // Percent of master vol above.
-	float m_flLerp; // The value to update per millisec.
-
+	float m_flTime; // Time to fade-in or out.
 	float m_flFadeOutTime; // When will we start to fade out?
-
-	float m_flSoundLength; // Length of the active sound decremented by the frametime = start time (dynamic).
-	float m_flTimeConstant; // Length of the active sound. 
 };
 
 extern CFMODManager *FMODManager();

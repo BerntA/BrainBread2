@@ -7,25 +7,10 @@
 
 #include "cbase.h"
 #include "vgui_base_panel.h"
-#include "hud.h"
-#include "hudelement.h"
-#include "hud_macros.h"
-#include "iclientmode.h"
-#include "c_basehlplayer.h"
 #include "vgui_controls/Panel.h"
 #include "vgui_controls/AnimationController.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include <vgui/IInput.h>
-#include "ienginevgui.h"
-#include "c_baseplayer.h" 
-#include "hud_numericdisplay.h"
 #include "vgui_controls/Button.h"
 #include "vgui_controls/ImagePanel.h"
-#include <vgui/IVGui.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/RichText.h>
-#include "GameBase_Client.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -91,7 +76,6 @@ CVGUIBasePanel::CVGUIBasePanel(vgui::Panel *parent, char const *panelName, float
 	SetScheme("BaseScheme");
 
 	InvalidateLayout();
-
 	PerformLayout();
 
 	SetVisible(false);

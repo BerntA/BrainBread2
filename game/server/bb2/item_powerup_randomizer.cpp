@@ -10,7 +10,6 @@
 #include "GameBase_Server.h"
 #include "GameBase_Shared.h"
 #include "inventory_item.h"
-#include "objective_icon.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

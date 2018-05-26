@@ -142,9 +142,7 @@ void C_ClientSideGibBase::SetForceFade(bool value)
 	if (m_bForceFade)
 		m_flFadeOutDelay = gpGlobals->curtime + FORCE_FADE_TIME;
 	else
-	{
 		m_flFadeOutDelay = gpGlobals->curtime + (m_iGibType == CLIENT_GIB_PROP ? PROP_FADE_TIME : bb2_gibs_fadeout_time.GetFloat());
-	}
 }
 
 void C_ClientSideGibBase::OnBecomeRagdoll(void)

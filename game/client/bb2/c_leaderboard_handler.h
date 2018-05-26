@@ -11,7 +11,6 @@
 #pragma once
 #endif
 
-#include "cbase.h"
 #include <steam/steam_api.h>
 
 #define MAX_LEADERBOARD_ENTRIES 5
