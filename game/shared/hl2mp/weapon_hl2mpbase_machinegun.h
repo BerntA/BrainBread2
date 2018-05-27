@@ -39,6 +39,20 @@ public:
 	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
 	virtual void Drop(const Vector &vecVelocity);
 
+	virtual int GetMinBurst() { return 1; }
+	virtual int GetMaxBurst() { return 3; }
+
+	virtual const WeaponProficiencyInfo_t *GetProficiencyValues();
+
+#ifndef CLIENT_DLL
+#ifdef BB2_AI // NPC Firing
+	virtual int CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
+	virtual void Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
+	virtual void FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir);
+	virtual void Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary);
+#endif //BB2_AI
+#endif
+
 private:	
 	CHL2MPMachineGun( const CHL2MPMachineGun & );
 

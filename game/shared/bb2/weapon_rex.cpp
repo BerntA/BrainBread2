@@ -19,8 +19,11 @@
 
 class CWeaponREX : public CBaseHL2MPCombatWeapon
 {
-	DECLARE_CLASS(CWeaponREX, CBaseHL2MPCombatWeapon);
 public:
+	DECLARE_CLASS(CWeaponREX, CBaseHL2MPCombatWeapon);
+	DECLARE_NETWORKCLASS();
+	DECLARE_PREDICTABLE();
+	DECLARE_ACTTABLE();
 
 	CWeaponREX(void);
 
@@ -30,11 +33,6 @@ public:
 	int GetOverloadCapacity() { return 2; }
 	int GetWeaponType(void) { return WEAPON_TYPE_REVOLVER; }
 	const char *GetAmmoEntityLink(void) { return "ammo_revolver"; }
-
-	DECLARE_NETWORKCLASS();
-	DECLARE_PREDICTABLE();
-
-	DECLARE_ACTTABLE();
 
 private:
 
@@ -175,8 +173,11 @@ bool CWeaponREX::Reload(void)
 
 class CWeaponREXAkimbo : public CBaseHL2MPCombatWeapon
 {
-	DECLARE_CLASS(CWeaponREXAkimbo, CBaseHL2MPCombatWeapon);
 public:
+	DECLARE_CLASS(CWeaponREXAkimbo, CBaseHL2MPCombatWeapon);
+	DECLARE_NETWORKCLASS();
+	DECLARE_PREDICTABLE();
+	DECLARE_ACTTABLE();
 
 	CWeaponREXAkimbo(void);
 
@@ -199,11 +200,6 @@ public:
 
 		return "right_muzzle";
 	}
-
-	DECLARE_NETWORKCLASS();
-	DECLARE_PREDICTABLE();
-
-	DECLARE_ACTTABLE();
 
 private:
 

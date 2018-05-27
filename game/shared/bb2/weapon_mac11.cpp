@@ -20,33 +20,15 @@ class CWeaponMAC11 : public CHL2MPMachineGun
 {
 public:
 	DECLARE_CLASS(CWeaponMAC11, CHL2MPMachineGun);
+	DECLARE_NETWORKCLASS();
+	DECLARE_PREDICTABLE();
+	DECLARE_ACTTABLE();
 
 	CWeaponMAC11();
 
-	DECLARE_NETWORKCLASS();
-	DECLARE_PREDICTABLE();
-
 	int GetOverloadCapacity() { return 8; }
 	int GetWeaponType(void) { return WEAPON_TYPE_SMG; }
-	const char *GetAmmoEntityLink(void) { return "ammo_smg"; }
-
-	int		GetMinBurst() { return 1; }
-	int		GetMaxBurst() { return 3; }
-
-	const WeaponProficiencyInfo_t *GetProficiencyValues();
-
-	DECLARE_ACTTABLE();
-
-#ifndef CLIENT_DLL
-
-#ifdef BB2_AI
-	int CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
-	void Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
-	void FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir);
-	void Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary);
-#endif //BB2_AI
-
-#endif
+	const char *GetAmmoEntityLink(void) { return "ammo_smg"; }	
 
 private:
 	CWeaponMAC11(const CWeaponMAC11 &);
@@ -107,91 +89,6 @@ acttable_t CWeaponMAC11::m_acttable[] =
 
 IMPLEMENT_ACTTABLE(CWeaponMAC11);
 
-//=========================================================
 CWeaponMAC11::CWeaponMAC11()
 {
-}
-
-#ifdef BB2_AI
-#ifndef CLIENT_DLL
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CWeaponMAC11::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir)
-{
-	// FIXME: use the returned number of bullets to account for >10hz firerate
-	WeaponSoundRealtime(SINGLE_NPC);
-
-	CSoundEnt::InsertSound(SOUND_COMBAT | SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_MACHINEGUN, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy());
-	pOperator->FireBullets(GetWpnData().m_iPellets, vecShootOrigin, vecShootDir, GetBulletSpread(),
-		MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2, entindex(), 0);
-
-	m_iClip1 = m_iClip1 - 1;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CWeaponMAC11::Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary)
-{
-	// Ensure we have enough rounds in the clip
-	m_iClip1++;
-
-	Vector vecShootOrigin, vecShootDir;
-	QAngle	angShootDir;
-	GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angShootDir);
-	AngleVectors(angShootDir, &vecShootDir);
-	FireNPCPrimaryAttack(pOperator, vecShootOrigin, vecShootDir);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CWeaponMAC11::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator)
-{
-	switch (pEvent->event)
-	{
-	case EVENT_WEAPON_AR2:
-    case EVENT_WEAPON_SMG1:
-	{
-		Vector vecShootOrigin, vecShootDir;
-		QAngle angDiscard;
-
-		// Support old style attachment point firing
-		if ((pEvent->options == NULL) || (pEvent->options[0] == '\0') || (!pOperator->GetAttachment(pEvent->options, vecShootOrigin, angDiscard)))
-		{
-			vecShootOrigin = pOperator->Weapon_ShootPosition();
-		}
-
-		CAI_BaseNPC *npc = pOperator->MyNPCPointer();
-		ASSERT(npc != NULL);
-		vecShootDir = npc->GetActualShootTrajectory(vecShootOrigin);
-
-		FireNPCPrimaryAttack(pOperator, vecShootOrigin, vecShootDir);
-	}
-	break;
-
-	default:
-		BaseClass::Operator_HandleAnimEvent(pEvent, pOperator);
-		break;
-	}
-}
-#endif
-#endif //BB2_AI
-
-//-----------------------------------------------------------------------------
-const WeaponProficiencyInfo_t *CWeaponMAC11::GetProficiencyValues()
-{
-	static WeaponProficiencyInfo_t proficiencyTable[] =
-	{
-		{ 7.0, 0.75 },
-		{ 5.00, 0.75 },
-		{ 10.0 / 3.0, 0.75 },
-		{ 5.0 / 3.0, 0.75 },
-		{ 1.00, 1.0 },
-	};
-
-	COMPILE_TIME_ASSERT(ARRAYSIZE(proficiencyTable) == WEAPON_PROFICIENCY_PERFECT + 1);
-
-	return proficiencyTable;
 }

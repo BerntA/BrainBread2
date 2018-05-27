@@ -30,17 +30,16 @@ class CWeaponMinigun : public CHL2MPMachineGun
 {
 public:
 	DECLARE_CLASS(CWeaponMinigun, CHL2MPMachineGun);
-
-	CWeaponMinigun();
-
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
+	DECLARE_ACTTABLE();
+
+	CWeaponMinigun();
 
 	int GetOverloadCapacity() { return 25; }
 
 	int GetMinBurst() { return 1; }
 	int GetMaxBurst() { return 1; }
-
 	float GetMinRestTime() { return 0; }
 	float GetMaxRestTime() { return 0; }
 
@@ -59,18 +58,7 @@ public:
 	bool Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
 	void Drop(const Vector &vecVelocity);
 
-	const WeaponProficiencyInfo_t *GetProficiencyValues();
-
-	DECLARE_ACTTABLE();
-
-#ifndef CLIENT_DLL
-#ifdef BB2_AI
-	int CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
-	void Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
-	void FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir);
-	void Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary);
-#endif //BB2_AI
-#endif
+	const WeaponProficiencyInfo_t *GetProficiencyValues();	
 
 private:
 	CWeaponMinigun(const CWeaponMinigun &);
@@ -174,17 +162,12 @@ acttable_t CWeaponMinigun::m_acttable[] =
 
 IMPLEMENT_ACTTABLE(CWeaponMinigun);
 
-//=========================================================
 CWeaponMinigun::CWeaponMinigun()
 {
 	m_iWeaponState = MINIGUN_STATE_IDLE;
 	m_flSoonestAttackTime = 0.0f;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Output : Activity
-//-----------------------------------------------------------------------------
 bool CWeaponMinigun::Reload(void)
 {
 	return false;
@@ -326,14 +309,13 @@ void CWeaponMinigun::SecondaryAttack(void)
 {
 }
 
-//-----------------------------------------------------------------------------
 const WeaponProficiencyInfo_t *CWeaponMinigun::GetProficiencyValues()
 {
 	static WeaponProficiencyInfo_t proficiencyTable[] =
 	{
 		{ 7.0, 0.75 },
 		{ 5.00, 0.75 },
-		{ 10.0 / 3.0, 0.75 },
+		{ 3.0, 0.85 },
 		{ 5.0 / 3.0, 0.75 },
 		{ 1.00, 1.0 },
 	};
@@ -342,63 +324,3 @@ const WeaponProficiencyInfo_t *CWeaponMinigun::GetProficiencyValues()
 
 	return proficiencyTable;
 }
-
-#ifdef BB2_AI
-#ifndef CLIENT_DLL
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CWeaponMinigun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir) // Unlimited ammo for npcs.
-{
-	WeaponSoundRealtime(SINGLE_NPC);
-
-	CSoundEnt::InsertSound(SOUND_COMBAT | SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_MACHINEGUN, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy());
-	pOperator->FireBullets(GetWpnData().m_iPellets, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2, entindex(), 0);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CWeaponMinigun::Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary)
-{
-	Vector vecShootOrigin, vecShootDir;
-	QAngle	angShootDir;
-	GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angShootDir);
-	AngleVectors(angShootDir, &vecShootDir);
-	FireNPCPrimaryAttack(pOperator, vecShootOrigin, vecShootDir);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CWeaponMinigun::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator)
-{
-	switch (pEvent->event)
-	{
-
-	case EVENT_WEAPON_AR2:
-	case EVENT_WEAPON_SMG1:
-	{
-		Vector vecShootOrigin, vecShootDir;
-		QAngle angDiscard;
-
-		// Support old style attachment point firing
-		if ((pEvent->options == NULL) || (pEvent->options[0] == '\0') || (!pOperator->GetAttachment(pEvent->options, vecShootOrigin, angDiscard)))
-			vecShootOrigin = pOperator->Weapon_ShootPosition();
-
-		CAI_BaseNPC *npc = pOperator->MyNPCPointer();
-		ASSERT(npc != NULL);
-		vecShootDir = npc->GetActualShootTrajectory(vecShootOrigin);
-
-		FireNPCPrimaryAttack(pOperator, vecShootOrigin, vecShootDir);
-		break;
-	}
-
-	default:
-		BaseClass::Operator_HandleAnimEvent(pEvent, pOperator);
-		break;
-
-	}
-}
-#endif
-#endif //BB2_AI

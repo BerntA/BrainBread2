@@ -124,6 +124,8 @@ void CHL2MPBasePistol::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombat
 {
 	switch (pEvent->event)
 	{
+	case EVENT_WEAPON_AR2:
+	case EVENT_WEAPON_SMG1:
 	case EVENT_WEAPON_PISTOL_FIRE:
 	{
 		Vector vecShootOrigin, vecShootDir;
@@ -139,10 +141,12 @@ void CHL2MPBasePistol::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombat
 		WeaponSound(SINGLE_NPC);
 		pOperator->FireBullets(1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2);
 		m_iClip1 = m_iClip1 - 1;
+
+		break;
 	}
-	break;
+
 	default:
-		BaseClass::Operator_HandleAnimEvent(pEvent, pOperator);
+		CWeaponHL2MPBase::Operator_HandleAnimEvent(pEvent, pOperator);
 		break;
 	}
 }

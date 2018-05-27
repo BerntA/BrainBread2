@@ -20,9 +20,11 @@ class CWeaponRemington : public CBaseHL2MPCombatWeapon
 {
 public:
 	DECLARE_CLASS(CWeaponRemington, CBaseHL2MPCombatWeapon);
-
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
+	DECLARE_ACTTABLE();
+
+	CWeaponRemington(void);
 
 #ifdef BB2_AI
 #ifndef CLIENT_DLL
@@ -33,14 +35,8 @@ public:
 #endif
 #endif //BB2_AI
 
-private:
-	CNetworkVar(bool, m_bInReload);
-	CNetworkVar(bool, m_bShouldReloadEmpty);
-
-public:
-
-	virtual int				GetMinBurst() { return 1; }
-	virtual int				GetMaxBurst() { return 1; }
+	int GetMinBurst() { return 1; }
+	int GetMaxBurst() { return 1; }
 
 	int GetOverloadCapacity() { return 4; }
 	int GetWeaponType(void) { return WEAPON_TYPE_SHOTGUN; }
@@ -62,12 +58,11 @@ public:
 
 	void AffectedByPlayerSkill(int skill);
 
-	DECLARE_ACTTABLE();
-
-	CWeaponRemington(void);
-
 private:
 	CWeaponRemington(const CWeaponRemington &);
+
+	CNetworkVar(bool, m_bInReload);
+	CNetworkVar(bool, m_bShouldReloadEmpty);
 };
 
 IMPLEMENT_NETWORKCLASS_ALIASED(WeaponRemington, DT_WeaponRemington)
@@ -181,7 +176,6 @@ IMPLEMENT_ACTTABLE(CWeaponRemington);
 
 #ifndef CLIENT_DLL
 #ifdef BB2_AI
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pOperator - 
@@ -190,13 +184,13 @@ void CWeaponRemington::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, boo
 {
 	Vector vecShootOrigin, vecShootDir;
 	CAI_BaseNPC *npc = pOperator->MyNPCPointer();
-	ASSERT(npc != NULL);
+	Assert(npc != NULL);
 	WeaponSound(SINGLE_NPC);
 	m_iClip1 = m_iClip1 - 1;
 
 	if (bUseWeaponAngles)
 	{
-		QAngle	angShootDir;
+		QAngle angShootDir;
 		GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angShootDir);
 		AngleVectors(angShootDir, &vecShootDir);
 	}
@@ -214,9 +208,7 @@ void CWeaponRemington::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, boo
 //-----------------------------------------------------------------------------
 void CWeaponRemington::Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary)
 {
-	// Ensure we have enough rounds in the clip
 	m_iClip1++;
-
 	FireNPCPrimaryAttack(pOperator, true);
 }
 
@@ -229,18 +221,15 @@ void CWeaponRemington::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombat
 {
 	switch (pEvent->event)
 	{
-	case EVENT_WEAPON_SHOTGUN_FIRE:
-	{
+	case EVENT_WEAPON_SHOTGUN_FIRE:	
 		FireNPCPrimaryAttack(pOperator, false);
-	}
-	break;
+		break;
 
 	default:
 		CBaseCombatWeapon::Operator_HandleAnimEvent(pEvent, pOperator);
 		break;
 	}
 }
-
 #endif // BB2_AI
 #endif
 

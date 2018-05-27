@@ -6,6 +6,7 @@
     #include "GameBase_Client.h"
 #else
 	#include "hl2mp_player.h"
+	#include "npcevent.h"
 #endif
 
 #include "weapon_hl2mpbase_machinegun.h"
@@ -241,3 +242,73 @@ bool CHL2MPMachineGun::CanHolster(void)
 
 	return bCanHolster;
 }
+
+const WeaponProficiencyInfo_t *CHL2MPMachineGun::GetProficiencyValues()
+{
+	static WeaponProficiencyInfo_t proficiencyTable[] =
+	{
+		{ 7.0, 0.75 },
+		{ 5.00, 0.75 },
+		{ 10.0 / 3.0, 0.75 },
+		{ 5.0 / 3.0, 0.75 },
+		{ 1.00, 1.0 },
+	};
+
+	COMPILE_TIME_ASSERT(ARRAYSIZE(proficiencyTable) == WEAPON_PROFICIENCY_PERFECT + 1);
+
+	return proficiencyTable;
+}
+
+#ifndef CLIENT_DLL
+#ifdef BB2_AI
+void CHL2MPMachineGun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir)
+{
+	WeaponSoundRealtime(SINGLE_NPC);
+	CSoundEnt::InsertSound(SOUND_COMBAT | SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_MACHINEGUN, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy());
+	pOperator->FireBullets(GetWpnData().m_iPellets, vecShootOrigin, vecShootDir, GetBulletSpread(),
+		MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2, entindex(), 0);
+
+	m_iClip1 = m_iClip1 - 1;
+}
+
+void CHL2MPMachineGun::Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary)
+{
+	m_iClip1++;
+
+	Vector vecShootOrigin, vecShootDir;
+	QAngle	angShootDir;
+	GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angShootDir);
+	AngleVectors(angShootDir, &vecShootDir);
+	FireNPCPrimaryAttack(pOperator, vecShootOrigin, vecShootDir);
+}
+
+void CHL2MPMachineGun::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator)
+{
+	switch (pEvent->event)
+	{
+	case EVENT_WEAPON_AR2:
+	case EVENT_WEAPON_SMG1:
+	case EVENT_WEAPON_PISTOL_FIRE:
+	{
+		Vector vecShootOrigin, vecShootDir;
+		QAngle angDiscard;
+
+		// Support old style attachment point firing
+		if ((pEvent->options == NULL) || (pEvent->options[0] == '\0') || (!pOperator->GetAttachment(pEvent->options, vecShootOrigin, angDiscard)))
+			vecShootOrigin = pOperator->Weapon_ShootPosition();
+
+		CAI_BaseNPC *npc = pOperator->MyNPCPointer();
+		Assert(npc != NULL);
+		vecShootDir = npc->GetActualShootTrajectory(vecShootOrigin);
+
+		FireNPCPrimaryAttack(pOperator, vecShootOrigin, vecShootDir);
+		break;
+	}
+
+	default:
+		BaseClass::Operator_HandleAnimEvent(pEvent, pOperator);
+		break;
+	}
+}
+#endif // BB2_AI
+#endif

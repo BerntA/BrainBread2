@@ -20,9 +20,11 @@ class CWeaponSawedOff : public CBaseHL2MPCombatWeapon
 {
 public:
 	DECLARE_CLASS( CWeaponSawedOff, CBaseHL2MPCombatWeapon );
-
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
+	DECLARE_ACTTABLE();
+	
+	CWeaponSawedOff(void);
 
 #ifdef BB2_AI
 #ifndef CLIENT_DLL
@@ -32,11 +34,6 @@ public:
 	void FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles );
 #endif
 #endif //BB2_AI
-
-private:
-	CNetworkVar(bool, m_bInReload);
-
-public:
 
 	int GetMinBurst() { return 1; }
 	int GetMaxBurst() { return 1; }
@@ -57,13 +54,11 @@ public:
 	float GetFireRate( void ) { return GetWpnData().m_flFireRate; }
 	void AffectedByPlayerSkill(int skill);
 	const char *GetMuzzleflashAttachment(bool bPrimaryAttack);
-
-	DECLARE_ACTTABLE();
-
-	CWeaponSawedOff(void);
-
+	
 private:
 	CWeaponSawedOff( const CWeaponSawedOff & );
+
+	CNetworkVar(bool, m_bInReload);
 };
 
 IMPLEMENT_NETWORKCLASS_ALIASED( WeaponSawedOff, DT_WeaponSawedOff )
@@ -171,7 +166,6 @@ IMPLEMENT_ACTTABLE(CWeaponSawedOff);
 
 #ifndef CLIENT_DLL
 #ifdef BB2_AI
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pOperator - 
@@ -180,7 +174,7 @@ void CWeaponSawedOff::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, boo
 {
 	Vector vecShootOrigin, vecShootDir;
 	CAI_BaseNPC *npc = pOperator->MyNPCPointer();
-	ASSERT( npc != NULL );
+	Assert( npc != NULL );
 	WeaponSound( SINGLE_NPC );
 	m_iClip1 = m_iClip1 - 1;
 
@@ -204,9 +198,7 @@ void CWeaponSawedOff::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, boo
 //-----------------------------------------------------------------------------
 void CWeaponSawedOff::Operator_ForceNPCFire( CBaseCombatCharacter *pOperator, bool bSecondary )
 {
-	// Ensure we have enough rounds in the clip
 	m_iClip1++;
-
 	FireNPCPrimaryAttack( pOperator, true );
 }
 
@@ -219,10 +211,8 @@ void CWeaponSawedOff::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombat
 {
 	switch( pEvent->event )
 	{
-	case EVENT_WEAPON_SHOTGUN_FIRE:
-		{
-			FireNPCPrimaryAttack( pOperator, false );
-		}
+	case EVENT_WEAPON_SHOTGUN_FIRE:		
+		FireNPCPrimaryAttack( pOperator, false );
 		break;
 
 	default:
@@ -230,7 +220,6 @@ void CWeaponSawedOff::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombat
 		break;
 	}
 }
-
 #endif //BB2_AI
 #endif
 

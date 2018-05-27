@@ -48,13 +48,12 @@ public:
 	virtual void Drop(const Vector &vecVelocity);
 	virtual bool Deploy(void);
 
-	virtual int	GetMinBurst() { return 1; }
-	virtual int	GetMaxBurst() { return 3; }
+	virtual const WeaponProficiencyInfo_t *GetProficiencyValues() { return CWeaponHL2MPBase::GetProficiencyValues(); }
 
 #ifdef BB2_AI
 #ifndef CLIENT_DLL
-	virtual int CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
 	virtual void Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
+	virtual void Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary) { return; }
 #endif
 #endif //BB2_AI
 

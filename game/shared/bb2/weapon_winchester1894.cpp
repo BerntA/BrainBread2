@@ -20,24 +20,11 @@ class CWeaponWinchester1894 : public CHL2MPSniperRifle
 {
 public:
 	DECLARE_CLASS(CWeaponWinchester1894, CHL2MPSniperRifle);
-
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
+	DECLARE_ACTTABLE();
 
-#ifdef BB2_AI
-#ifndef CLIENT_DLL
-	int CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
-	void Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
-	void Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary);
-	void FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool bUseWeaponAngles);
-#endif
-#endif //BB2_AI
-
-private:
-	CNetworkVar(bool, m_bInReload);
-	CNetworkVar(bool, m_bShouldReloadEmpty);
-
-public:
+	CWeaponWinchester1894(void);
 
 	bool ShouldDrawCrosshair(void) { return true; }
 	bool ShouldPlayZoomSounds() { return false; }
@@ -61,14 +48,13 @@ public:
 	void DryFire(void);
 	float GetFireRate(void) { return GetWpnData().m_flFireRate; }
 
-	void AffectedByPlayerSkill(int skill);
-
-	DECLARE_ACTTABLE();
-
-	CWeaponWinchester1894(void);
+	void AffectedByPlayerSkill(int skill);		
 
 private:
 	CWeaponWinchester1894(const CWeaponWinchester1894 &);
+
+	CNetworkVar(bool, m_bInReload);
+	CNetworkVar(bool, m_bShouldReloadEmpty);
 };
 
 IMPLEMENT_NETWORKCLASS_ALIASED(WeaponWinchester1894, DT_WeaponWinchester1894)
@@ -179,71 +165,6 @@ acttable_t	CWeaponWinchester1894::m_acttable[] =
 };
 
 IMPLEMENT_ACTTABLE(CWeaponWinchester1894);
-
-#ifndef CLIENT_DLL
-#ifdef BB2_AI
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pOperator - 
-//-----------------------------------------------------------------------------
-void CWeaponWinchester1894::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool bUseWeaponAngles)
-{
-	Vector vecShootOrigin, vecShootDir;
-	CAI_BaseNPC *npc = pOperator->MyNPCPointer();
-	ASSERT(npc != NULL);
-	WeaponSound(SINGLE_NPC);
-	m_iClip1 = m_iClip1 - 1;
-
-	if (bUseWeaponAngles)
-	{
-		QAngle	angShootDir;
-		GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angShootDir);
-		AngleVectors(angShootDir, &vecShootDir);
-	}
-	else
-	{
-		vecShootOrigin = pOperator->Weapon_ShootPosition();
-		vecShootDir = npc->GetActualShootTrajectory(vecShootOrigin);
-	}
-
-	pOperator->FireBullets(GetWpnData().m_iPellets, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CWeaponWinchester1894::Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary)
-{
-	// Ensure we have enough rounds in the clip
-	m_iClip1++;
-
-	FireNPCPrimaryAttack(pOperator, true);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-void CWeaponWinchester1894::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator)
-{
-	switch (pEvent->event)
-	{
-	case EVENT_WEAPON_SHOTGUN_FIRE:
-	{
-		FireNPCPrimaryAttack(pOperator, false);
-	}
-	break;
-
-	default:
-		CBaseCombatWeapon::Operator_HandleAnimEvent(pEvent, pOperator);
-		break;
-	}
-}
-
-#endif // BB2_AI
-#endif
 
 void CWeaponWinchester1894::AffectedByPlayerSkill(int skill)
 {

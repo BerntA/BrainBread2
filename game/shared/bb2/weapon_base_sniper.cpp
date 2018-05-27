@@ -8,6 +8,7 @@
 #include "weapon_base_sniper.h"
 #include "hl2mp_player_shared.h"
 #include "in_buttons.h"
+#include "npcevent.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -209,3 +210,38 @@ bool CHL2MPSniperRifle::CanPerformMeleeAttacks()
 
 	return true;
 }
+
+#ifdef BB2_AI
+#ifndef CLIENT_DLL
+void CHL2MPSniperRifle::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator)
+{
+	switch (pEvent->event)
+	{
+	case EVENT_WEAPON_AR2:
+	case EVENT_WEAPON_SMG1:
+	case EVENT_WEAPON_PISTOL_FIRE:
+	{
+		Vector vecShootOrigin, vecShootDir;
+		vecShootOrigin = pOperator->Weapon_ShootPosition();
+
+		CAI_BaseNPC *npc = pOperator->MyNPCPointer();
+		ASSERT(npc != NULL);
+
+		vecShootDir = npc->GetActualShootTrajectory(vecShootOrigin);
+
+		CSoundEnt::InsertSound(SOUND_COMBAT | SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_PISTOL, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy());
+
+		WeaponSound(SINGLE_NPC);
+		pOperator->FireBullets(1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2);
+		m_iClip1 = m_iClip1 - 1;
+
+		break;
+	}
+
+	default:		
+		CWeaponHL2MPBase::Operator_HandleAnimEvent(pEvent, pOperator);
+		break;
+	}
+}
+#endif
+#endif //BB2_AI

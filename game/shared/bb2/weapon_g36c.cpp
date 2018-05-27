@@ -20,11 +20,11 @@ class CWeaponG36C : public CHL2MPMachineGun
 {
 public:
 	DECLARE_CLASS(CWeaponG36C, CHL2MPMachineGun);
-
-	CWeaponG36C();
-
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
+	DECLARE_ACTTABLE();
+
+	CWeaponG36C();
 
 	int GetOverloadCapacity() { return 7; }
 	const char *GetAmmoEntityLink(void) { return "ammo_rifle"; }
@@ -32,24 +32,10 @@ public:
 
 	int	GetMinBurst() { return 1; }
 	int	GetMaxBurst() { return 1; }
-
 	float GetMinRestTime() { return 0; }
 	float GetMaxRestTime() { return 0; }
 
 	const WeaponProficiencyInfo_t *GetProficiencyValues();
-
-	DECLARE_ACTTABLE();
-
-#ifndef CLIENT_DLL
-
-#ifdef BB2_AI
-	int CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
-	void Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
-	void FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir);
-	void Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary);
-#endif //BB2_AI
-
-#endif
 
 private:
 	CWeaponG36C(const CWeaponG36C &);
@@ -149,86 +135,17 @@ acttable_t CWeaponG36C::m_acttable[] =
 
 IMPLEMENT_ACTTABLE(CWeaponG36C);
 
-//=========================================================
 CWeaponG36C::CWeaponG36C()
 {
 }
 
-#ifdef BB2_AI
-#ifndef CLIENT_DLL
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CWeaponG36C::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir)
-{
-	// FIXME: use the returned number of bullets to account for >10hz firerate
-	WeaponSoundRealtime(SINGLE_NPC);
-
-	CSoundEnt::InsertSound(SOUND_COMBAT | SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_MACHINEGUN, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy());
-	pOperator->FireBullets(GetWpnData().m_iPellets, vecShootOrigin, vecShootDir, GetBulletSpread(),
-		MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2, entindex(), 0);
-
-	m_iClip1 = m_iClip1 - 1;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CWeaponG36C::Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary)
-{
-	// Ensure we have enough rounds in the clip
-	m_iClip1++;
-
-	Vector vecShootOrigin, vecShootDir;
-	QAngle	angShootDir;
-	GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angShootDir);
-	AngleVectors(angShootDir, &vecShootDir);
-	FireNPCPrimaryAttack(pOperator, vecShootOrigin, vecShootDir);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CWeaponG36C::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator)
-{
-	switch (pEvent->event)
-	{
-	case EVENT_WEAPON_AR2:
-	case EVENT_WEAPON_SMG1:
-	{
-		Vector vecShootOrigin, vecShootDir;
-		QAngle angDiscard;
-
-		// Support old style attachment point firing
-		if ((pEvent->options == NULL) || (pEvent->options[0] == '\0') || (!pOperator->GetAttachment(pEvent->options, vecShootOrigin, angDiscard)))
-		{
-			vecShootOrigin = pOperator->Weapon_ShootPosition();
-		}
-
-		CAI_BaseNPC *npc = pOperator->MyNPCPointer();
-		ASSERT(npc != NULL);
-		vecShootDir = npc->GetActualShootTrajectory(vecShootOrigin);
-
-		FireNPCPrimaryAttack(pOperator, vecShootOrigin, vecShootDir);
-	}
-	break;
-
-	default:
-		BaseClass::Operator_HandleAnimEvent(pEvent, pOperator);
-		break;
-	}
-}
-#endif
-#endif //BB2_AI
-
-//-----------------------------------------------------------------------------
 const WeaponProficiencyInfo_t *CWeaponG36C::GetProficiencyValues()
 {
 	static WeaponProficiencyInfo_t proficiencyTable[] =
 	{
 		{ 7.0, 0.75 },
 		{ 5.00, 0.75 },
-		{ 10.0 / 3.0, 0.75 },
+		{ 3.0, 0.85 },
 		{ 5.0 / 3.0, 0.75 },
 		{ 1.00, 1.0 },
 	};
