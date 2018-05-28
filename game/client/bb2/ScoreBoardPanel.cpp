@@ -5,25 +5,14 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <stdio.h>
-#include <cdll_client_int.h>
-#include <cdll_util.h>
-#include <globalvars_base.h>
-#include <igameresources.h>
-#include "IGameUIFuncs.h" // for key bindings
-#include "inputsystem/iinputsystem.h"
 #include "ScoreBoardPanel.h"
 #include <voice_status.h>
 #include <vgui/IScheme.h>
 #include <vgui/ILocalize.h>
 #include <vgui/ISurface.h>
 #include <vgui/IVGui.h>
-#include <vstdlib/IKeyValuesSystem.h>
 #include <KeyValues.h>
-#include <vgui_controls/ImageList.h>
 #include <vgui_controls/Label.h>
-#include <vgui_controls/SectionedListPanel.h>
-#include <game/client/iviewport.h>
 #include <igameresources.h>
 #include "c_team.h"
 #include "c_world.h"
@@ -61,9 +50,9 @@ CScoreBoardPanel::CScoreBoardPanel(IViewPort *pViewPort) : CVGUIBaseFrame(NULL, 
 
 	int teams[] =
 	{
-		2,
-		3,
-		1,
+		TEAM_HUMANS,
+		TEAM_DECEASED,
+		TEAM_SPECTATOR,
 	};
 
 	for (int i = 0; i < _ARRAYSIZE(m_pScoreSections); i++)
@@ -179,10 +168,8 @@ void CScoreBoardPanel::OnThink()
 //-----------------------------------------------------------------------------
 void CScoreBoardPanel::Reset()
 {
-	for (int i = 0; i < _ARRAYSIZE(m_pScoreSections); i++)
-	{
-		m_pScoreSections[i]->Cleanup();
-	}
+	for (int i = 0; i < _ARRAYSIZE(m_pScoreSections); i++)	
+		m_pScoreSections[i]->Cleanup();	
 }
 
 //-----------------------------------------------------------------------------
@@ -227,7 +214,6 @@ void CScoreBoardPanel::ShowPanel(bool bShow)
 void CScoreBoardPanel::FireGameEvent(IGameEvent *event)
 {
 	const char * type = event->GetName();
-
 	if (Q_strcmp(type, "server_spawn") == 0)
 	{
 		const char *hostname = event->GetString("hostname");
@@ -241,9 +227,7 @@ void CScoreBoardPanel::PerformLayout()
 	GetSize(w, h);
 
 	for (int i = 0; i < _ARRAYSIZE(m_pScoreSections); i++)
-	{
 		m_pScoreSections[i]->SetSize((w / 2) - scheme()->GetProportionalScaledValue(24), scheme()->GetProportionalScaledValue(258));
-	}
 
 	for (int i = 0; i < _ARRAYSIZE(m_pInfoLabel); i++)
 	{

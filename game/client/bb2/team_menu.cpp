@@ -5,129 +5,26 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <stdio.h>
-#include <cdll_client_int.h>
 #include "team_menu.h"
 #include <vgui/IScheme.h>
 #include <vgui/ILocalize.h>
 #include <vgui/ISurface.h>
 #include <KeyValues.h>
-#include <vgui_controls/ImageList.h>
 #include <filesystem.h>
-#include <vgui_controls/TextEntry.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/Panel.h>
-#include "vgui_controls/AnimationController.h"
+#include <vgui_controls/AnimationController.h>
 #include <vgui/IInput.h>
 #include "vgui_controls/ImagePanel.h"
-#include <vgui/IVGui.h>
-#include <vgui_controls/Frame.h>
 #include "c_hl2mp_player.h"
-#include "vgui/MouseCode.h"
 #include "GameBase_Client.h"
 #include "GameBase_Shared.h"
-#include "cdll_util.h"
 #include <game/client/iviewport.h>
-#include <stdlib.h> // MAX_PATH define
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
-
-void CTeamMenu::PerformLayout()
-{
-	BaseClass::PerformLayout();
-
-	int w, h;
-	GetSize(w, h);
-
-	for (int i = 0; i < _ARRAYSIZE(m_pImgJoin); i++)
-	{
-		m_pImgJoin[i]->SetSize(scheme()->GetProportionalScaledValue(200), scheme()->GetProportionalScaledValue(200));
-		m_pButtonJoin[i]->SetSize(scheme()->GetProportionalScaledValue(200), scheme()->GetProportionalScaledValue(200));
-
-		m_pButtonJoin[i]->SetMouseInputEnabled(true);
-		m_pButtonJoin[i]->SetKeyBoardInputEnabled(true);
-
-		m_pTeamInfo[i]->SetSize(scheme()->GetProportionalScaledValue(200), scheme()->GetProportionalScaledValue(20));
-	}
-
-	m_pInfo->SetSize(w, scheme()->GetProportionalScaledValue(24));
-	m_pInfo->SetPos(0, scheme()->GetProportionalScaledValue(40));
-
-	m_pImgJoin[0]->SetPos(scheme()->GetProportionalScaledValue(100), h - scheme()->GetProportionalScaledValue(200));
-	m_pButtonJoin[0]->SetPos(scheme()->GetProportionalScaledValue(100), h - scheme()->GetProportionalScaledValue(200));
-	m_pButtonJoin[0]->MoveToFront();
-	m_pTeamInfo[0]->SetPos(scheme()->GetProportionalScaledValue(100), h - scheme()->GetProportionalScaledValue(65));
-
-	m_pImgJoin[1]->SetPos(w - scheme()->GetProportionalScaledValue(300), h - scheme()->GetProportionalScaledValue(200));
-	m_pButtonJoin[1]->SetPos(w - scheme()->GetProportionalScaledValue(300), h - scheme()->GetProportionalScaledValue(200));
-	m_pButtonJoin[1]->MoveToFront();
-	m_pTeamInfo[1]->SetPos(w - scheme()->GetProportionalScaledValue(300), h - scheme()->GetProportionalScaledValue(65));
-
-	for (int i = 0; i < _ARRAYSIZE(m_pModelPreviews); i++)
-	{
-		m_pModelPreviews[i]->SetSize(scheme()->GetProportionalScaledValue(200), h - scheme()->GetProportionalScaledValue(200));
-	}
-
-	m_pModelPreviews[0]->SetPos(scheme()->GetProportionalScaledValue(100), scheme()->GetProportionalScaledValue(50));
-	m_pModelPreviews[1]->SetPos(w - scheme()->GetProportionalScaledValue(300), scheme()->GetProportionalScaledValue(50));
-
-	m_pImgJoin[0]->SetImage("team/survivor_team");
-	m_pImgJoin[1]->SetImage("team/zombie_team");
-
-	m_bRollover[0] = false;
-	m_bRollover[1] = false;
-}
-
-void CTeamMenu::OnThink()
-{
-	BaseClass::OnThink();
-
-	SetSize(ScreenWidth(), ScreenHeight());
-
-	int x, y;
-	vgui::input()->GetCursorPos(x, y);
-
-	if (IsVisible() && engine->IsInGame())
-	{
-		int deceasedSize = HL2MPRules()->GetTeamSize(TEAM_DECEASED);
-		int humanSize = HL2MPRules()->GetTeamSize(TEAM_HUMANS);
-
-		wchar_t wszArg1[10], wszArg2[10], wszUnicodeString[128];
-		V_swprintf_safe(wszArg1, L"%i", humanSize);
-		V_swprintf_safe(wszArg2, L"%i", deceasedSize);
-
-		g_pVGuiLocalize->ConstructString(wszUnicodeString, sizeof(wszUnicodeString), g_pVGuiLocalize->Find("#VGUI_TeamMenuPlayers"), 1, wszArg1);
-		m_pTeamInfo[0]->SetText(wszUnicodeString);
-
-		g_pVGuiLocalize->ConstructString(wszUnicodeString, sizeof(wszUnicodeString), g_pVGuiLocalize->Find("#VGUI_TeamMenuPlayers"), 1, wszArg2);
-		m_pTeamInfo[1]->SetText(wszUnicodeString);
-	}
-
-	if (m_pButtonJoin[0]->IsWithin(x, y) && !m_bRollover[0])
-	{
-		m_bRollover[0] = true;
-		m_pImgJoin[0]->SetImage("team/survivor_team_over");
-	}
-	else if (!m_pButtonJoin[0]->IsWithin(x, y) && m_bRollover[0])
-	{
-		m_bRollover[0] = false;
-		m_pImgJoin[0]->SetImage("team/survivor_team");
-	}
-
-	if (m_pButtonJoin[1]->IsWithin(x, y) && !m_bRollover[1])
-	{
-		m_bRollover[1] = true;
-		m_pImgJoin[1]->SetImage("team/zombie_team_over");
-	}
-	else if (!m_pButtonJoin[1]->IsWithin(x, y) && m_bRollover[1])
-	{
-		m_bRollover[1] = false;
-		m_pImgJoin[1]->SetImage("team/zombie_team");
-	}
-}
 
 CTeamMenu::CTeamMenu(IViewPort *pViewPort) : BaseClass(NULL, PANEL_TEAM, false, 0.5f)
 {
@@ -206,16 +103,104 @@ CTeamMenu::~CTeamMenu()
 {
 }
 
+void CTeamMenu::PerformLayout()
+{
+	BaseClass::PerformLayout();
+
+	int w, h;
+	GetSize(w, h);
+
+	for (int i = 0; i < _ARRAYSIZE(m_pImgJoin); i++)
+	{
+		m_pImgJoin[i]->SetSize(scheme()->GetProportionalScaledValue(200), scheme()->GetProportionalScaledValue(200));
+		m_pButtonJoin[i]->SetSize(scheme()->GetProportionalScaledValue(200), scheme()->GetProportionalScaledValue(200));
+
+		m_pButtonJoin[i]->SetMouseInputEnabled(true);
+		m_pButtonJoin[i]->SetKeyBoardInputEnabled(true);
+
+		m_pTeamInfo[i]->SetSize(scheme()->GetProportionalScaledValue(200), scheme()->GetProportionalScaledValue(20));
+	}
+
+	m_pInfo->SetSize(w, scheme()->GetProportionalScaledValue(24));
+	m_pInfo->SetPos(0, scheme()->GetProportionalScaledValue(40));
+
+	m_pImgJoin[0]->SetPos(scheme()->GetProportionalScaledValue(100), h - scheme()->GetProportionalScaledValue(200));
+	m_pButtonJoin[0]->SetPos(scheme()->GetProportionalScaledValue(100), h - scheme()->GetProportionalScaledValue(200));
+	m_pButtonJoin[0]->MoveToFront();
+	m_pTeamInfo[0]->SetPos(scheme()->GetProportionalScaledValue(100), h - scheme()->GetProportionalScaledValue(65));
+
+	m_pImgJoin[1]->SetPos(w - scheme()->GetProportionalScaledValue(300), h - scheme()->GetProportionalScaledValue(200));
+	m_pButtonJoin[1]->SetPos(w - scheme()->GetProportionalScaledValue(300), h - scheme()->GetProportionalScaledValue(200));
+	m_pButtonJoin[1]->MoveToFront();
+	m_pTeamInfo[1]->SetPos(w - scheme()->GetProportionalScaledValue(300), h - scheme()->GetProportionalScaledValue(65));
+
+	for (int i = 0; i < _ARRAYSIZE(m_pModelPreviews); i++)
+		m_pModelPreviews[i]->SetSize(scheme()->GetProportionalScaledValue(200), h - scheme()->GetProportionalScaledValue(200));
+
+	m_pModelPreviews[0]->SetPos(scheme()->GetProportionalScaledValue(100), scheme()->GetProportionalScaledValue(50));
+	m_pModelPreviews[1]->SetPos(w - scheme()->GetProportionalScaledValue(300), scheme()->GetProportionalScaledValue(50));
+
+	m_pImgJoin[0]->SetImage("team/survivor_team");
+	m_pImgJoin[1]->SetImage("team/zombie_team");
+
+	m_bRollover[0] = false;
+	m_bRollover[1] = false;
+}
+
+void CTeamMenu::OnThink()
+{
+	BaseClass::OnThink();
+
+	SetSize(ScreenWidth(), ScreenHeight());
+
+	int x, y;
+	vgui::input()->GetCursorPos(x, y);
+
+	if (IsVisible() && engine->IsInGame())
+	{
+		int deceasedSize = HL2MPRules()->GetTeamSize(TEAM_DECEASED);
+		int humanSize = HL2MPRules()->GetTeamSize(TEAM_HUMANS);
+
+		wchar_t wszArg1[10], wszArg2[10], wszUnicodeString[128];
+		V_swprintf_safe(wszArg1, L"%i", humanSize);
+		V_swprintf_safe(wszArg2, L"%i", deceasedSize);
+
+		g_pVGuiLocalize->ConstructString(wszUnicodeString, sizeof(wszUnicodeString), g_pVGuiLocalize->Find("#VGUI_TeamMenuPlayers"), 1, wszArg1);
+		m_pTeamInfo[0]->SetText(wszUnicodeString);
+
+		g_pVGuiLocalize->ConstructString(wszUnicodeString, sizeof(wszUnicodeString), g_pVGuiLocalize->Find("#VGUI_TeamMenuPlayers"), 1, wszArg2);
+		m_pTeamInfo[1]->SetText(wszUnicodeString);
+	}
+
+	if (m_pButtonJoin[0]->IsWithin(x, y) && !m_bRollover[0])
+	{
+		m_bRollover[0] = true;
+		m_pImgJoin[0]->SetImage("team/survivor_team_over");
+	}
+	else if (!m_pButtonJoin[0]->IsWithin(x, y) && m_bRollover[0])
+	{
+		m_bRollover[0] = false;
+		m_pImgJoin[0]->SetImage("team/survivor_team");
+	}
+
+	if (m_pButtonJoin[1]->IsWithin(x, y) && !m_bRollover[1])
+	{
+		m_bRollover[1] = true;
+		m_pImgJoin[1]->SetImage("team/zombie_team_over");
+	}
+	else if (!m_pButtonJoin[1]->IsWithin(x, y) && m_bRollover[1])
+	{
+		m_bRollover[1] = false;
+		m_pImgJoin[1]->SetImage("team/zombie_team");
+	}
+}
+
 void CTeamMenu::OnCommand(const char *command)
 {
 	if (!Q_stricmp(command, "Humans"))
-	{
 		engine->ClientCmd_Unrestricted("jointeam 0\n");
-	}
 	else if (!Q_stricmp(command, "Zombies"))
-	{
 		engine->ClientCmd_Unrestricted("jointeam 1\n");
-	}
 
 	BaseClass::OnCommand(command);
 }
@@ -242,7 +227,6 @@ void CTeamMenu::OnShowPanel(bool bShow)
 		m_pViewPort->ShowBackGround(bShow);
 		gViewPortInterface->ShowBackGround(bShow);
 		SetVisible(bShow);
-
 		OnSetCharacterPreview();
 	}
 }
@@ -252,9 +236,7 @@ void CTeamMenu::ForceClose(void)
 	BaseClass::ForceClose();
 
 	for (int i = 0; i < _ARRAYSIZE(m_pModelPreviews); i++)
-	{
 		m_pModelPreviews[i]->DeleteModelData();
-	}
 
 	m_pViewPort->ShowBackGround(false);
 	gViewPortInterface->ShowBackGround(false);
@@ -300,7 +282,7 @@ void CTeamMenu::OnSetCharacterPreview()
 	const char *survivor = bb2_survivor_choice.GetString();
 	if (!survivor)
 		survivor = "";
-	
+
 	m_pModelPreviews[0]->LoadModel(survivor, TEAM_HUMANS);
 	m_pModelPreviews[1]->LoadModel(survivor, TEAM_DECEASED);
 
@@ -311,7 +293,5 @@ void CTeamMenu::OnSetCharacterPreview()
 	ConVarRef extra_leftleg("bb2_survivor_choice_extra_leg_left");
 
 	for (int i = 0; i < _ARRAYSIZE(m_pModelPreviews); i++)
-	{
 		m_pModelPreviews[i]->SetProperties(extra_skin.GetInt(), extra_head.GetInt(), extra_body.GetInt(), extra_rightleg.GetInt(), extra_leftleg.GetInt());
-	}
 }

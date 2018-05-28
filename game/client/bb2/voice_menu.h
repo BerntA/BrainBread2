@@ -12,14 +12,8 @@
 
 #include <vgui_controls/Frame.h>
 #include <vgui_controls/Button.h>
-#include <vgui_controls/HTML.h>
-#include <utlvector.h>
 #include <vgui/ILocalize.h>
-#include <vgui/KeyCode.h>
 #include <game/client/iviewport.h>
-#include "mouseoverpanelbutton.h"
-#include "vgui/MouseCode.h"
-#include <vgui_controls/RichText.h>
 #include "MouseInputPanel.h"
 #include "SkillTreeIcon.h"
 

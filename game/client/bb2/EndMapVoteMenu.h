@@ -13,12 +13,9 @@
 
 #include <vgui_controls/Frame.h>
 #include <vgui_controls/Button.h>
-#include <vgui_controls/HTML.h>
-#include <utlvector.h>
 #include <vgui/ILocalize.h>
 #include <vgui/KeyCode.h>
 #include <game/client/iviewport.h>
-#include "mouseoverpanelbutton.h"
 #include "vgui/MouseCode.h"
 #include "MapVoteItem.h"
 
@@ -48,7 +45,6 @@ public:
 	bool NeedsUpdate(void) { return false; }
 	bool HasInputElements(void) { return true; }
 	void ShowPanel(bool bShow);
-	void Paint(void);
 
 	vgui::VPANEL GetVPanel(void) { return BaseClass::GetVPanel(); }
 	bool IsVisible() { return BaseClass::IsVisible(); }

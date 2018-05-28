@@ -6,46 +6,10 @@
 
 #include "cbase.h"
 #include "NotePanel.h"
-#include "hud.h"
-#include "hudelement.h"
-#include "hud_macros.h"
-#include "iclientmode.h"
-#include "c_basehlplayer.h"
-#include "vgui_controls/Panel.h"
-#include "vgui_controls/AnimationController.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include <vgui/IInput.h>
-#include "ienginevgui.h"
-#include "c_baseplayer.h" 
-#include "hud_numericdisplay.h"
-#include "vgui_controls/Button.h"
-#include "vgui_controls/ImagePanel.h"
-#include <vgui/IVGui.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/RichText.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 
 using namespace vgui;
-
-void CNotePanel::OnScreenSizeChanged(int iOldWide, int iOldTall)
-{
-	BaseClass::OnScreenSizeChanged(iOldWide, iOldTall);
-	LoadControlSettings("resource/ui/notepanel.res");
-}
-
-void CNotePanel::OnShowPanel(bool bShow)
-{
-	vgui::surface()->PlaySound(bShow ? "ui/document_read.wav" : "ui/document_close.wav");
-	BaseClass::OnShowPanel(bShow);
-
-	if (GetBackground())
-		GetBackground()->SetVisible(false);
-
-	int w, h;
-	GetSize(w, h);
-	m_pInputPanel->SetPos(0, 0);
-	m_pInputPanel->SetSize(w, h);
-}
 
 CNotePanel::CNotePanel(vgui::VPANEL parent) : BaseClass(NULL, "NotePanel", false, 0.25f)
 {
@@ -94,6 +58,26 @@ CNotePanel::CNotePanel(vgui::VPANEL parent) : BaseClass(NULL, "NotePanel", false
 
 CNotePanel::~CNotePanel()
 {
+}
+
+void CNotePanel::OnScreenSizeChanged(int iOldWide, int iOldTall)
+{
+	BaseClass::OnScreenSizeChanged(iOldWide, iOldTall);
+	LoadControlSettings("resource/ui/notepanel.res");
+}
+
+void CNotePanel::OnShowPanel(bool bShow)
+{
+	vgui::surface()->PlaySound(bShow ? "ui/document_read.wav" : "ui/document_close.wav");
+	BaseClass::OnShowPanel(bShow);
+
+	if (GetBackground())
+		GetBackground()->SetVisible(false);
+
+	int w, h;
+	GetSize(w, h);
+	m_pInputPanel->SetPos(0, 0);
+	m_pInputPanel->SetSize(w, h);
 }
 
 void CNotePanel::SetupNote(const char *szHeader, const char *szFile)

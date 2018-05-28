@@ -12,19 +12,19 @@
 #pragma once
 #endif
 
-#include "vgui_controls/Frame.h"
+#include <vgui_controls/Frame.h>
 #include <vgui/ISurface.h>
 #include <vgui/IVGui.h>
 #include <vgui/IInput.h>
 #include <vgui/KeyCode.h>
 #include <vgui_controls/RichText.h>
-#include "KeyValues.h"
-#include "filesystem.h"
 #include <vgui/VGUI.h>
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/PHandle.h>
 #include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/Label.h>
+#include "KeyValues.h"
+#include "filesystem.h"
 
 namespace vgui
 {

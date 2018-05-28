@@ -6,38 +6,22 @@
 
 #include "cbase.h"
 #include "base_panel.h"
-#include "hud.h"
-#include "hudelement.h"
-#include "hud_macros.h"
-#include "iclientmode.h"
-#include "c_basehlplayer.h"
-#include "vgui_controls/Panel.h"
-#include "vgui_controls/AnimationController.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include <vgui/IInput.h>
-#include "ienginevgui.h"
-#include "c_baseplayer.h" 
-#include "hud_numericdisplay.h"
-#include "vgui_controls/Button.h"
-#include "vgui_controls/ImagePanel.h"
-#include "InventoryItem.h"
 #include "hl2mp_gamerules.h"
+#include "c_hl2mp_player.h"
 #include "GameBase_Shared.h"
-#include <vgui/IVGui.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/RichText.h>
 #include "IGameUIFuncs.h"
 
 extern IGameUIFuncs *gameuifuncs; // for key binding details
 
 using namespace vgui;
 
-void CBaseGamePanel::OnScreenSizeChanged(int iOldWide, int iOldTall)
+enum BasePanelPages_t
 {
-	BaseClass::OnScreenSizeChanged(iOldWide, iOldTall);
-	LoadControlSettings("resource/ui/basegamepanel.res");
-}
+	BASE_PANEL_INVENTORY = 0,
+	BASE_PANEL_QUESTS,
+
+	BASE_PANEL_PAGES
+};
 
 CBaseGamePanel::CBaseGamePanel(vgui::VPANEL parent) : BaseClass(NULL, "BaseGamePanel", false, 0.2f)
 {
@@ -110,18 +94,21 @@ CBaseGamePanel::CBaseGamePanel(vgui::VPANEL parent) : BaseClass(NULL, "BaseGameP
 	m_pQuestDetailList->MoveToFront();
 
 	SetScheme("BaseScheme");
-
 	LoadControlSettings("resource/ui/basegamepanel.res");
 
 	PerformLayout();
-
 	InvalidateLayout();
-
 	UpdateLayout();
 }
 
 CBaseGamePanel::~CBaseGamePanel()
 {
+}
+
+void CBaseGamePanel::OnScreenSizeChanged(int iOldWide, int iOldTall)
+{
+	BaseClass::OnScreenSizeChanged(iOldWide, iOldTall);
+	LoadControlSettings("resource/ui/basegamepanel.res");
 }
 
 void CBaseGamePanel::UpdateLayout(void)
@@ -222,7 +209,7 @@ void CBaseGamePanel::UpdateLayout(void)
 		m_pInventoryItem[i]->SetKeyBoardInputEnabled(true);
 		m_pInventoryItem[i]->SetPos(xz, yz);
 
-		if (m_iCurrentPage != 0)
+		if (m_iCurrentPage != BASE_PANEL_INVENTORY)
 			m_pInventoryItem[i]->SetVisible(false);
 	}
 
@@ -237,7 +224,7 @@ void CBaseGamePanel::UpdateLayout(void)
 	m_pQuestDetailList->SetSize((w - (x - w4) - (w3 * 2)), (h3));
 	m_pQuestDetailList->SetPos((x + w3), (y2 + h2));
 
-	if (m_iCurrentPage != 1)
+	if (m_iCurrentPage != BASE_PANEL_QUESTS)
 		m_pQuestDetailList->SetVisible(false);
 
 	m_pQuestDetailList->GetSize(w, h);
@@ -304,7 +291,7 @@ void CBaseGamePanel::OnShowPanel(bool bShow)
 	BaseClass::OnShowPanel(bShow);
 
 	// Set the default start page:
-	m_iCurrentPage = 0;
+	m_iCurrentPage = BASE_PANEL_INVENTORY;
 	UpdateLayout();
 	SetPage();
 }
@@ -318,7 +305,7 @@ void CBaseGamePanel::SetPage()
 	if (!pClient)
 		return;
 
-	if (m_iCurrentPage == 0)
+	if (m_iCurrentPage == BASE_PANEL_INVENTORY)
 	{
 		m_pPageTitle->SetText("#VGUI_BasePanel_InventoryHeader");
 
@@ -334,7 +321,7 @@ void CBaseGamePanel::SetPage()
 		for (int i = 0; i < GameBaseShared()->GetGameInventory().Count(); i++)
 		{
 			if (i >= _ARRAYSIZE(m_pInventoryItem))
-				continue;
+				break;
 
 			uint iItemID = GameBaseShared()->GetGameInventory()[i].m_iItemID;
 			bool bMapItem = GameBaseShared()->GetGameInventory()[i].bIsMapItem;
@@ -352,7 +339,7 @@ void CBaseGamePanel::SetPage()
 			}
 		}
 	}
-	else if (m_iCurrentPage == 1)
+	else if (m_iCurrentPage == BASE_PANEL_QUESTS)
 	{
 		m_pPageTitle->SetText("#VGUI_BasePanel_QuestHeader");
 		if ((pClient->GetTeamNumber() != TEAM_HUMANS) || (HL2MPRules()->GetCurrentGamemode() != MODE_OBJECTIVE) || (!GameBaseShared()->GetSharedQuestData()->IsAnyQuestActive()))

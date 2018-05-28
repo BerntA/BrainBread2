@@ -5,30 +5,15 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <stdio.h>
-#include <cdll_client_int.h>
 #include "EndMapVoteMenu.h"
 #include <vgui/IScheme.h>
 #include <vgui/ILocalize.h>
-#include <vgui/ISurface.h>
-#include <KeyValues.h>
-#include <vgui_controls/ImageList.h>
-#include <filesystem.h>
-#include <vgui_controls/TextEntry.h>
 #include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 #include <vgui_controls/Panel.h>
-#include "vgui_controls/AnimationController.h"
-#include <vgui/IInput.h>
-#include "vgui_controls/ImagePanel.h"
-#include <vgui/IVGui.h>
-#include <vgui_controls/Frame.h>
+#include <vgui_controls/AnimationController.h>
 #include "c_hl2mp_player.h"
 #include "GameBase_Client.h"
-#include "vgui/MouseCode.h"
-#include "cdll_util.h"
-#include "IGameUIFuncs.h"
-#include <game/client/iviewport.h>
-#include <stdlib.h> // MAX_PATH define
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -165,11 +150,6 @@ void CEndMapVoteMenu::ShowPanel(bool bShow)
 	SetVisible(bShow);
 	m_pViewPort->ShowBackGround(bShow);
 	gViewPortInterface->ShowBackGround(bShow);
-}
-
-void CEndMapVoteMenu::Paint(void)
-{
-	BaseClass::Paint();
 }
 
 void CEndMapVoteMenu::ApplySchemeSettings(vgui::IScheme *pScheme)

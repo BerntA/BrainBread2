@@ -10,20 +10,14 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-#include "vgui_controls/Frame.h"
-#include <vgui/ISurface.h>
-#include <vgui/IVGui.h>
-#include <vgui/IInput.h>
-#include <vgui/KeyCode.h>
-#include <vgui_controls/RichText.h>
-#include <vgui_controls/Divider.h>
-#include "KeyValues.h"
-#include "filesystem.h"
 #include "vgui_base_frame.h"
 #include "InventoryItem.h"
 #include "QuestDetailPanel.h"
 #include "CharacterStatPreview.h"
+#include <vgui_controls/Divider.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
+#include <vgui_controls/Label.h>
 
 class CBaseGamePanel : public vgui::CVGUIBaseFrame
 {

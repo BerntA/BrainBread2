@@ -10,11 +10,9 @@
 #pragma once
 #endif
 
-#include <vgui_controls/EditablePanel.h>
+#include "vgui_base_frame.h"
 #include <game/client/iviewport.h>
 #include "GameEventListener.h"
-#include <vgui_controls/Frame.h>
-#include "vgui_base_frame.h"
 #include "ScoreBoardSectionPanel.h"
 
 //-----------------------------------------------------------------------------

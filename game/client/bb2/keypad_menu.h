@@ -12,16 +12,13 @@
 
 #include <vgui_controls/Frame.h>
 #include <vgui_controls/Button.h>
-#include <vgui_controls/HTML.h>
-#include <utlvector.h>
 #include <vgui/ILocalize.h>
 #include <vgui/KeyCode.h>
 #include <game/client/iviewport.h>
-#include "mouseoverpanelbutton.h"
 #include "usermessages.h"
+#include "hud.h"
 #include "hud_macros.h"
 #include "iclientmode.h"
-#include "hud.h"
 
 namespace vgui
 {

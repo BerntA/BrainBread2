@@ -54,6 +54,8 @@ namespace vgui
 		void OnThink();
 		void ApplySchemeSettings(vgui::IScheme *pScheme);
 		void PerformLayout();
+		void FindAndSetAvatarForPlayer(int index, vgui::ImagePanel *image, int avatarIndex);
+		int FindPlayerIndexWithHighestScore(int *excluded, int size, int wantedTeam);
 	};
 }
 

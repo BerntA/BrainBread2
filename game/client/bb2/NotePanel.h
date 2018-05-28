@@ -10,15 +10,6 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-#include "vgui_controls/Frame.h"
-#include <vgui/ISurface.h>
-#include <vgui/IVGui.h>
-#include <vgui/IInput.h>
-#include <vgui/KeyCode.h>
-#include <vgui_controls/RichText.h>
-#include "KeyValues.h"
-#include "filesystem.h"
 #include "vgui_base_frame.h"
 #include "MouseInputPanel.h"
 

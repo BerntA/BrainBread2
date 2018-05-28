@@ -6,24 +6,10 @@
 
 #include "cbase.h"
 #include "vote_menu.h"
-#include "hud.h"
-#include "hudelement.h"
-#include "hud_macros.h"
-#include "iclientmode.h"
-#include "c_basehlplayer.h"
-#include "vgui_controls/Panel.h"
-#include "vgui_controls/AnimationController.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include <vgui/IInput.h>
-#include "ienginevgui.h"
-#include "c_baseplayer.h" 
-#include "hud_numericdisplay.h"
-#include "vgui_controls/Button.h"
-#include "vgui_controls/ImagePanel.h"
+#include "c_hl2mp_player.h" 
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 #include <vgui/IVGui.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/RichText.h>
 #include "IGameUIFuncs.h"
 #include "c_playerresource.h"
 
@@ -158,9 +144,7 @@ void CVotePanel::OnShowPanel(bool bShow)
 	BaseClass::OnShowPanel(bShow);
 
 	if (GetBackground())
-	{
 		GetBackground()->SetPaintBackgroundType(2);
-	}
 
 	PerformLayout();
 }
@@ -212,25 +196,15 @@ void CVotePanel::OnCommand(const char* pcCommand)
 
 	bool bWantsToPassVote = false;
 	if (!Q_stricmp(pcCommand, "Action1"))
-	{
 		m_iSelectedOption = VOTE_OPTION_KICK;
-	}
 	else if (!Q_stricmp(pcCommand, "Action2"))
-	{
 		m_iSelectedOption = VOTE_OPTION_BAN;
-	}
 	else if (!Q_stricmp(pcCommand, "Action3"))
-	{
 		m_iSelectedOption = VOTE_OPTION_MAP;
-	}
 	else if (!Q_stricmp(pcCommand, "Action4"))
-	{
 		bWantsToPassVote = true;
-	}
 	else if (!Q_stricmp(pcCommand, "Action5"))
-	{
 		PerformLayout();
-	}
 
 	if (m_iSelectedOption != VOTE_OPTION_NONE)
 	{
@@ -310,9 +284,7 @@ void CVotePanel::OnCommand(const char* pcCommand)
 						if (pszMapCycle && pszMapCycle[0])
 						{
 							if (pszMapCycle && nLength)
-							{
 								V_SplitString(pszMapCycle, "\n", m_VoteSetupMapCycle);
-							}
 						}
 					}
 				}

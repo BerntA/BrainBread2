@@ -5,28 +5,16 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "TopPlayersPanel.h"
-#include "iclientmode.h"
-#include "vgui_controls/AnimationController.h"
-#include <igameresources.h>
-#include "cdll_util.h"
-#include "GameBase_Client.h"
+#include <vgui/IInput.h>
+#include <vgui/IScheme.h>
+#include <vgui/ISurface.h>
+#include <vgui/IVGui.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
+#include <vgui_controls/AnimationController.h>
 #include "c_playerresource.h"
 #include "KeyValues.h"
-#include "clientmode_shared.h"
 #include "c_hl2mp_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -87,6 +75,62 @@ TopPlayersPanel::~TopPlayersPanel()
 void TopPlayersPanel::PerformLayout()
 {
 	BaseClass::PerformLayout();
+}
+
+void TopPlayersPanel::FindAndSetAvatarForPlayer(int index, vgui::ImagePanel *image, int avatarIndex)
+{
+	if ((IsPlayerIndex(index) == false) || 
+		(avatarIndex < 0) || (avatarIndex >= _ARRAYSIZE(m_pSteamAvatars)) ||
+		(image == NULL))
+		return;
+
+	player_info_t pi;
+	if (engine->GetPlayerInfo(index, &pi))
+	{
+		if (!pi.fakeplayer && pi.friendsID)
+		{
+			CSteamID steamIDForPlayer(pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual);
+			m_pSteamAvatars[avatarIndex] = new CAvatarImage();
+			m_pSteamAvatars[avatarIndex]->SetAvatarSteamID(steamIDForPlayer);
+			m_pSteamAvatars[avatarIndex]->SetAvatarSize(32, 32);
+			m_pSteamAvatars[avatarIndex]->SetSize(32, 32);
+			image->SetImage(m_pSteamAvatars[avatarIndex]);
+		}
+		else
+			image->SetImage("steam_default_avatar");
+	}
+}
+
+int TopPlayersPanel::FindPlayerIndexWithHighestScore(int *excluded, int size, int wantedTeam)
+{
+	bool bShouldExclude = (size > 0);
+
+	int index = -1;
+	int score = 0;
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		int team = g_PR->GetSelectedTeam(i);
+		if (team != wantedTeam)
+			continue;
+
+		if (bShouldExclude)
+		{
+			for (int x = 0; x < size; x++)
+			{
+				if (i == excluded[x])
+					
+			}
+		}
+
+		int playerScore = g_PR->GetRoundScore(i);
+		if (playerScore > score)
+		{
+			score = playerScore;
+			index = i;
+		}
+	}
+
+	return index;
 }
 
 void TopPlayersPanel::ApplySchemeSettings(vgui::IScheme *pScheme)

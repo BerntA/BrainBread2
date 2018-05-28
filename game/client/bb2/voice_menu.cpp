@@ -5,30 +5,21 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <stdio.h>
-#include <cdll_client_int.h>
 #include "voice_menu.h"
 #include <vgui/IScheme.h>
 #include <vgui/ILocalize.h>
-#include <vgui/ISurface.h>
 #include <KeyValues.h>
-#include <vgui_controls/ImageList.h>
 #include <filesystem.h>
-#include <vgui_controls/TextEntry.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/Panel.h>
-#include "vgui_controls/AnimationController.h"
+#include <vgui_controls/AnimationController.h>
 #include <vgui/IInput.h>
-#include "vgui_controls/ImagePanel.h"
+#include <vgui_controls/ImagePanel.h>
 #include <vgui/IVGui.h>
-#include <vgui_controls/Frame.h>
 #include "c_hl2mp_player.h"
-#include "vgui/MouseCode.h"
-#include "cdll_util.h"
 #include "GameBase_Client.h"
 #include "IGameUIFuncs.h"
 #include <game/client/iviewport.h>
-#include <stdlib.h> // MAX_PATH define
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -50,41 +41,6 @@ const char *pszOverlayPaths[] =
 	"voicewheel/look_hover",
 	"voicewheel/exit_hover",
 };
-
-void CVoiceMenu::PerformLayout()
-{
-	BaseClass::PerformLayout();
-}
-
-void CVoiceMenu::OnThink()
-{
-	C_HL2MP_Player *pPlayer = (C_HL2MP_Player *)C_HL2MP_Player::GetLocalHL2MPPlayer();
-	if (!pPlayer)
-		return;
-
-	MoveToCenterOfScreen();
-
-	m_pImgBackground->SetSize(GetWide(), GetTall());
-	m_pImgBackground->SetPos(0, 0);
-
-	m_pImgOverlay->SetSize(GetWide(), GetTall());
-	m_pImgOverlay->SetPos(0, 0);
-
-	int x, y;
-	vgui::input()->GetCursorPos(x, y);
-
-	bool bShouldBeVis = false;
-	for (int i = 0; i < _ARRAYSIZE(m_pButton); i++)
-	{
-		if (m_pButton[i]->IsWithin(x, y))
-		{
-			m_pImgOverlay->SetImage(pszOverlayPaths[i]);
-			bShouldBeVis = true;
-		}
-	}
-
-	m_pImgOverlay->SetVisible(bShouldBeVis);
-}
 
 CVoiceMenu::CVoiceMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_VOICEWHEEL)
 {
@@ -146,6 +102,41 @@ CVoiceMenu::CVoiceMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_VOICEWHEEL)
 
 CVoiceMenu::~CVoiceMenu()
 {
+}
+
+void CVoiceMenu::PerformLayout()
+{
+	BaseClass::PerformLayout();
+}
+
+void CVoiceMenu::OnThink()
+{
+	C_HL2MP_Player *pPlayer = (C_HL2MP_Player *)C_HL2MP_Player::GetLocalHL2MPPlayer();
+	if (!pPlayer)
+		return;
+
+	MoveToCenterOfScreen();
+
+	m_pImgBackground->SetSize(GetWide(), GetTall());
+	m_pImgBackground->SetPos(0, 0);
+
+	m_pImgOverlay->SetSize(GetWide(), GetTall());
+	m_pImgOverlay->SetPos(0, 0);
+
+	int x, y;
+	vgui::input()->GetCursorPos(x, y);
+
+	bool bShouldBeVis = false;
+	for (int i = 0; i < _ARRAYSIZE(m_pButton); i++)
+	{
+		if (m_pButton[i]->IsWithin(x, y))
+		{
+			m_pImgOverlay->SetImage(pszOverlayPaths[i]);
+			bShouldBeVis = true;
+		}
+	}
+
+	m_pImgOverlay->SetVisible(bShouldBeVis);
 }
 
 void CVoiceMenu::OnCommand(const char *command)

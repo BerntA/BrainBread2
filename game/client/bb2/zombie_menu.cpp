@@ -5,100 +5,24 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <stdio.h>
-#include <cdll_client_int.h>
 #include "zombie_menu.h"
-#include <vgui/IScheme.h>
-#include <vgui/ILocalize.h>
-#include <vgui/ISurface.h>
 #include <KeyValues.h>
-#include <vgui_controls/ImageList.h>
 #include <filesystem.h>
-#include <vgui_controls/TextEntry.h>
-#include <vgui_controls/Button.h>
 #include <vgui_controls/Panel.h>
-#include "vgui_controls/AnimationController.h"
+#include <vgui_controls/AnimationController.h>
 #include <vgui/IInput.h>
-#include "vgui_controls/ImagePanel.h"
-#include <vgui/IVGui.h>
-#include <vgui_controls/Frame.h>
+#include <vgui_controls/ImagePanel.h>
 #include "c_hl2mp_player.h"
-#include "vgui/MouseCode.h"
-#include "cdll_util.h"
 #include "GameBase_Client.h"
 #include "IGameUIFuncs.h"
 #include <game/client/iviewport.h>
-#include <stdlib.h> // MAX_PATH define
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-// Console Helpers:
 extern IGameUIFuncs *gameuifuncs; // for key binding details
 
 using namespace vgui;
-
-void CZombieMenu::PerformLayout()
-{
-	BaseClass::PerformLayout();
-
-	for (int i = 0; i < _ARRAYSIZE(m_pSkillIcon); i++)
-	{
-		if (m_pSkillIcon[i])
-			m_pSkillIcon[i]->PerformLayout();
-	}
-}
-
-void CZombieMenu::OnThink()
-{
-	C_HL2MP_Player *pPlayer = (C_HL2MP_Player *)C_HL2MP_Player::GetLocalHL2MPPlayer();
-	if (!pPlayer)
-		return;
-
-	MoveToCenterOfScreen();
-
-	wchar_t wszArg1[10], wszUnicodeString[128];
-	V_swprintf_safe(wszArg1, L"%i", pPlayer->m_BB2Local.m_iZombieCredits);
-	g_pVGuiLocalize->ConstructString(wszUnicodeString, sizeof(wszUnicodeString), g_pVGuiLocalize->Find("#VGUI_SkillPoints"), 1, wszArg1);
-	m_pCreditsInfo->SetText(wszUnicodeString);
-
-	int x, y;
-	vgui::input()->GetCursorPos(x, y);
-
-	bool bFound = false;
-	for (int i = 0; i < _ARRAYSIZE(m_pSkillIcon); i++)
-	{
-		if (m_pSkillIcon[i] == NULL)
-			continue;
-
-		m_pSkillIcon[i]->SetProgressValue((float)pPlayer->GetSkillValue(i + PLAYER_SKILL_ZOMBIE_HEALTH));
-
-		if (m_pSkillIcon[i]->IsWithin(x, y))
-		{
-			bFound = true;
-
-			wchar_t wszSkillInfo[512];
-			g_pVGuiLocalize->ConstructString(wszSkillInfo, sizeof(wszSkillInfo),
-				g_pVGuiLocalize->Find("#VGUI_SkillBase"), 2,
-				g_pVGuiLocalize->Find(m_pSkillIcon[i]->GetSkillName()),
-				g_pVGuiLocalize->Find(m_pSkillIcon[i]->GetSkillDescription())
-				);
-
-			m_pToolTip->SetText(wszSkillInfo);
-		}
-	}
-
-	m_pToolTip->SetVisible(bFound);
-
-	int w, h, wz, hz;
-	GetSize(w, h);
-	m_pToolTip->SetSize(w - scheme()->GetProportionalScaledValue(60), scheme()->GetProportionalScaledValue(70));
-	m_pToolTip->GetSize(wz, hz);
-	m_pToolTip->SetPos((w / 2) - (wz / 2), h - scheme()->GetProportionalScaledValue(24));
-	m_pToolTip->SetContentAlignment(Label::Alignment::a_north);
-
-	m_pCreditsInfo->SetPos(scheme()->GetProportionalScaledValue(30), h - scheme()->GetProportionalScaledValue(46));
-}
 
 CZombieMenu::CZombieMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_ZOMBIE)
 {
@@ -169,6 +93,68 @@ CZombieMenu::CZombieMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_ZOMBIE)
 
 CZombieMenu::~CZombieMenu()
 {
+}
+
+void CZombieMenu::PerformLayout()
+{
+	BaseClass::PerformLayout();
+
+	for (int i = 0; i < _ARRAYSIZE(m_pSkillIcon); i++)
+	{
+		if (m_pSkillIcon[i])
+			m_pSkillIcon[i]->PerformLayout();
+	}
+}
+
+void CZombieMenu::OnThink()
+{
+	C_HL2MP_Player *pPlayer = (C_HL2MP_Player *)C_HL2MP_Player::GetLocalHL2MPPlayer();
+	if (!pPlayer)
+		return;
+
+	MoveToCenterOfScreen();
+
+	wchar_t wszArg1[10], wszUnicodeString[128];
+	V_swprintf_safe(wszArg1, L"%i", pPlayer->m_BB2Local.m_iZombieCredits);
+	g_pVGuiLocalize->ConstructString(wszUnicodeString, sizeof(wszUnicodeString), g_pVGuiLocalize->Find("#VGUI_SkillPoints"), 1, wszArg1);
+	m_pCreditsInfo->SetText(wszUnicodeString);
+
+	int x, y;
+	vgui::input()->GetCursorPos(x, y);
+
+	bool bFound = false;
+	for (int i = 0; i < _ARRAYSIZE(m_pSkillIcon); i++)
+	{
+		if (m_pSkillIcon[i] == NULL)
+			continue;
+
+		m_pSkillIcon[i]->SetProgressValue(((float)pPlayer->GetSkillValue(i + PLAYER_SKILL_ZOMBIE_HEALTH)));
+
+		if (m_pSkillIcon[i]->IsWithin(x, y))
+		{
+			bFound = true;
+
+			wchar_t wszSkillInfo[512];
+			g_pVGuiLocalize->ConstructString(wszSkillInfo, sizeof(wszSkillInfo),
+				g_pVGuiLocalize->Find("#VGUI_SkillBase"), 2,
+				g_pVGuiLocalize->Find(m_pSkillIcon[i]->GetSkillName()),
+				g_pVGuiLocalize->Find(m_pSkillIcon[i]->GetSkillDescription())
+				);
+
+			m_pToolTip->SetText(wszSkillInfo);
+		}
+	}
+
+	m_pToolTip->SetVisible(bFound);
+
+	int w, h, wz, hz;
+	GetSize(w, h);
+	m_pToolTip->SetSize(w - scheme()->GetProportionalScaledValue(60), scheme()->GetProportionalScaledValue(70));
+	m_pToolTip->GetSize(wz, hz);
+	m_pToolTip->SetPos((w / 2) - (wz / 2), h - scheme()->GetProportionalScaledValue(24));
+	m_pToolTip->SetContentAlignment(Label::Alignment::a_north);
+
+	m_pCreditsInfo->SetPos(scheme()->GetProportionalScaledValue(30), h - scheme()->GetProportionalScaledValue(46));
 }
 
 void CZombieMenu::OnCommand(const char *command)

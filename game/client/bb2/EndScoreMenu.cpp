@@ -5,72 +5,21 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <stdio.h>
-#include <cdll_client_int.h>
 #include "EndScoreMenu.h"
 #include <vgui/IScheme.h>
 #include <vgui/ILocalize.h>
-#include <vgui/ISurface.h>
-#include <KeyValues.h>
-#include <vgui_controls/ImageList.h>
-#include <filesystem.h>
-#include <vgui_controls/TextEntry.h>
-#include <vgui_controls/Button.h>
 #include <vgui_controls/Panel.h>
-#include "vgui_controls/AnimationController.h"
-#include <vgui/IInput.h>
-#include "vgui_controls/ImagePanel.h"
-#include <vgui/IVGui.h>
-#include <vgui_controls/Frame.h>
+#include <vgui_controls/AnimationController.h>
+#include <vgui_controls/ImagePanel.h>
+#include <game/client/iviewport.h>
 #include "c_hl2mp_player.h"
 #include "hl2mp_gamerules.h"
 #include "GameBase_Client.h"
-#include "vgui/MouseCode.h"
-#include "cdll_util.h"
-#include "IGameUIFuncs.h" // for key bindings
-#include <game/client/iviewport.h>
-#include <stdlib.h> // MAX_PATH define
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
-
-#ifndef _XBOX
-extern IGameUIFuncs *gameuifuncs; // for key binding details
-#endif
-
-void CEndScoreMenu::PerformLayout()
-{
-	BaseClass::PerformLayout();
-}
-
-void CEndScoreMenu::Update()
-{
-	if (GetBackground())
-		GetBackground()->SetVisible(false);
-}
-
-void CEndScoreMenu::OnThink()
-{
-	BaseClass::OnThink();
-
-	SetSize(ScreenWidth(), ScreenHeight());
-	SetPos(0, 0);
-
-	int w, h;
-	GetSize(w, h);
-
-	m_pTopPlayerList->SetAlpha(m_pLabelWinner->GetAlpha());
-
-	m_pTopPlayerList->SetSize(scheme()->GetProportionalScaledValue(300), scheme()->GetProportionalScaledValue(300));
-	m_pTopPlayerList->SetPos((w / 2) - (scheme()->GetProportionalScaledValue(300) / 2), (h / 2) - (scheme()->GetProportionalScaledValue(200) / 2));
-
-	int height = scheme()->GetProportionalScaledValue(300);
-	int width = scheme()->GetProportionalScaledValue(240);
-	m_pCharacterStatsPreview->SetSize(width, height);
-	m_pCharacterStatsPreview->SetPos(w - width, (h / 2) - (height / 2));
-}
 
 CEndScoreMenu::CEndScoreMenu(IViewPort *pViewPort) : BaseClass(NULL, PANEL_ENDSCORE, false, 0.5f, true)
 {
@@ -107,16 +56,45 @@ CEndScoreMenu::CEndScoreMenu(IViewPort *pViewPort) : BaseClass(NULL, PANEL_ENDSC
 	m_pCharacterStatsPreview->AddActionSignalTarget(this);
 	m_pCharacterStatsPreview->SetZPos(40);
 
-	// Init Default 
 	PerformLayout();
-
 	InvalidateLayout(false, true);
-
 	SetupLayout(true);
 }
 
 CEndScoreMenu::~CEndScoreMenu()
 {
+}
+
+void CEndScoreMenu::PerformLayout()
+{
+	BaseClass::PerformLayout();
+}
+
+void CEndScoreMenu::Update()
+{
+	if (GetBackground())
+		GetBackground()->SetVisible(false);
+}
+
+void CEndScoreMenu::OnThink()
+{
+	BaseClass::OnThink();
+
+	SetSize(ScreenWidth(), ScreenHeight());
+	SetPos(0, 0);
+
+	int w, h;
+	GetSize(w, h);
+
+	m_pTopPlayerList->SetAlpha(m_pLabelWinner->GetAlpha());
+
+	m_pTopPlayerList->SetSize(scheme()->GetProportionalScaledValue(300), scheme()->GetProportionalScaledValue(300));
+	m_pTopPlayerList->SetPos((w / 2) - (scheme()->GetProportionalScaledValue(300) / 2), (h / 2) - (scheme()->GetProportionalScaledValue(200) / 2));
+
+	int height = scheme()->GetProportionalScaledValue(300);
+	int width = scheme()->GetProportionalScaledValue(240);
+	m_pCharacterStatsPreview->SetSize(width, height);
+	m_pCharacterStatsPreview->SetPos(w - width, (h / 2) - (height / 2));
 }
 
 void CEndScoreMenu::ShowPanel(bool bShow)
