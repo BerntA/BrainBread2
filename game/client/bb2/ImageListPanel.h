@@ -14,11 +14,6 @@
 #include <vgui/VGUI.h>
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/PHandle.h>
-#include <vgui_controls/EditablePanel.h>
-#include <vgui_controls/Label.h>
-#include <vgui_controls/RichText.h>
-#include <vgui_controls/ComboBox.h>
-#include <vgui_controls/PanelListPanel.h>
 #include <vgui_controls/Divider.h>
 #include "MouseInputPanel.h"
 #include "hud_crosshair.h"
@@ -26,7 +21,6 @@
 namespace vgui
 {
 	class ImageListPanel;
-
 	class ImageListPanel : public vgui::Panel
 	{
 		DECLARE_CLASS_SIMPLE(ImageListPanel, vgui::Panel);

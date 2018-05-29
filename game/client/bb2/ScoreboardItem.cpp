@@ -5,29 +5,14 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "ScoreboardItem.h"
-#include "iclientmode.h"
-#include "vgui_controls/AnimationController.h"
-#include <igameresources.h>
-#include "cdll_util.h"
+#include <vgui/IInput.h>
+#include <vgui/IScheme.h>
+#include <vgui_controls/Label.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
+#include <vgui_controls/AnimationController.h>
 #include "GameBase_Client.h"
-#include "KeyValues.h"
-#include "clientmode_shared.h"
-#include <steam/steam_api.h>
-#include "filesystem.h"
 #include "hl2mp_gamerules.h"
 #include "c_playerresource.h"
 #include "c_world.h"
@@ -41,12 +26,13 @@ ScoreboardItem::ScoreboardItem(vgui::Panel *parent, char const *panelName, KeyVa
 {
 	m_iTotalScore = 0;
 	m_bRollover = false;
+	m_bIsBot = pkvPlayerData->GetBool("fakeplr");
 	m_pAvatarIMG = NULL;
-	m_iSectionTeam = pkvPlayerData->GetInt("sectionTeam", 1);
+	m_iSectionTeam = pkvPlayerData->GetInt("sectionTeam", TEAM_SPECTATOR);
 	m_iPlayerIndex = pkvPlayerData->GetInt("playerIndex");
 	Q_strncpy(szSteamID, pkvPlayerData->GetString("steamid"), 80);
 
-	m_bIsLocalPlayer = ((m_iPlayerIndex == GetLocalPlayerIndex()) || (!strcmp(szSteamID, "BOT")));
+	m_bIsLocalPlayer = ((m_iPlayerIndex == GetLocalPlayerIndex()) || m_bIsBot);
 
 	SetMouseInputEnabled(true);
 	SetKeyBoardInputEnabled(true);
@@ -79,17 +65,14 @@ ScoreboardItem::ScoreboardItem(vgui::Panel *parent, char const *panelName, KeyVa
 	player_info_t pi;
 	if (engine->GetPlayerInfo(m_iPlayerIndex, &pi))
 	{
-		if (!pi.fakeplayer)
+		if (!pi.fakeplayer && pi.friendsID)
 		{
-			if (pi.friendsID)
-			{
-				CSteamID steamIDForPlayer(pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual);
-				m_pAvatarIMG = new CAvatarImage();
-				m_pAvatarIMG->SetAvatarSteamID(steamIDForPlayer, k_EAvatarSize32x32);
-				m_pAvatarIMG->SetAvatarSize(32, 32);
-				m_pAvatarIMG->SetSize(32, 32);
-				m_pSteamAvatar->SetImage(m_pAvatarIMG);
-			}
+			CSteamID steamIDForPlayer(pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual);
+			m_pAvatarIMG = new CAvatarImage();
+			m_pAvatarIMG->SetAvatarSteamID(steamIDForPlayer, k_EAvatarSize32x32);
+			m_pAvatarIMG->SetAvatarSize(32, 32);
+			m_pAvatarIMG->SetSize(32, 32);
+			m_pSteamAvatar->SetImage(m_pAvatarIMG);
 		}
 		else
 			m_pSteamAvatar->SetImage("steam_default_avatar");
@@ -165,6 +148,15 @@ ScoreboardItem::ScoreboardItem(vgui::Panel *parent, char const *panelName, KeyVa
 	UpdateItem(pkvPlayerData);
 }
 
+ScoreboardItem::~ScoreboardItem()
+{
+	if (m_pAvatarIMG)
+	{
+		delete m_pAvatarIMG;
+		m_pAvatarIMG = NULL;
+	}
+}
+
 void ScoreboardItem::UpdateItem(KeyValues *pkvPlayerData)
 {
 	m_iTotalScore = pkvPlayerData->GetInt("kills");
@@ -174,17 +166,11 @@ void ScoreboardItem::UpdateItem(KeyValues *pkvPlayerData)
 	m_pPing->SetText(pkvPlayerData->GetString("ping"));
 
 	const char *szPing = pkvPlayerData->GetString("ping");
-	m_pPing->SetFgColor(GetPingColorState((!strcmp(szPing, "BOT") ? -1 : atoi(szPing))));
+	m_pPing->SetFgColor(GetPingColorState((m_bIsBot ? -1 : atoi(szPing))));
 
 	int plIndex = GetPlayerIndex();
 	if (plIndex && !m_bIsLocalPlayer)
-	{
-		bool bMuted = GameBaseClient->IsPlayerGameVoiceMuted(plIndex);
-		if (bMuted)
-			m_pImgMuteStatus->SetImage("scoreboard/icon_muted");
-		else
-			m_pImgMuteStatus->SetImage("scoreboard/icon_unmuted");
-	}
+		m_pImgMuteStatus->SetImage(GameBaseClient->IsPlayerGameVoiceMuted(plIndex) ? "scoreboard/icon_muted" : "scoreboard/icon_unmuted");
 
 	if (g_PR)
 	{
@@ -198,9 +184,7 @@ void ScoreboardItem::UpdateItem(KeyValues *pkvPlayerData)
 	}
 
 	if (HL2MPRules())
-	{
 		m_pLevel->SetVisible(HL2MPRules()->CanUseSkills());
-	}
 
 	if (m_iSectionTeam == TEAM_SPECTATOR)
 	{
@@ -220,15 +204,6 @@ Color ScoreboardItem::GetPingColorState(int latency)
 		return Color(255, 255, 0, 255);
 	else
 		return Color(255, 0, 0, 255);
-}
-
-ScoreboardItem::~ScoreboardItem()
-{
-	if (m_pAvatarIMG)
-	{
-		delete m_pAvatarIMG;
-		m_pAvatarIMG = NULL;
-	}
 }
 
 void ScoreboardItem::SetSize(int wide, int tall)
@@ -310,10 +285,10 @@ void ScoreboardItem::OnThink()
 
 	if (m_pAvatarIMG && (m_flSteamImgThink > 0.0f) && (m_flSteamImgThink < engine->Time()))
 	{
-		if (!m_pAvatarIMG->IsLoading())
+		if (m_pAvatarIMG->IsValid())
 			m_flSteamImgThink = 0.0f;
 		else
-			m_flSteamImgThink = engine->Time() + 0.5f;
+			m_flSteamImgThink = engine->Time() + 0.25f;
 
 		m_pSteamAvatar->SetImage(m_pAvatarIMG);
 	}
@@ -348,7 +323,7 @@ void ScoreboardItem::OnCommand(const char* pcCommand)
 	// Redirect to community link / steam profile. From Id 32 to Id 64
 	if (!Q_stricmp(pcCommand, "Redirect"))
 	{
-		if (strcmp(szSteamID, "BOT"))
+		if (m_bIsBot == false)
 			steamapicontext->SteamFriends()->ActivateGameOverlayToWebPage(VarArgs("http://steamcommunity.com/profiles/%s", szSteamID));
 	}
 	else if (!Q_stricmp(pcCommand, "Mute"))

@@ -5,20 +5,9 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "MultiLabel.h"
-#include <igameresources.h>
-#include "KeyValues.h"
+#include <vgui_controls/Label.h>
+#include <vgui_controls/ImagePanel.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -95,10 +84,8 @@ void MultiLabel::SetTextColorSegmented(const char *szText[], Color textColor[], 
 		MultiLabel_Item_t labelItem;
 
 		vgui::Label *m_pLabel = vgui::SETUP_PANEL(new vgui::Label(this, "Label", szText[items]));
-		Color colLabel;
 		m_pLabel->SetVisible(true);
 		m_pLabel->SetText(szText[items]);
-		colLabel = textColor[items];
 
 		// If we use localization we need to use the localized text, not the actual token... (for size computing)
 		char pchText[256];
@@ -110,7 +97,7 @@ void MultiLabel::SetTextColorSegmented(const char *szText[], Color textColor[], 
 		m_pLabel->SetPos(x_pos, 0);
 
 		labelItem.m_pLabel = m_pLabel;
-		labelItem.fgColor = colLabel;
+		labelItem.fgColor = textColor[items];
 
 		pszTextSplits.AddToTail(labelItem);
 

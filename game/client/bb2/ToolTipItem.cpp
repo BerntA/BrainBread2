@@ -5,30 +5,10 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "ToolTipItem.h"
-#include <vgui/ILocalize.h>
-#include "iclientmode.h"
-#include "vgui_controls/AnimationController.h"
-#include <igameresources.h>
-#include "cdll_util.h"
-#include "GameBase_Client.h"
-#include "KeyValues.h"
-#include "clientmode_shared.h"
-#include <steam/steam_api.h>
-#include "filesystem.h"
+#include <vgui_controls/Label.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -103,7 +83,7 @@ void ToolTipItem::ApplySchemeSettings(vgui::IScheme *pScheme)
 
 	m_pInfoTitle->SetFont(pScheme->GetFont("Default"));
 	m_pInfoDesc->SetFont(pScheme->GetFont("DefaultSmall"));
-	m_pInfoDesc->SetBgColor(Color(15, 15, 15, 0));
+	m_pInfoDesc->SetBgColor(Color(0, 0, 0, 0));
 	m_pInfoDesc->SetFgColor(pScheme->GetColor("ToolTipDescriptionTextColor", Color(255, 255, 255, 255)));
 	m_pInfoTitle->SetFgColor(pScheme->GetColor("ToolTipTitleTextColor", Color(255, 255, 255, 255)));
 }

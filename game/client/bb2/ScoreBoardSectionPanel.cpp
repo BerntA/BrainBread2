@@ -5,30 +5,13 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "ScoreBoardSectionPanel.h"
-#include "iclientmode.h"
-#include "vgui_controls/AnimationController.h"
-#include <igameresources.h>
-#include "cdll_util.h"
+#include <vgui_controls/Label.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 #include "GameBase_Client.h"
 #include "GameBase_Shared.h"
 #include "c_playerresource.h"
-#include <vgui/ILocalize.h>
-#include "KeyValues.h"
-#include "filesystem.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -36,6 +19,22 @@
 using namespace vgui;
 
 #define BANNER_HEIGHT scheme()->GetProportionalScaledValue(15)
+#define UPDATE_FREQUENCY 0.3f
+
+typedef vgui::ScoreboardItem* ScoreboardObject;
+static int SortPlayerScorePredicate(const ScoreboardObject *data1, const ScoreboardObject *data2)
+{
+	int score1 = (*data1)->GetPlayerScore();
+	int score2 = (*data2)->GetPlayerScore();
+
+	if (score1 == score2)
+		return 0;
+
+	if (score1 < score2)
+		return 1;
+
+	return -1;
+}
 
 CScoreBoardSectionPanel::CScoreBoardSectionPanel(vgui::Panel *parent, char const *panelName, int targetTeam) : vgui::Panel(parent, panelName)
 {
@@ -104,7 +103,7 @@ void CScoreBoardSectionPanel::OnThink()
 
 	if (m_flLastUpdate < gpGlobals->curtime)
 	{
-		m_flLastUpdate = gpGlobals->curtime + 0.2f;
+		m_flLastUpdate = gpGlobals->curtime + UPDATE_FREQUENCY;
 		UpdateScoreInfo();
 	}
 }
@@ -146,22 +145,20 @@ void CScoreBoardSectionPanel::PerformLayout()
 	m_pSectionInfo[4]->SetSize(percent, BANNER_HEIGHT);
 
 	if (HL2MPRules())
-	{
 		m_pSectionInfo[1]->SetVisible(HL2MPRules()->CanUseSkills());
-	}
 
 	if (m_iTeamLink == TEAM_SPECTATOR)
 	{
 		for (int i = 1; i < _ARRAYSIZE(m_pSectionInfo); i++)
-		{
 			m_pSectionInfo[i]->SetVisible(false);
-		}
 
 		m_pSectionInfo[0]->SetSize(w, BANNER_HEIGHT);
 		m_pSectionInfo[0]->SetPos(0, 0);
 		m_pSectionInfo[0]->SetText("#GameUI_Scoreboard_Waiting");
 		m_pSectionInfo[0]->SetContentAlignment(Label::Alignment::a_center);
 	}
+
+	m_flLastUpdate = 0.0f;
 }
 
 void CScoreBoardSectionPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
@@ -247,45 +244,21 @@ void CScoreBoardSectionPanel::UpdateScoreInfo()
 		playerData->deleteThis();
 	}
 
-	// RePos - highest score and down...:
-	int highestScore = 0;
+	CUtlVector<vgui::ScoreboardItem*> tempList;
 	for (int i = 0; i < m_pItems.Count(); i++)
+		tempList.AddToTail(m_pItems[i]);
+
+	// Sort high -> low
+	if (tempList.Count() > 1)
+		tempList.Sort(SortPlayerScorePredicate);
+
+	for (int i = 0; i < tempList.Count(); i++)
 	{
-		if (m_pItems[i]->GetPlayerScore() > highestScore)
-			highestScore = m_pItems[i]->GetPlayerScore();
+		tempList[i]->SetSize(w, scheme()->GetProportionalScaledValue(20));
+		tempList[i]->SetPos(0, scheme()->GetProportionalScaledValue(17 + (i * 20)));
 	}
 
-	int lowestScore = 0;
-	for (int i = 0; i < m_pItems.Count(); i++)
-	{
-		if (m_pItems[i]->GetPlayerScore() < lowestScore)
-			lowestScore = m_pItems[i]->GetPlayerScore();
-	}
-
-	if (highestScore > 0)
-	{
-		int ypos = scheme()->GetProportionalScaledValue(17);
-		for (int score = highestScore; score >= lowestScore; score--)
-		{
-			for (int i = 0; i < m_pItems.Count(); i++)
-			{
-				if (score == m_pItems[i]->GetPlayerScore())
-				{
-					m_pItems[i]->SetSize(w, scheme()->GetProportionalScaledValue(20));
-					m_pItems[i]->SetPos(0, ypos);
-					ypos += scheme()->GetProportionalScaledValue(20);
-				}
-			}
-		}
-	}
-	else
-	{
-		for (int i = 0; i < m_pItems.Count(); i++)
-		{
-			m_pItems[i]->SetSize(w, scheme()->GetProportionalScaledValue(20));
-			m_pItems[i]->SetPos(0, scheme()->GetProportionalScaledValue(17 + (i * 20)));
-		}
-	}
+	tempList.RemoveAll();
 }
 
 void CScoreBoardSectionPanel::GetScoreInfo(int playerIndex, KeyValues *kv)
@@ -299,9 +272,15 @@ void CScoreBoardSectionPanel::GetScoreInfo(int playerIndex, KeyValues *kv)
 	kv->SetString("steamid", pi.guid);
 
 	if (g_PR->IsFakePlayer(playerIndex))
+	{
 		kv->SetString("ping", "BOT");
+		kv->SetBool("fakeplr", true);
+	}
 	else
+	{
 		kv->SetString("ping", VarArgs("%i", g_PR->GetPing(playerIndex)));
+		kv->SetBool("fakeplr", false);
+	}
 
 	kv->SetInt("level", g_PR->GetLevel(playerIndex));
 	kv->SetInt("kills", g_PR->GetTotalScore(playerIndex));

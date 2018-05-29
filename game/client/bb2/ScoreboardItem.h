@@ -14,9 +14,7 @@
 #include <vgui/VGUI.h>
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/PHandle.h>
-#include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/Label.h>
-#include <vgui_controls/RichText.h>
 #include "vgui_avatarimage.h"
 #include "MultiLabel.h"
 
@@ -39,14 +37,15 @@ namespace vgui
 
 	private:
 
+		int m_iPlayerIndex;
 		int m_iTotalScore;
 		int m_iSectionTeam;
 
 		bool m_bRollover;
 		bool m_bIsLocalPlayer;
+		bool m_bIsBot;
 
-		Color GetPingColorState(int latency);
-		int m_iPlayerIndex;
+		Color GetPingColorState(int latency);		
 
 		CAvatarImage *m_pAvatarIMG;
 		vgui::Button *m_pButton;

@@ -5,25 +5,12 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "InventoryItem.h"
-#include "inputsystem/iinputsystem.h"
-#include "vgui_controls/AnimationController.h"
-#include "cdll_util.h"
-#include "GameBase_Client.h"
-#include "KeyValues.h"
+#include <vgui/IInput.h>
+#include <vgui_controls/Label.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
+#include <inputsystem/iinputsystem.h>
 #include "GameBase_Shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -73,6 +60,7 @@ InventoryItem::InventoryItem(vgui::Panel *parent, char const *panelName, float f
 
 InventoryItem::~InventoryItem()
 {
+	m_pModelPreview->DeleteModelData();
 }
 
 void InventoryItem::OnThink()

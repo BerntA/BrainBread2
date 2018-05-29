@@ -11,9 +11,6 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-#include <utlvector.h>
-#include <utllinkedlist.h>
 #include <vgui/VGUI.h>
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/PHandle.h>
@@ -23,7 +20,6 @@
 namespace vgui
 {
 	class MouseInputPanel;
-
 	class MouseInputPanel : public vgui::Panel
 	{
 		DECLARE_CLASS_SIMPLE(MouseInputPanel, vgui::Panel);

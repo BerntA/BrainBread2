@@ -11,11 +11,9 @@
 #pragma once
 #endif
 
-#include <vgui_controls/EditablePanel.h>
+#include <vgui_controls/Panel.h>
 #include <vgui_controls/Label.h>
 #include "basemodelpanel.h"
-#include <vgui_controls/RichText.h>
-#include "vgui_base_panel.h"
 #include "MouseInputPanel.h"
 
 namespace vgui
@@ -31,9 +29,7 @@ namespace vgui
 		virtual ~InventoryItem();
 
 		virtual void SetSize(int wide, int tall);
-
-		int GetItemID() { return m_iItemID; }
-
+		virtual int GetItemID() { return m_iItemID; }
 		virtual void SetItemDetails(KeyValues *pkvData, bool bMapItem);
 
 	private:
@@ -46,7 +42,7 @@ namespace vgui
 		vgui::Label *m_pTitle; // Name of item.
 		vgui::Label *m_pType; // Type of item. (Misc, Attachment, etc)
 		vgui::MouseInputPanel *m_pInputPanel;
-		class CModelPanel*  m_pModelPreview;
+		class CModelPanel* m_pModelPreview;
 
 		float m_flAngleY;
 		float m_flOriginX;

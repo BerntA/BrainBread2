@@ -5,18 +5,11 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "GameBase_Shared.h"
 #include "PasswordDialog.h"
-#include "vgui_controls/Panel.h"
-#include "vgui/ISurface.h"
-#include "vgui_controls/AnimationController.h"
-#include <vgui/ILocalize.h>
+#include "GameBase_Shared.h"
 #include <vgui/IInput.h>
-#include "vgui_controls/Button.h"
-#include "vgui_controls/ImagePanel.h"
-#include <vgui/IVGui.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/RichText.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 
 using namespace vgui;
 
@@ -60,7 +53,6 @@ CPasswordDialog::CPasswordDialog(vgui::Panel *parent, char const *panelName) : v
 	m_pPasswordText->SetMaximumCharCount(-1);
 
 	PerformLayout();
-
 	InvalidateLayout();
 
 	OnUpdate(false);
@@ -113,11 +105,10 @@ void CPasswordDialog::ApplySchemeSettings(vgui::IScheme *pScheme)
 
 void CPasswordDialog::OnCommand(const char *pcCommand)
 {
-	int zx, zy;
-	vgui::input()->GetCursorPos(zx, zy);
-
 	if (!Q_stricmp(pcCommand, "Activate"))
 	{
+		int zx, zy;
+		vgui::input()->GetCursorPos(zx, zy);
 		if (m_pButton[0]->IsWithin(zx, zy))
 		{
 			char szPassword[128];

@@ -6,26 +6,12 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "QuestDetailPanel.h"
-#include "hud.h"
-#include "hudelement.h"
-#include "iclientmode.h"
-#include "vgui/ILocalize.h"
-#include "vgui_controls/AnimationController.h"
-#include "KeyValues.h"
+#include <vgui/IInput.h>
+#include <vgui_controls/Label.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
+#include <vgui/ILocalize.h>
 #include "GameBase_Shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -94,7 +80,6 @@ QuestDetailPanel::QuestDetailPanel(vgui::Panel *parent, char const *panelName) :
 	m_pQuestListLabel[1]->SetText("Side Quests");
 
 	InvalidateLayout();
-
 	PerformLayout();
 }
 
@@ -268,9 +253,7 @@ void QuestDetailPanel::ChooseQuestItem(int index)
 		wchar_t *wszToken = g_pVGuiLocalize->Find(objectiveString);
 
 		if (wszToken != NULL)
-		{
 			g_pVGuiLocalize->ConstructString(sIDString, sizeof(sIDString), wszToken, 1, wszArg);
-		}
 		else
 		{
 			g_pVGuiLocalize->ConvertANSIToUnicode(objectiveString, wszObjective, sizeof(wszObjective));

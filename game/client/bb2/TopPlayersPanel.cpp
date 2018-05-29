@@ -22,6 +22,34 @@
 
 using namespace vgui;
 
+#define MAX_SHOW_SCORE_FOR_PLR 4
+
+struct PlayerScoreItem
+{
+	PlayerScoreItem(int index, int score)
+	{
+		this->index = index;
+		this->score = score;
+	}
+
+	int index;
+	int score;
+
+	static int __cdecl SortPlayerScorePredicate(const PlayerScoreItem *data1, const PlayerScoreItem *data2)
+	{
+		int score1 = data1->score;
+		int score2 = data2->score;
+
+		if (score1 == score2)
+			return 0;
+
+		if (score1 < score2)
+			return 1;
+
+		return -1;
+	}
+};
+
 TopPlayersPanel::TopPlayersPanel(vgui::Panel *parent, char const *panelName) : vgui::Panel(parent, panelName)
 {
 	SetMouseInputEnabled(false);
@@ -77,60 +105,60 @@ void TopPlayersPanel::PerformLayout()
 	BaseClass::PerformLayout();
 }
 
-void TopPlayersPanel::FindAndSetAvatarForPlayer(int index, vgui::ImagePanel *image, int avatarIndex)
+void TopPlayersPanel::FindAndSetAvatarForPlayer(int playerIndex, int panelIndex)
 {
-	if ((IsPlayerIndex(index) == false) || 
-		(avatarIndex < 0) || (avatarIndex >= _ARRAYSIZE(m_pSteamAvatars)) ||
-		(image == NULL))
+	if ((IsPlayerIndex(playerIndex) == false) || (g_PR == NULL) ||
+		(panelIndex < 0) || (panelIndex >= _ARRAYSIZE(m_pSteamAvatars)))
 		return;
 
+	m_pLabelNames[panelIndex]->SetText(g_PR->GetPlayerName(playerIndex));
+
 	player_info_t pi;
-	if (engine->GetPlayerInfo(index, &pi))
+	if (engine->GetPlayerInfo(playerIndex, &pi))
 	{
 		if (!pi.fakeplayer && pi.friendsID)
 		{
 			CSteamID steamIDForPlayer(pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual);
-			m_pSteamAvatars[avatarIndex] = new CAvatarImage();
-			m_pSteamAvatars[avatarIndex]->SetAvatarSteamID(steamIDForPlayer);
-			m_pSteamAvatars[avatarIndex]->SetAvatarSize(32, 32);
-			m_pSteamAvatars[avatarIndex]->SetSize(32, 32);
-			image->SetImage(m_pSteamAvatars[avatarIndex]);
+			m_pSteamAvatars[panelIndex] = new CAvatarImage();
+			m_pSteamAvatars[panelIndex]->SetAvatarSteamID(steamIDForPlayer);
+			m_pSteamAvatars[panelIndex]->SetAvatarSize(32, 32);
+			m_pSteamAvatars[panelIndex]->SetSize(32, 32);
+			m_pImageAvatars[panelIndex]->SetImage(m_pSteamAvatars[panelIndex]);
 		}
 		else
-			image->SetImage("steam_default_avatar");
+			m_pImageAvatars[panelIndex]->SetImage("steam_default_avatar");
 	}
 }
 
-int TopPlayersPanel::FindPlayerIndexWithHighestScore(int *excluded, int size, int wantedTeam)
+/*static*/ void TopPlayersPanel::FindPlayersWithHighestScore(CUtlVector<PlayerScoreItem> &list, int wantedTeam /*= TEAM_ANY*/, bool roundScores /*= false*/)
 {
-	bool bShouldExclude = (size > 0);
+	if (g_PR == NULL)
+		return;
 
-	int index = -1;
-	int score = 0;
+	list.Purge();
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
-		int team = g_PR->GetSelectedTeam(i);
-		if (team != wantedTeam)
+		if (g_PR->IsConnected(i) == false)
 			continue;
 
-		if (bShouldExclude)
+		if (wantedTeam != TEAM_ANY)
 		{
-			for (int x = 0; x < size; x++)
-			{
-				if (i == excluded[x])
-					
-			}
+			if (g_PR->GetSelectedTeam(i) != wantedTeam)
+				continue;
 		}
 
-		int playerScore = g_PR->GetRoundScore(i);
-		if (playerScore > score)
-		{
-			score = playerScore;
-			index = i;
-		}
+		int score = (roundScores ? g_PR->GetRoundScore(i) : g_PR->GetTotalScore(i));
+		if (score <= 0)
+			continue;
+
+		list.AddToTail(PlayerScoreItem(i, score));
 	}
 
-	return index;
+	if (list.Count() <= 1)
+		return;
+
+	list.Sort(PlayerScoreItem::SortPlayerScorePredicate);
 }
 
 void TopPlayersPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
@@ -214,402 +242,153 @@ bool TopPlayersPanel::FindTopPlayers(void)
 	if (!g_PR || !HL2MPRules())
 		return false;
 
+	CUtlVector<PlayerScoreItem> pScoreList1, pScoreList2;
+
+	bool bRes = false;
 	switch (HL2MPRules()->GetCurrentGamemode())
 	{
 	case MODE_OBJECTIVE:
-		return FindTopPlayersObjective();
+		bRes = FindTopPlayersObjective(pScoreList1, pScoreList2);
+		break;
 	case MODE_ELIMINATION:
-		return FindTopPlayersElimination();
+		bRes = FindTopPlayersElimination(pScoreList1, pScoreList2);
+		break;
 	case MODE_ARENA:
-		return FindTopPlayersArena();
+		bRes = FindTopPlayersArena(pScoreList1, pScoreList2);
+		break;
 	case MODE_DEATHMATCH:
-		return FindTopPlayersDeathmatch();
+		bRes = FindTopPlayersDeathmatch(pScoreList1, pScoreList2);
+		break;
 	}
 
-	return false;
+	pScoreList1.Purge();
+	pScoreList2.Purge();
+	return bRes;
 }
 
-bool TopPlayersPanel::FindTopPlayersElimination(void)
+bool TopPlayersPanel::FindTopPlayersElimination(CUtlVector<PlayerScoreItem> &list1, CUtlVector<PlayerScoreItem> &list2)
 {
-	bool bFound = false;
+	FindPlayersWithHighestScore(list1, TEAM_HUMANS, true);
+	int sizeHumans = list1.Count();
 
-	int m_iPlayerIndex[4];
-	int iScore = 0;
+	FindPlayersWithHighestScore(list2, TEAM_DECEASED, true);
+	int sizeZombies = list2.Count();
 
-	// Find highest for the human team.
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	if ((sizeHumans <= 0) && (sizeZombies <= 0))
+		return false;
+
+	for (int i = 0; i < 2; i++)
 	{
-		int team = g_PR->GetSelectedTeam(i);
-		if (team != TEAM_HUMANS)
-			continue;
-
-		int playerScore = g_PR->GetRoundScore(i);
-		if (playerScore > iScore)
-		{
-			iScore = playerScore;
-			m_iPlayerIndex[0] = i;
-		}
+		m_pImageAvatars[i]->SetVisible(sizeHumans >= (1 + i));
+		m_pImageStars[i]->SetVisible(sizeHumans >= (1 + i));
+		m_pLabelNames[i]->SetVisible(sizeHumans >= (1 + i));
 	}
 
-	// Check for highest human score? none? Hide it then.
-	m_pImageAvatars[0]->SetVisible(iScore > 0);
-	m_pImageStars[0]->SetVisible(iScore > 0);
-	m_pLabelNames[0]->SetVisible(iScore > 0);
-
-	iScore = 0;
-
-	// Find second highest score on the human team.
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	for (int i = 2; i < MAX_SHOW_SCORE_FOR_PLR; i++)
 	{
-		int team = g_PR->GetSelectedTeam(i);
-		if (team != TEAM_HUMANS)
-			continue;
-
-		if (i == m_iPlayerIndex[0])
-			continue;
-
-		int playerScore = g_PR->GetRoundScore(i);
-		if (playerScore > iScore)
-		{
-			iScore = playerScore;
-			m_iPlayerIndex[1] = i;
-		}
+		m_pImageAvatars[i]->SetVisible(sizeZombies >= (1 + (i - 2)));
+		m_pImageStars[i]->SetVisible(sizeZombies >= (1 + (i - 2)));
+		m_pLabelNames[i]->SetVisible(sizeZombies >= (1 + (i - 2)));
 	}
 
-	// No secondary? Hide it then.
-	m_pImageAvatars[1]->SetVisible(iScore > 0);
-	m_pImageStars[1]->SetVisible(iScore > 0);
-	m_pLabelNames[1]->SetVisible(iScore > 0);
-
-	iScore = 0;
-
-	// Find highest score on the zombie team:
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		int team = g_PR->GetSelectedTeam(i);
-		if (team != TEAM_DECEASED)
-			continue;
-
-		int playerScore = g_PR->GetRoundScore(i);
-		if (playerScore > iScore)
-		{
-			iScore = playerScore;
-			m_iPlayerIndex[2] = i;
-		}
-	}
-
-	// If there's no best round scorer, hide.
-	m_pImageAvatars[2]->SetVisible(iScore > 0);
-	m_pImageStars[2]->SetVisible(iScore > 0);
-	m_pLabelNames[2]->SetVisible(iScore > 0);
-
-	iScore = 0;
-
-	// Find second highest score for the zombie team.
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		int team = g_PR->GetSelectedTeam(i);
-		if (team != TEAM_DECEASED)
-			continue;
-
-		if (i == m_iPlayerIndex[2])
-			continue;
-
-		int playerScore = g_PR->GetRoundScore(i);
-		if (playerScore > iScore)
-		{
-			iScore = playerScore;
-			m_iPlayerIndex[3] = i;
-		}
-	}
-
-	// If there's no best second round scorer, hide.
-	m_pImageAvatars[3]->SetVisible(iScore > 0);
-	m_pImageStars[3]->SetVisible(iScore > 0);
-	m_pLabelNames[3]->SetVisible(iScore > 0);
-
-	m_pLabelInfo[0]->SetVisible((m_pImageAvatars[0]->IsVisible() || m_pImageAvatars[1]->IsVisible()));
-	m_pLabelInfo[1]->SetVisible((m_pImageAvatars[2]->IsVisible() || m_pImageAvatars[3]->IsVisible()));
+	m_pLabelInfo[0]->SetVisible(sizeHumans > 0);
+	m_pLabelInfo[1]->SetVisible(sizeZombies > 0);
 
 	m_pLabelInfo[0]->SetText("#VGUI_TopPlayersPanel_Humans");
 	m_pLabelInfo[1]->SetText("#VGUI_TopPlayersPanel_Zombies");
 
 	const char *szStarIMGs[] = { "scoreboard/1st", "scoreboard/2nd", "scoreboard/1st", "scoreboard/2nd", };
 	for (int i = 0; i < _ARRAYSIZE(m_pImageAvatars); i++)
-	{
-		if (m_pImageAvatars[i]->IsVisible())
-			bFound = true;
-
-		m_pImageStars[i]->SetImage(szStarIMGs[i]);
-	}
-
-	// Set the player labels:
-	for (int i = 0; i < _ARRAYSIZE(m_iPlayerIndex); i++)
-	{
-		if (m_iPlayerIndex[i] <= 0)
-			continue;
-
-		m_pLabelNames[i]->SetText(g_PR->GetPlayerName(m_iPlayerIndex[i]));
-
-		// Get the image avatars for the scorers:
-		for (int player = 1; player <= gpGlobals->maxClients; player++)
-		{
-			C_HL2MP_Player *pCast = ToHL2MPPlayer(UTIL_PlayerByIndex(player));
-			if (!pCast)
-				continue;
-
-			if (player != m_iPlayerIndex[i])
-				continue;
-
-			player_info_t pi;
-			if (engine->GetPlayerInfo(player, &pi))
-			{
-				if (!pi.fakeplayer)
-				{
-					if (pi.friendsID)
-					{
-						CSteamID steamIDForPlayer(pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual);
-						m_pSteamAvatars[i] = new CAvatarImage();
-						m_pSteamAvatars[i]->SetAvatarSteamID(steamIDForPlayer);
-						m_pSteamAvatars[i]->SetAvatarSize(32, 32);
-						m_pSteamAvatars[i]->SetSize(32, 32);
-						m_pImageAvatars[i]->SetImage(m_pSteamAvatars[i]);
-					}
-				}
-				else
-					m_pImageAvatars[i]->SetImage("steam_default_avatar");
-			}
-		}
-	}
-
-	return bFound;
-}
-
-bool TopPlayersPanel::FindTopPlayersObjective(void)
-{
-	int m_iPlayerIndex[4];
-	int iScore = 0;
-
-	// Find highest score overall:
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		int playerScore = g_PR->GetTotalScore(i);
-		if (playerScore > iScore)
-		{
-			iScore = playerScore;
-			m_iPlayerIndex[0] = i;
-		}
-	}
-
-	// If we can't find any score above 0 that means we have no 'scores' to show!
-	if (iScore <= 0)
-		return false;
-
-	m_pImageAvatars[0]->SetVisible(iScore > 0);
-	m_pImageStars[0]->SetVisible(iScore > 0);
-	m_pLabelNames[0]->SetVisible(iScore > 0);
-
-	iScore = 0;
-
-	// Find second highest score overall:
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		if (i == m_iPlayerIndex[0])
-			continue;
-
-		int playerScore = g_PR->GetTotalScore(i);
-		if (playerScore > iScore)
-		{
-			iScore = playerScore;
-			m_iPlayerIndex[1] = i;
-		}
-	}
-
-	// No secondary? Hide it then.
-	m_pImageAvatars[1]->SetVisible(iScore > 0);
-	m_pImageStars[1]->SetVisible(iScore > 0);
-	m_pLabelNames[1]->SetVisible(iScore > 0);
-
-	iScore = 0;
-
-	// Find third highest score overall:
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		if ((i == m_iPlayerIndex[0]) || (i == m_iPlayerIndex[1]))
-			continue;
-
-		int playerScore = g_PR->GetTotalScore(i);
-		if (playerScore > iScore)
-		{
-			iScore = playerScore;
-			m_iPlayerIndex[2] = i;
-		}
-	}
-
-	// No third? Hide it then.
-	m_pImageAvatars[2]->SetVisible(iScore > 0);
-	m_pImageStars[2]->SetVisible(iScore > 0);
-	m_pLabelNames[2]->SetVisible(iScore > 0);
-
-	iScore = 0;
-
-	// Find fourth highest score overall:
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		if ((i == m_iPlayerIndex[0]) || (i == m_iPlayerIndex[1]) || (i == m_iPlayerIndex[2]))
-			continue;
-
-		int playerScore = g_PR->GetTotalScore(i);
-		if (playerScore > iScore)
-		{
-			iScore = playerScore;
-			m_iPlayerIndex[3] = i;
-		}
-	}
-
-	// No fourth? Hide it then.
-	m_pImageAvatars[3]->SetVisible(iScore > 0);
-	m_pImageStars[3]->SetVisible(iScore > 0);
-	m_pLabelNames[3]->SetVisible(iScore > 0);
-
-	const char *szStarIMGs[] = { "scoreboard/1st", "scoreboard/2nd", "scoreboard/3rd", "scoreboard/4th", };
-	for (int i = 0; i < _ARRAYSIZE(m_pImageAvatars); i++)
 		m_pImageStars[i]->SetImage(szStarIMGs[i]);
 
-	m_pLabelInfo[0]->SetVisible((m_pImageAvatars[0]->IsVisible() || m_pImageAvatars[1]->IsVisible()));
-	m_pLabelInfo[1]->SetVisible(false);
-
-	m_pLabelInfo[0]->SetText("#VGUI_TopPlayersPanel_Overall");
-	m_pLabelInfo[1]->SetText("#VGUI_TopPlayersPanel_Round");
-
-	// Set the player labels:
-	for (int i = 0; i < _ARRAYSIZE(m_iPlayerIndex); i++)
+	int idx = 0;
+	for (int i = 0; i < 2; i++)
 	{
-		if (m_iPlayerIndex[i] <= 0)
-			continue;
+		if (i >= sizeHumans)
+			break;
 
-		m_pLabelNames[i]->SetText(g_PR->GetPlayerName(m_iPlayerIndex[i]));
+		FindAndSetAvatarForPlayer(list1[i].index, idx);
+		idx++;
+	}
+	idx = 2;
+	for (int i = 0; i < 2; i++)
+	{
+		if (i >= sizeZombies)
+			break;
 
-		// Get the image avatars for the scorers:
-		for (int player = 1; player <= gpGlobals->maxClients; player++)
-		{
-			C_HL2MP_Player *pCast = ToHL2MPPlayer(UTIL_PlayerByIndex(player));
-			if (!pCast)
-				continue;
-
-			if (player != m_iPlayerIndex[i])
-				continue;
-
-			player_info_t pi;
-			if (engine->GetPlayerInfo(player, &pi))
-			{
-				if (!pi.fakeplayer)
-				{
-					if (pi.friendsID)
-					{
-						CSteamID steamIDForPlayer(pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual);
-						m_pSteamAvatars[i] = new CAvatarImage();
-						m_pSteamAvatars[i]->SetAvatarSteamID(steamIDForPlayer);
-						m_pSteamAvatars[i]->SetAvatarSize(32, 32);
-						m_pSteamAvatars[i]->SetSize(32, 32);
-						m_pImageAvatars[i]->SetImage(m_pSteamAvatars[i]);
-					}
-				}
-				else
-					m_pImageAvatars[i]->SetImage("steam_default_avatar");
-			}
-		}
+		FindAndSetAvatarForPlayer(list2[i].index, idx);
+		idx++;
 	}
 
 	return true;
 }
 
-bool TopPlayersPanel::FindTopPlayersArena(void)
+bool TopPlayersPanel::FindTopPlayersObjective(CUtlVector<PlayerScoreItem> &list1, CUtlVector<PlayerScoreItem> &list2)
 {
-	int m_iPlayerIndex[4];
-	int iScore = 0;
-
-	// Find highest score overall:
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		int playerScore = g_PR->GetTotalScore(i);
-		if (playerScore > iScore)
-		{
-			iScore = playerScore;
-			m_iPlayerIndex[0] = i;
-		}
-	}
+	FindPlayersWithHighestScore(list1);
+	int sizeOverall = list1.Count();
 
 	// If we can't find any score above 0 that means we have no 'scores' to show!
-	if (iScore <= 0)
+	if (sizeOverall <= 0)
 		return false;
 
-	m_pImageAvatars[0]->SetVisible(iScore > 0);
-	m_pImageStars[0]->SetVisible(iScore > 0);
-	m_pLabelNames[0]->SetVisible(iScore > 0);
-
-	iScore = 0;
-
-	// Find second highest score overall:
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	// Hide controls if the amount of scores are not:
+	for (int i = 0; i < MAX_SHOW_SCORE_FOR_PLR; i++)
 	{
-		if (i == m_iPlayerIndex[0])
-			continue;
-
-		int playerScore = g_PR->GetTotalScore(i);
-		if (playerScore > iScore)
-		{
-			iScore = playerScore;
-			m_iPlayerIndex[1] = i;
-		}
+		m_pImageAvatars[i]->SetVisible(sizeOverall >= (1 + i));
+		m_pImageStars[i]->SetVisible(sizeOverall >= (1 + i));
+		m_pLabelNames[i]->SetVisible(sizeOverall >= (1 + i));
 	}
 
-	// No secondary? Hide it then.
-	m_pImageAvatars[1]->SetVisible(iScore > 0);
-	m_pImageStars[1]->SetVisible(iScore > 0);
-	m_pLabelNames[1]->SetVisible(iScore > 0);
+	const char *szStarIMGs[] = { "scoreboard/1st", "scoreboard/2nd", "scoreboard/3rd", "scoreboard/4th", };
+	for (int i = 0; i < _ARRAYSIZE(m_pImageAvatars); i++)
+		m_pImageStars[i]->SetImage(szStarIMGs[i]);
 
-	iScore = 0;
+	m_pLabelInfo[0]->SetVisible(true);
+	m_pLabelInfo[1]->SetVisible(false);
 
-	// Find highest score for this round:
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	m_pLabelInfo[0]->SetText("#VGUI_TopPlayersPanel_Overall");
+	m_pLabelInfo[1]->SetText("#VGUI_TopPlayersPanel_Round");
+
+	for (int i = 0; i < MAX_SHOW_SCORE_FOR_PLR; i++)
 	{
-		int playerScore = g_PR->GetRoundScore(i);
-		if (playerScore > iScore)
-		{
-			iScore = playerScore;
-			m_iPlayerIndex[2] = i;
-		}
+		if (i >= sizeOverall)
+			break;
+
+		FindAndSetAvatarForPlayer(list1[i].index, i);
 	}
 
-	// If there's no best round scorer, hide.
-	m_pImageAvatars[2]->SetVisible(iScore > 0);
-	m_pImageStars[2]->SetVisible(iScore > 0);
-	m_pLabelNames[2]->SetVisible(iScore > 0);
+	return true;
+}
 
-	iScore = 0;
+bool TopPlayersPanel::FindTopPlayersArena(CUtlVector<PlayerScoreItem> &listHighOverall, CUtlVector<PlayerScoreItem> &listHighRound)
+{
+	FindPlayersWithHighestScore(listHighOverall);
+	int sizeOverall = listHighOverall.Count();
 
-	// Find second highest score for this round:
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	FindPlayersWithHighestScore(listHighRound, TEAM_ANY, true);
+	int sizeRound = listHighRound.Count();
+
+	// If we can't find any score above 0 that means we have no 'scores' to show!
+	if (sizeOverall <= 0)
+		return false;
+
+	for (int i = 0; i < 2; i++)
 	{
-		if (i == m_iPlayerIndex[2])
-			continue;
-
-		int playerScore = g_PR->GetRoundScore(i);
-		if (playerScore > iScore)
-		{
-			iScore = playerScore;
-			m_iPlayerIndex[3] = i;
-		}
+		m_pImageAvatars[i]->SetVisible(sizeOverall >= (1 + i));
+		m_pImageStars[i]->SetVisible(sizeOverall >= (1 + i));
+		m_pLabelNames[i]->SetVisible(sizeOverall >= (1 + i));
 	}
 
-	// If there's no best second round scorer, hide.
-	m_pImageAvatars[3]->SetVisible(iScore > 0);
-	m_pImageStars[3]->SetVisible(iScore > 0);
-	m_pLabelNames[3]->SetVisible(iScore > 0);
+	for (int i = 2; i < MAX_SHOW_SCORE_FOR_PLR; i++)
+	{
+		m_pImageAvatars[i]->SetVisible(sizeRound >= (1 + (i - 2)));
+		m_pImageStars[i]->SetVisible(sizeRound >= (1 + (i - 2)));
+		m_pLabelNames[i]->SetVisible(sizeRound >= (1 + (i - 2)));
+	}
 
-	m_pLabelInfo[0]->SetVisible((m_pImageAvatars[0]->IsVisible() || m_pImageAvatars[1]->IsVisible()));
-	m_pLabelInfo[1]->SetVisible((m_pImageAvatars[2]->IsVisible() || m_pImageAvatars[3]->IsVisible()));
+	m_pLabelInfo[0]->SetVisible(sizeOverall > 0);
+	m_pLabelInfo[1]->SetVisible(sizeRound > 0);
 
 	m_pLabelInfo[0]->SetText("#VGUI_TopPlayersPanel_Overall");
 	m_pLabelInfo[1]->SetText("#VGUI_TopPlayersPanel_Round");
@@ -618,182 +397,61 @@ bool TopPlayersPanel::FindTopPlayersArena(void)
 	for (int i = 0; i < _ARRAYSIZE(m_pImageAvatars); i++)
 		m_pImageStars[i]->SetImage(szStarIMGs[i]);
 
-	// Set the player labels:
-	for (int i = 0; i < _ARRAYSIZE(m_iPlayerIndex); i++)
+	int idx = 0;
+	for (int i = 0; i < 2; i++)
 	{
-		if (m_iPlayerIndex[i] <= 0)
-			continue;
+		if (i >= sizeOverall)
+			break;
 
-		m_pLabelNames[i]->SetText(g_PR->GetPlayerName(m_iPlayerIndex[i]));
+		FindAndSetAvatarForPlayer(listHighOverall[i].index, idx);
+		idx++;
+	}
+	idx = 2;
+	for (int i = 0; i < 2; i++)
+	{
+		if (i >= sizeRound)
+			break;
 
-		// Get the image avatars for the scorers:
-		for (int player = 1; player <= gpGlobals->maxClients; player++)
-		{
-			C_HL2MP_Player *pCast = ToHL2MPPlayer(UTIL_PlayerByIndex(player));
-			if (!pCast)
-				continue;
-
-			if (player != m_iPlayerIndex[i])
-				continue;
-
-			player_info_t pi;
-			if (engine->GetPlayerInfo(player, &pi))
-			{
-				if (!pi.fakeplayer)
-				{
-					if (pi.friendsID)
-					{
-						CSteamID steamIDForPlayer(pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual);
-						m_pSteamAvatars[i] = new CAvatarImage();
-						m_pSteamAvatars[i]->SetAvatarSteamID(steamIDForPlayer);
-						m_pSteamAvatars[i]->SetAvatarSize(32, 32);
-						m_pSteamAvatars[i]->SetSize(32, 32);
-						m_pImageAvatars[i]->SetImage(m_pSteamAvatars[i]);
-					}
-				}
-				else
-					m_pImageAvatars[i]->SetImage("steam_default_avatar");
-			}
-		}
+		FindAndSetAvatarForPlayer(listHighRound[i].index, idx);
+		idx++;
 	}
 
 	return true;
 }
 
-bool TopPlayersPanel::FindTopPlayersDeathmatch(void)
+bool TopPlayersPanel::FindTopPlayersDeathmatch(CUtlVector<PlayerScoreItem> &list1, CUtlVector<PlayerScoreItem> &list2)
 {
-	int m_iPlayerIndex[4];
-	int iScore = 0;
-
-	// Find highest score overall:
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		int playerScore = g_PR->GetTotalScore(i);
-		if (playerScore > iScore)
-		{
-			iScore = playerScore;
-			m_iPlayerIndex[0] = i;
-		}
-	}
+	FindPlayersWithHighestScore(list1);
+	int sizeOverall = list1.Count();
 
 	// If we can't find any score above 0 that means we have no 'scores' to show!
-	if (iScore <= 0)
+	if (sizeOverall <= 0)
 		return false;
 
-	m_pImageAvatars[0]->SetVisible(iScore > 0);
-	m_pImageStars[0]->SetVisible(iScore > 0);
-	m_pLabelNames[0]->SetVisible(iScore > 0);
-
-	iScore = 0;
-
-	// Find second highest score overall:
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	// Hide controls if the amount of scores are not:
+	for (int i = 0; i < MAX_SHOW_SCORE_FOR_PLR; i++)
 	{
-		if (i == m_iPlayerIndex[0])
-			continue;
-
-		int playerScore = g_PR->GetTotalScore(i);
-		if (playerScore > iScore)
-		{
-			iScore = playerScore;
-			m_iPlayerIndex[1] = i;
-		}
+		m_pImageAvatars[i]->SetVisible(sizeOverall >= (1 + i));
+		m_pImageStars[i]->SetVisible(sizeOverall >= (1 + i));
+		m_pLabelNames[i]->SetVisible(sizeOverall >= (1 + i));
 	}
-
-	// No secondary? Hide it then.
-	m_pImageAvatars[1]->SetVisible(iScore > 0);
-	m_pImageStars[1]->SetVisible(iScore > 0);
-	m_pLabelNames[1]->SetVisible(iScore > 0);
-
-	iScore = 0;
-
-	// Find third highest score overall:
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		if ((i == m_iPlayerIndex[0]) || (i == m_iPlayerIndex[1]))
-			continue;
-
-		int playerScore = g_PR->GetTotalScore(i);
-		if (playerScore > iScore)
-		{
-			iScore = playerScore;
-			m_iPlayerIndex[2] = i;
-		}
-	}
-
-	// No third? Hide it then.
-	m_pImageAvatars[2]->SetVisible(iScore > 0);
-	m_pImageStars[2]->SetVisible(iScore > 0);
-	m_pLabelNames[2]->SetVisible(iScore > 0);
-
-	iScore = 0;
-
-	// Find fourth highest score overall:
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		if ((i == m_iPlayerIndex[0]) || (i == m_iPlayerIndex[1]) || (i == m_iPlayerIndex[2]))
-			continue;
-
-		int playerScore = g_PR->GetTotalScore(i);
-		if (playerScore > iScore)
-		{
-			iScore = playerScore;
-			m_iPlayerIndex[3] = i;
-		}
-	}
-
-	// No fourth? Hide it then.
-	m_pImageAvatars[3]->SetVisible(iScore > 0);
-	m_pImageStars[3]->SetVisible(iScore > 0);
-	m_pLabelNames[3]->SetVisible(iScore > 0);
 
 	const char *szStarIMGs[] = { "scoreboard/1st", "scoreboard/2nd", "scoreboard/3rd", "scoreboard/4th", };
 	for (int i = 0; i < _ARRAYSIZE(m_pImageAvatars); i++)
 		m_pImageStars[i]->SetImage(szStarIMGs[i]);
 
-	m_pLabelInfo[0]->SetVisible((m_pImageAvatars[0]->IsVisible() || m_pImageAvatars[1]->IsVisible()));
+	m_pLabelInfo[0]->SetVisible(true);
 	m_pLabelInfo[1]->SetVisible(false);
 
 	m_pLabelInfo[0]->SetText("#VGUI_TopPlayersPanel_Overall");
 	m_pLabelInfo[1]->SetText("#VGUI_TopPlayersPanel_Round");
 
-	// Set the player labels:
-	for (int i = 0; i < _ARRAYSIZE(m_iPlayerIndex); i++)
+	for (int i = 0; i < MAX_SHOW_SCORE_FOR_PLR; i++)
 	{
-		if (m_iPlayerIndex[i] <= 0)
-			continue;
+		if (i >= sizeOverall)
+			break;
 
-		m_pLabelNames[i]->SetText(g_PR->GetPlayerName(m_iPlayerIndex[i]));
-
-		// Get the image avatars for the scorers:
-		for (int player = 1; player <= gpGlobals->maxClients; player++)
-		{
-			C_HL2MP_Player *pCast = ToHL2MPPlayer(UTIL_PlayerByIndex(player));
-			if (!pCast)
-				continue;
-
-			if (player != m_iPlayerIndex[i])
-				continue;
-
-			player_info_t pi;
-			if (engine->GetPlayerInfo(player, &pi))
-			{
-				if (!pi.fakeplayer)
-				{
-					if (pi.friendsID)
-					{
-						CSteamID steamIDForPlayer(pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual);
-						m_pSteamAvatars[i] = new CAvatarImage();
-						m_pSteamAvatars[i]->SetAvatarSteamID(steamIDForPlayer);
-						m_pSteamAvatars[i]->SetAvatarSize(32, 32);
-						m_pSteamAvatars[i]->SetSize(32, 32);
-						m_pImageAvatars[i]->SetImage(m_pSteamAvatars[i]);
-					}
-				}
-				else
-					m_pImageAvatars[i]->SetImage("steam_default_avatar");
-			}
-		}
+		FindAndSetAvatarForPlayer(list1[i].index, i);
 	}
 
 	return true;

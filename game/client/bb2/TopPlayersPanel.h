@@ -20,10 +20,11 @@
 #include "ScoreboardItem.h"
 #include "vgui_avatarimage.h"
 
-namespace vgui
-{
-	class TopPlayersPanel;
+struct PlayerScoreItem;
 
+namespace vgui
+{	
+	class TopPlayersPanel;
 	class TopPlayersPanel : public vgui::Panel
 	{
 		DECLARE_CLASS_SIMPLE(TopPlayersPanel, vgui::Panel);
@@ -32,12 +33,12 @@ namespace vgui
 		TopPlayersPanel(vgui::Panel *parent, char const *panelName);
 		~TopPlayersPanel();
 
-		bool FindTopPlayers(void);
+		bool FindTopPlayers(void);		
 
-		bool FindTopPlayersElimination(void);
-		bool FindTopPlayersObjective(void);
-		bool FindTopPlayersArena(void);
-		bool FindTopPlayersDeathmatch(void);
+		bool FindTopPlayersElimination(CUtlVector<PlayerScoreItem> &list1, CUtlVector<PlayerScoreItem> &list2);
+		bool FindTopPlayersObjective(CUtlVector<PlayerScoreItem> &list1, CUtlVector<PlayerScoreItem> &list2);
+		bool FindTopPlayersArena(CUtlVector<PlayerScoreItem> &list1, CUtlVector<PlayerScoreItem> &list2);
+		bool FindTopPlayersDeathmatch(CUtlVector<PlayerScoreItem> &list1, CUtlVector<PlayerScoreItem> &list2);
 
 		void Reset();
 
@@ -54,8 +55,8 @@ namespace vgui
 		void OnThink();
 		void ApplySchemeSettings(vgui::IScheme *pScheme);
 		void PerformLayout();
-		void FindAndSetAvatarForPlayer(int index, vgui::ImagePanel *image, int avatarIndex);
-		int FindPlayerIndexWithHighestScore(int *excluded, int size, int wantedTeam);
+		void FindAndSetAvatarForPlayer(int playerIndex, int panelIndex);
+		static void FindPlayersWithHighestScore(CUtlVector<PlayerScoreItem> &list, int wantedTeam = TEAM_ANY, bool roundScores = false);
 	};
 }
 

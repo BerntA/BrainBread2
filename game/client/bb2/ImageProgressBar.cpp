@@ -5,9 +5,9 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <vgui/ISurface.h>
-#include <KeyValues.h>
 #include "ImageProgressBar.h"
+#include <vgui/ISurface.h>
+
 #include "tier0/memdbgon.h"
 
 using namespace vgui;

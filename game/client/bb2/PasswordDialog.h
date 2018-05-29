@@ -4,14 +4,8 @@
 //
 //========================================================================================//
 
-#include "cbase.h"
-#include "vgui_controls/Panel.h"
-#include <vgui/ISurface.h>
+#include <vgui_controls/Panel.h>
 #include <vgui/IVGui.h>
-#include <vgui/IInput.h>
-#include <vgui/KeyCode.h>
-#include <vgui_controls/RichText.h>
-#include <vgui_controls/Divider.h>
 #include <vgui_controls/TextEntry.h>
 #include "InlineMenuButton.h"
 

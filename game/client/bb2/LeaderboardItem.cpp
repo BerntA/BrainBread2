@@ -5,29 +5,11 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "LeaderboardItem.h"
-#include "iclientmode.h"
-#include "vgui_controls/AnimationController.h"
-#include <igameresources.h>
-#include "cdll_util.h"
-#include "GameBase_Client.h"
-#include "KeyValues.h"
-#include "clientmode_shared.h"
-#include <steam/steam_api.h>
-#include "filesystem.h"
+#include <vgui/IInput.h>
+#include <vgui_controls/Label.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 #include "hl2mp_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -90,7 +72,6 @@ LeaderboardItem::LeaderboardItem(vgui::Panel *parent, char const *panelName, con
 	m_pButton->SetEnabled(true);
 
 	InvalidateLayout();
-
 	PerformLayout();
 }
 
@@ -146,10 +127,10 @@ void LeaderboardItem::OnThink()
 
 	if (m_pAvatarIMG && (m_flSteamImgThink > 0.0f) && (m_flSteamImgThink < engine->Time()))
 	{
-		if (!m_pAvatarIMG->IsLoading())
+		if (m_pAvatarIMG->IsValid())
 			m_flSteamImgThink = 0.0f;
 		else
-			m_flSteamImgThink = engine->Time() + 0.5f;
+			m_flSteamImgThink = engine->Time() + 0.25f;
 
 		m_pSteamAvatar->SetImage(m_pAvatarIMG);
 	}
