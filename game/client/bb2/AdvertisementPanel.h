@@ -14,9 +14,7 @@
 #include <vgui/VGUI.h>
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/PHandle.h>
-#include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/Label.h>
-#include <vgui_controls/RichText.h>
 
 namespace vgui
 {
@@ -31,11 +29,12 @@ namespace vgui
 		~AdvertisementPanel();
 
 		void SetEnabled(bool state);
-		vgui::Button *m_pButtonAdvert[3];
-		vgui::ImagePanel *m_pImageAdvert[3];
 
 	private:
 		const char *GetAdvertisementURL(int iIndex);
+
+		vgui::Button *m_pButtonAdvert[3];
+		vgui::ImagePanel *m_pImageAdvert[3];
 
 	protected:
 

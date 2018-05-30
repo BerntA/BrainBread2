@@ -8,12 +8,9 @@
 
 #include "cbase.h"
 #include "ComboImageList.h"
-#include "vgui/MouseCode.h"
-#include <vgui_controls/ImagePanel.h>
 #include "KeyValues.h"
 #include "filesystem.h"
-#include "vgui/ISurface.h"
-#include "vgui/ISystem.h"
+#include <vgui/ISystem.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -140,7 +137,7 @@ void ComboImageList::OnCommand(const char* pcCommand)
 	}
 	else if (!Q_stricmp(pcCommand, "ActivateList"))
 	{
-		if (m_hImportSprayDialog == NULL)
+		if (m_hImportSprayDialog == NULL) // A benefit from our custom spray importer was that it actually supported more images formats:
 		{
 			m_hImportSprayDialog = new FileOpenDialog(NULL, "#GameUI_ImportSprayImage", true);
 			m_hImportSprayDialog->AddFilter("*.tga,*.jpg,*.bmp,*.png", "#GameUI_All_Images", true);

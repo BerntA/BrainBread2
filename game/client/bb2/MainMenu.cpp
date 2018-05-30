@@ -5,21 +5,11 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "GameBase_Client.h"
 #include "MainMenu.h"
-#include "vgui_controls/Frame.h"
-#include <vgui/ISurface.h>
-#include <vgui/IVGui.h>
-#include <vgui/IInput.h>
-#include "vgui_controls/Button.h"
-#include "vgui_controls/ImagePanel.h"
-#include "filesystem.h"
-#include <KeyValues.h>
-#include "iclientmode.h"
-#include "vgui_controls/AnimationController.h"
+#include "GameBase_Client.h"
+#include <vgui_controls/AnimationController.h>
 #include "IGameUIFuncs.h"
 #include "GameBase_Shared.h"
-#include "vgui_base_panel.h"
 
 using namespace vgui;
 

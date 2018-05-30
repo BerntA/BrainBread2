@@ -6,28 +6,19 @@
 
 #include "cbase.h"
 #include "AddonInstallerPanel.h"
-#include "vgui_controls/Frame.h"
-#include <vgui/ISurface.h>
-#include <vgui/IVGui.h>
-#include <vgui/IInput.h>
 #include <vgui/ILocalize.h>
-#include "interface.h"
-#include "hl2mp_gamerules.h"
-#include "filesystem.h"
-#include "vgui_controls/Button.h"
-#include "vgui_controls/ImagePanel.h"
-#include <vgui/ISystem.h>
 #include "GameBase_Client.h"
 #include "GameBase_Shared.h"
-
-using namespace vgui;
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+using namespace vgui;
+
 CAddonInstallerPanel *m_pWorkshopInstaller = NULL;
 
-CAddonInstallerPanel::CAddonInstallerPanel(vgui::VPANEL parent) : BaseClass(NULL, "AddonInstaller"), m_CallbackWorkshopItemInstalled(this, &CAddonInstallerPanel::OnWorkshopItemInstalled)
+CAddonInstallerPanel::CAddonInstallerPanel(vgui::VPANEL parent)
+	: BaseClass(NULL, "AddonInstaller"), m_CallbackWorkshopItemInstalled(this, &CAddonInstallerPanel::OnWorkshopItemInstalled)
 {
 	SetParent(parent);
 	SetTitleBarVisible(false);

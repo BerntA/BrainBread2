@@ -11,15 +11,11 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-#include <utlvector.h>
-#include <utllinkedlist.h>
 #include <vgui/VGUI.h>
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/PHandle.h>
 #include <vgui_controls/Label.h>
 #include <vgui_controls/Button.h>
-#include "vgui_controls/CheckButton.h"
 #include <vgui_controls/ImagePanel.h>
 #include <vgui_controls/Divider.h>
 #include "GraphicalSlider.h"
@@ -49,7 +45,7 @@ namespace vgui
 
 	private:
 		void UpdateNobPosition(void);
-		char szConVar[64];
+
 		ConVar *m_pCVARLink;
 
 		int m_iRawValue;
@@ -64,7 +60,7 @@ namespace vgui
 		vgui::Label *m_pInfo;
 		vgui::Label *m_pValue;
 
-		float m_flOldVarVar;
+		float m_flOldVarVal;
 		int m_iOldSliderVal;
 
 	protected:

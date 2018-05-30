@@ -14,12 +14,7 @@
 #include <vgui/VGUI.h>
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/PHandle.h>
-#include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/Label.h>
-#include <vgui_controls/RichText.h>
-#include "vgui_base_panel.h"
-#include "MouseInputPanel.h"
-#include "basemodelpanel.h"
 #include "MultiLabel.h"
 
 namespace vgui

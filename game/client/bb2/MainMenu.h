@@ -11,8 +11,7 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-#include "vgui_controls/Frame.h"
+#include <vgui_controls/Frame.h>
 #include <vgui/ISurface.h>
 #include <vgui/IVGui.h>
 #include <vgui/IInput.h>

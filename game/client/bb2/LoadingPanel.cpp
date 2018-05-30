@@ -7,19 +7,12 @@
 
 #include "cbase.h"
 #include "LoadingPanel.h"
-#include "vgui_controls/Frame.h"
-#include <vgui/ISurface.h>
 #include <vgui/IVGui.h>
-#include <vgui/IInput.h>
 #include <vgui/ILocalize.h>
-#include "interface.h"
 #include "hl2mp_gamerules.h"
-#include "filesystem.h"
-#include "vgui_controls/Button.h"
-#include "vgui_controls/ImagePanel.h"
-#include <vgui/ISystem.h>
 #include "GameBase_Client.h"
 #include "GameBase_Shared.h"
+#include "fmod_manager.h"
 
 using namespace vgui;
 
@@ -347,9 +340,7 @@ void CLoadingPanel::OnTick()
 			if (!pPLR)
 				GameBaseClient->RunCommand(COMMAND_DISCONNECT);
 			else
-			{
 				GameBaseClient->RunClientEffect(PLAYER_EFFECT_ENTERED_GAME, 1);
-			}
 		}
 
 		m_bCanUpdateImage = false;

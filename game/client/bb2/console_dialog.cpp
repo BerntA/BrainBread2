@@ -6,15 +6,10 @@
 
 #include "cbase.h"
 #include "console_dialog.h"
-#include "vgui/IInput.h"
-#include "vgui/ISurface.h"
-#include "vgui/KeyCode.h"
-#include "ienginevgui.h"
-#include "modes.h"
-#include "materialsystem/materialsystem_config.h"
+#include <vgui/ISurface.h>
+#include <vgui_controls/AnimationController.h>
 #include "GameBase_Shared.h"
 #include "GameBase_Client.h"
-#include "vgui_controls/AnimationController.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -39,7 +34,6 @@ CGameConsoleDialog::CGameConsoleDialog() : BaseClass(NULL, "GameConsole", false)
 	SetPos(0, -512);
 
 	PerformLayout();
-
 	InvalidateLayout();
 
 	m_flPosY = 0.0f;

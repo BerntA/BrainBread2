@@ -10,19 +10,13 @@
 #pragma once
 #endif
 
-#include "cbase.h"
 #include <vgui/VGUI.h>
-#include "vgui_controls/Frame.h"
-#include <vgui/ISurface.h>
-#include <vgui/IInput.h>
-#include "fmod_manager.h"
-#include "vgui_controls/Button.h"
-#include "vgui_controls/ImagePanel.h"
+#include <vgui_controls/Frame.h>
+#include <vgui_controls/ImagePanel.h>
 #include <vgui_controls/Label.h>
-#include <vgui_controls/RichText.h>
 #include <vgui_controls/Divider.h>
-#include "ImageProgressBar.h"
 #include <steam/steam_api.h>
+#include "ImageProgressBar.h"
 
 struct gameMapItem_t;
 class CAddonInstallerPanel : public vgui::Frame

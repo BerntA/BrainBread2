@@ -14,8 +14,10 @@
 #include <vgui/VGUI.h>
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/Label.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
+#include <vgui_controls/FileOpenDialog.h>
 #include "ImageListPanel.h"
-#include "vgui_controls/FileOpenDialog.h"
 
 namespace vgui
 {

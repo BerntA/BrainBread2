@@ -5,30 +5,12 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/IVGui.h>
-#include "inputsystem/iinputsystem.h"
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "CharacterPreviewPanel.h"
-#include "iclientmode.h"
-#include "vgui_controls/AnimationController.h"
-#include <igameresources.h>
-#include "cdll_util.h"
-#include "GameBase_Client.h"
+#include <vgui/IInput.h>
+#include <inputsystem/iinputsystem.h>
 #include "GameBase_Shared.h"
 #include "hl2mp_gamerules.h"
 #include "gibs_shared.h"
-#include <vgui/ILocalize.h>
 #include "KeyValues.h"
 #include "model_types.h"
 #include "view_shared.h"
@@ -63,14 +45,10 @@ void CClientModelPanelModel::PrepareModel(const model_t *ptr)
 
 int	CClientModelPanelModel::DrawModel(int flags)
 {
+	if (!GetModel() || (GetRenderMode() == kRenderNone))
+		return 0;
+
 	int drawn = 0;
-
-	if (!GetModel())
-		return drawn;
-
-	if (GetRenderMode() == kRenderNone)
-		return drawn;
-
 	switch (modelinfo->GetModelType(GetModel()))
 	{
 	case mod_studio:
@@ -85,18 +63,17 @@ int	CClientModelPanelModel::DrawModel(int flags)
 
 int CClientModelPanelModel::DrawStudioModel(int flags)
 {
-	VPROF_BUDGET("CClientModelPanelModel::DrawStudioModel", VPROF_BUDGETGROUP_MODEL_RENDERING);
-	int drawn = 0;
+	if (!GetModel() || (modelinfo->GetModelType(GetModel()) != mod_studio))
+		return 0;
 
-	if (!GetModel() || modelinfo->GetModelType(GetModel()) != mod_studio)
-		return drawn;
+	VPROF_BUDGET("CClientModelPanelModel::DrawStudioModel", VPROF_BUDGETGROUP_MODEL_RENDERING);
 
 	// Make sure m_pstudiohdr is valid for drawing
 	MDLCACHE_CRITICAL_SECTION();
 	if (!GetModelPtr())
-		return drawn;
+		return 0;
 
-	drawn = modelrender->DrawModel(
+	int drawn = modelrender->DrawModel(
 		flags,
 		this,
 		MODEL_INSTANCE_INVALID,
@@ -117,7 +94,8 @@ void CClientModelPanelModel::Release(void)
 	BaseClass::Release();
 }
 
-CharacterPreviewPanel::CharacterPreviewPanel(vgui::Panel *pParent, const char *pName) : vgui::EditablePanel(pParent, pName)
+CharacterPreviewPanel::CharacterPreviewPanel(vgui::Panel *pParent, const char *pName)
+	: vgui::EditablePanel(pParent, pName)
 {
 	m_nFOV = 54;
 	m_hModel = NULL;
@@ -166,11 +144,8 @@ void CharacterPreviewPanel::DeleteModelData(void)
 void CharacterPreviewPanel::FireGameEvent(IGameEvent * event)
 {
 	const char *type = event->GetName();
-
 	if (Q_strcmp(type, "game_newmap") == 0)
-	{
 		m_bPanelDirty = true;
-	}
 }
 
 void CharacterPreviewPanel::LoadModel(const char *name, int team)

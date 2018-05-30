@@ -14,10 +14,9 @@
 #include <vgui/VGUI.h>
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/PHandle.h>
-#include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/Label.h>
-#include <vgui_controls/RichText.h>
-#include <vgui_controls/Divider.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 
 namespace vgui
 {
@@ -31,13 +30,13 @@ namespace vgui
 		CircularButton( vgui::Panel *parent, char const *panelName );
 		~CircularButton();
 
-		vgui::Button *m_pButton;
-		vgui::ImagePanel *m_pOverlay;
-
 		void OnUpdate();
 		void SetCMD( const char *szCommand );
 
 	private:
+		vgui::Button *m_pButton;
+		vgui::ImagePanel *m_pOverlay;
+
 		bool m_bMouseOver;
 		CPanelAnimationVar(float, m_flFrameFrac, "PictureFrame", "0.0f");
 

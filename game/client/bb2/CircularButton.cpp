@@ -5,27 +5,9 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "CircularButton.h"
-#include "iclientmode.h"
-#include "vgui_controls/AnimationController.h"
-#include <igameresources.h>
-#include "cdll_util.h"
-#include "GameBase_Client.h"
-#include "KeyValues.h"
-#include "filesystem.h"
+#include <vgui/IInput.h>
+#include <vgui_controls/AnimationController.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

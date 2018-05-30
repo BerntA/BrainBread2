@@ -10,15 +10,9 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-#include "vgui_controls/consoledialog.h"
-#include <Color.h>
-#include "vgui_controls/Frame.h"
+#include <vgui_controls/consoledialog.h>
+#include <vgui_controls/Frame.h>
 
-
-//-----------------------------------------------------------------------------
-// Purpose: Game/dev console dialog
-//-----------------------------------------------------------------------------
 class CGameConsoleDialog : public vgui::CConsoleDialog
 {
 	DECLARE_CLASS_SIMPLE(CGameConsoleDialog, vgui::CConsoleDialog);
@@ -40,6 +34,5 @@ protected:
 	virtual void OnKeyCodeTyped(vgui::KeyCode code);
 	virtual void PaintBackground();
 };
-
 
 #endif // GAMECONSOLEDIALOG_H

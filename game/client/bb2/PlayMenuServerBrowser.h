@@ -30,6 +30,7 @@
 #include "clientmode_shared.h"
 #include "cdll_client_int.h"
 #include <vgui_controls/Tooltip.h>
+#include <vgui_controls/CheckButton.h>
 
 namespace vgui
 {

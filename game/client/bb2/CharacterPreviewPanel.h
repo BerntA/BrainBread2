@@ -15,12 +15,7 @@
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/PHandle.h>
 #include <vgui_controls/EditablePanel.h>
-#include <vgui_controls/Label.h>
-#include <vgui_controls/RichText.h>
-#include <vgui/IScheme.h>
-#include <vgui_controls/ImagePanel.h>
 #include "GameEventListener.h"
-#include "KeyValues.h"
 #include "basemodelpanel.h"
 #include "MouseInputPanel.h"
 
