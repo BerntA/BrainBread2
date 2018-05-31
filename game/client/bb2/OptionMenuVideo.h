@@ -12,18 +12,15 @@
 #endif
 
 #include <vgui/VGUI.h>
-#include <vgui_controls/Panel.h>
 #include <vgui_controls/PHandle.h>
-#include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/Label.h>
 #include <vgui_controls/ComboBox.h>
-#include <vgui_controls/RichText.h>
-#include <vgui_controls/SectionedListPanel.h>
+#include "vgui_base_panel.h"
 #include "GraphicalCheckBox.h"
 #include "GraphicalOverlayInset.h"
-#include "vgui_base_panel.h"
 #include "ComboList.h"
 #include "InlineMenuButton.h"
+#include "ComboList.h"
 
 namespace vgui
 {

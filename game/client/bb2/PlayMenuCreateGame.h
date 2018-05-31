@@ -14,18 +14,13 @@
 #include <vgui/VGUI.h>
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/PHandle.h>
-#include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/Label.h>
 #include <vgui_controls/RichText.h>
-#include <vgui_controls/SectionedListPanel.h>
-#include "GraphicalCheckBox.h"
-#include "GraphicalOverlayInset.h"
-#include "ExoticImageButton.h"
+#include <vgui_controls/Tooltip.h>
+#include "vgui_base_panel.h"
 #include "MapSelectionPanel.h"
 #include "ServerSettingsPanel.h"
-#include "vgui_base_panel.h"
 #include "AnimatedMenuButton.h"
-#include <vgui_controls/Tooltip.h>
 
 namespace vgui
 {
@@ -43,7 +38,9 @@ namespace vgui
 		void SetupLayout(void);
 		void OnShowPanel(bool bShow);
 
-		// Controls
+	private:
+		CPanelAnimationVar(float, m_flLoadMapTimer, "LoadMapTimer", "0.0f");
+
 		vgui::MapSelectionPanel *m_pMapPanel;
 		vgui::ServerSettingsPanel *m_pServerPanel;
 
@@ -55,9 +52,6 @@ namespace vgui
 		vgui::AnimatedMenuButton *m_pPlayButton;
 
 		vgui::TextTooltip *m_pGamemodeToolTip;
-
-	private:
-		CPanelAnimationVar(float, m_flLoadMapTimer, "LoadMapTimer", "0.0f");
 
 	protected:
 		virtual void ApplySchemeSettings(vgui::IScheme *pScheme);

@@ -5,37 +5,14 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <stdio.h>
-#include "filesystem.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include <vgui/IScheme.h>
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "PlayMenuCreateGame.h"
-#include "iclientmode.h"
-#include <KeyValues.h>
-#include <vgui/MouseCode.h>
-#include "vgui_controls/AnimationController.h"
-#include <vgui_controls/SectionedListPanel.h>
-#include <igameresources.h>
-#include "cdll_util.h"
+#include <vgui/IInput.h>
+#include <vgui/ILocalize.h>
+#include <vgui_controls/Label.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
+#include <vgui_controls/AnimationController.h>
 #include "GameBase_Client.h"
-#include "inputsystem/iinputsystem.h"
-#include "utlvector.h"
-#include "KeyValues.h"
-#include "filesystem.h"
-#include <vgui_controls/TextImage.h>
 #include "GameBase_Shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

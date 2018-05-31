@@ -5,27 +5,10 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "ServerSettingsPanel.h"
-#include "iclientmode.h"
-#include "vgui_controls/AnimationController.h"
-#include <igameresources.h>
-#include "cdll_util.h"
-#include "GameBase_Client.h"
-#include "KeyValues.h"
-#include "filesystem.h"
+#include <vgui_controls/Label.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -90,9 +73,9 @@ void ServerSettingsPanel::PerformLayout()
 {
 	BaseClass::PerformLayout();
 
-	ConVarRef allow_latejoining("bb2_allow_latejoin");
-	ConVarRef zombie_death_teamchange("bb2_classic_zombie_noteamchange");
-	ConVarRef allow_npc_scoring("bb2_allow_npc_to_score");
+	static ConVarRef allow_latejoining("bb2_allow_latejoin");
+	static ConVarRef zombie_death_teamchange("bb2_classic_zombie_noteamchange");
+	static ConVarRef allow_npc_scoring("bb2_allow_npc_to_score");
 
 	m_pCheckFields[0]->SetCheckedStatus(allow_latejoining.GetBool());
 	m_pCheckFields[1]->SetCheckedStatus(zombie_death_teamchange.GetBool());
@@ -154,7 +137,7 @@ void ServerSettingsPanel::ApplyServerSettings(void)
 	engine->ClientCmd_Unrestricted("mp_footsteps 1\n");
 	engine->ClientCmd_Unrestricted("sv_footsteps 1\n");
 
-	ConVar *pConvarList[] =
+	static ConVar *pConvarList[] =
 	{
 		cvar->FindVar("bb2_allow_latejoin"),
 		cvar->FindVar("bb2_classic_zombie_noteamchange"),
@@ -175,11 +158,11 @@ void ServerSettingsPanel::ApplyServerSettings(void)
 
 void ServerSettingsPanel::UpdateServerSettings(void)
 {
-	ConVarRef hostname("hostname");
-	ConVarRef sv_password("sv_password");
-	ConVarRef npc_scaling("bb2_npc_scaling");
-	ConVarRef bb2_spawn_protection("bb2_spawn_protection");
-	ConVarRef bb2_allow_mercy("bb2_allow_mercy");
+	static ConVarRef hostname("hostname");
+	static ConVarRef sv_password("sv_password");
+	static ConVarRef npc_scaling("bb2_npc_scaling");
+	static ConVarRef bb2_spawn_protection("bb2_spawn_protection");
+	static ConVarRef bb2_allow_mercy("bb2_allow_mercy");
 
 	m_pEditableField[0]->SetText(hostname.GetString());
 	m_pEditableField[1]->SetText(sv_password.GetString());

@@ -12,25 +12,19 @@
 #endif
 
 #include <vgui/VGUI.h>
-#include "InlineMenuButton.h"
-#include <vgui_controls/Panel.h>
 #include <vgui_controls/PHandle.h>
 #include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/Label.h>
-#include <vgui_controls/RichText.h>
 #include <vgui_controls/ComboBox.h>
-#include <vgui_controls/SectionedListPanel.h>
-#include "GraphicalCheckBox.h"
-#include "GraphicalOverlayInset.h"
-#include "ExoticImageButton.h"
-#include "OverlayButton.h"
-#include "vgui_base_panel.h"
-#include <steam/steam_api.h>
-#include "steam/isteamapps.h"
-#include "clientmode_shared.h"
-#include "cdll_client_int.h"
 #include <vgui_controls/Tooltip.h>
+#include <vgui_controls/SectionedListPanel.h>
 #include <vgui_controls/CheckButton.h>
+#include "vgui_base_panel.h"
+#include "ExoticImageButton.h"
+#include "InlineMenuButton.h"
+#include "OverlayButton.h"
+#include <steam/steam_api.h>
+#include <steam/isteamapps.h>
 
 namespace vgui
 {

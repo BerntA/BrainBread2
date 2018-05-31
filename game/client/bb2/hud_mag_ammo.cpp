@@ -10,15 +10,10 @@
 #include "hud_macros.h"
 #include "c_hl2mp_player.h"
 #include "iclientmode.h"
-#include <stdarg.h>
-#include <stdio.h>
-#include <wchar.h>
-#include "c_basehlplayer.h"
 #include "hl2mp_gamerules.h"
-#include "vgui_controls/Panel.h"
-#include "vgui_controls/AnimationController.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
+#include <vgui_controls/Panel.h>
+#include <vgui_controls/AnimationController.h>
+#include <vgui/ISurface.h>
 
 using namespace vgui;
 
@@ -154,7 +149,7 @@ bool CHudBaseAmmo::ShouldDraw(void)
 	if (!pWeapon)
 		return false;
 
-	if (pWeapon->IsMeleeWeapon() || !pWeapon->UsesClipsForAmmo1())
+	if (pWeapon->IsMeleeWeapon() || !pWeapon->UsesClipsForAmmo1() || !pWeapon->VisibleInWeaponSelection())
 		return false;
 
 	return true;
@@ -169,11 +164,8 @@ void CHudBaseAmmo::Paint()
 	if (!pPlayer)
 		return;
 
-	C_BaseCombatWeapon *pLocalWeapon = GetActiveWeapon();
+	C_BaseCombatWeapon *pLocalWeapon = pPlayer->GetActiveWeapon();
 	if (!pLocalWeapon)
-		return;
-
-	if (!pLocalWeapon->UsesClipsForAmmo1() || pLocalWeapon->IsMeleeWeapon() || !pLocalWeapon->VisibleInWeaponSelection())
 		return;
 
 	int xpos = 0, ypos = 0, wide = 1, tall = 1, textX = 0, textY = 0;

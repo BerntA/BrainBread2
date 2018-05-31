@@ -9,12 +9,10 @@
 #include "hudelement.h"
 #include "hud_macros.h"
 #include "iclientmode.h"
-#include "c_basehlplayer.h"
-#include "vgui_controls/Panel.h"
-#include "vgui_controls/AnimationController.h"
-#include "vgui/ISurface.h"
+#include <vgui_controls/Panel.h>
+#include <vgui_controls/AnimationController.h>
+#include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
-#include "ienginevgui.h"
 #include "hl2mp_gamerules.h"
 #include "c_hl2mp_player.h"
 

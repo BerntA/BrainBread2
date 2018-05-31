@@ -10,14 +10,11 @@
 #include "hud_macros.h"
 #include "c_hl2mp_player.h"
 #include "iclientmode.h"
-#include "c_basehlplayer.h"
-#include "c_playerresource.h"
 #include "hl2mp_gamerules.h"
-#include "vgui_controls/Panel.h"
-#include "vgui_controls/AnimationController.h"
-#include "vgui/ISurface.h"
+#include <vgui_controls/Panel.h>
+#include <vgui_controls/AnimationController.h>
+#include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
-#include "vgui_avatarimage.h"
 
 using namespace vgui;
 

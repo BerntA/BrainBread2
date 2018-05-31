@@ -5,43 +5,13 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <stdio.h>
-#include "filesystem.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include <vgui/IScheme.h>
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/ComboBox.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "OptionMenuVideo.h"
-#include "iclientmode.h"
-#include <KeyValues.h>
-#include <vgui/MouseCode.h>
-#include "vgui_controls/AnimationController.h"
-#include <vgui_controls/SectionedListPanel.h>
-#include <igameresources.h>
-#include "cdll_util.h"
+#include <vgui/ILocalize.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 #include "GameBase_Client.h"
-#include "inputsystem/iinputsystem.h"
-#include "utlvector.h"
-#include "KeyValues.h"
-#include "filesystem.h"
-#include <vgui_controls/TextImage.h>
 #include "IGameUIFuncs.h"
-#include "modes.h"
-#include "utlvector.h"
 #include "materialsystem/materialsystem_config.h"
-#include "inetchannelinfo.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -233,10 +203,10 @@ void OptionMenuVideo::OnUpdate(bool bInGame)
 
 void OptionMenuVideo::ApplyChanges(void)
 {
-	ConVarRef motionblur("mat_motion_blur_enabled");
-	ConVarRef motionblur_forward("mat_motion_blur_forward_enabled");
-	ConVarRef glow_outline_effect_enable("glow_outline_effect_enable");
-	ConVarRef bb2_fx_filmgrain("bb2_fx_filmgrain");
+	static ConVarRef motionblur("mat_motion_blur_enabled");
+	static ConVarRef motionblur_forward("mat_motion_blur_forward_enabled");
+	static ConVarRef glow_outline_effect_enable("glow_outline_effect_enable");
+	static ConVarRef bb2_fx_filmgrain("bb2_fx_filmgrain");
 
 	motionblur.SetValue(m_pCheckBox[1]->IsChecked());
 	motionblur_forward.SetValue(m_pCheckBox[1]->IsChecked());
@@ -335,9 +305,9 @@ void OptionMenuVideo::SetupLayout(void)
 		SetCurrentResolutionComboItem();
 		PrepareResolutionList();
 
-		ConVarRef motionblur("mat_motion_blur_enabled");
-		ConVarRef glow_outline_effect_enable("glow_outline_effect_enable");
-		ConVarRef bb2_fx_filmgrain("bb2_fx_filmgrain");
+		static ConVarRef motionblur("mat_motion_blur_enabled");
+		static ConVarRef glow_outline_effect_enable("glow_outline_effect_enable");
+		static ConVarRef bb2_fx_filmgrain("bb2_fx_filmgrain");
 
 		m_pCheckBox[1]->SetCheckedStatus(motionblur.GetBool());
 		m_pCheckBox[2]->SetCheckedStatus(bb2_fx_filmgrain.GetBool());

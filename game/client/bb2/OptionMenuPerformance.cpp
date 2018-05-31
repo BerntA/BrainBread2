@@ -5,38 +5,10 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <stdio.h>
-#include "filesystem.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include <vgui/IScheme.h>
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "OptionMenuPerformance.h"
-#include "iclientmode.h"
-#include <KeyValues.h>
-#include <vgui/MouseCode.h>
-#include "vgui_controls/AnimationController.h"
-#include <vgui_controls/SectionedListPanel.h>
-#include <igameresources.h>
-#include "cdll_util.h"
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 #include "GameBase_Client.h"
-#include "inputsystem/iinputsystem.h"
-#include "utlvector.h"
-#include "KeyValues.h"
-#include "filesystem.h"
-#include <vgui_controls/TextImage.h>
-#include "GameBase_Shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -143,17 +115,17 @@ OptionMenuPerformance::~OptionMenuPerformance()
 void OptionMenuPerformance::ApplyChanges(void)
 {
 	// Gore Options:
-	ConVarRef bb2_extreme_gore("bb2_extreme_gore");
-	ConVarRef bb2_gibs_spawn_blood_puddle("bb2_gibs_spawn_blood_puddle");
-	ConVarRef bb2_gibs_spawn_blood("bb2_gibs_spawn_blood");
-	ConVarRef bb2_gibs_enable_fade("bb2_gibs_enable_fade");
+	static ConVarRef bb2_extreme_gore("bb2_extreme_gore");
+	static ConVarRef bb2_gibs_spawn_blood_puddle("bb2_gibs_spawn_blood_puddle");
+	static ConVarRef bb2_gibs_spawn_blood("bb2_gibs_spawn_blood");
+	static ConVarRef bb2_gibs_enable_fade("bb2_gibs_enable_fade");
 
 	// Misc Options:
-	ConVarRef bb2_render_client_in_mirrors("bb2_render_client_in_mirrors");
-	ConVarRef cl_new_impact_effects("cl_new_impact_effects");
-	ConVarRef muzzleflash_light("muzzleflash_light");
-	ConVarRef bb2_render_weapon_attachments("bb2_render_weapon_attachments");
-	ConVarRef bb2_enable_particle_gunfx("bb2_enable_particle_gunfx");
+	static ConVarRef bb2_render_client_in_mirrors("bb2_render_client_in_mirrors");
+	static ConVarRef cl_new_impact_effects("cl_new_impact_effects");
+	static ConVarRef muzzleflash_light("muzzleflash_light");
+	static ConVarRef bb2_render_weapon_attachments("bb2_render_weapon_attachments");
+	static ConVarRef bb2_enable_particle_gunfx("bb2_enable_particle_gunfx");
 
 	bb2_extreme_gore.SetValue(m_pCheckBoxVar[0]->IsChecked());
 	bb2_gibs_spawn_blood_puddle.SetValue(m_pCheckBoxVar[1]->IsChecked());
@@ -191,17 +163,17 @@ void OptionMenuPerformance::SetupLayout(void)
 	if (!IsVisible())
 	{
 		// Gore Options:
-		ConVarRef bb2_extreme_gore("bb2_extreme_gore");
-		ConVarRef bb2_gibs_spawn_blood_puddle("bb2_gibs_spawn_blood_puddle");
-		ConVarRef bb2_gibs_spawn_blood("bb2_gibs_spawn_blood");
-		ConVarRef bb2_gibs_enable_fade("bb2_gibs_enable_fade");
+		static ConVarRef bb2_extreme_gore("bb2_extreme_gore");
+		static ConVarRef bb2_gibs_spawn_blood_puddle("bb2_gibs_spawn_blood_puddle");
+		static ConVarRef bb2_gibs_spawn_blood("bb2_gibs_spawn_blood");
+		static ConVarRef bb2_gibs_enable_fade("bb2_gibs_enable_fade");
 
 		// Misc Options:
-		ConVarRef bb2_render_client_in_mirrors("bb2_render_client_in_mirrors");
-		ConVarRef cl_new_impact_effects("cl_new_impact_effects");
-		ConVarRef muzzleflash_light("muzzleflash_light");
-		ConVarRef bb2_render_weapon_attachments("bb2_render_weapon_attachments");
-		ConVarRef bb2_enable_particle_gunfx("bb2_enable_particle_gunfx");
+		static ConVarRef bb2_render_client_in_mirrors("bb2_render_client_in_mirrors");
+		static ConVarRef cl_new_impact_effects("cl_new_impact_effects");
+		static ConVarRef muzzleflash_light("muzzleflash_light");
+		static ConVarRef bb2_render_weapon_attachments("bb2_render_weapon_attachments");
+		static ConVarRef bb2_enable_particle_gunfx("bb2_enable_particle_gunfx");
 
 		m_pCheckBoxVar[0]->SetCheckedStatus(bb2_extreme_gore.GetBool());
 		m_pCheckBoxVar[1]->SetCheckedStatus(bb2_gibs_spawn_blood_puddle.GetBool());

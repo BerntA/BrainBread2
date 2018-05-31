@@ -7,19 +7,13 @@
 #include "cbase.h"
 #include "hudelement.h"
 #include "hud_macros.h"
-#include "c_playerresource.h"
 #include "clientmode_hl2mpnormal.h"
-#include <vgui_controls/Controls.h>
 #include <vgui_controls/Panel.h>
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
-#include <KeyValues.h>
-#include "vgui_controls/AnimationController.h"
+#include <vgui_controls/AnimationController.h>
 #include "c_baseplayer.h"
 #include "hl2mp_gamerules.h"
-#include "iclientmode.h"
-#include "c_team.h"
-#include "GameBase_Shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

@@ -5,39 +5,12 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <stdio.h>
-#include "filesystem.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include <vgui/IScheme.h>
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "ProfileMenuCharacterPanel.h"
-#include "iclientmode.h"
-#include <KeyValues.h>
-#include <vgui/MouseCode.h>
-#include "vgui_controls/AnimationController.h"
-#include <vgui_controls/SectionedListPanel.h>
-#include <igameresources.h>
-#include "cdll_util.h"
+#include <vgui_controls/Label.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 #include "GameBase_Client.h"
 #include "GameBase_Shared.h"
-#include "inputsystem/iinputsystem.h"
-#include "utlvector.h"
-#include "KeyValues.h"
-#include "filesystem.h"
-#include <vgui_controls/TextImage.h>
-#include "GameDefinitions_Shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -230,7 +203,7 @@ void ProfileMenuCharacterPanel::OnShowPanel(bool bShow)
 	{
 		m_pSurvivorCombo->GetComboBox()->RemoveAll();
 
-		ConVarRef survivor_choice("bb2_survivor_choice");
+		static ConVarRef survivor_choice("bb2_survivor_choice");
 		const char *survivorName = survivor_choice.GetString();
 		if (!survivorName)
 			survivorName = "";
@@ -256,11 +229,11 @@ void ProfileMenuCharacterPanel::ShowInfoForCharacter(int index, bool bLoadSelf)
 {
 	if (bLoadSelf)
 	{
-		ConVarRef extra_skin("bb2_survivor_choice_skin");
-		ConVarRef extra_head("bb2_survivor_choice_extra_head");
-		ConVarRef extra_body("bb2_survivor_choice_extra_body");
-		ConVarRef extra_rightleg("bb2_survivor_choice_extra_leg_right");
-		ConVarRef extra_leftleg("bb2_survivor_choice_extra_leg_left");
+		static ConVarRef extra_skin("bb2_survivor_choice_skin");
+		static ConVarRef extra_head("bb2_survivor_choice_extra_head");
+		static ConVarRef extra_body("bb2_survivor_choice_extra_body");
+		static ConVarRef extra_rightleg("bb2_survivor_choice_extra_leg_right");
+		static ConVarRef extra_leftleg("bb2_survivor_choice_extra_leg_left");
 
 		m_iCustomizationNum[0] = extra_skin.GetInt();
 		m_iCustomizationNum[1] = extra_head.GetInt();
@@ -271,9 +244,7 @@ void ProfileMenuCharacterPanel::ShowInfoForCharacter(int index, bool bLoadSelf)
 	else
 	{
 		for (int i = 0; i < MAX_CUSTOMIZABLE_ITEMS; i++)
-		{
 			m_iCustomizationNum[i] = 0;
-		}
 	}
 
 	const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(index);
@@ -282,8 +253,8 @@ void ProfileMenuCharacterPanel::ShowInfoForCharacter(int index, bool bLoadSelf)
 	m_pSelectedModel->LoadModel(data->szSurvivorName, TEAM_HUMANS);
 	m_pSelectedModel->SetProperties(m_iCustomizationNum[0], m_iCustomizationNum[1], m_iCustomizationNum[2], m_iCustomizationNum[3], m_iCustomizationNum[4]);
 
-	ConVarRef human_voiceset("bb2_sound_player_human");
-	ConVarRef zombie_voiceset("bb2_sound_player_deceased");
+	static ConVarRef human_voiceset("bb2_sound_player_human");
+	static ConVarRef zombie_voiceset("bb2_sound_player_deceased");
 
 	// Load other stuff:
 	m_pSoundSetComboHuman->GetComboBox()->RemoveAll();
@@ -358,15 +329,15 @@ void ProfileMenuCharacterPanel::ApplyChanges(void)
 	const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(m_iCurrentSelectedItem);
 	Assert(data != NULL);
 
-	ConVarRef survivor_choice("bb2_survivor_choice");
-	ConVarRef human_voiceset("bb2_sound_player_human");
-	ConVarRef zombie_voiceset("bb2_sound_player_deceased");
+	static ConVarRef survivor_choice("bb2_survivor_choice");
+	static ConVarRef human_voiceset("bb2_sound_player_human");
+	static ConVarRef zombie_voiceset("bb2_sound_player_deceased");
 
-	ConVarRef extra_skin("bb2_survivor_choice_skin");
-	ConVarRef extra_head("bb2_survivor_choice_extra_head");
-	ConVarRef extra_body("bb2_survivor_choice_extra_body");
-	ConVarRef extra_rightleg("bb2_survivor_choice_extra_leg_right");
-	ConVarRef extra_leftleg("bb2_survivor_choice_extra_leg_left");
+	static ConVarRef extra_skin("bb2_survivor_choice_skin");
+	static ConVarRef extra_head("bb2_survivor_choice_extra_head");
+	static ConVarRef extra_body("bb2_survivor_choice_extra_body");
+	static ConVarRef extra_rightleg("bb2_survivor_choice_extra_leg_right");
+	static ConVarRef extra_leftleg("bb2_survivor_choice_extra_leg_left");
 
 	survivor_choice.SetValue(data->szSurvivorName);
 

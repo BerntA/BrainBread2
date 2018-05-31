@@ -5,37 +5,11 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <stdio.h>
-#include "filesystem.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include <vgui/IScheme.h>
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "PlayMenuScoreboard.h"
-#include "iclientmode.h"
-#include <KeyValues.h>
-#include <vgui/MouseCode.h>
-#include "vgui_controls/AnimationController.h"
-#include <vgui_controls/SectionedListPanel.h>
-#include <igameresources.h>
-#include "cdll_util.h"
+#include <vgui_controls/Label.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 #include "GameBase_Client.h"
-#include "inputsystem/iinputsystem.h"
-#include "utlvector.h"
-#include "KeyValues.h"
-#include "filesystem.h"
-#include <vgui_controls/TextImage.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -165,8 +139,8 @@ void PlayMenuScoreboard::SetupLayout(void)
 	m_pGridDetail[2]->SetPos((width / 2) + scheme()->GetProportionalScaledValue(287), scheme()->GetProportionalScaledValue(4));
 	m_pGridDetail[3]->SetPos((width / 2) + scheme()->GetProportionalScaledValue(356), scheme()->GetProportionalScaledValue(4));
 
-	m_pGridDetail[4]->SetSize(scheme()->GetProportionalScaledValue(100), scheme()->GetProportionalScaledValue(20));
-	m_pGridDetail[4]->SetPos((w / 2) - (scheme()->GetProportionalScaledValue(100) / 2), h - scheme()->GetProportionalScaledValue(20));
+	m_pGridDetail[4]->SetSize(w, scheme()->GetProportionalScaledValue(20));
+	m_pGridDetail[4]->SetPos(0, h - scheme()->GetProportionalScaledValue(20));
 }
 
 void PlayMenuScoreboard::ApplySchemeSettings(vgui::IScheme *pScheme)
@@ -201,18 +175,14 @@ void PlayMenuScoreboard::RefreshScores(void)
 void PlayMenuScoreboard::RefreshCallback(int iItems)
 {
 	m_iPageNum = 0;
-	int iNeededItems = 5;
-	for (int i = 0; i <= iItems; i++)
+	if (iItems > 0)
 	{
-		if (i > iNeededItems)
-		{
-			m_iPageNum++;
-			iNeededItems += 5;
-		}
+		float pages = ceil(((float)iItems) / ((float)_ARRAYSIZE(m_pScoreItem)));
+		m_iPageNum = MAX((((int)pages) - 1), 0);
 	}
 
 	if (m_iPageNum > 0)
-		m_pGridDetail[4]->SetText(VarArgs("%i | %i", (m_iCurrPage + 1), (m_iPageNum + 1)));
+		m_pGridDetail[4]->SetText(VarArgs("Page %i | %i - (%i Entries)", (m_iCurrPage + 1), (m_iPageNum + 1), iItems));
 	else
 		m_pGridDetail[4]->SetText("");
 }

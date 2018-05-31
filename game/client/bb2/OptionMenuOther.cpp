@@ -5,37 +5,10 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <stdio.h>
-#include "filesystem.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include <vgui/IScheme.h>
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "OptionMenuOther.h"
-#include "iclientmode.h"
-#include <KeyValues.h>
-#include <vgui/MouseCode.h>
-#include "vgui_controls/AnimationController.h"
-#include <vgui_controls/SectionedListPanel.h>
-#include <igameresources.h>
-#include "cdll_util.h"
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 #include "GameBase_Client.h"
-#include "inputsystem/iinputsystem.h"
-#include "utlvector.h"
-#include "KeyValues.h"
-#include "filesystem.h"
-#include <vgui_controls/TextImage.h>
 #include "GameBase_Shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -154,19 +127,19 @@ OptionMenuOther::~OptionMenuOther()
 
 void OptionMenuOther::ApplyChanges(void)
 {
-	ConVarRef crosshair("crosshair");
+	static ConVarRef crosshair("crosshair");
 
-	ConVarRef bb2_sound_zombie("bb2_sound_zombie");
-	ConVarRef bb2_sound_fred("bb2_sound_fred");
-	ConVarRef bb2_sound_military("bb2_sound_military");
-	ConVarRef bb2_sound_bandit("bb2_sound_bandit");
-	ConVarRef bb2_sound_announcer("bb2_sound_announcer");
+	static ConVarRef bb2_sound_zombie("bb2_sound_zombie");
+	static ConVarRef bb2_sound_fred("bb2_sound_fred");
+	static ConVarRef bb2_sound_military("bb2_sound_military");
+	static ConVarRef bb2_sound_bandit("bb2_sound_bandit");
+	static ConVarRef bb2_sound_announcer("bb2_sound_announcer");
 
-	ConVarRef bb2_enable_healthbar_for_all("bb2_enable_healthbar_for_all");
-	ConVarRef bb2_show_details("bb2_show_details");
-	ConVarRef hud_fastswitch("hud_fastswitch");
-	ConVarRef bb2_render_damage_text("bb2_render_damage_text");
-	ConVarRef bb2_scope_refraction("bb2_scope_refraction");
+	static ConVarRef bb2_enable_healthbar_for_all("bb2_enable_healthbar_for_all");
+	static ConVarRef bb2_show_details("bb2_show_details");
+	static ConVarRef hud_fastswitch("hud_fastswitch");
+	static ConVarRef bb2_render_damage_text("bb2_render_damage_text");
+	static ConVarRef bb2_scope_refraction("bb2_scope_refraction");
 
 	bb2_sound_zombie.SetValue(m_pComboSoundSet[0]->GetComboBox()->GetActiveItem());
 	bb2_sound_fred.SetValue(m_pComboSoundSet[1]->GetComboBox()->GetActiveItem());
@@ -220,19 +193,19 @@ void OptionMenuOther::SetupLayout(void)
 			GameBaseShared()->GetSharedGameDetails()->AddSoundScriptItems(m_pComboSoundSet[i], types[i]);
 		}
 
-		ConVarRef bb2_sound_zombie("bb2_sound_zombie");
-		ConVarRef bb2_sound_fred("bb2_sound_fred");
-		ConVarRef bb2_sound_military("bb2_sound_military");
-		ConVarRef bb2_sound_bandit("bb2_sound_bandit");
-		ConVarRef bb2_sound_announcer("bb2_sound_announcer");
+		static ConVarRef bb2_sound_zombie("bb2_sound_zombie");
+		static ConVarRef bb2_sound_fred("bb2_sound_fred");
+		static ConVarRef bb2_sound_military("bb2_sound_military");
+		static ConVarRef bb2_sound_bandit("bb2_sound_bandit");
+		static ConVarRef bb2_sound_announcer("bb2_sound_announcer");
 
-		ConVarRef bb2_enable_healthbar_for_all("bb2_enable_healthbar_for_all");
-		ConVarRef bb2_show_details("bb2_show_details");
-		ConVarRef hud_fastswitch("hud_fastswitch");
-		ConVarRef bb2_render_damage_text("bb2_render_damage_text");
-		ConVarRef bb2_scope_refraction("bb2_scope_refraction");
+		static ConVarRef bb2_enable_healthbar_for_all("bb2_enable_healthbar_for_all");
+		static ConVarRef bb2_show_details("bb2_show_details");
+		static ConVarRef hud_fastswitch("hud_fastswitch");
+		static ConVarRef bb2_render_damage_text("bb2_render_damage_text");
+		static ConVarRef bb2_scope_refraction("bb2_scope_refraction");
 
-		ConVarRef crosshair("crosshair");
+		static ConVarRef crosshair("crosshair");
 
 		m_pCheckBoxVar[0]->SetCheckedStatus(bb2_enable_healthbar_for_all.GetBool());
 		m_pCheckBoxVar[1]->SetCheckedStatus(bb2_show_details.GetBool());

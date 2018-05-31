@@ -5,37 +5,10 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <stdio.h>
-#include "filesystem.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include <vgui/IScheme.h>
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "OptionMenuMouse.h"
-#include "iclientmode.h"
-#include <KeyValues.h>
-#include <vgui/MouseCode.h>
-#include "vgui_controls/AnimationController.h"
-#include <vgui_controls/SectionedListPanel.h>
-#include <igameresources.h>
-#include "cdll_util.h"
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 #include "GameBase_Client.h"
-#include "inputsystem/iinputsystem.h"
-#include "utlvector.h"
-#include "KeyValues.h"
-#include "filesystem.h"
-#include <vgui_controls/TextImage.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -180,13 +153,13 @@ void OptionMenuMouse::ApplySchemeSettings(vgui::IScheme *pScheme)
 
 void OptionMenuMouse::ApplyChanges(void)
 {
-	ConVarRef filter("m_filter");
-	ConVarRef pitch("m_pitch");
-	ConVarRef gamepad("joystick");
-	ConVarRef joy_inverty("joy_inverty");
-	ConVarRef joy_movement_stick("joy_movement_stick");
-	ConVarRef m_rawinput("m_rawinput");
-	ConVarRef m_customaccel("m_customaccel");
+	static ConVarRef filter("m_filter");
+	static ConVarRef pitch("m_pitch");
+	static ConVarRef gamepad("joystick");
+	static ConVarRef joy_inverty("joy_inverty");
+	static ConVarRef joy_movement_stick("joy_movement_stick");
+	static ConVarRef m_rawinput("m_rawinput");
+	static ConVarRef m_customaccel("m_customaccel");
 
 	filter.SetValue(m_pCheckBoxVar[0]->IsChecked());
 	pitch.SetValue(m_pCheckBoxVar[1]->IsChecked() ? "-0.022000" : "0.022000");
@@ -197,7 +170,7 @@ void OptionMenuMouse::ApplyChanges(void)
 	joy_movement_stick.SetValue(m_pCheckBoxVar[6]->IsChecked() && m_pCheckBoxVar[4]->IsChecked());
 
 	engine->ClientCmd_Unrestricted("host_writeconfig\n");
-	engine->ClientCmd_Unrestricted("joyadvancedupdate");
+	engine->ClientCmd_Unrestricted("joyadvancedupdate\n");
 }
 
 void OptionMenuMouse::SetupLayout(void)
@@ -243,13 +216,13 @@ void OptionMenuMouse::SetupLayout(void)
 
 	if (!IsVisible())
 	{
-		ConVarRef filter("m_filter");
-		ConVarRef pitch("m_pitch");
-		ConVarRef gamepad("joystick");
-		ConVarRef joy_inverty("joy_inverty");
-		ConVarRef joy_movement_stick("joy_movement_stick");
-		ConVarRef m_rawinput("m_rawinput");
-		ConVarRef m_customaccel("m_customaccel");
+		static ConVarRef filter("m_filter");
+		static ConVarRef pitch("m_pitch");
+		static ConVarRef gamepad("joystick");
+		static ConVarRef joy_inverty("joy_inverty");
+		static ConVarRef joy_movement_stick("joy_movement_stick");
+		static ConVarRef m_rawinput("m_rawinput");
+		static ConVarRef m_customaccel("m_customaccel");
 
 		m_pCheckBoxVar[0]->SetCheckedStatus(filter.GetBool());
 		m_pCheckBoxVar[1]->SetCheckedStatus((pitch.GetFloat() < 0) ? true : false);

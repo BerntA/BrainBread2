@@ -5,43 +5,10 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <stdio.h>
-#include "filesystem.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include <vgui/IScheme.h>
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/ComboBox.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "OptionMenuGraphics.h"
-#include "iclientmode.h"
-#include <KeyValues.h>
-#include <vgui/MouseCode.h>
-#include "vgui_controls/AnimationController.h"
-#include <vgui_controls/SectionedListPanel.h>
-#include <igameresources.h>
-#include "cdll_util.h"
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 #include "GameBase_Client.h"
-#include "inputsystem/iinputsystem.h"
-#include "utlvector.h"
-#include "KeyValues.h"
-#include "filesystem.h"
-#include <vgui_controls/TextImage.h>
-#include "IGameUIFuncs.h"
-#include "modes.h"
-#include "utlvector.h"
-#include "materialsystem/materialsystem_config.h"
-#include "inetchannelinfo.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -342,18 +309,18 @@ void OptionMenuGraphics::SetupLayout(void)
 
 	if (!IsVisible())
 	{
-		ConVarRef r_rootlod("r_rootlod");
-		ConVarRef mat_picmip("mat_picmip");
-		ConVarRef mat_trilinear("mat_trilinear");
-		ConVarRef mat_forceaniso("mat_forceaniso");
-		ConVarRef mat_antialias("mat_antialias");
-		ConVarRef mat_aaquality("mat_aaquality");
-		ConVarRef mat_vsync("mat_vsync");
-		ConVarRef mat_hdr_level("mat_hdr_level");
-		ConVarRef r_flashlightdepthtexture("r_flashlightdepthtexture");
-		ConVarRef r_waterforceexpensive("r_waterforceexpensive");
-		ConVarRef r_waterforcereflectentities("r_waterforcereflectentities");
-		ConVarRef r_shadowrendertotexture("r_shadowrendertotexture");
+		static ConVarRef r_rootlod("r_rootlod");
+		static ConVarRef mat_picmip("mat_picmip");
+		static ConVarRef mat_trilinear("mat_trilinear");
+		static ConVarRef mat_forceaniso("mat_forceaniso");
+		static ConVarRef mat_antialias("mat_antialias");
+		static ConVarRef mat_aaquality("mat_aaquality");
+		static ConVarRef mat_vsync("mat_vsync");
+		static ConVarRef mat_hdr_level("mat_hdr_level");
+		static ConVarRef r_flashlightdepthtexture("r_flashlightdepthtexture");
+		static ConVarRef r_waterforceexpensive("r_waterforceexpensive");
+		static ConVarRef r_waterforcereflectentities("r_waterforcereflectentities");
+		static ConVarRef r_shadowrendertotexture("r_shadowrendertotexture");
 
 		m_pGraphicsCombo[0]->GetComboBox()->ActivateItem(2 - clamp(r_rootlod.GetInt(), 0, 2));
 		m_pGraphicsCombo[1]->GetComboBox()->ActivateItem(2 - clamp(mat_picmip.GetInt(), -1, 2));
@@ -480,16 +447,10 @@ int OptionMenuGraphics::FindMSAAMode(int nAASamples, int nAAQuality)
 
 void OptionMenuGraphics::SetComboItemAsRecommended(vgui::ComboBox *combo, int iItem)
 {
-	// get the item text
-	wchar_t text[512];
+	char text[512];
 	combo->GetItemText(iItem, text, sizeof(text));
-
-	// append the recommended flag
-	wchar_t newText[512];
-	_snwprintf(newText, sizeof(newText) / sizeof(wchar_t), L"%s *", text);
-
-	// reset
-	combo->UpdateItem(iItem, newText, NULL);
+	Q_snprintf(text, sizeof(text), "%s *", text);
+	combo->UpdateItem(iItem, text, NULL);
 }
 
 void OptionMenuGraphics::MarkDefaultSettingsAsRecommended()

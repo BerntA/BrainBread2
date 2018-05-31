@@ -9,18 +9,16 @@
 #include "hudelement.h"
 #include "hud_macros.h"
 #include "iclientmode.h"
-#include "c_basehlplayer.h"
-#include "vgui_controls/Panel.h"
-#include "vgui_controls/AnimationController.h"
-#include "vgui/ISurface.h"
+#include <vgui_controls/Panel.h>
+#include <vgui_controls/AnimationController.h>
+#include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
-#include "ienginevgui.h"
 #include "hl2mp_gamerules.h"
 #include "c_hl2mp_player.h"
 
-using namespace vgui;
-
 #include "tier0/memdbgon.h" 
+
+using namespace vgui;
 
 ConVar bb2_render_damage_text("bb2_render_damage_text", "1", FCVAR_ARCHIVE, "When you attack enemies, display how much damage you dealt.", true, 0.0f, true, 1.0f);
 

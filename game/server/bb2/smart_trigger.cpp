@@ -16,20 +16,19 @@
 // A trigger once & multiple in one with added filters&stuffing.
 //-----------------------------------------------------------------------------
 
-BEGIN_DATADESC( CSmartTrigger ) 
+BEGIN_DATADESC(CSmartTrigger)
 
-	DEFINE_KEYFIELD( TouchOnlyOnce, FIELD_BOOLEAN, "TriggerOnce" ),
-	DEFINE_KEYFIELD( m_iFilter, FIELD_INTEGER, "Filter" ),
+DEFINE_KEYFIELD(m_bTouchOnlyOnce, FIELD_BOOLEAN, "TriggerOnce"),
+DEFINE_KEYFIELD(m_iExtraFilter, FIELD_INTEGER, "Filter"),
 
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(smart_trigger, CSmartTrigger);
 
-CSmartTrigger::CSmartTrigger( void )
+CSmartTrigger::CSmartTrigger(void)
 {
-	m_bDisabled = false;
-	TouchOnlyOnce = false;
-	m_iFilter = 0;
+	m_bTouchOnlyOnce = false;
+	m_iExtraFilter = 0;
 }
 
 void CSmartTrigger::Spawn()
@@ -37,45 +36,54 @@ void CSmartTrigger::Spawn()
 	BaseClass::Spawn();
 }
 
-void CSmartTrigger::Touch( CBaseEntity *pOther )
+bool CSmartTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 {
-	if ( m_bDisabled )
-		return;
+	if (m_bDisabled)
+		return false;
 
-	if ( m_iFilter == 1 )
+	int filter = m_iExtraFilter;
+	if (filter == 1)
 	{
-		if ( !pOther->IsHuman() )
-			return;
+		if (!pOther->IsHuman())
+			return false;
 	}
-	else if ( m_iFilter == 2 )
+	else if (filter == 2)
 	{
-		if ( pOther->Classify() != CLASS_COMBINE )
-			return;
+		if (pOther->Classify() != CLASS_COMBINE)
+			return false;
 	}
-	else if ( m_iFilter == 3 )
+	else if (filter == 3)
 	{
-		if ( !pOther->IsHuman(true) )
-			return;
+		if (!pOther->IsHuman(true))
+			return false;
 	}
-	else if ( m_iFilter == 4 )
+	else if (filter == 4)
 	{
-		if ( !pOther->IsZombie() )
-			return;
+		if (!pOther->IsZombie())
+			return false;
 	}
-	else if ( m_iFilter == 5 )
+	else if (filter == 5)
 	{
-		if ( pOther->Classify() != CLASS_ZOMBIE )
-			return;
+		if (pOther->Classify() != CLASS_ZOMBIE)
+			return false;
 	}
-	else if ( m_iFilter == 6 )
+	else if (filter == 6)
 	{
-		if ( !pOther->IsZombie(true) )
-			return;
+		if (!pOther->IsZombie(true))
+			return false;
 	}
+
+	return BaseClass::PassesTriggerFilters(pOther);
+}
+
+void CSmartTrigger::Touch(CBaseEntity *pOther)
+{
+	if (!PassesTriggerFilters(pOther))
+		return;
 
 	m_OnTouching.FireOutput(this, this);
 
 	// Only once ? If so we delete the entity on fire.
-	if ( TouchOnlyOnce )
-		UTIL_Remove( this );
+	if (m_bTouchOnlyOnce)
+		UTIL_Remove(this);
 }

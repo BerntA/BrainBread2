@@ -12,17 +12,9 @@
 #endif
 
 #include <vgui/VGUI.h>
-#include <vgui_controls/Panel.h>
 #include <vgui_controls/PHandle.h>
-#include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/Label.h>
-#include <vgui_controls/RichText.h>
 #include <vgui_controls/Divider.h>
-#include <vgui_controls/ScrollBar.h>
-#include <vgui_controls/SectionedListPanel.h>
-#include "GraphicalCheckBox.h"
-#include "GraphicalOverlayInset.h"
-#include <vgui_controls/ListPanel.h>
 #include "vgui_base_panel.h"
 #include "CharacterPreviewPanel.h"
 #include "InlineMenuButton.h"

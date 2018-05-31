@@ -5,37 +5,9 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <stdio.h>
-#include "filesystem.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include <vgui/IScheme.h>
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "ProfileMenuAchievementPanel.h"
-#include "iclientmode.h"
-#include <KeyValues.h>
-#include <vgui/MouseCode.h>
-#include "vgui_controls/AnimationController.h"
-#include <vgui_controls/SectionedListPanel.h>
-#include <igameresources.h>
-#include "cdll_util.h"
-#include "GameBase_Client.h"
-#include "inputsystem/iinputsystem.h"
-#include "utlvector.h"
-#include "KeyValues.h"
-#include "filesystem.h"
-#include <vgui_controls/TextImage.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 #include "GameDefinitions_Shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -54,7 +26,8 @@ bool HasAchievementInList(CUtlVector<AchievementItem*> &list, int index)
 	return false;
 }
 
-AchievementItem::AchievementItem(vgui::Panel *parent, char const *panelName, const char *pszAchievementID, int achIndex) : vgui::Panel(parent, panelName)
+AchievementItem::AchievementItem(vgui::Panel *parent, char const *panelName, const char *pszAchievementID, int achIndex)
+	: vgui::Panel(parent, panelName)
 {
 	m_iAchievementIndex = achIndex;
 
@@ -168,9 +141,11 @@ const char *AchievementItem::GetUnlockDate(void)
 {
 	bool bAchieved = false;
 	uint32 iActualTime = 0;
-	float flUnlockedTime = 0.0f;
 	steamapicontext->SteamUserStats()->GetAchievementAndUnlockTime(pszAchievementStringID, &bAchieved, &iActualTime);
-	flUnlockedTime = (float)iActualTime;
+	float flUnlockedTime = ((float)iActualTime);
+
+	if ((iActualTime <= 0) || (bAchieved == false))
+		return "";
 
 	uint32 iYears = 1970;
 	while (flUnlockedTime >= 31556926.0F)
@@ -186,26 +161,21 @@ const char *AchievementItem::GetUnlockDate(void)
 		iMonths++;
 	}
 
-	uint iDays = 1;
+	uint32 iDays = 1;
 	while (flUnlockedTime >= 86400.0F)
 	{
 		flUnlockedTime -= 86400.0F;
 		iDays++;
 	}
 
-	if (bAchieved && (iActualTime != 0))
-	{
-		if (iMonths < 10 && iDays < 10)
-			return VarArgs("%lu.0%lu.0%lu", iYears, iMonths, iDays);
-		else if (iMonths < 10)
-			return VarArgs("%lu.0%lu.%lu", iYears, iMonths, iDays);
-		else if (iDays < 10)
-			return VarArgs("%lu.%lu.0%lu", iYears, iMonths, iDays);
-		else
-			return VarArgs("%lu.%lu.%lu", iYears, iMonths, iDays);
-	}
-
-	return "";
+	if (iMonths < 10 && iDays < 10)
+		return VarArgs("%lu.0%lu.0%lu", iYears, iMonths, iDays);
+	else if (iMonths < 10)
+		return VarArgs("%lu.0%lu.%lu", iYears, iMonths, iDays);
+	else if (iDays < 10)
+		return VarArgs("%lu.%lu.0%lu", iYears, iMonths, iDays);
+	else
+		return VarArgs("%lu.%lu.%lu", iYears, iMonths, iDays);
 }
 
 void AchievementItem::ApplySchemeSettings(vgui::IScheme *pScheme)

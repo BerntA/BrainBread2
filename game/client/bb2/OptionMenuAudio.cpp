@@ -5,38 +5,10 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include <stdio.h>
-#include "filesystem.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include <vgui/IScheme.h>
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/ComboBox.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "OptionMenuAudio.h"
-#include "iclientmode.h"
-#include <KeyValues.h>
-#include <vgui/MouseCode.h>
-#include "vgui_controls/AnimationController.h"
-#include <vgui_controls/SectionedListPanel.h>
-#include <igameresources.h>
-#include "cdll_util.h"
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 #include "GameBase_Client.h"
-#include "inputsystem/iinputsystem.h"
-#include "utlvector.h"
-#include "KeyValues.h"
-#include "filesystem.h"
-#include <vgui_controls/TextImage.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -158,13 +130,13 @@ void OptionMenuAudio::OnUpdate(bool bInGame)
 
 void OptionMenuAudio::ApplyChanges(void)
 {
-	ConVarRef voice_enable("voice_modenable");
-	ConVarRef boost_mic_gain("voice_boost");
-	ConVarRef mute_losefocus("snd_mute_losefocus");
+	static ConVarRef voice_enable("voice_modenable");
+	static ConVarRef boost_mic_gain("voice_boost");
+	static ConVarRef mute_losefocus("snd_mute_losefocus");
 
-	ConVarRef closed_captions("closecaption");
-	ConVarRef subtitles("cc_subtitles");
-	ConVarRef surround_speakers("snd_surround_speakers");
+	static ConVarRef closed_captions("closecaption");
+	static ConVarRef subtitles("cc_subtitles");
+	static ConVarRef surround_speakers("snd_surround_speakers");
 
 	voice_enable.SetValue(m_pCheckBox[0]->IsChecked());
 	boost_mic_gain.SetValue(m_pCheckBox[1]->IsChecked());
@@ -176,7 +148,7 @@ void OptionMenuAudio::ApplyChanges(void)
 		surround_speakers.SetValue(speakers);
 
 		// headphones at high quality get enhanced stereo turned on
-		ConVar *dsp_enhance_stereo = cvar->FindVar("dsp_enhance_stereo");
+		static ConVar *dsp_enhance_stereo = cvar->FindVar("dsp_enhance_stereo");
 		if (dsp_enhance_stereo)
 		{
 			if (speakers == 0)
@@ -186,17 +158,15 @@ void OptionMenuAudio::ApplyChanges(void)
 		}
 	}
 
+	subtitles.SetValue(0);
 	int iCloseCaptionValue = 0;
 	switch (m_pComboList[1]->GetComboBox()->GetActiveItem())
 	{
 	default:
 	case 0:
-		iCloseCaptionValue = 0;
-		subtitles.SetValue(0);
 		break;
 	case 1:
 		iCloseCaptionValue = 1;
-		subtitles.SetValue(0);
 		break;
 	case 2:
 		iCloseCaptionValue = 1;
@@ -217,12 +187,12 @@ void OptionMenuAudio::SetupLayout(void)
 
 	if (!IsVisible())
 	{
-		ConVarRef voice_enable("voice_modenable");
-		ConVarRef boost_mic_gain("voice_boost");
-		ConVarRef mute_losefocus("snd_mute_losefocus");
-		ConVarRef closed_captions("closecaption");
-		ConVarRef subtitles("cc_subtitles");
-		ConVarRef surround_speakers("snd_surround_speakers");
+		static ConVarRef voice_enable("voice_modenable");
+		static ConVarRef boost_mic_gain("voice_boost");
+		static ConVarRef mute_losefocus("snd_mute_losefocus");
+		static ConVarRef closed_captions("closecaption");
+		static ConVarRef subtitles("cc_subtitles");
+		static ConVarRef surround_speakers("snd_surround_speakers");
 
 		m_pCheckBox[0]->SetCheckedStatus(voice_enable.GetBool());
 		m_pCheckBox[1]->SetCheckedStatus(boost_mic_gain.GetBool());

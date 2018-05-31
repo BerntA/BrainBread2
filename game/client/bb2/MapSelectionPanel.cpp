@@ -5,33 +5,11 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "vgui/MouseCode.h"
-#include "vgui/IInput.h"
-#include "vgui/IScheme.h"
-#include "vgui/ISurface.h"
-#include <vgui/IVGui.h>
-#include "vgui_controls/EditablePanel.h"
-#include "vgui_controls/ScrollBar.h"
-#include "vgui_controls/Label.h"
-#include "vgui_controls/Button.h"
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/Frame.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui_controls/Controls.h"
 #include "MapSelectionPanel.h"
-#include "iclientmode.h"
-#include "vgui_controls/AnimationController.h"
-#include <igameresources.h>
-#include "cdll_util.h"
-#include "GameBase_Client.h"
-#include "IGameUIFuncs.h"
-#include "modes.h"
-#include "utlvector.h"
-#include "materialsystem/materialsystem_config.h"
-#include "inetchannelinfo.h"
-#include "KeyValues.h"
 #include "GameBase_Shared.h"
-#include "filesystem.h"
+#include <vgui/IInput.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/ImagePanel.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -99,24 +77,22 @@ void MapSelectionPanel::PerformLayout()
 	{
 		m_iCurrPage = 0;
 		m_iPageNum = 0;
-		int iNeededItems = 6;
-		int iItem = 0;
+
+		int items = 0;
 		int itemCount = GameBaseShared()->GetSharedMapData()->pszGameMaps.Count();
-		for (int i = 0; i <= itemCount; i++)
+		for (int i = 0; i < itemCount; i++)
 		{
-			if (i < itemCount)
-			{
-				if (GameBaseShared()->GetSharedMapData()->pszGameMaps[i].bExclude)
-					continue;
-			}
+			if (GameBaseShared()->GetSharedMapData()->pszGameMaps[i].bExclude)
+				continue;
 
-			if (iItem > iNeededItems)
-			{
-				m_iPageNum++;
-				iNeededItems += 6;
-			}
+			items++;
+		}
 
-			iItem++;
+		if (items > 0)
+		{
+			float pages = ceil(((float)items) / ((float)_ARRAYSIZE(m_pMapItems)));
+			m_iPageNum = ((int)pages);
+			m_iCurrPage = 1;
 		}
 	}
 
@@ -146,8 +122,7 @@ void MapSelectionPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
 
 void MapSelectionPanel::OnMapItemChange(KeyValues *data)
 {
-	int index = data->GetInt("index");
-	ShowMap(index);
+	ShowMap(data->GetInt("index"));
 }
 
 void MapSelectionPanel::OnUpdate()
@@ -173,10 +148,10 @@ void MapSelectionPanel::OnUpdate()
 		else
 			m_pImgArrowBox[1]->SetImage("mainmenu/arrow_right");
 
-		m_pBtnArrowBox[0]->SetVisible(m_iCurrPage > 0);
+		m_pBtnArrowBox[0]->SetVisible(m_iCurrPage > 1);
 		m_pBtnArrowBox[1]->SetVisible(m_iCurrPage < m_iPageNum);
 
-		m_pImgArrowBox[0]->SetVisible(m_iCurrPage > 0);
+		m_pImgArrowBox[0]->SetVisible(m_iCurrPage > 1);
 		m_pImgArrowBox[1]->SetVisible(m_iCurrPage < m_iPageNum);
 	}
 }
@@ -263,20 +238,23 @@ void MapSelectionPanel::Redraw(int index)
 
 void MapSelectionPanel::OnCommand(const char* pcCommand)
 {
-	if (!Q_stricmp(pcCommand, "Left"))
+	if (m_iPageNum > 0)
 	{
-		if (m_iCurrPage > 0)
+		if (!Q_stricmp(pcCommand, "Left"))
 		{
-			m_iCurrPage--;
-			Redraw((m_iCurrPage * _ARRAYSIZE(m_pMapItems)));
+			if (m_iCurrPage > 1)
+			{
+				m_iCurrPage--;
+				Redraw(((m_iCurrPage - 1) * _ARRAYSIZE(m_pMapItems)));
+			}
 		}
-	}
-	else if (!Q_stricmp(pcCommand, "Right"))
-	{
-		if (m_iCurrPage < m_iPageNum)
+		else if (!Q_stricmp(pcCommand, "Right"))
 		{
-			m_iCurrPage++;
-			Redraw((m_iCurrPage * _ARRAYSIZE(m_pMapItems)));
+			if (m_iCurrPage < m_iPageNum)
+			{
+				m_iCurrPage++;
+				Redraw(((m_iCurrPage - 1) * _ARRAYSIZE(m_pMapItems)));
+			}
 		}
 	}
 

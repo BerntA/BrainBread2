@@ -16,16 +16,17 @@ class CSmartTrigger : public CTriggerMultiple
 {
 public:
 	DECLARE_DATADESC();
-	DECLARE_CLASS( CSmartTrigger, CTriggerMultiple);
+	DECLARE_CLASS(CSmartTrigger, CTriggerMultiple);
 
-	CSmartTrigger( void );
+	CSmartTrigger(void);
 
-	void Spawn( void );
-	void Touch( CBaseEntity *pOther );
+	void Spawn(void);
+	bool PassesTriggerFilters(CBaseEntity *pOther);
+	void Touch(CBaseEntity *pOther);
 
 protected:
-	int m_iFilter;
-	bool TouchOnlyOnce;
+	int m_iExtraFilter;
+	bool m_bTouchOnlyOnce;
 };
 
 #endif // TRIGGER_SMART_H
