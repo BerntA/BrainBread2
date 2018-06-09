@@ -15,12 +15,6 @@
 #pragma once
 #endif
 
-#ifdef INVASION_DLL
-#include "tf_shareddefs.h"
-
-#define POWERUP_THINK_CONTEXT	"PowerupThink"
-#endif
-
 #include "cbase.h"
 #include "baseentity.h"
 #include "baseflex.h"
@@ -456,34 +450,6 @@ public:
 	// -----------------------
 	virtual void		OnPursuedBy( INextBot * RESTRICT pPursuer ){} // called every frame while pursued by a bot in DirectChase.
 
-#ifdef INVASION_DLL
-public:
-
-
-	// TF2 Powerups
-	virtual bool		CanBePoweredUp( void );
-	bool				HasPowerup( int iPowerup );
-	virtual	bool		CanPowerupNow( int iPowerup );		// Return true if I can be powered by this powerup right now
-	virtual	bool		CanPowerupEver( int iPowerup );		// Return true if I ever accept this powerup type
-
-	void				SetPowerup( int iPowerup, bool bState, float flTime = 0, float flAmount = 0, CBaseEntity *pAttacker = NULL, CDamageModifier *pDamageModifier = NULL );
-	virtual	bool		AttemptToPowerup( int iPowerup, float flTime, float flAmount = 0, CBaseEntity *pAttacker = NULL, CDamageModifier *pDamageModifier = NULL );
-	virtual	float		PowerupDuration( int iPowerup, float flTime );
-	virtual	void		PowerupStart( int iPowerup, float flAmount = 0, CBaseEntity *pAttacker = NULL, CDamageModifier *pDamageModifier = NULL );
-	virtual	void		PowerupEnd( int iPowerup );
-
-	void				PowerupThink( void );
-	virtual	void		PowerupThink( int iPowerup );
-
-public:
-
-	CNetworkVar( int, m_iPowerups );
-	float				m_flPowerupAttemptTimes[ MAX_POWERUPS ];
-	float				m_flPowerupEndTimes[ MAX_POWERUPS ];
-	float				m_flFractionalBoost;	// POWERUP_BOOST health fraction - specific powerup data
-
-#endif
-
 public:
 	// returns the last body region that took damage
 	int	LastHitGroup() const				{ return m_LastHitGroup; }
@@ -590,14 +556,6 @@ inline CBaseCombatWeapon *CBaseCombatCharacter::GetWeapon( int i ) const
 	Assert( (i >= 0) && (i < MAX_WEAPONS) );
 	return m_hMyWeapons[i].Get();
 }
-
-#ifdef INVASION_DLL
-// Powerup Inlines
-inline bool CBaseCombatCharacter::CanBePoweredUp( void )							{ return true; }
-inline float CBaseCombatCharacter::PowerupDuration( int iPowerup, float flTime )	{ return flTime; }
-inline void	CBaseCombatCharacter::PowerupEnd( int iPowerup )						{ return; }
-inline void	CBaseCombatCharacter::PowerupThink( int iPowerup )						{ return; }
-#endif
 
 EXTERN_SEND_TABLE(DT_BaseCombatCharacter);
 

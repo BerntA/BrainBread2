@@ -11,14 +11,6 @@
 #include "ammodef.h"
 #include "hl2mp_gamerules.h"
 
-
-#ifdef CLIENT_DLL
-extern IVModelInfoClient* modelinfo;
-#else
-extern IVModelInfo* modelinfo;
-#endif
-
-
 #if defined( CLIENT_DLL )
 
 	#include "vgui/ISurface.h"
@@ -51,16 +43,9 @@ bool IsAmmoType( int iAmmoType, const char *pAmmoName )
 IMPLEMENT_NETWORKCLASS_ALIASED( WeaponHL2MPBase, DT_WeaponHL2MPBase )
 
 BEGIN_NETWORK_TABLE( CWeaponHL2MPBase, DT_WeaponHL2MPBase )
-
 #ifdef CLIENT_DLL
-  
 #else
-	// world weapon models have no aminations
-  //	SendPropExclude( "DT_AnimTimeMustBeFirst", "m_flAnimTime" ),
-//	SendPropExclude( "DT_BaseAnimating", "m_nSequence" ),
-//	SendPropExclude( "DT_LocalActiveWeaponData", "m_flTimeWeaponIdle" ),
 #endif
-	
 END_NETWORK_TABLE()
 
 BEGIN_PREDICTION_DATA( CWeaponHL2MPBase ) 
@@ -68,13 +53,9 @@ END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( weapon_hl2mp_base, CWeaponHL2MPBase );
 
-
 #ifdef GAME_DLL
-
 	BEGIN_DATADESC( CWeaponHL2MPBase )
-
 	END_DATADESC()
-
 #endif
 
 // ----------------------------------------------------------------------------- //
@@ -84,7 +65,6 @@ CWeaponHL2MPBase::CWeaponHL2MPBase()
 {
 	SetPredictionEligible( true );
 	AddSolidFlags( FSOLID_TRIGGER ); // Nothing collides with these but it gets touches.
-
 	m_flNextResetCheckTime = 0.0f;
 }
 
@@ -97,7 +77,6 @@ bool CWeaponHL2MPBase::IsPredicted() const
 void CWeaponHL2MPBase::WeaponSound( WeaponSound_t sound_type, float soundtime /* = 0.0f */ )
 {
 #ifdef CLIENT_DLL
-
 		// If we have some sounds from the weapon classname.txt file, play a random one of them
 		const char *shootsound = GetWpnData().aShootSounds[ sound_type ]; 
 		if ( !shootsound || !shootsound[0] )

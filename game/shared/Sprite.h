@@ -228,14 +228,6 @@ public:
 	virtual float	GlowBlend( CEngineSprite *psprite, const Vector& entorigin, int rendermode, int renderfx, int alpha, float *scale );
 	virtual void	GetToolRecordingState( KeyValues *msg );
 
-// Only supported in TF2 right now
-#if defined( INVASION_CLIENT_DLL )
-	virtual bool	ShouldPredict( void )
-	{
-		return true;
-	}
-#endif
-
 	virtual void	ClientThink( void );
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
 

@@ -75,13 +75,6 @@ ConVar ai_use_visibility_cache( "ai_use_visibility_cache", "1" );
 
 BEGIN_DATADESC( CBaseCombatCharacter )
 
-#ifdef INVASION_DLL
-	DEFINE_FIELD( m_iPowerups, FIELD_INTEGER ),
-	DEFINE_ARRAY( m_flPowerupAttemptTimes, FIELD_TIME, MAX_POWERUPS ),
-	DEFINE_ARRAY( m_flPowerupEndTimes, FIELD_TIME, MAX_POWERUPS ),
-	DEFINE_FIELD( m_flFractionalBoost, FIELD_FLOAT ),
-#endif
-
 	DEFINE_FIELD( m_flNextAttack, FIELD_TIME ),
 	DEFINE_FIELD( m_eHull, FIELD_INTEGER ),
 	DEFINE_FIELD( m_bloodColor, FIELD_INTEGER ),
@@ -194,11 +187,6 @@ IMPLEMENT_SERVERCLASS_ST(CBaseCombatCharacter, DT_BaseCombatCharacter)
 	SendPropArray3( SENDINFO_ARRAY3(m_hMyWeapons), SendPropEHandle( SENDINFO_ARRAY(m_hMyWeapons) ) ),
 	SendPropInt(SENDINFO(m_nGibFlags), MAX_GIB_BITS, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_nMaterialOverlayFlags), MAX_MAT_OVERLAYS_BITS, SPROP_UNSIGNED),
-
-#ifdef INVASION_DLL
-	SendPropInt( SENDINFO(m_iPowerups), MAX_POWERUPS, SPROP_UNSIGNED ), 
-#endif
-
 END_SEND_TABLE()
 
 

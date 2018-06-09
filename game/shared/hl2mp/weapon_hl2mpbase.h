@@ -13,11 +13,10 @@
 #include "hl2mp_player_shared.h"
 #include "basecombatweapon_shared.h"
 #include "hl2mp_weapon_parse.h"
-#ifdef BB2_AI
-	#ifndef CLIENT_DLL 
-		#include "ai_basenpc.h" 
-	#endif 
-#endif //BB2_AI
+
+#ifndef CLIENT_DLL 
+#include "ai_basenpc.h" 
+#endif 
 
 #if defined( CLIENT_DLL )
 	#define CWeaponHL2MPBase C_WeaponHL2MPBase

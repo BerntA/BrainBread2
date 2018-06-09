@@ -9,7 +9,6 @@
 #include "hud_crosshair.h"
 #include "iclientmode.h"
 #include "view.h"
-#include "vgui_controls/Controls.h"
 #include "vgui/ISurface.h"
 #include "ivrenderview.h"
 #include "materialsystem/imaterialsystem.h"
@@ -17,8 +16,6 @@
 #include "client_virtualreality.h"
 #include "sourcevr/isourcevirtualreality.h"
 #include "hl2mp_gamerules.h"
-#include "vgui_controls/AnimationController.h"
-#include "GameBase_Client.h"
 #include "GameBase_Shared.h"
 #include "in_buttons.h"
 
@@ -33,7 +30,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-CHudCrosshair *m_pCrosshairHUD = NULL;
+static CHudCrosshair *m_pCrosshairHUD = NULL;
 
 static void OnCrosshairIconChanged(IConVar *var, const char *pOldValue, float flOldValue)
 {
@@ -110,10 +107,7 @@ bool CHudCrosshair::ShouldDraw( void )
 	if ( !pPlayer )
 		return false;
 
-	if (pPlayer->GetTeamNumber() != TEAM_HUMANS)
-		return false;
-
-	if (!pPlayer->IsAlive())
+	if ((pPlayer->GetTeamNumber() < TEAM_HUMANS) || !pPlayer->IsAlive())
 		return false;
 
 	C_BaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();

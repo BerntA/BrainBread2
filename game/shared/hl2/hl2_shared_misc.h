@@ -10,8 +10,6 @@
 #pragma once
 #endif 
 
-#include "weapon_hl2mpbasehlmpcombatweapon.h"
-
 #ifdef CLIENT_DLL
 #include "c_baseentity.h"
 #include "iviewrender_beams.h"

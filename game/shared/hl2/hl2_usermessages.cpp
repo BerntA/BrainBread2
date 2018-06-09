@@ -41,11 +41,10 @@ void RegisterUserMessages( void )
 	usermessages->Register( "CreditsMsg", 1 );
 	usermessages->Register( "LogoTimeMsg", 4 );
 	usermessages->Register( "AchievementEvent", -1 );
-	usermessages->Register( "UpdateJalopyRadar", -1 );
 
 	// BB2 : 
-	usermessages->Register( "RunBuyCommand", 1 ); // Boolean : 0 / 1 where 0 = fail and 1 = success. Plays a sound depending on the state (on the client!)...
-	usermessages->Register( "ShowNote", -1 ); // Sends the note filename and its header.
+	usermessages->Register("RunBuyCommand", 1); // Boolean : 0 / 1 where 0 = fail and 1 = success. Plays a sound depending on the state (on the client!)...
+	usermessages->Register("ShowNote", -1); // Sends the note filename and its header.
 	usermessages->Register("ClientEffect", -1); // Client Command Stuff to the client from server.
 	usermessages->Register("PlayerInit", -1); // Called when the client connects to a server.
 	usermessages->Register("InventoryUpdate", -1); // Called when the client picks up or removes an inventory item.

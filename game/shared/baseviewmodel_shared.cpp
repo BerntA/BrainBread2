@@ -212,10 +212,6 @@ void CBaseViewModel::SpawnControlPanels()
 		pScreen->SetActualSize( flWidth, flHeight );
 		pScreen->SetActive( false );
 		pScreen->MakeVisibleOnlyToTeammates( false );
-	
-#ifdef INVASION_DLL
-		pScreen->SetOverlayMaterial( SCREEN_OVERLAY_MATERIAL );
-#endif
 		pScreen->SetAttachedToViewModel( true );
 		int nScreen = m_hScreens.AddToTail( );
 		m_hScreens[nScreen].Set( pScreen );
@@ -560,9 +556,7 @@ BEGIN_NETWORK_TABLE_NOBASE(CBaseViewModel, DT_BaseViewModel)
 	SendPropInt( SENDINFO( m_nResetEventsParity ), EF_PARITY_BITS, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_nMuzzleFlashParity ), EF_MUZZLEFLASH_BITS, SPROP_UNSIGNED ),
 
-#if !defined( INVASION_DLL ) && !defined( INVASION_CLIENT_DLL )
 	SendPropArray	(SendPropFloat(SENDINFO_ARRAY(m_flPoseParameter),	8, 0, 0.0f, 1.0f), m_flPoseParameter),
-#endif
 #else
 	RecvPropInt		(RECVINFO(m_nModelIndex)),
 	RecvPropInt		(RECVINFO(m_nSkin)),
@@ -579,9 +573,7 @@ BEGIN_NETWORK_TABLE_NOBASE(CBaseViewModel, DT_BaseViewModel)
 	RecvPropInt( RECVINFO( m_nResetEventsParity )),
 	RecvPropInt( RECVINFO( m_nMuzzleFlashParity )),
 
-#if !defined( INVASION_DLL ) && !defined( INVASION_CLIENT_DLL )
 	RecvPropArray(RecvPropFloat(RECVINFO(m_flPoseParameter[0]) ), m_flPoseParameter ),
-#endif
 #endif
 END_NETWORK_TABLE()
 

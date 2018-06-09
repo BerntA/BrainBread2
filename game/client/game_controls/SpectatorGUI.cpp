@@ -6,47 +6,22 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include <cdll_client_int.h>
-#include <globalvars_base.h>
-#include <cdll_util.h>
-#include <KeyValues.h>
 #include "spectatorgui.h"
-#include <vgui/IScheme.h>
 #include <vgui/ILocalize.h>
 #include "c_team.h"
-#include <vgui/ISurface.h>
-#include <vgui/IPanel.h>
-#include <vgui_controls/ImageList.h>
-#include <vgui_controls/MenuItem.h>
-#include <vgui_controls/TextImage.h>
 #include "hl2mp_gamerules.h"
 #include "c_hl2mp_player.h"
 #include "c_playerresource.h"
-#include <stdio.h> // _snprintf define
-#include <game/client/iviewport.h>
-#include "commandmenu.h"
 #include "GameBase_Client.h"
 #include "hltvcamera.h"
+#include "c_world.h"
+
 #if defined( REPLAY_ENABLED )
 #include "replay/replaycamera.h"
 #endif
 
-#include <vgui_controls/TextEntry.h>
-#include <vgui_controls/Panel.h>
-#include <vgui_controls/ImagePanel.h>
-#include <vgui_controls/Menu.h>
-#include "IGameUIFuncs.h" // for key bindings
-#include <imapoverview.h>
-#include <shareddefs.h>
-#include <igameresources.h>
-#include "c_world.h"
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-#ifndef _XBOX
-extern IGameUIFuncs *gameuifuncs; // for key binding details
-#endif
 
 CSpectatorGUI *g_pSpectatorGUI = NULL;
 
@@ -73,12 +48,12 @@ CSpectatorGUI::CSpectatorGUI(IViewPort *pViewPort) : EditablePanel(NULL, PANEL_S
 	SetMouseInputEnabled(false);
 	SetKeyBoardInputEnabled(false);
 
-	m_pBackground = new Divider(this, "background");
-	m_pPlayerLabel = new Label(this, "playerlabel", "");
-	m_pGameInfo = new Label(this, "gamelabel", "");
+	m_pBackground = vgui::SETUP_PANEL(new Divider(this, "background"));
+	m_pPlayerLabel = vgui::SETUP_PANEL(new Label(this, "playerlabel", ""));
+	m_pGameInfo = vgui::SETUP_PANEL(new Label(this, "gamelabel", ""));
 	m_pGameInfo->SetVisible(true);
 
-	m_pSharedInfo = new Label(this, "sharedlabel", "");
+	m_pSharedInfo = vgui::SETUP_PANEL(new Label(this, "sharedlabel", ""));
 
 	Q_strncpy(pszMapName, "", 128);
 
@@ -109,7 +84,6 @@ void CSpectatorGUI::ApplySchemeSettings(IScheme *pScheme)
 
 	SetBgColor(Color(0, 0, 0, 0)); // make the background transparent
 	SetPaintBorderEnabled(false);
-
 	SetBorder(NULL);
 
 	// BB2
@@ -126,7 +100,7 @@ void CSpectatorGUI::ApplySchemeSettings(IScheme *pScheme)
 	m_pBackground->SetBorder(NULL);
 	m_pBackground->SetPaintBorderEnabled(false);
 
-	SetZPos(-1);	// guarantee it shows above the scope
+	SetZPos(-1);	
 }
 
 //-----------------------------------------------------------------------------
@@ -202,9 +176,9 @@ void CSpectatorGUI::Update()
 
 		C_BasePlayer *pClient = UTIL_PlayerByIndex(playernum);
 		if (pClient)
-			m_iMaxHP = pClient->GetMaxHealth();
+			m_iMaxHP = MAX(pClient->GetMaxHealth(), 0);
 
-		m_pPlayerLabel->SetText(VarArgs("%s [%i|%i]", gr->GetPlayerName(playernum), gr->GetHealth(playernum), m_iMaxHP));
+		m_pPlayerLabel->SetText(VarArgs("%s [%i|%i]", gr->GetPlayerName(playernum), MAX(gr->GetHealth(playernum), 0), m_iMaxHP));
 	}
 	else
 		m_pPlayerLabel->SetText(L"");

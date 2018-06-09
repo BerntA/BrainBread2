@@ -156,14 +156,6 @@ public:
 	void LiveForTime( float time );
 	void BeamDamageInstant( trace_t *ptr, float damage );
 
-// Only supported in TF2 right now
-#if defined( INVASION_CLIENT_DLL )
-	virtual bool	ShouldPredict( void )
-	{
-		return true;
-	}
-#endif
-
 	virtual const char *GetDecalName( void ) { return "BigShot"; }
 
 #if defined( CLIENT_DLL )
