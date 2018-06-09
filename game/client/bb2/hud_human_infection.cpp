@@ -58,10 +58,6 @@ CHudHumanInfected::CHudHumanInfected(const char * pElementName) : CHudElement(pE
 	m_nTexture_FG = surface()->CreateNewTextureID();
 	surface()->DrawSetTextureFile(m_nTexture_FG, "effects/infected", true, false);
 
-	int screenWide, screenTall;
-	GetHudSize(screenWide, screenTall);
-	SetBounds(0, 0, screenWide, screenTall);
-
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_ROUNDSTARTING);
 }
 
@@ -70,6 +66,10 @@ void CHudHumanInfected::ApplySchemeSettings(vgui::IScheme *scheme)
 	BaseClass::ApplySchemeSettings(scheme);
 	SetPaintBackgroundEnabled(false);
 	SetPaintBorderEnabled(false);
+
+	int screenWide, screenTall;
+	GetHudSize(screenWide, screenTall);
+	SetBounds(0, 0, screenWide, screenTall);
 }
 
 //------------------------------------------------------------------------
@@ -103,16 +103,7 @@ bool CHudHumanInfected::ShouldDraw(void)
 //------------------------------------------------------------------------
 void CHudHumanInfected::Paint()
 {
-	int w, h;
-	GetHudSize(w, h);
-
-	if (GetWide() != w)
-		SetWide(w);
-
-	if (GetTall() != h)
-		SetTall(h);
-
 	surface()->DrawSetColor(GetFgColor());
 	surface()->DrawSetTexture(m_nTexture_FG);
-	surface()->DrawTexturedRect(0, 0, w, h);
+	surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
 }

@@ -6,21 +6,13 @@
 
 #include "cbase.h"
 #include "hud_objective.h"
-#include "hudelement.h"
-#include "hud_macros.h"
 #include "c_playerresource.h"
 #include "clientmode_hl2mpnormal.h"
-#include <vgui_controls/Controls.h>
-#include <vgui_controls/Panel.h>
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
-#include <KeyValues.h>
-#include "vgui_controls/AnimationController.h"
-#include "c_baseplayer.h"
 #include "hl2mp_gamerules.h"
-#include "iclientmode.h"
-#include "c_team.h"
 #include "GameBase_Client.h"
+#include "GameBase_Shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -29,7 +21,7 @@ using namespace vgui;
 
 #define ITEM_TRANSIT_TIME 1.0f
 
-CHudObjective *m_pObjectiveHUD = NULL;
+static CHudObjective *m_pObjectiveHUD = NULL;
 
 DECLARE_HUDELEMENT(CHudObjective);
 
@@ -40,14 +32,7 @@ CHudObjective::CHudObjective(const char * pElementName) : CHudElement(pElementNa
 {
 	vgui::Panel * pParent = g_pClientMode->GetViewport();
 	SetParent(pParent);
-
-	// Force fullscreen:
-	int screenWide, screenTall;
-	GetHudSize(screenWide, screenTall);
-	SetBounds(0, 0, screenWide, screenTall);
-
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
-
 	m_pObjectiveHUD = this;
 }
 
@@ -75,7 +60,7 @@ void CHudObjective::VidInit(void)
 //-----------------------------------------------------------------------------
 bool CHudObjective::ShouldDraw(void)
 {
-	return (CHudElement::ShouldDraw() && (pszObjectiveItems.Count()));
+	return (CHudElement::ShouldDraw() && pszObjectiveItems.Count());
 }
 
 //------------------------------------------------------------------------
@@ -144,7 +129,6 @@ void CHudObjective::Paint()
 		float flInterpolation = (MAX(0.0f, 1000.0f - pszObjectiveItems[iObject].m_flLerp)) * 0.001f;
 		if (flInterpolation >= ITEM_TRANSIT_TIME)
 		{
-			// Interp is done, do stuff...
 			if (HasObjectiveFlag(iObject, OBJ_IS_FINISHED))
 			{
 				pszObjectiveItems.Remove(iObject);
@@ -167,15 +151,6 @@ void CHudObjective::Paint()
 
 	m_TextColorTim[3] = GetAlpha();
 	m_TextColorObj[3] = GetAlpha();
-
-	int w, h;
-	GetHudSize(w, h);
-
-	if (GetWide() != w)
-		SetWide(w);
-
-	if (GetTall() != h)
-		SetTall(h);
 
 	float flYPos = (-60.0f * (1.0f - flFraction));
 	if (bIsArenaMode && pClient && pClient->IsObserver())
@@ -217,9 +192,7 @@ void CHudObjective::Paint()
 		surface()->DrawSetTextFont(m_hTimFont);
 		surface()->DrawSetTextColor(m_TextColorTim);
 
-		int iTime = (int)(pszObjectiveItems[iObject].m_flTime - gpGlobals->curtime);
-		if (iTime < 0)
-			iTime = 0;
+		int iTime = MAX(((int)(pszObjectiveItems[iObject].m_flTime - gpGlobals->curtime)), 0);
 
 		V_swprintf_safe(unicode_long, L"Time: %d:%02d", (iTime / 60), (iTime % 60));
 
@@ -249,20 +222,24 @@ void CHudObjective::ApplySchemeSettings(vgui::IScheme *scheme)
 
 	SetPaintBackgroundEnabled(false);
 	SetPaintBorderEnabled(false);
+
+	int screenWide, screenTall;
+	GetHudSize(screenWide, screenTall);
+	SetBounds(0, 0, screenWide, screenTall);
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Check if we have the desired item in our item list.
 //-----------------------------------------------------------------------------
-bool CHudObjective::HasThisItem(int index)
+ObjectiveItem_t *CHudObjective::GetObjectiveItem(int index)
 {
 	for (int i = 0; i < pszObjectiveItems.Count(); i++)
 	{
 		if (pszObjectiveItems[i].m_iIndex == index)
-			return true;
+			return &pszObjectiveItems[i];
 	}
 
-	return false;
+	return NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -284,24 +261,17 @@ void CHudObjective::FireGameEvent(IGameEvent *event)
 		bool bFullUpdate = event->GetBool("update");
 
 		// Make sure we don't add a duplicate: However this may be a unique item if the mapper forgot to setup the indexes for his logic_objective's...
-		if (HasThisItem(iIndex))
+		ObjectiveItem_t *existingItem = GetObjectiveItem(iIndex);
+		if (existingItem)
 		{
 			// We call objective_run when we start and end so we don't want to leave just yet, we want to set the stuff we can set:
-			for (int i = 0; i < pszObjectiveItems.Count(); i++)
+			existingItem->m_iStatus = iStatus; // The status controls the state of the item, if it becomes finished we'll start animating iex : fade out, then fade in the next item.
+
+			// Re-Scale Update...
+			if (bFullUpdate)
 			{
-				if (pszObjectiveItems[i].m_iIndex == iIndex)
-				{
-					pszObjectiveItems[i].m_iStatus = iStatus; // The status controls the state of the item, if it becomes finished we'll start animating iex : fade out, then fade in the next item.
-
-					// Re-Scale Update...
-					if (bFullUpdate)
-					{
-						pszObjectiveItems[i].m_iKillsLeft = iKillsLeft;
-						pszObjectiveItems[i].m_flTime = flTime;
-					}
-
-					break;
-				}
+				existingItem->m_iKillsLeft = iKillsLeft;
+				existingItem->m_flTime = flTime;
 			}
 
 			return;
@@ -327,22 +297,15 @@ void CHudObjective::FireGameEvent(IGameEvent *event)
 		int iIndex = event->GetInt("index"),
 			iKillsLeft = event->GetInt("kills_left");
 
-		if (!HasThisItem(iIndex))
+		ObjectiveItem_t *existingItem = GetObjectiveItem(iIndex);
+		if (existingItem == NULL)
 		{
 			Warning("Tried to update a non existant objective item!\n");
 			return;
 		}
 
-		// Unfortunatelly we're re-implementing the above sort of...
-		// Anyways we update the kills left and the string is drawn in the paint function so it will be updated accordingly.
-		for (int i = 0; i < pszObjectiveItems.Count(); i++)
-		{
-			if (pszObjectiveItems[i].m_iIndex == iIndex)
-			{
-				pszObjectiveItems[i].m_iKillsLeft = iKillsLeft;
-				break;
-			}
-		}
+		// Update the kills left and the string is drawn in the paint function so it will be updated accordingly.
+		existingItem->m_iKillsLeft = iKillsLeft;
 	}
 	else if (!strcmp(type, "round_end") || !strcmp(type, "round_start")) // Reset / Refresh :
 	{

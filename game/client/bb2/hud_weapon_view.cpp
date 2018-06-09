@@ -10,19 +10,14 @@
 #include "hud_macros.h"
 #include "c_hl2mp_player.h"
 #include "iclientmode.h"
-#include "c_basehlplayer.h"
 #include "hl2mp_gamerules.h"
-#include "vgui_controls/Panel.h"
-#include "vgui_controls/AnimationController.h"
-#include "vgui/ISurface.h"
-#include <stdarg.h>
-#include <stdio.h>
-#include <wchar.h>
+#include <vgui_controls/Panel.h>
+#include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 
-using namespace vgui;
-
 #include "tier0/memdbgon.h" 
+
+using namespace vgui;
 
 //-----------------------------------------------------------------------------
 // Purpose: Base
@@ -61,10 +56,8 @@ DECLARE_HUDELEMENT(CHudWeaponView);
 CHudWeaponView::CHudWeaponView(const char * pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudWeaponView")
 {
 	vgui::Panel * pParent = g_pClientMode->GetViewport();
-
 	SetParent(pParent);
 
-	// Initialize Textures:
 	m_pCooldownBG = m_pCooldownFG = NULL;
 
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_INVEHICLE | HIDEHUD_ZOMBIEMODE | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);

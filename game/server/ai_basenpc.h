@@ -2146,23 +2146,11 @@ public:
 	CNetworkVar( bool,  m_bFadeCorpse );
 	CNetworkVar( bool,  m_bImportanRagdoll );
 
-	CNetworkVar( bool,  m_bSpeedModActive );
-	CNetworkVar( int,   m_iSpeedModRadius );
-	CNetworkVar( int,   m_iSpeedModSpeed );
-	CNetworkVar( float, m_flTimePingEffect );			// Display the pinged effect until this time
-
-	void				InputActivateSpeedModifier( inputdata_t &inputdata ) { m_bSpeedModActive = true; }
-	void				InputDisableSpeedModifier( inputdata_t &inputdata ) { m_bSpeedModActive = false; }
-	void				InputSetSpeedModifierRadius( inputdata_t &inputdata );
-	void				InputSetSpeedModifierSpeed( inputdata_t &inputdata );
-
 	virtual bool		ShouldProbeCollideAgainstEntity( CBaseEntity *pEntity );
 	virtual bool		IsStaticNPC(void) { return false; } // NPC never actually moves, jumps, etc...
 
 	bool				m_bPlayerAvoidState;
 	void				GetPlayerAvoidBounds( Vector *pMins, Vector *pMaxs );
-
-	void				StartPingEffect( void ) { m_flTimePingEffect = gpGlobals->curtime + 2.0f; DispatchUpdateTransmitState(); }
 
 	#ifdef BB2_AI
 	// used by lag compensation to be able to refer to & track specific NPCs, and detect changes in the AI list 

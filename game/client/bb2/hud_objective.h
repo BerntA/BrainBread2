@@ -14,8 +14,8 @@
 #include "hudelement.h"
 #include "hud_macros.h"
 #include "vgui_controls/AnimationController.h"
-#include "GameBase_Shared.h"
 
+struct ObjectiveItem_t;
 class CHudObjective : public CHudElement, public vgui::Panel
 {
 	DECLARE_CLASS_SIMPLE(CHudObjective, vgui::Panel);
@@ -39,7 +39,7 @@ protected:
 private:
 
 	float m_flYPos;
-	bool HasThisItem(int index);
+	ObjectiveItem_t *GetObjectiveItem(int index);
 	CUtlVector<ObjectiveItem_t> pszObjectiveItems;
 
 	CPanelAnimationVar(vgui::HFont, m_hObjFont, "ObjectiveFont", "BB2_PANEL");

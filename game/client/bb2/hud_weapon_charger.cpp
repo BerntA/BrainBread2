@@ -10,20 +10,14 @@
 #include "hud_macros.h"
 #include "c_hl2mp_player.h"
 #include "iclientmode.h"
-#include <stdarg.h>
-#include <stdio.h>
-#include <wchar.h>
-#include "c_basehlplayer.h"
 #include "hl2mp_gamerules.h"
 #include "weapon_melee_chargeable.h"
-#include "vgui_controls/Panel.h"
-#include "vgui_controls/AnimationController.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-
-using namespace vgui;
+#include <vgui_controls/Panel.h>
+#include <vgui/ISurface.h>
 
 #include "tier0/memdbgon.h" 
+
+using namespace vgui;
 
 class CHudWeaponCharger : public CHudElement, public vgui::Panel
 {
@@ -109,11 +103,10 @@ bool CHudWeaponCharger::ShouldDraw(void)
 //------------------------------------------------------------------------
 void CHudWeaponCharger::Paint()
 {
-	Color fgColor = GetFgColor();
-
 	C_HL2MPMeleeChargeable *pChargeableWeapon = dynamic_cast<C_HL2MPMeleeChargeable*> (GetActiveWeapon());
 	if (pChargeableWeapon)
 	{
+		Color fgColor = GetFgColor();
 		float barWide = (pChargeableWeapon->GetChargeFraction() * ((float)GetWide()));
 		Color fullWhite = Color(255, 255, 255, fgColor.a());
 

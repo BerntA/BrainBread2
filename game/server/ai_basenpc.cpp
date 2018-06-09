@@ -4761,13 +4761,6 @@ void CAI_BaseNPC::GatherConditions( void )
 	m_bConditionsGathered = true;
 	g_AIConditionsTimer.Start();
 
-	if( gpGlobals->curtime > m_flTimePingEffect && m_flTimePingEffect > 0.0f )
-	{
-		// Turn off the pinging.
-		DispatchUpdateTransmitState();
-		m_flTimePingEffect = 0.0f;
-	}
-
 	if ( m_NPCState != NPC_STATE_NONE && m_NPCState != NPC_STATE_DEAD )
 	{
 		if ( FacingIdeal() )
@@ -10741,7 +10734,6 @@ BEGIN_DATADESC( CAI_BaseNPC )
 	//								m_poseAim_Pitch (not saved; recomputed on restore)
 	//								m_poseAim_Yaw (not saved; recomputed on restore)
 	//								m_poseMove_Yaw (not saved; recomputed on restore)
-	DEFINE_FIELD( m_flTimePingEffect,			FIELD_TIME ),
 	DEFINE_FIELD( m_bForceConditionsGather,		FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bConditionsGathered,		FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bSkippedChooseEnemy,		FIELD_BOOLEAN ),
@@ -10864,9 +10856,6 @@ BEGIN_DATADESC( CAI_BaseNPC )
 	DEFINE_FIELD( m_iDeathPose,					FIELD_INTEGER ),
 	DEFINE_FIELD( m_iDeathFrame,				FIELD_INTEGER ),
 	DEFINE_FIELD( m_bCheckContacts,				FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bSpeedModActive,			FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_iSpeedModRadius,			FIELD_INTEGER ),
-	DEFINE_FIELD( m_iSpeedModSpeed,				FIELD_INTEGER ),
 	DEFINE_FIELD( m_hEnemyFilter,				FIELD_EHANDLE ),
 	DEFINE_KEYFIELD( m_iszEnemyFilterName,		FIELD_STRING, "enemyfilter" ),
 	DEFINE_FIELD( m_bImportanRagdoll,			FIELD_BOOLEAN ),
@@ -10933,10 +10922,6 @@ BEGIN_DATADESC( CAI_BaseNPC )
 	DEFINE_INPUTFUNC( FIELD_VOID,	"GagDisable",	InputGagDisable ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"InsideTransition",	InputInsideTransition ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"OutsideTransition",	InputOutsideTransition ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"ActivateSpeedModifier", InputActivateSpeedModifier ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"DisableSpeedModifier", InputDisableSpeedModifier ),
-	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetSpeedModRadius", InputSetSpeedModifierRadius ),
-	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetSpeedModSpeed", InputSetSpeedModifierSpeed ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"HolsterWeapon", InputHolsterWeapon ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"HolsterAndDestroyWeapon", InputHolsterAndDestroyWeapon ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"UnholsterWeapon", InputUnholsterWeapon ),
@@ -10971,11 +10956,7 @@ IMPLEMENT_SERVERCLASS_ST( CAI_BaseNPC, DT_AI_BaseNPC )
 	SendPropBool( SENDINFO( m_bFadeCorpse ) ),
 	SendPropInt( SENDINFO( m_iDeathPose ), ANIMATION_SEQUENCE_BITS ),
 	SendPropInt( SENDINFO( m_iDeathFrame ), 5 ),
-	SendPropBool( SENDINFO( m_bSpeedModActive ) ),
-	SendPropInt( SENDINFO( m_iSpeedModRadius ) ),
-	SendPropInt( SENDINFO( m_iSpeedModSpeed ) ),
 	SendPropBool( SENDINFO( m_bImportanRagdoll ) ),
-	SendPropFloat( SENDINFO( m_flTimePingEffect ) ),
 	SendPropInt(SENDINFO(m_iHealth), -1, SPROP_VARINT | SPROP_CHANGES_OFTEN),
 	SendPropInt(SENDINFO(m_iMaxHealth), -1, SPROP_VARINT | SPROP_CHANGES_OFTEN),
 	SendPropString(SENDINFO(m_szNPCName)),
@@ -11651,11 +11632,6 @@ void CAI_BaseNPC::UpdateOnRemove(void)
 //-----------------------------------------------------------------------------
 int CAI_BaseNPC::UpdateTransmitState()
 {
-	if( gpGlobals->curtime < m_flTimePingEffect )
-	{
-		return SetTransmitState( FL_EDICT_ALWAYS );
-	}
-
 	return BaseClass::UpdateTransmitState();
 }
 
@@ -13136,16 +13112,6 @@ void AI_TraceLOS( const Vector& vecAbsStart, const Vector& vecAbsEnd, CBaseEntit
 	if ( !pFilter )
 		pFilter = &traceFilter;
 	AI_TraceLine( vecAbsStart, vecAbsEnd, MASK_BLOCKLOS_AND_NPCS, pFilter, ptr );
-}
-
-void CAI_BaseNPC::InputSetSpeedModifierRadius( inputdata_t &inputdata )
-{
-	m_iSpeedModRadius = inputdata.value.Int();
-	m_iSpeedModRadius *= m_iSpeedModRadius;
-}
-void CAI_BaseNPC::InputSetSpeedModifierSpeed( inputdata_t &inputdata )
-{
-	m_iSpeedModSpeed = inputdata.value.Int();
 }
 
 //-----------------------------------------------------------------------------

@@ -42,13 +42,9 @@ public:
 	// Input handling
 	virtual bool	CreateMove(float flInputSampleTime, CUserCmd *pCmd, bool bFakeInput);
 	void			PerformClientSideObstacleAvoidance( float flFrameTime, CUserCmd *pCmd );
-	void			PerformClientSideNPCSpeedModifiers( float flFrameTime, CUserCmd *pCmd );
 
 public:
-
 	C_HL2PlayerLocalData		m_HL2Local;
-	EHANDLE				m_hClosestNPC;
-	float				m_flSpeedModTime;
 
 private:
 	C_BaseHLPlayer( const C_BaseHLPlayer & ); // not defined, not accessible
@@ -61,8 +57,6 @@ private:
 	float				m_flZoomStartTime;
 
 	bool				m_bPlayUseDenySound;		// Signaled by PlayerUse, but can be unset by HL2 ladder code...
-	float				m_flSpeedMod;
-	float				m_flExitSpeedMod;
 
 
 friend class CHL2GameMovement;

@@ -42,9 +42,6 @@ public:
 	void BodyRestartMainSequence(C_BaseAnimating *pOwner);
 	void BodyRestartGesture(C_HL2MP_Player *pOwner, Activity activity, int slot);
 
-	// Healthbar Logic
-	void CreateNPCHealthbars(void);
-
 	// Misc
 	bool IsSniperScopeActive(void) { return m_bIsDrawingSniperScope; }
 	void SetSniperScopeActive(bool value) { m_bIsDrawingSniperScope = value; }
@@ -63,8 +60,6 @@ private:
 	Vector m_vecBodyOffset;
 
 	// Misc
-	float m_flUpdateTime;
-
 	bool m_bIsDrawingSniperScope;
 	bool m_bShouldDrawVotePanel;
 	int m_iPlayerVoteNum;

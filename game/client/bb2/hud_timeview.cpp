@@ -9,26 +9,14 @@
 #include "hudelement.h"
 #include "hud_macros.h"
 #include "c_hl2mp_player.h"
-#include <stdarg.h>
-#include <stdio.h>
-#include <wchar.h>
 #include "iclientmode.h"
-#include "c_basehlplayer.h"
 #include "hl2mp_gamerules.h"
-#include "vgui_controls/Panel.h"
-#include "usermessages.h"
-#include "vgui_controls/AnimationController.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
-#include "c_playerresource.h"
-#include "vgui_entitypanel.h"
-#include "iclientmode.h"
-#include "c_team.h"
-#include "vgui/ILocalize.h"
+#include <vgui_controls/Panel.h>
+#include <vgui/ISurface.h>
+
+#include "tier0/memdbgon.h"
 
 using namespace vgui;
-
-#include "tier0/memdbgon.h" 
 
 class CHudTimeView : public CHudElement, public vgui::Panel
 {
@@ -107,7 +95,7 @@ bool CHudTimeView::ShouldDraw(void)
 float CHudTimeView::GetSecondsFromTimeByPercentage(int iPercent)
 {
 	if (HL2MPRules())
-		return (((HL2MPRules()->GetTimelimitValue() * 60) / 100) * iPercent);
+		return (((HL2MPRules()->GetTimelimitValue() * 60.0f) / 100.0f) * iPercent);
 
 	return 0.0f;
 }

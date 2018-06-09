@@ -9,14 +9,10 @@
 #include "hud_macros.h"
 #include "c_playerresource.h"
 #include "clientmode_hl2mpnormal.h"
-#include <vgui_controls/Controls.h>
 #include <vgui_controls/Panel.h>
 #include <vgui/ISurface.h>
-#include "vgui_controls/AnimationController.h"
+#include <vgui_controls/AnimationController.h>
 #include <vgui/ILocalize.h>
-#include <KeyValues.h>
-#include "c_baseplayer.h"
-#include "c_team.h"
 #include "c_bb2_player_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -168,12 +164,12 @@ void CHudVoteSystem::Paint()
 
 	Color baseColor = Color(30, 30, 240, 255);
 	baseColor[3] = fgColor[3];
-	if (BB2PlayerGlobals->GetPlayerVoteResponse() == 1)
+	if (BB2PlayerGlobals->GetPlayerVoteResponse() == 1) // YES
 	{
 		surface()->DrawSetColor(baseColor);
 		surface()->DrawFilledRect(divider_xpos, yes_info_y, divider_xpos + divider_wide, yes_info_y + flFontTall);
 	}
-	else if (BB2PlayerGlobals->GetPlayerVoteResponse() == 2)
+	else if (BB2PlayerGlobals->GetPlayerVoteResponse() == 2) // NO
 	{
 		surface()->DrawSetColor(baseColor);
 		surface()->DrawFilledRect(divider_xpos, no_info_y, divider_xpos + divider_wide, no_info_y + flFontTall);

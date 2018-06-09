@@ -41,7 +41,7 @@ class CHudGameTip : public CHudElement, public vgui::Panel
 public:
 
 	CHudGameTip(const char * pElementName);
-	~CHudGameTip();
+	virtual ~CHudGameTip();
 
 	virtual void Init(void);
 	virtual void Reset(void);

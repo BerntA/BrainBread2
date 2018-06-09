@@ -67,10 +67,6 @@ CHudDamageIndicator::CHudDamageIndicator(const char * pElementName) : CHudElemen
 	m_nTexture_Right = surface()->CreateNewTextureID();
 	surface()->DrawSetTextureFile(m_nTexture_Right, "effects/indicator_right", true, false);
 
-	int screenWide, screenTall;
-	GetHudSize(screenWide, screenTall);
-	SetBounds(0, 0, screenWide, screenTall);
-
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_ROUNDSTARTING);
 }
 
@@ -106,14 +102,6 @@ void CHudDamageIndicator::Reset(void)
 //------------------------------------------------------------------------
 void CHudDamageIndicator::Paint()
 {
-	int w, h;
-	GetHudSize(w, h);
-	if (GetWide() != w)
-		SetWide(w);
-
-	if (GetTall() != h)
-		SetTall(h);
-
 	int ypos = (GetTall() / 2) - (dmg_size_h / 2);
 
 	surface()->DrawSetColor(GetFgColor());
@@ -139,6 +127,10 @@ void CHudDamageIndicator::ApplySchemeSettings(vgui::IScheme *scheme)
 
 	SetPaintBackgroundEnabled(false);
 	SetPaintBorderEnabled(false);
+
+	int screenWide, screenTall;
+	GetHudSize(screenWide, screenTall);
+	SetBounds(0, 0, screenWide, screenTall);
 }
 
 void CHudDamageIndicator::MsgFunc_Damage(bf_read &msg)

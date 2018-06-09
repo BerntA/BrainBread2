@@ -10,26 +10,16 @@
 #include "hud_macros.h"
 #include "c_hl2mp_player.h"
 #include "GameBase_Shared.h"
-#include <stdarg.h>
-#include <stdio.h>
-#include <wchar.h>
 #include "iclientmode.h"
-#include "c_basehlplayer.h"
 #include "hl2mp_gamerules.h"
-#include "vgui_controls/Panel.h"
-#include "usermessages.h"
-#include "vgui_controls/AnimationController.h"
-#include "vgui/ISurface.h"
-#include <vgui/ILocalize.h>
 #include "c_playerresource.h"
-#include "vgui_entitypanel.h"
-#include "iclientmode.h"
-#include "c_team.h"
-#include "vgui/ILocalize.h"
-
-using namespace vgui;
+#include <vgui_controls/Panel.h>
+#include <vgui_controls/AnimationController.h>
+#include <vgui/ISurface.h>
 
 #include "tier0/memdbgon.h" 
+
+using namespace vgui;
 
 enum RageBarTextures_t
 {
@@ -168,7 +158,7 @@ void CHudZombieRage::Paint()
 
 	int iStringW, iStringH;
 	surface()->GetTextSize(m_hTextFontDef, unicode, iStringW, iStringH);
-	vgui::surface()->DrawSetTextPos(
+	surface()->DrawSetTextPos(
 		(GetWide() / 2.0f) - (((float)iStringW) / 2.0f),
 		(GetTall() / 2.0f) - (((float)iStringH) / 2.0f)
 		);

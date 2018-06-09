@@ -11,18 +11,15 @@
 #include "hud_macros.h"
 #include "c_hl2mp_player.h"
 #include "iclientmode.h"
-#include "c_basehlplayer.h"
 #include "c_playerresource.h"
 #include "hl2mp_gamerules.h"
-#include "vgui_controls/Panel.h"
-#include "vgui_controls/AnimationController.h"
-#include "vgui/ISurface.h"
+#include <vgui_controls/Panel.h>
+#include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
-#include "vgui_avatarimage.h"
-
-using namespace vgui;
 
 #include "tier0/memdbgon.h" 
+
+using namespace vgui;
 
 //-----------------------------------------------------------------------------
 // Purpose: Base
@@ -34,7 +31,6 @@ class CHudTargetIdentifier : public CHudElement, public vgui::Panel
 public:
 
 	CHudTargetIdentifier(const char * pElementName);
-	~CHudTargetIdentifier();
 
 	virtual void Init(void);
 	virtual void Reset(void);
@@ -55,18 +51,8 @@ DECLARE_HUDELEMENT_DEPTH(CHudTargetIdentifier, 90);
 CHudTargetIdentifier::CHudTargetIdentifier(const char * pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudTargetIcon")
 {
 	vgui::Panel * pParent = g_pClientMode->GetViewport();
-
 	SetParent(pParent);
-
-	int screenWide, screenTall;
-	GetHudSize(screenWide, screenTall);
-	SetBounds(0, 0, screenWide, screenTall);
-
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_ROUNDSTARTING);
-}
-
-CHudTargetIdentifier::~CHudTargetIdentifier()
-{
 }
 
 //------------------------------------------------------------------------
@@ -91,15 +77,6 @@ void CHudTargetIdentifier::Reset(void)
 //------------------------------------------------------------------------
 void CHudTargetIdentifier::Paint()
 {
-	int w, h;
-	GetHudSize(w, h);
-
-	if (GetWide() != w)
-		SetWide(w);
-
-	if (GetTall() != h)
-		SetTall(h);
-
 	C_HL2MP_Player *pMe = C_HL2MP_Player::GetLocalHL2MPPlayer();
 	if (!pMe)
 		return;
@@ -158,7 +135,7 @@ void CHudTargetIdentifier::Paint()
 			surface()->DrawSetColor(Color(255, 255, 255, 255));
 			surface()->DrawSetTextFont(m_hTextFontDef);
 			surface()->DrawSetTextColor(textColor);
-			vgui::surface()->DrawSetTextPos(xpos, ypos);
+			surface()->DrawSetTextPos(xpos, ypos);
 			surface()->DrawUnicodeString(unicode);
 		}
 	}
@@ -170,4 +147,8 @@ void CHudTargetIdentifier::ApplySchemeSettings(vgui::IScheme *scheme)
 
 	SetPaintBackgroundEnabled(false);
 	SetPaintBorderEnabled(false);
+
+	int screenWide, screenTall;
+	GetHudSize(screenWide, screenTall);
+	SetBounds(0, 0, screenWide, screenTall);
 }

@@ -6,31 +6,35 @@
 
 #include "cbase.h" 
 #include "hud.h" 
-#include "hud_macros.h" 
-#include "c_baseplayer.h"
-#include "iclientmode.h" 
-#include "vgui/ISurface.h"
 #include "hudelement.h"
-#include "hud_numericdisplay.h"
-#include "vgui_controls/AnimationController.h"
-#include "basecombatweapon_shared.h"
-#include <vgui/ILocalize.h>
+#include "hud_macros.h" 
 #include "c_hl2mp_player.h"
+#include "iclientmode.h" 
+#include <vgui/ISurface.h>
+#include <vgui_controls/Panel.h>
+#include <vgui/ILocalize.h>
+
 #include "tier0/memdbgon.h" 
 
 using namespace vgui;
 
-// Content in our tool tip
+#define FADE_TIME 0.5f
+#define STAY_TIME 2.0f
+
+enum TipItemFlags_t
+{
+	TIP_ITEM_FLAG_FADEIN = 0x01,
+	TIP_ITEM_FLAG_FADEOUT = 0x02,
+	TIP_ITEM_FLAG_DRAW = 0x04,
+};
+
 struct TipItem
 {
 	char szMessage[128];
 	CHudTexture *icon;
 	int messageLength;
-	float m_flLerp;
-	float m_flDisplayTime;
-	bool m_bFadeIn;
-	bool m_bFadeOut;
-	bool m_bDraw;
+	int flags;
+	float flTime;
 };
 
 //-----------------------------------------------------------------------------
@@ -104,7 +108,7 @@ void CHudToolTips::VidInit(void)
 //-----------------------------------------------------------------------------
 bool CHudToolTips::ShouldDraw(void)
 {
-	return (CHudElement::ShouldDraw() && (m_ToolTips.Count()));
+	return (CHudElement::ShouldDraw() && m_ToolTips.Count());
 }
 
 //------------------------------------------------------------------------
@@ -114,51 +118,51 @@ void CHudToolTips::Paint()
 {
 	for (int i = (m_ToolTips.Count() - 1); i >= 0; i--)
 	{
+		TipItem *item = &m_ToolTips[i];
+
 		int m_iPosX = 0;
 		int m_iAlpha = 255;
 
-		if (m_ToolTips[i].m_bFadeIn || m_ToolTips[i].m_bFadeOut)
+		if (item->flags & (TIP_ITEM_FLAG_FADEIN | TIP_ITEM_FLAG_FADEOUT))
 		{
-			float flMilli = MAX(0.0f, 1000.0f - m_ToolTips[i].m_flLerp);
-			float flSec = flMilli * 0.001f;
-			if ((flSec >= 1.0))
+			float fraction = clamp(((gpGlobals->curtime - item->flTime) / FADE_TIME), 0.0f, 1.0f);
+			if (fraction >= 1.0f)
 			{
-				if (m_ToolTips[i].m_bFadeIn)
+				if (item->flags & TIP_ITEM_FLAG_FADEIN)
 				{
-					m_ToolTips[i].m_bFadeIn = false;
-					m_ToolTips[i].m_bDraw = true;
-					m_ToolTips[i].m_flDisplayTime = gpGlobals->curtime + 2; // display for 2 sec.
+					item->flags &= ~TIP_ITEM_FLAG_FADEIN;
+					item->flags |= TIP_ITEM_FLAG_DRAW;
 				}
 
-				if (m_ToolTips[i].m_bFadeOut)
+				if (item->flags & TIP_ITEM_FLAG_FADEOUT)
 				{
-					m_ToolTips[i].m_bFadeOut = false;
+					item->flags &= ~TIP_ITEM_FLAG_FADEOUT;
 					m_ToolTips.Remove(i);
 					continue;
 				}
 			}
 			else
 			{
-				float flFrac = SimpleSpline(flSec / 1.0);
-				m_iAlpha = ((m_ToolTips[i].m_bFadeIn ? flFrac : (1.0f - flFrac)) * 255);
-				m_iPosX = -(m_ToolTips[i].messageLength * (m_ToolTips[i].m_bFadeIn ? 1.0f - flFrac : flFrac));
+				m_iAlpha = (((item->flags & TIP_ITEM_FLAG_FADEIN) ? fraction : (1.0f - fraction)) * 255.0f);
+				m_iPosX = -(item->messageLength * ((item->flags & TIP_ITEM_FLAG_FADEIN) ? (1.0f - fraction) : fraction));
 			}
 		}
 
-		if (m_ToolTips[i].m_bDraw)
+		if (item->flags & TIP_ITEM_FLAG_DRAW)
 		{
-			if (m_ToolTips[i].m_flDisplayTime < gpGlobals->curtime)
+			if (gpGlobals->curtime >= (item->flTime + FADE_TIME + STAY_TIME))
 			{
-				m_ToolTips[i].m_flLerp = 1000.0f;
-				m_ToolTips[i].m_bDraw = false;
-				m_ToolTips[i].m_bFadeOut = true;
+				item->flTime = gpGlobals->curtime;
+				item->flags &= ~TIP_ITEM_FLAG_DRAW;
+				item->flags |= TIP_ITEM_FLAG_FADEOUT;
 			}
 		}
 
-		CHudTexture *icon = m_ToolTips[i].icon;
+		CHudTexture *icon = item->icon;
+		Assert(icon != NULL);
 
 		wchar_t message[256];
-		g_pVGuiLocalize->ConvertANSIToUnicode(m_ToolTips[i].szMessage, message, sizeof(message));
+		g_pVGuiLocalize->ConvertANSIToUnicode(item->szMessage, message, sizeof(message));
 
 		int y = (m_flLineHeight * ((m_ToolTips.Count() - 1) - i));
 		int x = 0;
@@ -177,15 +181,6 @@ void CHudToolTips::Paint()
 		surface()->DrawSetTextPos(m_iPosX + x, y);
 		surface()->DrawSetTextFont(m_hTextFont);
 		surface()->DrawUnicodeString(message);
-
-		float frame_msec = 1000.0f * gpGlobals->frametime;
-
-		if (m_ToolTips[i].m_flLerp > 0)
-		{
-			m_ToolTips[i].m_flLerp -= frame_msec;
-			if (m_ToolTips[i].m_flLerp < 0)
-				m_ToolTips[i].m_flLerp = 0;
-		}
 	}
 }
 
@@ -239,10 +234,8 @@ void CHudToolTips::MsgFunc_ToolTip(bf_read &msg)
 	Q_strncpy(item_msg.szMessage, pchMessage, 128);
 	item_msg.icon = gHUD.GetIcon(szIcon);
 	item_msg.messageLength = UTIL_ComputeStringWidth(m_hTextFont, pchMessage);
-	item_msg.m_bDraw = false;
-	item_msg.m_bFadeIn = true;
-	item_msg.m_bFadeOut = false;
-	item_msg.m_flDisplayTime = 0.0f;
-	item_msg.m_flLerp = 1000.0f;
+	item_msg.flags = TIP_ITEM_FLAG_FADEIN;
+	item_msg.flTime = gpGlobals->curtime;
+
 	m_ToolTips.AddToTail(item_msg);
 }

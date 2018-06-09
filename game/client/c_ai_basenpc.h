@@ -11,7 +11,6 @@
 #pragma once
 #endif
 
-
 #include "c_basecombatcharacter.h"
 
 // NOTE: MOved all controller code into c_basestudiomodel
@@ -23,46 +22,41 @@ public:
 	DECLARE_CLIENTCLASS();
 
 	C_AI_BaseNPC();
+
 	virtual unsigned int	PhysicsSolidMaskForEntity( void ) const;
 	virtual bool			IsNPC( void ) { return true; }
-	bool					IsMoving( void ){ return m_bIsMoving; }
-	bool					ShouldAvoidObstacle( void ){ return m_bPerformAvoidance; }
+	virtual bool			IsMoving( void ){ return m_bIsMoving; }
+	virtual bool			ShouldAvoidObstacle( void ){ return m_bPerformAvoidance; }
 	virtual bool			AddRagdollToFadeQueue( void ) { return m_bFadeCorpse; }
-
 	virtual bool			GetRagdollInitBoneArrays( matrix3x4_t *pDeltaBones0, matrix3x4_t *pDeltaBones1, matrix3x4_t *pCurrentBones, float boneDt ) OVERRIDE;
 
-	int						GetDeathPose( void ) { return m_iDeathPose; }
+	virtual int				GetDeathPose( void ) { return m_iDeathPose; }
 
-	bool					ShouldModifyPlayerSpeed( void ) { return m_bSpeedModActive;	}
-	int						GetSpeedModifyRadius( void ) { return m_iSpeedModRadius; }
-	int						GetSpeedModifySpeed( void ) { return m_iSpeedModSpeed;	}
+	virtual void			ClientThink( void );
+	virtual void			OnDataChanged( DataUpdateType_t type );
+	virtual bool			ImportantRagdoll( void ) { return m_bImportanRagdoll;	}
+	virtual int				DrawModel(int flags);
 
-	void					ClientThink( void );
-	void					OnDataChanged( DataUpdateType_t type );
-	bool					ImportantRagdoll( void ) { return m_bImportanRagdoll;	}
+	virtual					bool IsBoss(void) { return m_bIsBoss; }
+	virtual					const char *GetNPCName(void) { return m_szNPCName; }
 
-	virtual int DrawModel(int flags);
-
-	bool IsBoss(void) { return m_bIsBoss; }
-	const char *GetNPCName(void) { return m_szNPCName; }
+protected:
+	virtual					void RegisterHUDHealthBar();
 
 private:
 	C_AI_BaseNPC( const C_AI_BaseNPC & ); // not defined, not accessible
-	float m_flTimePingEffect;
 	int  m_iDeathPose;
 	int	 m_iDeathFrame;
-
-	int m_iSpeedModRadius;
-	int m_iSpeedModSpeed;
 
 	bool m_bPerformAvoidance;
 	bool m_bIsMoving;
 	bool m_bFadeCorpse;
-	bool m_bSpeedModActive;
 	bool m_bImportanRagdoll;
 
 	char m_szNPCName[MAX_MAP_NAME];	
 	bool m_bIsBoss;
+
+	bool m_bCreatedHealthBar;
 };
 
 

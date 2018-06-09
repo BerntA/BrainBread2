@@ -221,13 +221,7 @@ void CHudDeathNotice::RetireExpiredDeathNotices( void )
 //-----------------------------------------------------------------------------
 void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 {
-	if (!g_PR)
-		return;
-
-	if (!HL2MPRules())
-		return;
-
-	if ( hud_deathnotice_time.GetFloat() == 0 )
+	if (!g_PR || !HL2MPRules() || (hud_deathnotice_time.GetFloat() == 0))
 		return;
 
 	int victimID = event->GetInt("victimID");

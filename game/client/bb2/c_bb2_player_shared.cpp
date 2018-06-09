@@ -8,7 +8,6 @@
 #include "c_bb2_player_shared.h"
 #include "hl2mp_gamerules.h"
 #include "c_ai_basenpc.h"
-#include "hud_npc_health_bar.h"
 #include "GameBase_Shared.h"
 #include "GameBase_Client.h"
 #include "view.h"
@@ -22,8 +21,6 @@ static ConVar bb2_legs_origin_shift_y("bb2_legs_origin_shift_y", "0", FCVAR_CHEA
 
 static ConVar bb2_legs_origin_shift_x_crouch("bb2_legs_origin_shift_x_crouch", "-28", FCVAR_CHEAT, "Shift the legs forward or backward.");
 static ConVar bb2_legs_origin_shift_y_crouch("bb2_legs_origin_shift_y_crouch", "-6", FCVAR_CHEAT, "Shift the legs to the right or left.");
-
-static CHudNPCHealthBar *pHealthBarHUD = NULL;
 
 void CBB2PlayerShared::Initialize()
 {
@@ -66,8 +63,6 @@ void CBB2PlayerShared::CreateEntities()
 
 	m_bHasCreated = true;
 
-	pHealthBarHUD = GET_HUDELEMENT(CHudNPCHealthBar);
-
 	m_pPlayerBody = new C_FirstpersonBody();
 	m_pPlayerBody->InitializeAsClientEntity(GetPlayerBodyModel(pLocal), RENDER_GROUP_OPAQUE_ENTITY);
 	m_pPlayerBody->SetModelName(GetPlayerBodyModel(pLocal));
@@ -89,9 +84,6 @@ void CBB2PlayerShared::CreateEntities()
 	m_pPlayerHands = new C_ViewModelAttachment();
 	m_pPlayerHands->InitializeAsClientEntity(GetPlayerHandModel(pLocal), RENDER_GROUP_VIEW_MODEL_OPAQUE);
 	m_pPlayerHands->SetModelName(GetPlayerHandModel(pLocal));
-
-	// Misc
-	m_flUpdateTime = 0.0f;
 
 	// Run default idle anim on body: (prevent T-pose)
 	m_pPlayerBody->m_flAnimTime = gpGlobals->curtime;
@@ -174,7 +166,7 @@ void CBB2PlayerShared::UpdatePlayerHands(C_BaseViewModel *pParent, C_HL2MP_Playe
 	m_pPlayerHands->m_nSkin = pOwner->GetSkin();
 	m_pPlayerHands->m_nBody = pOwner->GetBody();
 
-	m_pPlayerHands->StudioFrameAdvance();
+	//m_pPlayerHands->StudioFrameAdvance();
 }
 
 const char *CBB2PlayerShared::GetPlayerHandModel(C_HL2MP_Player *pOwner)
@@ -350,35 +342,6 @@ void CBB2PlayerShared::BodyRestartGesture(C_HL2MP_Player *pOwner, Activity activ
 	}
 }
 
-void CBB2PlayerShared::CreateNPCHealthbars(void)
-{
-	C_HL2MP_Player *pLocal = C_HL2MP_Player::GetLocalHL2MPPlayer();
-	if (!pLocal)
-		return;
-
-	if (m_flUpdateTime < gpGlobals->curtime)
-	{
-		m_flUpdateTime = gpGlobals->curtime + 0.4f;
-
-		for (C_BaseEntity *pEntity = ClientEntityList().FirstBaseEntity(); pEntity; pEntity = ClientEntityList().NextBaseEntity(pEntity))
-		{
-			// Populate our health bar item list.
-			if (pEntity->IsNPC() && !pEntity->IsDormant())
-			{
-				C_AI_BaseNPC *pNPC = pEntity->MyNPCPointer();
-				if (pNPC)
-				{
-					if (strlen(pNPC->GetNPCName()) > 0)
-					{
-						if (pHealthBarHUD)
-							pHealthBarHUD->AddHealthBarItem(pNPC, pNPC->entindex(), pNPC->IsBoss(), pNPC->m_iHealth, pNPC->m_iMaxHealth, pNPC->GetNPCName());
-					}
-				}
-			}
-		}
-	}
-}
-
 void CBB2PlayerShared::OnUpdate()
 {
 	C_HL2MP_Player *pLocal = C_HL2MP_Player::GetLocalHL2MPPlayer();
@@ -398,7 +361,6 @@ void CBB2PlayerShared::OnUpdate()
 
 	UpdatePlayerHands(pViewModel, pOwner);
 	UpdatePlayerBody(pOwner);
-	CreateNPCHealthbars();
 }
 
 static CBB2PlayerShared g_BB2PlayerShared;

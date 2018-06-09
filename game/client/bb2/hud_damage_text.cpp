@@ -69,11 +69,6 @@ CHudDamageText::CHudDamageText(const char * pElementName) : CHudElement(pElement
 {
 	vgui::Panel * pParent = g_pClientMode->GetViewport();
 	SetParent(pParent);
-
-	int screenWide, screenTall;
-	GetHudSize(screenWide, screenTall);
-	SetBounds(0, 0, screenWide, screenTall);
-
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_ROUNDSTARTING);
 }
 
@@ -82,6 +77,10 @@ void CHudDamageText::ApplySchemeSettings(vgui::IScheme *scheme)
 	BaseClass::ApplySchemeSettings(scheme);
 	SetPaintBackgroundEnabled(false);
 	SetPaintBorderEnabled(false);
+
+	int screenWide, screenTall;
+	GetHudSize(screenWide, screenTall);
+	SetBounds(0, 0, screenWide, screenTall);
 }
 
 //------------------------------------------------------------------------
@@ -114,15 +113,6 @@ void CHudDamageText::Reset(void)
 
 void CHudDamageText::Paint()
 {
-	int w, h;
-	GetHudSize(w, h);
-
-	if (GetWide() != w)
-		SetWide(w);
-
-	if (GetTall() != h)
-		SetTall(h);
-
 	for (int i = (m_pItems.Count() - 1); i >= 0; i--)
 	{
 		float delta = (gpGlobals->curtime - m_pItems[i].timeAdded) / m_flTimeToUse;

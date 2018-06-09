@@ -9,8 +9,6 @@
 #include "iclientmode.h"
 #include "history_resource.h"
 #include "input.h"
-#include "../hud_crosshair.h"
-
 #include "VGuiMatSurface/IMatSystemSurface.h"
 #include <KeyValues.h>
 #include <vgui/IScheme.h>
@@ -18,8 +16,7 @@
 #include <vgui/ISystem.h>
 #include <vgui_controls/AnimationController.h>
 #include <vgui_controls/Panel.h>
-
-#include "vgui/ILocalize.h"
+#include <vgui/ILocalize.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

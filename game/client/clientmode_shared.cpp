@@ -39,16 +39,13 @@
 #include "sourcevr/isourcevirtualreality.h"
 
 // BB2
-#include "fmod_manager.h"
 #include "GameBase_Client.h"
 #include "c_hl2mp_player.h"
 #include "GameBase_Shared.h"
-#include "achievement_shareddefs.h"
-#include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "c_client_gib.h"
-#include "music_system.h"
 #include "c_bb2_player_shared.h"
 #include "c_ai_basenpc.h"
+#include "hud_npc_health_bar.h"
 
 #if defined( _X360 )
 #include "xbox/xbox_console.h"
@@ -897,10 +894,13 @@ void ClientModeShared::StartMessageMode( int iMessageModeType )
 //-----------------------------------------------------------------------------
 void ClientModeShared::LevelInit( const char *newmap )
 {
-	engine->ClientCmd("progress_enable");
+	engine->ClientCmd_Unrestricted("progress_enable\n");
 
 	GameBaseShared()->GetGameInventory().Purge();
 	GameBaseClient->CloseGamePanels();
+
+	if (GetHealthBarHUD())
+		GetHealthBarHUD()->Cleanup();
 
 	m_pViewport->GetAnimationController()->StartAnimationSequence("LevelInit");
 
@@ -934,10 +934,13 @@ void ClientModeShared::LevelInit( const char *newmap )
 //-----------------------------------------------------------------------------
 void ClientModeShared::LevelShutdown( void )
 {
-	engine->ClientCmd( "progress_enable" );
+	engine->ClientCmd_Unrestricted("progress_enable\n");
 
 	GameBaseShared()->GetGameInventory().Purge();
 	GameBaseClient->CloseGamePanels();
+
+	if (GetHealthBarHUD())
+		GetHealthBarHUD()->Cleanup();
 
 	// Reset the third person camera so we don't crash
 	g_ThirdPersonManager.Init();

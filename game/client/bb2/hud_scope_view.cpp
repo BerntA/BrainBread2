@@ -10,23 +10,16 @@
 #include "hud_macros.h"
 #include "c_hl2mp_player.h"
 #include "iclientmode.h"
-#include "c_basehlplayer.h"
 #include "hl2mp_gamerules.h"
-#include "vgui_controls/Panel.h"
-#include "vgui_controls/AnimationController.h"
-#include "vgui/ISurface.h"
-#include <stdarg.h>
-#include <stdio.h>
-#include <wchar.h>
-#include <vgui/ILocalize.h>
-#include "GameBase_Shared.h"
+#include <vgui_controls/Panel.h>
+#include <vgui/ISurface.h>
 #include "c_playerresource.h"
 #include "weapon_base_sniper.h"
 #include "c_bb2_player_shared.h"
 
-using namespace vgui;
-
 #include "tier0/memdbgon.h"
+
+using namespace vgui;
 
 ConVar bb2_scope_refraction("bb2_scope_refraction", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Enable refract for sniper scopes, if possible.", true, 0, true, 1);
 
@@ -60,10 +53,6 @@ CHudScopeView::CHudScopeView(const char * pElementName) : CHudElement(pElementNa
 
 	m_nTexture_ScopeRefract = surface()->CreateNewTextureID();
 	surface()->DrawSetTextureFile(m_nTexture_ScopeRefract, "effects/scope_refract", true, false);
-
-	int screenWide, screenTall;
-	GetHudSize(screenWide, screenTall);
-	SetBounds(0, 0, screenWide, screenTall);
 
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_INVEHICLE | HIDEHUD_ZOMBIEMODE | HIDEHUD_ROUNDSTARTING);
 }
@@ -104,22 +93,13 @@ bool CHudScopeView::ShouldDraw(void)
 //------------------------------------------------------------------------
 void CHudScopeView::Paint()
 {
-	int w, h;
-	GetHudSize(w, h);
-
-	if (GetWide() != w)
-		SetWide(w);
-
-	if (GetTall() != h)
-		SetTall(h);
-
 	int textureID = m_nTexture_Scope;
 	if (bb2_scope_refraction.GetBool())
 		textureID = m_nTexture_ScopeRefract;
 
 	surface()->DrawSetColor(GetFgColor());
 	surface()->DrawSetTexture(textureID);
-	surface()->DrawTexturedRect(0, 0, w, h);
+	surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
 }
 
 void CHudScopeView::ApplySchemeSettings(vgui::IScheme *scheme)
@@ -128,4 +108,8 @@ void CHudScopeView::ApplySchemeSettings(vgui::IScheme *scheme)
 
 	SetPaintBackgroundEnabled(false);
 	SetPaintBorderEnabled(false);
+
+	int screenWide, screenTall;
+	GetHudSize(screenWide, screenTall);
+	SetBounds(0, 0, screenWide, screenTall);
 }

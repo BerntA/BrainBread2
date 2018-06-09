@@ -17,23 +17,12 @@
 
 struct HealthBarItem_t
 {
-	char szName[MAX_PLAYER_NAME_LENGTH];
-	int m_iEntIndex;
-	int m_iCurrentHealth;
-	int m_iMaxHealth;
-	bool m_bIsBoss;
-	bool m_bShouldShow;
-	bool m_bDisplaying;
-	bool m_bFadingIn;
-	bool m_bFadingOut;
-	float m_flLerp;
+	int index;
+	float flTime;
 	Vector vecMins;
 	Vector vecMaxs;
 };
 
-//-----------------------------------------------------------------------------
-// Purpose: Declarations
-//-----------------------------------------------------------------------------
 class CHudNPCHealthBar : public CHudElement, public vgui::Panel
 {
 	DECLARE_CLASS_SIMPLE(CHudNPCHealthBar, vgui::Panel);
@@ -41,25 +30,24 @@ class CHudNPCHealthBar : public CHudElement, public vgui::Panel
 public:
 
 	CHudNPCHealthBar(const char * pElementName);
+	virtual ~CHudNPCHealthBar();
 
 	void Init(void);
-	void Reset(void);
-	void OnThink(void);
 	void VidInit(void);
-	void AddHealthBarItem(C_BaseEntity *pEntity, int index, bool bIsBoss, int currHealth, int maxHealth, const char *name);
+	void Reset(void);
+	bool ShouldDraw(void);
+	void AddHealthBarItem(C_BaseEntity *pEntity, int index, bool bIsBoss);
+	void Cleanup(void) { pszNPCHealthBarList.Purge(); }
 
 protected:
 
-	virtual void FireGameEvent(IGameEvent *event);
 	virtual void ApplySchemeSettings(vgui::IScheme *scheme);
 	virtual void Paint();
 
 private:
 
-	int GetItem(int index);
 	int m_nTextureBackground;
 	int m_nTexture_Bar;
-	bool m_bShouldRender;
 
 	CPanelAnimationVar(vgui::HFont, m_hTextFontDef, "TextFont", "Default");
 
@@ -73,5 +61,7 @@ private:
 
 	CUtlVector<HealthBarItem_t> pszNPCHealthBarList;
 };
+
+extern CHudNPCHealthBar *GetHealthBarHUD();
 
 #endif // HUD_NPC_HEALTH_BAR_H
