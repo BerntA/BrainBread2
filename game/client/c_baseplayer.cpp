@@ -2044,7 +2044,7 @@ void C_BasePlayer::PostThink( void )
 			SetSequence( 0 );
 		}
 
-		StudioFrameAdvance();
+		//StudioFrameAdvance(); <- BB2 Warn - Client Anims Should COver this!
 	}
 
 	// Even if dead simulate entities

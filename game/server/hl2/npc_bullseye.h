@@ -29,8 +29,6 @@ public:
 	virtual void Activate( void );
 	virtual void OnRestore( void );
 
-	virtual float GetAutoAimRadius() { return m_fAutoaimRadius; }
-
 	Class_T Classify( void );
 	void	Event_Killed( const CTakeDamageInfo &info );
 	void	DecalTrace( trace_t *pTrace, char const *decalName );

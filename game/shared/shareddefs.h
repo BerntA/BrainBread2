@@ -249,7 +249,7 @@ enum CastVote
 // The first team that's game specific (i.e. not unassigned / spectator)
 #define FIRST_GAME_TEAM			(LAST_SHARED_TEAM+1)
 
-#define MAX_TEAMS				32	// Max number of teams in a game
+#define MAX_TEAMS				5	// Max number of teams in a game
 #define MAX_TEAM_NAME_LENGTH	32	// Max length of a team's name
 
 // Weapon m_iState
@@ -845,52 +845,12 @@ struct EmitSound_t
 
 #define MAX_ACTORS_IN_SCENE 16
 
-//-----------------------------------------------------------------------------
-// Multiplayer specific defines
-//-----------------------------------------------------------------------------
-#define MAX_CONTROL_POINTS			8
-#define MAX_CONTROL_POINT_GROUPS	8
-
-// Maximum number of points that a control point may need owned to be cappable
-#define MAX_PREVIOUS_POINTS			3
-
-// The maximum number of teams the control point system knows how to deal with
-#define MAX_CONTROL_POINT_TEAMS		8
-
-// Maximum length of the cap layout string
-#define MAX_CAPLAYOUT_LENGTH		32
-
-// Maximum length of the current round printname
-#define MAX_ROUND_NAME				32
-
-// Maximum length of the current round name
-#define MAX_ROUND_IMAGE_NAME		64
-
-// Score added to the team score for a round win
-#define TEAMPLAY_ROUND_WIN_SCORE	1
-
-enum
-{
-	CP_WARN_NORMAL = 0,
-	CP_WARN_FINALCAP,
-	CP_WARN_NO_ANNOUNCEMENTS
-};
-
 // YWB:  3/12/2007
 // Changing the following #define for Prediction Error checking (See gamemovement.cpp for overview) will to 1 or 2 enables the system, 0 turns it off
 // Level 1 enables it, but doesn't force "full precision" networking, so you can still get lots of errors in position/velocity/etc.
 // Level 2 enables it but also forces origins/angles to be sent full precision, so other fields can be error / tolerance checked
 // NOTE:  This stuff only works on a listen server since it punches a hole from the client .dll to server .dll!!!
 #define PREDICTION_ERROR_CHECK_LEVEL 0
-
-//-----------------------------------------------------------------------------
-// Round timer states
-//-----------------------------------------------------------------------------
-enum
-{
-	RT_STATE_SETUP,		// Timer is in setup mode
-	RT_STATE_NORMAL,	// Timer is in normal mode
-};
 
 enum
 {

@@ -1418,13 +1418,6 @@ Vector CNPC_BaseZombie::BodyTarget( const Vector &posSrc, bool bNoisy )
 }
 
 //-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-float CNPC_BaseZombie::GetAutoAimRadius()
-{
-	return BaseClass::GetAutoAimRadius();
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pEnemy - 
 //			&chasePosition - 

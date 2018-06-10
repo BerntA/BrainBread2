@@ -92,6 +92,7 @@ $Project "Client (HL2MP)"
 				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.cpp"
 				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.h"
 				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.cpp"
+				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.h"
 				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.cpp"
 				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.h"
 			}

@@ -28,7 +28,6 @@
 
 // entity messages
 #define PLAY_PLAYER_JINGLE	1
-#define UPDATE_PLAYER_RADAR	2
 
 #define DEATH_ANIMATION_TIME	3.0f
 

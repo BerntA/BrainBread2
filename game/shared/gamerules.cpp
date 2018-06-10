@@ -12,11 +12,8 @@
 #include "iachievementmgr.h"
 
 #ifdef CLIENT_DLL
-
 	#include "usermessages.h"
-
 #else
-
 	#include "player.h"
 	#include "teamplay_gamerules.h"
 	#include "game.h"
@@ -26,7 +23,6 @@
 	#include "globalstate.h"
 	#include "player_resource.h"
 	#include "gamestats.h"
-
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -114,11 +110,6 @@ void CGameRulesProxy::NotifyNetworkStateChanged()
 ConVar	old_radius_damage( "old_radiusdamage", "0.0", FCVAR_REPLICATED );
 
 #ifdef CLIENT_DLL //{
-
-bool CGameRules::IsBonusChallengeTimeBased( void )
-{
-	return true;
-}
 
 bool CGameRules::IsLocalPlayer( int nEntIndex )
 {
@@ -233,29 +224,6 @@ bool CGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer  )
 //=========================================================
 bool CGameRules::CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon )
 {
-/*
-	if ( pWeapon->m_pszAmmo1 )
-	{
-		if ( !CanHaveAmmo( pPlayer, pWeapon->m_iPrimaryAmmoType ) )
-		{
-			// we can't carry anymore ammo for this gun. We can only 
-			// have the gun if we aren't already carrying one of this type
-			if ( pPlayer->Weapon_OwnsThisType( pWeapon ) )
-			{
-				return FALSE;
-			}
-		}
-	}
-	else
-	{
-		// weapon doesn't use ammo, don't take another if you already have it.
-		if ( pPlayer->Weapon_OwnsThisType( pWeapon ) )
-		{
-			return FALSE;
-		}
-	}
-*/
-	// note: will fall through to here if GetItemInfo doesn't fill the struct!
 	return TRUE;
 }
 
@@ -542,17 +510,8 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 #if defined( GAME_DLL )
 		if ( info.GetAttacker() && info.GetAttacker()->IsPlayer() && ToBaseCombatCharacter( tr.m_pEnt ) )
 		{
-
-			// This is a total hack!!!
-			bool bIsPrimary = true;
 			CBasePlayer *player = ToBasePlayer( info.GetAttacker() );
-			CBaseCombatWeapon *pWeapon = player->GetActiveWeapon();
-			if ( pWeapon && FClassnameIs( pWeapon, "weapon_smg1" ) )
-			{
-				bIsPrimary = false;
-			}
-
-			gamestats->Event_WeaponHit( player, bIsPrimary, (pWeapon != NULL) ? player->GetActiveWeapon()->GetClassname() : "NULL", info );
+			gamestats->Event_WeaponHit(player, false, (player->GetActiveWeapon() != NULL) ? player->GetActiveWeapon()->GetClassname() : "NULL", info);
 		}
 #endif
 	}
@@ -802,11 +761,7 @@ float CGameRules::GetAmmoDamage( CBaseEntity *pAttacker, CBaseEntity *pVictim, i
 	float flDamage = 0;
 	CAmmoDef *pAmmoDef = GetAmmoDef();
 
-	#ifdef BB2_AI
-		if ( pAttacker && pAttacker->IsPlayer() )
-	#else
-		if ( pAttacker->IsPlayer() )
-	#endif //BB2_AI
+	if (pAttacker && pAttacker->IsPlayer())
 	{
 		flDamage = pAmmoDef->PlrDamage( nAmmoType );
 	}

@@ -67,7 +67,6 @@
 #include "gameinterface.h"
 #include "hl2orange.spa.h"
 #include "dt_utlvector_send.h"
-#include "vote_controller.h"
 #include "ai_speech.h"
 #include "hl2mp_gamerules.h"
 #include "hl2mp_player.h"
@@ -1854,7 +1853,7 @@ void CBasePlayer::PlayerDeathThink(void)
 
 	if (GetModelIndex() && (!IsSequenceFinished()) && (m_lifeState == LIFE_DYING))
 	{
-		StudioFrameAdvance( );
+		//StudioFrameAdvance( ); <- BB2 Warn - Client Anims Should COver this!
 
 		m_iRespawnFrames++;
 		if ( m_iRespawnFrames < 60 )  // animations should be no longer than this
@@ -4080,9 +4079,10 @@ void CBasePlayer::PostThink()
 			SetSequence( 0 );
 		}
 
-		VPROF_SCOPE_BEGIN( "CBasePlayer::PostThink-StudioFrameAdvance" );
-		StudioFrameAdvance();
-		VPROF_SCOPE_END();
+		// BB2 Warn - Client Anims Should cover this!
+		//VPROF_SCOPE_BEGIN( "CBasePlayer::PostThink-StudioFrameAdvance" );
+		//StudioFrameAdvance();
+		//VPROF_SCOPE_END();
 
 		VPROF_SCOPE_BEGIN( "CBasePlayer::PostThink-DispatchAnimEvents" );
 		DispatchAnimEvents( this );
@@ -4304,90 +4304,7 @@ USES AND SETS GLOBAL g_pLastSpawn
 */
 CBaseEntity *CBasePlayer::EntSelectSpawnPoint()
 {
-	CBaseEntity *pSpot;
-	edict_t		*player;
-
-	player = edict();
-
-// choose a info_player_deathmatch point
-	if (g_pGameRules->IsCoOp())
-	{
-		pSpot = gEntList.FindEntityByClassname( g_pLastSpawn, "info_player_coop");
-		if ( pSpot )
-			goto ReturnSpot;
-		pSpot = gEntList.FindEntityByClassname( g_pLastSpawn, "info_player_start");
-		if ( pSpot ) 
-			goto ReturnSpot;
-	}
-	else if ( g_pGameRules->IsDeathmatch() )
-	{
-		pSpot = g_pLastSpawn;
-		// Randomize the start spot
-		for ( int i = random->RandomInt(1,5); i > 0; i-- )
-			pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" );
-		if ( !pSpot )  // skip over the null point
-			pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" );
-
-		CBaseEntity *pFirstSpot = pSpot;
-
-		do 
-		{
-			if ( pSpot )
-			{
-				// check if pSpot is valid
-				if ( g_pGameRules->IsSpawnPointValid( pSpot, this ) )
-				{
-					if ( pSpot->GetLocalOrigin() == vec3_origin )
-					{
-						pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" );
-						continue;
-					}
-
-					// if so, go to pSpot
-					goto ReturnSpot;
-				}
-			}
-			// increment pSpot
-			pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" );
-		} while ( pSpot != pFirstSpot ); // loop if we're not back to the start
-
-		// we haven't found a place to spawn yet,  so kill any guy at the first spawn point and spawn there
-		if ( pSpot )
-		{
-			CBaseEntity *ent = NULL;
-			for ( CEntitySphereQuery sphere( pSpot->GetAbsOrigin(), 128 ); (ent = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity() )
-			{
-				// if ent is a client, kill em (unless they are ourselves)
-				if ( ent->IsPlayer() && !(ent->edict() == player) )
-					ent->TakeDamage( CTakeDamageInfo( GetContainingEntity(INDEXENT(0)), GetContainingEntity(INDEXENT(0)), 300, DMG_GENERIC ) );
-			}
-			goto ReturnSpot;
-		}
-	}
-
-	// If startspot is set, (re)spawn there.
-	if ( !gpGlobals->startspot || !strlen(STRING(gpGlobals->startspot)))
-	{
-		pSpot = FindPlayerStart( "info_player_start" );
-		if ( pSpot )
-			goto ReturnSpot;
-	}
-	else
-	{
-		pSpot = gEntList.FindEntityByName( NULL, gpGlobals->startspot );
-		if ( pSpot )
-			goto ReturnSpot;
-	}
-
-ReturnSpot:
-	if ( !pSpot  )
-	{
-		Warning( "PutClientInServer: no info_player_start on level\n");
-		return CBaseEntity::Instance( INDEXENT( 0 ) );
-	}
-
-	g_pLastSpawn = pSpot;
-	return pSpot;
+	return NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -4433,8 +4350,6 @@ void CBasePlayer::Spawn( void )
 		AddFlag( FL_CLIENT );
 	}
 
-	AddFlag( FL_AIMTARGET );
-
 	m_AirFinished	= gpGlobals->curtime + AIRTIME;
 	m_nDrownDmgRate	= DROWNING_DAMAGE_INITIAL;
 	
@@ -4465,9 +4380,6 @@ void CBasePlayer::Spawn( void )
 
 	m_vecAdditionalPVSOrigin = vec3_origin;
 	m_vecCameraPVSOrigin = vec3_origin;
-
-	if ( !m_fGameHUDInitialized )
-		g_pGameRules->SetDefaultPlayerTeam( this );
 
 	g_pGameRules->GetPlayerSpawnSpot( this );
 
@@ -6100,15 +6012,6 @@ void CBasePlayer::CheckTrainUpdate( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Returns whether the player should autoaim or not
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CBasePlayer::ShouldAutoaim( void )
-{
-	return false;
-}
-
-//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 Vector CBasePlayer::GetAutoaimVector( float flScale )
 {
@@ -6448,26 +6351,20 @@ void CStripWeapons::StripWeapons(inputdata_t &data, bool stripSuit)
 	{
 		pPlayer = (CBasePlayer *)data.pActivator;
 	}
-	else if ( !g_pGameRules->IsDeathmatch() )
+	else
 	{
-#ifdef BB2_AI
-	for (int i = 1; i <= gpGlobals->maxClients; i++ ) 
-	{ 
-		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i ); 
-		if ( pPlayer )
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
-		pPlayer->RemoveAllItems();
+			pPlayer = UTIL_PlayerByIndex(i);
+			if (pPlayer)			
+				pPlayer->RemoveAllItems();			
 		}
-	}
-#else
-pPlayer = UTIL_GetLocalPlayer();
-#endif //BB2_AI
+
+		return;
 	}
 
-	if ( pPlayer )
-	{
+	if ( pPlayer )	
 		pPlayer->RemoveAllItems();
-	}
 }
 
 #define SF_SPEED_MOD_SUPPRESS_WEAPONS	(1<<0)	// Take away weapons
@@ -6530,13 +6427,9 @@ void CMovementSpeedMod::InputSpeedMod(inputdata_t &data)
 	{
 		pPlayer = (CBasePlayer *)data.pActivator;
 	}
-	else if ( !g_pGameRules->IsDeathmatch() )
+	else
 	{
-#ifdef BB2_AI
-		pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-#else
-pPlayer = UTIL_GetLocalPlayer();
-#endif //BB2_AI
+		pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
 	}
 
 	if ( pPlayer )
@@ -7468,73 +7361,6 @@ bool CBasePlayer::HasAnyAmmoOfType( int nAmmoIndex )
 	}	
 
 	// We're completely without this type of ammo
-	return false;
-}
-
-bool CBasePlayer::HandleVoteCommands( const CCommand &args )
-{
-	if( g_voteController == NULL )
-		return false;
-
-	if(  FStrEq( args[0], "Vote" ) )
-	{
-		if( args.ArgC() < 2 )
-			return true;
-
-		const char *arg2 = args[1];
-		char szResultString[MAX_COMMAND_LENGTH];
-
-		CVoteController::TryCastVoteResult nTryResult = g_voteController->TryCastVote( entindex(), arg2 );
-		switch( nTryResult )
-		{
-		case CVoteController::CAST_OK:
-			{
-				Q_snprintf( szResultString, MAX_COMMAND_LENGTH, "Voting %s.\n", arg2 );
-				break;
-			}
-		case CVoteController::CAST_FAIL_SERVER_DISABLE:
-			{
-				Q_snprintf( szResultString, MAX_COMMAND_LENGTH, "Vote failed: server disabled.\n" );
-				break;
-			}
-		case CVoteController::CAST_FAIL_NO_ACTIVE_ISSUE:
-			{
-				Q_snprintf( szResultString, MAX_COMMAND_LENGTH, "A vote has not been called.\n" );
-				break;
-			}
-		case CVoteController::CAST_FAIL_TEAM_RESTRICTED:
-			{
-				Q_snprintf( szResultString, MAX_COMMAND_LENGTH, "Vote failed: team restricted.\n" );
-				break;
-			}
-		case CVoteController::CAST_FAIL_NO_CHANGES:
-			{
-				Q_snprintf( szResultString, MAX_COMMAND_LENGTH, "Vote failed: no changing vote.\n" );
-				break;
-			}
-		case CVoteController::CAST_FAIL_DUPLICATE:
-			{
-				Q_snprintf( szResultString, MAX_COMMAND_LENGTH, "Vote failed: already voting %s.\n", arg2 );
-				break;
-			}
-		case CVoteController::CAST_FAIL_VOTE_CLOSED:
-			{
-				Q_snprintf( szResultString, MAX_COMMAND_LENGTH, "Vote failed: voting closed.\n" );
-				break;
-			}
-		case CVoteController::CAST_FAIL_SYSTEM_ERROR:
-		default:
-			{
-				Q_snprintf( szResultString, MAX_COMMAND_LENGTH, "Vote failed: system error.\n" );
-				break;
-			}
-		}
-
-		DevMsg( "%s", szResultString );		
-
-		return true;
-	}
-
 	return false;
 }
 

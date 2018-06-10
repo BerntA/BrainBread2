@@ -394,14 +394,14 @@ void ClientModeShared::Init()
  	Assert( m_pReplayReminderPanel );
 #endif
 
-	ListenForGameEvent( "player_connect_client" );
-	ListenForGameEvent( "player_disconnect" );
-	ListenForGameEvent( "player_team" );
-	ListenForGameEvent( "server_cvar" );
-	ListenForGameEvent( "player_changename" );
-	ListenForGameEvent( "teamplay_broadcast_audio" );
-	ListenForGameEvent( "achievement_earned" );
-	ListenForGameEvent( "client_sound_transmit" );
+	ListenForGameEvent("player_connect_client");
+	ListenForGameEvent("player_disconnect");
+	ListenForGameEvent("player_team");
+	ListenForGameEvent("server_cvar");
+	ListenForGameEvent("player_changename");
+	ListenForGameEvent("teamplay_broadcast_audio");
+	ListenForGameEvent("achievement_earned");
+	ListenForGameEvent("client_sound_transmit");
 	ListenForGameEvent("round_start");
 	ListenForGameEvent("changelevel");
 	ListenForGameEvent("game_achievement");
@@ -424,10 +424,10 @@ void ClientModeShared::Init()
 
 	m_CursorNone = vgui::dc_none;
 
-	HOOK_MESSAGE( VGUIMenu );
-	HOOK_MESSAGE( Rumble );
-	HOOK_MESSAGE( RunBuyCommand );
-	HOOK_MESSAGE( ShowNote );
+	HOOK_MESSAGE(VGUIMenu);
+	HOOK_MESSAGE(Rumble);
+	HOOK_MESSAGE(RunBuyCommand);
+	HOOK_MESSAGE(ShowNote);
 	HOOK_MESSAGE(ClientEffect);
 }
 

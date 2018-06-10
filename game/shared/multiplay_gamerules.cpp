@@ -440,49 +440,6 @@ bool CMultiplayRules::Init()
 		return true;
 	}
 
-	//=========================================================
-	//=========================================================
-	bool CMultiplayRules::IsCoOp( void )
-	{
-		return false;
-	}
-
-	//=========================================================
-	//=========================================================
-	bool CMultiplayRules::FShouldSwitchWeapon( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon )
-	{
-		//if ( !pPlayer->Weapon_CanSwitchTo( pWeapon ) )
-		//{
-		//	// Can't switch weapons for some reason.
-		//	return false;
-		//}
-
-		if ( !pPlayer->GetActiveWeapon() )
-		{
-			// Player doesn't have an active item, might as well switch.
-			return true;
-		}
-
-		if ( !pWeapon->AllowsAutoSwitchTo() )
-		{
-			// The given weapon should not be auto switched to from another weapon.
-			return false;
-		}
-
-		if ( !pPlayer->GetActiveWeapon()->AllowsAutoSwitchFrom() )
-		{
-			// The active weapon does not allow autoswitching away from it.
-			return false;
-		}
-
-		if ( pWeapon->GetWeight() > pPlayer->GetActiveWeapon()->GetWeight() )
-		{
-			return true;
-		}
-
-		return false;
-	}
-
 	//-----------------------------------------------------------------------------
 	// Purpose: Returns the weapon in the player's inventory that would be better than
 	//			the given weapon.
@@ -674,12 +631,7 @@ bool CMultiplayRules::Init()
 	//=========================================================
 	float CMultiplayRules::FlPlayerSpawnTime( CBasePlayer *pPlayer )
 	{
-		return gpGlobals->curtime;//now!
-	}
-
-	bool CMultiplayRules::AllowAutoTargetCrosshair( void )
-	{
-		return ( aimcrosshair.GetInt() != 0 );
+		return gpGlobals->curtime; //now!
 	}
 
 	//=========================================================
@@ -926,63 +878,15 @@ bool CMultiplayRules::Init()
 
 	//=========================================================
 	//=========================================================
-	void CMultiplayRules::PlayerGotAmmo( CBaseCombatCharacter *pPlayer, char *szName, int iCount )
-	{
-	}
-
-	//=========================================================
-	//=========================================================
 	bool CMultiplayRules::IsAllowedToSpawn( CBaseEntity *pEntity )
 	{
-	//	if ( pEntity->GetFlags() & FL_NPC )
-	//		return false;
-
 		return true;
-	}
-
-
-	//=========================================================
-	//=========================================================
-	float CMultiplayRules::FlHealthChargerRechargeTime( void )
-	{
-		return 60;
-	}
-
-
-	float CMultiplayRules::FlHEVChargerRechargeTime( void )
-	{
-		return 30;
-	}
-
-	//=========================================================
-	//=========================================================
-	int CMultiplayRules::DeadPlayerWeapons( CBasePlayer *pPlayer )
-	{
-		return GR_PLR_DROP_GUN_ACTIVE;
-	}
-
-	//=========================================================
-	//=========================================================
-	int CMultiplayRules::DeadPlayerAmmo( CBasePlayer *pPlayer )
-	{
-		return GR_PLR_DROP_AMMO_ACTIVE;
 	}
 
 	CBaseEntity *CMultiplayRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 	{
-		CBaseEntity *pentSpawnSpot = BaseClass::GetPlayerSpawnSpot( pPlayer );	
-
-	//!! replace this with an Event
-	/*
-		if ( IsMultiplayer() && pentSpawnSpot->m_target )
-		{
-			FireTargets( STRING(pentSpawnSpot->m_target), pPlayer, pPlayer, USE_TOGGLE, 0 ); // dvsents2: what is this code supposed to do?
-		}
-	*/
-
-		return pentSpawnSpot;
+		return BaseClass::GetPlayerSpawnSpot(pPlayer);
 	}
-
 
 	//=========================================================
 	//=========================================================
@@ -993,7 +897,6 @@ bool CMultiplayRules::Init()
 
 	int CMultiplayRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
 	{
-		// half life deathmatch has only enemies
 		return GR_NOTTEAMMATE;
 	}
 

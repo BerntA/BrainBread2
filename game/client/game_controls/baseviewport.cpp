@@ -261,17 +261,17 @@ void CBaseViewport::CreateDefaultPanels( void )
 	vgui::scheme()->LoadSchemeFromFile("resource/LoadingScheme.res", "LoadingScheme");
 
 #ifndef _XBOX
-	AddNewPanel( CreatePanelByName( PANEL_SCOREBOARD ), "PANEL_SCOREBOARD" );
-	AddNewPanel( CreatePanelByName( PANEL_INFO ), "PANEL_INFO" );
-	AddNewPanel( CreatePanelByName( PANEL_SPECGUI ), "PANEL_SPECGUI" );
-	AddNewPanel( CreatePanelByName( PANEL_NAV_PROGRESS ), "PANEL_NAV_PROGRESS" );
-	AddNewPanel( CreatePanelByName( PANEL_SKILL ), "PANEL_SKILL" );
+	AddNewPanel(CreatePanelByName(PANEL_SCOREBOARD), "PANEL_SCOREBOARD");
+	AddNewPanel(CreatePanelByName(PANEL_INFO), "PANEL_INFO");
+	AddNewPanel(CreatePanelByName(PANEL_SPECGUI), "PANEL_SPECGUI");
+	AddNewPanel(CreatePanelByName(PANEL_NAV_PROGRESS), "PANEL_NAV_PROGRESS");
+	AddNewPanel(CreatePanelByName(PANEL_SKILL), "PANEL_SKILL");
 	AddNewPanel(CreatePanelByName(PANEL_ZOMBIE), "PANEL_ZOMBIE");
 	AddNewPanel(CreatePanelByName(PANEL_VOICEWHEEL), "PANEL_VOICEWHEEL");
 	AddNewPanel(CreatePanelByName(PANEL_TEAM), "PANEL_TEAM");
 	AddNewPanel(CreatePanelByName(PANEL_ENDSCORE), "PANEL_ENDSCORE");
 	AddNewPanel(CreatePanelByName(PANEL_ENDVOTE), "PANEL_ENDVOTE");
-	AddNewPanel( CreatePanelByName( PANEL_KEYPAD ), "PANEL_KEYPAD" );
+	AddNewPanel(CreatePanelByName(PANEL_KEYPAD), "PANEL_KEYPAD");
 #endif
 }
 

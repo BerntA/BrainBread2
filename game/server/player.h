@@ -451,8 +451,6 @@ public:
 
 	void					NotifySinglePlayerGameEnding() { m_bSinglePlayerGameEnding = true; }
 	bool					IsSinglePlayerGameEnding() { return m_bSinglePlayerGameEnding == true; }
-
-	bool					HandleVoteCommands( const CCommand &args );
 	
 	// Observer functions
 	virtual bool			StartObserverMode(int mode); // true, if successful
@@ -556,7 +554,6 @@ public:
 	void					ResetAutoaim( void );
 	
 	virtual Vector			GetAutoaimVector( float flScale );
-	virtual bool			ShouldAutoaim( void );
 	void					SetTargetInfo( Vector &vecSrc, float flDist );
 
 	void					SetViewEntity( CBaseEntity *pEntity );

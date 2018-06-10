@@ -26,7 +26,6 @@ extern ConVar	fraglimit;
 extern ConVar	falldamage;
 extern ConVar	weaponstay;
 extern ConVar	footsteps;
-extern ConVar	aimcrosshair;
 extern ConVar	decalfrequency;
 
 // Engine Cvars

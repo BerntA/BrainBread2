@@ -163,13 +163,11 @@ public:
 	virtual bool IsAllowedToSpawn( CBaseEntity *pEntity );
 	virtual bool FAllowFlashlight( void );
 
-	virtual bool FShouldSwitchWeapon( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon );
 	virtual CBaseCombatWeapon *GetNextBestWeapon( CBaseCombatCharacter *pPlayer, CBaseCombatWeapon *pCurrentWeapon );
 	virtual bool SwitchToNextBestWeapon( CBaseCombatCharacter *pPlayer, CBaseCombatWeapon *pCurrentWeapon );
 
 // Functions to verify the single/multiplayer status of a game
 	virtual bool IsDeathmatch( void );
-	virtual bool IsCoOp( void );
 
 // Client connection/disconnection
 	// If ClientConnected returns FALSE, the connection is rejected and the user is provided the reason specified in
@@ -190,8 +188,6 @@ public:
 	virtual bool FPlayerCanRespawn( CBasePlayer *pPlayer );
 	virtual float FlPlayerSpawnTime( CBasePlayer *pPlayer );
 	virtual CBaseEntity *GetPlayerSpawnSpot( CBasePlayer *pPlayer );
-
-	virtual bool AllowAutoTargetCrosshair( void );
 
 // Client kills/scoring
 	virtual int IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled );
@@ -219,21 +215,7 @@ public:
 	virtual Vector VecItemRespawnSpot( CItem *pItem );
 	virtual QAngle VecItemRespawnAngles( CItem *pItem );
 
-// Ammo retrieval
-	virtual void PlayerGotAmmo( CBaseCombatCharacter *pPlayer, char *szName, int iCount );
-
-// Healthcharger respawn control
-	virtual float FlHealthChargerRechargeTime( void );
-	virtual float FlHEVChargerRechargeTime( void );
-
-// What happens to a dead player's weapons
-	virtual int DeadPlayerWeapons( CBasePlayer *pPlayer );
-
-// What happens to a dead player's ammo	
-	virtual int DeadPlayerAmmo( CBasePlayer *pPlayer );
-
 // Teamplay stuff	
-	virtual const char *GetTeamID( CBaseEntity *pEntity ) {return "";}
 	virtual int PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget );
 	virtual bool PlayerCanHearChat( CBasePlayer *pListener, CBasePlayer *pSpeaker );
 

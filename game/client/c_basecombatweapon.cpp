@@ -111,8 +111,6 @@ void C_BaseCombatWeapon::OnDataChanged( DataUpdateType_t updateType )
 {
 	BaseClass::OnDataChanged(updateType);
 
-	CHandle< C_BaseCombatWeapon > handle = this;
-
 	// If it's being carried by the *local* player, on the first update,
 	// find the registered weapon for this ID
 
@@ -120,7 +118,7 @@ void C_BaseCombatWeapon::OnDataChanged( DataUpdateType_t updateType )
 	C_BaseCombatCharacter *pOwner = GetOwner();
 
 	// check if weapon is carried by local player
-	bool bIsLocalPlayer = pPlayer && pPlayer == pOwner;
+	bool bIsLocalPlayer = pPlayer && (pPlayer == pOwner);
 	if ( bIsLocalPlayer && ShouldDrawLocalPlayerViewModel() )		
 	{
 		// If I was just picked up, or created & immediately carried, add myself to this client's list of weapons
@@ -191,7 +189,7 @@ ShadowType_t C_BaseCombatWeapon::ShadowCastType()
 	if (IsCarriedByLocalPlayer() && !C_BasePlayer::ShouldDrawLocalPlayer())
 		return SHADOWS_NONE;
 
-	C_HL2MP_Player *pOwnerEnt = ToHL2MPPlayer(GetOwner());
+	C_HL2MP_Player *pOwnerEnt = ToHL2MPPlayer(m_hOwner.Get());
 	if (pOwnerEnt)
 	{
 		if (!pOwnerEnt->IsDormant() && pOwnerEnt->IsPerkFlagActive(PERK_POWERUP_PREDATOR))
@@ -409,7 +407,7 @@ int C_BaseCombatWeapon::InternalDrawModel(int flags)
 {
 	if (!(flags & STUDIO_SKIP_MATERIAL_OVERRIDES))
 	{
-		C_HL2MP_Player *pOwnerEnt = ToHL2MPPlayer(GetOwner());
+		C_HL2MP_Player *pOwnerEnt = ToHL2MPPlayer(m_hOwner.Get());
 		if (pOwnerEnt)
 		{
 			if (!pOwnerEnt->IsDormant() && pOwnerEnt->IsPerkFlagActive(PERK_POWERUP_PREDATOR))

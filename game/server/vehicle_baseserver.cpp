@@ -31,8 +31,6 @@
 ConVar g_debug_vehiclesound( "g_debug_vehiclesound", "0", FCVAR_CHEAT );
 ConVar g_debug_vehicleexit( "g_debug_vehicleexit", "0", FCVAR_CHEAT );
 
-ConVar sv_vehicle_autoaim_scale("sv_vehicle_autoaim_scale", "8");
-
 bool ShouldVehicleIgnoreEntity( CBaseEntity *pVehicle, CBaseEntity *pCollide );
 
 #define HITBOX_SET	2

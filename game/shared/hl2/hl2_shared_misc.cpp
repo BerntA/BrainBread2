@@ -1865,11 +1865,6 @@ void CAPCMissile::Init()
 
 #ifdef BB2_AI
 	CreateDangerSounds(true);
-
-	if (g_pGameRules->GetAutoAimMode() == AUTOAIM_ON_CONSOLE)
-	{
-		AddFlag(FL_AIMTARGET);
-	}
 #endif //BB2_AI
 }
 

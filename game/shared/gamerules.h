@@ -37,14 +37,6 @@ class CBasePlayer;
 class CItem;
 class CAmmoDef;
 
-// Autoaiming modes
-enum
-{
-	AUTOAIM_NONE = 0,		// No autoaim at all.
-	AUTOAIM_ON,				// Autoaim is on.
-	AUTOAIM_ON_CONSOLE,		// Autoaim is on, including enhanced features for Console gaming (more assistance, etc)
-};
-
 // weapon respawning return codes
 enum
 {	
@@ -58,14 +50,6 @@ enum
 	
 	GR_ITEM_RESPAWN_YES,
 	GR_ITEM_RESPAWN_NO,
-
-	GR_PLR_DROP_GUN_ALL,
-	GR_PLR_DROP_GUN_ACTIVE,
-	GR_PLR_DROP_GUN_NO,
-
-	GR_PLR_DROP_AMMO_ALL,
-	GR_PLR_DROP_AMMO_ACTIVE,
-	GR_PLR_DROP_AMMO_NO,
 };
 
 // Player relationship return codes
@@ -77,7 +61,6 @@ enum
 	GR_ALLY,
 	GR_NEUTRAL,
 };
-
 
 // This class has the data tables and gets the CGameRules data to the client.
 class CGameRulesProxy : public CBaseEntity
@@ -132,9 +115,6 @@ public:
 	virtual int		Damage_GetNoPhysicsForce( void )= 0;
 	virtual int		Damage_GetShouldNotBleed( void ) = 0;
 
-// Ammo Definitions
-	//CAmmoDef* GetAmmoDef();
-
 	virtual bool SwitchToNextBestWeapon( CBaseCombatCharacter *pPlayer, CBaseCombatWeapon *pCurrentWeapon ); // Switch to the next best weapon
 	virtual CBaseCombatWeapon *GetNextBestWeapon( CBaseCombatCharacter *pPlayer, CBaseCombatWeapon *pCurrentWeapon ); // I can't use this weapon anymore, get me the next best one.
 	virtual bool ShouldCollide( int collisionGroup0, int collisionGroup1 );
@@ -159,7 +139,6 @@ public:
 
 // Damage rules for ammo types
 	virtual float GetAmmoDamage( CBaseEntity *pAttacker, CBaseEntity *pVictim, int nAmmoType );
-    virtual float GetDamageMultiplier( void ) { return 1.0f; }    
 
 // Functions to verify the single/multiplayer status of a game
 	virtual bool IsMultiplayer( void ) = 0;// is this a multiplayer game? (either coop or deathmatch)
@@ -180,8 +159,6 @@ public:
 	}
 
 #ifdef CLIENT_DLL
-
-	virtual bool IsBonusChallengeTimeBased( void );
 
 	virtual bool AllowMapParticleEffect( const char *pszParticleEffect ) { return true; }
 
@@ -250,12 +227,10 @@ public:
 	}
 
 	virtual bool FAllowFlashlight( void ) = 0;// Are players allowed to switch on their flashlight?
-	virtual bool FShouldSwitchWeapon( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon ) = 0;// should the player switch to this weapon?
 
 // Functions to verify the single/multiplayer status of a game
 	virtual bool IsDeathmatch( void ) = 0;//is this a deathmatch game?
 	virtual bool IsTeamplay( void ) { return FALSE; };// is this deathmatch game being played with team rules?
-	virtual bool IsCoOp( void ) = 0;// is this a coop game?
 	virtual const char *GetGameDescription( void ) { return "BrainBread 2"; }  // this is the game name that gets seen in the server browser
 	
 // Client connection/disconnection
@@ -265,15 +240,12 @@ public:
 	
 // Client damage rules
 	virtual float FlPlayerFallDamage( CBasePlayer *pPlayer ) = 0;// this client just hit the ground after a fall. How much damage?
-	virtual bool  FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker, const CTakeDamageInfo &info ) { return TRUE; } // can this player take damage from this attacker?
-	virtual bool ShouldAutoAim( CBasePlayer *pPlayer, edict_t *target ) { return false; }
-	virtual float GetAutoAimScale( CBasePlayer *pPlayer ) { return 1.0f; }
-	virtual int	GetAutoAimMode() { return AUTOAIM_NONE; }
+	virtual bool  FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker, const CTakeDamageInfo &info ) { return TRUE; } // can this player take damage from this attacker?	
 
 	virtual bool ShouldUseRobustRadiusDamage(CBaseEntity *pEntity) { return false; }
 	virtual void  RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore );
 	// Let the game rules specify if fall death should fade screen to black
-	virtual bool  FlPlayerFallDeathDoesScreenFade( CBasePlayer *pl ) { return TRUE; }
+	virtual bool  FlPlayerFallDeathDoesScreenFade( CBasePlayer *pl ) { return FALSE; }
 
 	virtual bool AllowDamage( CBaseEntity *pVictim, const CTakeDamageInfo &info ) = 0;
 
@@ -286,7 +258,6 @@ public:
 	virtual CBaseEntity *GetPlayerSpawnSpot( CBasePlayer *pPlayer );// Place this player on their spawnspot and face them the proper direction.
 	virtual bool IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer );
 
-	virtual bool AllowAutoTargetCrosshair( void ) { return TRUE; };
 	virtual bool ClientCommand( CBaseEntity *pEdict, const CCommand &args );  // handles the user commands;  returns TRUE if command handled properly
 	virtual void ClientSettingsChanged( CBasePlayer *pPlayer );		 // the player has changed cvars
 
@@ -323,34 +294,17 @@ public:
 // Ammo retrieval
 	virtual bool CanHaveAmmo( CBaseCombatCharacter *pPlayer, int iAmmoIndex ); // can this player take more of this ammo?
 	virtual bool CanHaveAmmo( CBaseCombatCharacter *pPlayer, const char *szName );
-	virtual void PlayerGotAmmo( CBaseCombatCharacter *pPlayer, char *szName, int iCount ) = 0;// called each time a player picks up some ammo in the world
-	virtual float GetAmmoQuantityScale( int iAmmoIndex ) { return 1.0f; }
 
 // AI Definitions
 	virtual void			InitDefaultAIRelationships( void ) { return; }
 	virtual const char*		AIClassText(int classType) { return NULL; }
 
-// Healthcharger respawn control
-	virtual float FlHealthChargerRechargeTime( void ) = 0;// how long until a depleted HealthCharger recharges itself?
-	virtual float FlHEVChargerRechargeTime( void ) { return 0; }// how long until a depleted HealthCharger recharges itself?
-
-// What happens to a dead player's weapons
-	virtual int DeadPlayerWeapons( CBasePlayer *pPlayer ) = 0;// what do I do with a player's weapons when he's killed?
-
-// What happens to a dead player's ammo	
-	virtual int DeadPlayerAmmo( CBasePlayer *pPlayer ) = 0;// Do I drop ammo when the player dies? How much?
-
-// Teamplay stuff
-	virtual const char *GetTeamID( CBaseEntity *pEntity ) = 0;// what team is this entity on?
+// Teamplay stuff	
 	virtual int PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget ) = 0;// What is the player's relationship with this entity?
 	virtual bool PlayerCanHearChat( CBasePlayer *pListener, CBasePlayer *pSpeaker ) = 0;
 	virtual void CheckChatText( CBasePlayer *pPlayer, char *pText ) { return; }
 
-	virtual int GetTeamIndex( const char *pTeamName ) { return -1; }
-	virtual const char *GetIndexedTeamName( int teamIndex ) { return ""; }
-	virtual bool IsValidTeam( const char *pTeamName ) { return true; }
 	virtual void ChangePlayerTeam( CBasePlayer *pPlayer, const char *pTeamName, bool bKill, bool bGib ) {}
-	virtual const char *SetDefaultPlayerTeam( CBasePlayer *pPlayer ) { return ""; }
 	virtual void UpdateClientData( CBasePlayer *pPlayer ) { };
 
 // Sounds

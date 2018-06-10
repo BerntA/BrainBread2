@@ -181,7 +181,6 @@ public:
 	virtual const char *GetMoanSound(int nSound) = 0;
 
 	virtual Vector BodyTarget(const Vector &posSrc, bool bNoisy);
-	virtual float  GetAutoAimRadius();
 	virtual void TranslateNavGoal(CBaseEntity *pEnemy, Vector &chasePosition);
 
 	virtual	bool		AllowedToIgnite(void) { return true; }

@@ -223,13 +223,13 @@ CBaseCombatWeapon* CBaseCombatCharacter::Weapon_OwnsThisType( const char *pszWea
 //-----------------------------------------------------------------------------
 // Purpose: Returns weapons with the appropriate weapon slot.
 //-----------------------------------------------------------------------------
-CBaseCombatWeapon *CBaseCombatCharacter::GetAllWeapons( int m_iSlot ) const
+CBaseCombatWeapon *CBaseCombatCharacter::GetAllWeapons(int m_iSlot) const
 {
-	for (int i= 0; i < MAX_WEAPONS; i++) 
+	for (int i = 0; i < MAX_WEAPONS; i++)
 	{
-		if ( m_hMyWeapons[i].Get() )
+		if (m_hMyWeapons[i].Get())
 		{
-			if ( (m_hMyWeapons[i]->GetSlot() == m_iSlot) )
+			if ((m_hMyWeapons[i]->GetSlot() == m_iSlot))
 				return m_hMyWeapons[i];
 		}
 	}

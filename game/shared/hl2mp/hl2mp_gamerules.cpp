@@ -2332,7 +2332,6 @@ void CHL2MPRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 int CHL2MPRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
 {
 #ifndef CLIENT_DLL
-
 	// In survival we will have teamplay OFF which means we have to force zombie players to be friends:
 	if (pPlayer && pTarget)
 	{
@@ -2345,10 +2344,8 @@ int CHL2MPRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget 
 	if ( !pPlayer || !pTarget || !pTarget->IsPlayer() || IsTeamplay() == false )
 		return GR_NOTTEAMMATE;
 
-	if ( (*GetTeamID(pPlayer) != '\0') && (*GetTeamID(pTarget) != '\0') && !stricmp( GetTeamID(pPlayer), GetTeamID(pTarget) ) )
-	{
+	if (pPlayer->GetTeamNumber() == pTarget->GetTeamNumber())
 		return GR_TEAMMATE;
-	}
 #endif
 
 	return GR_NOTTEAMMATE;
@@ -2624,12 +2621,6 @@ CAmmoDef *GetAmmoDef()
 
 #ifdef CLIENT_DLL
 
-ConVar cl_autowepswitch(
-	"cl_autowepswitch",
-	"1",
-	FCVAR_ARCHIVE | FCVAR_USERINFO,
-	"Automatically switch to picked up weapons (if more powerful)" );
-
 #else
 
 // Handler for the "bot" command.
@@ -2645,19 +2636,6 @@ void Bot_z()
 
 ConCommand cc_BotZ("bot_add_zombie", Bot_z, "Add a zombie bot.", FCVAR_CHEAT);
 ConCommand cc_BotH("bot_add_human", Bot_h, "Add a human bot.", FCVAR_CHEAT);
-
-bool CHL2MPRules::FShouldSwitchWeapon( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon )
-{		
-	if ( pPlayer->GetActiveWeapon() && pPlayer->IsNetClient() )
-	{
-		// Player has an active item, so let's check cl_autowepswitch.
-		const char *cl_autowepswitch = engine->GetClientConVarValue( engine->IndexOfEdict( pPlayer->edict() ), "cl_autowepswitch" );
-		if ( cl_autowepswitch && atoi( cl_autowepswitch ) <= 0 )
-			return false;
-	}
-
-	return BaseClass::FShouldSwitchWeapon( pPlayer, pWeapon );
-}
 
 #endif
 

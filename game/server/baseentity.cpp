@@ -67,7 +67,6 @@
 #include "tier0/memdbgon.h"
 
 extern bool g_bTestMoveTypeStepSimulation;
-extern ConVar sv_vehicle_autoaim_scale;
 
 // Init static class variables
 bool CBaseEntity::m_bInDebugSelect = false;	// Used for selection in debug overlays
@@ -930,66 +929,6 @@ void CBaseEntity::DrawDebugGeometryOverlays(void)
 		{
 			NDebugOverlay::EntityBounds(this, 255, 255, 255, 0, 0 );
 		}
-	}
-#ifdef BB2_AI	
-	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-	if ( m_debugOverlays & OVERLAY_AUTOAIM_BIT && (GetFlags()&FL_AIMTARGET) && pPlayer != NULL ) 
-#else
-	if ( m_debugOverlays & OVERLAY_AUTOAIM_BIT && (GetFlags()&FL_AIMTARGET) && AI_GetSinglePlayer() != NULL )	
-#endif //BB2_AI
-	
-	{
-		// Crude, but it gets the point across.
-		Vector vecCenter = GetAutoAimCenter();
-		Vector vecRight, vecUp, vecDiag;
-#ifndef BB2_AI
-CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif //BB2_AI
-
-		float radius = GetAutoAimRadius();
-
-		QAngle angles = pPlayer->EyeAngles();
-		AngleVectors( angles, NULL, &vecRight, &vecUp );
-
-		int r,g,b;
-
-		if( ((int)gpGlobals->curtime) % 2 == 1 )
-		{
-			r = 255; 
-			g = 255;
-			b = 255;
-
-			if( pPlayer->GetActiveWeapon() != NULL )
-				radius *= pPlayer->GetActiveWeapon()->WeaponAutoAimScale();
-
-		}
-		else
-		{
-			r = 255;g=0;b=0;
-
-			if( !ShouldAttractAutoAim(pPlayer) )
-			{
-				g = 255;
-			}
-		}
-
-		if( pPlayer->IsInAVehicle() )
-		{
-			radius *= sv_vehicle_autoaim_scale.GetFloat();
-		}
-
-		NDebugOverlay::Line( vecCenter, vecCenter + vecRight * radius, r, g, b, true, 0.1 );
-		NDebugOverlay::Line( vecCenter, vecCenter - vecRight * radius, r, g, b, true, 0.1 );
-		NDebugOverlay::Line( vecCenter, vecCenter + vecUp * radius, r, g, b, true, 0.1 );
-		NDebugOverlay::Line( vecCenter, vecCenter - vecUp * radius, r, g, b, true, 0.1 );
-
-		vecDiag = vecRight + vecUp;
-		VectorNormalize( vecDiag );
-		NDebugOverlay::Line( vecCenter - vecDiag * radius, vecCenter + vecDiag * radius, r, g, b, true, 0.1 );
-
-		vecDiag = vecRight - vecUp;
-		VectorNormalize( vecDiag );
-		NDebugOverlay::Line( vecCenter - vecDiag * radius, vecCenter + vecDiag * radius, r, g, b, true, 0.1 );
 	}
 }
 
@@ -2966,14 +2905,6 @@ ConVar ai_debug_los("ai_debug_los", "0", FCVAR_CHEAT, "NPC Line-Of-Sight debug m
 Class_T CBaseEntity::Classify ( void )
 { 
 	return CLASS_NONE;
-}
-
-float CBaseEntity::GetAutoAimRadius()
-{
-	if( g_pGameRules->GetAutoAimMode() == AUTOAIM_ON_CONSOLE )
-		return 48.0f;
-	else
-		return 24.0f;
 }
 
 //-----------------------------------------------------------------------------
