@@ -1949,61 +1949,6 @@ void CBasePlayer::PlayerDeathThink(void)
 	SetNextThink( TICK_NEVER_THINK );
 }
 
-/*
-
-//=========================================================
-// StartDeathCam - find an intermission spot and send the
-// player off into observer mode
-//=========================================================
-void CBasePlayer::StartDeathCam( void )
-{
-	CBaseEntity *pSpot, *pNewSpot;
-	int iRand;
-
-	if ( GetViewOffset() == vec3_origin )
-	{
-		// don't accept subsequent attempts to StartDeathCam()
-		return;
-	}
-
-	pSpot = gEntList.FindEntityByClassname( NULL, "info_intermission");	
-
-	if ( pSpot )
-	{
-		// at least one intermission spot in the world.
-		iRand = random->RandomInt( 0, 3 );
-
-		while ( iRand > 0 )
-		{
-			pNewSpot = gEntList.FindEntityByClassname( pSpot, "info_intermission");
-			
-			if ( pNewSpot )
-			{
-				pSpot = pNewSpot;
-			}
-
-			iRand--;
-		}
-
-		CreateCorpse();
-		StartObserverMode( pSpot->GetAbsOrigin(), pSpot->GetAbsAngles() );
-	}
-	else
-	{
-		// no intermission spot. Push them up in the air, looking down at their corpse
-		trace_t tr;
-
-		CreateCorpse();
-
-		UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + Vector( 0, 0, 128 ), 
-			MASK_PLAYERSOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
-		QAngle angles;
-		VectorAngles( GetAbsOrigin() - tr.endpos, angles );
-		StartObserverMode( tr.endpos, angles );
-		return;
-	}
-} */
-
 void CBasePlayer::StopObserverMode()
 {
 	m_bForcedObserverMode = false;
@@ -4262,10 +4207,6 @@ Vector CBasePlayer::GetSmoothedVelocity( void )
 	return m_vecSmoothedVelocity;
 }
 
-
-CBaseEntity	*g_pLastSpawn = NULL;
-
-
 //-----------------------------------------------------------------------------
 // Purpose: Finds a player start entity of the given classname. If any entity of
 //			of the given classname has the SF_PLAYER_START_MASTER flag set, that
@@ -4296,10 +4237,7 @@ CBaseEntity *FindPlayerStart(const char *pszClassName)
 /*
 ============
 EntSelectSpawnPoint
-
 Returns the entity to spawn at
-
-USES AND SETS GLOBAL g_pLastSpawn
 ============
 */
 CBaseEntity *CBasePlayer::EntSelectSpawnPoint()

@@ -4,6 +4,7 @@
 //
 // $NoKeywords: $
 //=============================================================================//
+
 #include "cbase.h"
 #include "hl2mp_gamerules.h"
 #include "viewport_panel_names.h"
@@ -115,16 +116,11 @@ bool FindInList(const char **pStrings, const char *pToFind)
 	return false;
 }
 
-ConVar sv_weapon_relocation_time( "sv_weapon_relocation_time", "10", FCVAR_GAMEDLL | FCVAR_NOTIFY );
-ConVar sv_item_relocation_time("sv_item_relocation_time", "10", FCVAR_GAMEDLL | FCVAR_NOTIFY);
 ConVar sv_report_client_settings("sv_report_client_settings", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY );
 
 extern ConVar mp_chattime;
 
-#define WEAPON_MAX_DISTANCE_FROM_SPAWN 64
-
 #endif
-
 
 REGISTER_GAMERULES_CLASS( CHL2MPRules );
 
@@ -247,8 +243,6 @@ static const char *s_PreserveEnts[] =
 	"", // END Marker
 };
 
-
-
 #ifdef CLIENT_DLL
 void RecvProxy_HL2MPRules( const RecvProp *pProp, void **pOut, void *pData, int objectID )
 {
@@ -278,7 +272,7 @@ BEGIN_SEND_TABLE( CHL2MPGameRulesProxy, DT_HL2MPGameRulesProxy )
 class CVoiceGameMgrHelper : public IVoiceGameMgrHelper
 {
 public:
-	virtual bool		CanPlayerHearPlayer( CBasePlayer *pListener, CBasePlayer *pTalker, bool &bProximity )
+	virtual bool CanPlayerHearPlayer( CBasePlayer *pListener, CBasePlayer *pTalker, bool &bProximity )
 	{
 		return ( pListener->GetTeamNumber() == pTalker->GetTeamNumber() );
 	}
@@ -328,11 +322,7 @@ CHL2MPRules::CHL2MPRules()
 	m_flScoreBoardTime = 0;
 	m_bShouldShowScores = false;
 
-	m_hRespawnableItemsAndWeapons.RemoveAll();
 	m_hBreakableDoors.RemoveAll();
-	m_tmNextPeriodicThink = 0;
-	m_flRestartGameTime = 0;
-	m_bCompleteReset = false;
 	m_bChangelevelDone = false;
 
 	// BB2
@@ -457,7 +447,7 @@ int CHL2MPRules::GetTeamSize(int team)
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 #ifdef CLIENT_DLL
-		if (g_PR->GetSelectedTeam(i) == team)
+		if (g_PR->IsConnected(i) && (g_PR->GetSelectedTeam(i) == team))
 			playerCount++;
 #else
 		CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
@@ -583,76 +573,31 @@ float CHL2MPRules::GetReinforcementRespawnTime()
 #ifndef CLIENT_DLL
 int CHL2MPRules::GetRewardFromRoundWin(CHL2MP_Player *pPlayer, int winnerTeam, bool gameOver)
 {
-	int iXPToGive = 0;
+	if (CanUseSkills() == false)
+		return 0;
+
+	float xpReward = 0.0f;
+	float xpRequired = ((float)pPlayer->m_BB2Local.m_iSkill_XPLeft);
 	float timeLeft = GetTimeLeft();
 	if (GetCurrentGamemode() == MODE_OBJECTIVE)
 	{
-		if ((pPlayer->HasPlayerEscaped() || ((pPlayer->GetTeamNumber() == winnerTeam) && pPlayer->HasFullySpawned() && pPlayer->IsAlive())) && gameOver)
-		{
-			iXPToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPGameWinObjective;
-		}
-	}
-	else if (GetCurrentGamemode() == MODE_ELIMINATION)
-	{
-		if ((pPlayer->GetSelectedTeam() == winnerTeam) && (GetTeamSize(TEAM_HUMANS) > 0) && (GetTeamSize(TEAM_DECEASED) > 0))
-		{
-			iXPToGive = (gameOver ? GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPGameWinElimination : GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPRoundWinElimination);
-		}
+		if ((pPlayer->HasPlayerEscaped() || ((pPlayer->GetTeamNumber() == winnerTeam) && pPlayer->HasFullySpawned() && pPlayer->IsAlive())) && gameOver)		
+			xpReward = xpRequired * (GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPGameWinObjective / 100.0f);
 	}
 	else if (GetCurrentGamemode() == MODE_ARENA)
 	{
 		if ((winnerTeam == TEAM_HUMANS) && pPlayer->HasFullySpawned())
 		{
-			iXPToGive = (gameOver ? GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPGameWinArena : GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPRoundWinArena);
+			xpReward = xpRequired * ((gameOver ? GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPGameWinArena : GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPRoundWinArena) / 100.0f);
 			GameBaseShared()->GetAchievementManager()->WriteToAchievement(pPlayer, "ACH_GM_ARENA_WIN");
 
 			if (timeLeft <= 0)
-				iXPToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPRoundWinArena;
+				xpReward = xpRequired * (GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPRoundWinArena / 100.0f);
 		}
 	}
-	else if (GetCurrentGamemode() == MODE_DEATHMATCH)
-	{
-		// Did you get the highest or second highest total score?
-		int scoreFirst = 0, scoreSecond = 0;
-		int playerIndexFirst = 0, playerIndexSecond = 0;
-		for (int i = 1; i <= gpGlobals->maxClients; i++)
-		{
-			CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-			if (!pPlayer)
-				continue;
 
-			int playerScore = pPlayer->GetTotalScore();
-			if (playerScore > scoreFirst)
-			{
-				scoreFirst = playerScore;
-				playerIndexFirst = i;
-			}
-		}
-
-		for (int i = 1; i <= gpGlobals->maxClients; i++)
-		{
-			CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-			if (!pPlayer)
-				continue;
-
-			int playerScore = pPlayer->GetTotalScore();
-			if (playerScore > scoreSecond && playerScore < scoreFirst)
-			{
-				scoreSecond = playerScore;
-				playerIndexFirst = i;
-			}
-		}
-
-		// Did you 'win'?
-		if (playerIndexFirst == pPlayer->entindex())
-			iXPToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPGameWinDeathmatch;
-		else if (playerIndexSecond == pPlayer->entindex())
-			iXPToGive = (GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPGameWinDeathmatch / 2);
-		else
-			iXPToGive = (GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iXPGameWinDeathmatch / 4);
-	}
-
-	if (iXPToGive != 0)
+	int iXPToGive = abs((int)(ceil(xpReward)));
+	if (iXPToGive > 0)
 	{
 		bool bRet = pPlayer->CanLevelUp(iXPToGive, NULL);
 		if (bRet)
@@ -1090,10 +1035,7 @@ void CHL2MPRules::GameModeSharedThink(void)
 				if (!pPlayer)
 					continue;
 
-				if (pPlayer->IsBot())
-					continue;
-
-				if (!pPlayer->HasLoadedStats())
+				if (pPlayer->IsBot() || !pPlayer->HasLoadedStats())
 					continue;
 
 				if ((pPlayer->GetRespawnTime() < gpGlobals->curtime) && (pPlayer->GetRespawnTime() > 0.0f))
@@ -1147,15 +1089,15 @@ void CHL2MPRules::GameModeSharedThink(void)
 				{
 					for (int i = 1; i <= gpGlobals->maxClients; i++)
 					{
+						if (m_iNumReinforcements <= 0)
+							break;
+
 						CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
 						if (!pPlayer)
 							continue;
 
 						if (!pPlayer->HasLoadedStats())
 							continue;
-
-						if (m_iNumReinforcements <= 0)
-							break;
 
 						// Everyone will become a human on game restart.
 						if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR)
@@ -1179,10 +1121,7 @@ void CHL2MPRules::GameModeSharedThink(void)
 				if (!pPlayer)
 					continue;
 
-				if (pPlayer->IsBot())
-					continue;
-
-				if (!pPlayer->HasLoadedStats())
+				if (pPlayer->IsBot() || !pPlayer->HasLoadedStats())
 					continue;
 
 				if ((pPlayer->GetRespawnTime() < gpGlobals->curtime) && (pPlayer->GetRespawnTime() > 0.0f))
@@ -1462,6 +1401,9 @@ void CHL2MPRules::PlayerVote(CBasePlayer *pPlayer, bool bYes)
 		return;
 
 	int voteIndex = (pPlayer->entindex() - 1);
+	if ((voteIndex < 0) || (voteIndex >= MAX_PLAYERS))
+		return;
+
 	bool bCanVote = m_bPlayersAllowedToVote[voteIndex];
 	bool bHasVoted = m_bPlayersVoted[voteIndex];
 	if (bCanVote && !bHasVoted)
@@ -1777,22 +1719,6 @@ void CHL2MPRules::Think( void )
 	GameModeSharedThink();
 	GameEndVoteThink();
 
-	if (g_fGameOver)
-		return;
-
-	if ( gpGlobals->curtime > m_tmNextPeriodicThink )
-	{		
-		CheckRestartGame();
-		m_tmNextPeriodicThink = gpGlobals->curtime + 1.0;
-	}
-
-	if ( m_flRestartGameTime > 0.0f && m_flRestartGameTime <= gpGlobals->curtime )
-	{
-		RestartGame();
-	}
-
-	ManageObjectRelocation();
-
 #endif
 }
 
@@ -1894,142 +1820,14 @@ Vector CHL2MPRules::VecWeaponRespawnSpot( CBaseCombatWeapon *pWeapon )
 {
 #ifndef CLIENT_DLL
 	CWeaponHL2MPBase *pHL2Weapon = dynamic_cast< CWeaponHL2MPBase*>( pWeapon );
-
 	if ( pHL2Weapon )
-	{
 		return pHL2Weapon->GetOriginalSpawnOrigin();
-	}
 #endif
 
 	return pWeapon->GetAbsOrigin();
 }
 
 #ifndef CLIENT_DLL
-
-CItem* IsManagedObjectAnItem( CBaseEntity *pObject )
-{
-	return dynamic_cast< CItem*>( pObject );
-}
-
-CWeaponHL2MPBase* IsManagedObjectAWeapon( CBaseEntity *pObject )
-{
-	return dynamic_cast< CWeaponHL2MPBase*>( pObject );
-}
-
-bool GetObjectsOriginalParameters( CBaseEntity *pObject, Vector &vOriginalOrigin, QAngle &vOriginalAngles )
-{
-	if ( CItem *pItem = IsManagedObjectAnItem( pObject ) )
-	{
-		if ( pItem->m_flNextResetCheckTime > gpGlobals->curtime )
-			return false;
-
-		vOriginalOrigin = pItem->GetOriginalSpawnOrigin();
-		vOriginalAngles = pItem->GetOriginalSpawnAngles();
-
-		pItem->m_flNextResetCheckTime = gpGlobals->curtime + sv_item_relocation_time.GetFloat();
-		return true;
-	}
-	else if ( CWeaponHL2MPBase *pWeapon = IsManagedObjectAWeapon( pObject )) 
-	{
-		if ( pWeapon->m_flNextResetCheckTime > gpGlobals->curtime )
-			return false;
-
-		vOriginalOrigin = pWeapon->GetOriginalSpawnOrigin();
-		vOriginalAngles = pWeapon->GetOriginalSpawnAngles();
-
-		pWeapon->m_flNextResetCheckTime = gpGlobals->curtime + sv_weapon_relocation_time.GetFloat();
-		return true;
-	}
-
-	return false;
-}
-
-void CHL2MPRules::ManageObjectRelocation( void )
-{
-	int iTotal = m_hRespawnableItemsAndWeapons.Count();
-
-	if ( iTotal > 0 )
-	{
-		for ( int i = 0; i < iTotal; i++ )
-		{
-			CBaseEntity *pObject = m_hRespawnableItemsAndWeapons[i].Get();
-
-			if ( pObject )
-			{
-				Vector vSpawOrigin;
-				QAngle vSpawnAngles;
-
-				if ( GetObjectsOriginalParameters( pObject, vSpawOrigin, vSpawnAngles ) == true )
-				{
-					float flDistanceFromSpawn = (pObject->GetAbsOrigin() - vSpawOrigin ).Length();
-
-					if ( flDistanceFromSpawn > WEAPON_MAX_DISTANCE_FROM_SPAWN )
-					{
-						bool shouldReset = false;
-						IPhysicsObject *pPhysics = pObject->VPhysicsGetObject();
-
-						if ( pPhysics )
-						{
-							shouldReset = pPhysics->IsAsleep();
-						}
-						else
-						{
-							shouldReset = (pObject->GetFlags() & FL_ONGROUND) ? true : false;
-						}
-
-						if ( shouldReset )
-						{
-							pObject->Teleport( &vSpawOrigin, &vSpawnAngles, NULL );
-
-							IPhysicsObject *pPhys = pObject->VPhysicsGetObject();
-
-							if ( pPhys )
-							{
-								pPhys->Wake();
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
-//=========================================================
-//AddLevelDesignerPlacedWeapon
-//=========================================================
-void CHL2MPRules::AddLevelDesignerPlacedObject( CBaseEntity *pEntity )
-{
-	if ( m_hRespawnableItemsAndWeapons.Find( pEntity ) == -1 )
-	{
-		m_hRespawnableItemsAndWeapons.AddToTail( pEntity );
-	}
-}
-
-//=========================================================
-//RemoveLevelDesignerPlacedWeapon
-//=========================================================
-void CHL2MPRules::RemoveLevelDesignerPlacedObject( CBaseEntity *pEntity )
-{
-	if ( m_hRespawnableItemsAndWeapons.Find( pEntity ) != -1 )
-	{
-		m_hRespawnableItemsAndWeapons.FindAndRemove( pEntity );
-	}
-}
-
-//=========================================================
-// Check if this entity is placed in the map by the designer.
-//=========================================================
-bool CHL2MPRules::IsLevelDesignerPlacedObject(CBaseEntity *pEntity)
-{
-	if (m_hRespawnableItemsAndWeapons.Find(pEntity) != -1)
-	{
-		return true;
-	}
-
-	return false;
-}
-
 //=========================================================
 // Where should this item respawn?
 // Some game variations may choose to randomize spawn locations
@@ -2054,7 +1852,6 @@ float CHL2MPRules::FlItemRespawnTime( CItem *pItem )
 {
 	return 1;
 }
-
 
 //=========================================================
 // CanHaveWeapon - returns false if the player is not allowed
@@ -2475,35 +2272,6 @@ bool CHL2MPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		collisionGroup1 = COLLISION_GROUP_NPC;
 	}
 
-	if ( collisionGroup0 == HL2COLLISION_GROUP_COMBINE_BALL )
-	{
-		if ( collisionGroup1 == HL2COLLISION_GROUP_COMBINE_BALL )
-			return false;
-	}
-
-	if ( collisionGroup0 == HL2COLLISION_GROUP_COMBINE_BALL && collisionGroup1 == HL2COLLISION_GROUP_COMBINE_BALL_NPC )
-		return false;
-
-	if ( ( collisionGroup0 == COLLISION_GROUP_WEAPON ) ||
-		( collisionGroup0 == COLLISION_GROUP_PLAYER ) ||
-		( collisionGroup0 == COLLISION_GROUP_PROJECTILE ) )
-	{
-		if ( collisionGroup1 == HL2COLLISION_GROUP_COMBINE_BALL )
-			return false;
-	}
-
-	if ( collisionGroup0 == COLLISION_GROUP_DEBRIS )
-	{
-		if ( collisionGroup1 == HL2COLLISION_GROUP_COMBINE_BALL )
-			return true;
-	}
-
-	if (collisionGroup0 == HL2COLLISION_GROUP_HOUNDEYE && collisionGroup1 == HL2COLLISION_GROUP_HOUNDEYE )
-		return false;
-
-	if (collisionGroup0 == HL2COLLISION_GROUP_HOMING_MISSILE && collisionGroup1 == HL2COLLISION_GROUP_HOMING_MISSILE )
-		return false;
-
 	if ( collisionGroup1 == HL2COLLISION_GROUP_CROW )
 	{
 		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_NPC ||
@@ -2515,13 +2283,6 @@ bool CHL2MPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 			collisionGroup0 == HL2COLLISION_GROUP_CROW )
 			return false;
 	}
-
-	if ( ( collisionGroup0 == HL2COLLISION_GROUP_HEADCRAB ) && ( collisionGroup1 == HL2COLLISION_GROUP_HEADCRAB ) )
-		return false;
-
-	// striders don't collide with other striders
-	if ( collisionGroup0 == HL2COLLISION_GROUP_STRIDER && collisionGroup1 == HL2COLLISION_GROUP_STRIDER )
-		return false;
 
 	// gunships don't collide with other gunships
 	if ( collisionGroup0 == HL2COLLISION_GROUP_GUNSHIP && collisionGroup1 == HL2COLLISION_GROUP_GUNSHIP )
@@ -2563,10 +2324,14 @@ bool CHL2MPRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 	if ( pPlayer->ClientCommand( args ) )
 		return true;
 
-	if (pPlayer && FStrEq(args[0], "player_vote_endmap_choice") && (args.ArgC() == 2) && m_bEndMapVotingEnabled && pPlayer->ShouldRunRateLimitedCommand(args))
+	if (pPlayer && (args.ArgC() == 2) && m_bEndMapVotingEnabled && FStrEq(args[0], "player_vote_endmap_choice") && pPlayer->ShouldRunRateLimitedCommand(args))
 	{
-		m_iEndVotePlayerChoices[pPlayer->entindex()] = atoi(args[1]);
-		RecalculateEndMapVotes();
+		int playerIndex = (pPlayer->entindex() - 1);
+		if (playerIndex >= 0 && playerIndex < MAX_PLAYERS)
+		{
+			m_iEndVotePlayerChoices[playerIndex] = atoi(args[1]);
+			RecalculateEndMapVotes();
+		}
 		return true;
 	}
 #endif
@@ -2686,15 +2451,11 @@ void CHL2MPRules::RestartGame()
 
 	// Respawn entities (glass, doors, etc..)
 	m_flIntermissionEndTime = 0;
-	m_flRestartGameTime = 0.0;		
-	m_bCompleteReset = false;
 
 	IGameEvent * event = gameeventmanager->CreateEvent( "round_start" );
 	if ( event )
 	{
-		event->SetInt("fraglimit", 0 );
 		event->SetInt( "priority", 6 ); // HLTV event priority, not transmitted
-		event->SetString("objective","DEATHMATCH");
 		gameeventmanager->FireEvent( event );
 	}
 
@@ -2712,7 +2473,7 @@ void CHL2MPRules::CleanUpMap()
 	CBaseEntity *pCur = gEntList.FirstEnt();
 	while ( pCur )
 	{
-		CBaseHL2MPCombatWeapon *pWeapon = dynamic_cast< CBaseHL2MPCombatWeapon* >( pCur );
+		CWeaponHL2MPBase *pWeapon = dynamic_cast<CWeaponHL2MPBase*>(pCur);
 		// Weapons with owners don't want to be removed..
 		if ( pWeapon )
 		{
@@ -2798,33 +2559,6 @@ void CHL2MPRules::CleanUpMap()
 	// DO NOT CALL SPAWN ON info_node ENTITIES!
 
 	MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &filter, true );
-}
-
-void CHL2MPRules::CheckChatForReadySignal( CHL2MP_Player *pPlayer, const char *chatmsg )
-{
-}
-
-void CHL2MPRules::CheckRestartGame( void )
-{
-	// Restart the game if specified by the server
-	int iRestartDelay = mp_restartgame.GetInt();
-
-	if ( iRestartDelay > 0 )
-	{
-		if ( iRestartDelay > 60 )
-			iRestartDelay = 60;
-
-
-		// let the players know
-		char strRestartDelay[64];
-		Q_snprintf( strRestartDelay, sizeof( strRestartDelay ), "%d", iRestartDelay );
-		UTIL_ClientPrintAll( HUD_PRINTCENTER, "Game will restart in %s1 %s2", strRestartDelay, iRestartDelay == 1 ? "SECOND" : "SECONDS" );
-		UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Game will restart in %s1 %s2", strRestartDelay, iRestartDelay == 1 ? "SECOND" : "SECONDS" );
-
-		m_flRestartGameTime = gpGlobals->curtime + iRestartDelay;
-		m_bCompleteReset = true;
-		mp_restartgame.SetValue( 0 );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -3195,73 +2929,6 @@ CBaseEntity *CHL2MPRules::GetNearbyBreakableDoorEntity(CBaseEntity *pChecker)
 bool CHL2MPRules::ShouldBurningPropsEmitLight()
 {
 	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: MULTIPLAYER BODY QUE HANDLING
-//-----------------------------------------------------------------------------
-class CCorpse : public CBaseAnimating
-{
-public:
-	DECLARE_CLASS(CCorpse, CBaseAnimating);
-	DECLARE_SERVERCLASS();
-
-	virtual int ObjectCaps(void) { return FCAP_DONT_SAVE; }
-
-public:
-	CNetworkVar(int, m_nReferencePlayer);
-};
-
-IMPLEMENT_SERVERCLASS_ST(CCorpse, DT_Corpse)
-SendPropInt(SENDINFO(m_nReferencePlayer), 10, SPROP_UNSIGNED)
-END_SEND_TABLE()
-
-LINK_ENTITY_TO_CLASS(bodyque, CCorpse);
-
-CCorpse		*g_pBodyQueueHead;
-
-void InitBodyQue(void)
-{
-	CCorpse *pEntity = (CCorpse *)CreateEntityByName("bodyque");
-	pEntity->AddEFlags(EFL_KEEP_ON_RECREATE_ENTITIES);
-	g_pBodyQueueHead = pEntity;
-	CCorpse *p = g_pBodyQueueHead;
-
-	// Reserve 3 more slots for dead bodies
-	for (int i = 0; i < 3; i++)
-	{
-		CCorpse *next = (CCorpse *)CreateEntityByName("bodyque");
-		next->AddEFlags(EFL_KEEP_ON_RECREATE_ENTITIES);
-		p->SetOwnerEntity(next);
-		p = next;
-	}
-
-	p->SetOwnerEntity(g_pBodyQueueHead);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: make a body que entry for the given ent so the ent can be respawned elsewhere
-// GLOBALS ASSUMED SET:  g_eoBodyQueueHead
-//-----------------------------------------------------------------------------
-void CopyToBodyQue(CBaseAnimating *pCorpse)
-{
-	if (pCorpse->IsEffectActive(EF_NODRAW))
-		return;
-
-	CCorpse *pHead = g_pBodyQueueHead;
-
-	pHead->CopyAnimationDataFrom(pCorpse);
-
-	pHead->SetMoveType(MOVETYPE_FLYGRAVITY);
-	pHead->SetAbsVelocity(pCorpse->GetAbsVelocity());
-	pHead->ClearFlags();
-	pHead->m_nReferencePlayer = ENTINDEX(pCorpse);
-
-	pHead->SetLocalAngles(pCorpse->GetAbsAngles());
-	UTIL_SetOrigin(pHead, pCorpse->GetAbsOrigin());
-
-	UTIL_SetSize(pHead, pCorpse->WorldAlignMins(), pCorpse->WorldAlignMaxs());
-	g_pBodyQueueHead = (CCorpse *)pHead->GetOwnerEntity();
 }
 
 #endif

@@ -47,14 +47,6 @@
 #include "GameBase_Server.h"
 #include "tier0/icommandline.h"
 
-#ifdef HL2_EPISODIC
-#include "npc_alyx_episodic.h"
-#endif
-
-#ifdef PORTAL
-#include "portal_player.h"
-#endif // PORTAL
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -71,142 +63,8 @@ extern ConVar weapon_showproficiency;
 
 #define TIME_IGNORE_FALL_DAMAGE 10.0
 
-ConVar sv_autojump( "sv_autojump", "0" );
-
 ConVar player_showpredictedposition( "player_showpredictedposition", "0" );
 ConVar player_showpredictedposition_timestep( "player_showpredictedposition_timestep", "1.0" );
-
-ConVar player_squad_transient_commands( "player_squad_transient_commands", "1", FCVAR_REPLICATED );
-ConVar player_squad_double_tap_time( "player_squad_double_tap_time", "0.25" );
-
-//==============================================================================================
-// CAPPED PLAYER PHYSICS DAMAGE TABLE
-//==============================================================================================
-static impactentry_t cappedPlayerLinearTable[] =
-{
-	{ 150*150, 5 },
-	{ 250*250, 10 },
-	{ 450*450, 20 },
-	{ 550*550, 30 },
-	//{ 700*700, 100 },
-	//{ 1000*1000, 500 },
-};
-
-static impactentry_t cappedPlayerAngularTable[] =
-{
-	{ 100*100, 10 },
-	{ 150*150, 20 },
-	{ 200*200, 30 },
-	//{ 300*300, 500 },
-};
-
-static impactdamagetable_t gCappedPlayerImpactDamageTable =
-{
-	cappedPlayerLinearTable,
-	cappedPlayerAngularTable,
-
-	ARRAYSIZE(cappedPlayerLinearTable),
-	ARRAYSIZE(cappedPlayerAngularTable),
-
-	24*24.0f,	// minimum linear speed
-	360*360.0f,	// minimum angular speed
-	2.0f,		// can't take damage from anything under 2kg
-
-	5.0f,		// anything less than 5kg is "small"
-	5.0f,		// never take more than 5 pts of damage from anything under 5kg
-	36*36.0f,	// <5kg objects must go faster than 36 in/s to do damage
-
-	0.0f,		// large mass in kg (no large mass effects)
-	1.0f,		// large mass scale
-	2.0f,		// large mass falling scale
-	320.0f,		// min velocity for player speed to cause damage
-
-};
-
-//-----------------------------------------------------------------------------
-// Purpose: Used to relay outputs/inputs from the player to the world and viceversa
-//-----------------------------------------------------------------------------
-class CLogicPlayerProxy : public CLogicalEntity
-{
-	DECLARE_CLASS( CLogicPlayerProxy, CLogicalEntity );
-
-private:
-
-	DECLARE_DATADESC();
-
-public:
-
-	COutputEvent m_OnFlashlightOn;
-	COutputEvent m_OnFlashlightOff;
-	COutputEvent m_PlayerHasAmmo;
-	COutputEvent m_PlayerHasNoAmmo;
-	COutputEvent m_PlayerDied;
-	COutputEvent m_PlayerMissedAR2AltFire; // Player fired a combine ball which did not dissolve any enemies. 
-	COutputInt m_RequestedPlayerHealth;
-
-	void InputRequestPlayerHealth( inputdata_t &inputdata );
-	void InputSetPlayerHealth( inputdata_t &inputdata );
-	void InputRequestAmmoState( inputdata_t &inputdata );
-	void InputEnableCappedPhysicsDamage( inputdata_t &inputdata );
-	void InputDisableCappedPhysicsDamage( inputdata_t &inputdata );
-
-	void Activate ( void );
-
-	bool PassesDamageFilter( const CTakeDamageInfo &info );
-
-	EHANDLE m_hPlayer;
-};
-
-// ConVar cl_forwardspeed( "cl_forwardspeed", "400", FCVAR_CHEAT ); // Links us to the client's version
-ConVar xc_crouch_range( "xc_crouch_range", "0.85", FCVAR_ARCHIVE, "Percentarge [1..0] of joystick range to allow ducking within" );	// Only 1/2 of the range is used
-ConVar xc_use_crouch_limiter( "xc_use_crouch_limiter", "0", FCVAR_ARCHIVE, "Use the crouch limiting logic on the controller" );
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-void CC_ToggleDuck( void )
-{
-	CBasePlayer* pPlayer = UTIL_GetCommandClient();
-	if ( pPlayer == NULL )
-		return;
-
-	// Cannot be frozen
-	if ( pPlayer->GetFlags() & FL_FROZEN )
-		return;
-
-	static bool		bChecked = false;
-	static ConVar *pCVcl_forwardspeed = NULL;
-	if ( !bChecked )
-	{
-		bChecked = true;
-		pCVcl_forwardspeed = ( ConVar * )cvar->FindVar( "cl_forwardspeed" );
-	}
-
-
-	// If we're not ducked, do extra checking
-	if ( xc_use_crouch_limiter.GetBool() )
-	{
-		if ( pPlayer->GetToggledDuckState() == false )
-		{
-			float flForwardSpeed = 400.0f;
-			if ( pCVcl_forwardspeed )
-			{
-				flForwardSpeed = pCVcl_forwardspeed->GetFloat();
-			}
-
-			flForwardSpeed = MAX( 1.0f, flForwardSpeed );
-
-			// Make sure we're not in the blindspot on the crouch detection
-			float flStickDistPerc = ( pPlayer->GetStickDist() / flForwardSpeed ); // Speed is the magnitude
-			if ( flStickDistPerc > xc_crouch_range.GetFloat() )
-				return;
-		}
-	}
-
-	// Toggle the duck
-	pPlayer->ToggleDuck();
-}
-
-static ConCommand toggle_duck("toggle_duck", CC_ToggleDuck, "Toggles duck" );
 
 #ifndef HL2MP
 #ifndef PORTAL
@@ -227,44 +85,27 @@ BEGIN_SIMPLE_DATADESC( LadderMove_t )
 	DEFINE_FIELD( m_vecStartPosition, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( m_hForceLadder, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_hReservedSpot, FIELD_EHANDLE ),
-	END_DATADESC()
+END_DATADESC()
 
 	// Global Savedata for HL2 player
-	BEGIN_DATADESC( CHL2_Player )
+BEGIN_DATADESC( CHL2_Player )
 
 	DEFINE_FIELD( m_nControlClass, FIELD_INTEGER ),
 	DEFINE_EMBEDDED( m_HL2Local ),
 
 	DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
 
-	// 	Field is used within a single tick, no need to save restore
-	// DEFINE_FIELD( m_bPlayUseDenySound, FIELD_BOOLEAN ),  
-	//							m_pPlayerAISquad reacquired on load
-
-	DEFINE_AUTO_ARRAY( m_vecMissPositions, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_nNumMissPositions, FIELD_INTEGER ),
-
-	//					m_pPlayerAISquad
-	DEFINE_EMBEDDED( m_CommanderUpdateTimer ),
-	//					m_RealTimeLastSquadCommand
-	DEFINE_FIELD( m_QueuedCommand, FIELD_INTEGER ),
-
 	DEFINE_FIELD( m_flTimeIgnoreFallDamage, FIELD_TIME ),
 	DEFINE_FIELD( m_bIgnoreFallDamageResetAfterImpact, FIELD_BOOLEAN ),
 
-	DEFINE_FIELD( m_flIdleTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flMoveTime, FIELD_TIME ),
 	DEFINE_FIELD( m_flLastDamageTime, FIELD_TIME ),
 	DEFINE_FIELD( m_flTargetFindTime, FIELD_TIME ),
 
 	DEFINE_FIELD( m_flNextFlashlightCheckTime, FIELD_TIME ),
 	DEFINE_FIELD( m_bFlashlightDisabled, FIELD_BOOLEAN ),
 
-	DEFINE_FIELD( m_bUseCappedPhysicsDamageTable, FIELD_BOOLEAN ),
-
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "IgnoreFallDamage", InputIgnoreFallDamage ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "IgnoreFallDamageWithoutReset", InputIgnoreFallDamageWithoutReset ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "OnSquadMemberKilled", OnSquadMemberKilled ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "DisableFlashlight", InputDisableFlashlight ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "EnableFlashlight", InputEnableFlashlight ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "ForceDropPhysObjects", InputForceDropPhysObjects ),
@@ -272,26 +113,14 @@ BEGIN_SIMPLE_DATADESC( LadderMove_t )
 	DEFINE_SOUNDPATCH( m_sndLeeches ),
 	DEFINE_SOUNDPATCH( m_sndWaterSplashes ),
 
-	DEFINE_FIELD( m_flArmorReductionTime, FIELD_TIME ),
-	DEFINE_FIELD( m_iArmorReductionFrom, FIELD_INTEGER ),
-
 	DEFINE_FIELD( m_flTimeUseSuspended, FIELD_TIME ),
-
 	DEFINE_FIELD( m_flTimeNextLadderHint, FIELD_TIME ),
 
-	//DEFINE_FIELD( m_hPlayerProxy, FIELD_EHANDLE ), //Shut up class check!
-
-	END_DATADESC()
+END_DATADESC()
 
 CHL2_Player::CHL2_Player()
 {
-	m_nNumMissPositions	= 0;
-	m_pPlayerAISquad = 0;
 	m_flNextEntityTraceCheck = 0.0f;
-
-	m_flArmorReductionTime = 0.0f;
-	m_iArmorReductionFrom = 0;
-
 	m_flLastTimeReplenishedAmmo = 0.0f;
 	m_flNextAmmoReplenishTime = 0.0f;
 	m_iNumAmmoReplenishes = 0;
@@ -316,14 +145,8 @@ void CHL2_Player::Precache( void )
 
 void CHL2_Player::HandleSpeedChanges( void )
 {
-	//int buttonsChanged = m_afButtonPressed | m_afButtonReleased;
-
 	bool bIsWalking = IsWalking();
-	// have suit, pressing button, not sprinting or ducking
-	bool bWantWalking;
-
-	bWantWalking = (m_nButtons & IN_WALK) && !(m_nButtons & IN_DUCK);
-
+	bool bWantWalking = (m_nButtons & IN_WALK) && !(m_nButtons & IN_DUCK);
 	if( bIsWalking != bWantWalking )
 	{
 		if ( bWantWalking )
@@ -331,24 +154,6 @@ void CHL2_Player::HandleSpeedChanges( void )
 		else
 			StopWalking();
 	}
-}
-
-//-----------------------------------------------------------------------------
-// This happens when we powerdown from the mega physcannon to the regular one
-//-----------------------------------------------------------------------------
-void CHL2_Player::HandleArmorReduction( void )
-{
-	if ( m_flArmorReductionTime < gpGlobals->curtime )
-		return;
-
-	if ( ArmorValue() <= 0 )
-		return;
-
-	float flPercent = 1.0f - (( m_flArmorReductionTime - gpGlobals->curtime ) / ARMOR_DECAY_TIME );
-
-	int iArmor = Lerp( flPercent, m_iArmorReductionFrom, 0 );
-
-	SetArmorValue( iArmor );
 }
 
 //-----------------------------------------------------------------------------
@@ -366,18 +171,6 @@ void CHL2_Player::PreThink(void)
 		NDebugOverlay::Line( GetAbsOrigin(), predPos, 0, 255, 0, 0, 0.01f );
 	}
 
-#ifdef HL2_EPISODIC
-	if( m_hLocatorTargetEntity != NULL )
-	{
-		// Keep track of the entity here, the client will pick up the rest of the work
-		m_HL2Local.m_vecLocatorOrigin = m_hLocatorTargetEntity->WorldSpaceCenter();
-	}
-	else
-	{
-		m_HL2Local.m_vecLocatorOrigin = vec3_invalid; // This tells the client we have no locator target.
-	}
-#endif//HL2_EPISODIC
-
 	// Riding a vehicle?
 	if ( IsInAVehicle() )	
 	{
@@ -389,55 +182,8 @@ void CHL2_Player::PreThink(void)
 		return;
 	}
 
-	// This is an experiment of mine- autojumping! 
-	// only affects you if sv_autojump is nonzero.
-	if( (GetFlags() & FL_ONGROUND) && sv_autojump.GetFloat() != 0 )
-	{
-		VPROF( "CHL2_Player::PreThink-Autojump" );
-		// check autojump
-		Vector vecCheckDir;
-
-		vecCheckDir = GetAbsVelocity();
-
-		float flVelocity = VectorNormalize( vecCheckDir );
-
-		if( flVelocity > 200 )
-		{
-			// Going fast enough to autojump
-			vecCheckDir = WorldSpaceCenter() + vecCheckDir * 34 - Vector( 0, 0, 16 );
-
-			trace_t tr;
-
-			UTIL_TraceHull( WorldSpaceCenter() - Vector( 0, 0, 16 ), vecCheckDir, NAI_Hull::Mins(HULL_TINY_CENTERED),NAI_Hull::Maxs(HULL_TINY_CENTERED), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
-
-			//NDebugOverlay::Line( tr.startpos, tr.endpos, 0,255,0, true, 10 );
-
-			if( tr.fraction == 1.0 && !tr.startsolid )
-			{
-				// Now trace down!
-				UTIL_TraceLine( vecCheckDir, vecCheckDir - Vector( 0, 0, 64 ), MASK_PLAYERSOLID, this, COLLISION_GROUP_NONE, &tr );
-
-				//NDebugOverlay::Line( tr.startpos, tr.endpos, 0,255,0, true, 10 );
-
-				if( tr.fraction == 1.0 && !tr.startsolid )
-				{
-					// !!!HACKHACK
-					// I KNOW, I KNOW, this is definitely not the right way to do this,
-					// but I'm prototyping! (sjb)
-					Vector vecNewVelocity = GetAbsVelocity();
-					vecNewVelocity.z += 250;
-					SetAbsVelocity( vecNewVelocity );
-				}
-			}
-		}
-	}
-
 	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-Speed" );
 	HandleSpeedChanges();
-#ifdef HL2_EPISODIC
-	HandleArmorReduction();
-#endif
-
 	VPROF_SCOPE_END();
 
 	if ( g_fGameOver || IsPlayerLockedInPlace() )
@@ -459,10 +205,6 @@ void CHL2_Player::PreThink(void)
 	{
 		m_Local.m_iHideHUD |= HIDEHUD_FLASHLIGHT;
 	}
-
-	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-CommanderUpdate" );
-	CommanderUpdate();
-	VPROF_SCOPE_END();
 
 	// checks if new client data (for HUD and view control) needs to be sent to the client
 	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-UpdateClientData" );
@@ -569,7 +311,6 @@ void CHL2_Player::PreThink(void)
 	{
 		m_iTrain = TRAIN_NEW; // turn off train
 	}
-
 
 	//
 	// If we're not on the ground, we're falling. Update our falling velocity.
@@ -687,35 +428,9 @@ void CHL2_Player::PostThink( void )
 	}
 }
 
-#define HL2PLAYER_RELOADGAME_ATTACK_DELAY 1.0f
-
 void CHL2_Player::Activate( void )
 {
 	BaseClass::Activate();
-
-#ifdef HL2_EPISODIC
-
-	// Delay attacks by 1 second after loading a game.
-	if ( GetActiveWeapon() )
-	{
-		float flRemaining = GetActiveWeapon()->m_flNextPrimaryAttack - gpGlobals->curtime;
-
-		if ( flRemaining < HL2PLAYER_RELOADGAME_ATTACK_DELAY )
-		{
-			GetActiveWeapon()->m_flNextPrimaryAttack = gpGlobals->curtime + HL2PLAYER_RELOADGAME_ATTACK_DELAY;
-		}
-
-		flRemaining = GetActiveWeapon()->m_flNextSecondaryAttack - gpGlobals->curtime;
-
-		if ( flRemaining < HL2PLAYER_RELOADGAME_ATTACK_DELAY )
-		{
-			GetActiveWeapon()->m_flNextSecondaryAttack = gpGlobals->curtime + HL2PLAYER_RELOADGAME_ATTACK_DELAY;
-		}
-	}
-
-#endif
-
-	GetPlayerProxy();
 }
 
 //------------------------------------------------------------------------------
@@ -756,50 +471,11 @@ bool CHL2_Player::HandleInteraction(int interactionType, void *data, CBaseCombat
 	return false;
 }
 
-
 void CHL2_Player::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 {
 	// Can't use stuff while dead
-	if ( IsDead() )
-	{
-		ucmd->buttons &= ~IN_USE;
-	}
-
-	//Update our movement information
-	if ( ( ucmd->forwardmove != 0 ) || ( ucmd->sidemove != 0 ) || ( ucmd->upmove != 0 ) )
-	{
-		m_flIdleTime -= TICK_INTERVAL * 2.0f;
-
-		if ( m_flIdleTime < 0.0f )
-		{
-			m_flIdleTime = 0.0f;
-		}
-
-		m_flMoveTime += TICK_INTERVAL;
-
-		if ( m_flMoveTime > 4.0f )
-		{
-			m_flMoveTime = 4.0f;
-		}
-	}
-	else
-	{
-		m_flIdleTime += TICK_INTERVAL;
-
-		if ( m_flIdleTime > 4.0f )
-		{
-			m_flIdleTime = 4.0f;
-		}
-
-		m_flMoveTime -= TICK_INTERVAL * 2.0f;
-
-		if ( m_flMoveTime < 0.0f )
-		{
-			m_flMoveTime = 0.0f;
-		}
-	}
-
-	//Msg("Player time: [ACTIVE: %f]\t[IDLE: %f]\n", m_flMoveTime, m_flIdleTime );
+	if ( IsDead() )	
+		ucmd->buttons &= ~IN_USE;	
 
 	BaseClass::PlayerRunCommand( ucmd, moveHelper );
 }
@@ -809,12 +485,6 @@ void CHL2_Player::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 //-----------------------------------------------------------------------------
 void CHL2_Player::Spawn(void)
 {
-#ifndef HL2MP
-#ifndef PORTAL
-	SetModel( "models/player.mdl" );
-#endif
-#endif
-
 	BaseClass::Spawn();
 
 	//
@@ -824,15 +494,6 @@ void CHL2_Player::Spawn(void)
 	//m_flMaxspeed = 320;
 
 	m_Local.m_iHideHUD |= HIDEHUD_CHAT;
-
-	m_pPlayerAISquad = g_AI_SquadManager.FindCreateSquad(AllocPooledString(PLAYER_SQUADNAME));
-
-	// Setup our flashlight values
-#ifdef HL2_EPISODIC
-	m_HL2Local.m_flFlashBattery = 100.0f;
-#endif 
-
-	GetPlayerProxy();
 
 	m_flLastTimeReplenishedAmmo = 0.0f;
 	m_flNextAmmoReplenishTime = 0.0f;
@@ -889,305 +550,8 @@ void CHL2_Player::InitVCollision( const Vector &vecAbsOrigin, const Vector &vecA
 	}
 }
 
-
 CHL2_Player::~CHL2_Player( void )
 {
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-
-bool CHL2_Player::CommanderFindGoal( commandgoal_t *pGoal )
-{
-	CAI_BaseNPC *pAllyNpc;
-	trace_t	tr;
-	Vector	vecTarget;
-	Vector	forward;
-
-	EyeVectors( &forward );
-
-	//---------------------------------
-	// MASK_SHOT on purpose! So that you don't hit the invisible hulls of the NPCs.
-	CTraceFilterSkipTwoEntities filter( this, NULL, COLLISION_GROUP_INTERACTIVE_DEBRIS );
-
-	UTIL_TraceLine( EyePosition(), EyePosition() + forward * MAX_COORD_RANGE, MASK_SHOT, &filter, &tr );
-
-	if( !tr.DidHitWorld() )
-	{
-		CUtlVector<CAI_BaseNPC *> Allies;
-		AISquadIter_t iter;
-		for ( pAllyNpc = m_pPlayerAISquad->GetFirstMember(&iter); pAllyNpc; pAllyNpc = m_pPlayerAISquad->GetNextMember(&iter) )
-		{
-			if ( pAllyNpc->IsCommandable() )
-				Allies.AddToTail( pAllyNpc );
-		}
-
-		for( int i = 0 ; i < Allies.Count() ; i++ )
-		{
-			if( Allies[ i ]->IsValidCommandTarget( tr.m_pEnt ) )
-			{
-				pGoal->m_pGoalEntity = tr.m_pEnt;
-				return true;
-			}
-		}
-	}
-
-	if( tr.fraction == 1.0 || (tr.surface.flags & SURF_SKY) )
-	{
-		// Move commands invalid against skybox.
-		pGoal->m_vecGoalLocation = tr.endpos;
-		return false;
-	}
-
-	if ( tr.m_pEnt->IsNPC() && ((CAI_BaseNPC *)(tr.m_pEnt))->IsCommandable() )
-	{
-		pGoal->m_vecGoalLocation = tr.m_pEnt->GetAbsOrigin();
-	}
-	else
-	{
-		vecTarget = tr.endpos;
-
-		Vector mins( -16, -16, 0 );
-		Vector maxs( 16, 16, 0 );
-
-		// Back up from whatever we hit so that there's enough space at the 
-		// target location for a bounding box.
-		// Now trace down. 
-		//UTIL_TraceLine( vecTarget, vecTarget - Vector( 0, 0, 8192 ), MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
-		UTIL_TraceHull( vecTarget + tr.plane.normal * 24,
-			vecTarget - Vector( 0, 0, 8192 ),
-			mins,
-			maxs,
-			MASK_SOLID_BRUSHONLY,
-			this,
-			COLLISION_GROUP_NONE,
-			&tr );
-
-
-		if ( !tr.startsolid )
-			pGoal->m_vecGoalLocation = tr.endpos;
-		else
-			pGoal->m_vecGoalLocation = vecTarget;
-	}
-
-	pAllyNpc = GetSquadCommandRepresentative();
-	if ( !pAllyNpc )
-		return false;
-
-	vecTarget = pGoal->m_vecGoalLocation;
-	if ( !pAllyNpc->FindNearestValidGoalPos( vecTarget, &pGoal->m_vecGoalLocation ) )
-		return false;
-
-	return ( ( vecTarget - pGoal->m_vecGoalLocation ).LengthSqr() < Square( 15*12 ) );
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CAI_BaseNPC *CHL2_Player::GetSquadCommandRepresentative()
-{
-	if ( m_pPlayerAISquad != NULL )
-	{
-		CAI_BaseNPC *pAllyNpc = m_pPlayerAISquad->GetFirstMember();
-
-		if ( pAllyNpc )
-		{
-			return pAllyNpc->GetSquadCommandRepresentative();
-		}
-	}
-
-	return NULL;
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-int CHL2_Player::GetNumSquadCommandables()
-{
-	AISquadIter_t iter;
-	int c = 0;
-	for ( CAI_BaseNPC *pAllyNpc = m_pPlayerAISquad->GetFirstMember(&iter); pAllyNpc; pAllyNpc = m_pPlayerAISquad->GetNextMember(&iter) )
-	{
-		if ( pAllyNpc->IsCommandable() )
-			c++;
-	}
-	return c;
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void CHL2_Player::CommanderUpdate()
-{
-	CAI_BaseNPC *pCommandRepresentative = GetSquadCommandRepresentative();
-	bool bFollowMode = false;
-	if ( pCommandRepresentative )
-	{
-		bFollowMode = ( pCommandRepresentative->GetCommandGoal() == vec3_invalid );
-
-		// set the variables for network transmission (to show on the hud)
-		m_HL2Local.m_iSquadMemberCount = GetNumSquadCommandables();
-		m_HL2Local.m_fSquadInFollowMode = bFollowMode;
-
-		// debugging code for displaying extra squad indicators
-		/*
-		char *pszMoving = "";
-		AISquadIter_t iter;
-		for ( CAI_BaseNPC *pAllyNpc = m_pPlayerAISquad->GetFirstMember(&iter); pAllyNpc; pAllyNpc = m_pPlayerAISquad->GetNextMember(&iter) )
-		{
-		if ( pAllyNpc->IsCommandMoving() )
-		{
-		pszMoving = "<-";
-		break;
-		}
-		}
-
-		NDebugOverlay::ScreenText(
-		0.932, 0.919, 
-		CFmtStr( "%d|%c%s", GetNumSquadCommandables(), ( bFollowMode ) ? 'F' : 'S', pszMoving ),
-		255, 128, 0, 128,
-		0 );
-		*/
-	}
-	else
-	{
-		m_HL2Local.m_iSquadMemberCount = 0;
-		m_HL2Local.m_fSquadInFollowMode = true;
-	}
-
-	if ( m_QueuedCommand != CC_NONE && ( m_QueuedCommand == CC_FOLLOW || gpGlobals->realtime - m_RealTimeLastSquadCommand >= player_squad_double_tap_time.GetFloat() ) )
-	{
-		CommanderExecute( m_QueuedCommand );
-		m_QueuedCommand = CC_NONE;
-	}
-	else if ( !bFollowMode && pCommandRepresentative && m_CommanderUpdateTimer.Expired() && player_squad_transient_commands.GetBool() )
-	{
-		m_CommanderUpdateTimer.Set(2.5);
-
-		if ( pCommandRepresentative->ShouldAutoSummon() )
-			CommanderExecute( CC_FOLLOW );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//
-// bHandled - indicates whether to continue delivering this order to
-// all allies. Allows us to stop delivering certain types of orders once we find
-// a suitable candidate. (like picking up a single weapon. We don't wish for
-// all allies to respond and try to pick up one weapon).
-//----------------------------------------------------------------------------- 
-bool CHL2_Player::CommanderExecuteOne( CAI_BaseNPC *pNpc, const commandgoal_t &goal, CAI_BaseNPC **Allies, int numAllies )
-{
-	if ( goal.m_pGoalEntity )
-	{
-		return pNpc->TargetOrder( goal.m_pGoalEntity, Allies, numAllies );
-	}
-	else if ( pNpc->IsInPlayerSquad() )
-	{
-		pNpc->MoveOrder( goal.m_vecGoalLocation, Allies, numAllies );
-	}
-
-	return true;
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-void CHL2_Player::CommanderExecute( CommanderCommand_t command )
-{
-	CAI_BaseNPC *pPlayerSquadLeader = GetSquadCommandRepresentative();
-
-	if ( !pPlayerSquadLeader )
-	{
-		EmitSound( "HL2Player.UseDeny" );
-		return;
-	}
-
-	int i;
-	CUtlVector<CAI_BaseNPC *> Allies;
-	commandgoal_t goal;
-
-	if ( command == CC_TOGGLE )
-	{
-		if ( pPlayerSquadLeader->GetCommandGoal() != vec3_invalid )
-			command = CC_FOLLOW;
-		else
-			command = CC_SEND;
-	}
-	else
-	{
-		if ( command == CC_FOLLOW && pPlayerSquadLeader->GetCommandGoal() == vec3_invalid )
-			return;
-	}
-
-	if ( command == CC_FOLLOW )
-	{
-		goal.m_pGoalEntity = this;
-		goal.m_vecGoalLocation = vec3_invalid;
-	}
-	else
-	{
-		goal.m_pGoalEntity = NULL;
-		goal.m_vecGoalLocation = vec3_invalid;
-
-		// Find a goal for ourselves.
-		if( !CommanderFindGoal( &goal ) )
-		{
-			EmitSound( "HL2Player.UseDeny" );
-			return; // just keep following
-		}
-	}
-
-#ifdef _DEBUG
-	if( goal.m_pGoalEntity == NULL && goal.m_vecGoalLocation == vec3_invalid )
-	{
-		DevMsg( 1, "**ERROR: Someone sent an invalid goal to CommanderExecute!\n" );
-	}
-#endif // _DEBUG
-
-	AISquadIter_t iter;
-	for ( CAI_BaseNPC *pAllyNpc = m_pPlayerAISquad->GetFirstMember(&iter); pAllyNpc; pAllyNpc = m_pPlayerAISquad->GetNextMember(&iter) )
-	{
-		if ( pAllyNpc->IsCommandable() )
-			Allies.AddToTail( pAllyNpc );
-	}
-
-	//---------------------------------
-	// If the trace hits an NPC, send all ally NPCs a "target" order. Always
-	// goes to targeted one first
-#ifdef DBGFLAG_ASSERT
-	int nAIs = g_AI_Manager.NumAIs();
-#endif
-	CAI_BaseNPC * pTargetNpc = (goal.m_pGoalEntity) ? goal.m_pGoalEntity->MyNPCPointer() : NULL;
-
-	bool bHandled = false;
-	if( pTargetNpc )
-	{
-		bHandled = !CommanderExecuteOne( pTargetNpc, goal, Allies.Base(), Allies.Count() );
-	}
-
-	for ( i = 0; !bHandled && i < Allies.Count(); i++ )
-	{
-		if ( Allies[i] != pTargetNpc && Allies[i]->IsPlayerAlly() )
-		{
-			bHandled = !CommanderExecuteOne( Allies[i], goal, Allies.Base(), Allies.Count() );
-		}
-		Assert( nAIs == g_AI_Manager.NumAIs() ); // not coded to support mutating set of NPCs
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Enter/exit commander mode, manage ally selection.
-//-----------------------------------------------------------------------------
-void CHL2_Player::CommanderMode()
-{
-	float commandInterval = gpGlobals->realtime - m_RealTimeLastSquadCommand;
-	m_RealTimeLastSquadCommand = gpGlobals->realtime;
-	if ( commandInterval < player_squad_double_tap_time.GetFloat() )
-	{
-		m_QueuedCommand = CC_FOLLOW;
-	}
-	else
-	{
-		m_QueuedCommand = (player_squad_transient_commands.GetBool()) ? CC_SEND : CC_TOGGLE;
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1198,31 +562,6 @@ void CHL2_Player::CheatImpulseCommands( int iImpulse )
 {
 	switch( iImpulse )
 	{
-	case 50:
-		{
-			CommanderMode();
-			break;
-		}
-
-	case 51:
-		{
-			// Cheat to create a dynamic resupply item
-			Vector vecForward;
-			AngleVectors( EyeAngles(), &vecForward );
-			CBaseEntity *pItem = (CBaseEntity *)CreateEntityByName( "item_dynamic_resupply" );
-			if ( pItem )
-			{
-				Vector vecOrigin = GetAbsOrigin() + vecForward * 256 + Vector(0,0,64);
-				QAngle vecAngles( 0, GetAbsAngles().y - 90, 0 );
-				pItem->SetAbsOrigin( vecOrigin );
-				pItem->SetAbsAngles( vecAngles );
-				pItem->KeyValue( "targetname", "resupply" );
-				pItem->Spawn();
-				pItem->Activate();
-			}
-			break;
-		}
-
 	case 52:
 		{
 			// Rangefinder
@@ -1289,10 +628,6 @@ void CHL2_Player::FlashlightTurnOn( void )
 
 	AddEffects( EF_DIMLIGHT );
 	EmitSound( "HL2Player.FlashLightOn" );
-
-	variant_t flashlighton;
-	flashlighton.SetFloat( 1.0f );
-	FirePlayerProxyOutput( "OnFlashlightOn", flashlighton, this, this );
 }
 
 
@@ -1302,10 +637,6 @@ void CHL2_Player::FlashlightTurnOff( void )
 {
 	RemoveEffects( EF_DIMLIGHT );
 	EmitSound( "HL2Player.FlashLightOff" );
-
-	variant_t flashlightoff;
-	flashlightoff.SetFloat(1.0f); // Intensity?
-	FirePlayerProxyOutput( "OnFlashlightOff", flashlightoff, this, this );
 }
 
 //-----------------------------------------------------------------------------
@@ -1317,7 +648,7 @@ bool CHL2_Player::IsIlluminatedByFlashlight( CBaseEntity *pEntity, float *flRetu
 		return false;
 
 	// Within 50 feet?
-	float flDistSqr = GetAbsOrigin().DistToSqr(pEntity->GetAbsOrigin());
+	float flDistSqr = GetLocalOrigin().DistToSqr(pEntity->GetLocalOrigin());
 	if( flDistSqr > FLASHLIGHT_RANGE )
 		return false;
 
@@ -1367,6 +698,7 @@ void CHL2_Player::CheckFlashlight( void )
 
 	if ( m_flNextFlashlightCheckTime > gpGlobals->curtime )
 		return;
+
 	m_flNextFlashlightCheckTime = gpGlobals->curtime + FLASHLIGHT_NPC_CHECK_INTERVAL;
 
 	// Loop through NPCs looking for illuminated ones
@@ -1396,18 +728,13 @@ void CHL2_Player::SetPlayerUnderwater( bool state )
 bool CHL2_Player::PassesDamageFilter( const CTakeDamageInfo &info )
 {
 	CBaseEntity *pAttacker = info.GetAttacker();
-	if( pAttacker && pAttacker->MyNPCPointer() && pAttacker->MyNPCPointer()->IsPlayerAlly() )
+	if (pAttacker && 
+		((pAttacker->MyNPCPointer() && pAttacker->MyNPCPointer()->IsPlayerAlly()) ||
+		((pAttacker->Classify() == CLASS_MILITARY_VEHICLE) && IsHuman()))		
+		)
 	{
 		return false;
 	}
-
-	if( m_hPlayerProxy && !m_hPlayerProxy->PassesDamageFilter( info ) )
-	{
-		return false;
-	}
-
-	if (pAttacker && (pAttacker->Classify() == CLASS_MILITARY_VEHICLE) && IsHuman())
-		return false;
 
 	return BaseClass::PassesDamageFilter( info );
 }
@@ -1436,7 +763,6 @@ void CHL2_Player::InputEnableFlashlight( inputdata_t &inputdata )
 {
 	SetFlashlightEnabled( true );
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Prevent the player from taking fall damage for [n] seconds, but
@@ -1467,14 +793,6 @@ void CHL2_Player::InputIgnoreFallDamageWithoutReset( inputdata_t &inputdata )
 
 	m_flTimeIgnoreFallDamage = gpGlobals->curtime + timeToIgnore;
 	m_bIgnoreFallDamageResetAfterImpact = false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Notification of a player's npc ally in the players squad being killed
-//-----------------------------------------------------------------------------
-void CHL2_Player::OnSquadMemberKilled( inputdata_t &data )
-{
-	// Add me BB2 ?
 }
 
 //-----------------------------------------------------------------------------
@@ -1600,16 +918,6 @@ int CHL2_Player::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		HL2MPRules()->EmitSoundToClient(this, "BurnPain", GetSoundType(), GetSoundsetGender());
 	}
 
-	if( (info.GetDamageType() & DMG_SLASH) && hl2_episodic.GetBool() )
-	{
-		if( m_afPhysicsFlags & PFLAG_USING )
-		{
-			// Stop the player using a rotating button for a short time if hit by a creature's melee attack.
-			// This is for the antlion burrow-corking training in EP1 (sjb).
-			SuspendUse( 0.5f );
-		}
-	}
-
 	// Call the base class implementation
 	return BaseClass::OnTakeDamage_Alive( info );
 }
@@ -1639,82 +947,6 @@ bool CHL2_Player::ShouldShootMissTarget( CBaseCombatCharacter *pAttacker )
 	}
 
 	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Notifies Alyx that player has put a combine ball into a socket so she can comment on it.
-// Input  : pCombineBall - ball the was socketed
-//-----------------------------------------------------------------------------
-void CHL2_Player::CombineBallSocketed( CPropCombineBall *pCombineBall )
-{
-#ifdef HL2_EPISODIC
-	CNPC_Alyx *pAlyx = CNPC_Alyx::GetAlyx();
-	if ( pAlyx )
-	{
-		pAlyx->CombineBallSocketed( pCombineBall->NumBounces() );
-	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void CHL2_Player::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &info )
-{
-	BaseClass::Event_KilledOther( pVictim, info );
-
-#ifdef HL2_EPISODIC
-
-	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
-
-	for ( int i = 0; i < g_AI_Manager.NumAIs(); i++ )
-	{
-		if (ppAIs[i] == NULL)
-			continue;
-
-		if ( ppAIs[i] && ppAIs[i]->IRelationType(this) == D_LI )
-		{
-			ppAIs[i]->OnPlayerKilledOther( pVictim, info );
-		}
-	}
-
-#endif
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void CHL2_Player::Event_Killed( const CTakeDamageInfo &info )
-{
-	BaseClass::Event_Killed( info );
-
-#ifndef BB2_AI
-	FirePlayerProxyOutput( "PlayerDied", variant_t(), this, this );
-	NotifyScriptsOfDeath();
-#endif //BB2_AI
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void CHL2_Player::NotifyScriptsOfDeath( void )
-{
-	CBaseEntity *pEnt =	gEntList.FindEntityByClassname( NULL, "scripted_sequence" );
-
-	while( pEnt )
-	{
-		variant_t emptyVariant;
-		pEnt->AcceptInput( "ScriptPlayerDeath", NULL, NULL, emptyVariant, 0 );
-
-		pEnt = gEntList.FindEntityByClassname( pEnt, "scripted_sequence" );
-	}
-
-	pEnt =	gEntList.FindEntityByClassname( NULL, "logic_choreographed_scene" );
-
-	while( pEnt )
-	{
-		variant_t emptyVariant;
-		pEnt->AcceptInput( "ScriptPlayerDeath", NULL, NULL, emptyVariant, 0 );
-
-		pEnt = gEntList.FindEntityByClassname( pEnt, "logic_choreographed_scene" );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1776,42 +1008,6 @@ void CHL2_Player::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Player reacts to bumping a weapon. 
-// Input  : pWeapon - the weapon that the player bumped into.
-// Output : Returns true if player picked up the weapon
-//-----------------------------------------------------------------------------
-bool CHL2_Player::BumpWeapon( CBaseCombatWeapon *pWeapon )
-{
-	CBaseCombatCharacter *pOwner = pWeapon->GetOwner();
-
-	if ( pOwner || !Weapon_CanUse( pWeapon ) )
-		return false;
-
-	// Don't let the player fetch weapons through walls (use MASK_SOLID so that you can't pickup through windows)
-	if( pWeapon->FVisible( this, MASK_SOLID ) == false && !(GetFlags() & FL_NOTARGET) )
-		return false;
-
-	pWeapon->CheckRespawn();
-	pWeapon->AddSolidFlags( FSOLID_NOT_SOLID );
-	pWeapon->AddEffects( EF_NODRAW );
-
-	Weapon_Equip( pWeapon );
-
-	if ( IsInAVehicle() )
-	{
-		pWeapon->FullHolster();
-	}
-	else
-	{
-		Weapon_Switch( pWeapon );
-	}
-
-	//EmitSound( "HL2Player.PickupWeapon" );
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *cmd - 
 // Output : Returns true on success, false on failure.
@@ -1821,7 +1017,7 @@ bool CHL2_Player::ClientCommand( const CCommand &args )
 	// Drop primary weapon:
 	if (!Q_stricmp(args[0], "DropPrimary"))
 	{
-		if ((!HL2MPRules()->m_bRoundStarted && HL2MPRules()->ShouldHideHUDDuringRoundWait()) || HL2MPRules()->m_bShouldShowScores)
+		if ((!HL2MPRules()->m_bRoundStarted && HL2MPRules()->ShouldHideHUDDuringRoundWait()) || HL2MPRules()->IsGameoverOrScoresVisible())
 			return true;
 
 		CBaseCombatWeapon *pActiveWeapon = GetActiveWeapon();
@@ -2019,9 +1215,7 @@ bool CHL2_Player::IsHoldingEntity( CBaseEntity *pEnt )
 
 float CHL2_Player::GetHeldObjectMass( IPhysicsObject *pHeldObject )
 {
-	float mass = PlayerPickupGetHeldObjectMass( m_hUseEntity, pHeldObject );
-
-	return mass;
+	return PlayerPickupGetHeldObjectMass(m_hUseEntity, pHeldObject);
 }
 
 //-----------------------------------------------------------------------------
@@ -2044,7 +1238,6 @@ void CHL2_Player::InputForceDropPhysObjects( inputdata_t &data )
 {
 	ForceDropOfCarriedPhysObjects( data.pActivator );
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -2076,7 +1269,6 @@ void CHL2_Player::UpdateClientData( void )
 void CHL2_Player::OnRestore()
 {
 	BaseClass::OnRestore();
-	m_pPlayerAISquad = g_AI_SquadManager.FindCreateSquad(AllocPooledString(PLAYER_SQUADNAME));
 }
 
 //---------------------------------------------------------
@@ -2108,7 +1300,6 @@ Vector CHL2_Player::EyeDirection3D( void )
 	return vecForward;
 }
 
-
 //---------------------------------------------------------
 //---------------------------------------------------------
 bool CHL2_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, bool bWantDraw, int viewmodelindex )
@@ -2116,7 +1307,6 @@ bool CHL2_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, bool bWantDraw, int
 	MDLCACHE_CRITICAL_SECTION();
 
 	bool bRet = BaseClass::Weapon_Switch( pWeapon, bWantDraw, viewmodelindex );
-
 	if ( bRet )
 	{
 		// Recalculate proficiency!
@@ -2125,7 +1315,6 @@ bool CHL2_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, bool bWantDraw, int
 
 	return bRet;
 }
-
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -2200,7 +1389,6 @@ static void Collision_ClearTrace( const Vector &vecRayStart, const Vector &vecRa
 	pTrace->fraction = 1.0f;
 	pTrace->contents = 0;
 }
-
 
 bool IntersectRayWithAACylinder( const Ray_t &ray, 
 	const Vector &center, float radius, float height, CBaseTrace *pTrace )
@@ -2280,7 +1468,6 @@ bool IntersectRayWithAACylinder( const Ray_t &ray,
 	return true;
 }
 
-
 bool CHL2_Player::TestHitboxes( const Ray_t &ray, unsigned int fContentsMask, trace_t& tr )
 {
 	if( g_pGameRules->IsMultiplayer() )
@@ -2357,7 +1544,6 @@ void CHL2_Player::ExitLadder()
 	m_HL2Local.m_hLadder.Set( NULL );
 }
 
-
 surfacedata_t *CHL2_Player::GetLadderSurface( const Vector &origin )
 {
 	extern const char *FuncLadder_GetSurfaceprops(CBaseEntity *pLadderEntity);
@@ -2381,7 +1567,6 @@ void CHL2_Player::PlayUseDenySound()
 	m_bPlayUseDenySound = true;
 }
 
-
 void CHL2_Player::ItemPostFrame()
 {
 	BaseClass::ItemPostFrame();
@@ -2392,7 +1577,6 @@ void CHL2_Player::ItemPostFrame()
 		EmitSound( "HL2Player.UseDeny" );
 	}
 }
-
 
 void CHL2_Player::StartWaterDeathSounds( void )
 {
@@ -2431,17 +1615,6 @@ void CHL2_Player::StopWaterDeathSounds( void )
 	{
 		(CSoundEnvelopeController::GetController()).SoundFadeOut( m_sndWaterSplashes, 0.5f, true );
 		m_sndWaterSplashes = NULL;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// 
-//-----------------------------------------------------------------------------
-void CHL2_Player::MissedAR2AltFire()
-{
-	if( GetPlayerProxy() != NULL )
-	{
-		GetPlayerProxy()->m_PlayerMissedAR2AltFire.FireOutput( this, this );
 	}
 }
 
@@ -2493,18 +1666,6 @@ void CHL2_Player::ModifyOrAppendPlayerCriteria( AI_CriteriaSet& set )
 	}
 }
 
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-const impactdamagetable_t &CHL2_Player::GetPhysicsImpactDamageTable()
-{
-	if ( m_bUseCappedPhysicsDamageTable )
-		return gCappedPlayerImpactDamageTable;
-
-	return BaseClass::GetPhysicsImpactDamageTable();
-}
-
-
 //-----------------------------------------------------------------------------
 // Purpose: Makes a splash when the player transitions between water states
 //-----------------------------------------------------------------------------
@@ -2532,128 +1693,4 @@ void CHL2_Player::Splash( void )
 		data.m_flScale = random->RandomFloat( 6, 8 );
 		DispatchEffect( "watersplash", data );
 	}
-}
-
-CLogicPlayerProxy *CHL2_Player::GetPlayerProxy( void )
-{
-	CLogicPlayerProxy *pProxy = dynamic_cast< CLogicPlayerProxy* > ( m_hPlayerProxy.Get() );
-
-	if ( pProxy == NULL )
-	{
-		pProxy = (CLogicPlayerProxy*)gEntList.FindEntityByClassname(NULL, "logic_playerproxy" );
-
-		if ( pProxy == NULL )
-			return NULL;
-
-		pProxy->m_hPlayer = this;
-		m_hPlayerProxy = pProxy;
-	}
-
-	return pProxy;
-}
-
-void CHL2_Player::FirePlayerProxyOutput( const char *pszOutputName, variant_t variant, CBaseEntity *pActivator, CBaseEntity *pCaller )
-{
-	if ( GetPlayerProxy() == NULL )
-		return;
-
-	GetPlayerProxy()->FireNamedOutput( pszOutputName, variant, pActivator, pCaller );
-}
-
-LINK_ENTITY_TO_CLASS( logic_playerproxy, CLogicPlayerProxy);
-
-BEGIN_DATADESC( CLogicPlayerProxy )
-	DEFINE_OUTPUT( m_OnFlashlightOn, "OnFlashlightOn" ),
-	DEFINE_OUTPUT( m_OnFlashlightOff, "OnFlashlightOff" ),
-	DEFINE_OUTPUT( m_RequestedPlayerHealth, "PlayerHealth" ),
-	DEFINE_OUTPUT( m_PlayerHasAmmo, "PlayerHasAmmo" ),
-	DEFINE_OUTPUT( m_PlayerHasNoAmmo, "PlayerHasNoAmmo" ),
-	DEFINE_OUTPUT( m_PlayerDied,	"PlayerDied" ),
-	DEFINE_OUTPUT( m_PlayerMissedAR2AltFire, "PlayerMissedAR2AltFire" ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"RequestPlayerHealth",	InputRequestPlayerHealth ),
-	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetPlayerHealth",	InputSetPlayerHealth ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"RequestAmmoState", InputRequestAmmoState ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"EnableCappedPhysicsDamage", InputEnableCappedPhysicsDamage ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"DisableCappedPhysicsDamage", InputDisableCappedPhysicsDamage ),
-	DEFINE_FIELD( m_hPlayer, FIELD_EHANDLE ),
-	END_DATADESC()
-
-	void CLogicPlayerProxy::Activate( void )
-{
-	BaseClass::Activate();
-	if ( m_hPlayer == NULL )
-	{
-		// BB2_MISC_FIXES
-		m_hPlayer = UTIL_GetLocalPlayer(); 
-	}
-}
-
-bool CLogicPlayerProxy::PassesDamageFilter( const CTakeDamageInfo &info )
-{
-	if (m_hDamageFilter)
-	{
-		CBaseFilter *pFilter = (CBaseFilter *)(m_hDamageFilter.Get());
-		return pFilter->PassesDamageFilter(info);
-	}
-
-	return true;
-}
-
-void CLogicPlayerProxy::InputSetPlayerHealth( inputdata_t &inputdata )
-{
-	if ( m_hPlayer == NULL )
-		return;
-
-	m_hPlayer->SetHealth( inputdata.value.Int() );
-
-}
-
-void CLogicPlayerProxy::InputRequestPlayerHealth( inputdata_t &inputdata )
-{
-	if ( m_hPlayer == NULL )
-		return;
-
-	m_RequestedPlayerHealth.Set( m_hPlayer->GetHealth(), inputdata.pActivator, inputdata.pCaller );
-}
-
-void CLogicPlayerProxy::InputRequestAmmoState( inputdata_t &inputdata )
-{
-	if( m_hPlayer == NULL )
-		return;
-
-	CHL2_Player *pPlayer = dynamic_cast<CHL2_Player*>(m_hPlayer.Get());
-
-	for ( int i = 0 ; i < pPlayer->WeaponCount(); ++i )
-	{
-		CBaseCombatWeapon* pCheck = pPlayer->GetWeapon( i );
-
-		if ( pCheck )
-		{
-			if ( pCheck->HasAnyAmmo() && (pCheck->UsesPrimaryAmmo() || pCheck->UsesSecondaryAmmo()))
-			{
-				m_PlayerHasAmmo.FireOutput( this, this, 0 );
-				return;
-			}
-		}
-	}
-
-	m_PlayerHasNoAmmo.FireOutput( this, this, 0 );
-}
-
-void CLogicPlayerProxy::InputEnableCappedPhysicsDamage( inputdata_t &inputdata )
-{
-	if( m_hPlayer == NULL )
-		return;
-
-	CHL2_Player *pPlayer = dynamic_cast<CHL2_Player*>(m_hPlayer.Get());
-	pPlayer->EnableCappedPhysicsDamage();
-}
-
-void CLogicPlayerProxy::InputDisableCappedPhysicsDamage( inputdata_t &inputdata )
-{
-	if( m_hPlayer == NULL )
-		return;
-
-	CHL2_Player *pPlayer = dynamic_cast<CHL2_Player*>(m_hPlayer.Get());
-	pPlayer->DisableCappedPhysicsDamage();
 }

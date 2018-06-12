@@ -35,8 +35,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-extern CBaseEntity				*g_pLastSpawn;
-void InitBodyQue(void);
 extern void W_Precache(void);
 extern void ActivityList_Free( void );
 extern CUtlMemoryPool g_EntityListPool;
@@ -601,8 +599,7 @@ const char *GetDefaultLightstyleString( int styleIndex )
 void CWorld::Precache( void )
 {
 	g_WorldEntity = this;
-	g_fGameOver = false;
-	g_pLastSpawn = NULL;
+	g_fGameOver = false;	
 
 	ConVarRef stepsize( "sv_stepsize" );
 	stepsize.SetValue( 18 );
@@ -640,7 +637,6 @@ void CWorld::Precache( void )
 	EventList_Free();
 	RegisterSharedEvents();
 
-	InitBodyQue();
 // init sentence group playback stuff from sentences.txt.
 // ok to call this multiple times, calls after first are ignored.
 

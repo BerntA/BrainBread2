@@ -264,7 +264,7 @@ public:
 // Client kills/scoring
 	virtual int IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled ) = 0;// how many points do I award whoever kills this player?
 	virtual void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info ) = 0;// Called each time a player dies
-	virtual void DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info) = 0; // Call this from within a GameRules class to report an obituary.
+	virtual void DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info) { } // Call this from within a GameRules class to report an obituary.
 	virtual const char *GetDamageCustomString( const CTakeDamageInfo &info ) { return NULL; }
 
 // Weapon Damage
@@ -276,20 +276,20 @@ public:
 	virtual bool CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon );// The player is touching an CBaseCombatWeapon, do I give it to him?
 
 // Weapon spawn/respawn control
-	virtual int WeaponShouldRespawn( CBaseCombatWeapon *pWeapon ) = 0;// should this weapon respawn?
-	virtual float FlWeaponRespawnTime( CBaseCombatWeapon *pWeapon ) = 0;// when may this weapon respawn?
-	virtual float FlWeaponTryRespawn( CBaseCombatWeapon *pWeapon ) = 0; // can i respawn now,  and if not, when should i try again?
-	virtual Vector VecWeaponRespawnSpot( CBaseCombatWeapon *pWeapon ) = 0;// where in the world should this weapon respawn?
+	virtual int WeaponShouldRespawn(CBaseCombatWeapon *pWeapon) { return TRUE; } // should this weapon respawn?
+	virtual float FlWeaponRespawnTime(CBaseCombatWeapon *pWeapon) { return 0.0f; } // when may this weapon respawn?
+	virtual float FlWeaponTryRespawn(CBaseCombatWeapon *pWeapon) { return 0.0f; } // can i respawn now,  and if not, when should i try again?
+	virtual Vector VecWeaponRespawnSpot(CBaseCombatWeapon *pWeapon) { return vec3_origin; } // where in the world should this weapon respawn?
 
 // Item retrieval
 	virtual bool CanHaveItem( CBasePlayer *pPlayer, CItem *pItem ) = 0;// is this player allowed to take this item?
 	virtual void PlayerGotItem( CBasePlayer *pPlayer, CItem *pItem ) = 0;// call each time a player picks up an item (battery, healthkit)
 
 // Item spawn/respawn control
-	virtual int ItemShouldRespawn( CItem *pItem ) = 0;// Should this item respawn?
-	virtual float FlItemRespawnTime( CItem *pItem ) = 0;// when may this item respawn?
-	virtual Vector VecItemRespawnSpot( CItem *pItem ) = 0;// where in the world should this item respawn?
-	virtual QAngle VecItemRespawnAngles( CItem *pItem ) = 0;// what angles should this item use when respawing?
+	virtual int ItemShouldRespawn(CItem *pItem) { return TRUE; } // Should this item respawn?
+	virtual float FlItemRespawnTime(CItem *pItem) { return 0.0f; } // when may this item respawn?
+	virtual Vector VecItemRespawnSpot(CItem *pItem) { return vec3_origin; } // where in the world should this item respawn?
+	virtual QAngle VecItemRespawnAngles(CItem *pItem) { return vec3_angle; } // what angles should this item use when respawing?
 
 // Ammo retrieval
 	virtual bool CanHaveAmmo( CBaseCombatCharacter *pPlayer, int iAmmoIndex ); // can this player take more of this ammo?
@@ -300,7 +300,7 @@ public:
 	virtual const char*		AIClassText(int classType) { return NULL; }
 
 // Teamplay stuff	
-	virtual int PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget ) = 0;// What is the player's relationship with this entity?
+	virtual int PlayerRelationship(CBaseEntity *pPlayer, CBaseEntity *pTarget) { return GR_NOTTEAMMATE; } // What is the player's relationship with this entity?
 	virtual bool PlayerCanHearChat( CBasePlayer *pListener, CBasePlayer *pSpeaker ) = 0;
 	virtual void CheckChatText( CBasePlayer *pPlayer, char *pText ) { return; }
 

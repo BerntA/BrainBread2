@@ -12,8 +12,6 @@
 #include "tier0/memdbgon.h"
 
 BEGIN_RECV_TABLE_NOBASE( C_HL2PlayerLocalData, DT_HL2Local )
-	RecvPropInt( RECVINFO(m_iSquadMemberCount) ),
-	RecvPropBool( RECVINFO(m_fSquadInFollowMode) ),
 	RecvPropEHandle( RECVINFO(m_hLadder) ),
 END_RECV_TABLE()
 
@@ -23,8 +21,5 @@ END_PREDICTION_DATA()
 
 C_HL2PlayerLocalData::C_HL2PlayerLocalData()
 {
-	m_iSquadMemberCount = 0;
-	m_fSquadInFollowMode = false;
 	m_hLadder = NULL;
 }
-

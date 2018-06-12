@@ -281,7 +281,7 @@ CHL2MP_Player::CHL2MP_Player()
 	BaseClass::ChangeTeam(0);
 }
 
-CHL2MP_Player::~CHL2MP_Player(void)
+CHL2MP_Player::~CHL2MP_Player()
 {
 	CleanupAssociatedAmmoEntities();
 	m_PlayerAnimState->Release();
@@ -2778,10 +2778,6 @@ void CHL2MP_Player::CheckChatText(char *p, int bufsize)
 	Q_strncpy(p, buf, bufsize);
 
 	delete[] buf;
-
-	const char *pReadyCheck = p;
-
-	HL2MPRules()->CheckChatForReadySignal(this, pReadyCheck);
 }
 
 void CHL2MP_Player::State_Transition(HL2MPPlayerState newState)

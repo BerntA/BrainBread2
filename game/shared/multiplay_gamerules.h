@@ -10,7 +10,6 @@
 #pragma once
 #endif
 
-
 #include "gamerules.h"
 
 #ifdef CLIENT_DLL
@@ -19,42 +18,14 @@
 
 #else
 
-extern ConVar mp_restartgame;
 extern ConVar nextlevel;
 extern INetworkStringTable *g_pStringTableServerMapCycle;
-
-#define VOICE_COMMAND_MAX_SUBTITLE_DIST	1900
 
 class CBaseMultiplayerPlayer;
 
 #endif
 
 extern ConVar mp_show_voice_icons;
-
-#define MAX_SPEAK_CONCEPT_LEN 64
-#define MAX_VOICE_COMMAND_SUBTITLE	256
-
-typedef struct
-{
-#ifndef CLIENT_DLL
-	// concept to speak
-	int	 m_iConcept;
-
-	// play subtitle?
-	bool m_bShowSubtitle;
-	bool m_bDistanceBasedSubtitle;
-
-	char m_szGestureActivity[64];
-
-#else
-	// localizable subtitle
-	char m_szSubtitle[MAX_VOICE_COMMAND_SUBTITLE];
-
-	// localizable string for menu
-	char m_szMenuLabel[MAX_VOICE_COMMAND_SUBTITLE];
-#endif
-
-} VoiceCommandMenuItem_t;
 
 extern ConVar mp_timelimit_objective;
 extern ConVar mp_timelimit_arena;
@@ -144,8 +115,6 @@ public:
 	CMultiplayRules();
 	virtual ~CMultiplayRules() {}
 
-	void LoadVoiceCommandScript( void );
-
 	virtual bool ShouldDrawHeadLabels()
 	{ 
 		if ( mp_show_voice_icons.GetBool() == false )
@@ -192,18 +161,11 @@ public:
 // Client kills/scoring
 	virtual int IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled );
 	virtual void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );
-	virtual void DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info);
 	CBasePlayer *GetDeathScorer( CBaseEntity *pKiller, CBaseEntity *pInflictor );									// old version of method - kept for backward compat
 	virtual CBasePlayer *GetDeathScorer( CBaseEntity *pKiller, CBaseEntity *pInflictor, CBaseEntity *pVictim );		// new version of method
 
 // Weapon retrieval
 	virtual bool CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon );// The player is touching an CBaseCombatWeapon, do I give it to him?
-
-// Weapon spawn/respawn control
-	virtual int WeaponShouldRespawn( CBaseCombatWeapon *pWeapon );
-	virtual float FlWeaponRespawnTime( CBaseCombatWeapon *pWeapon );
-	virtual float FlWeaponTryRespawn( CBaseCombatWeapon *pWeapon );
-	virtual Vector VecWeaponRespawnSpot( CBaseCombatWeapon *pWeapon );
 
 // Item retrieval
 	virtual bool CanHaveItem( CBasePlayer *pPlayer, CItem *pItem );
@@ -211,12 +173,8 @@ public:
 
 // Item spawn/respawn control
 	virtual int ItemShouldRespawn( CItem *pItem );
-	virtual float FlItemRespawnTime( CItem *pItem );
-	virtual Vector VecItemRespawnSpot( CItem *pItem );
-	virtual QAngle VecItemRespawnAngles( CItem *pItem );
 
 // Teamplay stuff	
-	virtual int PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget );
 	virtual bool PlayerCanHearChat( CBasePlayer *pListener, CBasePlayer *pSpeaker );
 
 	virtual bool PlayTextureSounds( void ) { return FALSE; }
@@ -228,21 +186,13 @@ public:
 	// Immediately end a multiplayer game
 	virtual void EndMultiplayerGame( void ) { GoToIntermission(); }
 
-// Voice commands
 	virtual bool ClientCommand( CBaseEntity *pEdict, const CCommand &args );
-	virtual VoiceCommandMenuItem_t *VoiceCommand( CBaseMultiplayerPlayer *pPlayer, int iMenu, int iItem );
-	
-// Bugbait report	
-	bool IsLoadingBugBaitReport( void );
 
 	virtual void ResetMapCycleTimeStamp( void ){ m_nMapCycleTimeStamp = 0; }
 
 	virtual void HandleTimeLimitChange( void ){ return; }
 
 	void IncrementMapCycleIndex();
-
-	void HaveAllPlayersSpeakConceptIfAllowed( int iConcept, int iTeam = TEAM_UNASSIGNED, const char *modifiers = NULL );
-	void RandomPlayersSpeakConceptIfAllowed( int iConcept, int iNumRandomPlayer = 1, int iTeam = TEAM_UNASSIGNED, const char *modifiers = NULL );
 	
 	virtual void GetTaggedConVarList( KeyValues *pCvarTagList );
 
@@ -251,15 +201,6 @@ public:
 	virtual void	ClientCommandKeyValues( edict_t *pEntity, KeyValues *pKeyValues );
 
 public:
-
-	struct ResponseRules_t
-	{
-		CUtlVector<IResponseSystem*> m_ResponseSystems;
-	};
-	CUtlVector<ResponseRules_t>	m_ResponseRules;
-
-	virtual void InitCustomResponseRulesDicts()	{}
-	virtual void ShutdownCustomResponseRulesDicts() {}
 
 	// NVNT virtual to check for haptic device 
 	virtual void ClientSettingsChanged( CBasePlayer *pPlayer );
@@ -277,7 +218,6 @@ public:
 	virtual bool IsManualMapChangeOkay( const char **pszReason ) OVERRIDE;
 
 protected:
-	virtual bool UseSuicidePenalty() { return true; }		// apply point penalty for suicide?
 	virtual float GetLastMajorEventTime( void ){ return -1.0f; }
 	
 public:
@@ -293,18 +233,9 @@ protected:
 	static int m_nMapCycleindex;
 	static CUtlVector<char*> m_MapList;
 
-	float m_flTimeLastMapChangeOrPlayerWasConnected;
-
 #else
-	
-	public:
-		const char *GetVoiceCommandSubtitle( int iMenu, int iItem );
-		bool GetVoiceMenuLabels( int iMenu, KeyValues *pKV );
 
 #endif
-
-	private:
-		CUtlVector< CUtlVector< VoiceCommandMenuItem_t > > m_VoiceCommandMenus;
 };
 
 inline CMultiplayRules* MultiplayRules()

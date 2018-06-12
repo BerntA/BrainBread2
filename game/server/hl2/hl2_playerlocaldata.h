@@ -28,9 +28,6 @@ public:
 
 	CHL2PlayerLocalData();
 
-	CNetworkVar( int,	m_iSquadMemberCount );
-	CNetworkVar( bool,	m_fSquadInFollowMode );
-
 	// Ladder related data
 	CNetworkVar( EHANDLE, m_hLadder );
 	LadderMove_t			m_LadderMove;

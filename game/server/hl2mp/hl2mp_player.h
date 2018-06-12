@@ -68,7 +68,7 @@ public:
 	DECLARE_CLASS(CHL2MP_Player, CHL2_Player);
 
 	CHL2MP_Player();
-	~CHL2MP_Player(void);
+	virtual ~CHL2MP_Player();
 
 	static CHL2MP_Player *CreatePlayer(const char *className, edict_t *ed)
 	{

@@ -276,7 +276,6 @@ public:
 	virtual void			MsgFunc_SayText( bf_read &msg );
 	virtual void			MsgFunc_SayText2( bf_read &msg );
 	virtual void			MsgFunc_TextMsg( bf_read &msg );
-	virtual void			MsgFunc_VoiceSubtitle( bf_read &msg );
 
 	
 	CBaseHudChatInputLine	*GetChatInput( void ) { return m_pChatInput; }
@@ -292,10 +291,6 @@ public:
 
 	virtual int		GetFilterForString( const char *pString );
 
-	virtual const char *GetDisplayedSubtitlePlayerName( int clientIndex );
-
-	bool			IsVoiceSubtitle( void ) { return m_bEnteringVoice; }
-	void			SetVoiceSubtitleState( bool bState ) { m_bEnteringVoice = bState; }
 	int				GetMessageMode( void ) { return m_nMessageMode; }
 
 	void			SetCustomColor( Color colNew ) { m_ColorCustom = colNew; }
@@ -327,8 +322,6 @@ private:
 	vgui::HFont		m_hChatFont;
 
 	int				m_iFilterFlags;
-	bool			m_bEnteringVoice;
-
 };
 
 class CBaseHudChatEntry : public vgui::TextEntry

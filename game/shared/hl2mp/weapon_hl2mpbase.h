@@ -79,11 +79,10 @@ public:
 
 	#endif
 
-	float		m_flPrevAnimTime;
-	float  m_flNextResetCheckTime;
+	float m_flPrevAnimTime;
 
-	Vector	GetOriginalSpawnOrigin( void ) { return m_vOriginalSpawnOrigin;	}
-	QAngle	GetOriginalSpawnAngles( void ) { return m_vOriginalSpawnAngles;	}
+	virtual const Vector &GetOriginalSpawnOrigin(void) { return m_vOriginalSpawnOrigin; }
+	virtual const QAngle &GetOriginalSpawnAngles( void ) { return m_vOriginalSpawnAngles;	}
 
 private:
 

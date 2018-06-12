@@ -22,33 +22,14 @@
 #endif
 
 class CAI_Squad;
-class CPropCombineBall;
 
 extern int TrainSpeed(int iSpeed, int iMax);
-extern void CopyToBodyQue( CBaseAnimating *pCorpse );
-
-#define ARMOR_DECAY_TIME 3.5f
 
 class IPhysicsPlayerController;
 class CLogicPlayerProxy;
 
-struct commandgoal_t
-{
-	Vector		m_vecGoalLocation;
-	CBaseEntity	*m_pGoalEntity;
-};
-
 // Time between checks to determine whether NPCs are illuminated by the flashlight
-#define FLASHLIGHT_NPC_CHECK_INTERVAL	0.4
-
-//----------------------------------------------------
-// Definitions for weapon slots
-//----------------------------------------------------
-#define	WEAPON_MELEE_SLOT			0
-#define	WEAPON_SECONDARY_SLOT		1
-#define	WEAPON_PRIMARY_SLOT			2
-#define	WEAPON_EXPLOSIVE_SLOT		3
-#define	WEAPON_TOOL_SLOT			4
+#define FLASHLIGHT_NPC_CHECK_INTERVAL	0.5f
 
 //=============================================================================
 // >> HL2_PLAYER
@@ -59,7 +40,7 @@ public:
 	DECLARE_CLASS(CHL2_Player, BASEPLAYERCLASS);
 
 	CHL2_Player();
-	~CHL2_Player( void );
+	virtual ~CHL2_Player( void );
 	
 	static CHL2_Player *CreatePlayer( const char *className, edict_t *ed )
 	{
@@ -69,8 +50,6 @@ public:
 
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
-
-	virtual void		CreateCorpse( void ) { CopyToBodyQue( this ); };
 
 	virtual void		Precache( void );
 	virtual void		Spawn(void);
@@ -90,8 +69,6 @@ public:
 	virtual Vector		EyeDirection2D( void );
 	virtual Vector		EyeDirection3D( void );
 
-	virtual void		CommanderMode();
-
 	virtual bool		ClientCommand( const CCommand &args );
 
 	// from cbasecombatcharacter
@@ -104,22 +81,7 @@ public:
 	virtual void		SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize );
 	
 	void SetFlashlightEnabled( bool bState );
-
-	// Commander Mode for controller NPCs
-	enum CommanderCommand_t
-	{
-		CC_NONE,
-		CC_TOGGLE,
-		CC_FOLLOW,
-		CC_SEND,
-	};
-
-	void CommanderUpdate();
-	void CommanderExecute( CommanderCommand_t command = CC_TOGGLE );
-	bool CommanderFindGoal( commandgoal_t *pGoal );
 	void NotifyFriendsOfDamage( CBaseEntity *pAttackerEntity );
-	CAI_BaseNPC *GetSquadCommandRepresentative();
-	int GetNumSquadCommandables();
 
 	// Walking
 	void StartWalking( void );
@@ -127,8 +89,6 @@ public:
 	bool IsWalking( void ) { return m_fIsWalking; }
 
 	// Aiming heuristics accessors
-	virtual float		GetIdleTime( void ) const { return ( m_flIdleTime - m_flMoveTime ); }
-	virtual float		GetMoveTime( void ) const { return ( m_flMoveTime - m_flIdleTime ); }
 	virtual float		GetLastDamageTime( void ) const { return m_flLastDamageTime; }
 	virtual bool		IsDucking( void ) const { return !!( GetFlags() & FL_DUCKING ); }
 
@@ -138,27 +98,17 @@ public:
 	void				InputEnableFlashlight( inputdata_t &inputdata );
 	void				InputDisableFlashlight( inputdata_t &inputdata );
 
-	const impactdamagetable_t &GetPhysicsImpactDamageTable();
 	virtual int			OnTakeDamage( const CTakeDamageInfo &info );
 	virtual int			OnTakeDamage_Alive( const CTakeDamageInfo &info );
 	virtual void		OnDamagedByExplosion( const CTakeDamageInfo &info );
 	bool				ShouldShootMissTarget( CBaseCombatCharacter *pAttacker );
 
-	void				CombineBallSocketed( CPropCombineBall *pCombineBall );
-
-	virtual void		Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &info );
-
 	virtual int			GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound);
-	virtual bool		BumpWeapon( CBaseCombatWeapon *pWeapon );
 	
 	virtual bool		Weapon_CanUse( CBaseCombatWeapon *pWeapon );
 	virtual void		Weapon_Equip( CBaseCombatWeapon *pWeapon );
 	virtual bool		Weapon_Switch( CBaseCombatWeapon *pWeapon, bool bWantDraw = false, int viewmodelindex = 0 );
 	virtual bool		Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon );
-
-	void FirePlayerProxyOutput( const char *pszOutputName, variant_t variant, CBaseEntity *pActivator, CBaseEntity *pCaller );
-
-	CLogicPlayerProxy	*GetPlayerProxy( void );
 
 	// Flashlight Device
 	void				CheckFlashlight( void );
@@ -180,9 +130,6 @@ public:
 	virtual bool		IsFollowingPhysics( void ) { return false; }
 	void				InputForceDropPhysObjects( inputdata_t &data );
 
-	virtual void		Event_Killed( const CTakeDamageInfo &info );
-	void				NotifyScriptsOfDeath( void );
-
 	// override the test for getting hit
 	virtual bool		TestHitboxes( const Ray_t &ray, unsigned int fContentsMask, trace_t& tr );
 
@@ -196,16 +143,6 @@ public:
 	
 	void StartWaterDeathSounds( void );
 	void StopWaterDeathSounds( void );
-
-	void HandleArmorReduction( void );
-	void StartArmorReduction( void ) { m_flArmorReductionTime = gpGlobals->curtime + ARMOR_DECAY_TIME; 
-									   m_iArmorReductionFrom = ArmorValue(); 
-									 }
-
-	void MissedAR2AltFire();
-
-	inline void EnableCappedPhysicsDamage();
-	inline void DisableCappedPhysicsDamage();
 
 	// HUD HINTS
 	void DisplayLadderHudHint();
@@ -226,9 +163,6 @@ protected:
 	virtual void		PlayUseDenySound();
 
 private:
-	bool				CommanderExecuteOne( CAI_BaseNPC *pNpc, const commandgoal_t &goal, CAI_BaseNPC **Allies, int numAllies );
-
-	void				OnSquadMemberKilled( inputdata_t &data );
 
 	Class_T				m_nControlClass;			// Class when player is controlling another entity
 
@@ -241,32 +175,16 @@ protected:	// Jeep: Portal_Player needs access to this variable to overload Play
 
 private:
 
-	CAI_Squad *			m_pPlayerAISquad;
-	CSimpleSimTimer		m_CommanderUpdateTimer;
-	float				m_RealTimeLastSquadCommand;
-	CommanderCommand_t	m_QueuedCommand;
-
-	Vector				m_vecMissPositions[16];
-	int					m_nNumMissPositions;
-
 	float				m_flTimeIgnoreFallDamage;
 	bool				m_bIgnoreFallDamageResetAfterImpact;
 
 	float				m_flNextFlashlightCheckTime;
 
 	// Aiming heuristics code
-	float				m_flIdleTime;		//Amount of time we've been motionless
-	float				m_flMoveTime;		//Amount of time we've been in motion
 	float				m_flLastDamageTime;	//Last time we took damage
 	float				m_flTargetFindTime;
 
-	EHANDLE				m_hPlayerProxy;
-
 	bool				m_bFlashlightDisabled;
-	bool				m_bUseCappedPhysicsDamageTable;
-	
-	float				m_flArmorReductionTime;
-	int					m_iArmorReductionFrom;
 
 	float				m_flTimeUseSuspended;
 	float				m_flTimeNextLadderHint;	// Next time we're eligible to display a HUD hint about a ladder.
@@ -277,21 +195,5 @@ private:
 	
 	friend class CHL2GameMovement;
 };
-
-
-//-----------------------------------------------------------------------------
-// FIXME: find a better way to do this
-// Switches us to a physics damage table that caps the max damage.
-//-----------------------------------------------------------------------------
-void CHL2_Player::EnableCappedPhysicsDamage()
-{
-	m_bUseCappedPhysicsDamageTable = true;
-}
-
-
-void CHL2_Player::DisableCappedPhysicsDamage()
-{
-	m_bUseCappedPhysicsDamageTable = false;
-}
 
 #endif	//HL2_PLAYER_H

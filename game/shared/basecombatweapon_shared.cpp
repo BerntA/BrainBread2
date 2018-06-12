@@ -778,10 +778,6 @@ void CBaseCombatWeapon::OnPickedUp( CBaseCombatCharacter *pNewOwner )
 		m_OnNPCPickup.FireOutput(pNewOwner, this);
 	}
 
-#ifdef HL2MP
-	HL2MPRules()->RemoveLevelDesignerPlacedObject( this );
-#endif
-
 	m_bCanRemoveWeapon = false;
 #endif
 }
@@ -1536,8 +1532,31 @@ void CBaseCombatWeapon::DoWeaponFX( void )
 //====================================================================================
 void CBaseCombatWeapon::ForceOriginalPosition()
 {
-#ifdef GAME_DLL
-	HL2MPRules()->AddLevelDesignerPlacedObject( this );
+#ifndef CLIENT_DLL
+
+	// BB2 WARN 
+	Vector originalPos = HL2MPRules()->VecWeaponRespawnSpot(this);
+	QAngle angles = GetAbsAngles();
+
+	float flDistanceFromSpawn = (originalPos - GetAbsOrigin()).Length();
+	if (flDistanceFromSpawn > 64.0f)
+	{
+		bool shouldReset = false;
+		IPhysicsObject *pPhysics = VPhysicsGetObject();
+		if (pPhysics)
+			shouldReset = pPhysics->IsAsleep();
+		else
+			shouldReset = (GetFlags() & FL_ONGROUND) ? true : false;
+
+		if (shouldReset)
+		{
+			Teleport(&originalPos, &angles, NULL);
+			IPhysicsObject *pPhys = VPhysicsGetObject();
+			if (pPhys)
+				pPhys->Wake();
+		}
+	}
+
 #endif
 }
 

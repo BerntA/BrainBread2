@@ -1132,12 +1132,6 @@ void CHL2GameMovement::SetGroundEntity( trace_t *pm )
 {
 	CBaseEntity *newGround = pm ? pm->m_pEnt : NULL;
 
-	//Adrian: Special case for combine balls.
-	if ( newGround && newGround->GetCollisionGroup() == HL2COLLISION_GROUP_COMBINE_BALL_NPC )
-	{
-		return;
-	}
-
 	BaseClass::SetGroundEntity( pm );
 }
 

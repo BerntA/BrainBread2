@@ -368,13 +368,10 @@ bool CGameDefinitionsShared::LoadData(void)
 	pkvParseData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/game/gamemode_shared");
 	if (pkvParseData)
 	{
-		pszGamemodeData.iXPRoundWinArena = pkvParseData->GetInt("round_win_arena", 100);
-		pszGamemodeData.iXPRoundWinElimination = pkvParseData->GetInt("round_win_elimination", 50);
+		pszGamemodeData.flXPRoundWinArena = clamp(pkvParseData->GetFloat("round_win_arena", 1.0f), 0.0f, 2.5f);
 
-		pszGamemodeData.iXPGameWinObjective = pkvParseData->GetInt("game_win_objective", 150);
-		pszGamemodeData.iXPGameWinArena = pkvParseData->GetInt("game_win_arena", 1000);
-		pszGamemodeData.iXPGameWinElimination = pkvParseData->GetInt("game_win_elimination", 500);
-		pszGamemodeData.iXPGameWinDeathmatch = pkvParseData->GetInt("game_win_deathmatch", 500);
+		pszGamemodeData.flXPGameWinObjective = clamp(pkvParseData->GetFloat("game_win_objective", 5.0f), 0.0f, 8.0f);
+		pszGamemodeData.flXPGameWinArena = clamp(pkvParseData->GetFloat("game_win_arena", 2.5f), 0.0f, 4.0f);
 
 		pszGamemodeData.iKillsRequiredToPerk = pkvParseData->GetInt("perk_kills_required", 50);
 

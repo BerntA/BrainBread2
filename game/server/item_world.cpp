@@ -28,7 +28,6 @@ BEGIN_DATADESC( CItem )
 	DEFINE_FIELD( m_bActivateWhenAtRest,	 FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_vOriginalSpawnOrigin, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( m_vOriginalSpawnAngles, FIELD_VECTOR ),
-	DEFINE_PHYSPTR( m_pConstraint ),
 
 	// Function Pointers
 	DEFINE_ENTITYFUNC( ItemTouch ),
@@ -36,7 +35,6 @@ BEGIN_DATADESC( CItem )
 	DEFINE_THINKFUNC( ComeToRest ),
 
 #if defined( HL2MP ) 
-	DEFINE_FIELD( m_flNextResetCheckTime, FIELD_TIME ),
 	DEFINE_THINKFUNC( FallThink ),
 #endif
 
@@ -102,10 +100,8 @@ void CItem::Spawn( void )
 	SetBlocksLOS( false );
 	AddEFlags( EFL_NO_ROTORWASH_PUSH );
 	
-	if( IsX360() )
-	{
-		AddEffects( EF_ITEM_BLINK );
-	}
+	if( IsX360() )	
+		AddEffects( EF_ITEM_BLINK );	
 
 	// This will make them not collide with the player, but will collide
 	// against other items + weapons
@@ -118,45 +114,18 @@ void CItem::Spawn( void )
 
 	m_takedamage = DAMAGE_EVENTS_ONLY;
 
-#if !defined( CLIENT_DLL )
-	// Constrained start?
-	if ( HasSpawnFlags( SF_ITEM_START_CONSTRAINED ) )
-	{
-		//Constrain the weapon in place
-		IPhysicsObject *pReferenceObject, *pAttachedObject;
-
-		pReferenceObject = g_PhysWorldObject;
-		pAttachedObject = VPhysicsGetObject();
-
-		if ( pReferenceObject && pAttachedObject )
-		{
-			constraint_fixedparams_t fixed;
-			fixed.Defaults();
-			fixed.InitWithCurrentObjectState( pReferenceObject, pAttachedObject );
-
-			fixed.constraint.forceLimit	= lbs2kg( 10000 );
-			fixed.constraint.torqueLimit = lbs2kg( 10000 );
-
-			m_pConstraint = physenv->CreateFixedConstraint( pReferenceObject, pAttachedObject, NULL, fixed );
-
-			m_pConstraint->SetGameData( (void *) this );
-		}
-	}
-#endif //CLIENT_DLL
-
 #if defined( HL2MP )
 	if (!EnablePhysics())
 	{
 		m_vOriginalSpawnOrigin = GetAbsOrigin();
 		m_vOriginalSpawnAngles = GetAbsAngles();
-		HL2MPRules()->AddLevelDesignerPlacedObject(this);
 	}
 #endif
 }
 
 unsigned int CItem::PhysicsSolidMaskForEntity( void ) const
 { 
-	return BaseClass::PhysicsSolidMaskForEntity() | CONTENTS_PLAYERCLIP;
+	return (BaseClass::PhysicsSolidMaskForEntity() | CONTENTS_PLAYERCLIP);
 }
 
 void CItem::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
@@ -171,7 +140,6 @@ void CItem::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType,
 
 extern int gEvilImpulse101;
 
-
 //-----------------------------------------------------------------------------
 // Activate when at rest, but don't allow pickup until then
 //-----------------------------------------------------------------------------
@@ -182,7 +150,6 @@ void CItem::ActivateWhenAtRest( float flTime /* = 0.5f */ )
 	SetThink( &CItem::ComeToRest );
 	SetNextThink( gpGlobals->curtime + flTime );
 }
-
 
 //-----------------------------------------------------------------------------
 // Become touchable when we are at rest
@@ -230,7 +197,6 @@ void CItem::FallThink ( void )
 {
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
-#if defined( HL2MP )
 	bool shouldMaterialize = false;
 	IPhysicsObject *pPhysics = VPhysicsGetObject();
 	if ( pPhysics )
@@ -245,13 +211,9 @@ void CItem::FallThink ( void )
 	if ( shouldMaterialize )
 	{
 		SetThink ( NULL );
-
 		m_vOriginalSpawnOrigin = GetAbsOrigin();
 		m_vOriginalSpawnAngles = GetAbsAngles();
-
-		HL2MPRules()->AddLevelDesignerPlacedObject( this );
 	}
-#endif // HL2MP
 }
 
 #endif // HL2MP, TF
@@ -370,10 +332,6 @@ void CItem::ItemTouch( CBaseEntity *pOther )
 		else
 		{
 			UTIL_Remove( this );
-
-#ifdef HL2MP
-			HL2MPRules()->RemoveLevelDesignerPlacedObject( this );
-#endif
 		}
 	}
 	else if (gEvilImpulse101)
@@ -409,10 +367,8 @@ void CItem::Materialize( void )
 {
 	CreateItemVPhysicsObject();
 
-	if ( IsEffectActive( EF_NODRAW ) )
-	{
-		RemoveEffects( EF_NODRAW );
-	}
+	if (IsEffectActive(EF_NODRAW))
+		RemoveEffects(EF_NODRAW);
 
 	SetTouch( &CItem::ItemTouch );
 }
@@ -423,7 +379,6 @@ void CItem::Materialize( void )
 void CItem::Precache()
 {
 	BaseClass::Precache();
-
 	PrecacheScriptSound( "Item.Materialize" );
 }
 
@@ -436,17 +391,8 @@ void CItem::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )
 {
 	m_OnCacheInteraction.FireOutput(pPhysGunUser, this);
 
-	if ( reason == PICKED_UP_BY_CANNON )
-	{
-		// Expand the pickup box
+	if ( reason == PICKED_UP_BY_CANNON )	
 		CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT * 2 );
-
-		if( m_pConstraint != NULL )
-		{
-			physenv->DestroyConstraint( m_pConstraint );
-			m_pConstraint = NULL;
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -456,6 +402,5 @@ void CItem::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )
 //-----------------------------------------------------------------------------
 void CItem::OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t reason )
 {
-	// Restore the pickup box to the original
 	CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT );
 }

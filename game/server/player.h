@@ -229,7 +229,7 @@ public:
 	DECLARE_SERVERCLASS();
 	
 	CBasePlayer();
-	~CBasePlayer();
+	virtual ~CBasePlayer();
 
 	// IPlayerInfo passthrough (because we can't do multiple inheritance)
 	IPlayerInfo *GetPlayerInfo() { return &m_PlayerInfo; }
@@ -476,7 +476,6 @@ public:
 	virtual int				GetDelayTicks();
 	virtual int				GetReplayEntity();
 
-	virtual void			CreateCorpse( void ) { }
 	virtual CBaseEntity		*EntSelectSpawnPoint( void );
 
 	// Vehicles

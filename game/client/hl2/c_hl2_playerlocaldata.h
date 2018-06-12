@@ -26,9 +26,6 @@ public:
 
 	C_HL2PlayerLocalData();
 
-	int		m_iSquadMemberCount;
-	bool	m_fSquadInFollowMode;
-
 	// Ladder related data
 	EHANDLE			m_hLadder;
 	LadderMove_t	m_LadderMove;

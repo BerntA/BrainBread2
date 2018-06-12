@@ -65,7 +65,6 @@ CWeaponHL2MPBase::CWeaponHL2MPBase()
 {
 	SetPredictionEligible( true );
 	AddSolidFlags( FSOLID_TRIGGER ); // Nothing collides with these but it gets touches.
-	m_flNextResetCheckTime = 0.0f;
 }
 
 
@@ -266,8 +265,6 @@ void CWeaponHL2MPBase::Materialize( void )
 
 	if ( (HasSpawnFlags( SF_NORESPAWN ) == false) )
 	{
-		HL2MPRules()->AddLevelDesignerPlacedObject( this );
-
 		if (GetOriginalSpawnOrigin() == vec3_origin)
 		{
 			m_vOriginalSpawnOrigin = GetAbsOrigin();

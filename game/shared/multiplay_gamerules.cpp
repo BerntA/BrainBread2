@@ -139,10 +139,6 @@ ConVar bb2_active_workshop_item("bb2_active_workshop_item", "0", FCVAR_REPLICATE
 ConVar tv_delaymapchange("tv_delaymapchange", "0", FCVAR_NONE, "Delays map change until broadcast is complete");
 ConVar tv_delaymapchange_protect("tv_delaymapchange_protect", "1", FCVAR_NONE, "Protect against doing a manual map change if HLTV is broadcasting and has not caught up with a major game event such as round_end");
 
-ConVar mp_restartgame( "mp_restartgame", "0", FCVAR_GAMEDLL, "If non-zero, game will restart in the specified number of seconds" );
-
-ConVar mp_mapcycle_empty_timeout_seconds( "mp_mapcycle_empty_timeout_seconds", "0", FCVAR_REPLICATED, "If nonzero, server will cycle to the next map if it has been empty on the current map for N seconds");
-
 void cc_SkipNextMapInCycle()
 {
 	if ( !UTIL_IsCommandIssuedByServerAdmin() )
@@ -296,8 +292,6 @@ bool CMultiplayRules::Damage_ShouldNotBleed( int iDmgType )
 CMultiplayRules::CMultiplayRules()
 {
 #ifndef CLIENT_DLL
-	m_flTimeLastMapChangeOrPlayerWasConnected = 0.0f;
-
 	RefreshSkillData( true );
 
 	// 11/8/98
@@ -342,33 +336,20 @@ CMultiplayRules::CMultiplayRules()
 	LoadMapCycleFile();
 
 #endif
-
-	LoadVoiceCommandScript();
 }
 
 bool CMultiplayRules::Init()
 {
-#ifdef GAME_DLL
-
-	// Initialize the custom response rule dictionaries.
-	InitCustomResponseRulesDicts();
-
-#endif
-
 	return BaseClass::Init();
 }
 
-
 #ifdef CLIENT_DLL
 
-
 #else 
-
 	extern bool			g_fGameOver;
 
 	#define ITEM_RESPAWN_TIME	30
 	#define WEAPON_RESPAWN_TIME	20
-	#define AMMO_RESPAWN_TIME	20
 
 	//=========================================================
 	//=========================================================
@@ -391,45 +372,6 @@ bool CMultiplayRules::Init()
 	void CMultiplayRules::FrameUpdatePostEntityThink()
 	{
 		BaseClass::FrameUpdatePostEntityThink();
-
-		float flNow = Plat_FloatTime();
-
-		// Update time when client was last connected
-		if ( m_flTimeLastMapChangeOrPlayerWasConnected <= 0.0f )
-		{
-			m_flTimeLastMapChangeOrPlayerWasConnected = flNow;
-		}
-		else
-		{
-			for( int iPlayerIndex = 1 ; iPlayerIndex <= MAX_PLAYERS; iPlayerIndex++ )
-			{
-				player_info_t pi;
-				if ( !engine->GetPlayerInfo( iPlayerIndex, &pi ) )
-					continue;
-#if defined( REPLAY_ENABLED )
-				if ( pi.ishltv || pi.isreplay || pi.fakeplayer )
-#else
-				if ( pi.ishltv || pi.fakeplayer )
-#endif
-					continue;
-
-				m_flTimeLastMapChangeOrPlayerWasConnected = flNow;
-				break;
-			}
-		}
-
-		// Check if we should cycle the map because we've been empty
-		// for long enough
-		if ( mp_mapcycle_empty_timeout_seconds.GetInt() > 0 )
-		{
-			int iIdleSeconds = (int)( flNow - m_flTimeLastMapChangeOrPlayerWasConnected );
-			if ( iIdleSeconds >= mp_mapcycle_empty_timeout_seconds.GetInt() )
-			{
-
-				Log( "Server has been empty for %d seconds on this map, cycling map as per mp_mapcycle_empty_timeout_seconds\n", iIdleSeconds );
-				ChangeLevel();
-			}
-		}
 	}
 
 
@@ -606,18 +548,11 @@ bool CMultiplayRules::Init()
 
 	//=========================================================
 	//=========================================================
-	void CMultiplayRules::PlayerSpawn( CBasePlayer *pPlayer )
+	void CMultiplayRules::PlayerSpawn(CBasePlayer *pPlayer)
 	{
-		bool		addDefault;
 		CBaseEntity	*pWeaponEntity = NULL;
-		
-		addDefault = true;
-
-		while ( (pWeaponEntity = gEntList.FindEntityByClassname( pWeaponEntity, "game_player_equip" )) != NULL)
-		{
-			pWeaponEntity->Touch( pPlayer );
-			addDefault = false;
-		}
+		while ((pWeaponEntity = gEntList.FindEntityByClassname(pWeaponEntity, "game_player_equip")) != NULL)
+			pWeaponEntity->Touch(pPlayer);
 	}
 
 	//=========================================================
@@ -725,80 +660,8 @@ bool CMultiplayRules::Init()
 		}
 		else
 		{  
-
 			// NO loss on death!!! BB2
 		}
-	}
-
-	//=========================================================
-	// Deathnotice. 
-	//=========================================================
-	void CMultiplayRules::DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info)
-	{
-	}
-
-	//=========================================================
-	// FlWeaponRespawnTime - what is the time in the future
-	// at which this weapon may spawn?
-	//=========================================================
-	float CMultiplayRules::FlWeaponRespawnTime( CBaseCombatWeapon *pWeapon )
-	{
-		if ( weaponstay.GetInt() > 0 )
-		{
-			// make sure it's only certain weapons
-			if ( !(pWeapon->GetWeaponFlags() & ITEM_FLAG_LIMITINWORLD) )
-			{
-				return gpGlobals->curtime + 0;		// weapon respawns almost instantly
-			}
-		}
-
-		return gpGlobals->curtime + WEAPON_RESPAWN_TIME;
-	}
-
-	// when we are within this close to running out of entities,  items 
-	// marked with the ITEM_FLAG_LIMITINWORLD will delay their respawn
-	#define ENTITY_INTOLERANCE	100
-
-	//=========================================================
-	// FlWeaponRespawnTime - Returns 0 if the weapon can respawn 
-	// now,  otherwise it returns the time at which it can try
-	// to spawn again.
-	//=========================================================
-	float CMultiplayRules::FlWeaponTryRespawn( CBaseCombatWeapon *pWeapon )
-	{
-		if ( pWeapon && (pWeapon->GetWeaponFlags() & ITEM_FLAG_LIMITINWORLD) )
-		{
-			if ( gEntList.NumberOfEntities() < (gpGlobals->maxEntities - ENTITY_INTOLERANCE) )
-				return 0;
-
-			// we're past the entity tolerance level,  so delay the respawn
-			return FlWeaponRespawnTime( pWeapon );
-		}
-
-		return 0;
-	}
-
-	//=========================================================
-	// VecWeaponRespawnSpot - where should this weapon spawn?
-	// Some game variations may choose to randomize spawn locations
-	//=========================================================
-	Vector CMultiplayRules::VecWeaponRespawnSpot( CBaseCombatWeapon *pWeapon )
-	{
-		return pWeapon->GetAbsOrigin();
-	}
-
-	//=========================================================
-	// WeaponShouldRespawn - any conditions inhibiting the
-	// respawning of this weapon?
-	//=========================================================
-	int CMultiplayRules::WeaponShouldRespawn( CBaseCombatWeapon *pWeapon )
-	{
-		if ( pWeapon->HasSpawnFlags( SF_NORESPAWN ) )
-		{
-			return GR_WEAPON_RESPAWN_NO;
-		}
-
-		return GR_WEAPON_RESPAWN_YES;
 	}
 
 	//=========================================================
@@ -850,32 +713,6 @@ bool CMultiplayRules::Init()
 		return GR_ITEM_RESPAWN_YES;
 	}
 
-
-	//=========================================================
-	// At what time in the future may this Item respawn?
-	//=========================================================
-	float CMultiplayRules::FlItemRespawnTime( CItem *pItem )
-	{
-		return gpGlobals->curtime + ITEM_RESPAWN_TIME;
-	}
-
-	//=========================================================
-	// Where should this item respawn?
-	// Some game variations may choose to randomize spawn locations
-	//=========================================================
-	Vector CMultiplayRules::VecItemRespawnSpot( CItem *pItem )
-	{
-		return pItem->GetAbsOrigin();
-	}
-
-	//=========================================================
-	// What angles should this item use to respawn?
-	//=========================================================
-	QAngle CMultiplayRules::VecItemRespawnAngles( CItem *pItem )
-	{
-		return pItem->GetAbsAngles();
-	}
-
 	//=========================================================
 	//=========================================================
 	bool CMultiplayRules::IsAllowedToSpawn( CBaseEntity *pEntity )
@@ -893,11 +730,6 @@ bool CMultiplayRules::Init()
 	bool CMultiplayRules::PlayerCanHearChat( CBasePlayer *pListener, CBasePlayer *pSpeaker )
 	{
 		return ( PlayerRelationship( pListener, pSpeaker ) == GR_TEAMMATE );
-	}
-
-	int CMultiplayRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
-	{
-		return GR_NOTTEAMMATE;
 	}
 
 	bool CMultiplayRules::PlayFootstepSounds( CBasePlayer *pl )
@@ -1229,65 +1061,11 @@ bool CMultiplayRules::Init()
 	void CMultiplayRules::ChangeLevelToMap( const char *pszMap )
 	{
 		g_fGameOver = true;
-		m_flTimeLastMapChangeOrPlayerWasConnected = 0.0f;
 		Msg( "CHANGE LEVEL: %s\n", pszMap );
 		GameBaseServer()->DoMapChange(pszMap);
 	}
 
 #endif		
-
-	//-----------------------------------------------------------------------------
-	// Purpose: Shared script resource of voice menu commands and hud strings
-	//-----------------------------------------------------------------------------
-	void CMultiplayRules::LoadVoiceCommandScript( void )
-	{
-		KeyValues *pKV = new KeyValues( "VoiceCommands" );
-
-		if ( pKV->LoadFromFile( filesystem, "scripts/voicecommands.txt", "GAME" ) )
-		{
-			for ( KeyValues *menu = pKV->GetFirstSubKey(); menu != NULL; menu = menu->GetNextKey() )
-			{
-				int iMenuIndex = m_VoiceCommandMenus.AddToTail();
-
-				int iNumItems = 0;
-
-				// for each subkey of this menu, add a menu item
-				for ( KeyValues *menuitem = menu->GetFirstSubKey(); menuitem != NULL; menuitem = menuitem->GetNextKey() )
-				{
-					iNumItems++;
-
-					if ( iNumItems > 9 )
-					{
-						Warning( "Trying to load more than 9 menu items in voicecommands.txt, extras ignored" );
-						continue;
-					}
-
-					VoiceCommandMenuItem_t item;
-
-#ifndef CLIENT_DLL
-					int iConcept = GetMPConceptIndexFromString( menuitem->GetString( "concept", "" ) );
-					if ( iConcept == MP_CONCEPT_NONE )
-					{
-						Warning( "Voicecommand script attempting to use unknown concept. Need to define new concepts in code. ( %s )\n", menuitem->GetString( "concept", "" ) );
-					}
-					item.m_iConcept = iConcept;
-
-					item.m_bShowSubtitle = ( menuitem->GetInt( "show_subtitle", 0 ) > 0 );
-					item.m_bDistanceBasedSubtitle = ( menuitem->GetInt( "distance_check_subtitle", 0 ) > 0 );
-
-					Q_strncpy( item.m_szGestureActivity, menuitem->GetString( "activity", "" ), sizeof( item.m_szGestureActivity ) ); 
-#else
-					Q_strncpy( item.m_szSubtitle, menuitem->GetString( "subtitle", "" ), MAX_VOICE_COMMAND_SUBTITLE );
-					Q_strncpy( item.m_szMenuLabel, menuitem->GetString( "menu_label", "" ), MAX_VOICE_COMMAND_SUBTITLE );
-
-#endif
-					m_VoiceCommandMenus.Element( iMenuIndex ).AddToTail( item );
-				}
-			}
-		}
-
-		pKV->deleteThis();
-	}
 
 #ifndef CLIENT_DLL
 
@@ -1319,34 +1097,12 @@ bool CMultiplayRules::Init()
 
 	bool CMultiplayRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 	{
-		CBasePlayer *pPlayer = ToBasePlayer( pEdict );
-
-		const char *pcmd = args[0];
-		if ( FStrEq( pcmd, "voicemenu" ) )
-		{
-			if ( args.ArgC() < 3 )
-				return true;
-
-			CBaseMultiplayerPlayer *pMultiPlayerPlayer = dynamic_cast< CBaseMultiplayerPlayer * >( pPlayer );
-
-			if ( pMultiPlayerPlayer )
-			{
-				int iMenu = atoi( args[1] );
-				int iItem = atoi( args[2] );
-
-				VoiceCommand( pMultiPlayerPlayer, iMenu, iItem );
-			}
-
-			return true;
-		}
-
 		return BaseClass::ClientCommand( pEdict, args );
 	}
 
 	void CMultiplayRules::ClientCommandKeyValues( edict_t *pEntity, KeyValues *pKeyValues )
 	{
 		CBaseMultiplayerPlayer *pPlayer = dynamic_cast< CBaseMultiplayerPlayer * >( CBaseEntity::Instance( pEntity ) );
-
 		if ( !pPlayer )
 			return;
 
@@ -1372,162 +1128,6 @@ bool CMultiplayRules::Init()
 			}
 		}
 	}
-
-	VoiceCommandMenuItem_t *CMultiplayRules::VoiceCommand( CBaseMultiplayerPlayer *pPlayer, int iMenu, int iItem )
-	{
-		// have the player speak the concept that is in a particular menu slot
-		if ( !pPlayer )
-			return NULL;
-
-		if ( iMenu < 0 || iMenu >= m_VoiceCommandMenus.Count() )
-			return NULL;
-
-		if ( iItem < 0 || iItem >= m_VoiceCommandMenus.Element( iMenu ).Count() )
-			return NULL;
-
-		VoiceCommandMenuItem_t *pItem = &m_VoiceCommandMenus.Element( iMenu ).Element( iItem );
-
-		Assert( pItem );
-
-		char szResponse[AI_Response::MAX_RESPONSE_NAME];
-
-		if ( pPlayer->CanSpeakVoiceCommand() )
-		{
-			CMultiplayer_Expresser *pExpresser = pPlayer->GetMultiplayerExpresser();
-			Assert( pExpresser );
-			pExpresser->AllowMultipleScenes();
-
-			if ( pPlayer->SpeakConceptIfAllowed( pItem->m_iConcept, NULL, szResponse, AI_Response::MAX_RESPONSE_NAME ) )
-			{
-				// show a subtitle if we need to
-				if ( pItem->m_bShowSubtitle )
-				{
-					CRecipientFilter filter;
-
-					if ( pItem->m_bDistanceBasedSubtitle )
-					{
-						filter.AddRecipientsByPAS( pPlayer->WorldSpaceCenter() );
-
-						// further reduce the range to a certain radius
-						int i;
-						for ( i = filter.GetRecipientCount()-1; i >= 0; i-- )
-						{
-							int index = filter.GetRecipientIndex(i);
-
-							CBasePlayer *pListener = UTIL_PlayerByIndex( index );
-
-							if ( pListener && pListener != pPlayer )
-							{
-								float flDist = ( pListener->WorldSpaceCenter() - pPlayer->WorldSpaceCenter() ).Length2D();
-
-								if ( flDist > VOICE_COMMAND_MAX_SUBTITLE_DIST )
-									filter.RemoveRecipientByPlayerIndex( index );
-							}
-						}
-					}
-					else
-					{
-						filter.AddAllPlayers();
-					}
-
-					// if we aren't a disguised spy
-					if ( !pPlayer->ShouldShowVoiceSubtitleToEnemy() )
-					{
-						// remove players on other teams
-						filter.RemoveRecipientsNotOnTeam( pPlayer->GetTeam() );
-					}
-
-					// Register this event in the mod-specific usermessages .cpp file if you hit this assert
-					Assert( usermessages->LookupUserMessage( "VoiceSubtitle" ) != -1 );
-
-					// Send a subtitle to anyone in the PAS
-					UserMessageBegin( filter, "VoiceSubtitle" );
-						WRITE_BYTE( pPlayer->entindex() );
-						WRITE_BYTE( iMenu );
-						WRITE_BYTE( iItem );
-					MessageEnd();
-				}
-
-				pPlayer->NoteSpokeVoiceCommand( szResponse );
-
-#ifdef NEXT_BOT
-				// let bots react to player's voice commands
-				CUtlVector< INextBot * > botVector;
-				TheNextBots().CollectAllBots( &botVector );
-
-				for( int i=0; i<botVector.Count(); ++i )
-				{
-					botVector[i]->OnActorEmoted( pPlayer, pItem->m_iConcept );
-				}
-#endif
-			}
-			else
-			{
-				pItem = NULL;
-			}
-
-			pExpresser->DisallowMultipleScenes();
-			return pItem;
-		}
-
-		return NULL;
-	}
-
-	bool CMultiplayRules::IsLoadingBugBaitReport()
-	{
-		return ( !engine->IsDedicatedServer()&& CommandLine()->CheckParm( "-bugbait" ) && sv_cheats->GetBool() );
-	}
-
-	void CMultiplayRules::HaveAllPlayersSpeakConceptIfAllowed( int iConcept, int iTeam /* = TEAM_UNASSIGNED */, const char *modifiers /* = NULL */ )
-	{
-		CBaseMultiplayerPlayer *pPlayer;
-		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-		{
-			pPlayer = ToBaseMultiplayerPlayer( UTIL_PlayerByIndex( i ) );
-
-			if ( !pPlayer )
-				continue;
-
-			if ( iTeam != TEAM_UNASSIGNED )
-			{
-				if ( pPlayer->GetTeamNumber() != iTeam )
-					continue;
-			}
-
-			pPlayer->SpeakConceptIfAllowed( iConcept, modifiers );
-		}
-	}
-	
-	void CMultiplayRules::RandomPlayersSpeakConceptIfAllowed( int iConcept, int iNumRandomPlayer /*= 1*/, int iTeam /*= TEAM_UNASSIGNED*/, const char *modifiers /*= NULL*/ )
-	{
-		CUtlVector< CBaseMultiplayerPlayer* > speakCandidates;
-
-		CBaseMultiplayerPlayer *pPlayer;
-		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-		{
-			pPlayer = ToBaseMultiplayerPlayer( UTIL_PlayerByIndex( i ) );
-
-			if ( !pPlayer )
-				continue;
-
-			if ( iTeam != TEAM_UNASSIGNED )
-			{
-				if ( pPlayer->GetTeamNumber() != iTeam )
-					continue;
-			}
-
-			speakCandidates.AddToTail( pPlayer );
-		}
-
-		int iSpeaker = iNumRandomPlayer;
-		while ( iSpeaker > 0 && speakCandidates.Count() > 0 )
-		{
-			int iRandomSpeaker = RandomInt( 0, speakCandidates.Count() - 1 );
-			speakCandidates[ iRandomSpeaker ]->SpeakConceptIfAllowed( iConcept, modifiers );
-			speakCandidates.FastRemove( iRandomSpeaker );
-			iSpeaker--;
-		}
-	}	
 
 	void CMultiplayRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	{
@@ -1560,43 +1160,5 @@ bool CMultiplayRules::Init()
 	}
 
 #else
-
-	const char *CMultiplayRules::GetVoiceCommandSubtitle( int iMenu, int iItem )
-	{
-		Assert( iMenu >= 0 && iMenu < m_VoiceCommandMenus.Count() );
-		if ( iMenu < 0 || iMenu >= m_VoiceCommandMenus.Count() )
-			return "";
-
-		Assert( iItem >= 0 && iItem < m_VoiceCommandMenus.Element( iMenu ).Count() );
-		if ( iItem < 0 || iItem >= m_VoiceCommandMenus.Element( iMenu ).Count() )
-			return "";
-
-		VoiceCommandMenuItem_t *pItem = &m_VoiceCommandMenus.Element( iMenu ).Element( iItem );
-
-		Assert( pItem );
-
-		return pItem->m_szSubtitle;
-	}
-
-	// Returns false if no such menu is declared or if it's an empty menu
-	bool CMultiplayRules::GetVoiceMenuLabels( int iMenu, KeyValues *pKV )
-	{
-		Assert( iMenu >= 0 && iMenu < m_VoiceCommandMenus.Count() );
-		if ( iMenu < 0 || iMenu >= m_VoiceCommandMenus.Count() )
-			return false;
-
-		int iNumItems = m_VoiceCommandMenus.Element( iMenu ).Count();
-
-		for ( int i=0; i<iNumItems; i++ )
-		{
-			VoiceCommandMenuItem_t *pItem = &m_VoiceCommandMenus.Element( iMenu ).Element( i );
-
-			KeyValues *pLabelKV = new KeyValues( pItem->m_szMenuLabel );
-
-			pKV->AddSubKey( pLabelKV );
-		}
-
-		return iNumItems > 0;
-	}
 
 #endif

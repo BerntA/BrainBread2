@@ -279,6 +279,7 @@ private:
 
 	CAI_Sentence< CNPC_Combine > m_Sentences;
 
+protected:
 	CAI_AssaultBehavior			m_AssaultBehavior;
 	CCombineStandoffBehavior	m_StandoffBehavior;
 	CAI_FollowBehavior			m_FollowBehavior;

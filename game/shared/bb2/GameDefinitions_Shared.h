@@ -49,13 +49,10 @@ enum VoiceCommandTypes
 
 struct DataGamemodeItem_Shared_t
 {
-	int iXPRoundWinArena;
-	int iXPRoundWinElimination;
+	float flXPRoundWinArena;
 
-	int iXPGameWinObjective;
-	int iXPGameWinArena;
-	int iXPGameWinElimination;
-	int iXPGameWinDeathmatch;
+	float flXPGameWinObjective;
+	float flXPGameWinArena;
 
 	int iKillsRequiredToPerk;
 

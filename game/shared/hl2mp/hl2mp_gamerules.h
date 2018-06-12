@@ -250,7 +250,6 @@ public:
 	void GameModeSharedThink(void);
 
 	void CleanUpMap();
-	void CheckRestartGame();
 	void RestartGame();
 
 	virtual Vector VecItemRespawnSpot( CItem *pItem );
@@ -258,11 +257,6 @@ public:
 	virtual float	FlItemRespawnTime( CItem *pItem );
 	virtual bool	CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pItem );
 
-	void	AddLevelDesignerPlacedObject( CBaseEntity *pEntity );
-	void	RemoveLevelDesignerPlacedObject( CBaseEntity *pEntity );
-	bool    IsLevelDesignerPlacedObject(CBaseEntity *pEntity);
-	void	ManageObjectRelocation( void );
-	void    CheckChatForReadySignal( CHL2MP_Player *pPlayer, const char *chatmsg );
 	const char *GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer );
 
 	// Elimination Mode
@@ -289,25 +283,19 @@ public:
 #endif
 	virtual void ClientDisconnected( edict_t *pClient );
 
-	bool CheckGameOver( void );
-	bool IsIntermission( void );
+	virtual bool CheckGameOver( void );
+	virtual bool IsIntermission( void );
 
-	void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );
-	
-	bool IsTeamplay(void);
-
+	virtual void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );	
+	virtual bool IsTeamplay(void);
 	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );
 	
 private:
 
 #ifndef CLIENT_DLL
-	CUtlVector<EHANDLE> m_hRespawnableItemsAndWeapons;
 	CUtlVector<EHANDLE> m_hBreakableDoors;
-	float m_tmNextPeriodicThink;
-	float m_flRestartGameTime;
 	float m_flRoundStartTime;
 	float m_flScoreBoardTime;
-	bool m_bCompleteReset;
 	bool m_bChangelevelDone;
 #endif
 };

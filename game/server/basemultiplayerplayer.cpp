@@ -14,7 +14,6 @@
 
 CBaseMultiplayerPlayer::CBaseMultiplayerPlayer()
 {
-	m_iCurrentConcept = MP_CONCEPT_NONE;
 	m_flConnectionTime = gpGlobals->curtime;
 }
 
@@ -22,83 +21,6 @@ CBaseMultiplayerPlayer::~CBaseMultiplayerPlayer()
 {
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-CAI_Expresser *CBaseMultiplayerPlayer::CreateExpresser(void)
-{
-	m_pExpresser = new CMultiplayer_Expresser(this);
-	if (!m_pExpresser)
-		return NULL;
-
-	m_pExpresser->Connect(this);
-	return m_pExpresser;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CBaseMultiplayerPlayer::PostConstructor(const char *szClassname)
-{
-	BaseClass::PostConstructor(szClassname);
-	CreateExpresser();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CBaseMultiplayerPlayer::ModifyOrAppendCriteria(AI_CriteriaSet& criteriaSet)
-{
-	BaseClass::ModifyOrAppendCriteria(criteriaSet);
-
-	ModifyOrAppendPlayerCriteria(criteriaSet);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CBaseMultiplayerPlayer::SpeakIfAllowed(AIConcept_t concept, const char *modifiers, char *pszOutResponseChosen, size_t bufsize, IRecipientFilter *filter)
-{
-	if (!IsAlive())
-		return false;
-
-	//if ( IsAllowedToSpeak( concept, bRespondingToPlayer ) )
-	return Speak(concept, modifiers, pszOutResponseChosen, bufsize, filter);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-IResponseSystem *CBaseMultiplayerPlayer::GetResponseSystem()
-{
-	return BaseClass::GetResponseSystem();
-	// NOTE: This is where you would hook your custom responses.
-	//	return <*>GameRules()->m_ResponseRules[iIndex].m_ResponseSystems[m_iCurrentConcept];
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Doesn't actually speak the concept. Just finds a response in the system. You then have to play it yourself.
-//-----------------------------------------------------------------------------
-bool CBaseMultiplayerPlayer::SpeakConcept( AI_Response &response, int iConcept )
-{
-	// Save the current concept.
-	m_iCurrentConcept = iConcept;
-	return SpeakFindResponse( response, g_pszMPConcepts[iConcept] );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CBaseMultiplayerPlayer::SpeakConceptIfAllowed(int iConcept, const char *modifiers, char *pszOutResponseChosen, size_t bufsize, IRecipientFilter *filter)
-{
-	// Save the current concept.
-	m_iCurrentConcept = iConcept;
-	return SpeakIfAllowed(g_pszMPConcepts[iConcept], modifiers, pszOutResponseChosen, bufsize, filter);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 bool CBaseMultiplayerPlayer::CanHearAndReadChatFrom(CBasePlayer *pPlayer)
 {
 	// can always hear the console unless we're ignoring all chat
@@ -120,15 +42,12 @@ bool CBaseMultiplayerPlayer::CanHearAndReadChatFrom(CBasePlayer *pPlayer)
 	return true;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CBaseMultiplayerPlayer::ShouldRunRateLimitedCommand( const CCommand &args )
+bool CBaseMultiplayerPlayer::ShouldRunRateLimitedCommand(const CCommand &args)
 {
-	return ShouldRunRateLimitedCommand( args[0] );
+	return ShouldRunRateLimitedCommand(args[0]);
 }
 
-bool CBaseMultiplayerPlayer::ShouldRunRateLimitedCommand( const char *pszCommand )
+bool CBaseMultiplayerPlayer::ShouldRunRateLimitedCommand(const char *pszCommand)
 {
 	const char *pcmd = pszCommand;
 
@@ -150,9 +69,6 @@ bool CBaseMultiplayerPlayer::ShouldRunRateLimitedCommand( const char *pszCommand
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 bool CBaseMultiplayerPlayer::ClientCommand(const CCommand &args)
 {
 	const char *pcmd = args[0];
@@ -181,14 +97,4 @@ bool CBaseMultiplayerPlayer::ClientCommand(const CCommand &args)
 	}
 
 	return BaseClass::ClientCommand(args);
-}
-
-bool CBaseMultiplayerPlayer::ShouldShowVoiceSubtitleToEnemy(void)
-{
-	return false;
-}
-
-void CBaseMultiplayerPlayer::Spawn(void)
-{
-	BaseClass::Spawn();
 }
