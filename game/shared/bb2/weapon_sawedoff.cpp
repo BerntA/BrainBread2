@@ -358,7 +358,7 @@ void CWeaponSawedOff::PerformAttack(bool bDouble)
 
 	FireBulletsInfo_t info(GetWpnData().m_iPellets * (bDouble ? 2 : 1), vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, !bDouble);
 	info.m_pAttacker = pPlayer;
-	info.m_vecFirstStartPos = pPlayer->GetAbsOrigin();
+	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
 	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
 	pPlayer->FireBullets(info);
 

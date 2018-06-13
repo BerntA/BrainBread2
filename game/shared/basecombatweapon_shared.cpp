@@ -47,8 +47,6 @@
 
 #define HIDEWEAPON_THINK_CONTEXT			"BaseCombatWeapon_HideThink"
 
-extern bool UTIL_ItemCanBeTouchedByPlayer( CBaseEntity *pItem, CBasePlayer *pPlayer );
-
 // BB2
 // Viewkick ConVar Defines
 ConVar viewpunch_x_min("viewpunch_x_min", "-1", FCVAR_REPLICATED);
@@ -100,10 +98,7 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 	m_iClip2 = -1;
 	m_iPrimaryAmmoType = -1;
 	m_iSecondaryAmmoType = -1;
-#endif
-
-#if !defined( CLIENT_DLL )
-	m_pConstraint = NULL;
+#else
 	OnBaseCombatWeaponCreated( this );
 	m_iDefaultAmmoCount = -1;
 	m_bCanRemoveWeapon = false;
@@ -123,13 +118,8 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 CBaseCombatWeapon::~CBaseCombatWeapon( void )
 {
 #if !defined( CLIENT_DLL )
-	//Remove our constraint, if we have one
-	if ( m_pConstraint != NULL )
-	{
-		physenv->DestroyConstraint( m_pConstraint );
-		m_pConstraint = NULL;
-	}
 	OnBaseCombatWeaponDestroyed( this );
+	m_pEnemiesStruck.Purge();
 #endif
 }
 
@@ -231,7 +221,7 @@ void CBaseCombatWeapon::Spawn( void )
 #endif
 
 	// Bloat the box for player pickup
-	CollisionProp()->UseTriggerBounds(true, 20.0f);
+	CollisionProp()->UseTriggerBounds(true, 10.0f);
 
 	// Use more efficient bbox culling on the client. Otherwise, it'll setup bones for most
 	// characters even when they're not in the frustum.
@@ -356,7 +346,7 @@ const char *CBaseCombatWeapon::GetAttachmentLink( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: Returns attachment coordinates for weapons on the back/hip, etc...
 //-----------------------------------------------------------------------------
-Vector CBaseCombatWeapon::GetAttachmentPositionOffset( void ) const
+const Vector &CBaseCombatWeapon::GetAttachmentPositionOffset( void ) const
 {
 	return GetWpnData().vecAttachmentPosOffset;
 }
@@ -364,7 +354,7 @@ Vector CBaseCombatWeapon::GetAttachmentPositionOffset( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: Returns attachment coordinates for weapons on the back/hip, etc...
 //-----------------------------------------------------------------------------
-QAngle CBaseCombatWeapon::GetAttachmentAngleOffset( void ) const
+const QAngle &CBaseCombatWeapon::GetAttachmentAngleOffset( void ) const
 {
 	return GetWpnData().angAttachmentAngOffset;
 }
@@ -882,12 +872,6 @@ void CBaseCombatWeapon::Equip( CBaseCombatCharacter *pOwner )
 
 #if !defined( CLIENT_DLL )
 	SetGlowMode(GLOW_MODE_NONE);
-	if ( m_pConstraint != NULL )
-	{
-		RemoveSpawnFlags( SF_WEAPON_START_CONSTRAINED );
-		physenv->DestroyConstraint( m_pConstraint );
-		m_pConstraint = NULL;
-	}
 #endif
 
 	m_flNextPrimaryAttack		= gpGlobals->curtime;
@@ -928,12 +912,8 @@ void CBaseCombatWeapon::SetActivity( Activity act, float duration )
 
 	//Adrian: Oh man again...
 #if !defined( CLIENT_DLL ) && (defined( HL2MP ) || defined( PORTAL ) || defined( SDK_DLL ) )
-
-#ifdef BB2_AI
-	if ( GetOwner()->IsPlayer() ) 
-#endif //BB2_AI
-
-		SetModel( GetViewModel() );
+	if (GetOwner() && GetOwner()->IsPlayer())
+		SetModel(GetViewModel());
 #endif
 
 	if ( sequence != ACTIVITY_NOT_AVAILABLE )
@@ -1558,6 +1538,8 @@ void CBaseCombatWeapon::ForceOriginalPosition()
 	}
 
 #endif
+
+	SetThink(NULL);
 }
 
 //====================================================================================
@@ -1980,7 +1962,7 @@ float CBaseCombatWeapon::GetFireRate( void )
 	if (pOwner)
 	{
 		if (pOwner->GetSkillValue(PLAYER_SKILL_HUMAN_SHOUT_AND_SPRAY) > 0)
-			flFireRate -= ((flFireRate / 100.0f) * ((float)((float)pOwner->GetSkillValue(PLAYER_SKILL_HUMAN_SHOUT_AND_SPRAY) * GetWpnData().m_flSkillFireRateFactor)));
+			flFireRate -= ((flFireRate / 100.0f) * ((((float)pOwner->GetSkillValue(PLAYER_SKILL_HUMAN_SHOUT_AND_SPRAY)) * GetWpnData().m_flSkillFireRateFactor)));
 	}
 
 	return flFireRate;
@@ -2200,18 +2182,6 @@ void CBaseCombatWeapon::AddViewKick( void )
 	// Firearms use GetViewKickAngle() while melee weapons override this function for now.
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Get the string to print death notices with
-//-----------------------------------------------------------------------------
-char *CBaseCombatWeapon::GetDeathNoticeName( void )
-{
-#if !defined( CLIENT_DLL )
-	return (char*)STRING( m_iszName );
-#else
-	return "GetDeathNoticeName not implemented on client yet";
-#endif
-}
-
 //====================================================================================
 // WEAPON RELOAD TYPES
 //====================================================================================
@@ -2374,7 +2344,7 @@ void CBaseCombatWeapon::PrimaryAttack( void )
 
 	FireBulletsInfo_t info;
 	info.m_vecSrc	 = pPlayer->Weapon_ShootPosition( );
-	info.m_vecFirstStartPos = pPlayer->GetAbsOrigin();
+	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
 	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
 	info.m_vecDirShooting = pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );
 
@@ -3031,8 +3001,6 @@ BEGIN_PREDICTION_DATA( CBaseCombatWeapon )
 	//	DEFINE_FIELD( m_iViewModelIndex, FIELD_INTEGER ),
 	//	DEFINE_FIELD( m_iWorldModelIndex, FIELD_INTEGER ),
 	//  DEFINE_FIELD( m_hWeaponFileInfo, ???? ),
-
-	DEFINE_PHYSPTR( m_pConstraint ),
 
 	// Just to quiet classcheck.. this field exists only on the client
 	//	DEFINE_FIELD( m_iOldState, FIELD_INTEGER ),

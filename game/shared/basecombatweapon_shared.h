@@ -37,14 +37,9 @@ class CBaseCombatCharacter;
 class IPhysicsConstraint;
 class CUserCmd;
 
-//Start with a constraint in place (don't drop to floor)
-#define	SF_WEAPON_START_CONSTRAINED	(1<<0)	
 #define SF_WEAPON_NO_PLAYER_PICKUP	(1<<1)
 #define SF_WEAPON_NO_PHYSCANNON_PUNT (1<<2)
 #define SF_WEAPON_NO_MOTION (1<<3)
-
-//Percent
-#define	CLIP_PERC_THRESHOLD		0.75f	
 
 // Put this in your derived class definition to declare it's activity table
 // UNDONE: Cascade these?
@@ -197,8 +192,8 @@ public:
 	bool					IsViewModelSequenceFinished( void ); // Returns if the viewmodel's current animation is finished
 
 	// BB2
-	virtual bool CanRespawnWeapon() { return true; }
-	virtual bool CanPickupWeaponAsAmmo() { return false; }
+	virtual bool			CanRespawnWeapon() { return true; }
+	virtual bool			CanPickupWeaponAsAmmo() { return false; }
 	virtual void			SetViewModel();
 	 
 	virtual bool			HasWeaponIdleTimeElapsed( void );
@@ -219,7 +214,6 @@ public:
 	virtual bool			Deploy( void );								// returns true is deploy was successful
 	virtual bool			Holster( CBaseCombatWeapon *pSwitchingTo = NULL );
 	virtual bool            FullHolster(void);
-	virtual CBaseCombatWeapon *GetLastWeapon( void ) { return this; }
 	virtual void			SetWeaponVisible( bool visible );
 	virtual bool			IsWeaponVisible( void );
 	virtual void			OnActiveStateChanged( int iOldState ) { return; }
@@ -252,14 +246,10 @@ public:
 	// Allow weapon to respawn back at orig pos after drop.
 	void ForceOriginalPosition();
 
-	virtual bool			ShouldBlockPrimaryFire() { return !AutoFiresFullClip(); }
-
 #ifdef CLIENT_DLL
 	virtual void			CreateMove( float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles ) {}
 	virtual int				CalcOverrideModelIndex() OVERRIDE;
 #endif
-
-	virtual bool			IsWeaponZoomed() { return false; }		// Is this weapon in its 'zoomed in' mode?
 
 	// Reloading
 	virtual	void			CheckReload( void );
@@ -270,7 +260,6 @@ public:
 	bool					ReloadsSingly( void ) const;
 
 	virtual bool			AutoFiresFullClip( void ) { return false; }
-	virtual bool			CanOverload( void ) { return false; }
 	virtual void			UpdateAutoFire( void );
 
 	// Weapon firing
@@ -335,23 +324,11 @@ public:
 	virtual void			StopWeaponSound( WeaponSound_t sound_type );
 	virtual const WeaponProficiencyInfo_t *GetProficiencyValues();
 
-	// Autoaim
-	virtual float			WeaponAutoAimScale() { return 1.0f; } // allows a weapon to influence the perceived size of the target's autoaim radius.
-
-	// TF Sprinting functions
-	virtual bool			StartSprinting( void ) { return false; };
-	virtual bool			StopSprinting( void ) { return false; };
-
-	// TF Injury functions
-	virtual float			GetDamage( float flDistance, int iLocation ) { return 0.0; };
-
 	virtual void			SetActivity( Activity act, float duration );
 	inline void				SetActivity( Activity eActivity ) { m_Activity = eActivity; }
 	inline Activity			GetActivity( void ) { return m_Activity; }
 
 	virtual void			AddViewKick( void );	// Add in the view kick for the weapon
-
-	virtual char			*GetDeathNoticeName( void );	// Get the string to print death notices with
 
 	CBaseCombatCharacter	*GetOwner() const;
 	void					SetOwner( CBaseCombatCharacter *owner );
@@ -369,10 +346,8 @@ public:
 	void					Lock( float lockTime, CBaseEntity *pLocker );
 	bool					IsLocked( CBaseEntity *pAsker );
 
-	//All weapons can be picked up by NPCs by default
+	// All weapons can be picked up by NPCs by default
 	virtual bool			CanBePickedUpByNPCs( void ) { return true;	}
-
-	virtual int				GetSkinOverride() const { return -1; }
 
 public:
 
@@ -399,8 +374,8 @@ public:
 	float                   GetSpecialDamage() const;
 
 	char const		*GetAttachmentLink( void ) const;
-	Vector GetAttachmentPositionOffset( void ) const;
-	QAngle GetAttachmentAngleOffset( void ) const;
+	const Vector &GetAttachmentPositionOffset( void ) const;
+	const QAngle &GetAttachmentAngleOffset( void ) const;
 
 	virtual int				GetPrimaryAmmoType( void )  const { return m_iPrimaryAmmoType; }
 	virtual int				GetSecondaryAmmoType( void )  const { return m_iSecondaryAmmoType; }
@@ -446,9 +421,6 @@ public:
 
 	// Weapon spawning
 	bool m_bSuppressRespawn;
-	bool					IsConstrained() { return m_pConstraint != NULL; }
-	bool					IsInBadPosition ( void );				// Is weapon in bad position to pickup?
-	bool					RepositionWeapon ( void );				// Attempts to reposition the weapon in a location where it can be
 	virtual void			Materialize( void );					// make a weapon visible and tangible
 	void					AttemptToMaterialize( void );			// see if the game rules will let the weapon become visible and tangible
 	virtual void			CheckRespawn( void );					// see if this weapon should respawn after being picked up
@@ -625,7 +597,7 @@ public:
 
 	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_nNextThinkTick );
 
-	int						WeaponState() const { return m_iState; }
+	int WeaponState() const { return m_iState; }
 
 	// Weapon data
 	CNetworkVar( int, m_iState );				// See WEAPON_* definition
@@ -649,13 +621,10 @@ public:
 
 	CNetworkVar( bool, m_bFlipViewModel );
 
-	IPhysicsConstraint		*GetConstraint() { return m_pConstraint; }
-
 	bool m_bLastFiredPrimary;
 
 private:
 	WEAPON_FILE_INFO_HANDLE	m_hWeaponFileInfo;
-	IPhysicsConstraint		*m_pConstraint;
 	
 	// Server only
 #if !defined( CLIENT_DLL )

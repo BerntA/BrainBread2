@@ -969,6 +969,11 @@ bool CGameMovement::IsDead( void ) const
 	return ( player->m_iHealth <= 0 && !player->IsAlive() );
 }
 
+bool CGameMovement::IsInFreeRoamMode(void) const
+{
+	return ((player->m_iHealth >= 1) && (player->GetTeamNumber() == TEAM_SPECTATOR) && (player->GetObserverMode() == OBS_MODE_ROAMING));
+}
+
 //-----------------------------------------------------------------------------
 // Figures out how the constraint should slow us down
 //-----------------------------------------------------------------------------
@@ -1071,7 +1076,7 @@ void CGameMovement::CheckParameters( void )
 
 	if ( player->GetFlags() & FL_FROZEN ||
 		 player->GetFlags() & FL_ONTRAIN || 
-		 IsDead() )
+		 (IsDead() && !IsInFreeRoamMode()))
 	{
 		mv->m_flForwardMove = 0;
 		mv->m_flSideMove    = 0;
@@ -1081,7 +1086,7 @@ void CGameMovement::CheckParameters( void )
 	DecayPunchAngle();
 
 	// Take angles from command.
-	if ( !IsDead() )
+	if (!IsDead() || IsInFreeRoamMode())
 	{
 		v_angle = mv->m_vecAngles;
 		v_angle = v_angle + player->m_Local.m_vecPunchAngle;
@@ -1105,7 +1110,7 @@ void CGameMovement::CheckParameters( void )
 	}
 
 	// Set dead player view_offset
-	if ( IsDead() )
+	if (IsDead() && !IsInFreeRoamMode())
 	{
 		player->SetViewOffset( VEC_DEAD_VIEWHEIGHT_SCALED( player ) );
 	}
@@ -1842,7 +1847,7 @@ void CGameMovement::AirMove( void )
 bool CGameMovement::CanAccelerate()
 {
 	// Dead players don't accelerate.
-	if (player->pl.deadflag)
+	if (player->pl.deadflag && !IsInFreeRoamMode())
 		return false;
 
 	// If waterjumping, don't accelerate

@@ -1053,10 +1053,6 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	g_AIFoesTalkSemaphore.Release();
 	g_OneWayTransition = false;
 
-	// clear any pending autosavedangerous
-	m_fAutoSaveDangerousTime = 0.0f;
-	m_fAutoSaveDangerousMinHealthToCommit = 0.0f;
-
 	return true;
 }
 
@@ -1324,29 +1320,6 @@ void CServerGameDLL::PreClientUpdate( bool simulating )
 
 void CServerGameDLL::Think( bool finalTick )
 {
-	if ( m_fAutoSaveDangerousTime != 0.0f && m_fAutoSaveDangerousTime < gpGlobals->curtime )
-	{
-		// The safety timer for a dangerous auto save has expired
-		#ifdef BB2_AI
-			CBasePlayer *pPlayer = UTIL_GetLocalPlayer(); 
-		#else
-			CBasePlayer *pPlayer = UTIL_PlayerByIndex( 1 );
-		#endif //BB2_AI
-
-		if ( pPlayer && ( pPlayer->GetDeathTime() == 0.0f || pPlayer->GetDeathTime() > gpGlobals->curtime )
-			&& !pPlayer->IsSinglePlayerGameEnding()
-			)
-		{
-			if( pPlayer->GetHealth() >= m_fAutoSaveDangerousMinHealthToCommit )
-			{
-				// The player isn't dead, so make the dangerous auto save safe
-				engine->ServerCommand( "autosavedangerousissafe\n" );
-			}
-		}
-
-		m_fAutoSaveDangerousTime = 0.0f;
-		m_fAutoSaveDangerousMinHealthToCommit = 0.0f;
-	}
 }
 
 void CServerGameDLL::OnQueryCvarValueFinished( QueryCvarCookie_t iCookie, edict_t *pPlayerEntity, EQueryCvarValueStatus eStatus, const char *pCvarName, const char *pCvarValue )

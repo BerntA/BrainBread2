@@ -51,6 +51,7 @@ extern ConVar bb2_deathmatch_respawn_time;
 extern ConVar bb2_deathmatch_fraglimit;
 
 extern ConVar bb2_story_respawn_time;
+extern ConVar bb2_story_dynamic_respawn;
 extern ConVar bb2_classic_mode_enabled;
 extern ConVar bb2_classic_zombie_noteamchange;
 

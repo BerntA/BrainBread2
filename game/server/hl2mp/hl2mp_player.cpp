@@ -40,7 +40,7 @@
 
 #include "tier0/memdbgon.h"
 
-CLogicPlayerEquipper *m_pPlayerEquipper = NULL;
+static CLogicPlayerEquipper *m_pPlayerEquipper = NULL;
 
 //=========       Copyright © Reperio Studios 2015 @ Bernt Andreas Eide!       ============//
 //
@@ -283,13 +283,10 @@ CHL2MP_Player::CHL2MP_Player()
 
 CHL2MP_Player::~CHL2MP_Player()
 {
+	pszWeaponPenaltyList.Purge();
 	CleanupAssociatedAmmoEntities();
 	m_PlayerAnimState->Release();
-}
-
-void CHL2MP_Player::UpdateOnRemove(void)
-{
-	BaseClass::UpdateOnRemove();
+	m_hLastKiller = NULL;
 }
 
 void CHL2MP_Player::Precache(void)
@@ -299,15 +296,13 @@ void CHL2MP_Player::Precache(void)
 	PrecacheModel("sprites/glow01.vmt");
 
 	//Precache Zombie models
-	int nHeads = ARRAYSIZE(g_ppszRandomZombieModels);
 	int i;
-
+	int nHeads = ARRAYSIZE(g_ppszRandomZombieModels);
 	for (i = 0; i < nHeads; ++i)
 		PrecacheModel(g_ppszRandomZombieModels[i]);
 
 	//Precache Human Models
 	nHeads = ARRAYSIZE(g_ppszRandomHumanModels);
-
 	for (i = 0; i < nHeads; ++i)
 		PrecacheModel(g_ppszRandomHumanModels[i]);
 
@@ -533,14 +528,6 @@ Class_T CHL2MP_Player::Classify(void)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Called the first time the player's created
-//-----------------------------------------------------------------------------
-void CHL2MP_Player::InitialSpawn(void)
-{
-	BaseClass::InitialSpawn();
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Sets HL2 specific defaults.
 //-----------------------------------------------------------------------------
 void CHL2MP_Player::Spawn(void)
@@ -594,7 +581,7 @@ void CHL2MP_Player::Spawn(void)
 
 	m_impactEnergyScale = HL2MPPLAYER_PHYSDAMAGE_SCALE;
 
-	if (HL2MPRules()->IsIntermission() || HL2MPRules()->m_bShouldShowScores)
+	if (HL2MPRules()->IsGameoverOrScoresVisible())
 		AddFlag(FL_FROZEN);
 	else
 		RemoveFlag(FL_FROZEN);
@@ -614,7 +601,7 @@ void CHL2MP_Player::Spawn(void)
 
 	ExecuteClientEffect(PLAYER_EFFECT_FULLCHECK, 1);
 
-	DoAnimationEvent(PLAYERANIMEVENT_SPAWN);
+	DoAnimationEvent(PLAYERANIMEVENT_SPAWN, 0, true);
 }
 
 // Perform reasonable updates at a cheap interval:
@@ -623,46 +610,42 @@ void CHL2MP_Player::PerformPlayerUpdate(void)
 	// Save Stats
 	GameBaseShared()->GetAchievementManager()->SaveGlobalStats(this);
 
-	if (HL2MPRules()->CanUseSkills())
+	if (HL2MPRules()->CanUseSkills() && IsAlive())
 	{
 		// Team Bonus:
 		int iPlayersFound = 0;
 		// We glow our teammates if we're a human and our friends are far away but in range and out of sight:
 		// We glow our enemies if we're a zombie.
-		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		if (GetTeamNumber() >= TEAM_HUMANS)
 		{
-			CHL2MP_Player *pPlr = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-			if (pPlr)
+			for (int i = 1; i <= gpGlobals->maxClients; i++)
 			{
-				if ((pPlr->entindex() == this->entindex()))
+				CHL2MP_Player *pOther = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+				if (pOther == NULL)
+					continue;
+
+				if ((pOther->entindex() == this->entindex()) ||
+					!pOther->IsAlive() ||
+					(pOther->GetTeamNumber() < TEAM_HUMANS) ||
+					(this->GetTeamNumber() != pOther->GetTeamNumber()))
 					continue;
 
 				// Check for team bonus
-				bool bCanCheckPlayer = (IsAlive() && pPlr->IsAlive() && (pPlr->GetTeamNumber() >= TEAM_HUMANS) && (GetTeamNumber() >= TEAM_HUMANS) && (GetTeamNumber() == pPlr->GetTeamNumber()));
-				if (bCanCheckPlayer)
-				{
-					if (GetLocalOrigin().DistTo(pPlr->GetLocalOrigin()) <= MAX_TEAMMATE_DISTANCE)
-					{
-						if (pPlr->FVisible(this, MASK_VISIBLE))
-							iPlayersFound++;
-					}
-				}
+				if ((GetLocalOrigin().DistTo(pOther->GetLocalOrigin()) <= MAX_TEAMMATE_DISTANCE) && this->FVisible(pOther, MASK_VISIBLE))
+					iPlayersFound++;
 			}
 		}
 
 		m_BB2Local.m_iPerkTeamBonus = iPlayersFound;
 
-		if (IsAlive())
+		if (IsHuman())
 		{
-			if (IsHuman())
-			{
-				m_BB2Local.m_bCanActivatePerk = (!GetPerkFlags() && (m_iNumPerkKills >= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iKillsRequiredToPerk)
-					&& ((GetSkillValue(PLAYER_SKILL_HUMAN_REALITY_PHASE) > 0) || (GetSkillValue(PLAYER_SKILL_HUMAN_BLOOD_RAGE) > 0) || (GetSkillValue(PLAYER_SKILL_HUMAN_GUNSLINGER) > 0)));
-			}
-			else if (IsZombie())
-			{
-				m_BB2Local.m_bCanActivatePerk = (!GetPerkFlags() && (m_BB2Local.m_flZombieRageThresholdDamage >= GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flRequiredDamageThreshold));
-			}
+			m_BB2Local.m_bCanActivatePerk = (!GetPerkFlags() && (m_iNumPerkKills >= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iKillsRequiredToPerk)
+				&& ((GetSkillValue(PLAYER_SKILL_HUMAN_REALITY_PHASE) > 0) || (GetSkillValue(PLAYER_SKILL_HUMAN_BLOOD_RAGE) > 0) || (GetSkillValue(PLAYER_SKILL_HUMAN_GUNSLINGER) > 0)));
+		}
+		else if (IsZombie())
+		{
+			m_BB2Local.m_bCanActivatePerk = (!GetPerkFlags() && (m_BB2Local.m_flZombieRageThresholdDamage >= GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flRequiredDamageThreshold));
 		}
 	}
 	else
@@ -815,7 +798,7 @@ void CHL2MP_Player::PreThink(void)
 // Give us armor or remove!
 void CHL2MP_Player::ApplyArmor(float flArmorDurability, int iType)
 {
-	m_ArmorValue = (int)flArmorDurability;
+	m_ArmorValue = ((int)flArmorDurability);
 
 	if (flArmorDurability <= 0)
 	{
@@ -850,10 +833,10 @@ void CHL2MP_Player::OnZombieInfectionComplete(void)
 	RefreshSpeed();
 }
 
-void CHL2MP_Player::DoHighPingCheck(void)
+bool CHL2MP_Player::DoHighPingCheck(void)
 {
 	if (m_bFinishedPingCheck || IsBot())
-		return;
+		return false;
 
 	if (gpGlobals->curtime > m_flLastTimeCheckedPing)
 	{
@@ -874,16 +857,19 @@ void CHL2MP_Player::DoHighPingCheck(void)
 			Q_snprintf(pchKickCmd, 128, "kickid %i Too high ping!\n", GetUserID());
 			engine->ServerCommand(pchKickCmd);
 			engine->ServerExecute();
+			return true;
 		}
 	}
+
+	return false;
 }
 
 void CHL2MP_Player::PostThink(void)
 {
 	BaseClass::PostThink();
 
-	if (bb2_enable_high_ping_kicker.GetBool() && engine->IsDedicatedServer())
-		DoHighPingCheck();
+	if (bb2_enable_high_ping_kicker.GetBool() && engine->IsDedicatedServer() && DoHighPingCheck())
+		return;
 
 	if (!IsBot() && bb2_enable_afk_kicker.GetBool() && engine->IsDedicatedServer() && !((GetTeamNumber() == TEAM_SPECTATOR) && m_bHasJoinedGame) && (m_flLastTimeRanCommand > 0.0f))
 	{
@@ -894,6 +880,7 @@ void CHL2MP_Player::PostThink(void)
 			Q_snprintf(pchKickCmd, 128, "kickid %i AFK for too long!\n", GetUserID());
 			engine->ServerCommand(pchKickCmd);
 			engine->ServerExecute();
+			return;
 		}
 	}
 
@@ -1186,7 +1173,7 @@ bool CHL2MP_Player::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, con
 
 	// No need to lag compensate at all if we're not attacking in this command and
 	// we haven't attacked recently.
-	if (bCheckAttackButton && !(pCmd->buttons & IN_ATTACK) && !(pCmd->buttons & IN_ATTACK2) && !(pCmd->buttons & IN_ATTACK3) && (pCmd->command_number - m_iLastWeaponFireUsercmd > 5))
+	if (bCheckAttackButton && !(pCmd->buttons & (IN_ATTACK | IN_ATTACK2 | IN_ATTACK3)) && ((pCmd->command_number - m_iLastWeaponFireUsercmd) > 5))
 		return false;
 
 	return BaseClass::WantsLagCompensationOnEntity(pEntity, pCmd, pEntityTransmitBits);
@@ -1195,7 +1182,6 @@ bool CHL2MP_Player::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, con
 void CHL2MP_Player::Weapon_Equip(CBaseCombatWeapon *pWeapon)
 {
 	BaseClass::Weapon_Equip(pWeapon);
-
 	GameBaseShared()->ComputePlayerWeight(this);
 }
 
@@ -1210,10 +1196,7 @@ bool CHL2MP_Player::EquipAmmoFromWeapon(CBaseCombatWeapon *pWeapon)
 	int primaryAmmo = GiveAmmo(pWeapon->GetDefaultClip1(), pWeapon->m_iPrimaryAmmoType, false);
 	int secondaryAmmo = GiveAmmo(pWeapon->GetDefaultClip2(), pWeapon->m_iSecondaryAmmoType, false);
 
-	if (primaryAmmo != 0 || secondaryAmmo != 0)
-		return true;
-
-	return false;
+	return (primaryAmmo != 0 || secondaryAmmo != 0);
 }
 
 CBaseCombatWeapon *CHL2MP_Player::GetBestWeapon()
@@ -1242,13 +1225,12 @@ CBaseCombatWeapon *CHL2MP_Player::GetBestWeapon()
 // Output : Returns true if player picked up the weapon
 //-----------------------------------------------------------------------------
 bool CHL2MP_Player::BumpWeapon(CBaseCombatWeapon *pWeapon)
-{
-	CBaseCombatCharacter *pOwner = pWeapon->GetOwner();
-
+{	
 	// Can I have this weapon type?
 	if (!IsAllowedToPickupWeapons() || (GetTeamNumber() >= TEAM_DECEASED) || !IsAlive())
 		return false;
 
+	CBaseCombatCharacter *pOwner = pWeapon->GetOwner();
 	if (pOwner || !Weapon_CanUse(pWeapon) || !Weapon_CanSwitchTo(pWeapon))
 		return false;
 
@@ -1313,8 +1295,8 @@ bool CHL2MP_Player::BumpWeapon(CBaseCombatWeapon *pWeapon)
 			UTIL_Remove(pWeapon);
 			return true;
 		}
-		else
-			return false;
+
+		return false;
 	}
 
 	Weapon_DropSlot(pWeapon->GetSlot());
@@ -1350,6 +1332,7 @@ bool CHL2MP_Player::GiveItem(const char *szItemName, bool bDoLevelCheck)
 		if (weaponHandle != GetInvalidWeaponInfoHandle())
 		{
 			FileWeaponInfo_t *pWeaponInfo = GetFileWeaponInfoFromHandle(weaponHandle);
+			Assert(pWeaponInfo != NULL);
 			int levelRequired = pWeaponInfo->m_iLevelReq;
 			if (m_iSkill_Level < levelRequired)
 			{
@@ -1431,6 +1414,7 @@ bool CHL2MP_Player::PerformLevelUp(int iXP)
 			char pchArg1[16];
 			Q_snprintf(pchArg1, 16, "%i", m_iSkill_Level);
 			GameBaseServer()->SendToolTip("#TOOLTIP_LEVELUP1", 0, this->entindex(), pchArg1);
+			IPredictionSystem::SuppressHostEvents(NULL);
 			DispatchParticleEffect("bb2_levelup_effect", PATTACH_ROOTBONE_FOLLOW, this, -1, true);
 		}
 
@@ -1569,6 +1553,7 @@ bool CHL2MP_Player::ActivatePerk(int skill)
 	}
 	}
 
+	IPredictionSystem::SuppressHostEvents(NULL);
 	DispatchParticleEffect("bb2_perk_activate", PATTACH_ROOTBONE_FOLLOW, this, -1, true);
 	return true;
 }
@@ -1612,6 +1597,7 @@ bool CHL2MP_Player::EnterRageMode(bool bForce) // Zombie 'Perk' thing.
 	RefreshSpeed();
 
 	AddPerkFlag(PERK_ZOMBIE_RAGE);
+	IPredictionSystem::SuppressHostEvents(NULL);
 	DispatchParticleEffect("bb2_perk_activate", PATTACH_ROOTBONE_FOLLOW, this, -1, true);
 	return true;
 }
@@ -2435,7 +2421,6 @@ void CHL2MP_Player::FlashlightTurnOn(void)
 	}
 }
 
-
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CHL2MP_Player::FlashlightTurnOff(void)
@@ -2460,7 +2445,6 @@ void CHL2MP_Player::RemoveSpawnProtection(void)
 void CHL2MP_Player::Weapon_Drop(CBaseCombatWeapon *pWeapon, const Vector *pvecTarget, const Vector *pVelocity)
 {
 	BaseClass::Weapon_Drop(pWeapon, pvecTarget, pVelocity);
-
 	GameBaseShared()->ComputePlayerWeight(this);
 }
 
@@ -2596,117 +2580,72 @@ void CHL2MP_Player::HandlePainSound(int iMajor, int iDamageTypeBits)
 
 CBaseEntity* CHL2MP_Player::EntSelectSpawnPoint(void)
 {
+	CUtlVector<CBaseEntity*> pSpawnPointsValid;
+	CUtlVector<CBaseEntity*> pSpawnPointsInValid;
+
 	CBaseEntity *pFinalSpawnPoint = NULL;
+
+	bool bUseCameraSpawn = true;
 	const char *pSpawnpointName = "info_start_camera";
-	int iAvailablePoints = 0;
+
 	if (GetTeamNumber() == TEAM_HUMANS)
+	{
+		bUseCameraSpawn = false;
 		pSpawnpointName = "info_player_human";
+	}
 	else if (GetTeamNumber() == TEAM_DECEASED)
+	{
+		bUseCameraSpawn = false;
 		pSpawnpointName = "info_player_zombie";
+	}
 
 	CBaseEntity *pEntity = gEntList.FindEntityByClassname(NULL, pSpawnpointName);
 	while (pEntity)
 	{
-		if (strcmp(pSpawnpointName, "info_start_camera"))
+		if (bUseCameraSpawn == false)
 		{
 			CBaseSpawnPoint *pPoint = dynamic_cast<CBaseSpawnPoint*> (pEntity);
-			if (pPoint)
+			if (pPoint && pPoint->IsEnabled())
 			{
-				if (pPoint->IsEnabled())
-				{
-					if (g_pGameRules->IsSpawnPointValid(pEntity, this))
-						iAvailablePoints++;
-				}
+				if (g_pGameRules->IsSpawnPointValid(pEntity, this))
+					pSpawnPointsValid.AddToTail(pEntity);
+				else
+					pSpawnPointsInValid.AddToTail(pEntity);
 			}
 		}
 		else
-			iAvailablePoints++;
+			pSpawnPointsValid.AddToTail(pEntity);
 
 		pEntity = gEntList.FindEntityByClassname(pEntity, pSpawnpointName);
 	}
 
-	int iChoosenSpawn = random->RandomInt(1, iAvailablePoints);
-	iAvailablePoints = 0;
+	int iValidSpawns = pSpawnPointsValid.Count();
+	int iInvalidSpawns = pSpawnPointsInValid.Count();
 
-	pEntity = gEntList.FindEntityByClassname(NULL, pSpawnpointName);
-	while (pEntity)
+	if ((iValidSpawns <= 0) && (iInvalidSpawns <= 0))
 	{
-		if (strcmp(pSpawnpointName, "info_start_camera"))
-		{
-			CBaseSpawnPoint *pPoint = dynamic_cast<CBaseSpawnPoint*> (pEntity);
-			if (pPoint)
-			{
-				if (pPoint->IsEnabled())
-				{
-					if (g_pGameRules->IsSpawnPointValid(pEntity, this))
-					{
-						iAvailablePoints++;
-						if (iChoosenSpawn == iAvailablePoints)
-						{
-							pFinalSpawnPoint = pEntity;
-							break;
-						}
-					}
-				}
-			}
-		}
-		else
-		{
-			iAvailablePoints++;
-			if (iChoosenSpawn == iAvailablePoints)
-			{
-				pFinalSpawnPoint = pEntity;
-				break;
-			}
-		}
-
-		pEntity = gEntList.FindEntityByClassname(pEntity, pSpawnpointName);
+		Warning("No available spawn point!\nForcing (0,0,0)!\n");
+		pFinalSpawnPoint = GetWorldEntity();
 	}
-
-	iAvailablePoints = 0;
-
-	if (!pFinalSpawnPoint)
-	{
-		pEntity = gEntList.FindEntityByClassname(NULL, pSpawnpointName);
-		while (pEntity)
-		{
-			if (strcmp(pSpawnpointName, "info_start_camera"))
-			{
-				CBaseSpawnPoint *pPoint = dynamic_cast<CBaseSpawnPoint*> (pEntity);
-				if (pPoint)
-				{
-					if (pPoint->IsEnabled())
-					{
-						iAvailablePoints++;
-						if (iChoosenSpawn == iAvailablePoints)
-						{
-							pFinalSpawnPoint = pEntity;
-							break;
-						}
-					}
-				}
-			}
-
-			pEntity = gEntList.FindEntityByClassname(pEntity, pSpawnpointName);
-		}
-
-		if (!pFinalSpawnPoint)
-		{
-			Warning("No available spawn point!\nForcing 0,0,0!\n");
-			pFinalSpawnPoint = GetWorldEntity();
-		}
-	}
+	else if (iValidSpawns > 0)
+		pFinalSpawnPoint = pSpawnPointsValid[random->RandomInt(0, (iValidSpawns - 1))];
+	else
+		pFinalSpawnPoint = pSpawnPointsInValid[random->RandomInt(0, (iInvalidSpawns - 1))];
 
 	m_flSpawnProtection = gpGlobals->curtime + bb2_spawn_protection.GetFloat();
 	m_flZombieVisionLockTime = gpGlobals->curtime + 0.5f;
 
-	//// We use 'dynamic' spawns in story mode:
-	//if (GameBaseServer()->IsStoryMode() && (GetTeamNumber() >= TEAM_HUMANS) && pFinalSpawnPoint)
-	//{
-	//	CBasePlayer *pDistantPlayer = UTIL_GetMostDistantPlayer(this, pFinalSpawnPoint->GetAbsOrigin());
-	//	if (pDistantPlayer)
-	//		return pDistantPlayer;
-	//}
+	pSpawnPointsValid.RemoveAll();
+	pSpawnPointsInValid.RemoveAll();
+
+	// Allow dyn. respawns in story mode.
+	if (GameBaseServer()->IsStoryMode() && HL2MPRules()->m_bRoundStarted && !HL2MPRules()->IsGameoverOrScoresVisible()
+		&& (GetTeamNumber() == TEAM_HUMANS) && pFinalSpawnPoint && bb2_story_dynamic_respawn.GetBool())
+	{
+		CBasePlayer *pDistantPlayer = UTIL_GetMostDistantPlayer(this, pFinalSpawnPoint->GetLocalOrigin());
+		if (pDistantPlayer)
+			return pDistantPlayer;
+	}
 
 	return pFinalSpawnPoint;
 }
@@ -2894,16 +2833,10 @@ void CHL2MP_Player::State_Enter_ACTIVE()
 	m_Local.m_iHideHUD = 0;
 }
 
-
 void CHL2MP_Player::State_PreThink_ACTIVE()
 {
 	//we don't really need to do anything here. 
 	//This state_prethink structure came over from CS:S and was doing an assert check that fails the way hl2dm handles death
-}
-
-void CHL2MP_Player::HandleAnimEvent(animevent_t *pEvent)
-{
-	BaseClass::HandleAnimEvent(pEvent);
 }
 
 void CHL2MP_Player::AddAssociatedAmmoEnt(CBaseEntity *pEnt)
@@ -2967,6 +2900,7 @@ void CHL2MP_Player::SetAnimation(PLAYER_ANIM playerAnim)
 }
 
 // BB2 SKILL SETUP, THIS IS HOW WE FIGURE OUT WHAT SPEED OFFSET(S) WE SHOULD HAVE AT ALL TIMES!!!
+
 float CHL2MP_Player::GetTeamPerkValue(float flOriginalValue)
 {
 	float flNewValue = flOriginalValue;
@@ -3036,14 +2970,14 @@ float CHL2MP_Player::GetSkillValue(const char *pszType, int skillType, int team,
 	if (flDefaultValue <= 0.0f)
 		return (GetSkillValue(skillType, team, false, dataSubType));
 
-	float flReturn = (flDefaultValue + ((flDefaultValue / 100) * ((float)GetSkillValue(skillType) * GameBaseShared()->GetSharedGameDetails()->GetPlayerSkillValue(skillType, team, dataSubType))));
+	float flReturn = (flDefaultValue + ((flDefaultValue / 100.0f) * ((float)GetSkillValue(skillType) * GameBaseShared()->GetSharedGameDetails()->GetPlayerSkillValue(skillType, team, dataSubType))));
 	return flReturn;
 }
 
 float CHL2MP_Player::GetSkillCombination(int skillDefault, int skillExtra)
 {
 	float flDefault = (float)skillDefault;
-	return (flDefault + ((flDefault / 100) * skillExtra));
+	return (flDefault + ((flDefault / 100.0f) * skillExtra));
 }
 
 float CHL2MP_Player::GetSkillWeaponDamage(float flDefaultDamage, float dmgFactor, int weaponType)
@@ -3067,7 +3001,7 @@ float CHL2MP_Player::GetSkillWeaponDamage(float flDefaultDamage, float dmgFactor
 		break;
 	}
 
-	float flMultiplier = ((flDefaultDamage / 100) * flExtraDamagePercent);
+	float flMultiplier = ((flDefaultDamage / 100.0f) * flExtraDamagePercent);
 	return flMultiplier;
 }
 
@@ -3476,12 +3410,14 @@ END_SEND_TABLE()
 
 static CTEPlayerAnimEvent g_TEPlayerAnimEvent("PlayerAnimEvent");
 
-void TE_PlayerAnimEvent(CBasePlayer *pPlayer, PlayerAnimEvent_t event, int nData)
+void TE_PlayerAnimEvent(CBasePlayer *pPlayer, PlayerAnimEvent_t event, int nData, bool bSkipPrediction)
 {
 	CPVSFilter filter((const Vector&)pPlayer->EyePosition());
 
-	//Tony; use prediction rules.
-	filter.UsePredictionRules();
+	if (bSkipPrediction == false)
+		filter.UsePredictionRules();
+	else
+		IPredictionSystem::SuppressHostEvents(NULL);
 
 	g_TEPlayerAnimEvent.m_hPlayer = pPlayer;
 	g_TEPlayerAnimEvent.m_iEvent = event;
@@ -3489,7 +3425,7 @@ void TE_PlayerAnimEvent(CBasePlayer *pPlayer, PlayerAnimEvent_t event, int nData
 	g_TEPlayerAnimEvent.Create(filter, 0);
 }
 
-void CHL2MP_Player::DoAnimationEvent(PlayerAnimEvent_t event, int nData)
+void CHL2MP_Player::DoAnimationEvent(PlayerAnimEvent_t event, int nData, bool bSkipPrediction)
 {
 	// Disable spawn prot. if we fire in elimination or deathmatch mode!
 	bool bShouldDisable = (
@@ -3505,7 +3441,7 @@ void CHL2MP_Player::DoAnimationEvent(PlayerAnimEvent_t event, int nData)
 		RemoveSpawnProtection();
 
 	m_PlayerAnimState->DoAnimationEvent(event, nData);
-	TE_PlayerAnimEvent(this, event, nData);	// Send to any clients who can see this guy.
+	TE_PlayerAnimEvent(this, event, nData, bSkipPrediction);	// Send to any clients who can see this guy.
 }
 
 //-----------------------------------------------------------------------------

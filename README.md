@@ -22,7 +22,7 @@ However, if you create a pull request, be sure to test your changes properly bef
 
 ### Future Implementations & Improvements
 - [ ] Add skill tree templates for fast switching between skill choices.
-- [ ] Improve movement mechanics, such as view tilting and camera movement when reloading weapons.
+- [ ] Improve movement mechanics, such as camera movement when reloading weapons.
 - [ ] New GUI for the inventory and quest system.
 - [ ] Fix tiny HUD / GUI text for some languages like Russian, Chinese, etc...
 - [ ] Allow players to actually use unique player models similar to GoldSource, change how player models are rendered @ client.
@@ -31,10 +31,8 @@ However, if you create a pull request, be sure to test your changes properly bef
 * Writing 'connect ip:port' in the console while in-game will bug if the server is password protected, you have to open the main menu in order to write in the desired password. (assuming you're using the console when the main menu isn't up)
 * Very rare and random crash which occurs when you click OK on the motd in-game, when you're about to enter the game. (spawn)
 * Engine related render crash, due to too many frames being rendered, happens in Termoil sometimes.
-* Unable to freeroam in spectator mode.
 * Sometimes viewmodels will randomly go invisible until you respawn/get a new weapon of the same type.
 * Very rarely some players will suddenly become invisible.
-* When recording via hltv, the objective HUD will be hidden.
+* When recording via HLTV, the objective HUD will be hidden.
 * Changing resolution while the motd is up will create unforeseen consequences.
 * Spectating starts inside the player, you have to refresh the spectate mode to fix this issue at this time.
-* Sometimes thirdperson gestures will not play. EX: Melee anims, swinging, etc...

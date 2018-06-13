@@ -33,6 +33,7 @@ struct WeaponPickupItem_t
 //=============================================================================
 // >> HL2MP_Player
 //=============================================================================
+
 class CHL2MPPlayerStateInfo
 {
 public:
@@ -47,25 +48,11 @@ public:
 
 class CHL2MP_Player : public CHL2_Player
 {
-	enum
-	{
-		Human = 0,
-		Zombie,
-		Default,
-	};
-
-public:
-
-	// BB2 Class Sys.
-	void SetPlayerClass(int iTeam);
-	void SetZombie();
-	void SetHuman();
-	void ResetZombieSkills(void);
-	void RefreshSpeed(void);
-	bool HandleLocalProfile(bool bSave = false);
-
 public:
 	DECLARE_CLASS(CHL2MP_Player, CHL2_Player);
+	DECLARE_SERVERCLASS();
+	DECLARE_DATADESC();
+	DECLARE_PREDICTABLE();
 
 	CHL2MP_Player();
 	virtual ~CHL2MP_Player();
@@ -76,17 +63,21 @@ public:
 		return (CHL2MP_Player*)CreateEntityByName(className);
 	}
 
-	DECLARE_SERVERCLASS();
-	DECLARE_DATADESC();
-	DECLARE_PREDICTABLE();
-
 	// This passes the event to the client's and server's CHL2MPPlayerAnimState.
-	void DoAnimationEvent(PlayerAnimEvent_t event, int nData = 0);
+	void DoAnimationEvent(PlayerAnimEvent_t event, int nData = 0, bool bSkipPrediction = false);
 	void SetupBones(matrix3x4_t *pBoneToWorld, int boneMask);
 
 	// BB2 Weapon stuff
 	bool Weapon_SwitchBySlot(int iSlot, int viewmodelindex = 0);
 	void DropAllWeapons(void);
+
+	// BB2 Class Sys.
+	void SetPlayerClass(int iTeam);
+	void SetZombie();
+	void SetHuman();
+	void ResetZombieSkills(void);
+	void RefreshSpeed(void);
+	bool HandleLocalProfile(bool bSave = false);
 
 	// Zombie Stored Kills Purpose: Since every zombie needs to be an individual we store a kill amount to respawn the zombie as a human after the death with the X score!
 	int m_iZombKills;
@@ -138,7 +129,6 @@ public:
 	virtual bool BecomeRagdollOnClient(const Vector &force);
 	virtual void Event_Killed(const CTakeDamageInfo &info);
 	virtual int OnTakeDamage(const CTakeDamageInfo &inputInfo);
-	virtual void InitialSpawn(void);
 	virtual bool IsValidObserverTarget(CBaseEntity * target); 
 	virtual void OnZombieInfectionComplete(void);
 
@@ -175,7 +165,6 @@ public:
 	virtual void PickupObject(CBaseEntity *pObject, bool bLimitMassAndSize);
 	virtual void PlayStepSound(Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force);
 	virtual void Weapon_Drop(CBaseCombatWeapon *pWeapon, const Vector *pvecTarget = NULL, const Vector *pVelocity = NULL);
-	virtual void UpdateOnRemove(void);
 	virtual void DeathSound(const CTakeDamageInfo &info);
 	virtual void MeleeSwingSound(bool bBash = false);
 	virtual CBaseEntity* EntSelectSpawnPoint(void);
@@ -284,8 +273,6 @@ public:
 	void IncrementTotalDeaths(void) { m_iTotalDeaths++; }
 	void IncrementRoundDeaths(void) { m_iRoundDeaths++; }
 
-	virtual void HandleAnimEvent(animevent_t *pEvent);
-
 	void SetAdminStatus(bool value) { m_bIsServerAdmin = value; }
 	bool IsAdminOnServer(void) { return m_bIsServerAdmin; }
 
@@ -323,7 +310,6 @@ private:
 	CNetworkQAngle(m_angEyeAngles);
 
 	int m_iLastWeaponFireUsercmd;
-	int m_iModelType;
 	CNetworkVar(int, m_iSpawnInterpCounter);
 	CNetworkVar(int, m_nPerkFlags);
 	CNetworkVar(bool, m_bIsInSlide);
@@ -354,7 +340,7 @@ private:
 	bool m_bEnterObserver;
 
 	// High Ping Kicker:
-	void DoHighPingCheck(void);
+	bool DoHighPingCheck(void);
 	int m_iTotalPing;
 	int m_iTimesCheckedPing;
 	float m_flLastTimeCheckedPing;

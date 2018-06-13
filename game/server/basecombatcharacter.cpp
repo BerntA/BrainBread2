@@ -695,6 +695,7 @@ CBaseCombatCharacter::~CBaseCombatCharacter( void )
 {
 	ResetVisibilityCache( this );
 	ClearLastKnownArea();
+	m_pActiveSkillEffects.Purge();
 }
 
 //-----------------------------------------------------------------------------
@@ -2747,16 +2748,11 @@ CBaseEntity *CBaseCombatCharacter::FindHealthItem( const Vector &vecPosition, co
 //-----------------------------------------------------------------------------
 bool CBaseCombatCharacter::Weapon_IsOnGround( CBaseCombatWeapon *pWeapon )
 {
-	if( pWeapon->IsConstrained() )
-	{
-		// Constrained to a rack.
+	if (pWeapon->HasSpawnFlags(SF_NORESPAWN) == false)
 		return false;
-	}
 
-	if( fabs(pWeapon->WorldSpaceCenter().z - GetAbsOrigin().z) >= 12.0f )
-	{
-		return false;
-	}
+	if( fabs(pWeapon->WorldSpaceCenter().z - GetAbsOrigin().z) >= 12.0f )	
+		return false;	
 
 	return true;
 }

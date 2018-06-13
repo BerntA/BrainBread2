@@ -89,7 +89,7 @@ void CHL2MPMachineGun::PrimaryAttack( void )
 	info.m_flDistance = MAX_TRACE_LENGTH;
 	info.m_iAmmoType = m_iPrimaryAmmoType;
 	info.m_iTracerFreq = 2;
-	info.m_vecFirstStartPos = pPlayer->GetAbsOrigin();
+	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
 	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
 	FireBullets( info );
 

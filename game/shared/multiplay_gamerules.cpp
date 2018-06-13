@@ -85,6 +85,7 @@ ConVar bb2_deathmatch_respawn_time("bb2_deathmatch_respawn_time", "3", FCVAR_REP
 ConVar bb2_deathmatch_fraglimit("bb2_deathmatch_fraglimit", "60", FCVAR_REPLICATED, "Set the max amount of frags a person can get before the game ends.", true, 20.0f, false, 1000.0f);
 
 ConVar bb2_story_respawn_time("bb2_story_respawn_time", "10", FCVAR_REPLICATED, "Set the default respawn time in seconds.", true, 4.0f, true, 30.0f);
+ConVar bb2_story_dynamic_respawn("bb2_story_dynamic_respawn", "0", FCVAR_REPLICATED, "Spawn at the nearest player, relative to the nearest checkpoint spawnpoint.", true, 0, true, 1);
 ConVar bb2_classic_mode_enabled("bb2_classic_mode_enabled", "0", FCVAR_REPLICATED, "This will enable BrainBread Classic Mode for Objective Mode. Enabling this will prevent non Walker and Military NPCs from spawning.", true, 0.0f, true, 1.0f);
 ConVar bb2_classic_zombie_noteamchange("bb2_classic_zombie_noteamchange", "1", FCVAR_REPLICATED, "When a player zombie kills a human player the human will not become a zombie on respawn.", true, 0.0f, true, 1.0f);
 

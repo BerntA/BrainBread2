@@ -787,9 +787,9 @@ RecvPropInt(RECVINFO(m_iEvent)),
 RecvPropInt(RECVINFO(m_nData))
 END_RECV_TABLE()
 
-void C_HL2MP_Player::DoAnimationEvent(PlayerAnimEvent_t event, int nData)
+void C_HL2MP_Player::DoAnimationEvent(PlayerAnimEvent_t event, int nData, bool bSkipPrediction)
 {
-	if (IsLocalPlayer())
+	if (IsLocalPlayer() && !bSkipPrediction)
 	{
 		if ((prediction->InPrediction() && !prediction->IsFirstTimePredicted()))
 			return;

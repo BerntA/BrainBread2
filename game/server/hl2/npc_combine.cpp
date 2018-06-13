@@ -286,7 +286,7 @@ void CNPC_Combine::FireBullets(const FireBulletsInfo_t &info)
 	if (GameBaseShared()->GetNPCData() && pWeapon)
 	{
 		flDamage = GameBaseShared()->GetNPCData()->GetFirearmDamage(GetNPCName(), pWeapon->GetClassname());
-		modinfo.m_vecFirstStartPos = GetAbsOrigin();
+		modinfo.m_vecFirstStartPos = GetLocalOrigin();
 		modinfo.m_flDropOffDist = pWeapon->GetWpnData().m_flDropOffDistance;
 	}
 

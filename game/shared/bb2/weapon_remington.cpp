@@ -418,7 +418,7 @@ void CWeaponRemington::PrimaryAttack(void)
 
 	FireBulletsInfo_t info(GetWpnData().m_iPellets, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
 	info.m_pAttacker = pPlayer;
-	info.m_vecFirstStartPos = pPlayer->GetAbsOrigin();
+	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
 	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
 
 	// Fire the bullets, and force the first shot to be perfectly accuracy

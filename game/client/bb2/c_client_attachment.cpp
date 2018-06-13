@@ -188,7 +188,7 @@ void C_ClientAttachment::ClientThink(void)
 			case CLIENT_ATTACHMENT_WEAPON:
 			{
 				int index = GetOtherLinkEntindex();
-				C_BaseCombatWeapon *pWeapon = pPlayer->GetAllWeapons(m_iParameter);
+				C_BaseCombatWeapon *pWeapon = pPlayer->Weapon_GetBySlot(m_iParameter);
 				m_bShouldHide = (pWeapon == NULL || (pWeapon == pPlayer->GetActiveWeapon()) || !bAlive || (teamNum != TEAM_HUMANS));
 				if (pWeapon && (!pWeapon->VisibleInWeaponSelection()))
 					m_bShouldHide = true;

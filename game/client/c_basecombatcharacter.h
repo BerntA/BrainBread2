@@ -16,7 +16,6 @@
 #include "c_baseflex.h"
 
 class C_BaseCombatWeapon;
-class C_WeaponCombatShield;
 
 #define BCC_DEFAULT_LOOK_TOWARDS_TOLERANCE 0.9f
 
@@ -66,7 +65,7 @@ public:
 	virtual bool                IsAmmoIndexSecondaryAmmo(int iAmmoIndex);
 
 	C_BaseCombatWeapon*	Weapon_OwnsThisType( const char *pszWeapon, int iSubType = 0 ) const;  // True if already owns a weapon of this class
-	C_BaseCombatWeapon* GetAllWeapons( int m_iSlot ) const;
+	C_BaseCombatWeapon* Weapon_GetBySlot(int slot) const;
 	virtual	bool		Weapon_Switch( C_BaseCombatWeapon *pWeapon, bool bWantDraw = false, int viewmodelindex = 0 );
 	virtual bool		Weapon_CanSwitchTo(C_BaseCombatWeapon *pWeapon);
 	C_BaseCombatWeapon	*Weapon_GetWpnForAmmo(int iAmmoIndex);

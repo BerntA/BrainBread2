@@ -245,6 +245,7 @@ protected:
 	void			PlaySwimSound();
 
 	bool			IsDead( void ) const;
+	bool			IsInFreeRoamMode(void) const;
 
 	// Figures out how the constraint should slow us down
 	float			ComputeConstraintSpeedFactor( void );

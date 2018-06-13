@@ -218,7 +218,7 @@ public:
 	virtual void		Weapon_FrameUpdate( void );
 	virtual void		Weapon_HandleAnimEvent( animevent_t *pEvent );
 	CBaseCombatWeapon*	Weapon_OwnsThisType( const char *pszWeapon, int iSubType = 0 ) const;  // True if already owns a weapon of this class
-	CBaseCombatWeapon* GetAllWeapons( int m_iSlot ) const;
+	CBaseCombatWeapon*	Weapon_GetBySlot(int slot) const;
 	virtual bool		Weapon_CanUse( CBaseCombatWeapon *pWeapon );		// True is allowed to use this class of weapon
 	virtual void		Weapon_Equip( CBaseCombatWeapon *pWeapon );			// Adds weapon to player
 	bool				Weapon_Detach( CBaseCombatWeapon *pWeapon );		// Clear any pointers to the weapon.

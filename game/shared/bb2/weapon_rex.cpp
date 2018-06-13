@@ -123,7 +123,7 @@ void CWeaponREX::PrimaryAttack(void)
 
 	FireBulletsInfo_t info(1, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
 	info.m_pAttacker = pPlayer;
-	info.m_vecFirstStartPos = pPlayer->GetAbsOrigin();
+	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
 	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
 	info.m_vecSpread = pPlayer->GetAttackSpread(this);
 
@@ -281,7 +281,7 @@ void CWeaponREXAkimbo::PerformAttack(bool bPrimary)
 
 	FireBulletsInfo_t info(1, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
 	info.m_pAttacker = pPlayer;
-	info.m_vecFirstStartPos = pPlayer->GetAbsOrigin();
+	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
 	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
 	info.m_vecSpread = pPlayer->GetAttackSpread(this);
 	info.m_bPrimaryAttack = bPrimary;

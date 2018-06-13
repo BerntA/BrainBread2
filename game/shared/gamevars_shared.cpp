@@ -36,10 +36,10 @@ ConVar mp_forcecamera(
 	);
 	
 ConVar mp_allowspectators(
-	"mp_allowspectators", 
-	"1.0", 
+	"mp_allowspectators",
+	"1",
 	FCVAR_REPLICATED,
-	"toggles whether the server allows spectator mode or not" );
+	"toggles whether the server allows spectator mode or not");
 
 ConVar friendlyfire(
 	"mp_friendlyfire",
@@ -47,12 +47,3 @@ ConVar friendlyfire(
 	FCVAR_REPLICATED | FCVAR_NOTIFY,
 	"Allows team members to injure other members of their team"
 	);
-
-ConVar mp_fadetoblack( 
-	"mp_fadetoblack", 
-	"0", 
-	FCVAR_REPLICATED | FCVAR_NOTIFY, 
-	"fade a player's screen to black when he dies" );
-
-
-ConVar sv_hudhint_sound( "sv_hudhint_sound", "1", FCVAR_REPLICATED );

@@ -867,7 +867,7 @@ void CNPC_CustomActor::FireBullets(const FireBulletsInfo_t &info)
 	float flDamage = info.m_flDamage;
 	if (pWeapon)
 	{
-		modinfo.m_vecFirstStartPos = GetAbsOrigin();
+		modinfo.m_vecFirstStartPos = GetLocalOrigin();
 		modinfo.m_flDropOffDist = pWeapon->GetWpnData().m_flDropOffDistance;
 	}
 

@@ -98,7 +98,7 @@ public:
 	float GetSkillCombination(int skillDefault, int skillExtra);
 
 	virtual void UpdateClientSideAnimation();
-	void DoAnimationEvent(PlayerAnimEvent_t event, int nData = 0);
+	void DoAnimationEvent(PlayerAnimEvent_t event, int nData = 0, bool bSkipPrediction = false);
 	virtual void CalculateIKLocks(float currentTime);
 
 	float GetRespawnTime(void) { return m_BB2Local.m_flPlayerRespawnTime; }

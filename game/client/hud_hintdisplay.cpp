@@ -279,9 +279,6 @@ void CHudHintDisplay::FireGameEvent( IGameEvent * event)
 	LocalizeAndDisplay( tmpStr, hintmessage );
 }
 
-extern ConVar sv_hudhint_sound;
-ConVar cl_hudhint_sound( "cl_hudhint_sound", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Disable hudhint sounds." );
-
 //-----------------------------------------------------------------------------
 // Purpose: Localize, display, and animate the hud element
 //-----------------------------------------------------------------------------
@@ -320,13 +317,7 @@ void CHudHintDisplay::LocalizeAndDisplay( const char *pszHudTxtMsg, const char *
 		C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
 		if ( pLocalPlayer )
 		{
-#ifndef HL2MP
-			if ( sv_hudhint_sound.GetBool() && cl_hudhint_sound.GetBool() )
-			{
-				pLocalPlayer->EmitSound( "Hud.Hint" );
-			}
-#endif // HL2MP
-
+			// TODO: Play sound ?
 			if ( pLocalPlayer->Hints() )
 			{
 				pLocalPlayer->Hints()->PlayedAHint();

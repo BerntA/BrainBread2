@@ -1414,84 +1414,74 @@ static ConCommand groundlist("groundlist", CC_GroundList_f, "Display ground enti
 // Purpose: called each time a player uses a "cmd" command
 // Input  : *pEdict - the player who issued the command
 //-----------------------------------------------------------------------------
-void ClientCommand( CBasePlayer *pPlayer, const CCommand &args )
+void ClientCommand(CBasePlayer *pPlayer, const CCommand &args)
 {
 	const char *pCmd = args[0];
 
 	// Is the client spawned yet?
-	if ( !pPlayer )
+	if (!pPlayer)
 		return;
 
 	MDLCACHE_CRITICAL_SECTION();
 
-	/*
-	const char *pstr;
-
-	if (((pstr = strstr(pcmd, "weapon_")) != NULL)  && (pstr == pcmd))
+	bool bIssuedCommand = false;
+	if (sv_cheats && sv_cheats->GetBool())
 	{
-		// Subtype may be specified
-		if ( args.ArgC() == 2 )
+		if (FStrEq(pCmd, "killtarget"))
 		{
-			pPlayer->SelectItem( pcmd, atoi( args[1] ) );
+			if (g_pDeveloper->GetBool() && UTIL_IsCommandIssuedByServerAdmin())
+			{
+				ConsoleKillTarget(pPlayer, args[1]);
+			}
+
+			bIssuedCommand = true;
+		}
+		else if (FStrEq(pCmd, "demorestart"))
+		{
+			pPlayer->ForceClientDllUpdate();
+			bIssuedCommand = true;
+		}
+		else if (FStrEq(pCmd, "fade"))
+		{
+			color32 black = { 32, 63, 100, 200 };
+			UTIL_ScreenFade(pPlayer, black, 3, 3, FFADE_OUT);
+			bIssuedCommand = true;
+		}
+		else if (FStrEq(pCmd, "te"))
+		{
+			if (UTIL_IsCommandIssuedByServerAdmin())
+			{
+				if (FStrEq(args[1], "stop"))
+				{
+					// Destroy it
+					//
+					CBaseEntity *ent = gEntList.FindEntityByClassname(NULL, "te_tester");
+					while (ent)
+					{
+						CBaseEntity *next = gEntList.FindEntityByClassname(ent, "te_tester");
+						UTIL_Remove(ent);
+						ent = next;
+					}
+				}
+				else
+				{
+					CTempEntTester::Create(pPlayer->WorldSpaceCenter(), pPlayer->EyeAngles(), args[1], args[2]);
+				}
+			}
+			bIssuedCommand = true;
+		}
+	}
+
+	if ((bIssuedCommand == false) && !g_pGameRules->ClientCommand(pPlayer, args))
+	{
+		if (Q_strlen(pCmd) > 128)
+		{
+			ClientPrint(pPlayer, HUD_PRINTCONSOLE, "Console command too long.\n");
 		}
 		else
 		{
-			pPlayer->SelectItem(pcmd);
-		}
-	}
-	*/
-	
-	if ( FStrEq( pCmd, "killtarget" ) )
-	{
-		if ( g_pDeveloper->GetBool() && sv_cheats->GetBool() && UTIL_IsCommandIssuedByServerAdmin() )
-		{
-			ConsoleKillTarget( pPlayer, args[1] );
-		}
-	}
-	else if ( FStrEq( pCmd, "demorestart" ) ) 
-	{
-		pPlayer->ForceClientDllUpdate(); 
-	}
-	else if ( FStrEq( pCmd, "fade" ) )
-	{
-		color32 black = {32,63,100,200};
-		UTIL_ScreenFade( pPlayer, black, 3, 3, FFADE_OUT  );
-	} 
-	else if ( FStrEq( pCmd, "te" ) )
-	{
-		if ( sv_cheats->GetBool() && UTIL_IsCommandIssuedByServerAdmin() )
-		{
-			if ( FStrEq( args[1], "stop" ) )
-			{
-				// Destroy it
-				//
-				CBaseEntity *ent = gEntList.FindEntityByClassname( NULL, "te_tester" );
-				while ( ent )
-				{
-					CBaseEntity *next = gEntList.FindEntityByClassname( ent, "te_tester" );
-					UTIL_Remove( ent );
-					ent = next;
-				}
-			}
-			else
-			{
-				CTempEntTester::Create( pPlayer->WorldSpaceCenter(), pPlayer->EyeAngles(), args[1], args[2] );
-			}
-		}
-	}
-	else 
-	{
-		if ( !g_pGameRules->ClientCommand( pPlayer, args ) )
-		{
-			if ( Q_strlen( pCmd ) > 128 )
-			{
-				ClientPrint( pPlayer, HUD_PRINTCONSOLE, "Console command too long.\n" );
-			}
-			else
-			{
-				// tell the user they entered an unknown command
-				ClientPrint( pPlayer, HUD_PRINTCONSOLE, UTIL_VarArgs( "Unknown command: %s\n", pCmd ) );
-			}
+			// tell the user they entered an unknown command
+			ClientPrint(pPlayer, HUD_PRINTCONSOLE, UTIL_VarArgs("Unknown command: %s\n", pCmd));
 		}
 	}
 }

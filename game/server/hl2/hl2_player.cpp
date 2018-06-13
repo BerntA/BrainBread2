@@ -1182,8 +1182,14 @@ bool CHL2_Player::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
 	return true;
 }
 
+extern ConVar sv_turbophysics;
+
 void CHL2_Player::PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize )
 {
+	// BB2 Warn
+	//if ((VPhysicsGetObject() == NULL) || sv_turbophysics.GetBool())
+	//	return;
+
 	// can't pick up what you're standing on
 	if ( GetGroundEntity() == pObject )
 		return;

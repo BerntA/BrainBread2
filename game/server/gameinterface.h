@@ -118,8 +118,6 @@ public:
 
 	virtual void			SetServerHibernation( bool bHibernating ) OVERRIDE;
 
-	float	m_fAutoSaveDangerousTime;
-	float	m_fAutoSaveDangerousMinHealthToCommit;
 	bool	m_bIsHibernating;
 
 	// Called after the steam API has been activated post-level startup

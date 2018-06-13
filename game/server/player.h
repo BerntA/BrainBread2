@@ -283,7 +283,7 @@ public:
 	virtual void			Activate( void );
 	virtual void			SharedSpawn(); // Shared between client and server.
 	virtual void			ForceRespawn( void );
-	virtual void SetNewSolidFlags( bool bNonSolid );
+	virtual void			SetNewSolidFlags( bool bNonSolid );
 
 	virtual void			InitialSpawn( void );
 	virtual void			InitHUD( void ) {}
@@ -442,15 +442,11 @@ public:
 
 	virtual Class_T			Classify ( void );
 	virtual void			SetAnimation( PLAYER_ANIM playerAnim );
-	void					SetWeaponAnimType( const char *szExtention );
 
 	// custom player functions
 	virtual void			ImpulseCommands( void );
 	virtual void			CheatImpulseCommands( int iImpulse );
 	virtual bool			ClientCommand( const CCommand &args );
-
-	void					NotifySinglePlayerGameEnding() { m_bSinglePlayerGameEnding = true; }
-	bool					IsSinglePlayerGameEnding() { return m_bSinglePlayerGameEnding == true; }
 	
 	// Observer functions
 	virtual bool			StartObserverMode(int mode); // true, if successful
@@ -653,8 +649,6 @@ public:
 	bool	HUDNeedsRestart() const { return m_fInitHUD; }
 	float	MaxSpeed() const		{ return m_flMaxspeed; }
 	float MaxAirSpeed() const { return m_flMaxAirSpeed; }
-	Activity GetActivity( ) const	{ return m_Activity; }
-	inline void SetActivity( Activity eActivity ) { m_Activity = eActivity; }
 	bool	IsPlayerLockedInPlace() const { return m_iPlayerLocked != 0; }
 	bool	IsObserver() const		{ return (m_afPhysicsFlags & PFLAG_OBSERVER) != 0; }
 	float	MuzzleFlashTime() const { return m_flFlashTime; }
@@ -662,13 +656,6 @@ public:
 
 	int		GetObserverMode() const	{ return m_iObserverMode; }
 	CBaseEntity *GetObserverTarget() const	{ return m_hObserverTarget; }
-
-	// Round gamerules
-	virtual bool	IsReadyToPlay( void ) { return true; }
-	virtual bool	IsReadyToSpawn( void ) { return true; }
-	virtual bool	ShouldGainInstantSpawn( void ) { return false; }
-	virtual void	ResetPerRoundStats( void ) { return; }
-	void			AllowInstantSpawn( void ) { m_bAllowInstantSpawn = true; }
 
 	virtual void	ResetScores( void ) { ResetFragCount(); ResetDeathCount(); }
 	void	ResetFragCount();
@@ -678,14 +665,11 @@ public:
 	void	IncrementDeathCount( int nCount );
 
 	void	SetArmorValue( int value );
-	void	IncrementArmorValue( int nCount, int nMaxValue = -1 );
 
 	void	SetConnected( PlayerConnectedState iConnected ) { m_iConnected = iConnected; }
 	void	SetMaxSpeed( float flMaxSpeed ) { m_flMaxspeed = flMaxSpeed; }
 	void SetMaxAirSpeed(float flMaxAirSpeed) { m_flMaxAirSpeed = flMaxAirSpeed; }
 
-	void	SetAdditionalPVSOrigin( const Vector &vecOrigin );
-	void	SetCameraPVSOrigin( const Vector &vecOrigin );
 	void	SetMuzzleFlashTime( float flTime );
 	void	SetUseEntity( CBaseEntity *pUseEntity );
 	CBaseEntity *GetUseEntity();
@@ -813,7 +797,7 @@ public:
 		return m_vecLagCompHitEndPosition;
 	}
 
-	virtual void SetLagCompVecPos(Vector position)
+	virtual void SetLagCompVecPos(const Vector &position)
 	{
 		m_vecLagCompHitEndPosition = position;
 	}
@@ -884,10 +868,6 @@ public:
 	int						GetNumWearables( void ) { return m_hMyWearables.Count(); }
 #endif
 
-private:
-
-	Activity				m_Activity;
-
 protected:
 
 	void					CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
@@ -895,14 +875,6 @@ protected:
 								float& zNear, float& zFar, float& fov );
 	void					CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	void					CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles);
-
-	// FIXME: Make these private! (tf_player uses them)
-
-	// Secondary point to derive PVS from when zoomed in with binoculars/sniper rifle.  The PVS is 
-	//  a merge of the standing origin and this additional origin
-	Vector					m_vecAdditionalPVSOrigin; 
-	// Extra PVS origin if we are using a camera object
-	Vector					m_vecCameraPVSOrigin;
 
 	CNetworkHandle( CBaseEntity, m_hUseEntity );			// the player is currently controlling this entity because of +USE latched, NULL if no entity
 
@@ -963,8 +935,6 @@ protected:
 	// Player Physics Shadow
 	int						m_vphysicsCollisionState;
 
-	virtual int SpawnArmorValue( void ) const { return 0; }
-
 	float					m_fNextSuicideTime; // the time after which the player can next use the suicide command
 	int						m_iSuicideCustomKillFlags;
 
@@ -1012,9 +982,6 @@ private:
 
 	float					m_flNextDecalTime;// next time this player can spray a decal
 
-	// Team Handling
-	// char					m_szTeamName[TEAM_NAME_LENGTH];
-
 	// Multiplayer handling
 	PlayerConnectedState	m_iConnected;
 
@@ -1036,8 +1003,6 @@ protected:
 	QAngle					m_qangLockViewangles;
 
 	float					m_flStepSoundTime;	// time to check for next footstep sound
-
-	bool					m_bAllowInstantSpawn;
 
 #if defined USES_ECON_ITEMS
 	// Wearables
@@ -1113,14 +1078,8 @@ private:
 
 protected:
 	// HACK FOR TF2 Prediction
-	friend class CTFGameMovementRecon;
 	friend class CGameMovement;
-	friend class CTFGameMovement;
-	friend class CHL1GameMovement;
-	friend class CCSGameMovement;	
 	friend class CHL2GameMovement;
-	friend class CDODGameMovement;
-	friend class CPortalGameMovement;
 	
 	// Accessors for gamemovement
 	bool IsDucked( void ) const { return m_Local.m_bDucked; }
@@ -1153,8 +1112,6 @@ protected:
 	float			m_surfaceFriction;
 	char			m_chTextureType;
 	char			m_chPreviousTextureType;	// Separate from m_chTextureType. This is cleared if the player's not on the ground.
-
-	bool			m_bSinglePlayerGameEnding;
 
 	// BB2
 	virtual void HandlePainSound(int iMajor, int iDamageTypeBits) {};
@@ -1206,8 +1163,6 @@ typedef CHandle<CBasePlayer> CBasePlayerHandle;
 
 EXTERN_SEND_TABLE(DT_BasePlayer)
 
-
-
 //-----------------------------------------------------------------------------
 // Inline methods
 //-----------------------------------------------------------------------------
@@ -1230,16 +1185,6 @@ inline bool CBasePlayer::IsAutoKickDisabled( void ) const
 inline void CBasePlayer::DisableAutoKick( bool disabled )
 {
 	m_autoKickDisabled = disabled;
-}
-
-inline void CBasePlayer::SetAdditionalPVSOrigin( const Vector &vecOrigin ) 
-{ 
-	m_vecAdditionalPVSOrigin = vecOrigin; 
-}
-
-inline void CBasePlayer::SetCameraPVSOrigin( const Vector &vecOrigin ) 
-{ 
-	m_vecCameraPVSOrigin = vecOrigin; 
 }
 
 inline void CBasePlayer::SetMuzzleFlashTime( float flTime ) 

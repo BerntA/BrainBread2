@@ -20,7 +20,6 @@
 #include "engine/IEngineSound.h"
 #include "sendproxy.h"
 #include "tier1/strtools.h"
-#include "vphysics/constraints.h"
 #include "npcevent.h"
 #include "igamesystem.h"
 #include "collisionutils.h"
@@ -495,31 +494,6 @@ void CBaseCombatWeapon::FallInit( void )
 	}
 	else
 	{
-#if !defined( CLIENT_DLL )
-		// Constrained start?
-		if ( HasSpawnFlags( SF_WEAPON_START_CONSTRAINED ) )
-		{
-			//Constrain the weapon in place
-			IPhysicsObject *pReferenceObject, *pAttachedObject;
-			
-			pReferenceObject = g_PhysWorldObject;
-			pAttachedObject = VPhysicsGetObject();
-
-			if ( pReferenceObject && pAttachedObject )
-			{
-				constraint_fixedparams_t fixed;
-				fixed.Defaults();
-				fixed.InitWithCurrentObjectState( pReferenceObject, pAttachedObject );
-				
-				fixed.constraint.forceLimit	= lbs2kg( 10000 );
-				fixed.constraint.torqueLimit = lbs2kg( 10000 );
-
-				m_pConstraint = physenv->CreateFixedConstraint( pReferenceObject, pAttachedObject, NULL, fixed );
-
-				m_pConstraint->SetGameData( (void *) this );
-			}
-		}
-#endif //CLIENT_DLL
 	}	
 
 	SetPickupTouch();
@@ -597,7 +571,6 @@ void CBaseCombatWeapon::Materialize( void )
 void CBaseCombatWeapon::AttemptToMaterialize( void )
 {
 	float time = g_pGameRules->FlWeaponTryRespawn( this );
-
 	if ( time == 0 )
 	{
 		Materialize();

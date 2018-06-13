@@ -141,19 +141,16 @@ extern ConVar *sv_maxreplay;
 #define VPHYS_MAX_DISTSQR		(VPHYS_MAX_DISTANCE*VPHYS_MAX_DISTANCE)
 #define VPHYS_MAX_VELSQR		(VPHYS_MAX_VEL*VPHYS_MAX_VEL)
 
-extern bool		g_fDrawLines;
-int				gEvilImpulse101;
+int gEvilImpulse101;
 
 bool gInitHUD = true;
 
 extern void respawn(CBaseEntity *pEdict, bool fCopyCorpse);
-int MapTextureTypeStepType(char chTextureType);
 extern void	SpawnBlood(Vector vecSpot, const Vector &vecDir, int bloodColor, float flDamage, int hitbox);
 extern void AddMultiDamage( const CTakeDamageInfo &info, CBaseEntity *pEntity );
 
 #define CMD_MOSTRECENT 0
 
-//ConVar	player_usercommand_timeout( "player_usercommand_timeout", "10", 0, "After this many seconds without a usercommand from a player, the client is kicked." );
 #ifdef _DEBUG
 ConVar  sv_player_net_suppress_usercommands( "sv_player_net_suppress_usercommands", "0", FCVAR_CHEAT, "For testing usercommand hacking sideeffects. DO NOT SHIP" );
 #endif // _DEBUG
@@ -163,12 +160,7 @@ ConVar  player_debug_print_damage( "player_debug_print_damage", "0", FCVAR_CHEAT
 
 void CC_GiveCurrentAmmo( void )
 {
-	#ifdef BB2_AI
-		CBasePlayer *pPlayer = UTIL_GetCommandClient(); 
-	#else
-		CBasePlayer *pPlayer = UTIL_PlayerByIndex(1);
-	#endif //BB2_AI
-
+	CBasePlayer *pPlayer = UTIL_GetCommandClient();
 	if( pPlayer )
 	{
 		CBaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
@@ -243,15 +235,11 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_iObserverLastMode, FIELD_INTEGER ),
 	DEFINE_FIELD( m_hObserverTarget, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_bForcedObserverMode, FIELD_BOOLEAN ),
-//	DEFINE_CUSTOM_FIELD( m_Activity, ActivityDataOps() ),
 
 	DEFINE_FIELD( m_nUpdateRate, FIELD_INTEGER ),
 	DEFINE_FIELD( m_fLerpTime, FIELD_FLOAT ),
 	DEFINE_FIELD( m_bLagCompensation, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bPredictWeapons, FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_vecAdditionalPVSOrigin, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_vecCameraPVSOrigin, FIELD_POSITION_VECTOR ),
 
 	DEFINE_FIELD( m_hUseEntity, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_iTrain, FIELD_INTEGER ),
@@ -306,7 +294,6 @@ BEGIN_DATADESC( CBasePlayer )
 
 	DEFINE_FIELD( m_iFrags, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iDeaths, FIELD_INTEGER ),
-	DEFINE_FIELD( m_bAllowInstantSpawn, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_flNextDecalTime, FIELD_TIME ),
 
 	// from edict_t
@@ -350,8 +337,7 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_bitsDamageType, FIELD_INTEGER ),
 	DEFINE_AUTO_ARRAY( m_rgbTimeBasedDamage, FIELD_CHARACTER ),
 	DEFINE_FIELD( m_fLastPlayerTalkTime, FIELD_FLOAT ),
-	
-	
+		
 	DEFINE_FIELD( m_hLastWeapon, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_hNextWeapon, FIELD_EHANDLE ),
 
@@ -376,7 +362,6 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_vNewVPhysicsPosition, FIELD_VECTOR ),
 	DEFINE_FIELD( m_vNewVPhysicsVelocity, FIELD_VECTOR ),
 
-	DEFINE_FIELD( m_bSinglePlayerGameEnding, FIELD_BOOLEAN ),
 	DEFINE_ARRAY( m_szLastPlaceName, FIELD_CHARACTER, MAX_PLACE_NAME_LENGTH ),
 
 	DEFINE_FIELD( m_autoKickDisabled, FIELD_BOOLEAN ),
@@ -397,8 +382,6 @@ BEGIN_DATADESC( CBasePlayer )
 
 	DEFINE_FIELD( m_nNumCrateHudHints, FIELD_INTEGER ),
 
-
-
 	// DEFINE_FIELD( m_nBodyPitchPoseParam, FIELD_INTEGER ),
 	// DEFINE_ARRAY( m_StepSoundCache, StepSoundCache_t,  2  ),
 
@@ -406,10 +389,7 @@ BEGIN_DATADESC( CBasePlayer )
 	// DEFINE_UTLVECTOR( m_vecPlayerSimInfo ),
 END_DATADESC()
 
-int giPrecacheGrunt = 0;
-
 edict_t *CBasePlayer::s_PlayerEdict = NULL;
-
 
 inline bool ShouldRunCommandsInContext( const CCommandContext *ctx )
 {
@@ -496,8 +476,6 @@ CBasePlayer::CBasePlayer( )
 	AddEFlags( EFL_NO_AUTO_EDICT_ATTACH );
 
 #ifdef _DEBUG
-	m_vecAdditionalPVSOrigin.Init();
-	m_vecCameraPVSOrigin.Init();
 	m_DmgOrigin.Init();
 	m_vecLadderNormal.Init();
 
@@ -890,16 +868,8 @@ void CBasePlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &v
 			break;
 		}
 
-#ifdef HL2_EPISODIC
-		// If this damage type makes us bleed, then do so
-		bool bShouldBleed = !g_pGameRules->Damage_ShouldNotBleed( info.GetDamageType() );
-		if ( bShouldBleed )
-#endif
-		{
-			SpawnBlood(ptr->endpos, vecDir, BloodColor(), info.GetDamage(), ptr->hitgroup);// a little surface blood.
-			TraceBleed( info.GetDamage(), vecDir, ptr, info.GetDamageType() );
-		}
-
+		SpawnBlood(ptr->endpos, vecDir, BloodColor(), info.GetDamage(), ptr->hitgroup);// a little surface blood.
+		TraceBleed( info.GetDamage(), vecDir, ptr, info.GetDamageType() );
 		AddMultiDamage( info, this );
 	}
 }
@@ -1398,7 +1368,7 @@ void CBasePlayer::CheckIsPlayerStuck(void)
 	if (tr.startsolid)
 	{
 		float flDefaultLength = 48.0f;
-		Vector vecTestPos[6] =
+		Vector vecTestPos[8] =
 		{
 			(vecPlayerOrigin + Vector(flDefaultLength, 0, 0)),
 			(vecPlayerOrigin - Vector(flDefaultLength, 0, 0)),
@@ -1406,6 +1376,8 @@ void CBasePlayer::CheckIsPlayerStuck(void)
 			(vecPlayerOrigin - Vector(0, flDefaultLength, 0)),
 			(vecPlayerOrigin + Vector(flDefaultLength, flDefaultLength, 0)),
 			(vecPlayerOrigin - Vector(flDefaultLength, flDefaultLength, 0)),
+			(vecPlayerOrigin + Vector(-flDefaultLength, flDefaultLength, 0)),
+			(vecPlayerOrigin + Vector(flDefaultLength, -flDefaultLength, 0)),
 		};
 
 		for (int i = 0; i < _ARRAYSIZE(vecTestPos); ++i)
@@ -2575,13 +2547,6 @@ void CBasePlayer::Jump()
 
 void CBasePlayer::Duck( )
 {
-	if (m_nButtons & IN_DUCK) 
-	{
-		if ( m_Activity != ACT_LEAP )
-		{
-			SetAnimation( PLAYER_WALK );
-		}
-	}
 }
 
 //
@@ -3077,21 +3042,6 @@ void CBasePlayer::PhysicsSimulate( void )
 	//  that they are in the timespace of the player?
 	gpGlobals->curtime		= savetime;
 	gpGlobals->frametime	= saveframetime;	
-
-// 	// Kick the player if they haven't sent a user command in awhile in order to prevent clients
-// 	// from using packet-level manipulation to mess with gamestate.  Not sending usercommands seems
-// 	// to have all kinds of bad effects, such as stalling a bunch of Think()'s and gamestate handling.
-// 	// An example from TF: A medic stops sending commands after deploying an uber on another player.
-// 	// As a result, invuln is permanently on the heal target because the maintenance code is stalled.
-// 	if ( GetTimeSinceLastUserCommand() > player_usercommand_timeout.GetFloat() )
-// 	{
-// 		// If they have an active netchan, they're almost certainly messing with usercommands?
-// 		INetChannelInfo *pNetChanInfo = engine->GetPlayerNetInfo( entindex() );
-// 		if ( pNetChanInfo && pNetChanInfo->GetTimeSinceLastReceived() < 5.f )
-// 		{
-// 			engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "UserCommand Timeout" ) );
-// 		}
-// 	}
 }
 
 unsigned int CBasePlayer::PhysicsSolidMaskForEntity() const
@@ -4025,13 +3975,14 @@ void CBasePlayer::PostThink()
 		}
 
 		// BB2 Warn - Client Anims Should cover this!
+
 		//VPROF_SCOPE_BEGIN( "CBasePlayer::PostThink-StudioFrameAdvance" );
 		//StudioFrameAdvance();
 		//VPROF_SCOPE_END();
 
-		VPROF_SCOPE_BEGIN( "CBasePlayer::PostThink-DispatchAnimEvents" );
-		DispatchAnimEvents( this );
-		VPROF_SCOPE_END();
+		//VPROF_SCOPE_BEGIN( "CBasePlayer::PostThink-DispatchAnimEvents" );
+		//DispatchAnimEvents( this );
+		//VPROF_SCOPE_END();
 
 		SetSimulationTime( gpGlobals->curtime );
 
@@ -4207,33 +4158,6 @@ Vector CBasePlayer::GetSmoothedVelocity( void )
 	return m_vecSmoothedVelocity;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Finds a player start entity of the given classname. If any entity of
-//			of the given classname has the SF_PLAYER_START_MASTER flag set, that
-//			is the entity that will be returned. Otherwise, the first entity of
-//			the given classname is returned.
-// Input  : pszClassName - should be "info_player_start", "info_player_coop", or
-//			"info_player_deathmatch"
-//-----------------------------------------------------------------------------
-CBaseEntity *FindPlayerStart(const char *pszClassName)
-{
-	#define SF_PLAYER_START_MASTER	1
-	
-	CBaseEntity *pStart = gEntList.FindEntityByClassname(NULL, pszClassName);
-	CBaseEntity *pStartFirst = pStart;
-	while (pStart != NULL)
-	{
-		if (pStart->HasSpawnFlags(SF_PLAYER_START_MASTER))
-		{
-			return pStart;
-		}
-
-		pStart = gEntList.FindEntityByClassname(pStart, pszClassName);
-	}
-
-	return pStartFirst;
-}
-
 /*
 ============
 EntSelectSpawnPoint
@@ -4315,9 +4239,6 @@ void CBasePlayer::Spawn( void )
 	m_flPlayerUseTime = 0.0f;
 	
 	m_flFieldOfView		= 0.766;// some NPCs use this to determine whether or not the player is looking at them.
-
-	m_vecAdditionalPVSOrigin = vec3_origin;
-	m_vecCameraPVSOrigin = vec3_origin;
 
 	g_pGameRules->GetPlayerSpawnSpot( this );
 
@@ -4588,16 +4509,6 @@ void CBasePlayer::OnRestore( void )
 void CBasePlayer::SetArmorValue( int value )
 {
 	m_ArmorValue = value;
-}
-
-void CBasePlayer::IncrementArmorValue( int nCount, int nMaxValue )
-{ 
-	m_ArmorValue += nCount;
-	if (nMaxValue > 0)
-	{
-		if (m_ArmorValue > nMaxValue)
-			m_ArmorValue = nMaxValue;
-	}
 }
 
 // used by the physics gun and game physics... is there a better interface?
@@ -5293,45 +5204,6 @@ void CBasePlayer::ImpulseCommands( )
 	m_nImpulse = 0;
 }
 
-#ifdef HL2_EPISODIC
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-static void CreateJalopy( CBasePlayer *pPlayer )
-{
-	// Cheat to create a jeep in front of the player
-	Vector vecForward;
-	AngleVectors( pPlayer->EyeAngles(), &vecForward );
-	CBaseEntity *pJeep = (CBaseEntity *)CreateEntityByName( "prop_vehicle_jalopy" );
-	if ( pJeep )
-	{
-		Vector vecOrigin = pPlayer->GetAbsOrigin() + vecForward * 256 + Vector(0,0,64);
-		QAngle vecAngles( 0, pPlayer->GetAbsAngles().y - 90, 0 );
-		pJeep->SetAbsOrigin( vecOrigin );
-		pJeep->SetAbsAngles( vecAngles );
-		pJeep->KeyValue( "model", "models/vehicle.mdl" );
-		pJeep->KeyValue( "solid", "6" );
-		pJeep->KeyValue( "targetname", "jeep" );
-		pJeep->KeyValue( "vehiclescript", "scripts/vehicles/jalopy.txt" );
-		DispatchSpawn( pJeep );
-		pJeep->Activate();
-		pJeep->Teleport( &vecOrigin, &vecAngles, NULL );
-	}
-}
-
-void CC_CH_CreateJalopy( void )
-{
-	CBasePlayer *pPlayer = UTIL_GetCommandClient();
-	if ( !pPlayer )
-		return;
-	CreateJalopy( pPlayer );
-}
-
-static ConCommand ch_createjalopy("ch_createjalopy", CC_CH_CreateJalopy, "Spawn jalopy in front of the player.", FCVAR_CHEAT);
-
-#endif // HL2_EPISODIC
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -5430,23 +5302,7 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 
 	switch ( iImpulse )
 	{
-	case 76:
-		{
-			if (!giPrecacheGrunt)
-			{
-				giPrecacheGrunt = 1;
-				Msg( "You must now restart to use Grunt-o-matic.\n");
-			}
-			else
-			{
-				Vector forward = UTIL_YawToVector( EyeAngles().y );
-				Create("NPC_human_grunt", GetLocalOrigin() + forward * 128, GetLocalAngles());
-			}
-			break;
-		}
-
 	case 81:
-
 		GiveNamedItem( "weapon_cubemap" );
 		break;
 
@@ -5596,13 +5452,6 @@ bool CBasePlayer::ClientCommand( const CCommand &args )
 		{
 			AttemptToExitFreezeCam();
 			return true;
-		}
-
-		// not allowed to change spectator modes when mp_fadetoblack is being used
-		if (mp_fadetoblack.GetBool())
-		{
-			if (GetTeamNumber() > TEAM_SPECTATOR)
-				return true;
 		}
 
 		// check for parameters.
@@ -7052,7 +6901,7 @@ void CBasePlayer::ModifyOrAppendPlayerCriteria( AI_CriteriaSet& set )
 	}
 
 	// Append current activity name
-	set.AppendCriteria( "playeractivity", CAI_BaseNPC::GetActivityName( GetActivity() ) );
+	set.AppendCriteria( "playeractivity", CAI_BaseNPC::GetActivityName( ACT_IDLE ) );
 
 	set.AppendCriteria( "playerspeed", UTIL_VarArgs( "%.3f", GetAbsVelocity().Length() ) );
 
@@ -7145,7 +6994,7 @@ bool CBasePlayer::GetNearbyTeammates(void)
 			continue;
 
 		float flMaxDistSqr = MAX_TEAMMATE_DISTANCE * MAX_TEAMMATE_DISTANCE;
-		float flDist = (pPlayer->GetAbsOrigin() - this->GetAbsOrigin()).LengthSqr();
+		float flDist = (pPlayer->GetLocalOrigin() - this->GetLocalOrigin()).LengthSqr();
 		if (flDist > flMaxDistSqr)
 			continue;
 
