@@ -14,7 +14,6 @@
 #include <steam/steam_api.h>
 
 #define MAX_LEADERBOARD_ENTRIES 5
-#define TIME_TO_FULL_UPDATE 10.0f
 
 class CLeaderboardHandler
 {
@@ -22,6 +21,7 @@ public:
 	CLeaderboardHandler();
 	~CLeaderboardHandler();
 
+	void UploadLeaderboardStats(bool bDelay = false);
 	void FetchLeaderboardHandle(void);
 	void FetchLeaderboardResults(int iOffset = 0);
 	void OnUpdate(void);
@@ -38,7 +38,7 @@ private:
 	void OnLeaderboardDownloadedEntries(LeaderboardScoresDownloaded_t *pLeaderboardScoresDownloaded, bool bIOFailure);
 	CCallResult<CLeaderboardHandler, LeaderboardScoresDownloaded_t> m_callResultDownloadEntries;
 
-	float m_flScoreUpdateTime;
+	float m_flTimeToUpload;
 };
 
 #endif // LEADERBOARD_HANDLER_H

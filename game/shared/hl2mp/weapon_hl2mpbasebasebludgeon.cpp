@@ -1,28 +1,20 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//=========       Copyright © Reperio Studios 2013-2018 @ Bernt Andreas Eide!       ============//
 //
-// Purpose: 
+// Purpose: Melee HL2MP base wep class.
 //
-// $NoKeywords: $
-//
-//=============================================================================//
+//==============================================================================================//
 
 #include "cbase.h"
 #include "weapon_hl2mpbasebasebludgeon.h"
 #include "gamerules.h"
-#include "ammodef.h"
-#include "mathlib/mathlib.h"
 #include "in_buttons.h"
-#include "animation.h"
 #include "GameBase_Shared.h"
 #include "npcevent.h"
 
 #if defined( CLIENT_DLL )
 #include "c_hl2mp_player.h"
-#include "GameBase_Client.h"
 #else
 #include "hl2mp_player.h"
-#include "ndebugoverlay.h"
-#include "te_effect_dispatch.h"
 #include "ilagcompensationmanager.h"
 #endif
 
@@ -54,7 +46,7 @@ void CBaseHL2MPBludgeonWeapon::Spawn(void)
 	m_fMinRange2 = 0;
 	m_fMaxRange1 = 64;
 	m_fMaxRange2 = 64;
-	//Call base class first
+	
 	BaseClass::Spawn();
 }
 
@@ -63,7 +55,6 @@ void CBaseHL2MPBludgeonWeapon::Spawn(void)
 //-----------------------------------------------------------------------------
 void CBaseHL2MPBludgeonWeapon::Precache(void)
 {
-	//Call base class first
 	BaseClass::Precache();
 }
 
@@ -78,9 +69,6 @@ void CBaseHL2MPBludgeonWeapon::ItemPostFrame(void)
 
 	BaseClass::HandleWeaponSelectionTime();
 	BaseClass::MeleeAttackUpdate();
-
-	if (pOwner->GetTeamNumber() == TEAM_HUMANS)
-		BaseClass::GenericBB2Animations();
 
 	bool bCanAttack = ((m_flNextPrimaryAttack <= gpGlobals->curtime) && (m_flNextSecondaryAttack <= gpGlobals->curtime));
 
@@ -110,8 +98,7 @@ float CBaseHL2MPBludgeonWeapon::GetFireRate(void)
 
 float CBaseHL2MPBludgeonWeapon::GetRange(void)
 {
-	float flRange = (float)GetWpnData().m_iRangeMax;
-	return flRange;
+	return ((float)GetWpnData().m_iRangeMax);
 }
 
 float CBaseHL2MPBludgeonWeapon::GetSpecialAttackDamage(void)
@@ -121,17 +108,13 @@ float CBaseHL2MPBludgeonWeapon::GetSpecialAttackDamage(void)
 
 float CBaseHL2MPBludgeonWeapon::GetDamageForActivity(Activity hitActivity)
 {
-	float flNewDamage = 15.0f;
-
-	CWeaponHL2MPBase *pWeapon = dynamic_cast<CWeaponHL2MPBase *>(this);
-	if (pWeapon)
-		flNewDamage = pWeapon->GetHL2MPWpnData().m_iPlayerDamage;
-
+	float flNewDamage = GetHL2MPWpnData().m_iPlayerDamage;
+	
 	CHL2MP_Player *pClient = ToHL2MPPlayer(this->GetOwner());
 	if (pClient)
 	{
 		int iTeamBonus = (pClient->m_BB2Local.m_iPerkTeamBonus - 5);
-		flNewDamage += ((flNewDamage / 100) * (pClient->GetSkillValue(PLAYER_SKILL_HUMAN_MELEE_MASTER) * GetWpnData().m_flSkillDamageFactor));
+		flNewDamage += ((flNewDamage / 100.0f) * (((float)pClient->GetSkillValue(PLAYER_SKILL_HUMAN_MELEE_MASTER)) * GetWpnData().m_flSkillDamageFactor));
 
 		if (pClient->IsPerkFlagActive(PERK_HUMAN_BLOODRAGE))
 			flNewDamage += ((flNewDamage / 100.0f) * (pClient->GetSkillValue(PLAYER_SKILL_HUMAN_BLOOD_RAGE, TEAM_HUMANS)));
@@ -144,7 +127,7 @@ float CBaseHL2MPBludgeonWeapon::GetDamageForActivity(Activity hitActivity)
 		}
 
 		if (iTeamBonus > 0)
-			flNewDamage += ((flNewDamage / 100) * (iTeamBonus * GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iTeamBonusDamageIncrease));
+			flNewDamage += ((flNewDamage / 100.0f) * (iTeamBonus * GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iTeamBonusDamageIncrease));
 	}
 
 	bool bSpecialAttack = (hitActivity >= ACT_VM_SPECIALATTACK0 && hitActivity <= ACT_VM_SPECIALATTACK10);
@@ -230,7 +213,6 @@ float CBaseHL2MPBludgeonWeapon::SpecialPunishTime()
 void CBaseHL2MPBludgeonWeapon::AddViewKick(void)
 {
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
-
 	if (pPlayer == NULL)
 		return;
 
@@ -266,7 +248,7 @@ int CBaseHL2MPBludgeonWeapon::WeaponMeleeAttack1Condition(float flDot, float flD
 	Vector vecDelta;
 	VectorSubtract(vecExtrapolatedPos, pNPC->WorldSpaceCenter(), vecDelta);
 
-	if (fabs(vecDelta.z) > 70)
+	if (fabs(vecDelta.z) > (GetRange() * 1.15f))
 	{
 		return COND_TOO_FAR_TO_ATTACK;
 	}
@@ -274,7 +256,7 @@ int CBaseHL2MPBludgeonWeapon::WeaponMeleeAttack1Condition(float flDot, float flD
 	Vector vecForward = pNPC->BodyDirection2D();
 	vecDelta.z = 0.0f;
 	float flExtrapolatedDist = Vector2DNormalize(vecDelta.AsVector2D());
-	if ((flDist > 64) && (flExtrapolatedDist > 64))
+	if ((flDist > GetRange()) && (flExtrapolatedDist > GetRange()))
 	{
 		return COND_TOO_FAR_TO_ATTACK;
 	}
@@ -345,6 +327,7 @@ void CBaseHL2MPBludgeonWeapon::Operator_HandleAnimEvent(animevent_t *pEvent, CBa
 	switch (pEvent->event)
 	{
 	case EVENT_WEAPON_MELEE_HIT:
+	case EVENT_WEAPON_MELEE_SWISH:
 		HandleAnimEventMeleeHit(pEvent, pOperator);
 		break;
 

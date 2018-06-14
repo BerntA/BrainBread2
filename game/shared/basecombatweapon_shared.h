@@ -619,8 +619,6 @@ public:
 	float					m_flUnlockTime;
 	EHANDLE					m_hLocker;				// Who locked this weapon.
 
-	CNetworkVar( bool, m_bFlipViewModel );
-
 	bool m_bLastFiredPrimary;
 
 private:

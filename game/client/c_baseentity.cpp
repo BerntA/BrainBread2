@@ -901,8 +901,9 @@ m_iv_vecVelocity("C_BaseEntity::m_iv_vecVelocity")
 	m_pAttributes = NULL;
 	
 #ifdef GLOWS_ENABLE
-	m_iGlowMethod = GLOW_MODE_NONE;
+	m_iGlowMethod = m_iOldGlowMethod = GLOW_MODE_NONE;
 	m_iGlowTeamLink = 0;
+	m_bGlowSuppressRender = false;
 #endif
 
 	AddVar( &m_vecOrigin, &m_iv_vecOrigin, LATCH_SIMULATION_VAR );
@@ -980,7 +981,10 @@ m_iv_vecVelocity("C_BaseEntity::m_iv_vecVelocity")
 C_BaseEntity::~C_BaseEntity()
 {
 #ifdef GLOWS_ENABLE
-	m_iGlowMethod = GLOW_MODE_NONE;
+	if (m_iOldGlowMethod > GLOW_MODE_NONE)
+		g_GlowObjectManager.RemoveEntityFromGlowList(this);
+
+	m_iGlowMethod = m_iOldGlowMethod = GLOW_MODE_NONE;
 #endif
 
 	Term();
@@ -3189,13 +3193,24 @@ void C_BaseEntity::OnDataChanged(DataUpdateType_t type)
 	{
 		UpdateVisibility();
 	}
+
+#ifdef GLOWS_ENABLE
+	if (m_iGlowMethod != m_iOldGlowMethod)
+	{
+		m_iOldGlowMethod = m_iGlowMethod;
+		if (m_iGlowMethod > GLOW_MODE_NONE)
+			g_GlowObjectManager.AddEntityToGlowList(this);
+		else
+			g_GlowObjectManager.RemoveEntityFromGlowList(this);
+	}
+#endif
 }
 
 #ifdef GLOWS_ENABLE
 bool C_BaseEntity::CanGlowEntity()
 {
 	C_BasePlayer *pLocal = C_BasePlayer::GetLocalPlayer();
-	if (!pLocal)
+	if (!pLocal || m_bGlowSuppressRender)
 		return false;
 
 	if (GetGlowMode() <= GLOW_MODE_NONE)
@@ -3211,6 +3226,9 @@ bool C_BaseEntity::CanGlowEntity()
 		if (pLocal->GetTeamNumber() != teamLink)
 			return false;
 	}
+
+	if (GetGlowMode() == GLOW_MODE_GLOBAL)
+		return true;
 
 	float length = pLocal->GetLocalOrigin().DistTo(GetLocalOrigin());
 	if (GetGlowMode() == GLOW_MODE_RADIUS)
@@ -3277,7 +3295,7 @@ Vector C_BaseEntity::GetGlowColor()
 float C_BaseEntity::GetGlowAlpha()
 {
 	Color glowColor = GetActualGlowColor();
-	return ((float)glowColor.a() / 255.0f);
+	return (((float)glowColor.a()) / 255.0f);
 }
 
 bool C_BaseEntity::ShouldGlowWhenOccluded()

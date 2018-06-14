@@ -27,6 +27,8 @@ public:
 	{
 	}
 
+	void AddEntityToGlowList(C_BaseEntity *pEntity);
+	void RemoveEntityFromGlowList(C_BaseEntity *pEntity);
 	void Shutdown(void);
 	void RenderGlowEffects(const CViewSetup *pSetup);
 
@@ -36,6 +38,7 @@ private:
 };
 
 extern CGlowObjectManager g_GlowObjectManager;
+extern ConVar bb2_max_glow_effects;
 
 #endif // GLOWS_ENABLE
 

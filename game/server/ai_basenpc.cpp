@@ -1238,28 +1238,20 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 
 	if ( subInfo.GetDamage() >= 1.0 && !(subInfo.GetDamageType() & DMG_SHOCK ) )
 	{
-		bool bSShow = true;
-		// BB2 Warn - Prevent Blood when attacking friendlies.
+		bool bShouldShowBlood = true;
+
 		CHL2MP_Player *pClient = ToHL2MPPlayer(subInfo.GetAttacker());
 		if (pClient)
 		{
-			if (HL2MPRules()->m_bRoundStarted)
-			{
-				if (pClient->IsHuman() && this->Classify() == CLASS_COMBINE)
-					bSShow = false;
-				else if (pClient->IsZombie() && this->IsZombie(true))
-					bSShow = false;
-			}
+			if ((pClient->IsHuman() && (this->Classify() == CLASS_COMBINE)) ||
+				(pClient->IsZombie() && this->IsZombie(true)))
+				bShouldShowBlood = false;
 		}
 
-		if (bSShow)
+		if (bShouldShowBlood && (this->GetCollisionGroup() != COLLISION_GROUP_NPC_ZOMBIE_SPAWNING))
 		{
 			SpawnBlood(ptr->endpos, vecDir, BloodColor(), subInfo.GetDamage(), ptr->hitgroup);
-
-			if (this->IsHuman(true) || this->IsZombie(true))
-				UTIL_BloodSpawn(this->entindex(), ptr->endpos, vecDir, subInfo.GetDamage(), ptr->hitgroup);
-			else
-				TraceBleed(subInfo.GetDamage(), vecDir, ptr, subInfo.GetDamageType());
+			TraceBleed(subInfo.GetDamage(), vecDir, ptr, subInfo.GetDamageType());
 		}
 
 		if ( ptr->hitgroup == HITGROUP_HEAD && m_iHealth - subInfo.GetDamage() > 0 )
@@ -1626,48 +1618,6 @@ void CBaseEntity::CreateBubbleTrailTracer( const Vector &vecShotSrc, const Vecto
 	ComputeTracerStartPosition( vecShotSrc, &vecTracerSrc );
 	UTIL_BubbleTrail( vecTracerSrc, vecBubbleEnd, nBubbles );
 }
-
-
-//=========================================================
-//=========================================================
-void CAI_BaseNPC::MakeDamageBloodDecal ( int cCount, float flNoise, trace_t *ptr, Vector vecDir )
-{
-	// make blood decal on the wall!
-	trace_t Bloodtr;
-	Vector vecTraceDir;
-	int i;
-
-	if ( !IsAlive() )
-	{
-		// dealing with a dead npc.
-		if ( m_iMaxHealth <= 0 )
-		{
-			// no blood decal for a npc that has already decalled its limit.
-			return;
-		}
-		else
-		{
-			m_iMaxHealth -= 1;
-		}
-	}
-
-	for ( i = 0 ; i < cCount ; i++ )
-	{
-		vecTraceDir = vecDir;
-
-		vecTraceDir.x += random->RandomFloat( -flNoise, flNoise );
-		vecTraceDir.y += random->RandomFloat( -flNoise, flNoise );
-		vecTraceDir.z += random->RandomFloat( -flNoise, flNoise );
-
-		AI_TraceLine( ptr->endpos, ptr->endpos + vecTraceDir * 172, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &Bloodtr);
-
-		if ( Bloodtr.fraction != 1.0 )
-		{
-			UTIL_BloodDecalTrace( &Bloodtr, BloodColor() );
-		}
-	}
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 

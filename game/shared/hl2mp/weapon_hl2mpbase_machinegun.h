@@ -1,5 +1,8 @@
-
-#include "weapon_hl2mpbase.h"
+//=========       Copyright © Reperio Studios 2013-2018 @ Bernt Andreas Eide!       ============//
+//
+// Purpose: Machine Gun HL2MP Baseclass.
+//
+//==============================================================================================//
 
 #ifndef BASEHLCOMBATWEAPON_H
 #define BASEHLCOMBATWEAPON_H
@@ -7,13 +10,12 @@
 #pragma once
 #endif
 
+#include "weapon_hl2mpbase.h"
+
 #if defined( CLIENT_DLL )
 	#define CHL2MPMachineGun C_HL2MPMachineGun
 #endif
 
-//=========================================================
-// Machine gun base class
-//=========================================================
 class CHL2MPMachineGun : public CWeaponHL2MPBase
 {
 public:

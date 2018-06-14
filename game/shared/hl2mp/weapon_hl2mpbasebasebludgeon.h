@@ -1,14 +1,8 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//=========       Copyright © Reperio Studios 2013-2018 @ Bernt Andreas Eide!       ============//
 //
-// Purpose:		The class from which all bludgeon melee
-//				weapons are derived. 
+// Purpose: Melee HL2MP base wep class.
 //
-// $Workfile:     $
-// $Date:         $
-// $NoKeywords: $
-//=============================================================================//
-
-#include "weapon_hl2mpbasehlmpcombatweapon.h"
+//==============================================================================================//
 
 #ifndef BASEBLUDGEONWEAPON_H
 #define BASEBLUDGEONWEAPON_H
@@ -17,13 +11,12 @@
 #pragma once
 #endif
 
+#include "weapon_hl2mpbasehlmpcombatweapon.h"
+
 #if defined( CLIENT_DLL )
 #define CBaseHL2MPBludgeonWeapon C_BaseHL2MPBludgeonWeapon
 #endif
 
-//=========================================================
-// CBaseHLBludgeonWeapon 
-//=========================================================
 class CBaseHL2MPBludgeonWeapon : public CBaseHL2MPCombatWeapon
 {
 	DECLARE_CLASS(CBaseHL2MPBludgeonWeapon, CBaseHL2MPCombatWeapon);
@@ -35,7 +28,7 @@ public:
 	DECLARE_PREDICTABLE();
 
 #ifndef CLIENT_DLL 
-	int		CapabilitiesGet(void) { return bits_CAP_WEAPON_MELEE_ATTACK1; }
+	virtual int CapabilitiesGet(void) { return bits_CAP_WEAPON_MELEE_ATTACK1; }
 	virtual int WeaponMeleeAttack1Condition(float flDot, float flDist);
 
 	// Animation event
@@ -55,8 +48,8 @@ public:
 	virtual void	ItemPostFrame(void);
 
 	//Functions to select animation sequences 
-	virtual Activity	GetPrimaryAttackActivity(void)	{ return	ACT_VM_HITCENTER; }
-	virtual Activity	GetSecondaryAttackActivity(void)	{ return	ACT_VM_HITCENTER2; }
+	virtual Activity	GetPrimaryAttackActivity(void)	{ return ACT_VM_HITCENTER; }
+	virtual Activity	GetSecondaryAttackActivity(void)	{ return ACT_VM_HITCENTER2; }
 
 	virtual	float	GetFireRate(void);
 	virtual float   GetRange(void);

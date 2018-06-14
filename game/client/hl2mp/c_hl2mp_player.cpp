@@ -155,7 +155,7 @@ void C_HL2MP_Player::TraceAttack( const CTakeDamageInfo &info, const Vector &vec
 			}
 		}
 
-		if ( blood != DONT_BLEED )
+		if ((blood != DONT_BLEED) && (IsMaterialOverlayFlagActive(MAT_OVERLAY_SPAWNPROTECTION) == false))
 		{
 			SpawnBlood( vecOrigin, vecDir, blood, flDistance, ptr->hitgroup );// a little surface blood.
 			TraceBleed( flDistance, vecDir, ptr, info.GetDamageType() );

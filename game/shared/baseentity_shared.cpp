@@ -2258,29 +2258,17 @@ float CBaseEntity::HealthFraction() const
 
 void CBaseEntity::TraceBleed( float flDamage, const Vector &vecDir, trace_t *ptr, int bitsDamageType )
 {
-	if ((BloodColor() == DONT_BLEED) || (BloodColor() == BLOOD_COLOR_MECH))
-	{
-		return;
-	}
-
-	if (flDamage == 0)
+	if ((BloodColor() == DONT_BLEED) || (BloodColor() == BLOOD_COLOR_MECH) || (flDamage == 0))
 		return;
 
-	if (! (bitsDamageType & (DMG_CRUSH | DMG_BULLET | DMG_SLASH | DMG_ZOMBIE | DMG_BLAST | DMG_CLUB | DMG_AIRBOAT)))
+	if (!(bitsDamageType & (DMG_CRUSH | DMG_BULLET | DMG_SLASH | DMG_ZOMBIE | DMG_BLAST | DMG_CLUB | DMG_AIRBOAT | DMG_BUCKSHOT)))
 		return;
-
-	// make blood decal on the wall!
-	trace_t Bloodtr;
-	Vector vecTraceDir;
-	float flNoise;
-	int cCount;
-	int i;
 
 #ifdef GAME_DLL
-	if ( !IsAlive() )
+	if (!IsAlive())
 	{
 		// dealing with a dead npc.
-		if ( GetMaxHealth() <= 0 )
+		if (GetMaxHealth() <= 0)
 		{
 			// no blood decal for a npc that has already decalled its limit.
 			return;
@@ -2292,39 +2280,7 @@ void CBaseEntity::TraceBleed( float flDamage, const Vector &vecDir, trace_t *ptr
 	}
 #endif
 
-	if (flDamage < 10)
-	{
-		flNoise = 0.1;
-		cCount = 1;
-	}
-	else if (flDamage < 25)
-	{
-		flNoise = 0.2;
-		cCount = 2;
-	}
-	else
-	{
-		flNoise = 0.3;
-		cCount = 4;
-	}
-
-	float flTraceDist = (bitsDamageType & DMG_AIRBOAT) ? 384 : 172;
-	for ( i = 0 ; i < cCount ; i++ )
-	{
-		vecTraceDir = vecDir * -1;// trace in the opposite direction the shot came from (the direction the shot is going)
-
-		vecTraceDir.x += random->RandomFloat( -flNoise, flNoise );
-		vecTraceDir.y += random->RandomFloat( -flNoise, flNoise );
-		vecTraceDir.z += random->RandomFloat( -flNoise, flNoise );
-
-		// Don't bleed on grates.
-		AI_TraceLine( ptr->endpos, ptr->endpos + vecTraceDir * -flTraceDist, MASK_SOLID_BRUSHONLY & ~CONTENTS_GRATE, this, COLLISION_GROUP_NONE, &Bloodtr);
-
-		if ( Bloodtr.fraction != 1.0 )
-		{
-			UTIL_BloodDecalTrace( &Bloodtr, BloodColor() );
-		}
-	}
+	UTIL_BloodSpawn(entindex(), ptr->endpos, vecDir, flDamage, ptr->hitgroup);
 }
 
 

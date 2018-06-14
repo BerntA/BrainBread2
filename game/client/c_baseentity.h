@@ -1684,8 +1684,10 @@ public:
 
 	// BB2 L4D Glow
 #ifdef GLOWS_ENABLE
-	int m_iGlowMethod; 
+	int m_iGlowMethod;
+	int m_iOldGlowMethod;
 	int m_iGlowTeamLink; // 0/1 - Any, 2 - Humans, 3 - Zombies...
+	bool m_bGlowSuppressRender;
 	color32 m_GlowColor;
 	virtual bool CanGlowEntity();
 	virtual Color GetActualGlowColor();

@@ -486,17 +486,23 @@ void CGameBaseServer::PostInit()
 // Are you allowed to store your skills?
 int CGameBaseServer::CanStoreSkills()
 {
-	// Did this server ever have cheats on? If so we'll not allow this server to load any stats until you restart the map with sv_cheats off.
-	if (bFoundCheats || (gpGlobals->maxClients <= 1) || sv_cheats->GetBool() || (HL2MPRules() && !HL2MPRules()->CanUseSkills()) || !engine->IsDedicatedServer())
+	// Are we even allowed to use skills?
+	if (HL2MPRules() && !HL2MPRules()->CanUseSkills())
 		return PROFILE_NONE;
 
 	int profileType = bb2_allow_profile_system.GetInt();
 
-	// We won't allow profile saving or score saving if we're having cheats enabled.
+	// We won't allow profile saving or score saving if we're having cheats enabled. (only global)
 	// profile_local will allow the connected player to read a keyvalue file from the server's folder which contains the stats for the steam id of the connected player.
 	// Global stats only works on dedicated servers!
-	if ((profileType == PROFILE_GLOBAL) && (HasIllegalConVarValues() || IsServerBlacklisted() || bFoundIllegalPlugin || !bAllowStatsForMap))
-		return PROFILE_NONE;
+	if (profileType == PROFILE_GLOBAL)
+	{
+		// Blacklisted? Using sourcemod or similar? Using cheats? Not hosting whitelisted maps? Exploiting through convars like gravity? etc...
+		// Did this server ever have cheats on? If so we'll not allow this server to load any stats until you restart the map with sv_cheats off.
+		if (IsServerBlacklisted() || bFoundIllegalPlugin || !bAllowStatsForMap || HasIllegalConVarValues() ||
+			bFoundCheats || (gpGlobals->maxClients <= 1) || (sv_cheats && sv_cheats->GetBool()) || !engine->IsDedicatedServer())
+			return PROFILE_NONE;
+	}
 
 	if (IsTutorialModeEnabled())
 		return PROFILE_NONE;

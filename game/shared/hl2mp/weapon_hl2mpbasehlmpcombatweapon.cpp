@@ -1,8 +1,8 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//=========       Copyright © Reperio Studios 2013-2018 @ Bernt Andreas Eide!       ============//
 //
-// Purpose: 
+// Purpose: Base HL2MP Combat Weapon
 //
-//=============================================================================//
+//==============================================================================================//
 
 #include "cbase.h"
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
@@ -38,20 +38,6 @@ END_PREDICTION_DATA()
 
 CBaseHL2MPCombatWeapon::CBaseHL2MPCombatWeapon( void )
 {
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Allows the weapon to choose proper weapon idle animation
-//-----------------------------------------------------------------------------
-void CBaseHL2MPCombatWeapon::WeaponIdle( void )
-{
-	if (HasWeaponIdleTimeElapsed())
-	{
-		if ((m_iClip1 <= 0) && UsesEmptyAnimation())
-			SendWeaponAnim(ACT_VM_IDLE_EMPTY);
-		else
-			SendWeaponAnim(ACT_VM_IDLE);
-	}
 }
 
 #if defined( CLIENT_DLL )

@@ -59,7 +59,20 @@ struct ShaderStencilState_t
 	}
 };
 
-CUtlVector<C_BaseEntity *> m_pGlowEntities;
+static CUtlVector<C_BaseEntity *> m_pGlowEntities;
+
+void CGlowObjectManager::AddEntityToGlowList(C_BaseEntity *pEntity)
+{
+	if (m_pGlowEntities.Find(pEntity) != -1)
+		return;
+
+	m_pGlowEntities.AddToTail(pEntity);
+}
+
+void CGlowObjectManager::RemoveEntityFromGlowList(C_BaseEntity *pEntity)
+{
+	m_pGlowEntities.FindAndRemove(pEntity);
+}
 
 void CGlowObjectManager::Shutdown(void)
 {
@@ -74,29 +87,26 @@ void CGlowObjectManager::RenderGlowEffects(const CViewSetup *pSetup)
 		if (!pLocalPlayer)
 			return;
 
-		if (glow_outline_effect_enable.GetBool() && pLocalPlayer->CanDrawGlowEffects())
+		if (glow_outline_effect_enable.GetBool() && pLocalPlayer->CanDrawGlowEffects() && m_pGlowEntities.Count())
 		{
-			m_pGlowEntities.RemoveAll();
 			int numRadiusObjects = 0;
-			for (C_BaseEntity *pEntity = ClientEntityList().FirstBaseEntity(); pEntity; pEntity = ClientEntityList().NextBaseEntity(pEntity))
+			for (int i = 0; i < m_pGlowEntities.Count(); i++)
 			{
-				if (!pEntity->CanGlowEntity())
+				m_pGlowEntities[i]->m_bGlowSuppressRender = false;
+				if (!m_pGlowEntities[i]->CanGlowEntity())
 					continue;
 
-				if (pEntity->GetGlowMode() == GLOW_MODE_RADIUS)
+				if (m_pGlowEntities[i]->GetGlowMode() == GLOW_MODE_RADIUS)
 				{
 					if (numRadiusObjects >= bb2_max_glow_effects.GetInt())
+					{
+						m_pGlowEntities[i]->m_bGlowSuppressRender = true;
 						continue;
+					}
 
 					numRadiusObjects++;
 				}
-
-				m_pGlowEntities.AddToTail(pEntity);
 			}
-
-			// Nothing...
-			if (!m_pGlowEntities.Count())
-				return;
 
 			CMatRenderContextPtr pRenderContext(materials);
 
@@ -161,6 +171,9 @@ void CGlowObjectManager::RenderGlowModels(const CViewSetup *pSetup, CMatRenderCo
 	//==================//
 	for (int i = 0; i < m_pGlowEntities.Count(); ++i)
 	{
+		if (!m_pGlowEntities[i]->CanGlowEntity())
+			continue;
+
 		float alpha = m_pGlowEntities[i]->GetGlowAlpha();
 		render->SetBlend(alpha);
 		Vector vGlowColor = m_pGlowEntities[i]->GetGlowColor() * alpha;
@@ -203,6 +216,9 @@ void CGlowObjectManager::ApplyEntityGlowEffects(const CViewSetup *pSetup, CMatRe
 
 	for (int i = 0; i < m_pGlowEntities.Count(); ++i)
 	{
+		if (!m_pGlowEntities[i]->CanGlowEntity())
+			continue;
+
 		if (m_pGlowEntities[i]->ShouldGlowWhenOccluded() || m_pGlowEntities[i]->ShouldGlowWhenUnoccluded())
 		{
 			if (m_pGlowEntities[i]->ShouldGlowWhenOccluded() && m_pGlowEntities[i]->ShouldGlowWhenUnoccluded())
@@ -255,6 +271,9 @@ void CGlowObjectManager::ApplyEntityGlowEffects(const CViewSetup *pSetup, CMatRe
 	// Need to do a 2nd pass to warm stencil for objects which are rendered only when occluded
 	for (int i = 0; i < m_pGlowEntities.Count(); ++i)
 	{
+		if (!m_pGlowEntities[i]->CanGlowEntity())
+			continue;
+
 		if (m_pGlowEntities[i]->ShouldGlowWhenOccluded() && !m_pGlowEntities[i]->ShouldGlowWhenUnoccluded())
 		{
 			ShaderStencilState_t stencilState;

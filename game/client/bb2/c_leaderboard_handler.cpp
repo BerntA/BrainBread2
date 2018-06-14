@@ -26,35 +26,46 @@ CLeaderboardHandler::~CLeaderboardHandler()
 
 void CLeaderboardHandler::Reset(void)
 {
-	m_flScoreUpdateTime = engine->Time() + TIME_TO_FULL_UPDATE;
+	m_flTimeToUpload = 0.0f;
 	FetchLeaderboardHandle();
+}
+
+void CLeaderboardHandler::UploadLeaderboardStats(bool bDelay)
+{
+	if (bDelay)
+	{
+		m_flTimeToUpload = engine->Time() + 0.15f;
+		return;
+	}
+
+	if (m_hGlobalLeaderboardHandle != NULL)
+	{
+		int32 iLevel = 0, iKills = 0, iDeaths = 0, iScore = 0;
+		steamapicontext->SteamUserStats()->GetStat("BBX_ST_LEVEL", &iLevel);
+		steamapicontext->SteamUserStats()->GetStat("BBX_ST_KILLS", &iKills);
+		steamapicontext->SteamUserStats()->GetStat("BBX_ST_DEATHS", &iDeaths);
+
+		iScore = (iLevel + iKills) - iDeaths;
+		if (iScore < 0)
+			iScore = 0;
+
+		int32 details[] =
+		{
+			iLevel,
+			iKills,
+			iDeaths,
+		};
+
+		steamapicontext->SteamUserStats()->UploadLeaderboardScore(m_hGlobalLeaderboardHandle, k_ELeaderboardUploadScoreMethodForceUpdate, iScore, details, _ARRAYSIZE(details));
+	}
 }
 
 void CLeaderboardHandler::OnUpdate(void)
 {
-	if (m_flScoreUpdateTime < engine->Time())
+	if ((m_flTimeToUpload > 0.0f) && (engine->Time() >= m_flTimeToUpload))
 	{
-		m_flScoreUpdateTime = engine->Time() + TIME_TO_FULL_UPDATE;
-		if ((m_hGlobalLeaderboardHandle != NULL) && engine->IsInGame() && HL2MPRules() && HL2MPRules()->CanUseSkills())
-		{
-			int32 iLevel = 0, iKills = 0, iDeaths = 0, iScore = 0;
-			steamapicontext->SteamUserStats()->GetStat("BBX_ST_LEVEL", &iLevel);
-			steamapicontext->SteamUserStats()->GetStat("BBX_ST_KILLS", &iKills);
-			steamapicontext->SteamUserStats()->GetStat("BBX_ST_DEATHS", &iDeaths);
-
-			iScore = (iLevel + iKills) - iDeaths;
-			if (iScore < 0)
-				iScore = 0;
-
-			int32 details[] =
-			{
-				iLevel,
-				iKills,
-				iDeaths,
-			};
-
-			steamapicontext->SteamUserStats()->UploadLeaderboardScore(m_hGlobalLeaderboardHandle, k_ELeaderboardUploadScoreMethodForceUpdate, iScore, details, _ARRAYSIZE(details));
-		}
+		UploadLeaderboardStats();
+		m_flTimeToUpload = 0.0f;
 	}
 }
 

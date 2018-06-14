@@ -461,6 +461,9 @@ void CGameBaseClient::RunCommand(int iCommand)
 		FMODManager()->SetSoundVolume(1.0f);
 		FMODManager()->TransitionAmbientSound("ui/mainmenu_theme.mp3");
 
+		if (pLeaderboardHandler)
+			pLeaderboardHandler->UploadLeaderboardStats(true);
+
 		break;
 	case COMMAND_RESET:
 		engine->ClientCmd_Unrestricted("exec config_default.cfg\n");

@@ -29,6 +29,7 @@
 
 // This is the default, see shareddefs.h for mod-specific value, which can override this
 #define DEFAULT_TICK_INTERVAL	(0.015)				// 15 msec is the default
+#define DEFAULT_MOD_TICK_INTERVAL	(0.030)				// BB2 now uses 30 ms @33 tickrate by def.
 #define MINIMUM_TICK_INTERVAL   (0.001)
 #define MAXIMUM_TICK_INTERVAL	(0.1)
 

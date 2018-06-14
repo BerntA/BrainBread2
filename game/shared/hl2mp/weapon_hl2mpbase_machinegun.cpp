@@ -1,5 +1,12 @@
+//=========       Copyright © Reperio Studios 2013-2018 @ Bernt Andreas Eide!       ============//
+//
+// Purpose: Machine Gun HL2MP Baseclass.
+//
+//==============================================================================================//
 
 #include "cbase.h"
+#include "weapon_hl2mpbase_machinegun.h"
+#include "in_buttons.h"
 
 #if defined( CLIENT_DLL )
 	#include "c_hl2mp_player.h"
@@ -9,23 +16,28 @@
 	#include "npcevent.h"
 #endif
 
-#include "weapon_hl2mpbase_machinegun.h"
-#include "in_buttons.h"
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 IMPLEMENT_NETWORKCLASS_ALIASED( HL2MPMachineGun, DT_HL2MPMachineGun )
 
+BEGIN_NETWORK_TABLE_NOBASE(CHL2MPMachineGun, DT_HL2MPMachineGunLocal)
+#if !defined( CLIENT_DLL )
+	SendPropBool(SENDINFO(m_bIsFiringBurst)),
+	SendPropInt(SENDINFO(m_iBurstBullet), 4, SPROP_UNSIGNED),
+	SendPropTime(SENDINFO(m_flSoonestSecondaryAttack)),
+#else
+	RecvPropBool(RECVINFO(m_bIsFiringBurst)),
+	RecvPropInt(RECVINFO(m_iBurstBullet)),
+	RecvPropTime(RECVINFO(m_flSoonestSecondaryAttack)),
+#endif
+END_NETWORK_TABLE()
+
 BEGIN_NETWORK_TABLE( CHL2MPMachineGun, DT_HL2MPMachineGun )
 #ifdef CLIENT_DLL
-RecvPropBool(RECVINFO(m_bIsFiringBurst)),
-RecvPropInt(RECVINFO(m_iBurstBullet)),
-RecvPropTime(RECVINFO(m_flSoonestSecondaryAttack)),
+RecvPropDataTable("HL2MPMachineGunLocal", 0, 0, &REFERENCE_RECV_TABLE(DT_HL2MPMachineGunLocal)),
 #else
-SendPropBool(SENDINFO(m_bIsFiringBurst)),
-SendPropInt(SENDINFO(m_iBurstBullet), 4, SPROP_UNSIGNED),
-SendPropTime(SENDINFO(m_flSoonestSecondaryAttack)),
+SendPropDataTable("HL2MPMachineGunLocal", 0, &REFERENCE_SEND_TABLE(DT_HL2MPMachineGunLocal), SendProxy_SendLocalWeaponDataTable),
 #endif
 END_NETWORK_TABLE()
 
@@ -33,7 +45,7 @@ END_NETWORK_TABLE()
 BEGIN_PREDICTION_DATA( CHL2MPMachineGun )
 DEFINE_PRED_FIELD(m_bIsFiringBurst, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE),
 DEFINE_PRED_FIELD(m_iBurstBullet, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
-DEFINE_PRED_FIELD(m_flSoonestSecondaryAttack, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
+DEFINE_PRED_FIELD_TOL(m_flSoonestSecondaryAttack, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE),
 END_PREDICTION_DATA()
 #endif
 

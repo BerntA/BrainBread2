@@ -283,6 +283,9 @@ CHL2MP_Player::CHL2MP_Player()
 
 CHL2MP_Player::~CHL2MP_Player()
 {
+	if ((engine->IsDedicatedServer() == false) && (m_iSkill_Level > 0))
+		HandleLocalProfile(true);
+
 	pszWeaponPenaltyList.Purge();
 	CleanupAssociatedAmmoEntities();
 	m_PlayerAnimState->Release();
@@ -3031,140 +3034,134 @@ void CHL2MP_Player::RefreshSpeed(void)
 
 bool CHL2MP_Player::HandleLocalProfile(bool bSave)
 {
-	if (GameBaseServer()->CanStoreSkills() != PROFILE_LOCAL)
+	if (IsBot() || (bSave != m_bHasReadProfileData) || (GameBaseServer()->CanStoreSkills() != PROFILE_LOCAL))
 		return false;
 
-	char pszFileName[64];
-	Q_snprintf(pszFileName, 64, "%llu", (unsigned long long)GetSteamIDAsUInt64());
-
-	char pszFilePath[80];
-	Q_snprintf(pszFilePath, 80, "data/local/%s.txt", pszFileName);
+	char pszFilePath[128];
+	Q_snprintf(pszFilePath, 128, "data/local/%llu.txt", GetSteamIDAsUInt64());
 
 	// Save your local profile:
 	if (bSave)
 	{
-		if (m_bHasReadProfileData)
+		FileHandle_t localProfile = g_pFullFileSystem->Open(pszFilePath, "w");
+		if (localProfile != FILESYSTEM_INVALID_HANDLE)
 		{
-			FileHandle_t localProfile = g_pFullFileSystem->Open(pszFilePath, "w");
-			if (localProfile != FILESYSTEM_INVALID_HANDLE)
-			{
-				char pszFileContent[1024];
-				Q_snprintf(pszFileContent, 1024,
-					"\"Profile\"\n"
-					"{\n"
+			char pszFileContent[2048];
+			Q_snprintf(pszFileContent, 2048,
+				"\"Profile\"\n"
+				"{\n"
 
-					"    \"Level\" \"%i\"\n"
-					"    \"XPCurrent\" \"%i\"\n"
-					"    \"XPLeft\" \"%i\"\n"
-					"    \"Talents\" \"%i\"\n"
-					"    \"ZombiePoints\" \"%i\"\n"
+				"    \"Level\" \"%i\"\n"
+				"    \"XPCurrent\" \"%i\"\n"
+				"    \"XPLeft\" \"%i\"\n"
+				"    \"Talents\" \"%i\"\n"
+				"    \"ZombiePoints\" \"%i\"\n"
 
-					"    \"Speed\" \"%i\"\n"
-					"    \"Acrobatics\" \"%i\"\n"
-					"    \"Slide\" \"%i\"\n"
-					"    \"SniperMaster\" \"%i\"\n"
-					"    \"EnhancedReflexes\" \"%i\"\n"
-					"    \"MeleeSpeed\" \"%i\"\n"
-					"    \"Lightweight\" \"%i\"\n"
-					"    \"Weightless\" \"%i\"\n"
-					"    \"HealthRegen\" \"%i\"\n"
-					"    \"RealityPhase\" \"%i\"\n"
+				"    \"Speed\" \"%i\"\n"
+				"    \"Acrobatics\" \"%i\"\n"
+				"    \"Slide\" \"%i\"\n"
+				"    \"SniperMaster\" \"%i\"\n"
+				"    \"EnhancedReflexes\" \"%i\"\n"
+				"    \"MeleeSpeed\" \"%i\"\n"
+				"    \"Lightweight\" \"%i\"\n"
+				"    \"Weightless\" \"%i\"\n"
+				"    \"HealthRegen\" \"%i\"\n"
+				"    \"RealityPhase\" \"%i\"\n"
 
-					"    \"Health\" \"%i\"\n"
-					"    \"Impenetrable\" \"%i\"\n"
-					"    \"Painkiller\" \"%i\"\n"
-					"    \"LifeLeech\" \"%i\"\n"
-					"    \"PowerKick\" \"%i\"\n"
-					"    \"Bleed\" \"%i\"\n"
-					"    \"CripplingBlow\" \"%i\"\n"
-					"    \"ArmorMaster\" \"%i\"\n"
-					"    \"MeleeMaster\" \"%i\"\n"
-					"    \"BloodRage\" \"%i\"\n"
+				"    \"Health\" \"%i\"\n"
+				"    \"Impenetrable\" \"%i\"\n"
+				"    \"Painkiller\" \"%i\"\n"
+				"    \"LifeLeech\" \"%i\"\n"
+				"    \"PowerKick\" \"%i\"\n"
+				"    \"Bleed\" \"%i\"\n"
+				"    \"CripplingBlow\" \"%i\"\n"
+				"    \"ArmorMaster\" \"%i\"\n"
+				"    \"MeleeMaster\" \"%i\"\n"
+				"    \"BloodRage\" \"%i\"\n"
 
-					"    \"RifleMaster\" \"%i\"\n"
-					"    \"ShotgunMaster\" \"%i\"\n"
-					"    \"PistolMaster\" \"%i\"\n"
-					"    \"Resourceful\" \"%i\"\n"
-					"    \"BlazingAmmo\" \"%i\"\n"
-					"    \"Coldsnap\" \"%i\"\n"
-					"    \"ShoutAndSpray\" \"%i\"\n"
-					"    \"EmpoweredBullets\" \"%i\"\n"
-					"    \"MagazineRefill\" \"%i\"\n"
-					"    \"Gunslinger\" \"%i\"\n"
+				"    \"RifleMaster\" \"%i\"\n"
+				"    \"ShotgunMaster\" \"%i\"\n"
+				"    \"PistolMaster\" \"%i\"\n"
+				"    \"Resourceful\" \"%i\"\n"
+				"    \"BlazingAmmo\" \"%i\"\n"
+				"    \"Coldsnap\" \"%i\"\n"
+				"    \"ShoutAndSpray\" \"%i\"\n"
+				"    \"EmpoweredBullets\" \"%i\"\n"
+				"    \"MagazineRefill\" \"%i\"\n"
+				"    \"Gunslinger\" \"%i\"\n"
 
-					"    \"ZombieHealth\" \"%i\"\n"
-					"    \"ZombieDamage\" \"%i\"\n"
-					"    \"ZombieDamageReduction\" \"%i\"\n"
-					"    \"ZombieSpeed\" \"%i\"\n"
-					"    \"ZombieJump\" \"%i\"\n"
-					"    \"ZombieLeap\" \"%i\"\n"
-					"    \"ZombieDeath\" \"%i\"\n"
-					"    \"ZombieLifeLeech\" \"%i\"\n"
-					"    \"ZombieHealthRegen\" \"%i\"\n"
-					"    \"ZombieMassInvasion\" \"%i\"\n"
+				"    \"ZombieHealth\" \"%i\"\n"
+				"    \"ZombieDamage\" \"%i\"\n"
+				"    \"ZombieDamageReduction\" \"%i\"\n"
+				"    \"ZombieSpeed\" \"%i\"\n"
+				"    \"ZombieJump\" \"%i\"\n"
+				"    \"ZombieLeap\" \"%i\"\n"
+				"    \"ZombieDeath\" \"%i\"\n"
+				"    \"ZombieLifeLeech\" \"%i\"\n"
+				"    \"ZombieHealthRegen\" \"%i\"\n"
+				"    \"ZombieMassInvasion\" \"%i\"\n"
 
-					"}\n",
+				"}\n",
 
-					m_iSkill_Level,
-					m_BB2Local.m_iSkill_XPCurrent,
-					m_BB2Local.m_iSkill_XPLeft,
-					m_BB2Local.m_iSkill_Talents,
-					m_BB2Local.m_iZombieCredits,
+				m_iSkill_Level,
+				m_BB2Local.m_iSkill_XPCurrent,
+				m_BB2Local.m_iSkill_XPLeft,
+				m_BB2Local.m_iSkill_Talents,
+				m_BB2Local.m_iZombieCredits,
 
-					GetSkillValue(0),
-					GetSkillValue(1),
-					GetSkillValue(2),
-					GetSkillValue(3),
-					GetSkillValue(4),
-					GetSkillValue(5),
-					GetSkillValue(6),
-					GetSkillValue(7),
-					GetSkillValue(8),
-					GetSkillValue(9),
+				GetSkillValue(0),
+				GetSkillValue(1),
+				GetSkillValue(2),
+				GetSkillValue(3),
+				GetSkillValue(4),
+				GetSkillValue(5),
+				GetSkillValue(6),
+				GetSkillValue(7),
+				GetSkillValue(8),
+				GetSkillValue(9),
 
-					GetSkillValue(10),
-					GetSkillValue(11),
-					GetSkillValue(12),
-					GetSkillValue(13),
-					GetSkillValue(14),
-					GetSkillValue(15),
-					GetSkillValue(16),
-					GetSkillValue(17),
-					GetSkillValue(18),
-					GetSkillValue(19),
+				GetSkillValue(10),
+				GetSkillValue(11),
+				GetSkillValue(12),
+				GetSkillValue(13),
+				GetSkillValue(14),
+				GetSkillValue(15),
+				GetSkillValue(16),
+				GetSkillValue(17),
+				GetSkillValue(18),
+				GetSkillValue(19),
 
-					GetSkillValue(20),
-					GetSkillValue(21),
-					GetSkillValue(22),
-					GetSkillValue(23),
-					GetSkillValue(24),
-					GetSkillValue(25),
-					GetSkillValue(26),
-					GetSkillValue(27),
-					GetSkillValue(28),
-					GetSkillValue(29),
+				GetSkillValue(20),
+				GetSkillValue(21),
+				GetSkillValue(22),
+				GetSkillValue(23),
+				GetSkillValue(24),
+				GetSkillValue(25),
+				GetSkillValue(26),
+				GetSkillValue(27),
+				GetSkillValue(28),
+				GetSkillValue(29),
 
-					GetSkillValue(30),
-					GetSkillValue(31),
-					GetSkillValue(32),
-					GetSkillValue(33),
-					GetSkillValue(34),
-					GetSkillValue(35),
-					GetSkillValue(36),
-					GetSkillValue(37),
-					GetSkillValue(38),
-					GetSkillValue(39)
-					);
+				GetSkillValue(30),
+				GetSkillValue(31),
+				GetSkillValue(32),
+				GetSkillValue(33),
+				GetSkillValue(34),
+				GetSkillValue(35),
+				GetSkillValue(36),
+				GetSkillValue(37),
+				GetSkillValue(38),
+				GetSkillValue(39)
+				);
 
-				g_pFullFileSystem->Write(&pszFileContent, strlen(pszFileContent), localProfile);
-				g_pFullFileSystem->Close(localProfile);
-				return true;
-			}
+			g_pFullFileSystem->Write(&pszFileContent, strlen(pszFileContent), localProfile);
+			g_pFullFileSystem->Close(localProfile);
+			return true;
 		}
 
 		return false;
 	}
-	
+
 	// Load your local profile:
 	m_bHasReadProfileData = true;
 	m_bHasTriedToLoadStats = true;
@@ -3681,6 +3678,33 @@ CON_COMMAND(holster_weapon, "Holster your weapon.")
 		return;
 
 	pClient->Weapon_Switch(pWantedWeapon);
+}
+
+CON_COMMAND(bb2_reset_local_stats, "Reset local stats on any server which allows this.")
+{
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_GetCommandClient());
+	if (!pPlayer)
+		return;
+
+	if (GameBaseServer()->CanStoreSkills() != PROFILE_LOCAL)
+	{
+		ClientPrint(pPlayer, HUD_PRINTCONSOLE, "This command can only be used on servers which allow local stats!\n");
+		return;
+	}
+
+	// BB2 SKILL TREE - Base
+	int iLevel = MAX(GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iLevel, 1);
+
+	pPlayer->SetPlayerLevel(iLevel);
+	pPlayer->m_BB2Local.m_iSkill_Talents = ((iLevel > 100) ? 100 : (iLevel - 1));
+	pPlayer->m_BB2Local.m_iSkill_XPLeft = (GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iXPIncreasePerLevel * iLevel);
+	pPlayer->m_BB2Local.m_iSkill_XPCurrent = 0;
+	pPlayer->m_BB2Local.m_iZombieCredits = 0;
+
+	for (int i = 0; i < MAX_SKILL_ARRAY; i++)
+		pPlayer->m_BB2Local.m_iPlayerSkills.Set(i, 0);
+
+	ClientPrint(pPlayer, HUD_PRINTCONSOLE, "You've reset all your skills!\n");
 }
 
 CON_COMMAND_F(bb2_set_fps, "Set fps of all animations. (weapons)", FCVAR_CHEAT)

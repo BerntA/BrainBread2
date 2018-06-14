@@ -1968,7 +1968,8 @@ void CHL2MPRules::ClientDisconnected( edict_t *pClient )
 				pBaseHL2MP->DropAllWeapons();
 
 			pBaseHL2MP->RemovePowerups();
-			pBaseHL2MP->HandleLocalProfile(true);
+			if (engine->IsDedicatedServer())
+				pBaseHL2MP->HandleLocalProfile(true);
 			GameBaseShared()->GetAchievementManager()->SaveGlobalStats(pBaseHL2MP);
 			GameBaseShared()->RemoveInventoryItem(pBaseHL2MP->entindex(), pBaseHL2MP->GetAbsOrigin());
 		}

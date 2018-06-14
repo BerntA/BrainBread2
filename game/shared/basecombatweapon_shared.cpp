@@ -73,8 +73,6 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 	// Defaults to zero
 	m_nViewModelIndex	= 0;
 
-	m_bFlipViewModel	= false;
-
 	// BB2
 	m_flHolsteredTime = 0.0f;
 
@@ -2149,10 +2147,9 @@ bool CBaseCombatWeapon::Reload( void )
 //=========================================================
 void CBaseCombatWeapon::WeaponIdle( void )
 {
-	//Idle again if we've finished
 	if ( HasWeaponIdleTimeElapsed() )
 	{
-		if (UsesEmptyAnimation() && m_iClip1 <= 0)
+		if (UsesEmptyAnimation() && (m_iClip1 <= 0))
 			SendWeaponAnim(ACT_VM_IDLE_EMPTY);
 		else
 			SendWeaponAnim(ACT_VM_IDLE);
@@ -2434,7 +2431,7 @@ void CBaseCombatWeapon::MeleeAttackUpdate(void)
 		return;
 
 #ifndef CLIENT_DLL
-	if (m_flLastTraceTime < gpGlobals->curtime)
+	if (m_flLastTraceTime <= gpGlobals->curtime)
 	{
 		m_flLastTraceTime = gpGlobals->curtime + TRACE_FREQUENCY;
 
@@ -2896,10 +2893,9 @@ BEGIN_PREDICTION_DATA( CBaseCombatWeapon )
 	DEFINE_PRED_FIELD_TOL( m_flMeleeCooldown, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),
 	DEFINE_PRED_FIELD_TOL(m_flNextBashAttack, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE),
 	DEFINE_PRED_FIELD_TOL( m_flTimeWeaponIdle, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),
-
 	DEFINE_PRED_FIELD_TOL(m_flHolsteredTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE),
 
-	DEFINE_PRED_FIELD( m_bWantsHolster, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD(m_bWantsHolster, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD(m_bIsBloody, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE),
 
 	DEFINE_PRED_FIELD( m_iPrimaryAmmoType, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
@@ -2912,14 +2908,13 @@ BEGIN_PREDICTION_DATA( CBaseCombatWeapon )
 
 	DEFINE_PRED_FIELD( m_nViewModelIndex, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 
-	DEFINE_PRED_FIELD(m_flViewKickTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
-	DEFINE_PRED_FIELD(m_flViewKickPenalty, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD_TOL(m_flViewKickTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE),
+	DEFINE_PRED_FIELD_TOL(m_flViewKickPenalty, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE),
 	DEFINE_PRED_FIELD(m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
 	DEFINE_PRED_FIELD(m_iMeleeAttackType, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
 
 	// Not networked
 
-	DEFINE_PRED_FIELD( m_flTimeWeaponIdle, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_FIELD( m_bInReload, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bFiringWholeClip, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_flNextEmptySoundTime, FIELD_FLOAT ),
@@ -2955,7 +2950,7 @@ BEGIN_PREDICTION_DATA( CBaseCombatWeapon )
 	//-----------------------------------------------------------------------------
 	// Purpose: Save Data for Base Weapon object
 	//-----------------------------------------------------------------------------// 
-	BEGIN_DATADESC( CBaseCombatWeapon )
+BEGIN_DATADESC( CBaseCombatWeapon )
 
 	DEFINE_FIELD( m_flNextPrimaryAttack, FIELD_TIME ),
 	DEFINE_FIELD( m_flNextSecondaryAttack, FIELD_TIME ),
@@ -3026,34 +3021,7 @@ BEGIN_PREDICTION_DATA( CBaseCombatWeapon )
 	// Hammer Keyfields
 	DEFINE_KEYFIELD(m_iDefaultAmmoCount, FIELD_INTEGER, "AmmoCount"),
 
-	END_DATADESC()
-
-	//-----------------------------------------------------------------------------
-	// Purpose: Only send to local player if this weapon is the active weapon
-	// Input  : *pStruct - 
-	//			*pVarData - 
-	//			*pRecipients - 
-	//			objectID - 
-	// Output : void*
-	//-----------------------------------------------------------------------------
-	void* SendProxy_SendActiveLocalWeaponDataTable( const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID )
-{
-	// Get the weapon entity
-	CBaseCombatWeapon *pWeapon = (CBaseCombatWeapon*)pVarData;
-	if ( pWeapon )
-	{
-		// Only send this chunk of data to the player carrying this weapon
-		CBasePlayer *pPlayer = ToBasePlayer( pWeapon->GetOwner() );
-		if ( pPlayer /*&& pPlayer->GetActiveWeapon() == pWeapon*/ )
-		{
-			pRecipients->SetOnly( pPlayer->GetClientIndex() );
-			return (void*)pVarData;
-		}
-	}
-
-	return NULL;
-}
-REGISTER_SEND_PROXY_NON_MODIFIED_POINTER( SendProxy_SendActiveLocalWeaponDataTable );
+END_DATADESC()
 
 //-----------------------------------------------------------------------------
 // Purpose: Only send the LocalWeaponData to the player carrying the weapon
@@ -3109,77 +3077,64 @@ REGISTER_SEND_PROXY_NON_MODIFIED_POINTER( SendProxy_SendNonLocalWeaponDataTable 
 //-----------------------------------------------------------------------------
 // Purpose: Propagation data for weapons. Only sent when a player's holding it.
 //-----------------------------------------------------------------------------
-BEGIN_NETWORK_TABLE_NOBASE( CBaseCombatWeapon, DT_LocalActiveWeaponData )
-#if !defined( CLIENT_DLL )
-	SendPropTime( SENDINFO( m_flNextPrimaryAttack ) ),
-	SendPropTime( SENDINFO( m_flNextSecondaryAttack ) ),
-	SendPropTime(SENDINFO(m_flMeleeCooldown)),
-	SendPropTime( SENDINFO( m_flNextBashAttack ) ),
-	SendPropInt( SENDINFO( m_nNextThinkTick ) ),
-	SendPropTime( SENDINFO( m_flTimeWeaponIdle ) ),
-#else
-	RecvPropTime( RECVINFO( m_flNextPrimaryAttack ) ),
-	RecvPropTime( RECVINFO( m_flNextSecondaryAttack ) ),
-	RecvPropTime( RECVINFO( m_flMeleeCooldown ) ),
-	RecvPropTime(RECVINFO(m_flNextBashAttack)),
-	RecvPropInt( RECVINFO( m_nNextThinkTick ) ),
-	RecvPropTime( RECVINFO( m_flTimeWeaponIdle ) ),
-#endif
-END_NETWORK_TABLE()
-
-	//-----------------------------------------------------------------------------
-	// Purpose: Propagation data for weapons. Only sent when a player's holding it.
-	//-----------------------------------------------------------------------------
 BEGIN_NETWORK_TABLE_NOBASE( CBaseCombatWeapon, DT_LocalWeaponData )
 #if !defined( CLIENT_DLL )
-	SendPropIntWithMinusOneFlag( SENDINFO(m_iClip1 ), 10 ),
-	SendPropIntWithMinusOneFlag( SENDINFO(m_iClip2 ), 10 ),
-	SendPropInt( SENDINFO(m_iPrimaryAmmoType ), 8 ),
-	SendPropInt( SENDINFO(m_iSecondaryAmmoType ), 8 ),
-	SendPropInt( SENDINFO( m_nViewModelIndex ), VIEWMODEL_INDEX_BITS, SPROP_UNSIGNED ),
-	SendPropInt( SENDINFO( m_bFlipViewModel ) ),
+	SendPropIntWithMinusOneFlag(SENDINFO(m_iClip1), 10),
+	SendPropIntWithMinusOneFlag(SENDINFO(m_iClip2), 10),
+	SendPropInt(SENDINFO(m_iPrimaryAmmoType), 6),
+	SendPropInt(SENDINFO(m_iSecondaryAmmoType), 6),
+	SendPropInt(SENDINFO(m_nViewModelIndex), VIEWMODEL_INDEX_BITS, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_iShotsFired), 7, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN),
+	SendPropTime(SENDINFO(m_flNextPrimaryAttack)),
+	SendPropTime(SENDINFO(m_flNextSecondaryAttack)),
+	SendPropTime(SENDINFO(m_flMeleeCooldown)),
+	SendPropTime(SENDINFO(m_flNextBashAttack)),
+	SendPropTime(SENDINFO(m_flTimeWeaponIdle)),
+	SendPropTime(SENDINFO(m_flHolsteredTime)),
+	SendPropTime(SENDINFO(m_flViewKickTime)),
+	SendPropFloat(SENDINFO(m_flViewKickPenalty), -1, SPROP_CHANGES_OFTEN),
+	SendPropInt(SENDINFO(m_nNextThinkTick)),
+	SendPropBool(SENDINFO(m_bWantsHolster)),
 #else
-	RecvPropIntWithMinusOneFlag( RECVINFO(m_iClip1 )),
-	RecvPropIntWithMinusOneFlag( RECVINFO(m_iClip2 )),
-	RecvPropInt( RECVINFO(m_iPrimaryAmmoType )),
-	RecvPropInt( RECVINFO(m_iSecondaryAmmoType )),
-	RecvPropInt( RECVINFO( m_nViewModelIndex ) ),
-	RecvPropBool( RECVINFO( m_bFlipViewModel ) ),
+	RecvPropIntWithMinusOneFlag(RECVINFO(m_iClip1)),
+	RecvPropIntWithMinusOneFlag(RECVINFO(m_iClip2)),
+	RecvPropInt(RECVINFO(m_iPrimaryAmmoType)),
+	RecvPropInt(RECVINFO(m_iSecondaryAmmoType)),
+	RecvPropInt(RECVINFO(m_nViewModelIndex)),
+	RecvPropInt(RECVINFO(m_iShotsFired)),
+	RecvPropTime(RECVINFO(m_flNextPrimaryAttack)),
+	RecvPropTime(RECVINFO(m_flNextSecondaryAttack)),
+	RecvPropTime(RECVINFO(m_flMeleeCooldown)),
+	RecvPropTime(RECVINFO(m_flNextBashAttack)),
+	RecvPropTime(RECVINFO(m_flTimeWeaponIdle)),
+	RecvPropTime(RECVINFO(m_flHolsteredTime)),
+	RecvPropTime(RECVINFO(m_flViewKickTime)),
+	RecvPropFloat(RECVINFO(m_flViewKickPenalty)),
+	RecvPropInt(RECVINFO(m_nNextThinkTick)),
+	RecvPropBool(RECVINFO(m_bWantsHolster)),
 #endif
 END_NETWORK_TABLE()
 
-	BEGIN_NETWORK_TABLE(CBaseCombatWeapon, DT_BaseCombatWeapon)
+BEGIN_NETWORK_TABLE(CBaseCombatWeapon, DT_BaseCombatWeapon)
 #if !defined( CLIENT_DLL )
-	SendPropDataTable("LocalWeaponData", 0, &REFERENCE_SEND_TABLE(DT_LocalWeaponData), SendProxy_SendLocalWeaponDataTable ),
-	SendPropDataTable("LocalActiveWeaponData", 0, &REFERENCE_SEND_TABLE(DT_LocalActiveWeaponData), SendProxy_SendActiveLocalWeaponDataTable ),
-	SendPropModelIndex( SENDINFO(m_iViewModelIndex) ),
-	SendPropModelIndex( SENDINFO(m_iWorldModelIndex) ),
-	SendPropInt( SENDINFO(m_iState ), 8, SPROP_UNSIGNED ),
-	SendPropEHandle( SENDINFO(m_hOwner) ),
-	SendPropTime( SENDINFO( m_flHolsteredTime ) ),
-	SendPropBool( SENDINFO( m_bWantsHolster ) ),
-	SendPropBool( SENDINFO( m_bIsBloody ) ),
-	SendPropTime( SENDINFO( m_flViewKickTime ) ),
-	SendPropFloat(SENDINFO(m_flViewKickPenalty), -1, SPROP_CHANGES_OFTEN),
-	SendPropInt( SENDINFO(m_iShotsFired), 8, SPROP_UNSIGNED ),
-	SendPropInt(SENDINFO(m_iPrimaryAmmoCount), -1, SPROP_UNSIGNED),
-	SendPropInt(SENDINFO(m_iSecondaryAmmoCount), -1, SPROP_UNSIGNED),
+	SendPropDataTable("LocalWeaponData", 0, &REFERENCE_SEND_TABLE(DT_LocalWeaponData), SendProxy_SendLocalWeaponDataTable),
+	SendPropModelIndex(SENDINFO(m_iViewModelIndex)),
+	SendPropModelIndex(SENDINFO(m_iWorldModelIndex)),
+	SendPropInt(SENDINFO(m_iState), 3, SPROP_UNSIGNED),
+	SendPropEHandle(SENDINFO(m_hOwner)),
+	SendPropBool(SENDINFO(m_bIsBloody)),
+	SendPropInt(SENDINFO(m_iPrimaryAmmoCount), 12, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_iSecondaryAmmoCount), 12, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_iMeleeAttackType), 3, SPROP_UNSIGNED),
 #else
 	RecvPropDataTable("LocalWeaponData", 0, 0, &REFERENCE_RECV_TABLE(DT_LocalWeaponData)),
-	RecvPropDataTable("LocalActiveWeaponData", 0, 0, &REFERENCE_RECV_TABLE(DT_LocalActiveWeaponData)),
-	RecvPropInt( RECVINFO(m_iViewModelIndex)),
-	RecvPropInt( RECVINFO(m_iWorldModelIndex)),
-	RecvPropInt( RECVINFO(m_iState )),
-	RecvPropEHandle( RECVINFO(m_hOwner ) ),
-	RecvPropTime(RECVINFO(m_flHolsteredTime)),
-	RecvPropBool( RECVINFO( m_bWantsHolster ) ),
+	RecvPropInt(RECVINFO(m_iViewModelIndex)),
+	RecvPropInt(RECVINFO(m_iWorldModelIndex)),
+	RecvPropInt(RECVINFO(m_iState)),
+	RecvPropEHandle(RECVINFO(m_hOwner)),
 	RecvPropBool(RECVINFO(m_bIsBloody)),
-	RecvPropTime(RECVINFO(m_flViewKickTime)),
-	RecvPropFloat(RECVINFO(m_flViewKickPenalty)),
-	RecvPropInt(RECVINFO(m_iShotsFired)),
 	RecvPropInt(RECVINFO(m_iPrimaryAmmoCount)),
 	RecvPropInt(RECVINFO(m_iSecondaryAmmoCount)),
 	RecvPropInt(RECVINFO(m_iMeleeAttackType)),
 #endif
-	END_NETWORK_TABLE()
+END_NETWORK_TABLE()

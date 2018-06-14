@@ -27,17 +27,17 @@ IMPLEMENT_NETWORKCLASS_ALIASED(HL2MPMeleeChargeable, DT_HL2MPMeleeChargeable)
 BEGIN_NETWORK_TABLE(CHL2MPMeleeChargeable, DT_HL2MPMeleeChargeable)
 #ifdef CLIENT_DLL
 RecvPropInt(RECVINFO(m_iChargeState)),
-RecvPropFloat(RECVINFO(m_flTimeCharged)),
+RecvPropTime(RECVINFO(m_flTimeCharged)),
 #else
 SendPropInt(SENDINFO(m_iChargeState), 2, SPROP_UNSIGNED),
-SendPropFloat(SENDINFO(m_flTimeCharged)),
+SendPropTime(SENDINFO(m_flTimeCharged)),
 #endif
 END_NETWORK_TABLE()
 
 #ifdef CLIENT_DLL
 BEGIN_PREDICTION_DATA(CHL2MPMeleeChargeable)
 DEFINE_PRED_FIELD(m_iChargeState, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
-DEFINE_PRED_FIELD(m_flTimeCharged, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
+DEFINE_PRED_FIELD_TOL(m_flTimeCharged, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE),
 END_PREDICTION_DATA()
 #endif
 

@@ -28,6 +28,7 @@
 #ifdef CLIENT_DLL
 	#include "c_te_effect_dispatch.h"
     #include "c_hl2mp_player.h"
+	#include "GameBase_Client.h"
 #else
 	#include "te_effect_dispatch.h"
     #include "hl2mp_player.h"
@@ -864,7 +865,11 @@ void UTIL_BloodDecalTrace( trace_t *pTrace, int bloodColor )
 	{
 		if ( bloodColor == BLOOD_COLOR_RED )
 		{
+#ifdef CLIENT_DLL
+			UTIL_DecalTrace( pTrace, (GameBaseClient->IsExtremeGore() ? "ExtremeBlood" : "Blood"));
+#else
 			UTIL_DecalTrace( pTrace, "Blood" );
+#endif
 		}
 		else
 		{
@@ -924,6 +929,10 @@ void UTIL_GibImpact(CBaseEntity *pVictim, int attachment, int color, int hitbox,
 
 void UTIL_BloodSpawn(int iEntIndex, const Vector &pos, const Vector &dir, float flDamage, int hitbox)
 {
+#ifdef BB2_AI
+	IPredictionSystem::SuppressHostEvents(NULL);
+#endif //BB2_AI
+
 	CEffectData	data;
 
 	data.m_vOrigin = pos;

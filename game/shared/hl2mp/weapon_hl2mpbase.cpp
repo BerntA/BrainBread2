@@ -1,9 +1,8 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//=========       Copyright © Reperio Studios 2013-2018 @ Bernt Andreas Eide!       ============//
 //
-// Purpose: 
+// Purpose: HL2MP Base Weapon.
 //
-// $NoKeywords: $
-//=============================================================================//
+//==============================================================================================//
 
 #include "cbase.h"
 #include "in_buttons.h"
@@ -12,33 +11,12 @@
 #include "hl2mp_gamerules.h"
 
 #if defined( CLIENT_DLL )
-
-	#include "vgui/ISurface.h"
-	#include "vgui_controls/Controls.h"
 	#include "c_hl2mp_player.h"
-	#include "hud_crosshair.h"
-
 #else
-
 	#include "hl2mp_player.h"
-	#include "vphysics/constraints.h"
-
 #endif
 
 #include "weapon_hl2mpbase.h"
-
-// ----------------------------------------------------------------------------- //
-// Global functions.
-// ----------------------------------------------------------------------------- //
-
-bool IsAmmoType( int iAmmoType, const char *pAmmoName )
-{
-	return GetAmmoDef()->Index( pAmmoName ) == iAmmoType;
-}
-
-// ----------------------------------------------------------------------------- //
-// CWeaponHL2MPBase tables.
-// ----------------------------------------------------------------------------- //
 
 IMPLEMENT_NETWORKCLASS_ALIASED( WeaponHL2MPBase, DT_WeaponHL2MPBase )
 
@@ -67,7 +45,6 @@ CWeaponHL2MPBase::CWeaponHL2MPBase()
 	AddSolidFlags( FSOLID_TRIGGER ); // Nothing collides with these but it gets touches.
 }
 
-
 bool CWeaponHL2MPBase::IsPredicted() const
 { 
 	return true;
@@ -91,7 +68,6 @@ void CWeaponHL2MPBase::WeaponSound( WeaponSound_t sound_type, float soundtime /*
 #endif
 }
 
-
 CBasePlayer* CWeaponHL2MPBase::GetPlayerOwner() const
 {
 	return dynamic_cast< CBasePlayer* >( GetOwner() );
@@ -111,7 +87,6 @@ void CWeaponHL2MPBase::OnDataChanged( DataUpdateType_t type )
 	if ( GetPredictable() && !ShouldPredict() )
 		ShutdownPredictable();
 }
-
 
 bool CWeaponHL2MPBase::ShouldPredict()
 {
@@ -353,47 +328,11 @@ const CHL2MPSWeaponInfo &CWeaponHL2MPBase::GetHL2MPWpnData() const
 
 	return *pHL2MPInfo;
 }
+
 void CWeaponHL2MPBase::FireBullets( const FireBulletsInfo_t &info )
 {
 	FireBulletsInfo_t modinfo = info;
-
 	modinfo.m_iPlayerDamage = GetHL2MPWpnData().m_iPlayerDamage;
 
 	BaseClass::FireBullets( modinfo );
 }
-
-
-#if defined( CLIENT_DLL )
-
-#include "c_te_effect_dispatch.h"
-
-#define NUM_MUZZLE_FLASH_TYPES 4
-
-bool CWeaponHL2MPBase::OnFireEvent( C_BaseViewModel *pViewModel, const Vector& origin, const QAngle& angles, int event, const char *options )
-{
-	return BaseClass::OnFireEvent( pViewModel, origin, angles, event, options );
-}
-
-
-void UTIL_ClipPunchAngleOffset( QAngle &in, const QAngle &punch, const QAngle &clip )
-{
-	QAngle	final = in + punch;
-
-	//Clip each component
-	for ( int i = 0; i < 3; i++ )
-	{
-		if ( final[i] > clip[i] )
-		{
-			final[i] = clip[i];
-		}
-		else if ( final[i] < -clip[i] )
-		{
-			final[i] = -clip[i];
-		}
-
-		//Return the result
-		in[i] = final[i] - punch[i];
-	}
-}
-
-#endif

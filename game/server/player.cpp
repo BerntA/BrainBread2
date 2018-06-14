@@ -868,8 +868,12 @@ void CBasePlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &v
 			break;
 		}
 
-		SpawnBlood(ptr->endpos, vecDir, BloodColor(), info.GetDamage(), ptr->hitgroup);// a little surface blood.
-		TraceBleed( info.GetDamage(), vecDir, ptr, info.GetDamageType() );
+		if (IsMaterialOverlayFlagActive(MAT_OVERLAY_SPAWNPROTECTION) == false)
+		{
+			SpawnBlood(ptr->endpos, vecDir, BloodColor(), info.GetDamage(), ptr->hitgroup); 
+			TraceBleed(info.GetDamage(), vecDir, ptr, info.GetDamageType());
+		}
+
 		AddMultiDamage( info, this );
 	}
 }
@@ -4867,45 +4871,6 @@ void CSprayCan::Think( void )
 	UTIL_Remove( this );
 }
 
-class	CBloodSplat : public CPointEntity
-{
-public:
-	DECLARE_CLASS( CBloodSplat, CPointEntity );
-
-	void	Spawn ( CBaseEntity *pOwner );
-	void	Think ( void );
-};
-
-void CBloodSplat::Spawn ( CBaseEntity *pOwner )
-{
-	SetLocalOrigin( pOwner->WorldSpaceCenter() + Vector ( 0 , 0 , 32 ) );
-	SetLocalAngles( pOwner->GetLocalAngles() );
-	SetOwnerEntity( pOwner );
-
-	SetNextThink( gpGlobals->curtime + 0.1f );
-}
-
-void CBloodSplat::Think( void )
-{
-	trace_t	tr;	
-	
-	if ( g_Language.GetInt() != LANGUAGE_GERMAN )
-	{
-		CBasePlayer *pPlayer;
-		pPlayer = ToBasePlayer( GetOwnerEntity() );
-
-		Vector forward;
-		AngleVectors( GetAbsAngles(), &forward );
-		UTIL_TraceLine ( GetAbsOrigin(), GetAbsOrigin() + forward * 128, 
-			MASK_SOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_NONE, & tr);
-
-		UTIL_BloodDecalTrace( &tr, BLOOD_COLOR_RED );
-	}
-	UTIL_Remove( this );
-}
-
-//==============================================
-
 //-----------------------------------------------------------------------------
 // Purpose: Create and give the named item to the player. Then return it.
 //-----------------------------------------------------------------------------
@@ -5300,114 +5265,94 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 	CBaseEntity *pEntity;
 	trace_t tr;
 
-	switch ( iImpulse )
+	switch (iImpulse)
 	{
 	case 81:
-		GiveNamedItem( "weapon_cubemap" );
+		GiveNamedItem("weapon_cubemap");
 		break;
 
 	case 82:
 		// Cheat to create a jeep in front of the player
-		CreateJeep( this );
+		CreateJeep(this);
 		break;
 
 	case 83:
-		CreateAirboat( this );
+		CreateAirboat(this);
 		break;
 
 	case 101:
 		gEvilImpulse101 = true;
 
-		if ( GetHealth() < 100 )
+		if (GetHealth() < 100)
 		{
-			TakeHealth( 25, DMG_GENERIC );
+			TakeHealth(25, DMG_GENERIC);
 		}
-		
-		gEvilImpulse101		= false;
 
-		break;
+		gEvilImpulse101 = false;
 
-	case 102:
-		// Gibbage!!!
-		CGib::SpawnRandomGibs( this, 1, GIB_HUMAN );
 		break;
 
 	case 103:
 		// What the hell are you doing?
-		pEntity = FindEntityForward( this, true );
-		if ( pEntity )
+		pEntity = FindEntityForward(this, true);
+		if (pEntity)
 		{
 			CAI_BaseNPC *pNPC = pEntity->MyNPCPointer();
-			if ( pNPC )
+			if (pNPC)
 				pNPC->ReportAIState();
 		}
 		break;
 
 	case 106:
 		// Give me the classname and targetname of this entity.
-		pEntity = FindEntityForward( this, true );
-		if ( pEntity )
+		pEntity = FindEntityForward(this, true);
+		if (pEntity)
 		{
-			Msg( "Classname: %s", pEntity->GetClassname() );
-			
-			if ( pEntity->GetEntityName() != NULL_STRING )
+			Msg("Classname: %s", pEntity->GetClassname());
+
+			if (pEntity->GetEntityName() != NULL_STRING)
 			{
-				Msg( " - Name: %s\n", STRING( pEntity->GetEntityName() ) );
+				Msg(" - Name: %s\n", STRING(pEntity->GetEntityName()));
 			}
 			else
 			{
-				Msg( " - Name: No Targetname\n" );
+				Msg(" - Name: No Targetname\n");
 			}
 
-			if ( pEntity->m_iParent != NULL_STRING )
-				Msg( "Parent: %s\n", STRING(pEntity->m_iParent) );
+			if (pEntity->m_iParent != NULL_STRING)
+				Msg("Parent: %s\n", STRING(pEntity->m_iParent));
 
-			Msg( "Model: %s\n", STRING( pEntity->GetModelName() ) );
-			if ( pEntity->m_iGlobalname != NULL_STRING )
-				Msg( "Globalname: %s\n", STRING(pEntity->m_iGlobalname) );
+			Msg("Model: %s\n", STRING(pEntity->GetModelName()));
+			if (pEntity->m_iGlobalname != NULL_STRING)
+				Msg("Globalname: %s\n", STRING(pEntity->m_iGlobalname));
 		}
 		break;
 
 	case 107:
-		{
-			trace_t tr;
+	{
+		trace_t tr;
 
-			edict_t		*pWorld = engine->PEntityOfEntIndex( 0 );
+		edict_t		*pWorld = engine->PEntityOfEntIndex(0);
 
-			Vector start = EyePosition();
-			Vector forward;
-			EyeVectors( &forward );
-			Vector end = start + forward * 1024;
-			UTIL_TraceLine( start, end, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
-			if ( tr.m_pEnt )
-				pWorld = tr.m_pEnt->edict();
+		Vector start = EyePosition();
+		Vector forward;
+		EyeVectors(&forward);
+		Vector end = start + forward * 1024;
+		UTIL_TraceLine(start, end, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr);
+		if (tr.m_pEnt)
+			pWorld = tr.m_pEnt->edict();
 
-			const char *pTextureName = tr.surface.name;
+		const char *pTextureName = tr.surface.name;
 
-			if ( pTextureName )
-				Msg( "Texture: %s\n", pTextureName );
-		}
-		break;
+		if (pTextureName)
+			Msg("Texture: %s\n", pTextureName);
+	}
+	break;
 
-	case	202:// Random blood splatter
-		{
-			Vector forward;
-			EyeVectors( &forward );
-			UTIL_TraceLine ( EyePosition(), 
-				EyePosition() + forward * 128, 
-				MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, & tr);
-
-			if ( tr.fraction != 1.0 )
-			{// line hit something, so paint a decal
-				CBloodSplat *pBlood = CREATE_UNSAVED_ENTITY( CBloodSplat, "bloodsplat" );
-				pBlood->Spawn( this );
-			}
-		}
-		break;
-	case	203:// remove creature.
-		pEntity = FindEntityForward( this, true );
-		if ( pEntity )
-			UTIL_Remove( pEntity );
+	case 203: // remove creature.
+		pEntity = FindEntityForward(this, true);
+		if (pEntity)
+			UTIL_Remove(pEntity);
 		break;
 	}
 #endif	// HLDEMO_BUILD

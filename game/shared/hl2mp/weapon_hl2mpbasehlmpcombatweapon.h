@@ -1,6 +1,12 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//=========       Copyright © Reperio Studios 2013-2018 @ Bernt Andreas Eide!       ============//
+//
+// Purpose: Base HL2MP Combat Weapon
+//
+//==============================================================================================//
+
 #ifndef WEAPON_BASEHL2MPCOMBATWEAPON_SHARED_H
 #define WEAPON_BASEHL2MPCOMBATWEAPON_SHARED_H
+
 #ifdef _WIN32
 #pragma once
 #endif
@@ -29,8 +35,6 @@ public:
 	DECLARE_PREDICTABLE();
 
 	CBaseHL2MPCombatWeapon();
-
-	virtual void	WeaponIdle( void );
 
 	virtual Vector	GetBulletSpread(WeaponProficiency_t proficiency);
 	virtual const Vector& GetBulletSpread(void) { return BaseClass::GetBulletSpread(); }

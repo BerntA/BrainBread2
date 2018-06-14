@@ -1,8 +1,8 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//=========       Copyright © Reperio Studios 2013-2018 @ Bernt Andreas Eide!       ============//
 //
-// Purpose: 
+// Purpose: HL2MP Base Weapon.
 //
-//=============================================================================//
+//==============================================================================================//
 
 #ifndef WEAPON_HL2MPBASE_H
 #define WEAPON_HL2MPBASE_H
@@ -20,18 +20,9 @@
 
 #if defined( CLIENT_DLL )
 	#define CWeaponHL2MPBase C_WeaponHL2MPBase
-	void UTIL_ClipPunchAngleOffset( QAngle &in, const QAngle &punch, const QAngle &clip );
 #endif
 
 class CHL2MP_Player;
-
-// These are the names of the ammo types that go in the CAmmoDefs and that the 
-// weapon script files reference.
-
-// Given an ammo type (like from a weapon's GetPrimaryAmmoType()), this compares it
-// against the ammo name you specify.
-// MIKETODO: this should use indexing instead of searching and strcmp()'ing all the time.
-bool IsAmmoType( int iAmmoType, const char *pAmmoName );
 
 class CWeaponHL2MPBase : public CBaseCombatWeapon
 {
@@ -57,7 +48,6 @@ public:
 	
 	CHL2MPSWeaponInfo const	&GetHL2MPWpnData() const;
 
-
 	virtual void FireBullets( const FireBulletsInfo_t &info );
 	virtual void FallInit( void );
 	virtual bool Reload();
@@ -70,8 +60,6 @@ public:
 		
 		virtual bool	ShouldPredict();
 		virtual void	OnDataChanged( DataUpdateType_t type );
-
-		virtual bool	OnFireEvent( C_BaseViewModel *pViewModel, const Vector& origin, const QAngle& angles, int event, const char *options );
 
 	#else
 

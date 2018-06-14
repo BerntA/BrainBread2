@@ -613,9 +613,6 @@ void BloodSpraySplatCallback(const CEffectData & data)
 {
 	float flDamage = data.m_flScale;
 
-	if (flDamage <= 0)
-		return;
-
 	Vector vecEnd = data.m_vOrigin;
 	Vector vecDir = data.m_vNormal;
 
