@@ -3886,7 +3886,7 @@ void CBasePropDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 void CBasePropDoor::OnUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	// Prevent door +use spamming.
-	if ((gpGlobals->curtime - m_flLastTimeUsed) < 2.0f)
+	if (((gpGlobals->curtime - m_flLastTimeUsed) < 2.0f) || !CanEntityUseDoor(pActivator, pCaller, useType, value))
 		return;
 
 	// If we're blocked while closing, open away from our blocker. This will
@@ -6224,6 +6224,9 @@ public:
 	void Event_Killed(const CTakeDamageInfo &info);
 	void UpdatePhysics(void);
 
+protected:
+	bool CanEntityUseDoor(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
+
 private:
 	string_t pszScriptFile;
 
@@ -6314,6 +6317,15 @@ void CPropDoorBreakable::UpdatePhysics(void)
 	IPhysicsObject *physics = VPhysicsInitShadow(false, false);
 	if (physics)
 		VPhysicsUpdate(physics);
+}
+
+bool CPropDoorBreakable::CanEntityUseDoor(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
+{
+	// Zombie Players can no longer open breakable doors, they gotta break'em!
+	if ((m_takedamage == DAMAGE_YES) && pActivator && pActivator->IsZombie(true))
+		return false;
+
+	return true;
 }
 
 bool CPropDoorBreakable::ParseDoorData(const char *script)

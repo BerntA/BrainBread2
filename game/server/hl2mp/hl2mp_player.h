@@ -106,6 +106,7 @@ public:
 	// Profile System Helper:
 	bool m_bHasReadProfileData;
 	bool m_bHasTriedToLoadStats;
+	unsigned long long m_ullCachedSteamID;
 
 	// The total weight of items and weapons combined.
 	void ApplyArmor(float flArmorDurability, int iType = 0);

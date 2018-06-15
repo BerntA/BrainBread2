@@ -80,7 +80,11 @@ void CHudNPCHealthBar::Reset(void)
 
 bool CHudNPCHealthBar::ShouldDraw(void)
 {
-	return (CHudElement::ShouldDraw() && pszNPCHealthBarList.Count());
+	C_HL2MP_Player *pClient = C_HL2MP_Player::GetLocalHL2MPPlayer();
+	if (!pClient)
+		return false;
+
+	return (CHudElement::ShouldDraw() && pszNPCHealthBarList.Count() && !pClient->IsInVGuiInputMode());
 }
 
 //------------------------------------------------------------------------

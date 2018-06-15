@@ -65,6 +65,9 @@ void RenderObjectiveIcons(void)
 	if (!pPlayer)
 		return;
 
+	if (pPlayer->IsInVGuiInputMode())
+		return;
+
 	CMatRenderContextPtr pRenderContext(materials);
 	int iTeam = pPlayer->GetTeamNumber();
 	int iNumObjIcons = m_pObjectiveIcons.Count();

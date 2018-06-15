@@ -22,8 +22,9 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define GRENADE_RADIUS	4.0f // inches
 #define PROPANE_GRIEF_XP 50
+#define PROPANE_THROW_OFFSET_FORWARD 5.0f
+#define PROPANE_THROW_OFFSET_RIGHT 5.0f
 #define RETHROW_DELAY	0.5
 
 ConVar sk_weapon_propane_lockedtime("sk_weapon_propane_lockedtime", "2", FCVAR_REPLICATED);
@@ -230,11 +231,11 @@ void CPropaneExplosive::Spawn(void)
 //-----------------------------------------------------------------------------
 class CWeaponPropane : public CBaseHL2MPCombatWeapon
 {
-	DECLARE_CLASS(CWeaponPropane, CBaseHL2MPCombatWeapon);
 public:
-
+	DECLARE_CLASS(CWeaponPropane, CBaseHL2MPCombatWeapon);
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
+	DECLARE_ACTTABLE();
 
 	CWeaponPropane();
 
@@ -250,7 +251,6 @@ public:
 
 #ifndef CLIENT_DLL
 	void Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
-	bool m_bRemoveWeapon;
 #endif
 
 	void	ThrowGrenade(CBasePlayer *pPlayer);
@@ -259,13 +259,11 @@ public:
 	bool CanPerformMeleeAttacks() { return false; }
 
 private:
-
-	// check a throw from vecSrc.  If not valid, move the position back along the line to vecEye
-	void	CheckThrowPosition(CBasePlayer *pPlayer, const Vector &vecEye, Vector &vecSrc);
-
 	CWeaponPropane(const CWeaponPropane &);
 
-	DECLARE_ACTTABLE();
+#ifndef CLIENT_DLL
+	bool m_bRemoveWeapon;
+#endif
 };
 
 acttable_t	CWeaponPropane::m_acttable[] =
@@ -457,20 +455,6 @@ void CWeaponPropane::Drop(const Vector &vecVelocity)
 	BaseClass::Drop(vecVelocity);
 }
 
-// check a throw from vecSrc.  If not valid, move the position back along the line to vecEye
-void CWeaponPropane::CheckThrowPosition(CBasePlayer *pPlayer, const Vector &vecEye, Vector &vecSrc)
-{
-	trace_t tr;
-
-	UTIL_TraceHull(vecEye, vecSrc, -Vector(GRENADE_RADIUS + 2, GRENADE_RADIUS + 2, GRENADE_RADIUS + 2), Vector(GRENADE_RADIUS + 2, GRENADE_RADIUS + 2, GRENADE_RADIUS + 2),
-		pPlayer->PhysicsSolidMaskForEntity(), pPlayer, pPlayer->GetCollisionGroup(), &tr);
-
-	if (tr.DidHit())
-	{
-		vecSrc = tr.endpos;
-	}
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pPlayer - 
@@ -478,18 +462,14 @@ void CWeaponPropane::CheckThrowPosition(CBasePlayer *pPlayer, const Vector &vecE
 void CWeaponPropane::ThrowGrenade(CBasePlayer *pPlayer)
 {
 #ifndef CLIENT_DLL
-	Vector	vecEye = pPlayer->EyePosition();
-	Vector	vForward, vRight;
-
+	Vector vForward, vRight;
 	pPlayer->EyeVectors(&vForward, &vRight, NULL);
-	Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f;
-	CheckThrowPosition(pPlayer, vecEye, vecSrc);
-	//	vForward[0] += 0.1f;
+	Vector vecSrc = pPlayer->EyePosition() + (vForward * PROPANE_THROW_OFFSET_FORWARD) + (vRight * PROPANE_THROW_OFFSET_RIGHT);
 	vForward[2] += 0.1f;
 
 	Vector vecThrow;
 	pPlayer->GetVelocity(&vecThrow, NULL);
-	vecThrow += vForward * 1200;
+	vecThrow += vForward * 1400;
 
 	CPropaneExplosive *pPropane = (CPropaneExplosive*)CBaseEntity::Create("prop_propane_explosive", vecSrc, vec3_angle);
 	if (pPropane)

@@ -281,7 +281,7 @@ void CAddonInstallerPanel::OnReceiveUGCQueryResults(SteamUGCQueryCompleted_t *pC
 					if (iExistingMapIndex == -1)
 					{
 						gameMapItem_t itemMapDataItem;
-						Q_strncpy(itemMapDataItem.pszMapTitle, WorkshopItem.m_rgchTitle, 32);
+						Q_strncpy(itemMapDataItem.pszMapTitle, ((strlen(WorkshopItem.m_rgchTitle) <= 0) ? mapNameValue : WorkshopItem.m_rgchTitle), 32);
 						Q_strncpy(itemMapDataItem.pszMapDescription, WorkshopItem.m_rgchDescription, 256);
 						Q_strncpy(itemMapDataItem.pszMapExtraInfo, "", 256);
 						itemMapDataItem.iMapVerification = iVerification;

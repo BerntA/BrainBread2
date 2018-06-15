@@ -374,7 +374,7 @@ void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted
 				else
 				{
 					gameMapItem_t mapItem;
-					Q_strncpy(mapItem.pszMapTitle, WorkshopItem.m_rgchTitle, 32);
+					Q_strncpy(mapItem.pszMapTitle, ((strlen(WorkshopItem.m_rgchTitle) <= 0) ? mapNameValue : WorkshopItem.m_rgchTitle), 32);
 					Q_strncpy(mapItem.pszMapDescription, WorkshopItem.m_rgchDescription, 256);
 					Q_strncpy(mapItem.pszMapExtraInfo, "", 256);
 					mapItem.iMapVerification = iVerification;

@@ -1139,8 +1139,6 @@ void CTempEnts::ClientSideGib(int modelindex, int body, int skin, const Vector& 
 		return;
 	}
 
-	bool bShouldFadeRightAway = !CanSpawnClientGib(gibType);
-
 	// Spawn a ragdoll based gib:
 	if (gibType > CLIENT_GIB_RAGDOLL_NORMAL_PHYSICS)
 	{
@@ -1186,16 +1184,14 @@ void CTempEnts::ClientSideGib(int modelindex, int body, int skin, const Vector& 
 			pEntity->m_nGibFlags = flags;
 			pEntity->SetPlayerIndexLink(playerIndex);
 
-			if (pPlayerLink->IsLocalPlayer())
-			{
-				bShouldFadeRightAway = false;
-				m_pPlayerRagdoll = pEntity;
-			}
+			if (pPlayerLink->IsLocalPlayer())			
+				m_pPlayerRagdoll = pEntity;			
 
 			pEntity->OnBecomeRagdoll();
 		}
 
-		pEntity->SetForceFade(bShouldFadeRightAway);
+		pEntity->SetForceFade();
+		pEntity->OnFullyInitialized();
 		return;
 	}
 
@@ -1229,7 +1225,8 @@ void CTempEnts::ClientSideGib(int modelindex, int body, int skin, const Vector& 
 		return;
 	}
 
-	pEntity->SetForceFade(bShouldFadeRightAway);
+	pEntity->SetForceFade();
+	pEntity->OnFullyInitialized();
 }
 
 //-----------------------------------------------------------------------------

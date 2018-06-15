@@ -278,6 +278,8 @@ CHL2MP_Player::CHL2MP_Player()
 
 	m_hLastKiller = NULL;
 
+	m_ullCachedSteamID = 0;
+
 	BaseClass::ChangeTeam(0);
 }
 
@@ -3037,8 +3039,10 @@ bool CHL2MP_Player::HandleLocalProfile(bool bSave)
 	if (IsBot() || (bSave != m_bHasReadProfileData) || (GameBaseServer()->CanStoreSkills() != PROFILE_LOCAL))
 		return false;
 
+	unsigned long long steamID = (m_ullCachedSteamID > 0) ? m_ullCachedSteamID : ((unsigned long long)GetSteamIDAsUInt64());
+
 	char pszFilePath[128];
-	Q_snprintf(pszFilePath, 128, "data/local/%llu.txt", GetSteamIDAsUInt64());
+	Q_snprintf(pszFilePath, 128, "data/local/%llu.txt", steamID);
 
 	// Save your local profile:
 	if (bSave)
@@ -3165,6 +3169,7 @@ bool CHL2MP_Player::HandleLocalProfile(bool bSave)
 	// Load your local profile:
 	m_bHasReadProfileData = true;
 	m_bHasTriedToLoadStats = true;
+	m_ullCachedSteamID = steamID;
 
 	if (!filesystem->FileExists(pszFilePath, "MOD"))
 		return false;

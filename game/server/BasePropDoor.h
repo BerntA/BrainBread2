@@ -101,6 +101,8 @@ protected:
 
 	inline CBaseEntity *GetActivator();
 
+	virtual bool CanEntityUseDoor(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value) { return true; }
+
 private:
 
 	// Implement these in your leaf class.

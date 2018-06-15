@@ -26,7 +26,7 @@
 
 ConVar bb2_gibs_spawn_blood_puddle("bb2_gibs_spawn_blood_puddle", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Spawn blood puddles with ragdolls? Eventually this may decrease performance, if the level has a lot of puddles.", true, 0.0f, true, 1.0f);
 ConVar bb2_gibs_spawn_blood("bb2_gibs_spawn_blood", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "When a gib take damage/touch stuff should it spray/spawn blood?", true, 0.0f, true, 1.0f);
-ConVar bb2_gibs_max("bb2_gibs_max", "64", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Set the max amount of gibs and ragdolls to be created on the client. When you reach the limit new gibs will fade out automatically.", true, 0.0f, true, 256.0f);
+ConVar bb2_gibs_max("bb2_gibs_max", "64", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Set the max amount of gibs and ragdolls to be created on the client. When you reach the limit old gibs will fade out automatically.", true, 0.0f, true, 256.0f);
 ConVar bb2_gibs_enable_fade("bb2_gibs_enable_fade", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Should gibs and ragdolls fade out?", true, 0.0f, true, 1.0f);
 ConVar bb2_gibs_fadeout_time("bb2_gibs_fadeout_time", "4", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Set the time in seconds before a ragdoll or gib will fade out.", true, 0.0f, true, 30.0f);
 ConVar bb2_gibs_blood_chance("bb2_gibs_blood_chance", "100", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Set the chance in % to spawn blood when you attack an entity.", true, 0.0f, true, 100.0f);
@@ -36,22 +36,18 @@ extern ConVar r_propsmaxdist;
 
 static CUtlVector<C_ClientSideGibBase*> s_ClientGibList;
 
-bool CanSpawnClientGib(int type)
+int GetCurrentGibCount()
 {
-	if (type != CLIENT_GIB_PROP)
+	int count = 0;
+	for (int i = 0; i < s_ClientGibList.Count(); i++)
 	{
-		int iGibsInWorld = 0;
-		for (int i = 0; i < s_ClientGibList.Count(); i++)
-		{
-			if (s_ClientGibList[i]->GetGibType() != CLIENT_GIB_PROP)
-				iGibsInWorld++;
-		}
+		if ((s_ClientGibList[i]->GetGibType() <= CLIENT_GIB_PROP) || s_ClientGibList[i]->IsForceFading())
+			continue;
 
-		if (iGibsInWorld >= bb2_gibs_max.GetInt())
-			return false;
+		count++;
 	}
 
-	return true;
+	return count;
 }
 
 bool ShouldFadeClientGib(int type)
@@ -225,6 +221,32 @@ void C_ClientSideGibBase::Spawn()
 	BaseClass::Spawn();
 
 	m_takedamage = DAMAGE_EVENTS_ONLY;
+}
+
+void C_ClientSideGibBase::OnFullyInitialized(void)
+{
+	if (GetGibType() != CLIENT_GIB_PROP)
+	{
+		int items = GetCurrentGibCount();
+		if (items > bb2_gibs_max.GetInt()) // Remove older gibs if we reached the limit!
+		{
+			for (int i = 0; i < s_ClientGibList.Count(); i++)
+			{
+				if ((s_ClientGibList[i]->GetGibType() <= CLIENT_GIB_PROP) ||
+					s_ClientGibList[i]->IsForceFading() ||
+					(s_ClientGibList[i] == this))
+					continue;
+
+				s_ClientGibList[i]->SetForceFade(true);
+				items--;
+
+				if (items > bb2_gibs_max.GetInt())
+					continue;
+
+				break;
+			}
+		}
+	}
 }
 
 void C_ClientSideGibBase::StartTouch(C_BaseEntity *pOther)

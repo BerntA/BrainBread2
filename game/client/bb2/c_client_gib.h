@@ -24,6 +24,7 @@ public:
 	virtual bool Initialize(int type);
 	virtual bool LoadRagdoll();
 	virtual void Spawn();
+	virtual void OnFullyInitialized(void);
 
 	virtual bool IsDormant(void) { return false; }
 	virtual CollideType_t GetCollideType(void) { return ENTITY_SHOULD_RESPOND; }
@@ -43,7 +44,8 @@ public:
 	virtual void SetGibType(int type) { m_iGibType = type; }
 	virtual void OnGibbedGroup(int hitgroup, bool bExploded) { }
 
-	virtual void SetForceFade(bool value);
+	virtual void SetForceFade(bool value = false);
+	virtual bool IsForceFading(void) { return m_bForceFade; }
 
 	virtual void OnBecomeRagdoll(void);
 
@@ -109,8 +111,6 @@ public:
 extern ConVar bb2_gibs_fadeout_time;
 extern ConVar bb2_gibs_blood_chance;
 
-extern bool CanSpawnClientGib(int type);
-extern bool ShouldFadeClientGib(int type);
 extern bool RemoveAllClientGibs();
 
 #endif // C_CLIENT_GIB_H

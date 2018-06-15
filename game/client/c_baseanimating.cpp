@@ -4609,8 +4609,6 @@ bool C_BaseAnimating::GetRagdollInitBoneArrays( matrix3x4_t *pDeltaBones0, matri
 
 C_BaseAnimating *C_BaseAnimating::CreateRagdollCopy()
 {
-	bool bFadeRightAway = !CanSpawnClientGib(CLIENT_RAGDOLL);
-
 	//Adrian: We now create a separate entity that becomes this entity's ragdoll.
 	//That way the server side version of this entity can go away. 
 	//Plus we can hook save/restore code to these ragdolls so they don't fall on restore anymore.
@@ -4636,7 +4634,8 @@ C_BaseAnimating *C_BaseAnimating::CreateRagdollCopy()
 		Q_strncpy(pRagdoll->pchNPCName, MyNPCPointer()->GetNPCName(), 32);
 
 	pRagdoll->SetGibType(CLIENT_RAGDOLL);
-	pRagdoll->SetForceFade(bFadeRightAway);	
+	pRagdoll->SetForceFade();	
+	pRagdoll->OnFullyInitialized();
 
 	// move my current model instance to the ragdoll's so decals are preserved.
 	SnatchModelInstance( pRagdoll );

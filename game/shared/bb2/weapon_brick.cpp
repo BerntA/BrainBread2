@@ -26,6 +26,9 @@
 ConVar sk_weapon_brick_throwforce("sk_weapon_brick_throwforce", "6000", FCVAR_REPLICATED);
 ConVar sk_weapon_brick_throwdistance("sk_weapon_brick_throwdistance", "250", FCVAR_REPLICATED);
 
+#define BRICK_OFFSET_FORWARD 6.0f
+#define BRICK_OFFSET_RIGHT 6.0f
+
 #ifndef CLIENT_DLL
 class CPropBrick : public CPhysicsProp
 {
@@ -293,8 +296,7 @@ void CWeaponBrick::SecondaryAttack()
 	SendWeaponAnim(ACT_VM_THROW);
 	pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_SECONDARY, ACT_VM_THROW);
 
-	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
-	m_flNextSecondaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
+	m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 }
 
 void CWeaponBrick::Drop(const Vector &vecVelocity)
@@ -313,24 +315,26 @@ void CWeaponBrick::Drop(const Vector &vecVelocity)
 #ifndef CLIENT_DLL
 void CWeaponBrick::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator)
 {
-	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
-
 	switch (pEvent->event)
 	{
+
 	case EVENT_WEAPON_THROW:
 	{
-		Vector	vecEye = pPlayer->EyePosition();
-		Vector	vForward, vRight;
+		CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
+		Assert(pPlayer != NULL);
+
+		Vector vecEye = pPlayer->EyePosition();
+		Vector vForward, vRight;
 
 		pPlayer->EyeVectors(&vForward, &vRight, NULL);
-		Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f;
+		vecEye += (vForward * BRICK_OFFSET_FORWARD) + (vRight * BRICK_OFFSET_RIGHT);
 		vForward[2] += 0.1f;
 
 		Vector vecThrow;
 		pPlayer->GetVelocity(&vecThrow, NULL);
 		vecThrow += vForward * sk_weapon_brick_throwforce.GetFloat();
 
-		CPropBrick *pBrick = (CPropBrick*)CBaseEntity::Create("prop_thrown_brick", vecSrc, vec3_angle);
+		CPropBrick *pBrick = (CPropBrick*)CBaseEntity::Create("prop_thrown_brick", vecEye, vec3_angle);
 		if (pBrick)
 		{
 			pBrick->SetProperties(pPlayer, GetSpecialDamage());
@@ -356,6 +360,7 @@ void CWeaponBrick::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatChar
 	default:
 		BaseClass::Operator_HandleAnimEvent(pEvent, pOperator);
 		break;
+
 	}
 }
 #endif
