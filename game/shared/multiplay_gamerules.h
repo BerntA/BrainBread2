@@ -76,6 +76,8 @@ extern ConVar bb2_vote_time;
 extern ConVar bb2_vote_time_endgame;
 extern ConVar bb2_vote_frequency_time;
 extern ConVar bb2_ban_time;
+extern ConVar bb2_vote_roundstart_delay;
+extern ConVar bb2_vote_kick_ban_time;
 extern ConVar bb2_allow_npc_to_score;
 
 extern ConVar bb2_enable_afk_kicker;

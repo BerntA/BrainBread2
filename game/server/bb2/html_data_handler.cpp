@@ -170,6 +170,12 @@ void LoadSharedData(void)
 			return;
 		}
 
+		if (pkvMiscData->GetInt("disabled", 0) >= 1)
+		{
+			Msg("Game tags and such has been disabled!\n");
+			return;
+		}
+
 		g_iActiveItemType = 0;
 		for (KeyValues *sub = pkvMiscData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
 		{

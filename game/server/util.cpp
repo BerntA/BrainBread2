@@ -587,6 +587,20 @@ CBasePlayer *UTIL_PlayerBySteamID( const CSteamID &steamID )
 	return NULL;
 }
 
+CBasePlayer *UTIL_PlayerBySteamID(unsigned long long steamID)
+{
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex(i);
+		if (!pPlayer || pPlayer->IsBot())
+			continue;
+
+		if (((unsigned long long)pPlayer->GetSteamIDAsUInt64()) == steamID)
+			return pPlayer;
+	}
+	return NULL;
+}
+
 CBasePlayer* UTIL_PlayerByName( const char *name )
 {
 	if ( !name || !name[0] )

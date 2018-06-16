@@ -116,6 +116,8 @@ ConVar bb2_vote_time("bb2_vote_time", "30", FCVAR_REPLICATED, "The time in secon
 ConVar bb2_vote_time_endgame("bb2_vote_time_endgame", "10", FCVAR_REPLICATED, "When the game ends the players will have this much time to vote for the next map.", true, 10.0f, true, 30.0f);
 ConVar bb2_vote_frequency_time("bb2_vote_frequency_time", "60", FCVAR_REPLICATED, "The time in seconds until players can vote again.", true, 10.0f, true, 120.0f);
 ConVar bb2_ban_time("bb2_ban_time", "30", FCVAR_REPLICATED, "For how many minutes will a player be banned if a ban vote passes?", true, 0.0f, false, 0.0f);
+ConVar bb2_vote_roundstart_delay("bb2_vote_roundstart_delay", "60", FCVAR_REPLICATED, "How long should players have to wait before being able to create a vote when the round has started?", true, 0.0f, true, 120.0f);
+ConVar bb2_vote_kick_ban_time("bb2_vote_kick_ban_time", "5", FCVAR_REPLICATED, "If a kick vote passes, should the player be banned for a few minutes as well?", true, 0.0f, true, 10.0f);
 
 ConVar bb2_allow_mercy( "bb2_allow_mercy", "0", FCVAR_REPLICATED, "If greater than 0, zombies will respawn as humans when they have died this many times.", true, 0.0f, true, 10.0f );
 ConVar bb2_zombie_kills_required("bb2_zombie_kills_required", "3", FCVAR_REPLICATED, "If greater than 0, zombies can respawn as humans when they've killed at least this many hostiles. Click a certain button to respawn, whenever you're ready!", true, 0.0f, true, 10.0f);

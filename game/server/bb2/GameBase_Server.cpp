@@ -655,6 +655,30 @@ CON_COMMAND(admin_kick_id, "Admin Kick Command")
 	engine->ServerCommand(pchCommand);
 }
 
+CON_COMMAND(admin_kick_bots, "Kick all bots from the server.")
+{
+	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
+	if (!pClient)
+		return;
+
+	if (pClient->IsBot() || !pClient->IsAdminOnServer())
+	{
+		ClientPrint(pClient, HUD_PRINTCONSOLE, "You are not an admin on this server!");
+		return;
+	}
+
+	char pchServerCMD[80];
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex(i);
+		if (!pPlayer || !pPlayer->IsBot())
+			continue;
+
+		Q_snprintf(pchServerCMD, 80, "kickid %i\n", pPlayer->GetUserID());
+		engine->ServerCommand(pchServerCMD);
+	}
+}
+
 CON_COMMAND(admin_ban_id, "Admin Ban Command")
 {
 	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
@@ -687,6 +711,8 @@ CON_COMMAND(admin_ban_id, "Admin Ban Command")
 
 	Q_snprintf(pchCommand, 80, "kickid %i \"%s\"\n", userID, reason);
 	engine->ServerCommand(pchCommand); // Kick afterwards.
+
+	engine->ServerCommand("writeid;writeip\n"); // Save the new ids already, in case the server crashes b4 level change..
 }
 
 CON_COMMAND(admin_changelevel, "Admin Changelevel Command")

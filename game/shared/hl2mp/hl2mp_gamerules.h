@@ -35,6 +35,14 @@ enum
 	TEAM_DECEASED,
 };
 
+enum BB2_VoteType
+{
+	VOTE_TYPE_NONE = 0,
+	VOTE_TYPE_KICK,
+	VOTE_TYPE_BAN,
+	VOTE_TYPE_MAP,
+};
+
 enum BB2_GameMode
 {
 	MODE_OBJECTIVE = 1,
@@ -216,7 +224,7 @@ public:
 #ifndef CLIENT_DLL
 	// User vote system:
 	int m_iAmountOfVoters;
-	int m_iUserIDToKickOrBan;
+	unsigned long long m_ullSteamIDToKickOrBan;
 	float m_flNextVoteTime;
 	char pchMapToChangeTo[MAX_MAP_NAME];
 	bool m_bPlayersAllowedToVote[MAX_PLAYERS];
@@ -296,6 +304,7 @@ private:
 	CUtlVector<EHANDLE> m_hBreakableDoors;
 	float m_flRoundStartTime;
 	float m_flScoreBoardTime;
+	float m_flTimeRoundStarted;
 	bool m_bChangelevelDone;
 #endif
 };

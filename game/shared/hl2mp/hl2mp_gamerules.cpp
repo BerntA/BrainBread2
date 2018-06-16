@@ -341,8 +341,9 @@ CHL2MPRules::CHL2MPRules()
 	m_flNextVoteTime = 0.0f;
 	m_iAmountOfVoters = 0;
 	m_iCurrentVoteType = 0;
-	m_iUserIDToKickOrBan = 0;
+	m_ullSteamIDToKickOrBan = 0;
 	pchMapToChangeTo[0] = 0;
+	m_flTimeRoundStarted = 0.0f;
 
 	ResetEndMapVoting();
 
@@ -689,6 +690,7 @@ void CHL2MPRules::NewRoundInit(int iPlayersInGame)
 
 			m_flRoundStartTime = 0;
 			m_bRoundStarted = true;
+			m_flTimeRoundStarted = gpGlobals->curtime;
 
 			if (GetCurrentGamemode() == MODE_ARENA)
 			{
@@ -1185,22 +1187,45 @@ void CHL2MPRules::VoteSystemThink(void)
 			if (yesVotes >= bb2_vote_required_percentage.GetFloat())
 			{
 				bVoteStatus = true;
-				char pchServerCMD[64];
+
+				CBasePlayer *pTarget = NULL;
+				if (voteType != VOTE_TYPE_MAP)
+					pTarget = UTIL_PlayerBySteamID(m_ullSteamIDToKickOrBan);
+
+				char pchServerCMD[80];
 				switch (voteType)
 				{
-				case 1:
-					Q_snprintf(pchServerCMD, 64, "kickid %i\n", m_iUserIDToKickOrBan);
-					engine->ServerCommand(pchServerCMD);
-					engine->ServerExecute();
+
+				case VOTE_TYPE_KICK:
+				{
+					if ((bb2_vote_kick_ban_time.GetInt() > 0) && (m_ullSteamIDToKickOrBan > 0))
+					{
+						Q_snprintf(pchServerCMD, 80, "banid %i %llu\n", bb2_vote_kick_ban_time.GetInt(), m_ullSteamIDToKickOrBan);
+						engine->ServerCommand(pchServerCMD);
+					}
 					break;
-				case 2:
-					Q_snprintf(pchServerCMD, 64, "banid %i %i\n", bb2_ban_time.GetInt(), m_iUserIDToKickOrBan);
-					engine->ServerCommand(pchServerCMD);
-					engine->ServerExecute();
+				}
+
+				case VOTE_TYPE_BAN:
+				{
+					if (m_ullSteamIDToKickOrBan > 0)
+					{
+						Q_snprintf(pchServerCMD, 80, "banid %i %llu;writeid;writeip\n", bb2_ban_time.GetInt(), m_ullSteamIDToKickOrBan);
+						engine->ServerCommand(pchServerCMD);
+					}
 					break;
-				case 3:
+				}
+
+				case VOTE_TYPE_MAP:
 					GameBaseServer()->DoMapChange(pchMapToChangeTo);
 					break;
+
+				}
+
+				if (pTarget)
+				{
+					Q_snprintf(pchServerCMD, 80, "kickid %i\n", pTarget->GetUserID());
+					engine->ServerCommand(pchServerCMD);
 				}
 			}
 
@@ -1222,13 +1247,11 @@ void CHL2MPRules::ResetVote(bool bFullReset)
 	m_iCurrentNoVotes = 0;
 	m_iAmountOfVoters = 0;
 	m_iCurrentVoteType = 0;
-	m_iUserIDToKickOrBan = 0;
+	m_ullSteamIDToKickOrBan = 0;
 	pchMapToChangeTo[0] = 0;
 
-	if (bFullReset)
-	{
-		m_flNextVoteTime = 0.0f;
-	}
+	if (bFullReset)	
+		m_flNextVoteTime = 0.0f;	
 }
 
 bool CHL2MPRules::CanCreateVote(CBasePlayer *pVoter)
@@ -1243,6 +1266,9 @@ bool CHL2MPRules::CanCreateVote(CBasePlayer *pVoter)
 	}
 
 	float timePassed = (m_flNextVoteTime - gpGlobals->curtime);
+	if ((bb2_vote_roundstart_delay.GetFloat() > 0.0f) && ((gpGlobals->curtime - m_flTimeRoundStarted) < bb2_vote_roundstart_delay.GetFloat()))
+		timePassed += abs(bb2_vote_roundstart_delay.GetFloat() - (gpGlobals->curtime - m_flTimeRoundStarted));
+
 	if (timePassed > 0.0f)
 	{
 		char pchTime[32];
@@ -1298,13 +1324,10 @@ void CHL2MPRules::CreateBanKickVote(CBasePlayer *pVoter, CBasePlayer *pTarget, b
 	}
 
 	CHL2MP_Player *pTargetClient = ToHL2MPPlayer(pTarget);
-	if (pTargetClient)
+	if (pTargetClient && pTargetClient->IsAdminOnServer())
 	{
-		if (pTargetClient->IsAdminOnServer())
-		{
-			GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_KICKBAN_ADMIN", 1, pVoter->entindex());
-			return;
-		}
+		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_KICKBAN_ADMIN", 1, pVoter->entindex());
+		return;
 	}
 
 	if (!CanCreateVote(pVoter))
@@ -1312,9 +1335,9 @@ void CHL2MPRules::CreateBanKickVote(CBasePlayer *pVoter, CBasePlayer *pTarget, b
 
 	ResetVote();
 	SetupVote(pVoter->entindex());
-	m_iCurrentVoteType = bBan ? 2 : 1;
-	m_iUserIDToKickOrBan = pTarget->GetUserID();
-
+	m_iCurrentVoteType = bBan ? VOTE_TYPE_BAN : VOTE_TYPE_KICK;
+	m_ullSteamIDToKickOrBan = ((unsigned long long)pTarget->GetSteamIDAsUInt64());
+	
 	GameBaseServer()->GameAnnouncement((bBan ? "#Vote_Ban_Player" : "#Vote_Kick_Player"), pVoter->GetPlayerName(), pTarget->GetPlayerName());
 	DispatchVoteEvent(pVoter->entindex(), pTarget->entindex());
 }
@@ -1361,7 +1384,7 @@ void CHL2MPRules::CreateMapVote(CBasePlayer *pVoter, const char *map)
 
 	ResetVote();
 	SetupVote(pVoter->entindex());
-	m_iCurrentVoteType = 3;
+	m_iCurrentVoteType = VOTE_TYPE_MAP;
 	Q_strncpy(pchMapToChangeTo, map, MAX_MAP_NAME);
 
 	GameBaseServer()->GameAnnouncement("#Vote_MapChange", pVoter->GetPlayerName(), pchMapToChangeTo);
