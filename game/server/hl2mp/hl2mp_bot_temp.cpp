@@ -444,7 +444,7 @@ void Bot_Think( CHL2MP_Player *pBot )
 	RunPlayerMove( pBot, pBot->GetLocalAngles(), forwardmove, sidemove, upmove, buttons, impulse, frametime );
 
 	// If we're dead, try to respawn us.
-	if (!pBot->IsAlive() && !HL2MPRules()->IsIntermission() && !HL2MPRules()->m_bShouldShowScores)
+	if (!pBot->IsAlive() && !HL2MPRules()->IsGameoverOrScoresVisible())
 	{
 		if (pBot->GetTeamNumber() < 2)
 			pBot->ChangeTeam(botdata->m_WantedTeam, true);

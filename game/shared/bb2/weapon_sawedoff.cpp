@@ -16,6 +16,12 @@
 #define CWeaponSawedOff C_WeaponSawedOff
 #endif
 
+enum WeaponSawedOffFlags 
+{
+	SAWEDOFF_FIRED_LEFT = 0x01,
+	SAWEDOFF_FIRED_RIGHT = 0x02,
+};
+
 class CWeaponSawedOff : public CBaseHL2MPCombatWeapon
 {
 public:
@@ -59,6 +65,8 @@ private:
 	CWeaponSawedOff( const CWeaponSawedOff & );
 
 	CNetworkVar(bool, m_bInReload);
+	CNetworkVar(int, m_iFiringFlags);
+	CNetworkVar(int, m_iFiringState);
 };
 
 IMPLEMENT_NETWORKCLASS_ALIASED( WeaponSawedOff, DT_WeaponSawedOff )
@@ -66,14 +74,20 @@ IMPLEMENT_NETWORKCLASS_ALIASED( WeaponSawedOff, DT_WeaponSawedOff )
 	BEGIN_NETWORK_TABLE( CWeaponSawedOff, DT_WeaponSawedOff )
 #ifdef CLIENT_DLL
 	RecvPropBool( RECVINFO( m_bInReload ) ),
+	RecvPropInt(RECVINFO(m_iFiringFlags)),
+	RecvPropInt(RECVINFO(m_iFiringState)),
 #else
 	SendPropBool(SENDINFO(m_bInReload)),
+	SendPropInt(SENDINFO(m_iFiringFlags), 2, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_iFiringState), 2, SPROP_UNSIGNED),
 #endif
 	END_NETWORK_TABLE()
 
 #ifdef CLIENT_DLL
 	BEGIN_PREDICTION_DATA( CWeaponSawedOff )
 	DEFINE_PRED_FIELD( m_bInReload, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD(m_iFiringFlags, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD(m_iFiringState, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
 	END_PREDICTION_DATA()
 #endif
 
@@ -230,6 +244,7 @@ void CWeaponSawedOff::AffectedByPlayerSkill(int skill)
 	case PLAYER_SKILL_HUMAN_GUNSLINGER:
 	case PLAYER_SKILL_HUMAN_MAGAZINE_REFILL:
 	{
+		m_iFiringFlags = 0;
 		break;
 	}
 	}
@@ -239,7 +254,7 @@ const char *CWeaponSawedOff::GetMuzzleflashAttachment(bool bPrimaryAttack)
 {
 	if (bPrimaryAttack)
 	{
-		if (m_iClip1 >= 1)
+		if (m_iFiringState == SAWEDOFF_FIRED_LEFT)
 			return "left_muzzle";
 		else
 			return "right_muzzle";
@@ -335,28 +350,21 @@ void CWeaponSawedOff::PerformAttack(bool bDouble)
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	WeaponSound((bDouble ? WPN_DOUBLE : SINGLE));
 
-	Activity shootActivity = ACT_VM_SHOOT_LEFT;
+	Activity shootActivity = (m_iFiringState == SAWEDOFF_FIRED_LEFT) ? ACT_VM_SHOOT_LEFT : ACT_VM_SHOOT_RIGHT;
 	if (bDouble)
 		shootActivity = ACT_VM_SHOOT_BOTH;
-	else if (m_iClip1 <= 1)
-		shootActivity = ACT_VM_SHOOT_RIGHT;
 
 	SendWeaponAnim(shootActivity);
 
-	// Don't fire again until fire animation has completed
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-
-	if (bDouble)
-		m_iClip1 -= 2;
-	else
-		m_iClip1 -= 1;
+	m_iClip1 -= 1;
 
 	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, shootActivity);
 
-	Vector	vecSrc = pPlayer->Weapon_ShootPosition();
-	Vector	vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
+	Vector vecSrc = pPlayer->Weapon_ShootPosition();
+	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
 
-	FireBulletsInfo_t info(GetWpnData().m_iPellets * (bDouble ? 2 : 1), vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, !bDouble);
+	FireBulletsInfo_t info(GetWpnData().m_iPellets, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, !bDouble);
 	info.m_pAttacker = pPlayer;
 	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
 	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
@@ -396,15 +404,16 @@ void CWeaponSawedOff::ItemPostFrame( void )
 				FillClip(1);
 
 			m_bInReload = false;
+			m_iFiringFlags = m_iFiringState = 0;
 		}
 	}
 
-	if (!m_bInReload && IsViewModelSequenceFinished() && (m_flNextBashAttack <= gpGlobals->curtime) && !(pOwner->m_nButtons & IN_BASH) && !(pOwner->m_nButtons & IN_ATTACK) && !(pOwner->m_nButtons & IN_ATTACK2) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
+	if (!m_bInReload && IsViewModelSequenceFinished() && (m_flNextBashAttack <= gpGlobals->curtime) && !(pOwner->m_nButtons & (IN_BASH | IN_ATTACK | IN_ATTACK2)) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 		WeaponIdle();
 
 	if (m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
-		if ((pOwner->m_nButtons & (IN_ATTACK | IN_ATTACK2)))
+		if (pOwner->m_nButtons & (IN_ATTACK | IN_ATTACK2))
 		{
 			if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !pOwner->GetAmmoCount(m_iPrimaryAmmoType)))
 			{
@@ -419,20 +428,32 @@ void CWeaponSawedOff::ItemPostFrame( void )
 			}
 		}
 
-		if ((pOwner->m_nButtons & IN_ATTACK2) && (m_iClip1 >= 2))
-		{
-			if (pOwner->m_afButtonPressed & IN_ATTACK2)
-				m_flNextPrimaryAttack = gpGlobals->curtime;
-
-			PerformAttack(true);
-			return;
-		}
-
 		if (pOwner->m_nButtons & IN_ATTACK)
 		{
-			if (pOwner->m_afButtonPressed & IN_ATTACK)
-				m_flNextPrimaryAttack = gpGlobals->curtime;
+			if (m_iFiringFlags & SAWEDOFF_FIRED_LEFT)
+			{
+				DryFire();
+				return;
+			}
+			else
+				m_iFiringState = SAWEDOFF_FIRED_LEFT;
+		}
+		else if (pOwner->m_nButtons & IN_ATTACK2)
+		{
+			if (m_iFiringFlags & SAWEDOFF_FIRED_RIGHT)
+			{
+				DryFire();
+				return;
+			}
+			else
+				m_iFiringState = SAWEDOFF_FIRED_RIGHT;
+		}
 
+		int oldFlags = m_iFiringFlags;
+		m_iFiringFlags |= m_iFiringState;
+
+		if (oldFlags != m_iFiringFlags)
+		{
 			PerformAttack();
 			return;
 		}
@@ -448,25 +469,23 @@ void CWeaponSawedOff::ItemPostFrame( void )
 CWeaponSawedOff::CWeaponSawedOff( void )
 {
 	m_bReloadsSingly = true;
+	m_iFiringFlags = m_iFiringState = 0;
 }
 
 void CWeaponSawedOff::StartHolsterSequence()
 {
 	m_bInReload = false;
-
 	BaseClass::StartHolsterSequence();
 }
 
 bool CWeaponSawedOff::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
 	m_bInReload = false;
-
 	return BaseClass::Holster( pSwitchingTo );
 }
 
 void CWeaponSawedOff::Drop(const Vector &vecVelocity)
 {
 	m_bInReload = false;
-
 	BaseClass::Drop(vecVelocity);
 }

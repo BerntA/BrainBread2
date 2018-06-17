@@ -1100,7 +1100,7 @@ bool CHud::IsHidden( int iHudFlags )
 	if ((iHudFlags & HIDEHUD_SCOREBOARD) && gViewPortInterface && gViewPortInterface->GetActivePanel() && !strcmp(gViewPortInterface->GetActivePanel()->GetName(), PANEL_SCOREBOARD))
 		return true;
 
-	if ((iHudFlags & HIDEHUD_ROUNDSTARTING) && ((!HL2MPRules()->m_bRoundStarted && HL2MPRules()->ShouldHideHUDDuringRoundWait()) || HL2MPRules()->m_bShouldShowScores))
+	if ((iHudFlags & HIDEHUD_ROUNDSTARTING) && ((!HL2MPRules()->m_bRoundStarted && HL2MPRules()->ShouldHideHUDDuringRoundWait()) || HL2MPRules()->IsGameoverOrScoresVisible()))
 		return true;
 
 	return ( ( iHudFlags & iHideHud ) != 0);

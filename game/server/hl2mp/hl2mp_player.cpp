@@ -1456,6 +1456,9 @@ bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 	if (m_iSkill_Level < MAX_PLAYER_LEVEL)
 	{
 		int iExperienceToGive = iXP;
+		if ((HL2MPRules()->GetCurrentGamemode() == MODE_ARENA) && HL2MPRules()->IsGamemodeFlagActive(GM_FLAG_ARENA_HARDMODE))
+			iExperienceToGive = ceil(((float)iXP) * GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flArenaHardModeXPMultiplier);		
+
 		if (pVictim && (iXP > 1))
 			iExperienceToGive += (m_BB2Local.m_iPerkTeamBonus * GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iTeamBonusXPIncrease);
 
@@ -2487,10 +2490,23 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 	{
 		if ((HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE) && !GameBaseServer()->IsStoryMode())
 		{
-			if ((pAttacker != this) && IsZombie())
+			if (IsZombie())
 			{
-				m_iZombDeaths++;
-				CheckCanRespawnAsHuman();
+				float flCreditsToLose = ceil((GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flZombieCreditsPercentToLose / 100.0f) * ((float)m_BB2Local.m_iZombieCredits));
+				if (!IsPerkFlagActive(PERK_ZOMBIE_RAGE) && (flCreditsToLose > 0.0f))
+				{
+					m_BB2Local.m_iZombieCredits -= MIN(((int)flCreditsToLose), m_BB2Local.m_iZombieCredits.Get());
+
+					char pchArg1[16];
+					Q_snprintf(pchArg1, 16, "%i", ((int)flCreditsToLose));
+					GameBaseServer()->SendToolTip("#TOOLTIP_ZOMBIE_DEATH", 0, this->entindex(), pchArg1);
+				}
+
+				if (pAttacker != this)
+				{
+					m_iZombDeaths++;
+					CheckCanRespawnAsHuman();
+				}
 			}
 
 			if (!m_bIsInfected && IsHuman())

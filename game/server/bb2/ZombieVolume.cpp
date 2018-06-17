@@ -27,7 +27,7 @@ enum ZombieClassTypes
 
 ConVar bb2_zombie_spawner_distance("bb2_zombie_spawner_distance", "5200", FCVAR_REPLICATED, "If there is no players within this distance from the spawner it will not spawn any zombies.", true, 200.0f, false, 0.0f);
 
-bool IsAllowedToSpawn(CBaseEntity *pEntity)
+bool IsAllowedToSpawn(CBaseEntity *pEntity, float distance, bool bCheckVisible)
 {
 	if (!pEntity)
 		return false;
@@ -38,11 +38,16 @@ bool IsAllowedToSpawn(CBaseEntity *pEntity)
 		if (!pClient)
 			continue;
 
-		if (pClient->Classify() != CLASS_PLAYER || !pClient->IsAlive() || pClient->IsObserver())
+		if ((pClient->Classify() != CLASS_PLAYER) || !pClient->IsAlive() || pClient->IsObserver())
 			continue;
 
-		if ((pEntity->GetLocalOrigin().DistTo(pClient->GetLocalOrigin()) < bb2_zombie_spawner_distance.GetFloat()) && pEntity->FVisible(pClient, MASK_VISIBLE))
-			return true;
+		if (pEntity->GetLocalOrigin().DistTo(pClient->GetLocalOrigin()) > distance)
+			continue;
+
+		if (bCheckVisible && !pEntity->FVisible(pClient, MASK_VISIBLE))
+			continue;
+
+		return true;
 	}
 
 	return false;
@@ -69,6 +74,7 @@ DEFINE_OUTPUT(m_OnForceStop, "OnStop"),
 // Hammer Keyfields
 DEFINE_KEYFIELD(m_iTypeToSpawn, FIELD_INTEGER, "ZombieType"),
 DEFINE_KEYFIELD(ZombieSpawnNum, FIELD_INTEGER, "ZombieNumber"),
+DEFINE_KEYFIELD(m_flMaxDistance, FIELD_FLOAT, "MaximumDistance"),
 DEFINE_KEYFIELD(SpawnInterval, FIELD_FLOAT, "SpawnInterval"),
 DEFINE_KEYFIELD(m_flRandomSpawnPercent, FIELD_FLOAT, "RandomSpawnChance"),
 DEFINE_KEYFIELD(m_bSpawnNoMatterWhat, FIELD_BOOLEAN, "AutoSpawn"),
@@ -76,6 +82,7 @@ DEFINE_KEYFIELD(m_bSpawnNoMatterWhat, FIELD_BOOLEAN, "AutoSpawn"),
 DEFINE_KEYFIELD(goalEntity, FIELD_STRING, "goal_target"),
 DEFINE_KEYFIELD(goalActivity, FIELD_INTEGER, "goal_activity"),
 DEFINE_KEYFIELD(goalType, FIELD_INTEGER, "goal_type"),
+DEFINE_KEYFIELD(goalInterruptType, FIELD_INTEGER, "goal_interrupt_type"),
 
 DEFINE_FIELD(m_flNextSpawnWave, FIELD_TIME),
 DEFINE_FIELD(m_iSpawnNum, FIELD_INTEGER),
@@ -98,6 +105,9 @@ CZombieVolume::CZombieVolume(void)
 	goalEntity = NULL_STRING;
 	goalActivity = ACT_WALK;
 	goalType = 0;
+	goalInterruptType = DAMAGEORDEATH_INTERRUPTABILITY;
+
+	m_flMaxDistance = bb2_zombie_spawner_distance.GetFloat();
 }
 
 void CZombieVolume::Spawn()
@@ -133,7 +143,7 @@ void CZombieVolume::VolumeThink()
 		m_iSpawnNum = 0;
 	}
 
-	if (m_bSpawnNoMatterWhat || IsAllowedToSpawn(this))
+	if (m_bSpawnNoMatterWhat || IsAllowedToSpawn(this, m_flMaxDistance, (HasSpawnFlags(SF_NOVISCHECK) == false)))
 	{
 		if ((HL2MPRules()->CanSpawnZombie()) && (m_iSpawnNum < ZombieSpawnNum))
 			SpawnWave();
@@ -235,7 +245,7 @@ void CZombieVolume::SpawnWave()
 					pTarget = gEntList.FindEntityByClassname(NULL, STRING(goalEntity));
 
 				if (pTarget)
-					npcZombie->SpawnRunSchedule(pTarget, ((Activity)goalActivity), (goalType >= 1));
+					npcZombie->SpawnRunSchedule(pTarget, ((Activity)goalActivity), (goalType >= 1), goalInterruptType);
 			}
 		}
 

@@ -53,6 +53,7 @@ private:
 	string_t goalEntity;
 	int goalActivity;
 	int goalType;
+	int goalInterruptType;
 };
 
 BEGIN_DATADESC(CNPCAutoSpawner)
@@ -62,6 +63,7 @@ DEFINE_KEYFIELD(m_bCanDropWeapons, FIELD_BOOLEAN, "allow_weapondrop"),
 DEFINE_KEYFIELD(goalEntity, FIELD_STRING, "goal_target"),
 DEFINE_KEYFIELD(goalActivity, FIELD_INTEGER, "goal_activity"),
 DEFINE_KEYFIELD(goalType, FIELD_INTEGER, "goal_type"),
+DEFINE_KEYFIELD(goalInterruptType, FIELD_INTEGER, "goal_interrupt_type"),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(npc_auto_spawner, CNPCAutoSpawner);
@@ -73,6 +75,7 @@ CNPCAutoSpawner::CNPCAutoSpawner()
 	goalEntity = NULL_STRING;
 	goalActivity = ACT_WALK;
 	goalType = 0;
+	goalInterruptType = DAMAGEORDEATH_INTERRUPTABILITY;
 }
 
 void CNPCAutoSpawner::Spawn()
@@ -114,7 +117,7 @@ CBaseEntity *CNPCAutoSpawner::SpawnNewEntity(void)
 			pTarget = gEntList.FindEntityByClassname(NULL, STRING(goalEntity));
 
 		if (pTarget)
-			pEntity->MyNPCPointer()->SpawnRunSchedule(pTarget, ((Activity)goalActivity), (goalType >= 1));
+			pEntity->MyNPCPointer()->SpawnRunSchedule(pTarget, ((Activity)goalActivity), (goalType >= 1), goalInterruptType);
 	}
 
 	return pEntity;

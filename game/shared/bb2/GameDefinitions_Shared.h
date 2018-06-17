@@ -54,6 +54,9 @@ struct DataGamemodeItem_Shared_t
 	float flXPGameWinObjective;
 	float flXPGameWinArena;
 
+	float flZombieCreditsPercentToLose;
+	float flArenaHardModeXPMultiplier;
+
 	int iKillsRequiredToPerk;
 
 	int iDefaultZombieCredits;

@@ -3093,7 +3093,7 @@ bool CAI_BaseNPC::ShouldAlwaysThink()
 	return HasSpawnFlags(SF_NPC_ALWAYSTHINK);
 }
 
-bool CAI_BaseNPC::SpawnRunSchedule(CBaseEntity *pTarget, Activity act, bool pathcorner)
+bool CAI_BaseNPC::SpawnRunSchedule(CBaseEntity *pTarget, Activity act, bool pathcorner, int interruptType)
 {
 	if (!pTarget)
 		return false;
@@ -3111,7 +3111,7 @@ bool CAI_BaseNPC::SpawnRunSchedule(CBaseEntity *pTarget, Activity act, bool path
 		ret = ScheduledMoveToGoalEntity(SCHED_IDLE_WALK, pTarget, act);
 
 	if (ret)
-		SetScriptedScheduleIgnoreConditions(DEATH_INTERRUPTABILITY);
+		SetScriptedScheduleIgnoreConditions((Interruptability_t)interruptType);
 
 	return ret;
 }

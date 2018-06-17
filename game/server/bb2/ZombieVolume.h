@@ -22,7 +22,8 @@
 enum
 {
 	SF_STARTACTIVE = 0x01, // Start active
-	SF_FASTSPAWN = 0x02,
+	SF_FASTSPAWN = 0x02, // Skip fade phase
+	SF_NOVISCHECK = 0x04, // Don't care about FVisible, spawn regardless of PVS / vis state
 };
 
 class CZombieVolume : public CBaseEntity
@@ -44,6 +45,7 @@ private:
 
 	// Hammer Variables...
 	int ZombieSpawnNum;
+	float m_flMaxDistance;
 	float SpawnInterval;
 	float m_flRandomSpawnPercent;
 	int m_iTypeToSpawn;
@@ -59,6 +61,7 @@ private:
 	string_t goalEntity;
 	int goalActivity;
 	int goalType;
+	int goalInterruptType;
 
 	COutputEvent m_OnWaveSpawned;
 	COutputEvent m_OnForceSpawned;

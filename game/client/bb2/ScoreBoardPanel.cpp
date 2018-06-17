@@ -130,10 +130,12 @@ void CScoreBoardPanel::OnThink()
 
 		case MODE_ARENA:
 		{
-			if (HL2MPRules()->m_iNumReinforcements > 0)
+			if (HL2MPRules()->IsGamemodeFlagActive(GM_FLAG_ARENA_HARDMODE))
+				m_pInfoLabel[0]->SetText("#HUD_ArenaHardModeEnabled");
+			else if (HL2MPRules()->GetReinforcementsLeft() > 0)
 			{
 				wchar_t wszArg1[10];
-				V_swprintf_safe(wszArg1, L"%i", HL2MPRules()->m_iNumReinforcements);
+				V_swprintf_safe(wszArg1, L"%i", HL2MPRules()->GetReinforcementsLeft());
 				g_pVGuiLocalize->ConstructString(wszUnicodeString, sizeof(wszUnicodeString), g_pVGuiLocalize->Find("#HUD_ReinforcementsLeft"), 1, wszArg1);
 				m_pInfoLabel[0]->SetText(wszUnicodeString);
 			}

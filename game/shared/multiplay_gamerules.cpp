@@ -80,6 +80,7 @@ ConVar bb2_elimination_teammate_distance("bb2_elimination_teammate_distance", "1
 
 ConVar bb2_arena_respawn_time("bb2_arena_respawn_time", "40", FCVAR_REPLICATED, "Server respawn interval, respawns waiting reinforcements every X seconds! Minimum 20 sec.", true, 20.0f, false, 0.0f);
 ConVar bb2_arena_reinforcement_count("bb2_arena_reinforcement_count", "14", FCVAR_REPLICATED, "How many respawns will you allow?", true, 0.0f, true, 100.0f);
+ConVar bb2_arena_hard_mode("bb2_arena_hard_mode", "0", FCVAR_REPLICATED, "This will disable respawns in Arena mode, all XP gained will be increased by X%.", true, 0, true, 1);
 
 ConVar bb2_deathmatch_respawn_time("bb2_deathmatch_respawn_time", "3", FCVAR_REPLICATED, "Set the default respawn time in seconds.", true, 1.0f, true, 30.0f);
 ConVar bb2_deathmatch_fraglimit("bb2_deathmatch_fraglimit", "60", FCVAR_REPLICATED, "Set the max amount of frags a person can get before the game ends.", true, 20.0f, false, 1000.0f);

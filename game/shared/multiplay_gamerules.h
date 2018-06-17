@@ -46,6 +46,7 @@ extern ConVar bb2_elimination_teammate_distance;
 
 extern ConVar bb2_arena_respawn_time;
 extern ConVar bb2_arena_reinforcement_count;
+extern ConVar bb2_arena_hard_mode;
 
 extern ConVar bb2_deathmatch_respawn_time;
 extern ConVar bb2_deathmatch_fraglimit;

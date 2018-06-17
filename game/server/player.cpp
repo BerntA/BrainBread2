@@ -4534,7 +4534,7 @@ void CBasePlayer::CommitSuicide( bool bExplode /*= false*/, bool bForce /*= fals
 {
 	MDLCACHE_CRITICAL_SECTION();
 
-	if( !IsAlive() || HL2MPRules()->m_bShouldShowScores )
+	if( !IsAlive() || HL2MPRules()->IsGameoverOrScoresVisible() )
 		return;
 		
 	// prevent suiciding too often

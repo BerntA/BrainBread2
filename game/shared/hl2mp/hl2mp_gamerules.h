@@ -80,6 +80,11 @@ enum BB2_EndMapVoteTypes
 	ENDMAP_VOTE_TYPES_MAX = 6,
 };
 
+enum BB2_GamemodeFlags
+{
+	GM_FLAG_ARENA_HARDMODE = 0x01,
+};
+
 #ifdef CLIENT_DLL
 	#define CHL2MPRules C_HL2MPRules
 	#define CHL2MPGameRulesProxy C_HL2MPGameRulesProxy
@@ -162,22 +167,17 @@ public:
 	virtual ~CHL2MPRules();
 
 	// Arena Specific:
-	CNetworkVar(float, m_flRespawnTime);
-	CNetworkVar(int, m_iNumReinforcements);
 	float GetReinforcementRespawnTime();
+	int GetReinforcementsLeft() { return m_iNumReinforcements; }
 
 	// Shared Stuff:
 	float GetTimeLeft();
 	float GetTimelimitValue();
+	int GetRoundCountdownNum() { return m_iRoundCountdown; }
+	int GetCurrentGamemode() { return m_iCurrentGamemode; }
+	bool IsGamemodeFlagActive(int flag) { return ((m_iGamemodeFlags.Get() & flag) != 0); }
 
 	CNetworkVar(bool, m_bRoundStarted);
-	CNetworkVar(bool, m_bShouldShowScores);
-	CNetworkVar(int, m_iRoundCountdown);
-	CNetworkVar(int, m_iCurrentGamemode);
-
-	CNetworkVar(float, m_flServerStartTime);
-
-	int GetCurrentGamemode() { return m_iCurrentGamemode; }
 
 	virtual void Precache( void );
 	virtual bool ShouldCollide( int collisionGroup0, int collisionGroup1 );
@@ -196,6 +196,14 @@ public:
 	virtual bool CanPlayersRespawnIndividually(void);
 	virtual bool ShouldHideHUDDuringRoundWait(void);
 	virtual bool ShouldDrawHeadLabels();
+	virtual bool IsGameoverOrScoresVisible(void) 
+	{ 
+#ifdef CLIENT_DLL
+		return (IsIntermission() || m_bShouldShowScores);
+#else
+		return (IsIntermission() || m_bShouldShowScores || g_fGameOver);
+#endif
+	}
 
 	virtual void CreateStandardEntities( void );
 	virtual void ClientSettingsChanged( CBasePlayer *pPlayer );
@@ -273,7 +281,6 @@ public:
 
 	// Shared
 	int GetRewardFromRoundWin(CHL2MP_Player *pPlayer, int winnerTeam, bool gameOver);
-	virtual bool IsGameoverOrScoresVisible(void) { return (IsIntermission() || m_bShouldShowScores || g_fGameOver); }
 
 	// Zombie Limiting
 	bool CanSpawnZombie(void);
@@ -299,6 +306,17 @@ public:
 	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );
 	
 private:
+
+	// Shared
+	CNetworkVar(float, m_flServerStartTime);
+	CNetworkVar(bool, m_bShouldShowScores);
+	CNetworkVar(int, m_iRoundCountdown);
+	CNetworkVar(int, m_iCurrentGamemode);
+	CNetworkVar(int, m_iGamemodeFlags);
+
+	// Arena
+	CNetworkVar(float, m_flRespawnTime);
+	CNetworkVar(int, m_iNumReinforcements);
 
 #ifndef CLIENT_DLL
 	CUtlVector<EHANDLE> m_hBreakableDoors;

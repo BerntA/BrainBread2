@@ -49,7 +49,7 @@ void CTriggerEscape::Touch( CBaseEntity *pOther )
 	if ( !pOther->IsHuman() )
 		return;
 
-	if ( HL2MPRules()->IsIntermission() || HL2MPRules()->m_bShouldShowScores )
+	if (HL2MPRules()->IsGameoverOrScoresVisible())
 		return;
 
 	CHL2MP_Player *pClient = ToHL2MPPlayer( pOther );

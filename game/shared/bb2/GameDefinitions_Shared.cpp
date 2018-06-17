@@ -373,6 +373,9 @@ bool CGameDefinitionsShared::LoadData(void)
 		pszGamemodeData.flXPGameWinObjective = clamp(pkvParseData->GetFloat("game_win_objective", 5.0f), 0.0f, 8.0f);
 		pszGamemodeData.flXPGameWinArena = clamp(pkvParseData->GetFloat("game_win_arena", 2.5f), 0.0f, 4.0f);
 
+		pszGamemodeData.flZombieCreditsPercentToLose = clamp(pkvParseData->GetFloat("zombie_credits_lost_death", 50.0f), 0.0f, 100.0f);
+		pszGamemodeData.flArenaHardModeXPMultiplier = MAX(pkvParseData->GetFloat("arena_hardmode_multiplier", 2.0f), 1.0f);
+
 		pszGamemodeData.iKillsRequiredToPerk = pkvParseData->GetInt("perk_kills_required", 50);
 
 		pszGamemodeData.iDefaultZombieCredits = pkvParseData->GetInt("zombie_credits_start", 10);

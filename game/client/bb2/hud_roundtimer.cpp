@@ -85,7 +85,7 @@ bool CHudRoundTimer::ShouldDraw(void)
 	if (!CHudElement::ShouldDraw() || !HL2MPRules())
 		return false;
 
-	m_iRoundTimeLeft = MAX(HL2MPRules()->m_iRoundCountdown, 0);
+	m_iRoundTimeLeft = MAX(HL2MPRules()->GetRoundCountdownNum(), 0);
 	if ((m_iRoundTimeLeft > 0) && !HL2MPRules()->m_bRoundStarted)
 	{
 		if (!m_bShouldRender)

@@ -128,6 +128,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CHL2MPRules, DT_HL2MPRules )
 
 #ifdef CLIENT_DLL
 	RecvPropInt( RECVINFO( m_iCurrentGamemode ) ),
+	RecvPropInt( RECVINFO( m_iGamemodeFlags ) ),
 	RecvPropBool( RECVINFO( m_bRoundStarted ) ),
 	RecvPropBool( RECVINFO(m_bShouldShowScores)),
 	RecvPropInt( RECVINFO( m_iRoundCountdown ) ),
@@ -145,6 +146,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CHL2MPRules, DT_HL2MPRules )
 	RecvPropArray3(RECVINFO_ARRAY(m_iEndMapVotesForType), RecvPropInt(RECVINFO(m_iEndMapVotesForType[0]))),
 #else
 	SendPropInt(SENDINFO(m_iCurrentGamemode), 3, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_iGamemodeFlags), 2, SPROP_UNSIGNED),
 	SendPropBool(SENDINFO(m_bRoundStarted)),
 	SendPropBool(SENDINFO(m_bShouldShowScores)),
 	SendPropInt(SENDINFO(m_iRoundCountdown), 6, SPROP_UNSIGNED),
@@ -321,6 +323,7 @@ CHL2MPRules::CHL2MPRules()
 	m_flIntermissionEndTime = 0.0f;
 	m_flScoreBoardTime = 0;
 	m_bShouldShowScores = false;
+	m_iGamemodeFlags = 0;
 
 	m_hBreakableDoors.RemoveAll();
 	m_bChangelevelDone = false;
@@ -365,6 +368,9 @@ CHL2MPRules::CHL2MPRules()
 
 	// Execute linked .cfg for this map, if any:
 	engine->ServerCommand(UTIL_VarArgs("exec maps/%s.cfg\n", szCurrentMap));
+
+	if ((GetCurrentGamemode() == MODE_ARENA) && bb2_arena_hard_mode.GetBool())
+		m_iGamemodeFlags |= GM_FLAG_ARENA_HARDMODE;
 
 #endif
 }
@@ -694,8 +700,8 @@ void CHL2MPRules::NewRoundInit(int iPlayersInGame)
 
 			if (GetCurrentGamemode() == MODE_ARENA)
 			{
-				m_iNumReinforcements = bb2_arena_reinforcement_count.GetInt();
-				m_flRespawnTime = gpGlobals->curtime + bb2_arena_respawn_time.GetFloat();
+				m_iNumReinforcements = IsGamemodeFlagActive(GM_FLAG_ARENA_HARDMODE) ? 0 : bb2_arena_reinforcement_count.GetInt();
+				m_flRespawnTime = IsGamemodeFlagActive(GM_FLAG_ARENA_HARDMODE) ? 0.0f : (gpGlobals->curtime + bb2_arena_respawn_time.GetFloat());
 			}
 
 			// Fire out an event!
@@ -1372,7 +1378,7 @@ void CHL2MPRules::CreateMapVote(CBasePlayer *pVoter, const char *map)
 		return;
 	}
 
-	bool bFound = HL2MPRules()->IsMapInMapCycle(map);
+	bool bFound = IsMapInMapCycle(map);
 	if (!bFound)
 	{
 		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_MAP_ERROR_CYCLE", 1, pVoter->entindex());
