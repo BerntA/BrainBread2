@@ -37,7 +37,6 @@ enum PlayerAnimEvent_t
 	PLAYERANIMEVENT_FLINCH_RIGHTARM,
 	PLAYERANIMEVENT_FLINCH_LEFTLEG,
 	PLAYERANIMEVENT_FLINCH_RIGHTLEG,
-	PLAYERANIMEVENT_DOUBLEJUMP,
 	PLAYERANIMEVENT_BASH,
 	PLAYERANIMEVENT_INFECTED,
 	PLAYERANIMEVENT_KICK,
@@ -54,21 +53,6 @@ enum PlayerAnimEvent_t
 	PLAYERANIMEVENT_CUSTOM_GESTURE,
 	PLAYERANIMEVENT_CUSTOM_SEQUENCE,	// Used to play specific sequences
 	PLAYERANIMEVENT_CUSTOM_GESTURE_SEQUENCE,
-
-	// TF Specific. Here until there's a derived game solution to this.
-	PLAYERANIMEVENT_ATTACK_PRE,
-	PLAYERANIMEVENT_ATTACK_POST,
-	PLAYERANIMEVENT_GRENADE1_DRAW,
-	PLAYERANIMEVENT_GRENADE2_DRAW,
-	PLAYERANIMEVENT_GRENADE1_THROW,
-	PLAYERANIMEVENT_GRENADE2_THROW,
-	PLAYERANIMEVENT_VOICE_COMMAND_GESTURE,
-	PLAYERANIMEVENT_DOUBLEJUMP_CROUCH,
-	PLAYERANIMEVENT_STUN_BEGIN,
-	PLAYERANIMEVENT_STUN_MIDDLE,
-	PLAYERANIMEVENT_STUN_END,
-
-	PLAYERANIMEVENT_ATTACK_PRIMARY_SUPER,
 
 	PLAYERANIMEVENT_COUNT
 };
@@ -177,7 +161,7 @@ public:
 	// This is called by both the client and the server in the same way to trigger events for
 	// players firing, jumping, throwing grenades, etc.
 	virtual void ClearAnimationState();
-	virtual void DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
+	virtual void DoAnimationEvent(PlayerAnimEvent_t event, int nData = 0, float flData = 1.0f);
 	virtual Activity CalcMainActivity();	
 	virtual void Update( float eyeYaw, float eyePitch );
 	virtual void Release( void );

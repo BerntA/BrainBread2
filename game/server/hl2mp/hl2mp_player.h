@@ -64,7 +64,8 @@ public:
 	}
 
 	// This passes the event to the client's and server's CHL2MPPlayerAnimState.
-	void DoAnimationEvent(PlayerAnimEvent_t event, int nData = 0, bool bSkipPrediction = false);
+	void DoAnimationEvent(PlayerAnimEvent_t event, int nData = 0, bool bSkipPrediction = false, float flData = 1.0f);
+	float GetPlaybackRateForAnimEvent(PlayerAnimEvent_t event, int nData);
 	void SetupBones(matrix3x4_t *pBoneToWorld, int boneMask);
 
 	// BB2 Weapon stuff

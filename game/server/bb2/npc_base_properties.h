@@ -59,12 +59,20 @@ protected:
 	float m_flRange;
 	bool m_bGender;
 
+	float m_flSpeedFactorValue;
 	float m_flDamageScaleValue;
 	float m_flHealthScaleValue;
 
 	char pszModelName[MAX_WEAPON_STRING];
 
 	CNPCDataItem *m_pNPCData;
+
+private:
+
+	int m_iDefaultHealth;
+	int m_iDefaultDamage1H;
+	int m_iDefaultDamage2H;
+	int m_iDefaultKickDamage;
 };
 
 #endif // NPC_BASE_PROPERTIES_H

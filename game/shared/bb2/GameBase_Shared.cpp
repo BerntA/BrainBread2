@@ -429,6 +429,19 @@ float CGameBaseShared::GetSequenceDuration(CStudioHdr *ptr, int sequence)
 	return 0.0f;
 }
 
+float CGameBaseShared::GetPlaybackSpeedThirdperson(CHL2MP_Player *pClient, int viewmodelActivity, int thirdpersonActivity)
+{
+	if (pClient == NULL || pClient->GetViewModel() == NULL || pClient->GetActiveWeapon() == NULL)
+		return 1.0f;
+
+	float durationViewmodel = GetSequenceDuration(pClient->GetViewModel()->GetModelPtr(), viewmodelActivity);
+	float durationThirdperson = GetSequenceDuration(pClient->GetModelPtr(), (int)pClient->GetActiveWeapon()->ActivityOverride((Activity)thirdpersonActivity, NULL));
+	if ((durationViewmodel > 0.0f) && (durationThirdperson > 0.0f))
+		return (1.0f / (durationViewmodel / durationThirdperson));
+
+	return 1.0f;
+}
+
 ////////////////////////////////////////////////
 // Purpose:
 // Spawn the bleedout effect.
@@ -1102,6 +1115,29 @@ bool CGameBaseShared::ClientCommand(const CCommand &args)
 ///////////////////////////////////////////////
 void CGameBaseShared::NewPlayerConnection(bool bState)
 {
+	int iNumPlayers = 0;
+	int iAvgLevel = 0;
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+		if (!pClient || !pClient->IsConnected())
+			continue;
+
+		iNumPlayers++;
+		iAvgLevel += pClient->GetPlayerLevel();
+	}
+
+	if (iNumPlayers > 0)
+	{
+		if (iAvgLevel > 0)
+			iAvgLevel /= iNumPlayers;
+
+		iNumPlayers--; // Everyone but the first player will affect scaling.
+	}
+
+	m_iNumActivePlayers = MAX(iNumPlayers, 0);
+	m_iAvgPlayerLvL = MAX(iAvgLevel, 1);
+
 	IGameEvent *event = gameeventmanager->CreateEvent("player_connection");
 	if (event)
 	{
@@ -1170,6 +1206,10 @@ CON_COMMAND(reload_gamebase_server, "Reload the game base content.(full reparse)
 	GameBaseShared()->GetSharedMapData()->ReloadDataForMap();
 
 	LoadSharedData();
+
+	IGameEvent *event = gameeventmanager->CreateEvent("reload_game_data");
+	if (event)
+		gameeventmanager->FireEvent(event);
 };
 
 CON_COMMAND_F(bb2_give_armor_type, "Give Temp Armor Type", FCVAR_CHEAT)
@@ -1201,5 +1241,9 @@ CON_COMMAND(reload_gamebase_client, "Reload the game base content.(full reparse)
 	GameBaseShared()->GetSharedGameDetails()->Precache();
 	GameBaseShared()->GetNPCData()->Precache();
 	GameBaseShared()->GetSharedMapData()->ReloadDataForMap();
+
+	IGameEvent *event = gameeventmanager->CreateEvent("reload_game_data");
+	if (event)
+		gameeventmanager->FireEventClientSide(event);
 };
 #endif

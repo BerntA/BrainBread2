@@ -336,6 +336,7 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 		m_iZoomModeFOV[i] = 0;
 
 	m_flFireRate = 1;
+	m_flAccuracyFactor = 0.2f;
 	m_flPhysicalWeight = 1; // Default 1kg.
 	m_flPickupPenalty = 60.0f;
 	m_flBashRange = 33.0f;
@@ -425,6 +426,7 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 	m_iRangeMin = pPropertiesField ? pPropertiesField->GetInt("range_min", 64) : 64;
 	m_iRangeMax = pPropertiesField ? pPropertiesField->GetInt("range_max", 1024) : 1024;
 	m_flFireRate = pPropertiesField ? pPropertiesField->GetFloat("fire_rate", 1.0f) : 1.0f;
+	m_flAccuracyFactor = pPropertiesField ? pPropertiesField->GetFloat("accuracy_factor", 0.2f) : 0.2f;
 	m_flPhysicalWeight = pPropertiesField ? pPropertiesField->GetFloat("weight", 1.0f) : 1.0f;
 	m_flPickupPenalty = pPropertiesField ? pPropertiesField->GetFloat("pickup_penalty", 60.0f) : 60.0f; // Prevent the user from picking up this same weapon for X sec. (only counts for respawnable items (not dropped))
 	m_flBashRange = pPropertiesField ? pPropertiesField->GetFloat("range_bash", 33.0f) : 33.0f;

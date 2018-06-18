@@ -372,6 +372,9 @@ CHL2MPRules::CHL2MPRules()
 	if ((GetCurrentGamemode() == MODE_ARENA) && bb2_arena_hard_mode.GetBool())
 		m_iGamemodeFlags |= GM_FLAG_ARENA_HARDMODE;
 
+	if (CanUseSkills() && bb2_hard_scaling.GetBool())
+		m_iGamemodeFlags |= GM_FLAG_EXTREME_SCALING;
+
 #endif
 }
 

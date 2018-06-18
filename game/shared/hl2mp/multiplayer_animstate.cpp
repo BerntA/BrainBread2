@@ -148,7 +148,7 @@ void CMultiPlayerAnimState::ClearAnimationState()
 // Purpose: 
 // Input  : event - 
 //-----------------------------------------------------------------------------
-void CMultiPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
+void CMultiPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event, int nData, float flData)
 {
 	switch( event )
 	{
@@ -172,7 +172,6 @@ void CMultiPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData
 		}
 	case PLAYERANIMEVENT_RELOAD:
 		{
-			// Weapon reload.
 			if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
 			{
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH );
@@ -185,11 +184,6 @@ void CMultiPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData
 			{
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND );
 			}
-
-			// Set the modified reload playback rate
-			float flPlaybackRate = 1.0f;
-			m_aGestureSlots[ GESTURE_SLOT_ATTACK_AND_RELOAD ].m_pAnimLayer->m_flPlaybackRate = flPlaybackRate;
-
 			break;
 		}
 	case PLAYERANIMEVENT_RELOAD_LOOP:
@@ -207,11 +201,6 @@ void CMultiPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData
 			{
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND_LOOP );
 			}
-
-			// Set the modified reload playback rate
-			float flPlaybackRate = 1.0f;
-			m_aGestureSlots[ GESTURE_SLOT_ATTACK_AND_RELOAD ].m_pAnimLayer->m_flPlaybackRate = flPlaybackRate;
-
 			break;
 		}
 	case PLAYERANIMEVENT_RELOAD_END:
@@ -229,11 +218,6 @@ void CMultiPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData
 			{
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND_END );
 			}
-
-			// Set the modified reload playback rate
-			float flPlaybackRate = 1.0f;
-			m_aGestureSlots[ GESTURE_SLOT_ATTACK_AND_RELOAD ].m_pAnimLayer->m_flPlaybackRate = flPlaybackRate;
-
 			break;
 		}
 	case PLAYERANIMEVENT_JUMP:
@@ -1174,7 +1158,7 @@ void CMultiPlayerAnimState::UpdateGestureLayer( CStudioHdr *pStudioHdr, GestureS
 
 	// Get the current cycle.
 	float flCycle = pGesture->m_pAnimLayer->m_flCycle;
-	flCycle += pPlayer->GetSequenceCycleRate( pStudioHdr, pGesture->m_pAnimLayer->m_nSequence ) * gpGlobals->frametime * GetGesturePlaybackRate() * pGesture->m_pAnimLayer->m_flPlaybackRate;
+	flCycle += pPlayer->GetSequenceCycleRate( pStudioHdr, pGesture->m_pAnimLayer->m_nSequence ) * gpGlobals->frametime * GetGesturePlaybackRate() * pGesture->m_pAnimLayer->m_flPlaybackRate.GetRaw();
 
 	pGesture->m_pAnimLayer->m_flPrevCycle =	pGesture->m_pAnimLayer->m_flCycle;
 	pGesture->m_pAnimLayer->m_flCycle = flCycle;

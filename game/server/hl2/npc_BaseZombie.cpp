@@ -1452,6 +1452,16 @@ bool CNPC_BaseZombie::OverrideShouldAddToLookList(CBaseEntity *pEntity)
 	return true;
 }
 
+float CNPC_BaseZombie::GetIdealSpeed() const
+{
+	return (BaseClass::GetIdealSpeed() * m_flSpeedFactorValue);
+}
+
+float CNPC_BaseZombie::GetIdealAccel() const
+{
+	return (BaseClass::GetIdealAccel() * m_flSpeedFactorValue);
+}
+
 //-----------------------------------------------------------------------------
 //
 // Schedules

@@ -83,6 +83,7 @@ enum BB2_EndMapVoteTypes
 enum BB2_GamemodeFlags
 {
 	GM_FLAG_ARENA_HARDMODE = 0x01,
+	GM_FLAG_EXTREME_SCALING = 0x02,
 };
 
 #ifdef CLIENT_DLL

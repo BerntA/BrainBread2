@@ -30,7 +30,8 @@ struct NPCModelItem_t
 struct NPCWeaponItem_t
 {
 	char szWeaponClass[32];
-	float flDamage;
+	float flDamageMin;
+	float flDamageMax;
 	float flDamageScale[NUM_DAMAGE_SCALES];
 };
 
@@ -63,14 +64,28 @@ public:
 	const NPCModelItem_t *GetModelItem(int index = -1);
 
 	char szNPCName[MAX_MAP_NAME_SAVE];
-	int iHealth;
-	int iSlashDamage;
-	int iDoubleSlashDamage;
-	int iKickDamage;
+
+	int iHealthMin;
+	int iHealthMax;
+
+	int iSlashDamageMin;
+	int iSlashDamageMax;
+
+	int iDoubleSlashDamageMin;
+	int iDoubleSlashDamageMax;
+
+	int iKickDamageMin;
+	int iKickDamageMax;
+
+	float flSpeedFactorMin;
+	float flSpeedFactorMax;
+
 	int iXP;
+
 	float flHealthScale;
 	float flDamageScale;
 	float flRange;
+
 	CUtlVector<NPCModelItem_t> pszModelList;
 	CUtlVector<NPCWeaponItem_t> pszWeaponList;
 	CUtlVector<NPCLimbItem_t> pszLimbList;
@@ -107,14 +122,7 @@ public:
 	bool Precache(void);
 
 	CNPCDataItem *GetNPCData(const char *name);
-	int GetHealth(const char *name);
-	int GetSlashDamage(const char *name);
-	int GetDoubleSlashDamage(const char *name);
-	int GetKickDamage(const char *name);
-	int GetXP(const char *name);
 	int GetSkin(const char *name, const char *model);
-	float GetScale(const char *name, bool bDamage);
-	float GetRange(const char *name);
 	float GetFirearmDamage(const char *name, const char *weapon);
 	float GetFirearmDamageScale(const char *name, const char *weapon, int entityType);
 	float GetLimbData(const char *name, const char *limb, bool bHealth = false);

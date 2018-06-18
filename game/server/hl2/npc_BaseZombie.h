@@ -184,7 +184,10 @@ public:
 	virtual void TranslateNavGoal(CBaseEntity *pEnemy, Vector &chasePosition);
 
 	virtual	bool		AllowedToIgnite(void) { return true; }
-	virtual bool OverrideShouldAddToLookList(CBaseEntity *pEntity);
+	virtual bool		OverrideShouldAddToLookList(CBaseEntity *pEntity);
+
+	virtual float		GetIdealSpeed() const;
+	virtual float		GetIdealAccel() const;
 
 public:
 	CAI_ActBusyBehavior		m_ActBusyBehavior;

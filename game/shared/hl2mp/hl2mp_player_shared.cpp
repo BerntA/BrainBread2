@@ -284,3 +284,38 @@ const Vector CHL2MP_Player::GetPlayerMaxs(void) const
 
 	return BaseClass::GetPlayerMaxs();
 }
+
+float CHL2MP_Player::GetPlaybackRateForAnimEvent(PlayerAnimEvent_t event, int nData)
+{
+	if (nData > 0)
+	{
+		Activity thirdpersonAct = ACT_INVALID;
+		switch (event)
+		{
+		case PLAYERANIMEVENT_ATTACK_PRIMARY:
+			thirdpersonAct = ACT_MP_ATTACK_STAND_PRIMARYFIRE;
+			break;
+
+		case PLAYERANIMEVENT_ATTACK_SECONDARY:
+			thirdpersonAct = ACT_MP_ATTACK_STAND_SECONDARYFIRE;
+			break;
+
+		case PLAYERANIMEVENT_RELOAD:
+			thirdpersonAct = ACT_MP_RELOAD_STAND;
+			break;
+
+		case PLAYERANIMEVENT_RELOAD_END:
+			thirdpersonAct = ACT_MP_RELOAD_STAND_END;
+			break;
+
+		case PLAYERANIMEVENT_BASH:
+			thirdpersonAct = ACT_MP_BASH;
+			break;
+		}
+
+		if (thirdpersonAct != ACT_INVALID)
+			return GameBaseShared()->GetPlaybackSpeedThirdperson(this, nData, thirdpersonAct);
+	}
+
+	return 1.0f;
+}

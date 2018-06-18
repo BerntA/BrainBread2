@@ -766,17 +766,16 @@ public:
 	virtual void PostDataUpdate(DataUpdateType_t updateType)
 	{
 		// Create the effect.
-		C_HL2MP_Player *pPlayer = dynamic_cast< C_HL2MP_Player* >(m_hPlayer.Get());
+		C_HL2MP_Player *pPlayer = dynamic_cast<C_HL2MP_Player*>(m_hPlayer.Get());
 		if (pPlayer && !pPlayer->IsDormant())
-		{
-			pPlayer->DoAnimationEvent((PlayerAnimEvent_t)m_iEvent.Get(), m_nData);
-		}
+			pPlayer->DoAnimationEvent((PlayerAnimEvent_t)m_iEvent.Get(), m_nData, m_flData);
 	}
 
 public:
 	CNetworkHandle(CBasePlayer, m_hPlayer);
 	CNetworkVar(int, m_iEvent);
 	CNetworkVar(int, m_nData);
+	CNetworkVar(float, m_flData);
 };
 
 IMPLEMENT_CLIENTCLASS_EVENT(C_TEPlayerAnimEvent, DT_TEPlayerAnimEvent, CTEPlayerAnimEvent);
@@ -784,10 +783,11 @@ IMPLEMENT_CLIENTCLASS_EVENT(C_TEPlayerAnimEvent, DT_TEPlayerAnimEvent, CTEPlayer
 BEGIN_RECV_TABLE_NOBASE(C_TEPlayerAnimEvent, DT_TEPlayerAnimEvent)
 RecvPropEHandle(RECVINFO(m_hPlayer)),
 RecvPropInt(RECVINFO(m_iEvent)),
-RecvPropInt(RECVINFO(m_nData))
+RecvPropInt(RECVINFO(m_nData)),
+RecvPropFloat(RECVINFO(m_flData))
 END_RECV_TABLE()
 
-void C_HL2MP_Player::DoAnimationEvent(PlayerAnimEvent_t event, int nData, bool bSkipPrediction)
+void C_HL2MP_Player::DoAnimationEvent(PlayerAnimEvent_t event, int nData, bool bSkipPrediction, float flData)
 {
 	if (IsLocalPlayer() && !bSkipPrediction)
 	{
@@ -795,8 +795,11 @@ void C_HL2MP_Player::DoAnimationEvent(PlayerAnimEvent_t event, int nData, bool b
 			return;
 	}
 
+	if (nData > 0)
+		flData = GetPlaybackRateForAnimEvent(event, nData);
+
 	MDLCACHE_CRITICAL_SECTION();
-	m_PlayerAnimState->DoAnimationEvent(event, nData);
+	m_PlayerAnimState->DoAnimationEvent(event, nData, flData);
 }
 
 //-----------------------------------------------------------------------------

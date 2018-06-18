@@ -110,7 +110,7 @@ void CHL2MPMachineGun::PrimaryAttack( void )
 
 	int shootAct = GetPrimaryAttackActivity();
 	SendWeaponAnim(shootAct);
-	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, shootAct);
+	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY);
 }
 
 void CHL2MPMachineGun::SecondaryAttack(void)

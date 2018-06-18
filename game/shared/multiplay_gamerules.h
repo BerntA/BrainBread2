@@ -63,6 +63,7 @@ extern ConVar bb2_zombie_lifespan_max;
 extern ConVar bb2_zombie_lifespan_min;
 extern ConVar bb2_zombie_max;
 extern ConVar bb2_npc_scaling;
+extern ConVar bb2_hard_scaling;
 extern ConVar bb2_allow_latejoin;
 extern ConVar bb2_allow_mercy;
 extern ConVar bb2_zombie_kills_required;

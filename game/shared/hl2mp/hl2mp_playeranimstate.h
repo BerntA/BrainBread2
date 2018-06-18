@@ -36,7 +36,7 @@ public:
 	virtual Activity TranslateActivity( Activity actDesired );
 	virtual void Update( float eyeYaw, float eyePitch );
 
-	void	DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
+	void	DoAnimationEvent(PlayerAnimEvent_t event, int nData = 0, float flData = 1.0f);
 
 	bool	HandleMoving( Activity &idealActivity );
 	bool	HandleJumping( Activity &idealActivity );

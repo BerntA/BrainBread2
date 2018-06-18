@@ -168,7 +168,7 @@ void CHL2MPPlayerAnimState::Update( float eyeYaw, float eyePitch )
 // Purpose: 
 // Input  : event - 
 //-----------------------------------------------------------------------------
-void CHL2MPPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
+void CHL2MPPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event, int nData, float flData)
 {
 	Activity iGestureActivity = ACT_INVALID;
 
@@ -185,13 +185,6 @@ void CHL2MPPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData
 			break;
 		}
 
-	case PLAYERANIMEVENT_VOICE_COMMAND_GESTURE:
-		{
-			if ( !IsGestureSlotActive( GESTURE_SLOT_ATTACK_AND_RELOAD ) )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, (Activity)nData );
-
-			break;
-		}
 	case PLAYERANIMEVENT_ATTACK_SECONDARY:
 		{
 			// Weapon secondary fire.
@@ -201,28 +194,6 @@ void CHL2MPPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_STAND_SECONDARYFIRE );
 
 			iGestureActivity = ACT_VM_PRIMARYATTACK;
-			break;
-		}
-	case PLAYERANIMEVENT_ATTACK_PRE:
-		{
-			if ( m_pHL2MPPlayer->GetFlags() & FL_DUCKING ) 
-			{
-				// Weapon pre-fire. Used for minigun windup, sniper aiming start, etc in crouch.
-				iGestureActivity = ACT_MP_ATTACK_CROUCH_PREFIRE;
-			}
-			else
-			{
-				// Weapon pre-fire. Used for minigun windup, sniper aiming start, etc.
-				iGestureActivity = ACT_MP_ATTACK_STAND_PREFIRE;
-			}
-
-			RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, iGestureActivity, false );
-
-			break;
-		}
-	case PLAYERANIMEVENT_ATTACK_POST:
-		{
-			RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_STAND_POSTFIRE );
 			break;
 		}
 
@@ -256,9 +227,9 @@ void CHL2MPPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData
 	{
 		/*
 		RestartGesture(GESTURE_SLOT_SWIM, ACT_MP_SLIDE);
-#ifdef CLIENT_DLL
+		#ifdef CLIENT_DLL
 		BB2PlayerGlobals->BodyRestartGesture(GetHL2MPPlayer(), ACT_MP_SLIDE, 0);
-#endif
+		#endif
 		m_flSlideGestureTime = gpGlobals->curtime + 0.39f;
 		*/
 
@@ -277,6 +248,7 @@ void CHL2MPPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND );
 			break;
 		}
+
 	case PLAYERANIMEVENT_RELOAD_LOOP:
 		{
 			// Weapon reload.
@@ -286,6 +258,7 @@ void CHL2MPPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND_LOOP );
 			break;
 		}
+
 	case PLAYERANIMEVENT_RELOAD_END:
 		{
 			// Weapon reload.
@@ -295,25 +268,15 @@ void CHL2MPPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND_END );
 			break;
 		}
+
 	default:
 		{
-			BaseClass::DoAnimationEvent( event, nData );
+			BaseClass::DoAnimationEvent(event, nData, flData);
 			break;
 		}
 	}
 
-	if (GetHL2MPPlayer() && (nData > 0) &&
-		(event == PLAYERANIMEVENT_ATTACK_PRIMARY || event == PLAYERANIMEVENT_ATTACK_SECONDARY || event == PLAYERANIMEVENT_RELOAD || event == PLAYERANIMEVENT_RELOAD_LOOP || event == PLAYERANIMEVENT_RELOAD_END || event == PLAYERANIMEVENT_BASH)
-		)
-	{
-		CBaseViewModel *pvm = GetHL2MPPlayer()->GetViewModel();
-		if (pvm)
-		{
-			float rate = (GameBaseShared()->GetSequenceDuration(GetHL2MPPlayer()->GetModelPtr(), m_aGestureSlots[GESTURE_SLOT_ATTACK_AND_RELOAD].m_iActivity) / GameBaseShared()->GetSequenceDuration(pvm->GetModelPtr(), nData));
-			if (rate > 0.0f)
-				m_aGestureSlots[GESTURE_SLOT_ATTACK_AND_RELOAD].m_pAnimLayer->m_flPlaybackRate = rate;
-		}
-	}
+	m_aGestureSlots[GESTURE_SLOT_ATTACK_AND_RELOAD].m_pAnimLayer->m_flPlaybackRate = flData;
 
 #ifdef CLIENT_DLL
 	// Make the weapon play the animation as well

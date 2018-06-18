@@ -54,6 +54,10 @@ struct DataGamemodeItem_Shared_t
 	float flXPGameWinObjective;
 	float flXPGameWinArena;
 
+	float flXPScaleFactor;
+	float flXPScaleFactorMinAvgLvL;
+	float flXPScaleFactorMaxAvgLvL;
+
 	float flZombieCreditsPercentToLose;
 	float flArenaHardModeXPMultiplier;
 

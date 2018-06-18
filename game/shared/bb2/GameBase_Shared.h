@@ -284,6 +284,7 @@ public:
 	void GetFileContent(const char *path, char *buf, int size);
 	float GetDropOffDamage(const Vector &vecStart, const Vector &vecEnd, float damage, float minDist);
 	float GetSequenceDuration(CStudioHdr *ptr, int sequence);
+	float GetPlaybackSpeedThirdperson(CHL2MP_Player *pClient, int viewmodelActivity, int thirdpersonActivity);
 
 	// Bleeding Dispatches
 	void DispatchBleedout(CBaseEntity *pEntity);
@@ -322,6 +323,8 @@ public:
 
 	// Events
 	void NewPlayerConnection(bool bState = false);
+	int GetNumActivePlayers(void) { return m_iNumActivePlayers; }
+	int GetAveragePlayerLevel(void) { return m_iAvgPlayerLvL; }
 
 	// Misc
 	void ComputePlayerWeight(CHL2MP_Player *pPlayer);
@@ -352,6 +355,9 @@ private:
 	CGameDefinitionsWorkshop *m_pServerWorkshopData;
 	// Server Loadout Handler:
 	CPlayerLoadoutHandler *m_pPlayerLoadoutHandler;
+
+	int m_iNumActivePlayers;
+	int m_iAvgPlayerLvL;
 #endif
 
 	// Shared Game Data Info

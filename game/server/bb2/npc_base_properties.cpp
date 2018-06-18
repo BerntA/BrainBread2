@@ -30,12 +30,15 @@ CNPCBaseProperties::CNPCBaseProperties()
 	pszModelName[0] = 0;
 	m_pNPCData = NULL;
 
+	ListenForGameEvent("reload_game_data");
 	ListenForGameEvent("player_connection");
 	ListenForGameEvent("round_started");
 }
 
 bool CNPCBaseProperties::ParseNPC(int index)
 {
+	m_flSpeedFactorValue = 1.0f;
+
 	if (!GameBaseShared() || !GameBaseShared()->GetNPCData())
 		return false;
 
@@ -51,13 +54,19 @@ bool CNPCBaseProperties::ParseNPC(int index)
 		Q_strncpy(pszModelName, modelItem ? modelItem->szModelPath : "", MAX_WEAPON_STRING);
 		m_bGender = (Q_stristr(pszModelName, "female")) ? false : true;
 
+		m_iDefaultHealth = random->RandomInt(npcData->iHealthMin, npcData->iHealthMax);
+		m_iDefaultDamage1H = random->RandomInt(npcData->iSlashDamageMin, npcData->iSlashDamageMax);
+		m_iDefaultDamage2H = random->RandomInt(npcData->iDoubleSlashDamageMin, npcData->iDoubleSlashDamageMax);
+		m_iDefaultKickDamage = random->RandomInt(npcData->iKickDamageMin, npcData->iKickDamageMax);
+
 		m_iXPToGive = npcData->iXP;
-		m_iTotalHP = npcData->iHealth;
-		m_iDamageOneHand = npcData->iSlashDamage;
-		m_iDamageBothHands = npcData->iDoubleSlashDamage;
-		m_iDamageKick = npcData->iKickDamage;
+		m_iTotalHP = m_iDefaultHealth;
+		m_iDamageOneHand = m_iDefaultDamage1H;
+		m_iDamageBothHands = m_iDefaultDamage2H;
+		m_iDamageKick = m_iDefaultKickDamage;
 		m_iModelSkin = modelItem ? random->RandomInt(modelItem->iSkinMin, modelItem->iSkinMax) : 0;
 		m_flRange = npcData->flRange;
+		m_flSpeedFactorValue = abs(random->RandomFloat(npcData->flSpeedFactorMin, npcData->flSpeedFactorMax));
 	}
 	else
 		Warning("Can't load the npc data!\nRemoving npc!\n");
@@ -67,7 +76,18 @@ bool CNPCBaseProperties::ParseNPC(int index)
 
 float CNPCBaseProperties::GetScaleValue(bool bDamageScale)
 {
-	return (bb2_npc_scaling.GetInt() * (bDamageScale ? m_pNPCData->flDamageScale : m_pNPCData->flHealthScale));
+	float value = (bb2_npc_scaling.GetInt() * (bDamageScale ? m_pNPCData->flDamageScale : m_pNPCData->flHealthScale));
+	float avgLevel = ((float)GameBaseShared()->GetAveragePlayerLevel());
+	if (HL2MPRules()->IsGamemodeFlagActive(GM_FLAG_EXTREME_SCALING) && (avgLevel > GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPScaleFactorMinAvgLvL))
+	{
+		float range = avgLevel - GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPScaleFactorMinAvgLvL;
+		float fraction = range / (GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPScaleFactorMaxAvgLvL -
+			GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPScaleFactorMinAvgLvL);
+		fraction = clamp(fraction, 0.0f, 1.0f);
+		value *= fraction * GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPScaleFactor;
+	}
+
+	return value;
 }
 
 void CNPCBaseProperties::UpdateNPCScaling()
@@ -79,38 +99,22 @@ void CNPCBaseProperties::UpdateNPCScaling()
 		return;
 	}
 
-	m_pNPCData = GameBaseShared()->GetNPCData()->GetNPCData(GetNPCName());
 	float flDamageScaleAmount = 0.0f, flHealthScaleAmount = 0.0f;
-	int iNumPlayers = 0;
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-		if (!pClient)
-			continue;
 
-		if (!pClient->IsConnected())
-			continue;
+	flDamageScaleAmount = (((float)GameBaseShared()->GetNumActivePlayers()) * GetScaleValue(true));
+	flHealthScaleAmount = (((float)GameBaseShared()->GetNumActivePlayers()) * GetScaleValue(false));
 
-		iNumPlayers++;
-	}
-
-	if (iNumPlayers > 0)
-		iNumPlayers--; // Everyone but the first player will affect scaling.
-
-	flDamageScaleAmount = (iNumPlayers * GetScaleValue(true));
-	flHealthScaleAmount = (iNumPlayers * GetScaleValue(false));
-
-	float defaultTotalHP = m_pNPCData->iHealth;
-	float flTotal = (flHealthScaleAmount * (float)((float)defaultTotalHP / 100)) + defaultTotalHP;
+	float defaultTotalHP = ((float)m_iDefaultHealth);
+	float flTotal = round((flHealthScaleAmount * (defaultTotalHP / 100.0f)) + defaultTotalHP);
 	m_iTotalHP = (int)flTotal;
 
-	float damageSingle = m_pNPCData->iSlashDamage;
-	float damageBoth = m_pNPCData->iDoubleSlashDamage;
-	float damageKick = m_pNPCData->iKickDamage;
+	float damageSingle = m_iDefaultDamage1H;
+	float damageBoth = m_iDefaultDamage2H;
+	float damageKick = m_iDefaultKickDamage;
 
-	m_iDamageOneHand = (flDamageScaleAmount * (float)(damageSingle / 100)) + damageSingle;
-	m_iDamageBothHands = (flDamageScaleAmount * (float)(damageBoth / 100)) + damageBoth;
-	m_iDamageKick = (flDamageScaleAmount * (float)(damageKick / 100)) + damageKick;
+	m_iDamageOneHand = (flDamageScaleAmount * (damageSingle / 100.0f)) + damageSingle;
+	m_iDamageBothHands = (flDamageScaleAmount * (damageBoth / 100.0f)) + damageBoth;
+	m_iDamageKick = (flDamageScaleAmount * (damageKick / 100.0f)) + damageKick;
 
 	float defaultXP = ((float)m_pNPCData->iXP);
 	float newXPValue = ((flHealthScaleAmount + flDamageScaleAmount) * (defaultXP / 100.0f)) + defaultXP;
@@ -120,17 +124,14 @@ void CNPCBaseProperties::UpdateNPCScaling()
 	if (pEntity)
 	{
 		float newHP = 0.0f;
-		float hpPercentLeft = (float)(((float)pEntity->GetHealth()) / ((float)pEntity->GetMaxHealth()));
+		float hpPercentLeft = (((float)pEntity->GetHealth()) / ((float)pEntity->GetMaxHealth()));
 
-		if (hpPercentLeft >= 1) // No HP lost.
+		if (hpPercentLeft >= 1.0f) // No HP lost.
 			newHP = flTotal;
 		else // HP lost
-			newHP = (float)((float)((float)m_iTotalHP / 100) * (hpPercentLeft * 100));
+			newHP = ((float)m_iTotalHP) * hpPercentLeft;
 
-		newHP = round(newHP);
-
-		if (newHP <= 0)
-			newHP = 1;
+		newHP = MAX(round(newHP), 1.0f);
 
 		pEntity->SetHealth((int)newHP);
 		pEntity->SetMaxHealth(m_iTotalHP);
@@ -146,9 +147,15 @@ void CNPCBaseProperties::FireGameEvent(IGameEvent *event)
 {
 	const char *type = event->GetName();
 
-	if (!strcmp(type, "player_connection"))
+	if (!strcmp(type, "reload_game_data"))
+	{
+		m_pNPCData = GameBaseShared()->GetNPCData()->GetNPCData(GetNPCName());
+		return;
+	}
+	else if (!strcmp(type, "player_connection"))
 	{
 		UpdateNPCScaling();
+		return;
 	}
 
 	// Human Events:
@@ -160,7 +167,5 @@ void CNPCBaseProperties::FireGameEvent(IGameEvent *event)
 		return;
 
 	if (!strcmp(type, "round_started"))
-	{
 		HL2MPRules()->EmitSoundToClient(pEntity, "Ready", GetNPCType(), GetGender());
-	}
 }

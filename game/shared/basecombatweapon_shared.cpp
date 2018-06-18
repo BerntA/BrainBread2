@@ -1845,19 +1845,19 @@ int CBaseCombatWeapon::GetBulletType( void )
 Vector CBaseCombatWeapon::GetBulletConeByAccLevel(void)
 {
 	int iAccuracyLevel = GetWpnData().m_iAccuracy;
-	if (iAccuracyLevel == 0) // This weapon uses new accuracy.
+	if (iAccuracyLevel <= 0) // This weapon uses new accuracy.
 	{
-		if ((gpGlobals->curtime - m_flViewKickTime) > 0.5f)
+		float delta = (gpGlobals->curtime - m_flViewKickTime);
+		if (delta >= 0.5f)
 			m_flViewKickPenalty = 1.0f;
 		else
-			m_flViewKickPenalty += (0.05f + GetWpnData().m_flFireRate);
+			m_flViewKickPenalty += (1.0f - (MAX((delta - GetWpnData().m_flFireRate), 0.0f) / 0.5f)) * GetWpnData().m_flAccuracyFactor;
 
-		m_flViewKickTime = gpGlobals->curtime; // reset the timer.
+		m_flViewKickTime = gpGlobals->curtime; // reset the timer.		
+		iAccuracyLevel = MIN(((int)round(m_flViewKickPenalty)), 10);
 	}
-	else
-		m_flViewKickPenalty = (float)iAccuracyLevel;
 
-	switch ((int)m_flViewKickPenalty)
+	switch (iAccuracyLevel)
 	{
 	case 1:
 		return VECTOR_CONE_1DEGREES;
@@ -1882,9 +1882,8 @@ Vector CBaseCombatWeapon::GetBulletConeByAccLevel(void)
 	case 11:
 		return VECTOR_CONE_15DEGREES;
 	case 12:
-		return VECTOR_CONE_20DEGREES;
 	default:
-		return VECTOR_CONE_5DEGREES;
+		return VECTOR_CONE_20DEGREES;
 	}
 }
 
@@ -2384,7 +2383,7 @@ void CBaseCombatWeapon::PrimaryAttack( void )
 
 	int shootAct = GetPrimaryAttackActivity();
 	SendWeaponAnim(shootAct);
-	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, shootAct);
+	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY);
 }
 
 #define TRACE_FREQUENCY 0.0225f

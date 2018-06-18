@@ -105,6 +105,7 @@ ConVar bb2_zombie_lifespan_min("bb2_zombie_lifespan_min", "0.5", FCVAR_REPLICATE
 ConVar bb2_zombie_max("bb2_zombie_max", "50", FCVAR_REPLICATED, "Maximum amount of zombies allowed in the game.", true, 1.0f, true, 128.0f);
 
 ConVar bb2_npc_scaling("bb2_npc_scaling", "1", FCVAR_REPLICATED, "Set the start scale value to add per player in the game. If the value is 5 then every player in the game * 5 is the scale of the npc which means you scale the npc's health and damage by that amount.", true, 1.0f, true, 100.0f);
+ConVar bb2_hard_scaling("bb2_hard_scaling", "0", FCVAR_REPLICATED, "Enables more challenging gameplay for higher level players, this will enable scaling based on the average level in the game. XP gained will be increased as well.", true, 0, true, 1);
 
 ConVar bb2_allow_latejoin( "bb2_allow_latejoin", "1", FCVAR_REPLICATED, "Allow players who join late to spawn as a human.", true, 0.0f, true, 1.0f );
 

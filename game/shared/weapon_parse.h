@@ -127,6 +127,7 @@ public:
 	int m_iZoomModeFOV[MAX_WEAPON_ZOOM_MODES];
 	float m_flPhysicalWeight;
 	float m_flFireRate;
+	float m_flAccuracyFactor;
 	float m_flPickupPenalty;
 	float m_flBashRange;
 	float m_flBashForce;

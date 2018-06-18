@@ -373,6 +373,10 @@ bool CGameDefinitionsShared::LoadData(void)
 		pszGamemodeData.flXPGameWinObjective = clamp(pkvParseData->GetFloat("game_win_objective", 5.0f), 0.0f, 8.0f);
 		pszGamemodeData.flXPGameWinArena = clamp(pkvParseData->GetFloat("game_win_arena", 2.5f), 0.0f, 4.0f);
 
+		pszGamemodeData.flXPScaleFactor = pkvParseData->GetFloat("xp_scale_factor", 3.0f);
+		pszGamemodeData.flXPScaleFactorMinAvgLvL = pkvParseData->GetFloat("xp_scale_factor_min_avg_lvl", 50.0f);
+		pszGamemodeData.flXPScaleFactorMaxAvgLvL = pkvParseData->GetFloat("xp_scale_factor_max_avg_lvl", 100.0f);
+
 		pszGamemodeData.flZombieCreditsPercentToLose = clamp(pkvParseData->GetFloat("zombie_credits_lost_death", 50.0f), 0.0f, 100.0f);
 		pszGamemodeData.flArenaHardModeXPMultiplier = MAX(pkvParseData->GetFloat("arena_hardmode_multiplier", 2.0f), 1.0f);
 

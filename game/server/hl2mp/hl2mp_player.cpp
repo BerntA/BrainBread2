@@ -3418,17 +3418,19 @@ public:
 	CNetworkHandle(CBasePlayer, m_hPlayer);
 	CNetworkVar(int, m_iEvent);
 	CNetworkVar(int, m_nData);
+	CNetworkVar(float, m_flData);
 };
 
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CTEPlayerAnimEvent, DT_TEPlayerAnimEvent)
 SendPropEHandle(SENDINFO(m_hPlayer)),
 SendPropInt(SENDINFO(m_iEvent), Q_log2(PLAYERANIMEVENT_COUNT) + 1, SPROP_UNSIGNED),
-SendPropInt(SENDINFO(m_nData), 32)
+SendPropInt(SENDINFO(m_nData), 32),
+SendPropFloat(SENDINFO(m_flData))
 END_SEND_TABLE()
 
 static CTEPlayerAnimEvent g_TEPlayerAnimEvent("PlayerAnimEvent");
 
-void TE_PlayerAnimEvent(CBasePlayer *pPlayer, PlayerAnimEvent_t event, int nData, bool bSkipPrediction)
+void TE_PlayerAnimEvent(CBasePlayer *pPlayer, PlayerAnimEvent_t event, int nData, bool bSkipPrediction, float flData)
 {
 	CPVSFilter filter((const Vector&)pPlayer->EyePosition());
 
@@ -3440,10 +3442,11 @@ void TE_PlayerAnimEvent(CBasePlayer *pPlayer, PlayerAnimEvent_t event, int nData
 	g_TEPlayerAnimEvent.m_hPlayer = pPlayer;
 	g_TEPlayerAnimEvent.m_iEvent = event;
 	g_TEPlayerAnimEvent.m_nData = nData;
+	g_TEPlayerAnimEvent.m_flData = flData;
 	g_TEPlayerAnimEvent.Create(filter, 0);
 }
 
-void CHL2MP_Player::DoAnimationEvent(PlayerAnimEvent_t event, int nData, bool bSkipPrediction)
+void CHL2MP_Player::DoAnimationEvent(PlayerAnimEvent_t event, int nData, bool bSkipPrediction, float flData)
 {
 	// Disable spawn prot. if we fire in elimination or deathmatch mode!
 	bool bShouldDisable = (
@@ -3458,8 +3461,11 @@ void CHL2MP_Player::DoAnimationEvent(PlayerAnimEvent_t event, int nData, bool bS
 	if (bShouldDisable && ((HL2MPRules()->GetCurrentGamemode() == MODE_DEATHMATCH) || (HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION)))
 		RemoveSpawnProtection();
 
-	m_PlayerAnimState->DoAnimationEvent(event, nData);
-	TE_PlayerAnimEvent(this, event, nData, bSkipPrediction);	// Send to any clients who can see this guy.
+	if (nData > 0)
+		flData = GetPlaybackRateForAnimEvent(event, nData);
+
+	m_PlayerAnimState->DoAnimationEvent(event, nData, flData);
+	TE_PlayerAnimEvent(this, event, nData, bSkipPrediction, flData);	// Send to any clients who can see this guy.
 }
 
 //-----------------------------------------------------------------------------

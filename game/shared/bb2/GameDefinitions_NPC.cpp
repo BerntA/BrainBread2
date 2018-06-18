@@ -67,10 +67,22 @@ bool CGameDefinitionsNPC::LoadNPCData(void)
 			{
 				CNPCDataItem *npcItem = new CNPCDataItem();
 				Q_strncpy(npcItem->szNPCName, npcName, MAX_MAP_NAME_SAVE);
-				npcItem->iHealth = npcData->GetInt("Health", 100);
-				npcItem->iSlashDamage = npcData->GetInt("DamageSingle", 1);
-				npcItem->iDoubleSlashDamage = npcData->GetInt("DamageBoth", 1);
-				npcItem->iKickDamage = npcData->GetInt("KickDamage", 1);
+
+				npcItem->iHealthMin = npcData->GetInt("HealthMin", 100);
+				npcItem->iHealthMax = npcData->GetInt("HealthMax", 100);
+
+				npcItem->iSlashDamageMin = npcData->GetInt("DamageSingleMin", 1);
+				npcItem->iSlashDamageMax = npcData->GetInt("DamageSingleMax", 1);
+
+				npcItem->iDoubleSlashDamageMin = npcData->GetInt("DamageBothMin", 1);
+				npcItem->iDoubleSlashDamageMax = npcData->GetInt("DamageBothMax", 1);
+
+				npcItem->flSpeedFactorMin = npcData->GetFloat("SpeedMin", 1.0f);
+				npcItem->flSpeedFactorMax = npcData->GetFloat("SpeedMax", 1.0f);
+
+				npcItem->iKickDamageMin = npcData->GetInt("KickDamageMin");
+				npcItem->iKickDamageMax = npcData->GetInt("KickDamageMax");
+
 				npcItem->iXP = npcData->GetInt("XP");
 				npcItem->flHealthScale = npcData->GetFloat("HealthScale", 10.0f);
 				npcItem->flDamageScale = npcData->GetFloat("DamageScale", 10.0f);
@@ -105,7 +117,17 @@ bool CGameDefinitionsNPC::LoadNPCData(void)
 					{
 						NPCWeaponItem_t weaponItem;
 						Q_strncpy(weaponItem.szWeaponClass, sub->GetName(), 32);
-						weaponItem.flDamage = sub->GetFloat("damage", 1.0f);
+						
+						if (sub->FindKey("damage"))
+							weaponItem.flDamageMin = weaponItem.flDamageMax = MAX(sub->GetFloat("damage"), 0.1f);
+						else if (sub->FindKey("damage_min") && sub->FindKey("damage_max"))
+						{
+							weaponItem.flDamageMin = MAX(sub->GetFloat("damage_min"), 0.1f);
+							weaponItem.flDamageMax = MAX(sub->GetFloat("damage_max"), 0.1f);
+						}
+						else
+							weaponItem.flDamageMin = weaponItem.flDamageMax = 1.0f;
+
 						weaponItem.flDamageScale[DAMAGE_SCALE_TO_PLAYER] = sub->GetFloat("scale_player", 1.0f);
 						weaponItem.flDamageScale[DAMAGE_SCALE_TO_PLAYER_ZOMBIE] = sub->GetFloat("scale_player_zombie", 1.0f);
 						weaponItem.flDamageScale[DAMAGE_SCALE_TO_NPC_ZOMBIES] = sub->GetFloat("scale_npc_zombies", 1.0f);
@@ -220,74 +242,6 @@ CNPCDataItem *CGameDefinitionsNPC::GetNPCData(const char *name)
 	return NULL;
 }
 
-int CGameDefinitionsNPC::GetHealth(const char *name)
-{
-	int index = GetIndex(name);
-	if (index != -1)
-		return pszNPCItems[index]->iHealth;
-
-	return 100;
-}
-
-int CGameDefinitionsNPC::GetSlashDamage(const char *name)
-{
-	int index = GetIndex(name);
-	if (index != -1)
-		return pszNPCItems[index]->iSlashDamage;
-
-	return 1;
-}
-
-int CGameDefinitionsNPC::GetDoubleSlashDamage(const char *name)
-{
-	int index = GetIndex(name);
-	if (index != -1)
-		return pszNPCItems[index]->iDoubleSlashDamage;
-
-	return 1;
-}
-
-int CGameDefinitionsNPC::GetKickDamage(const char *name)
-{
-	int index = GetIndex(name);
-	if (index != -1)
-		return pszNPCItems[index]->iKickDamage;
-
-	return 1;
-}
-
-float CGameDefinitionsNPC::GetScale(const char *name, bool bDamage)
-{
-	int index = GetIndex(name);
-	if (index != -1)
-	{
-		if (bDamage)
-			return pszNPCItems[index]->flDamageScale;
-
-		return pszNPCItems[index]->flHealthScale;
-	}
-
-	return 10.0f;
-}
-
-float CGameDefinitionsNPC::GetRange(const char *name)
-{
-	int index = GetIndex(name);
-	if (index != -1)
-		return pszNPCItems[index]->flRange;
-
-	return 50.0f;
-}
-
-int CGameDefinitionsNPC::GetXP(const char *name)
-{
-	int index = GetIndex(name);
-	if (index != -1)
-		return pszNPCItems[index]->iXP;
-
-	return 0;
-}
-
 int CGameDefinitionsNPC::GetSkin(const char *name, const char *model)
 {
 	int index = GetIndex(name);
@@ -325,7 +279,7 @@ float CGameDefinitionsNPC::GetFirearmDamage(const char *name, const char *weapon
 		for (int i = 0; i < pszNPCItems[index]->pszWeaponList.Count(); i++)
 		{
 			if (!strcmp(weapon, pszNPCItems[index]->pszWeaponList[i].szWeaponClass))
-				return pszNPCItems[index]->pszWeaponList[i].flDamage;
+				return (random->RandomFloat(pszNPCItems[index]->pszWeaponList[i].flDamageMin, pszNPCItems[index]->pszWeaponList[i].flDamageMax));
 		}
 	}
 
