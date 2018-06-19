@@ -2939,11 +2939,6 @@ bool CNPC_Combine::IsRunningApproachEnemySchedule()
 	return false;
 }
 
-bool CNPC_Combine::ShouldPickADeathPose( void ) 
-{ 
-	return !IsCrouching(); 
-}
-
 //-----------------------------------------------------------------------------
 //
 // Schedules

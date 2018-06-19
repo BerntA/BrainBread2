@@ -64,6 +64,7 @@ $Project "Client (HL2MP)"
 			$File	"$SRCDIR\game\shared\hl2\hl2_shared_misc.h"
 			$File	"hl2\episodic_screenspaceeffects.cpp"
 			$File	"hl2\episodic_screenspaceeffects.h"
+			$File	"hl2\c_npc_BaseZombie.cpp"
 		}
 
 		$Folder	"HL2MP"

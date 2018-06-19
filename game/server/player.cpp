@@ -663,6 +663,13 @@ int CBasePlayer::ShouldTransmit( const CCheckTransmitInfo *pInfo )
 	return BaseClass::ShouldTransmit( pInfo );
 }
 
+static vec_t GetAngleForDotProduct(const Vector &a, const Vector &b)
+{
+	vec_t dot = a.Dot(b);
+	dot /= (a.Length() * b.Length()); // cosine of the angle.
+	return (acos(dot) * (180.0f / M_PI_F));
+}
+
 bool CBasePlayer::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits) const
 {
 	if (HL2MPRules()->IsTeamplay())
@@ -695,15 +702,14 @@ bool CBasePlayer::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const
 	if (vHisOrigin.DistTo(vMyOrigin) < maxDistance)
 		return true;
 
-	// If their origin is not within a 45 degree cone in front of us, no need to lag compensate.
+	// If their origin is not within a 75 degree cone in front of us, no need to lag compensate.
 	Vector vForward;
 	AngleVectors(pCmd->viewangles, &vForward);
 
 	Vector vDiff = vHisOrigin - vMyOrigin;
 	VectorNormalize(vDiff);
 
-	float flCosAngle = 0.707107f;	// 45 degree angle
-	if (vForward.Dot(vDiff) < flCosAngle)
+	if (GetAngleForDotProduct(vForward, vDiff) > 75.0f)
 		return false;
 
 	return true;

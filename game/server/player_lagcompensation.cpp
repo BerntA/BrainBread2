@@ -236,10 +236,8 @@ void CLagCompensationManager::FrameUpdatePostEntityThink()
 		LagRecord &record = track->Element(track->AddToHead());
 
 		record.m_fFlags = 0;
-		if (pPlayer->IsAlive())
-		{
-			record.m_fFlags |= LC_ALIVE;
-		}
+		if (pPlayer->IsAlive())		
+			record.m_fFlags |= LC_ALIVE;		
 
 		record.m_flSimulationTime = pPlayer->GetSimulationTime();
 		record.m_vecOrigin = pPlayer->GetLocalOrigin();
@@ -294,10 +292,8 @@ void CLagCompensationManager::FrameUpdatePostEntityThink()
 		LagRecord &record = track->Element(track->AddToHead());
 
 		record.m_fFlags = 0;
-		if (pNPC->IsAlive())
-		{
-			record.m_fFlags |= LC_ALIVE;
-		}
+		if (pNPC->IsAlive())		
+			record.m_fFlags |= LC_ALIVE;		
 
 		record.m_flSimulationTime = pNPC->GetSimulationTime();
 		record.m_vecOrigin = pNPC->GetLocalOrigin();

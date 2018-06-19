@@ -229,7 +229,7 @@ int C_HL2MP_Player::DrawModel( int flags )
 			BaseClass::DrawModel(STUDIO_RENDER | STUDIO_TRANSPARENCY);
 			modelrender->ForcedMaterialOverride(0);
 		}
-		else
+		else if (GlobalRenderEffects->CanDrawOverlay(this))
 		{
 			if (IsMaterialOverlayFlagActive(MAT_OVERLAY_BLOOD))
 			{

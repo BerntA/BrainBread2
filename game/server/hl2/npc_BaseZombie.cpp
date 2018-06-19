@@ -1,9 +1,8 @@
-//========= Copyright Bernt A Eide. ============//
+//=========       Copyright © Reperio Studios 2013-2019 @ Bernt Andreas Eide!       ============//
 //
-// Purpose: Base Zombie Class
+// Purpose: Zombie NPC BaseClass
 //
-// $NoKeywords: $
-//=============================================================================//
+//==============================================================================================//
 
 #include "cbase.h"
 #include "npc_BaseZombie.h"
@@ -149,11 +148,23 @@ BEGIN_DATADESC( CNPC_BaseZombie )
 	DEFINE_EMBEDDED(m_DurationDoorBash),
 	DEFINE_EMBEDDED(m_NextTimeToStartDoorBash),
 
-	END_DATADESC()
+END_DATADESC()
 
-	//---------------------------------------------------------
-	//---------------------------------------------------------
-	int CNPC_BaseZombie::g_numZombies = 0;
+IMPLEMENT_SERVERCLASS_ST(CNPC_BaseZombie, DT_AI_BaseZombie)
+SendPropExclude("DT_BaseCombatCharacter", "m_hActiveWeapon"),
+SendPropExclude("DT_BaseCombatCharacter", "m_hMyWeapons"),
+
+SendPropExclude("DT_BaseFlex", "m_flexWeight"),
+SendPropExclude("DT_BaseFlex", "m_blinktoggle"),
+SendPropExclude("DT_BaseFlex", "m_viewtarget"),
+
+SendPropExclude("DT_BaseFlex", "m_vecLean"),
+SendPropExclude("DT_BaseFlex", "m_vecShift"),
+END_SEND_TABLE()
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+int CNPC_BaseZombie::g_numZombies = 0;
 
 //---------------------------------------------------------
 //---------------------------------------------------------

@@ -96,6 +96,21 @@ void CGlobalRenderEffects::Shutdown()
 	m_MatFilmGrainOverlay = NULL;
 }
 
+bool CGlobalRenderEffects::CanDrawOverlay(C_BaseEntity *pTarget)
+{
+	C_HL2MP_Player *pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
+	if (!pPlayer || !pTarget)
+		return false;
+
+	if (pPlayer->entindex() == pTarget->entindex())
+		return true;
+
+	if (pPlayer->IsInVGuiInputMode() || (pPlayer->GetLocalOrigin().DistTo(pTarget->GetLocalOrigin()) > MAX_TEAMMATE_DISTANCE))
+		return false;
+
+	return true;
+}
+
 static CGlobalRenderEffects g_GlobalRenderFX;
 CGlobalRenderEffects *GlobalRenderEffects = &g_GlobalRenderFX;
 
@@ -194,13 +209,13 @@ void DrawHumanIndicators(void)
 	}
 }
 
-void DrawDizzyIcon(Vector vecOrigin)
+void DrawDizzyIcon(const Vector &vecOrigin)
 {
-	CMatRenderContextPtr pRenderContext(materials);
-
 	IMaterial *renderTexture = GlobalRenderEffects->GetDizzyIcon();
 	if (renderTexture != NULL)
 	{
+		CMatRenderContextPtr pRenderContext(materials);
+
 		Vector vOrigin = vecOrigin;
 
 		// Align it so it never points up or down.

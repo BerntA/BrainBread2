@@ -85,7 +85,6 @@ mstudioevent_t *GetEventIndexForSequence( mstudioseqdesc_t &seqdesc );
 
 C_EntityDissolve *DissolveEffect( C_BaseEntity *pTarget, float flTime );
 C_EntityFlame *FireEffect( C_BaseAnimating *pTarget, C_BaseEntity *pServerFire, float *flScaleEnd, float *flTimeStart, float *flTimeEnd );
-bool NPC_IsImportantNPC( C_BaseAnimating *pAnimating );
 void VCollideWireframe_ChangeCallback( IConVar *pConVar, char const *pOldString, float flOldValue );
 
 ConVar vcollide_wireframe( "vcollide_wireframe", "0", FCVAR_CHEAT, "Render physics collision models in wireframe", VCollideWireframe_ChangeCallback );
@@ -4647,13 +4646,6 @@ C_BaseAnimating *C_BaseAnimating::CreateRagdollCopy()
 	pRagdoll->IgniteRagdoll( this );
 	pRagdoll->TransferDissolveFrom( this );
 	pRagdoll->InitModelEffects();
-
-	//if ( AddRagdollToFadeQueue() == true )
-	//{
-	//	pRagdoll->m_bImportant = NPC_IsImportantNPC( this );
-	//	s_RagdollLRU.MoveToTopOfLRU( pRagdoll, pRagdoll->m_bImportant );
-	//	pRagdoll->m_bFadeOut = true;
-	//}
 
 	m_builtRagdoll = true;
 	AddEffects( EF_NODRAW );

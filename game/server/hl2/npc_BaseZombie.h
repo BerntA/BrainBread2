@@ -1,9 +1,8 @@
-//========= Copyright Bernt A Eide. ============//
+//=========       Copyright © Reperio Studios 2013-2019 @ Bernt Andreas Eide!       ============//
 //
-// Purpose: Base Zombie Class
+// Purpose: Zombie NPC BaseClass
 //
-// $NoKeywords: $
-//=============================================================================//
+//==============================================================================================//
 
 #ifndef NPC_BASEZOMBIE_H
 #define NPC_BASEZOMBIE_H
@@ -87,6 +86,7 @@ typedef CAI_BlendingHost< CAI_BehaviorHost<CAI_BaseNPC> > CAI_BaseZombieBase;
 abstract_class CNPC_BaseZombie : public CAI_BaseZombieBase, public CNPCBaseProperties
 {
 	DECLARE_CLASS(CNPC_BaseZombie, CAI_BaseZombieBase);
+	DECLARE_SERVERCLASS();
 
 public:
 	CNPC_BaseZombie(void);

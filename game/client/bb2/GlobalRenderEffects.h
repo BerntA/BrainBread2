@@ -41,6 +41,8 @@ public:
 	IMaterial *GetZombieVision(void) { return m_MatZombieVisionOverlay; }
 	IMaterial *GetFilmGrainOverlay(void) { return m_MatFilmGrainOverlay; }
 
+	bool CanDrawOverlay(C_BaseEntity *pTarget);
+
 private:
 	IMaterial *m_MatBloodOverlay;
 	IMaterial *m_MatPerkOverlay;
@@ -61,6 +63,6 @@ private:
 
 extern CGlobalRenderEffects *GlobalRenderEffects;
 extern void DrawHumanIndicators(void);
-extern void DrawDizzyIcon(Vector vecOrigin);
+extern void DrawDizzyIcon(const Vector &vecOrigin);
 
 #endif // C_GLOBAL_RENDER_FX_H

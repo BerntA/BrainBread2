@@ -100,7 +100,6 @@ public:
 
 	virtual int		TranslateSchedule(int scheduleType);
 	virtual void    OnStartSchedule(int scheduleType);
-	virtual bool	ShouldPickADeathPose(void);
 
 protected:
 	virtual BB2_SoundTypes GetNPCType() { return TYPE_SOLDIER; }

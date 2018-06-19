@@ -145,8 +145,6 @@ public:
 	virtual int		TranslateSchedule( int scheduleType );
 	void			OnStartSchedule( int scheduleType );
 
-	virtual bool	ShouldPickADeathPose( void );
-
 	virtual int GetIdleState(void) { return 0; }
 	virtual void SetIdleState(int state) {}
 

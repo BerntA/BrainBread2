@@ -1517,11 +1517,6 @@ bool CNPCBaseSoldierStatic::ActiveWeaponIsFullyLoaded()
 	return (pWeapon->Clip1() >= pWeapon->GetMaxClip1());
 }
 
-bool CNPCBaseSoldierStatic::ShouldPickADeathPose(void)
-{
-	return true;
-}
-
 AI_BEGIN_CUSTOM_NPC(npc_soldier_base, CNPCBaseSoldierStatic)
 
 DECLARE_TASK(TASK_SOLDIER_FACE_TOSS_DIR)

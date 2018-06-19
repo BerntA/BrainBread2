@@ -82,7 +82,6 @@
 #include "vphysics/friction.h"
 #include "physics_npc_solver.h"
 #include "tier0/vcrmode.h"
-#include "death_pose.h"
 #include "datacache/imdlcache.h"
 #include "vstdlib/jobthread.h"
 
@@ -124,8 +123,6 @@
 #endif
 
 //#define DEBUG_LOOK
-
-bool RagdollManager_SaveImportant( CAI_BaseNPC *pNPC );
 
 #define	MIN_PHYSICS_FLINCH_DAMAGE	5.0f
 
@@ -577,29 +574,6 @@ void CAI_BaseNPC::CleanupOnDeath( CBaseEntity *pCulprit, bool bFireDeathOutput )
 		DevMsg( "Unexpected double-death-cleanup\n" );
 }
 
-void CAI_BaseNPC::SelectDeathPose( const CTakeDamageInfo &info )
-{
-	if ( !GetModelPtr() || (info.GetDamageType() & DMG_PREVENT_PHYSICS_FORCE) )
-		return;
-
-	if ( ShouldPickADeathPose() == false )
-		return;
-
-	Activity aActivity = ACT_INVALID;
-	int iDeathFrame = 0;
-
-	SelectDeathPoseActivityAndFrame( this, info, LastHitGroup(), aActivity, iDeathFrame );
-	if ( aActivity == ACT_INVALID )
-	{
-		SetDeathPose( ACT_INVALID );
-		SetDeathPoseFrame( 0 );
-		return;
-	}
-
-	SetDeathPose( SelectWeightedSequence( aActivity ) );
-	SetDeathPoseFrame( iDeathFrame );
-}
-
 //-----------------------------------------------------------------------------
 // Purpose:
 // Input  :
@@ -613,12 +587,8 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	Wake( false );
-	
-	//Adrian: Select a death pose to extrapolate the ragdoll's velocity.
-	SelectDeathPose( info );
 
 	m_lifeState = LIFE_DYING;
-
 	CleanupOnDeath( info.GetAttacker() );
 
 	StopLoopingSounds();
@@ -630,11 +600,6 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	BaseClass::Event_Killed( info );
-
-	if ( m_bFadeCorpse )
-	{
-		m_bImportanRagdoll = RagdollManager_SaveImportant( this );
-	}
 	
 	// Make sure this condition is fired too (OnTakeDamage breaks out before this happens on death)
 	SetCondition( COND_LIGHT_DAMAGE );
@@ -6911,10 +6876,6 @@ void CAI_BaseNPC::NPCInit ( void )
 	SetIdealActivity( ACT_IDLE );
 	SetActivity( ACT_IDLE );
 
-#ifdef HL1_DLL
-	SetDeathPose( ACT_INVALID );
-#endif
-
 	ClearCommandGoal();
 
 	ClearSchedule( "Initializing NPC" );
@@ -7007,16 +6968,11 @@ void CAI_BaseNPC::NPCInit ( void )
 		SetEfficiency( AIE_EFFICIENT );
 	}
 
-	m_bFadeCorpse = ShouldFadeOnDeath();
-
 	m_GiveUpOnDeadEnemyTimer.Set( 0.75, 2.0 );
 
 	m_flTimeLastMovement = FLT_MAX;
 
 	m_flIgnoreDangerSoundsUntil = 0;
-	
-	SetDeathPose( ACT_INVALID );
-	SetDeathPoseFrame( 0 );
 
 	m_EnemiesSerialNumber = -1;
 }
@@ -10517,19 +10473,6 @@ CBaseEntity *CAI_BaseNPC::DropItem ( const char *pszItemName, Vector vecPos, QAn
 
 }
 
-bool CAI_BaseNPC::ShouldFadeOnDeath( void )
-{
-	if ( g_RagdollLVManager.IsLowViolence() )
-	{
-		return true;
-	}
-	else
-	{
-		// if flagged to fade out
-		return HasSpawnFlags(SF_NPC_FADE_CORPSE);
-	}
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Indicates whether or not this npc should play an idle sound now.
 //
@@ -10802,13 +10745,9 @@ BEGIN_DATADESC( CAI_BaseNPC )
 	DEFINE_FIELD( m_bIsCrouching,				FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bPerformAvoidance,			FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bIsMoving,					FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bFadeCorpse,				FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_iDeathPose,					FIELD_INTEGER ),
-	DEFINE_FIELD( m_iDeathFrame,				FIELD_INTEGER ),
 	DEFINE_FIELD( m_bCheckContacts,				FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_hEnemyFilter,				FIELD_EHANDLE ),
 	DEFINE_KEYFIELD( m_iszEnemyFilterName,		FIELD_STRING, "enemyfilter" ),
-	DEFINE_FIELD( m_bImportanRagdoll,			FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bPlayerAvoidState,			FIELD_BOOLEAN ),
 	DEFINE_ARRAY(m_szNPCName, FIELD_CHARACTER, MAX_MAP_NAME_SAVE),
 	DEFINE_FIELD(m_bIsBoss, FIELD_BOOLEAN),
@@ -10898,19 +10837,19 @@ BEGIN_SIMPLE_DATADESC( AIScheduleState_t )
 	DEFINE_FIELD( bScheduleWasInterrupted, FIELD_BOOLEAN ),
 END_DATADESC()
 
-
 IMPLEMENT_SERVERCLASS_ST( CAI_BaseNPC, DT_AI_BaseNPC )
 	SendPropInt( SENDINFO( m_lifeState ), 3, SPROP_UNSIGNED ),
 	SendPropBool( SENDINFO( m_bPerformAvoidance ) ),
 	SendPropBool( SENDINFO( m_bIsMoving ) ),
-	SendPropBool( SENDINFO( m_bFadeCorpse ) ),
-	SendPropInt( SENDINFO( m_iDeathPose ), ANIMATION_SEQUENCE_BITS ),
-	SendPropInt( SENDINFO( m_iDeathFrame ), 5 ),
-	SendPropBool( SENDINFO( m_bImportanRagdoll ) ),
-	SendPropInt(SENDINFO(m_iHealth), -1, SPROP_VARINT | SPROP_CHANGES_OFTEN),
-	SendPropInt(SENDINFO(m_iMaxHealth), -1, SPROP_VARINT | SPROP_CHANGES_OFTEN),
+	SendPropInt(SENDINFO(m_iHealth), 20, SPROP_CHANGES_OFTEN),
+	SendPropInt(SENDINFO(m_iMaxHealth), 20, SPROP_CHANGES_OFTEN),
 	SendPropString(SENDINFO(m_szNPCName)),
 	SendPropBool(SENDINFO(m_bIsBoss)),
+
+	// Removes all glow logic for ALL npcs though... TODO , allow for custom actor only?
+	SendPropExclude("DT_BaseEntity", "m_iGlowMethod"),
+	SendPropExclude("DT_BaseEntity", "m_GlowColor"),
+	SendPropExclude("DT_BaseEntity", "m_iGlowTeamLink"),
 END_SEND_TABLE()
 
 //-------------------------------------

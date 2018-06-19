@@ -199,6 +199,10 @@ SendPropExclude("DT_BaseFlex", "m_flexWeight"),
 SendPropExclude("DT_BaseFlex", "m_blinktoggle"),
 SendPropExclude("DT_BaseFlex", "m_viewtarget"),
 
+// BB2 Warn
+SendPropExclude("DT_BaseFlex", "m_vecLean"),
+SendPropExclude("DT_BaseFlex", "m_vecShift"),
+
 // Data that only gets sent to the local player.
 SendPropDataTable("hl2mplocaldata", 0, &REFERENCE_SEND_TABLE(DT_HL2MPLocalPlayerExclusive), SendProxy_SendLocalDataTable),
 // Data that gets sent to all other players
@@ -1170,7 +1174,7 @@ bool CHL2MP_Player::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, con
 			bCheckAttackButton = false;
 
 			// Only compensate NPCs within a reasonable distance.
-			float distance = GetAbsOrigin().DistTo(pEntity->GetAbsOrigin());
+			float distance = GetLocalOrigin().DistTo(pEntity->GetLocalOrigin());
 			if (distance > MAX_MELEE_LAGCOMP_DIST)
 				return false;
 		}

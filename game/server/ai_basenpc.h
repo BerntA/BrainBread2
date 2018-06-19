@@ -960,9 +960,6 @@ private:
 	Activity			m_IdealTranslatedActivity;		// Desired actual translated animation state
 	Activity			m_IdealWeaponActivity;			// Desired weapon animation state
 
-	CNetworkVar(int, m_iDeathPose );
-	CNetworkVar(int, m_iDeathFrame );
-
 public:
 	//-----------------------------------------------------
 	//
@@ -1051,12 +1048,6 @@ public:
 	void				CheckTarget( CBaseEntity *pTarget );
 	float				GetAcceptableTimeSeenEnemy( void )		{ return m_flAcceptableTimeSeenEnemy; }
 	virtual	CAI_BaseNPC *CreateCustomTarget( const Vector &vecOrigin, float duration = -1 );
-
-	void				SetDeathPose( const int &iDeathPose ) { m_iDeathPose = iDeathPose; }
-	void				SetDeathPoseFrame( const int &iDeathPoseFrame ) { m_iDeathFrame = iDeathPoseFrame; }
-	
-	void				SelectDeathPose( const CTakeDamageInfo &info );
-	virtual bool		ShouldPickADeathPose( void ) { return true; }
 
 	virtual	bool		AllowedToIgnite( void ) { return false; }
 
@@ -1675,8 +1666,6 @@ public:
 
 	CBaseGrenade*		IncomingGrenade(void);
 
-	virtual bool		ShouldFadeOnDeath( void );
-
 	void				NPCInitDead( void );	// Call after animation/pose is set up
 	void				CorpseFallThink( void );
 
@@ -2141,8 +2130,6 @@ public:
 
 	CNetworkVar( bool,  m_bPerformAvoidance );
 	CNetworkVar( bool,	m_bIsMoving );
-	CNetworkVar( bool,  m_bFadeCorpse );
-	CNetworkVar( bool,  m_bImportanRagdoll );
 
 	virtual bool		ShouldProbeCollideAgainstEntity( CBaseEntity *pEntity );
 	virtual bool		IsStaticNPC(void) { return false; } // NPC never actually moves, jumps, etc...
