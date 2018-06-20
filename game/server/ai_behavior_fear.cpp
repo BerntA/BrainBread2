@@ -324,13 +324,13 @@ void CAI_FearBehavior::GatherConditions()
 		CBasePlayer *pPlayer = AI_GetSinglePlayer();
 	#endif //BB2_AI
 
-	if( pPlayer != NULL && GetAbsOrigin().DistToSqr(pPlayer->GetAbsOrigin()) >= Square( ai_fear_player_dist.GetFloat() * 1.5f )  )
+	if( pPlayer && GetAbsOrigin().DistToSqr(pPlayer->GetAbsOrigin()) >= Square( ai_fear_player_dist.GetFloat() * 1.5f )  )
 	{
 		SetCondition(COND_FEAR_SEPARATED_FROM_PLAYER);
 	}
 
 	// Here's the visibility check. We can't skip this because it's time-sensitive
-	if( GetOuter()->FVisible(pPlayer) )
+	if (pPlayer && GetOuter()->FVisible(pPlayer))
 	{
 		m_flTimePlayerLastVisible = gpGlobals->curtime;
 	}
@@ -464,7 +464,7 @@ CAI_Hint *CAI_FearBehavior::FindFearWithdrawalDest()
 	hintCriteria.SetFlag( bits_HINT_NODE_VISIBLE_TO_PLAYER | bits_HINT_NOT_CLOSE_TO_ENEMY /*| bits_HINT_NODE_IN_VIEWCONE | bits_HINT_NPC_IN_NODE_FOV*/ );
 	
 	#ifdef BB2_AI
-		hintCriteria.AddIncludePosition( UTIL_GetNearestPlayer(GetAbsOrigin())->GetAbsOrigin(), ( ai_fear_player_dist.GetFloat() ) ); 
+		hintCriteria.AddIncludePosition(UTIL_GetNearestPlayer(GetAbsOrigin(), true)->GetAbsOrigin(), (ai_fear_player_dist.GetFloat()));
 	#else
 		hintCriteria.AddIncludePosition( AI_GetSinglePlayer()->GetAbsOrigin(), ( ai_fear_player_dist.GetFloat() ) );	
 	#endif //BB2_AI

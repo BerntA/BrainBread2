@@ -6756,7 +6756,7 @@ void CBaseEntity::DumpResponseCriteria( void )
 #ifdef BB2_AI
 	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
 #else
-CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 #endif //BB2_AI
 
 	if ( pPlayer )

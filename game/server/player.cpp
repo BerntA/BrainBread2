@@ -238,7 +238,6 @@ BEGIN_DATADESC( CBasePlayer )
 
 	DEFINE_FIELD( m_nUpdateRate, FIELD_INTEGER ),
 	DEFINE_FIELD( m_fLerpTime, FIELD_FLOAT ),
-	DEFINE_FIELD( m_bLagCompensation, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bPredictWeapons, FIELD_BOOLEAN ),
 
 	DEFINE_FIELD( m_hUseEntity, FIELD_EHANDLE ),
@@ -531,7 +530,6 @@ CBasePlayer::CBasePlayer( )
 	m_nUpdateRate = 20;  // cl_updaterate defualt
 	m_fLerpTime = 0.1f; // cl_interp default
 	m_bPredictWeapons = true;
-	m_bLagCompensation = false;
 	m_flLaggedMovementValue = 1.0f;
 	m_StuckLast = 0;
 	m_impactEnergyScale = 1.0f;
@@ -670,21 +668,17 @@ static vec_t GetAngleForDotProduct(const Vector &a, const Vector &b)
 	return (acos(dot) * (180.0f / M_PI_F));
 }
 
-bool CBasePlayer::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits) const
+bool CBasePlayer::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const CUserCmd *pCmd) const
 {
-	if (HL2MPRules()->IsTeamplay())
+	if (HL2MPRules()->IsTeamplay() && (friendlyfire.GetInt() <= 0))
 	{
 		// Team members shouldn't be adjusted unless friendly fire is on.
-		if (!friendlyfire.GetInt() && (pEntity->GetTeamNumber() == GetTeamNumber()) && pEntity->IsPlayer())
+		if ((pEntity->GetTeamNumber() == GetTeamNumber()) && pEntity->IsPlayer())
 			return false;
 	}
 
-	// If this entity hasn't been transmitted to us and acked, then don't bother lag compensating it.
-	if (pEntityTransmitBits && !pEntityTransmitBits->Get(pEntity->entindex()))
-		return false;
-
-	const Vector &vMyOrigin = GetAbsOrigin();
-	const Vector &vHisOrigin = pEntity->GetAbsOrigin();
+	const Vector &vMyOrigin = GetLocalOrigin();
+	const Vector &vHisOrigin = pEntity->GetLocalOrigin();
 
 	// get max distance player could have moved within max lag compensation time, 
 	// multiply by 1.5 to to avoid "dead zones"  (sqrt(2) would be the exact value)
@@ -694,7 +688,7 @@ bool CBasePlayer::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const
 	if (pPlayer)
 		maxspeed = pPlayer->MaxSpeed();
 	else
-		maxspeed = 300;
+		maxspeed = 235.0f;
 
 	float maxDistance = 1.5 * maxspeed * sv_maxunlag.GetFloat();
 
@@ -709,7 +703,7 @@ bool CBasePlayer::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const
 	Vector vDiff = vHisOrigin - vMyOrigin;
 	VectorNormalize(vDiff);
 
-	if (GetAngleForDotProduct(vForward, vDiff) > 75.0f)
+	if (GetAngleForDotProduct(vForward, vDiff) > 60.0f)
 		return false;
 
 	return true;
@@ -1163,9 +1157,9 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 		// Only humans can get infected!
 		// No infection in arena mode!
-		if (pAttacker && pClient->IsHuman() && !pClient->IsPlayerInfected() && (pAttacker->Classify() == CLASS_ZOMBIE) && (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE) && !GameBaseServer()->IsTutorialModeEnabled() && !GameBaseServer()->IsStoryMode())
+		if (pAttacker && pClient->IsHuman() && !pClient->IsPlayerInfected() && (pAttacker->Classify() == CLASS_ZOMBIE) && !HL2MPRules()->IsGameoverOrScoresVisible() && (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE) && !GameBaseServer()->IsTutorialModeEnabled() && !GameBaseServer()->IsStoryMode())
 		{
-			float flHealthLeft = (float)m_iHealth - info.GetDamage();
+			float flHealthLeft = ((float)m_iHealth) - info.GetDamage();
 			float m_flHP = (((float)GetMaxHealth()) / 100.0f) * (float)GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iInfectionStartPercent; // % of the health.
 			if (m_flHP > flHealthLeft)
 			{

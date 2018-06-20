@@ -200,11 +200,6 @@ void CHL2MP_Player::DoPlayerKick(void)
 		knockbackForce += (knockbackForce / 100.0f) * skillPercent;
 	}
 
-#ifndef CLIENT_DLL
-	HL2MPRules()->EmitSoundToClient(this, "KickAttack", GetSoundType(), GetSoundsetGender());
-	lagcompensation->StartLagCompensation(this, this->GetCurrentCommand(), range);
-#endif
-
 	trace_t traceHit;
 	CBaseEntity *pHitEnt = NULL;
 
@@ -212,19 +207,18 @@ void CHL2MP_Player::DoPlayerKick(void)
 	Vector forward;
 	EyeVectors(&forward, NULL, NULL);
 
-#ifndef CLIENT_DLL
-	Vector vecLagCompPos = GetLagCompPos();
-	if (vecLagCompPos != vec3_invalid)
-	{
-		forward = vecLagCompPos;
-		range = MAX_TRACE_LENGTH;
-	}
-#endif
-
 	VectorNormalize(forward);
 	Vector swingEnd = swingStart + forward * range;
 
+#ifndef CLIENT_DLL
+	HL2MPRules()->EmitSoundToClient(this, "KickAttack", GetSoundType(), GetSoundsetGender());
+
+	lagcompensation->TraceRealtime(this, swingStart, swingEnd, -Vector(3, 3, 3), Vector(3, 3, 3), this, COLLISION_GROUP_NONE, &traceHit, range, true);
+	forward = traceHit.endpos - traceHit.startpos;
+	VectorNormalize(forward);
+#else
 	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT, this, COLLISION_GROUP_NONE, &traceHit);
+#endif
 
 	pHitEnt = traceHit.m_pEnt;
 	if (traceHit.fraction != 1.0f)
@@ -263,10 +257,6 @@ void CHL2MP_Player::DoPlayerKick(void)
 
 		UTIL_ImpactTrace(&traceHit, DMG_CLUB);
 	}
-
-#ifndef CLIENT_DLL
-	lagcompensation->FinishLagCompensation(this);
-#endif
 }
 
 const Vector CHL2MP_Player::GetPlayerMins(void) const

@@ -1185,7 +1185,7 @@ int CAI_ActBusyBehavior::SelectScheduleWhileNotBusy( int iBase )
 			{
 				#ifdef BB2_AI
 					CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(GetOuter()); 
-					if ( m_hActBusyGoal->IsCombatActBusyTeleportAllowed() && m_iNumConsecutivePathFailures >= 2 && !pPlayer->FInViewCone(GetOuter()) )  
+					if (pPlayer && m_hActBusyGoal->IsCombatActBusyTeleportAllowed() && m_iNumConsecutivePathFailures >= 2 && !pPlayer->FInViewCone(GetOuter()))
 				#else
 					if ( m_hActBusyGoal->IsCombatActBusyTeleportAllowed() && m_iNumConsecutivePathFailures >= 2 && !AI_GetSinglePlayer()->FInViewCone(GetOuter()) )
 				#endif //BB2_AI			

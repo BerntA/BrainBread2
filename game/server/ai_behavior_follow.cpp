@@ -2092,9 +2092,8 @@ void CAI_FollowGoal::EnableGoal( CAI_BaseNPC *pAI )
 	#ifdef BB2_AI
 		if ( !pGoalEntity ) 
 		{
-			CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-			
-			if ( pAI->IRelationType(pPlayer) == D_LI ) 
+			CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 			
+			if (pPlayer && (pAI->IRelationType(pPlayer) == D_LI))
 			{
 				pGoalEntity = pPlayer; 
 				SetGoalEntity( pGoalEntity );

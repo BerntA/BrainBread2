@@ -1736,7 +1736,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 		if( IsPlayer() && info.m_iShots > 1 && iShot % 2 )
 		{
 			// Half of the shotgun pellets are hulls that make it easier to hit targets with the shotgun.
-			AI_TraceHull( info.m_vecSrc, vecEnd, Vector( -3, -3, -3 ), Vector( 3, 3, 3 ), MASK_SHOT, &traceFilter, &tr );
+			AI_TraceHull( info.m_vecSrc, vecEnd, Vector( -3, -3, -3 ), Vector( 3, 3, 3 ), MASK_SHOT_HULL, &traceFilter, &tr );
 			bUseHullTrace = true;
 		}
 		else
@@ -2032,7 +2032,7 @@ bool CBaseEntity::ShouldDrawUnderwaterBulletBubbles()
 	#else
 		CBaseEntity *pPlayer = ( gpGlobals->maxClients == 1 ) ? UTIL_GetLocalPlayer() : NULL;
 	#endif //BB2_AI
-	return pPlayer && (pPlayer->GetWaterLevel() == 3);
+	return (pPlayer && (pPlayer->GetWaterLevel() == 3));
 #else
 	return false;
 #endif

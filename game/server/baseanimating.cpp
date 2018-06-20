@@ -3032,7 +3032,7 @@ void CBaseAnimating::DrawServerHitboxes( float duration /*= 0.0f*/, bool monocol
 	}
 }
 
-void CBaseAnimating::DrawServerHitboxes(Vector offset, float duration, bool monocolor)
+void CBaseAnimating::DrawServerHitboxes(const Vector &offset, float duration, bool monocolor)
 {
 	CStudioHdr *pStudioHdr = GetModelPtr();
 	if (!pStudioHdr)

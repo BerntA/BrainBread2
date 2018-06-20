@@ -1010,13 +1010,13 @@ void CAI_StandoffBehavior::OnChangeTacticalConstraints()
 
 bool CAI_StandoffBehavior::PlayerIsLeading()
 {
-	#ifdef BB2_AI
-		CBaseEntity *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-	#else
-		CBaseEntity *pPlayer = AI_GetSinglePlayer();
-	#endif //BB2_AI
+#ifdef BB2_AI
+	CBaseEntity *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+#else
+	CBaseEntity *pPlayer = AI_GetSinglePlayer();
+#endif //BB2_AI
 
-	return ( pPlayer && GetOuter()->IRelationType( pPlayer ) == D_LI );
+	return (pPlayer && (GetOuter()->IRelationType(pPlayer) == D_LI));
 }
 
 //-------------------------------------
@@ -1029,8 +1029,9 @@ CBaseEntity *CAI_StandoffBehavior::GetPlayerLeader()
 		CBaseEntity *pPlayer = AI_GetSinglePlayer();
 	#endif //BB2_AI
 
-	if ( pPlayer && GetOuter()->IRelationType( pPlayer ) == D_LI )
+	if ( pPlayer && (GetOuter()->IRelationType( pPlayer ) == D_LI) )
 		return pPlayer;
+
 	return NULL;
 }
 

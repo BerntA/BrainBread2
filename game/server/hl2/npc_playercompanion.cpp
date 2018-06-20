@@ -345,18 +345,9 @@ void CNPC_PlayerCompanion::GatherConditions()
 {
 	BaseClass::GatherConditions();
 
-		#ifdef BB2_AI
-			//Null pointer fixed.
-			CBasePlayer *pPlayer = ToBasePlayer( GetFollowBehavior().GetFollowTarget() );//UTIL_GetNearestPlayer(GetAbsOrigin());
-		
-			if ( pPlayer ) 
-			{
-		#else
-			if ( AI_IsSinglePlayer() )
-			{
-		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-		#endif //BB2_AI
-
+	CBasePlayer *pPlayer = ToBasePlayer(GetFollowBehavior().GetFollowTarget());
+	if (pPlayer)
+	{
 		if ( Classify() == CLASS_PLAYER_ALLY_VITAL )
 		{
 			bool bInPlayerSquad = ( m_pSquad && MAKE_STRING(m_pSquad->GetName()) == GetPlayerSquadName() );
@@ -501,17 +492,9 @@ void CNPC_PlayerCompanion::GatherConditions()
 		DoCustomSpeechAI();
 	}
 
-	#ifdef BB2_AI
-	//Null pointer fixed.
-		if ( pPlayer && hl2_episodic.GetBool() && !GetEnemy() && HasCondition( COND_HEAR_PLAYER ) )
-		{
-			Vector los = ( pPlayer->EyePosition() - EyePosition() );
-	#else
-		if ( AI_IsSinglePlayer() && hl2_episodic.GetBool() && !GetEnemy() && HasCondition( COND_HEAR_PLAYER ) )
-		{
-			Vector los = ( UTIL_GetLocalPlayer()->EyePosition() - EyePosition() );
-	#endif //BB2_AI
-
+	if (pPlayer && hl2_episodic.GetBool() && !GetEnemy() && HasCondition(COND_HEAR_PLAYER))
+	{
+		Vector los = (pPlayer->EyePosition() - EyePosition());
 		los.z = 0;
 		VectorNormalize( los );
 
@@ -986,26 +969,29 @@ int CNPC_PlayerCompanion::TranslateSchedule( int scheduleType )
 	{
 	case SCHED_IDLE_STAND:
 	case SCHED_ALERT_STAND:
-		if( GetActiveWeapon() )
+	{
+		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+		if (pWeapon)
 		{
-			// Everyone with less than half a clip takes turns reloading when not fighting.
-			CBaseCombatWeapon *pWeapon = GetActiveWeapon();
-
-			if( CanReload() && pWeapon->UsesClipsForAmmo1() && pWeapon->Clip1() < ( pWeapon->GetMaxClip1() * .5 ) && OccupyStrategySlot( SQUAD_SLOT_EXCLUSIVE_RELOAD ) )
+			// Everyone with less than half a clip takes turns reloading when not fighting.		
+			if (CanReload() && pWeapon->UsesClipsForAmmo1() && (pWeapon->Clip1() < (pWeapon->GetMaxClip1() * .5)) && OccupyStrategySlot(SQUAD_SLOT_EXCLUSIVE_RELOAD))
 			{
-					CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
-
+				CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+				if (pPlayer)
+				{
 					pWeapon = pPlayer->GetActiveWeapon();
-					if( pWeapon && pWeapon->UsesClipsForAmmo1() && 
-						pWeapon->Clip1() < ( pWeapon->GetMaxClip1() * .75 ) &&
-						pPlayer->GetAmmoCount( pWeapon->GetPrimaryAmmoType() ) )
+					if (pWeapon && pWeapon->UsesClipsForAmmo1() &&
+						(pWeapon->Clip1() < (pWeapon->GetMaxClip1() * .75)) &&
+						pPlayer->GetAmmoCount(pWeapon->GetPrimaryAmmoType()))
 					{
-						SpeakIfAllowed( TLK_PLRELOAD );
+						SpeakIfAllowed(TLK_PLRELOAD);
 					}
+				}
 				return SCHED_RELOAD;
 			}
 		}
 		break;
+	}
 
 	case SCHED_COWER:
 		return SCHED_PC_COWER;
@@ -1275,15 +1261,7 @@ void CNPC_PlayerCompanion::RunTask( const Task_t *pTask )
 
 		case TASK_PC_GET_PATH_OFF_COMPANION:
 			{
-#ifdef BB2_AI
-					GetNavigator()->SetAllowBigStep( UTIL_GetNearestPlayer(GetAbsOrigin()) );
-#else
-if ( AI_IsSinglePlayer() )
-				{
-					GetNavigator()->SetAllowBigStep( UTIL_GetLocalPlayer() );
-				}
-#endif //BB2_AI
-
+				GetNavigator()->SetAllowBigStep(UTIL_GetNearestPlayer(GetAbsOrigin()));
 				ChainRunTask( TASK_MOVE_AWAY_PATH, 48 );
 			}
 			break;
@@ -1640,12 +1618,7 @@ void CNPC_PlayerCompanion::Touch( CBaseEntity *pOther )
 		if ( m_afMemory & bits_MEMORY_PROVOKED )
 			return;
 			
-#ifdef BB2_AI
-		TestPlayerPushing( ( pOther->IsPlayer() ) ? pOther : UTIL_GetNearestPlayer(GetAbsOrigin()) ); 
-#else
-TestPlayerPushing( ( pOther->IsPlayer() ) ? pOther : AI_GetSinglePlayer() );
-#endif //BB2_AI
-
+		TestPlayerPushing((pOther->IsPlayer()) ? pOther : UTIL_GetNearestPlayer(GetAbsOrigin()));
 	}
 }
 
@@ -1873,11 +1846,7 @@ void CNPC_PlayerCompanion::UpdateReadiness()
 		}
 	}
 
-#ifdef BB2_AI
- 	if( ai_debug_readiness.GetBool() ) 
-#else
-if( ai_debug_readiness.GetBool() && AI_IsSinglePlayer() )
-#endif //BB2_AI
+	if (ai_debug_readiness.GetBool())
 	{
 		// Draw the readiness-o-meter
 		Vector vecSpot;
@@ -1885,11 +1854,13 @@ if( ai_debug_readiness.GetBool() && AI_IsSinglePlayer() )
 		const float BARLENGTH = 12.0f;
 		const float GRADLENGTH	= 4.0f;
 
-		Vector right;
+		Vector right = vec3_origin;
 #ifdef BB2_AI
-		UTIL_GetNearestPlayer(GetAbsOrigin())->GetVectors( NULL, &right, NULL ); 
+		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+		if (pPlayer)
+			pPlayer->GetVectors( NULL, &right, NULL ); 
 #else
-UTIL_PlayerByIndex( 1 )->GetVectors( NULL, &right, NULL );
+		UTIL_PlayerByIndex( 1 )->GetVectors( NULL, &right, NULL );
 #endif //BB2_AI
 
 		if ( IsInScriptedReadinessState() )
@@ -2044,7 +2015,7 @@ pArgs->flDuration = random->RandomFloat( flMinLookTime, flMaxLookTime );
 #ifdef BB2_AI
 			pArgs->hTarget = UTIL_GetNearestVisiblePlayer(this);
 #else
-pArgs->hTarget = AI_GetSinglePlayer();
+			pArgs->hTarget = AI_GetSinglePlayer();
 #endif //BB2_AI
 
 			return true;
@@ -2938,7 +2909,7 @@ void CNPC_PlayerCompanion::OnFriendDamaged( CBaseCombatCharacter *pSquadmate, CB
 #ifdef BB2_AI
 		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
 #else
-CBasePlayer *pPlayer = AI_GetSinglePlayer();
+		CBasePlayer *pPlayer = AI_GetSinglePlayer();
 #endif //BB2_AI
 
 		if ( pPlayer && IsInPlayerSquad() && ( pPlayer->GetAbsOrigin().AsVector2D() - GetAbsOrigin().AsVector2D() ).LengthSqr() < Square( 25*12 ) && IsAllowedToSpeak( TLK_WATCHOUT ) )
@@ -3158,20 +3129,11 @@ float CNPC_PlayerCompanion::GetIdealAccel() const
 {
 	float multiplier = 1.0;
 
-
-#ifdef BB2_AI
-		if ( m_bMovingAwayFromPlayer && (UTIL_GetNearestPlayer(GetAbsOrigin())->GetAbsOrigin() - GetAbsOrigin()).Length2DSqr() < Square(3.0*12.0) ) 
+	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+	if (m_bMovingAwayFromPlayer && pPlayer && (pPlayer->GetAbsOrigin() - GetAbsOrigin()).Length2DSqr() < Square(3.0*12.0))
 		multiplier = 2.0;
 
 	return BaseClass::GetIdealAccel() * multiplier;
-#else
-	if ( AI_IsSinglePlayer() )
-	{
-		if ( m_bMovingAwayFromPlayer && (UTIL_PlayerByIndex(1)->GetAbsOrigin() - GetAbsOrigin()).Length2DSqr() < Square(3.0*12.0) )
-			multiplier = 2.0;
-	}
-	return BaseClass::GetIdealAccel() * multiplier;
-#endif //BB2_AI
 }
 
 //-----------------------------------------------------------------------------
@@ -3249,8 +3211,11 @@ void CNPC_PlayerCompanion::InputOutsideTransition( inputdata_t &inputdata )
 #ifdef BB2_AI
 	CBaseEntity *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
 #else
-CBaseEntity *pPlayer = UTIL_GetLocalPlayer();
+	CBaseEntity *pPlayer = UTIL_GetLocalPlayer();
 #endif //BB2_AI
+
+	if (!pPlayer)
+		return;
 
 	const Vector &playerPos = pPlayer->GetAbsOrigin();
 

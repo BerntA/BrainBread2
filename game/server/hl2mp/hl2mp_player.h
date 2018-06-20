@@ -155,7 +155,7 @@ public:
 
 	virtual Class_T Classify(void);
 
-	virtual bool WantsLagCompensationOnEntity(const CBaseEntity *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits) const;
+	virtual bool WantsLagCompensationOnEntity(const CBaseEntity *pPlayer, const CUserCmd *pCmd) const;
 
 	virtual void FireBullets(const FireBulletsInfo_t &info);
 	virtual bool Weapon_Switch(CBaseCombatWeapon *pWeapon, bool bWantDraw = false, int viewmodelindex = 0);

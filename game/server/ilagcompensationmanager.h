@@ -20,14 +20,36 @@ class CUserCmd;
 abstract_class ILagCompensationManager
 {
 public:
-	// Called during player movement to set up/restore after lag compensation
-	virtual void	StartLagCompensation(CBasePlayer *player, CUserCmd *cmd, float maxrange = MAX_TRACE_LENGTH) = 0;
-	virtual void	FinishLagCompensation( CBasePlayer *player ) = 0;
-	virtual bool	IsCurrentlyDoingLagCompensation() const = 0;
+	virtual void TraceRealtime(
+		CBaseCombatCharacter *pTracer,
+		const Vector& vecAbsStart,
+		const Vector& vecAbsEnd,
+		const Vector &hullMin,
+		const Vector &hullMax,
+		ITraceFilter *pFilter,
+		trace_t *ptr,
+		float maxrange = MAX_TRACE_LENGTH,
+		bool bRevertToHullTrace = false
+		) = 0;
 
-	#ifdef BB2_AI
-	virtual void	RemoveNpcData(int index) = 0; 
-	#endif // BB2_AI
+	virtual void TraceRealtime(
+		CBaseCombatCharacter *pTracer,
+		const Vector& vecAbsStart,
+		const Vector& vecAbsEnd,
+		const Vector &hullMin,
+		const Vector &hullMax,
+		const IHandleEntity *ignore,
+		int collisionGroup,
+		trace_t *ptr,
+		float maxrange = MAX_TRACE_LENGTH,
+		bool bRevertToHullTrace = false
+		) = 0;
+
+	virtual void TraceRealtime(CBaseCombatCharacter *pTracer) = 0;
+
+#ifdef BB2_AI
+	virtual void RemoveNpcData(int index) = 0;
+#endif // BB2_AI
 };
 
 extern ILagCompensationManager *lagcompensation;

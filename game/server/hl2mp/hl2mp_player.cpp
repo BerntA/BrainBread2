@@ -1081,8 +1081,7 @@ void CHL2MP_Player::FireBullets(const FireBulletsInfo_t &info)
 		return;
 	}
 
-	// Move other players back to history positions based on local player's lag
-	lagcompensation->StartLagCompensation(this, this->GetCurrentCommand());
+	lagcompensation->TraceRealtime(this);
 
 	FireBulletsInfo_t modinfo = info;
 
@@ -1144,9 +1143,6 @@ void CHL2MP_Player::FireBullets(const FireBulletsInfo_t &info)
 
 	BaseClass::FireBullets(modinfo);
 
-	// Move other players back to history positions based on local player's lag
-	lagcompensation->FinishLagCompensation(this);
-
 	m_bPlayerUsedFirearm = true;
 }
 
@@ -1159,33 +1155,24 @@ void CHL2MP_Player::NoteWeaponFired(void)
 	}
 }
 
-bool CHL2MP_Player::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits) const
+bool CHL2MP_Player::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const CUserCmd *pCmd) const
 {
-	bool bCheckAttackButton = true;
-
 	CBaseCombatWeapon *pActiveWeapon = GetActiveWeapon();
 	if (pActiveWeapon)
 	{
-		if (!pActiveWeapon->WantsLagCompensation(pEntity))
-			return false;
-
-		if (pActiveWeapon->m_iMeleeAttackType > 0)
+		if (pActiveWeapon->m_iMeleeAttackType.Get() > 0)
 		{
-			bCheckAttackButton = false;
-
-			// Only compensate NPCs within a reasonable distance.
+			// Only compensate ents within a reasonable distance.
 			float distance = GetLocalOrigin().DistTo(pEntity->GetLocalOrigin());
 			if (distance > MAX_MELEE_LAGCOMP_DIST)
 				return false;
 		}
+
+		if (!pActiveWeapon->WantsLagCompensation(pEntity))
+			return false;
 	}
 
-	// No need to lag compensate at all if we're not attacking in this command and
-	// we haven't attacked recently.
-	if (bCheckAttackButton && !(pCmd->buttons & (IN_ATTACK | IN_ATTACK2 | IN_ATTACK3)) && ((pCmd->command_number - m_iLastWeaponFireUsercmd) > 5))
-		return false;
-
-	return BaseClass::WantsLagCompensationOnEntity(pEntity, pCmd, pEntityTransmitBits);
+	return BaseClass::WantsLagCompensationOnEntity(pEntity, pCmd);
 }
 
 void CHL2MP_Player::Weapon_Equip(CBaseCombatWeapon *pWeapon)

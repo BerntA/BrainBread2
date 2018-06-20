@@ -402,7 +402,7 @@ void C_HL2MP_Player::AddEntity( void )
 
 bool C_HL2MP_Player::CanDrawGlowEffects(void)
 {
-	if (BB2PlayerGlobals->IsSniperScopeActive() || IsInVGuiInputMode())
+	if (BB2PlayerGlobals->IsSniperScopeActive() || IsInVGuiInputMode() || IsObserver() || (GetTeamNumber() <= TEAM_SPECTATOR))
 		return false;
 
 	return true;

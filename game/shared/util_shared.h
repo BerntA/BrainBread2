@@ -240,6 +240,21 @@ private:
 	ITraceFilter	*m_pTraceFilter2;
 };
 
+#ifndef CLIENT_DLL
+class CBaseCombatWeapon;
+class CTraceFilterRealtime : public CTraceFilterSimple // Used for lag comp and melee traces.
+{
+public:
+	DECLARE_CLASS(CTraceFilterRealtime, CTraceFilterSimple);
+	CTraceFilterRealtime(IHandleEntity *pHandleEntity, int collisionGroup, CBaseCombatWeapon *pWeapon);
+
+	virtual bool ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask);
+
+protected:
+	CHandle<CBaseCombatWeapon> m_hWeaponLink;
+};
+#endif
+
 // helper
 void DebugDrawLine( const Vector& vecAbsStart, const Vector& vecAbsEnd, int r, int g, int b, bool test, float duration );
 

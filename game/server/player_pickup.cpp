@@ -30,6 +30,9 @@ void Pickup_ForcePlayerToDropThisObject( CBaseEntity *pTarget )
 		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 	#endif //BB2_AI
 
+		if (pPlayer == NULL)
+			return;
+
 		pPlayer->ForceDropOfCarriedPhysObjects( pTarget );
 	}
 }

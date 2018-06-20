@@ -514,6 +514,38 @@ bool CTraceFilterChain::ShouldHitEntity( IHandleEntity *pHandleEntity, int conte
 	return ( bResult1 && bResult2 );
 }
 
+#ifndef CLIENT_DLL
+//-----------------------------------------------------------------------------
+// Trace used by melee weapons and lag comp.
+//-----------------------------------------------------------------------------
+CTraceFilterRealtime::CTraceFilterRealtime(IHandleEntity *pHandleEntity, int collisionGroup, CBaseCombatWeapon *pWeapon) :
+BaseClass(pHandleEntity, collisionGroup)
+{
+	m_hWeaponLink = pWeapon;
+}
+
+bool CTraceFilterRealtime::ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask)
+{
+	CBaseCombatWeapon *pWeaponActive = m_hWeaponLink.Get();
+	if (pWeaponActive)
+	{
+		int ownerIndex = pWeaponActive->GetOwner() ? pWeaponActive->GetOwner()->entindex() : -1;
+		CBaseEntity *pEntity = EntityFromEntityHandle(pHandleEntity);
+		if (pEntity)
+		{
+			int entityIndexHit = pEntity->entindex();
+			if (entityIndexHit == ownerIndex || entityIndexHit == pWeaponActive->entindex())
+				return false;
+
+			if (!pWeaponActive->CanHitThisTarget(entityIndexHit))
+				return false;
+		}
+	}
+
+	return BaseClass::ShouldHitEntity(pHandleEntity, contentsMask);
+}
+#endif
+
 //-----------------------------------------------------------------------------
 // Sweeps against a particular model, using collision rules 
 //-----------------------------------------------------------------------------

@@ -232,13 +232,14 @@ CBasePlayer* UTIL_GetLocalPlayer( void );
 
 #ifdef BB2_AI
 // helper functions added for replacing the above 
-CBasePlayer *UTIL_GetNearestPlayer( const Vector &origin );
+
+CBasePlayer *UTIL_GetNearestPlayer(const Vector &origin, bool bNoMatterWhat = false);
 
 CBasePlayer *UTIL_GetNearestHumanPlayer( const Vector &origin );
 
 CBasePlayer *UTIL_GetMostDistantPlayer(CBasePlayer *pIgnore, const Vector &origin);
 
-CBasePlayer *UTIL_GetNearestVisiblePlayer(CBaseEntity *pLooker, int mask = MASK_SOLID_BRUSHONLY); 
+CBasePlayer *UTIL_GetNearestVisiblePlayer(CBaseEntity *pLooker, int mask = MASK_SOLID_BRUSHONLY, bool bNoMatterWhat = false);
 #endif //BB2_AI
 
 // get the local player on a listen server

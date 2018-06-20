@@ -3126,7 +3126,7 @@ CBaseEntity *CBaseCombatCharacter::FindMissTarget( void )
 #ifdef BB2_AI
 	CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this); 
 #else
-CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 #endif //BB2_AI
 
 	CBaseEntity *pEnts[256];

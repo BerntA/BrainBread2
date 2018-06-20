@@ -23,20 +23,17 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define LC_NONE				0
 #define LC_ALIVE			(1<<0)
-#define LC_ORIGIN_CHANGED	(1<<8)
-#define LC_SIZE_CHANGED		(1<<9)
 
 static ConVar sv_lagcompensation_teleport_dist("sv_lagcompensation_teleport_dist", "64", FCVAR_DEVELOPMENTONLY | FCVAR_CHEAT, "How far a player got moved by game code before we can't lag compensate their position back");
-#define LAG_COMPENSATION_EPS_SQR ( 0.1f * 0.1f )
 #define HITBOX_MAX_DEVIATION 8.3f // How far can we move off the nearest hitbox and still call it a successful hit? 7-9 units is fair..
-#define MELEE_BBOX_MAX_DEVIATION 12.0f
 
 ConVar sv_unlag("sv_unlag", "1", FCVAR_DEVELOPMENTONLY, "Enables player lag compensation");
 ConVar sv_maxunlag("sv_maxunlag", "1.0", FCVAR_DEVELOPMENTONLY, "Maximum lag compensation in seconds", true, 0.0f, true, 1.0f);
 ConVar sv_lagflushbonecache("sv_lagflushbonecache", "1", FCVAR_DEVELOPMENTONLY, "Flushes entity bone cache on lag compensation");
 ConVar sv_showlagcompensation("sv_showlagcompensation", "0", FCVAR_CHEAT, "Show lag compensated hitboxes whenever a player is lag compensated.");
+
+static Vector g_vecPlayerStartPos = vec3_origin;
 
 struct LagCompEntry
 {
@@ -46,12 +43,24 @@ struct LagCompEntry
 	Vector differencePos;
 	Vector boundsMin;
 	Vector boundsMax;
-	Vector callerPos;
 	Vector endDirection;
+	int hitgroup;
 
 	int distanceFromCaller() const
 	{
-		return ((int)((lagCompedPos - callerPos).Length()));
+		return ((int)((lagCompedPos - g_vecPlayerStartPos).Length()));
+	}
+
+	LagCompEntry(CBaseCombatCharacter *pEntity)
+	{
+		Assert(pEntity != NULL);
+		m_hEntity = pEntity;
+		originalPos = lagCompedPos = pEntity->GetLocalOrigin();
+		boundsMin = (pEntity->IsPlayer() ? pEntity->CollisionProp()->OBBMinsPreScaled() : pEntity->WorldAlignMins());
+		boundsMax = (pEntity->IsPlayer() ? pEntity->CollisionProp()->OBBMaxsPreScaled() : pEntity->WorldAlignMaxs());
+		differencePos = vec3_origin;
+		endDirection = vec3_invalid;
+		hitgroup = HITGROUP_GENERIC;
 	}
 
 	~LagCompEntry()
@@ -96,11 +105,6 @@ public:
 	float					m_flSimulationTime;
 };
 
-//
-// Try to take the player from his current origin to vWantedPos.
-// If it can't get there, leave the player where he is.
-// 
-
 ConVar sv_unlag_debug("sv_unlag_debug", "0", FCVAR_GAMEDLL | FCVAR_DEVELOPMENTONLY);
 
 //-----------------------------------------------------------------------------
@@ -111,7 +115,6 @@ class CLagCompensationManager : public CAutoGameSystemPerFrame, public ILagCompe
 public:
 	CLagCompensationManager(char const *name) : CAutoGameSystemPerFrame(name), m_flTeleportDistanceSqr(64 * 64)
 	{
-		m_isCurrentlyDoingCompensation = false;
 	}
 
 	// IServerSystem stuff
@@ -128,8 +131,32 @@ public:
 	// called after entities think
 	virtual void FrameUpdatePostEntityThink();
 
-	void StartLagCompensation(CBasePlayer *player, CUserCmd *cmd, float maxrange = MAX_TRACE_LENGTH);
-	void FinishLagCompensation(CBasePlayer *player);
+	void TraceRealtime(
+		CBaseCombatCharacter *pTracer,
+		const Vector& vecAbsStart,
+		const Vector& vecAbsEnd,
+		const Vector &hullMin,
+		const Vector &hullMax,
+		ITraceFilter *pFilter,
+		trace_t *ptr,
+		float maxrange = MAX_TRACE_LENGTH,
+		bool bRevertToHullTrace = false
+		);
+
+	void TraceRealtime(
+		CBaseCombatCharacter *pTracer,
+		const Vector& vecAbsStart,
+		const Vector& vecAbsEnd,
+		const Vector &hullMin,
+		const Vector &hullMax,
+		const IHandleEntity *ignore,
+		int collisionGroup,
+		trace_t *ptr,
+		float maxrange = MAX_TRACE_LENGTH,
+		bool bRevertToHullTrace = false
+		);
+
+	void TraceRealtime(CBaseCombatCharacter *pTracer);
 
 #ifdef BB2_AI	
 	void RemoveNpcData(int index) // clear specific NPC's history 
@@ -139,12 +166,24 @@ public:
 	}
 #endif //BB2_AI
 
-	bool IsCurrentlyDoingLagCompensation() const OVERRIDE{ return m_isCurrentlyDoingCompensation; }
-
 private:
-	void DoFastBacktrack(CBasePlayer *player, CBaseCombatCharacter *pEntity, float flTargetTime, CUtlVector<LagCompEntry> &list);
-	void AnalyzeFastBacktracks(CBasePlayer *player, CUtlVector<LagCompEntry> &list, float maxrange);
-	Vector GetNearestHitboxPos(CBaseCombatCharacter *pEntity, const Vector &from, Vector &chestHBOXPos);
+	float GetSimulationTime(CBasePlayer *player);
+
+	void DoFastBacktrack(CBaseCombatCharacter *pEntity, float flTargetTime, LagCompEntry &entry);
+	void AnalyzeFastBacktracks(
+		CBasePlayer *player,
+		CUtlVector<LagCompEntry> &list,
+		const Vector& vecAbsStart,
+		const Vector& vecAbsEnd,
+		const Vector &hullMin,
+		const Vector &hullMax,
+		ITraceFilter *pFilter,
+		trace_t *ptr,
+		float maxrange = MAX_TRACE_LENGTH,
+		bool bRevertToHullTrace = false
+		);
+
+	Vector GetNearestHitboxPos(CBaseCombatCharacter *pEntity, const Vector &from, Vector &chestHBOXPos, int &hitgroup);
 	Vector GetChestHitboxPos(CBaseCombatCharacter *pEntity);
 
 	void ClearHistory()
@@ -164,9 +203,7 @@ private:
 	CUtlFixedLinkedList< LagRecord > m_EntityTrack[MAX_AIS];
 #endif //BB2_AI
 
-	CBasePlayer *m_pCurrentPlayer;	// The player we are doing lag compensation for
 	float m_flTeleportDistanceSqr;
-	bool m_isCurrentlyDoingCompensation;
 };
 
 static CLagCompensationManager g_LagCompensationManager("CLagCompensationManager");
@@ -236,8 +273,8 @@ void CLagCompensationManager::FrameUpdatePostEntityThink()
 		LagRecord &record = track->Element(track->AddToHead());
 
 		record.m_fFlags = 0;
-		if (pPlayer->IsAlive())		
-			record.m_fFlags |= LC_ALIVE;		
+		if (pPlayer->IsAlive())
+			record.m_fFlags |= LC_ALIVE;
 
 		record.m_flSimulationTime = pPlayer->GetSimulationTime();
 		record.m_vecOrigin = pPlayer->GetLocalOrigin();
@@ -292,8 +329,8 @@ void CLagCompensationManager::FrameUpdatePostEntityThink()
 		LagRecord &record = track->Element(track->AddToHead());
 
 		record.m_fFlags = 0;
-		if (pNPC->IsAlive())		
-			record.m_fFlags |= LC_ALIVE;		
+		if (pNPC->IsAlive())
+			record.m_fFlags |= LC_ALIVE;
 
 		record.m_flSimulationTime = pNPC->GetSimulationTime();
 		record.m_vecOrigin = pNPC->GetLocalOrigin();
@@ -301,39 +338,154 @@ void CLagCompensationManager::FrameUpdatePostEntityThink()
 		record.m_vecMinsPreScaled = pNPC->WorldAlignMins();
 	}
 #endif //BB2_AI
-
-	//Clear the current player.
-	m_pCurrentPlayer = NULL;
-	m_isCurrentlyDoingCompensation = false;
 }
 
-// Called during player movement to set up/restore after lag compensation
-void CLagCompensationManager::StartLagCompensation(CBasePlayer *player, CUserCmd *cmd, float maxrange)
+void CLagCompensationManager::TraceRealtime(
+	CBaseCombatCharacter *pTracer,
+	const Vector& vecAbsStart,
+	const Vector& vecAbsEnd,
+	const Vector &hullMin,
+	const Vector &hullMax,
+	ITraceFilter *pFilter,
+	trace_t *ptr,
+	float maxrange,
+	bool bRevertToHullTrace)
 {
-	if (!player || !cmd)
-		return;
+	CHL2MP_Player *player = ToHL2MPPlayer(pTracer);
+	if (player)
+		player->SetLagCompVecPos(vec3_invalid);
 
-	// DONT LAG COMP AGAIN THIS FRAME IF THERES ALREADY ONE IN PROGRESS
-	// IF YOU'RE HITTING THIS THEN IT MEANS THERES A CODE BUG
-	if (m_pCurrentPlayer || m_isCurrentlyDoingCompensation)
+	// Only players can make use of the lag comp features!
+	if ((gpGlobals->maxClients <= 1) ||
+		!sv_unlag.GetBool() ||
+		(player == NULL) ||
+		(player->GetTeamNumber() <= TEAM_SPECTATOR) ||
+		player->IsObserver() ||
+		!player->IsAlive() ||
+		player->IsBot() ||
+		(player->GetCurrentCommand() == NULL))
 	{
-		Warning("Trying to start a new lag compensation session while one is already active!\n");
+		if (ptr && pFilter)
+		{
+			AI_TraceLine(vecAbsStart, vecAbsEnd, MASK_SHOT, pFilter, ptr);
+			if (bRevertToHullTrace && (ptr->fraction == 1.0f))
+				AI_TraceHull(vecAbsStart, vecAbsEnd, hullMin, hullMax, MASK_SHOT_HULL, pFilter, ptr);
+		}
+
 		return;
 	}
 
-	if (!player->m_bLagCompensation		// Player not wanting lag compensation
-		|| (gpGlobals->maxClients <= 1)	// no lag compensation in single player
-		|| !sv_unlag.GetBool()				// disabled by server admin
-		|| player->IsBot() 				// not for bots
-		|| player->IsObserver()			// not for spectators
-		)
-		return;
+	CUserCmd *cmd = player->GetCurrentCommand();
+	g_vecPlayerStartPos = vecAbsStart;
 
-	m_pCurrentPlayer = player;
-	m_isCurrentlyDoingCompensation = true;
+	VPROF_BUDGET("TraceRealtime", "CLagCompensationManager");
 
-	// NOTE: Put this here so that it won't show up in single player mode.
-	VPROF_BUDGET("StartLagCompensation", VPROF_BUDGETGROUP_OTHER_NETWORKING);
+	float tick = GetSimulationTime(player);
+	CUtlVector<LagCompEntry> potentialEntries;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex(i);
+		if (!pPlayer || (player->entindex() == pPlayer->entindex()))
+			continue;
+
+		if (!pPlayer->IsAlive() || (pPlayer->GetTeamNumber() <= TEAM_SPECTATOR) || pPlayer->IsObserver() ||
+			!player->WantsLagCompensationOnEntity(pPlayer, cmd))
+			continue;
+
+		LagCompEntry item(pPlayer);
+		DoFastBacktrack(pPlayer, tick, item);
+		potentialEntries.AddToTail(item);
+	}
+
+#ifdef BB2_AI
+	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
+	int nAIs = g_AI_Manager.NumAIs();
+	for (int i = 0; i < nAIs; i++)
+	{
+		CAI_BaseNPC *pNPC = ppAIs[i];
+		if (!pNPC)
+			continue;
+
+		// Only compensate 'valid' npcs.
+		if ((pNPC->Classify() == CLASS_NONE) ||
+			(pNPC->GetCollisionGroup() == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) ||
+			!pNPC->IsAlive() ||
+			(pNPC->GetAIIndex() <= -1))
+			continue;
+
+		Disposition_t rel = pNPC->IRelationType(player);
+		if (rel == D_LI)
+		{
+			// If we like this player, continue, however if we're infected we still want to lag comp enemy zombies!! Despite them considering us as allies until we turn fully.
+			if (!(player->IsHuman() && pNPC->IsZombie(true)))
+				continue;
+		}
+
+		if (!player->WantsLagCompensationOnEntity(pNPC, cmd))
+			continue;
+
+		LagCompEntry item(pNPC);
+		DoFastBacktrack(pNPC, tick, item);
+		potentialEntries.AddToTail(item);
+	}
+#endif //BB2_AI
+
+	AnalyzeFastBacktracks(player, potentialEntries, vecAbsStart, vecAbsEnd, hullMin, hullMax, pFilter, ptr, maxrange, bRevertToHullTrace);
+
+	potentialEntries.Purge();
+
+	// We were unable to hit anything, revert to default:
+	if (ptr && pFilter && ptr->m_pEnt == NULL)
+	{
+		AI_TraceLine(vecAbsStart, vecAbsEnd, MASK_SHOT, pFilter, ptr);
+		if (bRevertToHullTrace && (ptr->fraction == 1.0f))
+			AI_TraceHull(vecAbsStart, vecAbsEnd, hullMin, hullMax, MASK_SHOT_HULL, pFilter, ptr);
+	}
+}
+
+void CLagCompensationManager::TraceRealtime(
+	CBaseCombatCharacter *pTracer,
+	const Vector& vecAbsStart,
+	const Vector& vecAbsEnd,
+	const Vector &hullMin,
+	const Vector &hullMax,
+	const IHandleEntity *ignore,
+	int collisionGroup,
+	trace_t *ptr,
+	float maxrange,
+	bool bRevertToHullTrace)
+{
+	CTraceFilterSimple filter(ignore, collisionGroup);
+	TraceRealtime(pTracer,
+		vecAbsStart, vecAbsEnd,
+		hullMin, hullMax,
+		&filter, ptr, maxrange, bRevertToHullTrace);
+}
+
+void CLagCompensationManager::TraceRealtime(CBaseCombatCharacter *pTracer)
+{
+	Assert(pTracer != NULL);
+	Vector vecStart = pTracer->Weapon_ShootPosition();
+	Vector vecForward;
+	AngleVectors(pTracer->EyeAngles(), &vecForward);
+	VectorNormalize(vecForward);
+
+	TraceRealtime(
+		pTracer,
+		vecStart,
+		(vecStart + vecForward * MAX_TRACE_LENGTH),
+		-Vector(3, 3, 3),
+		Vector(3, 3, 3),
+		NULL,
+		NULL);
+}
+
+float CLagCompensationManager::GetSimulationTime(CBasePlayer *player)
+{
+	Assert(player != NULL);
+	CUserCmd *cmd = player->GetCurrentCommand();
+	Assert(cmd != NULL);
 
 	// Get true latency
 	// correct is the amout of time we have to correct game time
@@ -364,76 +516,17 @@ void CLagCompensationManager::StartLagCompensation(CBasePlayer *player, CUserCmd
 	if (fabs(deltaTime) > 0.2f)
 	{
 		// difference between cmd time and latency is too big > 200ms, use time correction based on latency
-		// DevMsg("StartLagCompensation: delta too big (%.3f)\n", deltaTime );
 		targettick = gpGlobals->tickcount - TIME_TO_TICKS(correct);
 	}
 
-	CUtlVector<LagCompEntry> potentialEntries;
-	const CBitVec<MAX_EDICTS> *pEntityTransmitBits = engine->GetEntityTransmitBitsForClient(player->entindex() - 1);
-
-	// Iterate all active players
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CBasePlayer *pPlayer = UTIL_PlayerByIndex(i);
-		if (!pPlayer || player == pPlayer)
-			continue;
-
-		if (!pPlayer->IsAlive() || (pPlayer->GetTeamNumber() <= TEAM_SPECTATOR))
-			continue;
-
-		// Custom checks for if things should lag compensate (based on things like what team the player is on).
-		if (!player->WantsLagCompensationOnEntity(pPlayer, cmd, pEntityTransmitBits))
-			continue;
-
-		// Move other player back in time
-		DoFastBacktrack(player, pPlayer, TICKS_TO_TIME(targettick), potentialEntries);
-	}
-
-#ifdef BB2_AI
-	// also iterate all monsters 
-	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
-	int nAIs = g_AI_Manager.NumAIs();
-	for (int i = 0; i < nAIs; i++)
-	{
-		CAI_BaseNPC *pNPC = ppAIs[i];
-		if (!pNPC)
-			continue;
-
-		// Only compensate 'valid' npcs.
-		if ((pNPC->GetSleepState() != AISS_AWAKE) ||
-			(pNPC->Classify() == CLASS_NONE) ||
-			(pNPC->GetCollisionGroup() == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) ||
-			!pNPC->IsAlive() ||
-			pNPC->IsStaticNPC() ||
-			(pNPC->GetAIIndex() <= -1))
-			continue;
-
-		Disposition_t rel = pNPC->IRelationType(player);
-		if (rel == D_LI)
-		{
-			// If we like this player, continue, however if we're infected we still want to lag comp enemy zombies!! Despite them considering us as allies until we turn fully.
-			if (!(player->IsHuman() && pNPC->IsZombie(true)))
-				continue;
-		}
-
-		if (!player->WantsLagCompensationOnEntity(pNPC, cmd, pEntityTransmitBits))
-			continue;
-
-		// Move NPC back in time 
-		DoFastBacktrack(player, pNPC, TICKS_TO_TIME(targettick), potentialEntries);
-	}
-#endif //BB2_AI
-
-	AnalyzeFastBacktracks(player, potentialEntries, maxrange);
-
-	potentialEntries.Purge();
+	return (TICKS_TO_TIME(targettick));
 }
 
-void CLagCompensationManager::DoFastBacktrack(CBasePlayer *player, CBaseCombatCharacter *pEntity, float flTargetTime, CUtlVector<LagCompEntry> &list)
+void CLagCompensationManager::DoFastBacktrack(CBaseCombatCharacter *pEntity, float flTargetTime, LagCompEntry &entry)
 {
-	Vector org, mins, maxs;
-
 	VPROF_BUDGET("DoFastBacktrack", "CLagCompensationManager");
+
+	Vector org, mins, maxs;
 
 	// get track history of this entity
 	int index = pEntity->entindex() - 1; // PLR indx.
@@ -448,8 +541,8 @@ void CLagCompensationManager::DoFastBacktrack(CBasePlayer *player, CBaseCombatCh
 		track = &m_EntityTrack[index];
 
 	// check if we have at leat one entry
-	if (!track || track->Count() <= 0)
-		return;
+	if (!track || track->Count() <= 0)	
+		return;	
 
 	int curr = track->Head();
 
@@ -530,39 +623,10 @@ void CLagCompensationManager::DoFastBacktrack(CBasePlayer *player, CBaseCombatCh
 		maxs = record->m_vecMaxsPreScaled;
 	}
 
-	// See if this represents a change for the entity
-	int flags = 0;
-
-	Vector orgdiff = pEntity->GetLocalOrigin() - org;
-
-	if (pEntity->IsPlayer())
-	{
-		if (mins != pEntity->CollisionProp()->OBBMinsPreScaled() || maxs != pEntity->CollisionProp()->OBBMaxsPreScaled())
-			flags |= LC_SIZE_CHANGED;
-	}
-	else
-	{
-		if ((mins != pEntity->WorldAlignMins()) || (maxs != pEntity->WorldAlignMaxs()))
-			flags |= LC_SIZE_CHANGED;
-	}
-
-	if (orgdiff.LengthSqr() > LAG_COMPENSATION_EPS_SQR)
-		flags |= LC_ORIGIN_CHANGED;
-
-	if (!flags)
-		return; // we didn't change anything
-
-	LagCompEntry item;
-	item.m_hEntity = pEntity;
-	item.originalPos = pEntity->GetLocalOrigin();
-	item.lagCompedPos = org;
-	item.differencePos = pEntity->GetLocalOrigin() - org;
-	item.boundsMin = mins;
-	item.boundsMax = maxs;
-	item.callerPos = player->Weapon_ShootPosition();
-	item.endDirection = vec3_invalid;
-
-	list.AddToTail(item);
+	entry.lagCompedPos = org;
+	entry.differencePos = pEntity->GetLocalOrigin() - org;
+	entry.boundsMin = mins;
+	entry.boundsMax = maxs;
 }
 
 int __cdecl SortLagCompEntriesPredicate(const LagCompEntry *data1, const LagCompEntry *data2)
@@ -579,12 +643,22 @@ int __cdecl SortLagCompEntriesPredicate(const LagCompEntry *data1, const LagComp
 	return 1;
 }
 
-void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVector<LagCompEntry> &list, float maxrange)
+void CLagCompensationManager::AnalyzeFastBacktracks(
+	CBasePlayer *player,
+	CUtlVector<LagCompEntry> &list,
+	const Vector& vecAbsStart,
+	const Vector& vecAbsEnd,
+	const Vector &hullMin,
+	const Vector &hullMax,
+	ITraceFilter *pFilter,
+	trace_t *ptr,
+	float maxrange,
+	bool bRevertToHullTrace)
 {
 	VPROF_BUDGET("AnalyzeFastBacktracks", "CLagCompensationManager");
 
-	if (!player)
-		return;
+	if (ptr)
+		ptr->m_pEnt = NULL;
 
 	if (list.Count() <= 0)
 	{
@@ -594,30 +668,27 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 		return;
 	}
 
-	Vector vecForward = player->GetAutoaimVector(1.0f);
-	Vector vecStart = player->Weapon_ShootPosition();
-	VectorNormalize(vecForward);
+	Vector vecRight, vecUp;
+	AngleVectors(player->EyeAngles(), NULL, &vecRight, &vecUp);
 
-	Vector traceCheckHullMins = Vector(-3, -3, -3);
-	Vector traceCheckHullMaxs = Vector(3, 3, 3);
-	bool bCanUseBiggerHull = false;
+	Vector vecForward = (vecAbsEnd - vecAbsStart);
+	Vector vecStart = vecAbsStart;
+
+	VectorNormalize(vecForward);
+	VectorNormalize(vecRight);
+	VectorNormalize(vecUp);
+
+	Vector vecMeleeBoundsTemp = (vecForward * (abs(maxrange) * 0.5f) + vecRight * 20.0f + vecUp * 8.0f), vecMeleeBounds = vec3_origin;
+	VectorMax(-vecMeleeBoundsTemp, vecMeleeBoundsTemp, vecMeleeBounds);
+
 	CBaseCombatWeapon *pActiveWeapon = player->GetActiveWeapon();
-	if (pActiveWeapon)
-	{
-		int meleeAttackType = pActiveWeapon->m_iMeleeAttackType.Get();
-		bCanUseBiggerHull = (meleeAttackType == MELEE_TYPE_SLASH) || (meleeAttackType == MELEE_TYPE_BASH_SLASH);
-		if (meleeAttackType > 0)
-		{
-			traceCheckHullMins = Vector(-5, -5, -5);
-			traceCheckHullMaxs = Vector(5, 5, 5);
-		}
-	}
+	bool bCanUseBiggerHull = pActiveWeapon ?
+		(pActiveWeapon->m_iMeleeAttackType.Get() == MELEE_TYPE_SLASH || pActiveWeapon->m_iMeleeAttackType.Get() == MELEE_TYPE_BASH_SLASH) : false;
 
 	int numEnts = list.Count();
 	for (int i = (numEnts - 1); i >= 0; i--) // Keep valid items, remove the rest.
 	{
 		LagCompEntry *entry = &list[i];
-
 		CBaseCombatCharacter *pEntity = entry->m_hEntity.Get();
 		if (!pEntity)
 		{
@@ -625,13 +696,8 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 			continue;
 		}
 
-		float rangeMax = maxrange;
-		float extraDeviation = MELEE_BBOX_MAX_DEVIATION;
-		if (rangeMax <= MAX_MELEE_LAGCOMP_DIST)
-			rangeMax += extraDeviation;
-
-		Vector vecCurrentForward = vecForward * rangeMax;
-		Vector vecWepPos = vecStart + (vecCurrentForward * 0.5f);
+		Vector vecCurrentForward = vecForward * abs(maxrange);
+		Vector vecWepPos = vecStart + vecForward * (abs(maxrange) * 0.5f);
 
 		CBaseTrace tr;
 		IntersectRayWithBox(vecStart, vecCurrentForward, entry->lagCompedPos + entry->boundsMin, entry->lagCompedPos + entry->boundsMax, 0.0f, &tr);
@@ -644,7 +710,7 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 				pEntity->DrawServerHitboxes((entry->lagCompedPos - entry->originalPos), 2.0f, true);
 
 			Vector chestHitboxPos = vec3_invalid;
-			Vector vecNearestPosToHitbox = GetNearestHitboxPos(pEntity, (tr.endpos + entry->differencePos), chestHitboxPos);
+			Vector vecNearestPosToHitbox = GetNearestHitboxPos(pEntity, (tr.endpos + entry->differencePos), chestHitboxPos, entry->hitgroup);
 			if (vecNearestPosToHitbox != vec3_invalid)
 				entry->endDirection = vecNearestPosToHitbox - tr.startpos;
 			else
@@ -653,7 +719,10 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 				if (bCanUseBiggerHull)
 				{
 					if (chestHitboxPos != vec3_invalid)
+					{
 						entry->endDirection = (chestHitboxPos - tr.startpos);
+						entry->hitgroup = HITGROUP_CHEST;
+					}
 					else
 					{
 						Vector vecAutoCorrector = (entry->lagCompedPos - tr.startpos);
@@ -665,32 +734,37 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 
 			continue;
 		}
-		else if (bCanUseBiggerHull)
+		else if (bCanUseBiggerHull &&
+			(IsBoxIntersectingBox(
+			entry->lagCompedPos + entry->boundsMin,
+			entry->lagCompedPos + entry->boundsMax,
+			vecWepPos - vecMeleeBounds,
+			vecWepPos + vecMeleeBounds) || IsBoxIntersectingBox(
+			entry->originalPos + entry->boundsMin,
+			entry->originalPos + entry->boundsMax,
+			vecWepPos - vecMeleeBounds,
+			vecWepPos + vecMeleeBounds)))
 		{
-			if (IsBoxIntersectingBox(
-				vecWepPos + pActiveWeapon->GetMeleeBoundsMin() + Vector(-extraDeviation, -extraDeviation, 0),
-				vecWepPos + pActiveWeapon->GetMeleeBoundsMax() + Vector(extraDeviation, extraDeviation, 0),
-				entry->lagCompedPos + entry->boundsMin,
-				entry->lagCompedPos + entry->boundsMax))
+			if (sv_lagflushbonecache.GetBool())
+				pEntity->InvalidateBoneCache();
+
+			if (sv_showlagcompensation.GetInt() >= 1)
+				pEntity->DrawServerHitboxes((entry->lagCompedPos - entry->originalPos), 2.0f, true);
+
+			Vector chestHitboxPos = GetChestHitboxPos(pEntity);
+			if (chestHitboxPos != vec3_invalid)
 			{
-				if (sv_lagflushbonecache.GetBool())
-					pEntity->InvalidateBoneCache();
-
-				if (sv_showlagcompensation.GetInt() >= 1)
-					pEntity->DrawServerHitboxes((entry->lagCompedPos - entry->originalPos), 2.0f, true);
-
-				Vector chestHitboxPos = GetChestHitboxPos(pEntity);
-				if (chestHitboxPos != vec3_invalid)
-					entry->endDirection = chestHitboxPos - vecStart;
-				else
-				{
-					Vector vecAutoCorrector = (entry->lagCompedPos - vecStart);
-					vecAutoCorrector.z += (0.55f * (entry->boundsMax - entry->boundsMin).z);
-					entry->endDirection = vecAutoCorrector + entry->differencePos;
-				}
-
-				continue;
+				entry->endDirection = chestHitboxPos - vecStart;
+				entry->hitgroup = HITGROUP_CHEST;
 			}
+			else
+			{
+				Vector vecAutoCorrector = (entry->lagCompedPos - vecStart);
+				vecAutoCorrector.z += (0.55f * (entry->boundsMax - entry->boundsMin).z);
+				entry->endDirection = vecAutoCorrector + entry->differencePos;
+			}
+
+			continue;
 		}
 
 		list.Remove(i);
@@ -700,14 +774,13 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 	if (list.Count() > 1)
 		list.Sort(SortLagCompEntriesPredicate);
 
-	Vector vecWantedLagPosVec = vec3_invalid;
 	trace_t trace;
-	CTraceFilterOnlyNPCsAndPlayer filter(player, COLLISION_GROUP_NONE);
+	CTraceFilterRealtime filter(player, player->GetCollisionGroup(), pActiveWeapon);
 
 	numEnts = list.Count();
 	for (int i = 0; i < numEnts; i++)
 	{
-		if (i >= BB2_LAGCOMP_HIT_MAX)
+		if ((i + 1) >= BB2_LAGCOMP_HIT_MAX)
 			break;
 
 		LagCompEntry *entry = &list[i];
@@ -715,41 +788,42 @@ void CLagCompensationManager::AnalyzeFastBacktracks(CBasePlayer *player, CUtlVec
 		if (!pEntity)
 			continue;
 
+		Vector vecEndPos = (vecStart + entry->endDirection);
 		VectorNormalize(entry->endDirection);
-		Vector vecStartPos = entry->callerPos;
-		Vector vecEndPos = vecStartPos + entry->endDirection * MAX_TRACE_LENGTH;
 
-		if (maxrange <= MAX_MELEE_LAGCOMP_DIST) // Melee will not allow 'bullet pene'. <.<
-		{
-			UTIL_TraceLine(vecStartPos, vecEndPos, MASK_SHOT, player, COLLISION_GROUP_NONE, &trace); // A simple trace against hitboxes.
-			if ((trace.fraction == 1.0f) || (trace.m_pEnt != pEntity)) // Nothing? Try a hull.
-				UTIL_TraceHull(vecStartPos, vecEndPos, traceCheckHullMins, traceCheckHullMaxs, MASK_SHOT_HULL, player, COLLISION_GROUP_NONE, &trace);
-		}
+		// Check if this pos is invalid:
+		if (ptr == NULL)
+			UTIL_TraceLine(vecStart, vecEndPos, MASK_SHOT, &filter, &trace);
 		else
-		{
-			UTIL_TraceLine(vecStartPos, vecEndPos, MASK_SHOT, &filter, &trace); // A simple trace against hitboxes.
-			if ((trace.fraction == 1.0f) || (trace.m_pEnt != pEntity)) // Nothing? Try a hull.
-				UTIL_TraceHull(vecStartPos, vecEndPos, traceCheckHullMins, traceCheckHullMaxs, MASK_SHOT_HULL, &filter, &trace);
-		}
+			UTIL_TraceHull(vecStart, vecEndPos, hullMin, hullMax, MASK_SHOT_HULL, &filter, &trace);
 
 		// Draw hitboxes + hit pos.
 		if (sv_showlagcompensation.GetInt() >= 1)
 		{
-			NDebugOverlay::BoxDirection(trace.endpos, -Vector(5, 5, 5), Vector(5, 5, 5), entry->endDirection, 100, 255, 255, 20, 4.0f);
+			NDebugOverlay::BoxDirection(trace.endpos, hullMin, hullMax, entry->endDirection, 100, 255, 255, 20, 4.0f);
 			pEntity->DrawServerHitboxes(4.0f, true);
 		}
 
-		if ((trace.fraction == 1.0f) || (trace.m_pEnt != pEntity))
+		if (trace.DidHit() && (trace.m_pEnt != pEntity))
 			continue;
 
-		vecWantedLagPosVec = (trace.endpos - trace.startpos);
+		// Force a 'hit':
+		if (ptr)
+		{
+			ptr->m_pEnt = (CBaseEntity*)pEntity;
+			ptr->fraction = 0.0f;
+			ptr->allsolid = ptr->startsolid = false;
+			ptr->hitgroup = entry->hitgroup;
+			ptr->endpos = vecEndPos;
+			ptr->startpos = vecAbsStart;
+		}
+
+		player->SetLagCompVecPos((vecEndPos - vecAbsStart));
 		break;
 	}
-
-	player->SetLagCompVecPos(vecWantedLagPosVec);
 }
 
-Vector CLagCompensationManager::GetNearestHitboxPos(CBaseCombatCharacter *pEntity, const Vector &from, Vector &chestHBOXPos)
+Vector CLagCompensationManager::GetNearestHitboxPos(CBaseCombatCharacter *pEntity, const Vector &from, Vector &chestHBOXPos, int &hitgroup)
 {
 	if (!pEntity)
 		return vec3_invalid;
@@ -798,6 +872,7 @@ Vector CLagCompensationManager::GetNearestHitboxPos(CBaseCombatCharacter *pEntit
 	if (!IsPointInBox(from, vecNearest + newMins, vecNearest + newMaxs))
 		return vec3_invalid;
 
+	hitgroup = pTargetHBOX->group;
 	return vecNearest;
 }
 
@@ -831,22 +906,4 @@ Vector CLagCompensationManager::GetChestHitboxPos(CBaseCombatCharacter *pEntity)
 	}
 
 	return vec3_invalid;
-}
-
-void CLagCompensationManager::FinishLagCompensation(CBasePlayer *player)
-{
-	VPROF_BUDGET_FLAGS("FinishLagCompensation", VPROF_BUDGETGROUP_OTHER_NETWORKING, BUDGETFLAG_CLIENT | BUDGETFLAG_SERVER);
-
-	if (player && player->IsBot())
-		return;
-
-	if (player == NULL || m_isCurrentlyDoingCompensation == false || m_pCurrentPlayer == NULL || (player != m_pCurrentPlayer))
-	{
-		Warning("Unable to finish lag compensation!\n");
-		return;
-	}
-
-	player->SetLagCompVecPos(vec3_invalid);
-	m_isCurrentlyDoingCompensation = false;
-	m_pCurrentPlayer = NULL;
 }

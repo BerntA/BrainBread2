@@ -2267,18 +2267,7 @@ void CFuncTank::Fire( int bulletCount, const Vector &barrelEnd, const Vector &fo
 
 	if( pAttacker && pAttacker->IsPlayer() )
 	{
-		if ( IsX360() )
-		{
-#ifdef BB2_AI
-			UTIL_GetNearestPlayer(GetAbsOrigin())->RumbleEffect( RUMBLE_AR2, 0, RUMBLE_FLAG_RESTART | RUMBLE_FLAG_RANDOM_AMPLITUDE ); 
-#else
-UTIL_PlayerByIndex(1)->RumbleEffect( RUMBLE_AR2, 0, RUMBLE_FLAG_RESTART | RUMBLE_FLAG_RANDOM_AMPLITUDE );
-#endif //BB2_AI
-		}
-		else
-		{
-			CSoundEnt::InsertSound( SOUND_MOVE_AWAY, barrelEnd + forward * 32.0f, 32.0f, 0.2f, pAttacker, SOUNDENT_CHANNEL_WEAPON );
-		}
+		CSoundEnt::InsertSound(SOUND_MOVE_AWAY, barrelEnd + forward * 32.0f, 32.0f, 0.2f, pAttacker, SOUNDENT_CHANNEL_WEAPON);
 	}
 
 
@@ -4260,17 +4249,17 @@ void CFuncTankCombineCannon::FuncTankPostThink()
 			AddSpawnFlags( SF_TANK_AIM_AT_POS );
 
 			Vector vecTargetPosition = GetTargetPosition();
-			#ifdef BB2_AI
-			CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this); 
+#ifdef BB2_AI
+			CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this);
 #else
-CBasePlayer *pPlayer = AI_GetSinglePlayer();
+			CBasePlayer *pPlayer = AI_GetSinglePlayer();
 #endif //BB2_AI
 
-            // Fixing null pointers on ep2_outland_09.
+			// Fixing null pointers on ep2_outland_09.
 			if (pPlayer == NULL)
 			{
-			CreateBeam();
-			return;
+				CreateBeam();
+				return;
 			}
 
 			Vector vecToPlayer = pPlayer->WorldSpaceCenter() - GetAbsOrigin();
@@ -4424,13 +4413,11 @@ void CFuncTankCombineCannon::MakeTracer( const Vector &vecTracerSrc, const trace
 	// If the shot passed near the player, shake the screen.
 	// Updated for multiplayer.
 #ifdef BB2_AI
-	
-		CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this);
-		if ( pPlayer == NULL)
-		{
+	CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this);
+	if (pPlayer == NULL)
 		return;
-		}
-		Vector vecPlayer = pPlayer->EyePosition();
+
+	Vector vecPlayer = pPlayer->EyePosition();
 #else
 		if( AI_IsSinglePlayer() )
 		{

@@ -280,8 +280,6 @@ public:
 	virtual void MeleeAttackUpdate(void);
 	virtual void MeleeAttackTrace(void);
 	virtual bool ImpactWater(const Vector &start, const Vector &end);
-	virtual Vector GetMeleeBoundsMax(void);
-	virtual Vector GetMeleeBoundsMin(void);
 	virtual float GetRange(void);
 	virtual float GetDamageForActivity(Activity hitActivity);
 	virtual int GetMeleeDamageType(void) { return DMG_SLASH; }

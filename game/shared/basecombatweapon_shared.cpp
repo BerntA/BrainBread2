@@ -2433,62 +2433,10 @@ void CBaseCombatWeapon::MeleeAttackUpdate(void)
 	if (m_flLastTraceTime <= gpGlobals->curtime)
 	{
 		m_flLastTraceTime = gpGlobals->curtime + TRACE_FREQUENCY;
-
-		// Move other players back to history positions based on local player's lag
-		lagcompensation->StartLagCompensation(pPlayer, pPlayer->GetCurrentCommand(), GetRange());
-
 		MeleeAttackTrace();
-
-		// Move other players back to history positions based on local player's lag
-		lagcompensation->FinishLagCompensation(pPlayer);
 	}
 #endif
 }
-
-#ifndef CLIENT_DLL
-class CTraceFilterMeleeNew : public CTraceFilterSimple
-{
-public:
-	DECLARE_CLASS(CTraceFilterMeleeNew, CTraceFilterSimple);
-
-	CTraceFilterMeleeNew(IHandleEntity *pHandleEntity, int collisionGroup, CBaseCombatWeapon *pWeapon) :
-		BaseClass(pHandleEntity, collisionGroup)
-	{
-		m_hWeaponLink = pWeapon;
-	}
-
-	virtual bool ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask)
-	{
-		CBaseCombatWeapon *pWeaponActive = m_hWeaponLink.Get();
-		if (pWeaponActive)
-		{
-			int entityIndexHit = -1;
-			int ownerIndex = pWeaponActive->GetOwner() ? pWeaponActive->GetOwner()->entindex() : -1;
-			CBaseEntity *pEntity = EntityFromEntityHandle(pHandleEntity);
-			if (pEntity)
-			{
-				entityIndexHit = pEntity->entindex();
-				if (entityIndexHit == ownerIndex || entityIndexHit == pWeaponActive->entindex())
-					return false;
-
-				if (!pWeaponActive->CanHitThisTarget(entityIndexHit))
-					return false;
-			}
-
-			bool ret = BaseClass::ShouldHitEntity(pHandleEntity, contentsMask);
-			if (ret && (entityIndexHit >= 0))
-				pWeaponActive->StruckTarget(entityIndexHit);
-
-			return ret;
-		}
-
-		return BaseClass::ShouldHitEntity(pHandleEntity, contentsMask);
-	}
-
-protected:
-	CHandle<CBaseCombatWeapon> m_hWeaponLink;
-};
-#endif
 
 void CBaseCombatWeapon::MeleeAttackTrace(void)
 {
@@ -2501,30 +2449,24 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 	if (!pvm)
 		return;
 
-	trace_t traceHit;
 	float range = GetRange();
+
+	trace_t traceHit;
 	Vector swingStart = pOwner->Weapon_ShootPosition();
 	Vector forward;
 	AngleVectors(pOwner->EyeAngles(), &forward);
-
-	Vector vecLagCompPos = pOwner->GetLagCompPos();
-	if (vecLagCompPos != vec3_invalid)
-	{
-		forward = vecLagCompPos;
-		range = MAX_TRACE_LENGTH;
-	}
 
 	VectorNormalize(forward);
 	Vector swingEnd = swingStart + (forward * range);
 
 	IPredictionSystem::SuppressHostEvents(NULL);
-	CTraceFilterMeleeNew traceFilter(pOwner, COLLISION_GROUP_NONE, this);
+	CTraceFilterRealtime traceFilter(pOwner, COLLISION_GROUP_NONE, this);
 
 	Activity activity = pvm->GetSequenceActivity(pvm->GetSequence());
 
-	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT, &traceFilter, &traceHit); // Try a simple trace first, allowing headshots.
-	if (traceHit.fraction == 1.0)
-		UTIL_TraceHull(swingStart, swingEnd, Vector(-5, -5, -5), Vector(5, 5, 5), MASK_SHOT_HULL, &traceFilter, &traceHit); // Try a small hull.
+	lagcompensation->TraceRealtime(pOwner, swingStart, swingEnd, -Vector(5, 5, 5), Vector(5, 5, 5), &traceFilter, &traceHit, range, true);
+	forward = (traceHit.endpos - traceHit.startpos);
+	VectorNormalize(forward);
 
 	if (traceHit.fraction == 1.0f)
 		ImpactWater(swingStart, swingEnd);
@@ -2542,6 +2484,8 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 
 			if (bHitWorld)
 				StruckTarget(0);
+			else
+				StruckTarget(pHitEnt->entindex());
 
 			CTakeDamageInfo info(GetOwner(), GetOwner(), GetDamageForActivity(activity), GetMeleeDamageType());
 			CalculateMeleeDamageForce(&info, forward, traceHit.endpos);
@@ -2565,20 +2509,10 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 				}
 			}
 
-			IPhysicsSurfaceProps *physprops = MoveHelper()->GetSurfaceProps();
-			if (physprops)
-			{
-				const char *szSurfProp = physprops->GetPropName(traceHit.surface.surfaceProps);
-				if (szSurfProp)
-				{
-					if (Q_stristr(szSurfProp, "flesh"))
-						WeaponSound(MELEE_HIT);
-					else
-						WeaponSound(MELEE_HIT_WORLD);
-				}
-			}
-			else
+			if (pHitEnt->IsNPC() || pHitEnt->IsPlayer())
 				WeaponSound(MELEE_HIT);
+			else
+				WeaponSound(MELEE_HIT_WORLD);
 		}
 
 		// See if we hit water (we don't do the other impact effects in this case)
@@ -2658,20 +2592,6 @@ bool CBaseCombatWeapon::ImpactWater(const Vector &start, const Vector &end)
 float CBaseCombatWeapon::GetDamageForActivity(Activity hitActivity)
 {
 	return GetSpecialDamage();
-}
-
-Vector CBaseCombatWeapon::GetMeleeBoundsMax(void)
-{
-	float range = abs((GetRange() / 2.0f));
-	if (range <= 10.0f)
-		return Vector(10, 10, 10);
-
-	return Vector(range, range, 10);
-}
-
-Vector CBaseCombatWeapon::GetMeleeBoundsMin(void)
-{
-	return -GetMeleeBoundsMax();
 }
 
 float CBaseCombatWeapon::GetRange(void)

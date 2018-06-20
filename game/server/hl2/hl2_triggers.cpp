@@ -299,6 +299,8 @@ void CTriggerWeaponStrip::StartTouch(CBaseEntity *pOther)
 		return;
 
 	CBaseCombatCharacter *pCharacter = pOther->MyCombatCharacterPointer();
+	if (pCharacter == NULL)
+		return;
 	
 	if ( m_bKillWeapons )
 	{
@@ -317,13 +319,6 @@ void CTriggerWeaponStrip::StartTouch(CBaseEntity *pOther)
 	// Strip the player of his weapons
 	if ( pCharacter && pCharacter->IsAllowedToPickupWeapons() )
 	{
-		CBaseCombatWeapon *pBugbait = pCharacter->Weapon_OwnsThisType( "weapon_bugbait" );
-		if ( pBugbait )
-		{
-			pCharacter->Weapon_Drop( pBugbait );
-			UTIL_Remove( pBugbait );
-		}
-
 		pCharacter->Weapon_DropAll( true );
 		pCharacter->SetPreventWeaponPickup( true );
 	}

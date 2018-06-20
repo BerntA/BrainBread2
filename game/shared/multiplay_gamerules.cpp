@@ -99,8 +99,8 @@ ConVar bb2_enable_scaling("bb2_enable_scaling", "1", FCVAR_REPLICATED, "Should N
 
 ConVar bb2_spawn_protection("bb2_spawn_protection", "5", FCVAR_REPLICATED, "Player Spawn Protection Time(sec) On Spawn!", true, 0.0f, true, 10.0f);
 
-ConVar bb2_zombie_lifespan_max("bb2_zombie_lifespan_max", "1.5", FCVAR_REPLICATED, "The max amount of minutes a regular zombie will last before automatically dying.", true, 0.5f, true, 4.0f);
-ConVar bb2_zombie_lifespan_min("bb2_zombie_lifespan_min", "0.5", FCVAR_REPLICATED, "The min amount of minutes a regular zombie will last before automatically dying.", true, 0.5f, true, 4.0f);
+ConVar bb2_zombie_lifespan_max("bb2_zombie_lifespan_max", "0.6", FCVAR_REPLICATED, "The max amount of minutes a regular zombie will last before automatically dying.", true, 0.1f, true, 4.0f);
+ConVar bb2_zombie_lifespan_min("bb2_zombie_lifespan_min", "0.3", FCVAR_REPLICATED, "The min amount of minutes a regular zombie will last before automatically dying.", true, 0.1f, true, 4.0f);
 
 ConVar bb2_zombie_max("bb2_zombie_max", "50", FCVAR_REPLICATED, "Maximum amount of zombies allowed in the game.", true, 1.0f, true, 128.0f);
 

@@ -200,17 +200,16 @@ bool CAI_LeadBehavior::CanSelectSchedule()
 
 void CAI_LeadBehavior::BeginScheduleSelection()
 {
-	#ifdef BB2_AI
-		CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(GetOuter()); 
-		
-		if ( !pPlayer ) 
-		{
-		pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-		SetTarget( pPlayer ); 
-		}
-	#else
-		SetTarget( AI_GetSinglePlayer() );
-	#endif //BB2_AI
+#ifdef BB2_AI
+	CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(GetOuter());
+	if (!pPlayer)
+	{
+		pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+		SetTarget(pPlayer);
+	}
+#else
+	SetTarget( AI_GetSinglePlayer() );
+#endif //BB2_AI
 
 	CAI_Expresser *pExpresser = GetOuter()->GetExpresser();
 	if ( pExpresser )
@@ -345,11 +344,8 @@ bool CAI_LeadBehavior::PlayerIsAheadOfMe( bool bForce )
 	m_bInitialAheadTest = false;
 
 	Vector vecClosestPoint;
-	#ifdef BB2_AI
-	if ( GetClosestPointOnRoute( UTIL_GetNearestPlayer(GetAbsOrigin())->GetAbsOrigin(), &vecClosestPoint ) ) 
-#else
-if ( GetClosestPointOnRoute( AI_GetSinglePlayer()->GetAbsOrigin(), &vecClosestPoint ) )
-#endif //BB2_AI
+	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+	if (pPlayer && GetClosestPointOnRoute(pPlayer->GetAbsOrigin(), &vecClosestPoint))
 	{
 		// If the closest point is not right next to me, then 
 		// the player is somewhere ahead of me on the route.
@@ -563,20 +559,14 @@ int CAI_LeadBehavior::SelectSchedule()
 		// Player's here, but does he have the weapon we want him to have?
 		if ( m_weaponname != NULL_STRING )
 		{
-			#ifdef BB2_AI
-				CBasePlayer *pFollower = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-			#else
-				CBasePlayer *pFollower = AI_GetSinglePlayer();
-			#endif //BB2_AI
-
+			CBasePlayer *pFollower = UTIL_GetNearestPlayer(GetAbsOrigin());
 			if ( pFollower && !pFollower->Weapon_OwnsThisType( STRING(m_weaponname) ) )
 			{
 				// If the safety timeout has run out, just give the player the weapon
 				if ( !m_flWeaponSafetyTimeOut || (m_flWeaponSafetyTimeOut > gpGlobals->curtime) )
 					return SCHED_LEAD_PLAYERNEEDSWEAPON;
 
-				string_t iszItem = AllocPooledString( "weapon_bugbait" );
-				pFollower->GiveNamedItem( STRING(iszItem) );
+				// TODO
 			}
 		}
 

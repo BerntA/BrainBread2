@@ -636,37 +636,6 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 void CAI_BaseNPC::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool bCalledByLevelDesigner )
 {
 	BaseClass::Ignite( flFlameLifetime, bNPCOnly, flSize, bCalledByLevelDesigner );
-
-#ifdef BB2_AI
-		#ifdef HL2_EPISODIC 
-		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
-		if ( pPlayer->IRelationType( this ) != D_LI ) 
-		{ 
-			CNPC_Alyx *alyx = CNPC_Alyx::GetAlyx(); 
-
-			if ( alyx ) 
-			{ 
-				alyx->EnemyIgnited( this ); 
-			} 
-		} 
-		#endif //HL2_EPISODIC
-#else
-	#ifdef HL2_EPISODIC
-	if ( AI_IsSinglePlayer() )
-	{
-		CBasePlayer *pPlayer = AI_GetSinglePlayer();
-		if ( pPlayer->IRelationType( this ) != D_LI )
-		{
-			CNPC_Alyx *alyx = CNPC_Alyx::GetAlyx();
-
-			if ( alyx )
-			{
-				alyx->EnemyIgnited( this );
-			}
-		}
-	}
-	#endif //HL2_EPISODIC
-#endif //BB2_AI
 }
 
 //-----------------------------------------------------------------------------
@@ -797,7 +766,7 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 #ifdef BB2_AI
 			if( pAttacker && pAttacker->IsAlive() && UTIL_GetNearestPlayer(GetAbsOrigin()) ) 
 #else
-if( pAttacker && pAttacker->IsAlive() && pPlayer )
+			if( pAttacker && pAttacker->IsAlive() && pPlayer )
 #endif //BB2_AI
 			{
 				if( pAttacker->GetSquad() != NULL && pAttacker->IsInPlayerSquad() )
@@ -4843,43 +4812,21 @@ void CAI_BaseNPC::RunAI( void )
 		}
 	}
 
-	#ifdef BB2_AI
-		if( ai_debug_loners.GetBool() && !IsInSquad() ) 
-		{
+	if (ai_debug_loners.GetBool() && !IsInSquad())
+	{
 		Vector right;
 		Vector vecPoint;
 
-		vecPoint = EyePosition() + Vector( 0, 0, 12 );
+		vecPoint = EyePosition() + Vector(0, 0, 12);
 
-		#ifdef BB2_AI
-			UTIL_GetNearestPlayer(GetAbsOrigin())->GetVectors( NULL, &right, NULL ); 
-		#else
-			UTIL_GetLocalPlayer()->GetVectors( NULL, &right, NULL );
-		#endif //BB2_AI
+		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+		if (pPlayer)
+			pPlayer->GetVectors(NULL, &right, NULL);
 
-		NDebugOverlay::Line( vecPoint, vecPoint + Vector( 0, 0, 64 ), 255, 0, 0, false , 0.1 );
-		NDebugOverlay::Line( vecPoint, vecPoint + Vector( 0, 0, 32 ) + right * 32, 255, 0, 0, false , 0.1 );
-		NDebugOverlay::Line( vecPoint, vecPoint + Vector( 0, 0, 32 ) - right * 32, 255, 0, 0, false , 0.1 );
-		}
-	#else
-		if( ai_debug_loners.GetBool() && !IsInSquad() && AI_IsSinglePlayer() )
-		{
-		Vector right;
-		Vector vecPoint;
-
-		vecPoint = EyePosition() + Vector( 0, 0, 12 );
-
-		#ifdef BB2_AI
-			UTIL_GetNearestPlayer(GetAbsOrigin())->GetVectors( NULL, &right, NULL ); 
-		#else
-			UTIL_GetLocalPlayer()->GetVectors( NULL, &right, NULL );
-		#endif //BB2_AI
-
-		NDebugOverlay::Line( vecPoint, vecPoint + Vector( 0, 0, 64 ), 255, 0, 0, false , 0.1 );
-		NDebugOverlay::Line( vecPoint, vecPoint + Vector( 0, 0, 32 ) + right * 32, 255, 0, 0, false , 0.1 );
-		NDebugOverlay::Line( vecPoint, vecPoint + Vector( 0, 0, 32 ) - right * 32, 255, 0, 0, false , 0.1 );
-		}
-	#endif //BB2_AI
+		NDebugOverlay::Line(vecPoint, vecPoint + Vector(0, 0, 64), 255, 0, 0, false, 0.1);
+		NDebugOverlay::Line(vecPoint, vecPoint + Vector(0, 0, 32) + right * 32, 255, 0, 0, false, 0.1);
+		NDebugOverlay::Line(vecPoint, vecPoint + Vector(0, 0, 32) - right * 32, 255, 0, 0, false, 0.1);
+	}
 
 	
 #ifdef _DEBUG
@@ -9963,10 +9910,10 @@ CBaseEntity *CAI_BaseNPC::FindNamedEntity( const char *name, IEntityFindFilter *
 {
 	if ( !stricmp( name, "!player" ))
 	{
-		#ifdef BB2_AI
+#ifdef BB2_AI
 		return UTIL_GetNearestPlayer(GetAbsOrigin()); 
 #else
-return ( CBaseEntity * )AI_GetSinglePlayer();
+		return ( CBaseEntity * )AI_GetSinglePlayer();
 #endif //BB2_AI
 	}
 	else if ( !stricmp( name, "!enemy" ) )
@@ -9982,10 +9929,10 @@ return ( CBaseEntity * )AI_GetSinglePlayer();
 	{
 		// FIXME: look at CBaseEntity *CNPCSimpleTalker::FindNearestFriend(bool fPlayer)
 		// punt for now
-		#ifdef BB2_AI
+#ifdef BB2_AI
 		return UTIL_GetNearestPlayer(GetAbsOrigin()); 
 #else
-return ( CBaseEntity * )AI_GetSinglePlayer();
+		return ( CBaseEntity * )AI_GetSinglePlayer();
 #endif //BB2_AI
 	}
 	else if (!stricmp( name, "self" ))
@@ -10006,10 +9953,10 @@ return ( CBaseEntity * )AI_GetSinglePlayer();
 		{
 			DevMsg( "ERROR: \"player\" is no longer used, use \"!player\" in vcd instead!\n" );
 		}
-		#ifdef BB2_AI
+#ifdef BB2_AI
 		return UTIL_GetNearestPlayer(GetAbsOrigin()); 
 #else
-return ( CBaseEntity * )AI_GetSinglePlayer();
+		return ( CBaseEntity * )AI_GetSinglePlayer();
 #endif //BB2_AI
 	}
 	else
@@ -11979,10 +11926,10 @@ bool CAI_BaseNPC::CineCleanup()
 			{
 				SetLocalOrigin( origin );
 
-				#ifdef BB2_AI
-				int drop = UTIL_DropToFloor( this, MASK_NPCSOLID, UTIL_GetNearestVisiblePlayer(this) ); 
+#ifdef BB2_AI
+				int drop = UTIL_DropToFloor(this, MASK_NPCSOLID, UTIL_GetNearestVisiblePlayer(this));
 #else
-int drop = UTIL_DropToFloor( this, MASK_NPCSOLID, UTIL_GetLocalPlayer() );
+				int drop = UTIL_DropToFloor( this, MASK_NPCSOLID, UTIL_GetLocalPlayer() );
 #endif //BB2_AI
 
 				// Origin in solid?  Set to org at the end of the sequence
@@ -12063,7 +12010,7 @@ bool CAI_BaseNPC::FindSpotForNPCInRadius( Vector *pResult, const Vector &vStartP
 	#ifdef BB2_AI
 	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(pNPC->GetAbsOrigin()); 
 #else
-CBasePlayer *pPlayer = AI_GetSinglePlayer();
+	CBasePlayer *pPlayer = AI_GetSinglePlayer();
 #endif //BB2_AI
 
 	QAngle fan;
@@ -12604,19 +12551,7 @@ bool CAI_BaseNPC::IsPlayerAlly( CBasePlayer *pPlayer )
 { 
 	if ( pPlayer == NULL )
 	{
-		// in multiplayer mode we need a valid pPlayer 
-		// or override this virtual function
-		#ifndef BB2_AI
-			if ( !AI_IsSinglePlayer() ) 
-			return false; 
-		#endif //BB2_AI
-
-		// NULL means single player mode
-		#ifdef BB2_AI
-			pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-		#else
-			pPlayer = UTIL_GetLocalPlayer();
-		#endif //BB2_AI
+		pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin(), true);
 	}
 
 	return ( !pPlayer || IRelationType( pPlayer ) == D_LI ); 
@@ -12914,9 +12849,9 @@ bool CAI_BaseNPC::FindNearestValidGoalPos( const Vector &vTestPoint, Vector *pRe
 	if ( vCandidate != vec3_invalid )
 	{
 		#ifdef BB2_AI
-		AI_Waypoint_t *pPathToPoint = GetPathfinder()->BuildRoute( GetAbsOrigin(), vCandidate, UTIL_GetNearestPlayer(GetAbsOrigin()), 5*12, NAV_NONE, true ); 
+		AI_Waypoint_t *pPathToPoint = GetPathfinder()->BuildRoute( GetAbsOrigin(), vCandidate, UTIL_GetNearestPlayer(GetAbsOrigin(), true), 5*12, NAV_NONE, true ); 
 #else
-AI_Waypoint_t *pPathToPoint = GetPathfinder()->BuildRoute( GetAbsOrigin(), vCandidate, AI_GetSinglePlayer(), 5*12, NAV_NONE, true );
+		AI_Waypoint_t *pPathToPoint = GetPathfinder()->BuildRoute( GetAbsOrigin(), vCandidate, AI_GetSinglePlayer(), 5*12, NAV_NONE, true );
 #endif //BB2_AI
 
 		if ( pPathToPoint )

@@ -3666,7 +3666,7 @@ void CAI_BaseNPC::RunTask( const Task_t *pTask )
 						if( pHint )
 						{
 							#ifdef BB2_AI
-								CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
+								CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin(), true); 
 							#else
 								CBasePlayer *pPlayer = AI_GetSinglePlayer();
 							#endif //BB2_AI

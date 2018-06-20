@@ -669,7 +669,7 @@ CBasePlayer *UTIL_GetLocalPlayer( void )
 	return NULL;
 }
 
-CBasePlayer *UTIL_GetNearestPlayer( const Vector &origin )
+CBasePlayer *UTIL_GetNearestPlayer(const Vector &origin, bool bNoMatterWhat)
 {
 	float distToNearest = FLT_MAX;
 	CBasePlayer *pNearest = NULL;
@@ -680,8 +680,11 @@ CBasePlayer *UTIL_GetNearestPlayer( const Vector &origin )
 		if ( !pPlayer )
 			continue;
 
-		if (!pPlayer->IsAlive() || pPlayer->IsObserver() || (pPlayer->GetTeamNumber() <= TEAM_SPECTATOR))
-			continue;
+		if (bNoMatterWhat == false)
+		{
+			if (!pPlayer->IsAlive() || pPlayer->IsObserver() || (pPlayer->GetTeamNumber() <= TEAM_SPECTATOR))
+				continue;
+		}
 
 		float flDist = (pPlayer->GetLocalOrigin() - origin).LengthSqr();
 		if ( flDist < distToNearest )
@@ -744,7 +747,7 @@ CBasePlayer *UTIL_GetMostDistantPlayer(CBasePlayer *pIgnore, const Vector &origi
 	return pPlayerInTheDistantHorizon;
 }
 
-CBasePlayer *UTIL_GetNearestVisiblePlayer( CBaseEntity *pLooker, int mask )
+CBasePlayer *UTIL_GetNearestVisiblePlayer(CBaseEntity *pLooker, int mask, bool bNoMatterWhat)
 {							
 	if (!pLooker)
 		return NULL;
@@ -758,8 +761,11 @@ CBasePlayer *UTIL_GetNearestVisiblePlayer( CBaseEntity *pLooker, int mask )
 		if ( !pPlayer )
 			continue;
 
-		if (!pPlayer->IsAlive() || pPlayer->IsObserver() || (pPlayer->GetTeamNumber() <= TEAM_SPECTATOR))
-			continue;
+		if (bNoMatterWhat == false)
+		{
+			if (!pPlayer->IsAlive() || pPlayer->IsObserver() || (pPlayer->GetTeamNumber() <= TEAM_SPECTATOR))
+				continue;
+		}
 
 		float flDist = (pPlayer->GetLocalOrigin() - pLooker->GetLocalOrigin()).LengthSqr();
 		if ( flDist < distToNearest && pLooker->FVisible( pPlayer, mask ) )

@@ -661,10 +661,10 @@ CNPCSpawnDestination *CTemplateNPCMaker::FindSpawnDestination()
 			Vector vecTest = pDestination->GetAbsOrigin();
 
 		#ifdef BB2_AI
-			pPlayer = UTIL_GetNearestPlayer(vecTest); 
+			pPlayer = UTIL_GetNearestPlayer(vecTest, true); 
 		#endif //BB2_AI
 
-			if( m_CriterionVisibility != TS_YN_DONT_CARE )
+			if (pPlayer && (m_CriterionVisibility != TS_YN_DONT_CARE))
 			{
 				// Right now View Cone check is omitted intentionally.
 				Vector vecTopOfHull = NAI_Hull::Maxs( HULL_HUMAN );
@@ -732,7 +732,7 @@ CNPCSpawnDestination *CTemplateNPCMaker::FindSpawnDestination()
 				Vector vecTest = pDestinations[ i ]->GetAbsOrigin();
 
 			#ifdef BB2_AI
-				pPlayer = UTIL_GetNearestPlayer(vecTest); 
+				pPlayer = UTIL_GetNearestPlayer(vecTest, true); 
 			#endif //BB2_AI
 
 				float flDist = ( vecTest - pPlayer->GetAbsOrigin() ).Length();

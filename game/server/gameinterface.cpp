@@ -2732,17 +2732,14 @@ void CServerGameClients::ClientSettingsChanged( edict_t *pEdict )
 	
 #if !defined( NO_ENTITY_PREDICTION )
 	bool usePrediction = Q_atoi( QUICKGETCVARVALUE("cl_predict")) != 0;
-
 	if ( usePrediction )
 	{
 		player->m_bPredictWeapons  = Q_atoi( QUICKGETCVARVALUE("cl_predictweapons")) != 0;
-		player->m_bLagCompensation = Q_atoi( QUICKGETCVARVALUE("cl_lagcompensation")) != 0;
 	}
 	else
 #endif
 	{
 		player->m_bPredictWeapons  = false;
-		player->m_bLagCompensation = false;
 	}
 	
 

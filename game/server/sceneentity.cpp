@@ -2276,19 +2276,7 @@ bool CSceneEntity::CheckActors()
 					if ( IsRunningScriptedSceneWithSpeech( pActor ) )
 					{
 						bShouldWait = true;
-					}
-					
-#ifdef HL2_EPISODIC
-					// HACK: Alyx cannot play scenes when she's in the middle of transitioning					
-					if ( pActor->IsInAVehicle() )
-					{
-						CNPC_Alyx *pAlyx = dynamic_cast<CNPC_Alyx *>(pActor);
-						if ( pAlyx != NULL && ( pAlyx->GetPassengerState() == PASSENGER_STATE_ENTERING || pAlyx->GetPassengerState() == PASSENGER_STATE_EXITING ) )
-						{
-							bShouldWait = true;
-						}
-					}
-#endif // HL2_EPISODIC
+					}				
 				}
 
 				if ( pActor->GetExpresser() && pActor->GetExpresser()->IsSpeaking() )
@@ -3715,7 +3703,7 @@ CBaseEntity *CSceneEntity::FindNamedEntity( const char *name, CBaseEntity *pActo
 #ifdef BB2_AI
 		entity = UTIL_GetNearestPlayer(GetAbsOrigin()); 
 #else
-entity = ( gpGlobals->maxClients == 1 ) ? ( CBaseEntity * )UTIL_GetLocalPlayer() : NULL;
+		entity = ( gpGlobals->maxClients == 1 ) ? ( CBaseEntity * )UTIL_GetLocalPlayer() : NULL;
 #endif //BB2_AI
 	}
 	else if ( !stricmp( name, "!target1" ) )
@@ -3846,7 +3834,7 @@ CBaseEntity *CSceneEntity::FindNamedEntityClosest( const char *name, CBaseEntity
 #ifdef BB2_AI
 		entity = UTIL_GetNearestPlayer(GetAbsOrigin()); 
 #else
-entity = ( gpGlobals->maxClients == 1 ) ? ( CBaseEntity * )UTIL_GetLocalPlayer() : NULL;		
+		entity = ( gpGlobals->maxClients == 1 ) ? ( CBaseEntity * )UTIL_GetLocalPlayer() : NULL;		
 #endif //BB2_AI
 		return entity;
 	}

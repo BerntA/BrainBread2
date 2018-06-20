@@ -33,7 +33,6 @@
 #include "ai_behavior_follow.h"
 #include "ai_behavior_lead.h"
 #include "gameinterface.h"
-#include "ilagcompensationmanager.h"
 
 #ifdef HL2_DLL
 #include "hl2_player.h"
@@ -1386,10 +1385,11 @@ void CTriggerPush::Touch( CBaseEntity *pOther )
 #endif
 
 			Vector vecPush = (m_flPushSpeed * vecAbsDir);
-			if ( ( pOther->GetFlags() & FL_BASEVELOCITY ) && !lagcompensation->IsCurrentlyDoingLagCompensation() )
+			if (pOther->GetFlags() & FL_BASEVELOCITY)
 			{
 				vecPush = vecPush + pOther->GetBaseVelocity();
 			}
+
 			if ( vecPush.z > 0 && (pOther->GetFlags() & FL_ONGROUND) )
 			{
 				pOther->SetGroundEntity( NULL );
@@ -1924,7 +1924,7 @@ void CTriggerCamera::Enable( void )
 #ifdef BB2_AI
 		m_hPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
 #else
-m_hPlayer = UTIL_GetLocalPlayer();
+		m_hPlayer = UTIL_GetLocalPlayer();
 #endif //BB2_AI
 
 	}
@@ -2121,12 +2121,14 @@ void CTriggerCamera::Disable( void )
 		m_hPlayer->m_takedamage = m_nOldTakeDamage;
 	}
 
-	//BB2_MISC_FIXES 
+	// BB2_MISC_FIXES 
 #ifdef BB2_AI	
 	CBasePlayer *m_hPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
 #endif //BB2_AI
-	//return the player to previous takedamage state
-	m_hPlayer->m_takedamage = m_nOldTakeDamage;
+
+	// return the player to previous takedamage state
+	if (m_hPlayer)
+		m_hPlayer->m_takedamage = m_nOldTakeDamage;
 
 	m_state = USE_OFF;
 	m_flReturnTime = gpGlobals->curtime;
