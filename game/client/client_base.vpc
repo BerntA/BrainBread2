@@ -228,6 +228,7 @@ $Project
 		$Folder "Shaders"
 		{
 			$File "bb2/BloodyTextureProxy.cpp"
+			$File "bb2/TeamTextureProxy.cpp"
 			$File "bb2/GlobalRenderEffects.cpp"
 			$File "bb2/GlobalRenderEffects.h"
 		}

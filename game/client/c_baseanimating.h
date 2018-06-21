@@ -617,6 +617,8 @@ private:
 	CNetworkVar( unsigned char, m_nMuzzleFlashParity );
 	unsigned char m_nOldMuzzleFlashParity;
 
+	float							m_flLastMuzzleFlashLightTime;
+
 	bool							m_bInitModelEffects;
 
 	// Dynamic models

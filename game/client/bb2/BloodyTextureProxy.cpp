@@ -50,6 +50,9 @@ C_BloodyTextureProxy::~C_BloodyTextureProxy()
 
 void C_BloodyTextureProxy::FireGameEvent(IGameEvent *event)
 {
+	if (blendFactor == NULL)
+		return;
+
 	const char *type = event->GetName();
 	if (!strcmp(type, "round_start"))
 	{
@@ -68,7 +71,10 @@ bool C_BloodyTextureProxy::Init(IMaterial *pMaterial, KeyValues *pKeyValues)
 	bool found;
 	blendFactor = pMaterial->FindVar("$detailblendfactor", &found, false);
 	if (!found)
+	{
+		blendFactor = NULL;
 		return false;
+	}
 
 	return true;
 }
@@ -81,7 +87,7 @@ C_BaseEntity *C_BloodyTextureProxy::BindArgToEntity(void *pArg)
 
 void C_BloodyTextureProxy::OnBind(void* pC_BaseEntity)
 {
-	if (!pC_BaseEntity)
+	if (!pC_BaseEntity || (blendFactor == NULL))
 		return;
 
 	C_HL2MP_Player *pLocal = C_HL2MP_Player::GetLocalHL2MPPlayer();
@@ -120,6 +126,9 @@ void C_BloodyTextureProxy::OnBind(void* pC_BaseEntity)
 
 IMaterial *C_BloodyTextureProxy::GetMaterial()
 {
+	if (blendFactor == NULL)
+		return NULL;
+
 	return blendFactor->GetOwningMaterial();
 }
 

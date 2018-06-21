@@ -688,7 +688,7 @@ bool CBasePlayer::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const
 	if (pPlayer)
 		maxspeed = pPlayer->MaxSpeed();
 	else
-		maxspeed = 235.0f;
+		maxspeed = 250.0f;
 
 	float maxDistance = 1.5 * maxspeed * sv_maxunlag.GetFloat();
 
@@ -703,7 +703,7 @@ bool CBasePlayer::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const
 	Vector vDiff = vHisOrigin - vMyOrigin;
 	VectorNormalize(vDiff);
 
-	if (GetAngleForDotProduct(vForward, vDiff) > 60.0f)
+	if (GetAngleForDotProduct(vForward, vDiff) > 30.0f)
 		return false;
 
 	return true;

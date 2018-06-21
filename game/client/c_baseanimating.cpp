@@ -715,6 +715,7 @@ C_BaseAnimating::C_BaseAnimating() :
 	m_nMuzzleFlashParity = 0;
 
 	m_flModelScale = 1.0f;
+	m_flLastMuzzleFlashLightTime = 0.0f;
 
 	m_iEyeAttachment = 0;
 #ifdef _XBOX
@@ -3349,7 +3350,7 @@ void C_BaseAnimating::ProcessMuzzleFlashEvent()
 	if ( muzzleflash_light.GetBool() )
 	{
 		//FIXME: We should really use a named attachment for this
-		if ( m_Attachments.Count() > 0 )
+		if ((m_Attachments.Count() > 0) && (gpGlobals->curtime >= m_flLastMuzzleFlashLightTime))
 		{
 			Vector vAttachment, vAng;
 			QAngle angles;
@@ -3368,6 +3369,8 @@ void C_BaseAnimating::ProcessMuzzleFlashEvent()
 			dl->die = gpGlobals->curtime + 0.05f;
 			dl->radius = random->RandomFloat( 245.0f, 256.0f );
 			dl->decay = 512.0f;
+
+			m_flLastMuzzleFlashLightTime = gpGlobals->curtime + 0.1f; // Prevent DLights from spawning too frequently, wait for it to die before spawning a new one!!!
 		}
 	}
 }

@@ -14,6 +14,7 @@
 #include "hl2mp_gamerules.h"
 #include "hl2mp_player.h"
 #include "GameBase_Server.h"
+#include "collisionutils.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -27,7 +28,7 @@ enum ZombieClassTypes
 
 ConVar bb2_zombie_spawner_distance("bb2_zombie_spawner_distance", "5200", FCVAR_REPLICATED, "If there is no players within this distance from the spawner it will not spawn any zombies.", true, 200.0f, false, 0.0f);
 
-bool IsAllowedToSpawn(CBaseEntity *pEntity, float distance, bool bCheckVisible)
+bool IsAllowedToSpawn(CBaseEntity *pEntity, float distance, float zDiff, bool bCheckVisible)
 {
 	if (!pEntity)
 		return false;
@@ -43,6 +44,19 @@ bool IsAllowedToSpawn(CBaseEntity *pEntity, float distance, bool bCheckVisible)
 
 		if (pEntity->GetLocalOrigin().DistTo(pClient->GetLocalOrigin()) > distance)
 			continue;
+
+		if (pEntity->CollisionProp() && IsBoxIntersectingBox(
+			(pEntity->GetLocalOrigin() + pEntity->CollisionProp()->OBBMins()),
+			(pEntity->GetLocalOrigin() + pEntity->CollisionProp()->OBBMaxs()),
+			(pClient->GetLocalOrigin() + pClient->WorldAlignMins()),
+			(pClient->GetLocalOrigin() + pClient->WorldAlignMaxs())))
+		{
+			return true;
+		}
+
+		float diff = abs((pEntity->GetLocalOrigin() - pClient->GetLocalOrigin()).z);
+		if ((zDiff > 0.0f) && (diff > zDiff))		
+			continue;		
 
 		if (bCheckVisible && !pEntity->FVisible(pClient, MASK_VISIBLE))
 			continue;
@@ -73,9 +87,11 @@ DEFINE_OUTPUT(m_OnForceStop, "OnStop"),
 
 // Hammer Keyfields
 DEFINE_KEYFIELD(m_iTypeToSpawn, FIELD_INTEGER, "ZombieType"),
-DEFINE_KEYFIELD(ZombieSpawnNum, FIELD_INTEGER, "ZombieNumber"),
+DEFINE_KEYFIELD(m_iZombiesToSpawn, FIELD_INTEGER, "ZombieNumber"),
 DEFINE_KEYFIELD(m_flMaxDistance, FIELD_FLOAT, "MaximumDistance"),
-DEFINE_KEYFIELD(SpawnInterval, FIELD_FLOAT, "SpawnInterval"),
+DEFINE_KEYFIELD(m_flMaxZDifference, FIELD_FLOAT, "MaximumZDifference"),
+DEFINE_KEYFIELD(m_flSpawnInterval, FIELD_FLOAT, "SpawnInterval"),
+DEFINE_KEYFIELD(m_flSpawnFrequency, FIELD_FLOAT, "SpawnFrequency"),
 DEFINE_KEYFIELD(m_flRandomSpawnPercent, FIELD_FLOAT, "RandomSpawnChance"),
 DEFINE_KEYFIELD(m_bSpawnNoMatterWhat, FIELD_BOOLEAN, "AutoSpawn"),
 
@@ -93,9 +109,9 @@ LINK_ENTITY_TO_CLASS(zombie_volume, CZombieVolume);
 
 CZombieVolume::CZombieVolume(void)
 {
-	SpawnInterval = 10.0f;
+	m_flSpawnInterval = 10.0f;
 	m_flRandomSpawnPercent = 20.0f;
-	ZombieSpawnNum = 5;
+	m_iZombiesToSpawn = 5;
 	m_iSpawnNum = 0;
 	m_iTypeToSpawn = 0;
 	m_flNextSpawnWave = 0.0f;
@@ -108,6 +124,8 @@ CZombieVolume::CZombieVolume(void)
 	goalInterruptType = DAMAGEORDEATH_INTERRUPTABILITY;
 
 	m_flMaxDistance = bb2_zombie_spawner_distance.GetFloat();
+	m_flMaxZDifference = 0.0f;
+	m_flSpawnFrequency = 0.0f;
 }
 
 void CZombieVolume::Spawn()
@@ -118,19 +136,16 @@ void CZombieVolume::Spawn()
 	SetModel(STRING(GetModelName()));
 	m_nRenderMode = kRenderEnvironmental;
 
-	if (ZombieSpawnNum > 50)
-		ZombieSpawnNum = 50;
-	else if (ZombieSpawnNum <= 0)
-		ZombieSpawnNum = 5;
+	if (m_iZombiesToSpawn > 50)
+		m_iZombiesToSpawn = 50;
+	else if (m_iZombiesToSpawn <= 0)
+		m_iZombiesToSpawn = 5;
 
 	if (HasSpawnFlags(SF_STARTACTIVE))
 	{
-		m_OnWaveSpawned.FireOutput(this, this);
-		m_flNextSpawnWave = gpGlobals->curtime + SpawnInterval;
-		m_iSpawnNum = 0;
-
+		m_flNextSpawnWave = 0.0f;
 		SetThink(&CZombieVolume::VolumeThink);
-		SetNextThink(gpGlobals->curtime + bb2_spawn_frequency.GetFloat());
+		SetNextThink(gpGlobals->curtime + 0.01f);
 	}
 }
 
@@ -138,28 +153,26 @@ void CZombieVolume::VolumeThink()
 {
 	if (m_flNextSpawnWave <= gpGlobals->curtime)
 	{
-		m_flNextSpawnWave = gpGlobals->curtime + SpawnInterval;
+		m_flNextSpawnWave = gpGlobals->curtime + m_flSpawnInterval;
 		m_OnWaveSpawned.FireOutput(this, this);
 		m_iSpawnNum = 0;
 	}
 
-	if (m_bSpawnNoMatterWhat || IsAllowedToSpawn(this, m_flMaxDistance, (HasSpawnFlags(SF_NOVISCHECK) == false)))
+	// If the round has started + we haven't  reached any limits, try to spawn!
+	if (HL2MPRules()->CanSpawnZombie() && (m_iSpawnNum < m_iZombiesToSpawn) && HL2MPRules()->m_bRoundStarted && !HL2MPRules()->IsGameoverOrScoresVisible())
 	{
-		if ((HL2MPRules()->CanSpawnZombie()) && (m_iSpawnNum < ZombieSpawnNum))
+		if (m_bSpawnNoMatterWhat || IsAllowedToSpawn(this, m_flMaxDistance, m_flMaxZDifference, (HasSpawnFlags(SF_NOVISCHECK) == false)))
 			SpawnWave();
 	}
 
-	SetNextThink(gpGlobals->curtime + bb2_spawn_frequency.GetFloat());
+	SetNextThink(gpGlobals->curtime + GetSpawnFrequency());
 }
 
 void CZombieVolume::InputStartSpawn(inputdata_t &inputData)
 {
-	m_flNextSpawnWave = gpGlobals->curtime + SpawnInterval;
-	m_iSpawnNum = 0;
-
+	m_flNextSpawnWave = 0.0f;
 	SetThink(&CZombieVolume::VolumeThink);
-	SetNextThink(gpGlobals->curtime + bb2_spawn_frequency.GetFloat());
-
+	SetNextThink(gpGlobals->curtime + 0.01f);
 	m_OnForceSpawned.FireOutput(this, this);
 }
 
@@ -167,6 +180,14 @@ void CZombieVolume::InputStopSpawn(inputdata_t &inputData)
 {
 	SetThink(NULL);
 	m_OnForceStop.FireOutput(this, this);
+}
+
+float CZombieVolume::GetSpawnFrequency(void)
+{
+	if (m_flSpawnFrequency > 0.0f)
+		return m_flSpawnFrequency;
+
+	return bb2_spawn_frequency.GetFloat();
 }
 
 void CZombieVolume::TraceZombieBBox(const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm, CBaseEntity *pEntity)
@@ -177,8 +198,8 @@ void CZombieVolume::TraceZombieBBox(const Vector& start, const Vector& end, unsi
 	// Here the zombies will spawn standing up, not lying down, use a smaller hull!
 	if (HasSpawnFlags(SF_FASTSPAWN))
 	{
-		ZombieMins = Vector(-16, -16, 0);
-		ZombieMax = Vector(16, 16, 75);
+		ZombieMins = Vector(-18, -18, 0);
+		ZombieMax = Vector(18, 18, 75);
 	}
 
 	Ray_t ray;
@@ -188,11 +209,6 @@ void CZombieVolume::TraceZombieBBox(const Vector& start, const Vector& end, unsi
 
 void CZombieVolume::SpawnWave()
 {
-	// We wait until the round has begun.
-	if (!HL2MPRules()->m_bRoundStarted)
-		return;
-
-	bool bCouldSpawn = true;
 	Vector vecBoundsMaxs = CollisionProp()->OBBMaxs(),
 		vecBoundsMins = CollisionProp()->OBBMins();
 
@@ -208,49 +224,36 @@ void CZombieVolume::SpawnWave()
 	TraceZombieBBox(newPos, newPos + vecDown * MAX_TRACE_LENGTH, MASK_NPCSOLID, COLLISION_GROUP_NPC, tr, this);
 
 	// We hit an entity which means there is already something in this part of the volume! Ignore and continue to next part of the volume!
-	CBaseEntity *pEntity = tr.m_pEnt;
-	if (pEntity)
-	{
-		if (!FClassnameIs(pEntity, "worldspawn"))
-		{
-			DevMsg(2, "A zombie couldn't spawn at %f %f %f!\n", tr.endpos.x, tr.endpos.y, tr.endpos.z);
-			bCouldSpawn = false;
-		}
-	}
-
-	if (tr.startsolid || tr.DidHitNonWorldEntity())
+	if (tr.startsolid || tr.allsolid || tr.DidHitNonWorldEntity())
 	{
 		DevMsg(2, "A zombie couldn't spawn at %f %f %f!\n", tr.endpos.x, tr.endpos.y, tr.endpos.z);
-		bCouldSpawn = false;
+		return;
 	}
 
-	if (bCouldSpawn)
+	CAI_BaseNPC *npcZombie = (CAI_BaseNPC*)CreateEntityByName(GetZombieClassnameToSpawn());
+	if (npcZombie)
 	{
-		CAI_BaseNPC *npcZombie = (CAI_BaseNPC*)CreateEntityByName(GetZombieClassnameToSpawn());
-		if (npcZombie)
+		QAngle randomAngle = QAngle(0, random->RandomFloat(-180.0f, 180.0f), 0);
+		npcZombie->SetAbsOrigin(tr.endpos);
+		npcZombie->SetAbsAngles(randomAngle);
+		if (HasSpawnFlags(SF_FASTSPAWN))
+			npcZombie->SpawnDirectly(); // Skip zombie fade-in + rise stuff, use fast spawn for npcs which spawn in a hidden place, will make them spawn faster + more efficient.
+
+		npcZombie->Spawn();
+		// UTIL_DropToFloor(npcZombie, MASK_NPCSOLID);
+
+		if (goalEntity != NULL_STRING)
 		{
-			QAngle randomAngle = QAngle(0, random->RandomFloat(-180.0f, 180.0f), 0);
-			npcZombie->SetAbsOrigin(tr.endpos);
-			npcZombie->SetAbsAngles(randomAngle);
-			if (HasSpawnFlags(SF_FASTSPAWN))
-				npcZombie->SpawnDirectly(); // Skip zombie fade-in + rise stuff, use fast spawn for npcs which spawn in a hidden place, will make them spawn faster + more efficient.
+			CBaseEntity *pTarget = gEntList.FindEntityByName(NULL, STRING(goalEntity));
+			if (!pTarget)
+				pTarget = gEntList.FindEntityByClassname(NULL, STRING(goalEntity));
 
-			npcZombie->Spawn();
-			//UTIL_DropToFloor(npcZombie, MASK_NPCSOLID);
-
-			if (goalEntity != NULL_STRING)
-			{
-				CBaseEntity *pTarget = gEntList.FindEntityByName(NULL, STRING(goalEntity));
-				if (!pTarget)
-					pTarget = gEntList.FindEntityByClassname(NULL, STRING(goalEntity));
-
-				if (pTarget)
-					npcZombie->SpawnRunSchedule(pTarget, ((Activity)goalActivity), (goalType >= 1), goalInterruptType);
-			}
+			if (pTarget)
+				npcZombie->SpawnRunSchedule(pTarget, ((Activity)goalActivity), (goalType >= 1), goalInterruptType);
 		}
-
-		m_iSpawnNum++;
 	}
+
+	m_iSpawnNum++;
 }
 
 const char *CZombieVolume::GetZombieClassnameToSpawn()

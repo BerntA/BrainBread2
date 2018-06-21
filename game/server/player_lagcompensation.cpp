@@ -383,6 +383,9 @@ void CLagCompensationManager::TraceRealtime(
 	float tick = GetSimulationTime(player);
 	CUtlVector<LagCompEntry> potentialEntries;
 
+	trace_t trVerify;
+	CTraceFilterNoNPCsOrPlayer trFilter(player, player->GetCollisionGroup());
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CBasePlayer *pPlayer = UTIL_PlayerByIndex(i);
@@ -395,6 +398,12 @@ void CLagCompensationManager::TraceRealtime(
 
 		LagCompEntry item(pPlayer);
 		DoFastBacktrack(pPlayer, tick, item);
+
+		// Do a simple double check if this ent can be reached:
+		AI_TraceLine(vecAbsStart, item.lagCompedPos, MASK_SHOT, &trFilter, &trVerify);
+		if (trVerify.DidHit())
+			continue;
+
 		potentialEntries.AddToTail(item);
 	}
 
@@ -427,6 +436,12 @@ void CLagCompensationManager::TraceRealtime(
 
 		LagCompEntry item(pNPC);
 		DoFastBacktrack(pNPC, tick, item);
+
+		// Do a simple double check if this ent can be reached:
+		AI_TraceLine(vecAbsStart, item.lagCompedPos, MASK_SHOT, &trFilter, &trVerify);
+		if (trVerify.DidHit())
+			continue;
+
 		potentialEntries.AddToTail(item);
 	}
 #endif //BB2_AI
