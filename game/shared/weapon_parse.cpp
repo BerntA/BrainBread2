@@ -345,6 +345,7 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 	m_flDropOffDistance = 0.0f;
 	m_flBurstFireRate = 0.2f;
 	m_flWeaponChargeTime = 3.0f;
+	m_flDepletionFactor = 5.0f;
 
 	m_iAmmoHUDIndex = 0;
 	m_bShowAsMagsLeft = true;
@@ -435,6 +436,7 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 	m_flDropOffDistance = pPropertiesField ? pPropertiesField->GetFloat("dropoff_distance", 0.0f) : 0.0f;
 	m_flBurstFireRate = pPropertiesField ? pPropertiesField->GetFloat("fire_rate_burst", 0.2f) : 0.2f;
 	m_flWeaponChargeTime = pPropertiesField ? pPropertiesField->GetFloat("charge_time", 3.0f) : 3.0f;
+	m_flDepletionFactor = pPropertiesField ? pPropertiesField->GetFloat("depletion_factor", 5.0f) : 5.0f;
 
 	m_iZoomModeFOV[0] = pPropertiesField ? pPropertiesField->GetInt("zoom_mode_1") : 0;
 	m_iZoomModeFOV[1] = pPropertiesField ? pPropertiesField->GetInt("zoom_mode_2") : 0;

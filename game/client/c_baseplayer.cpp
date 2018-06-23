@@ -431,7 +431,6 @@ C_BasePlayer::C_BasePlayer() : m_iv_vecViewOffset( "C_BasePlayer::m_iv_vecViewOf
 
 	m_flNextAchievementAnnounceTime = 0;
 
-	m_bFiredWeapon = false;
 	m_bIsSelectingWeapons = false;
 
 	m_nForceVisionFilterFlags = 0;
@@ -484,9 +483,6 @@ void C_BasePlayer::Spawn( void )
 	SharedSpawn();
 
 	m_bWasFreezeFraming = false;
-
-	m_bFiredWeapon = false;
-
 	m_bIsSelectingWeapons = false;
 }
 

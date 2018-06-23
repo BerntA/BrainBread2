@@ -135,6 +135,7 @@ public:
 	float m_flDropOffDistance;
 	float m_flBurstFireRate;
 	float m_flWeaponChargeTime;
+	float m_flDepletionFactor;
 
 	// Client Ammo Properties:
 	int m_iAmmoHUDIndex;

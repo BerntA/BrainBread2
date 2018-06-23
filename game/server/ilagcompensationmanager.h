@@ -29,7 +29,8 @@ public:
 		ITraceFilter *pFilter,
 		trace_t *ptr,
 		float maxrange = MAX_TRACE_LENGTH,
-		bool bRevertToHullTrace = false
+		bool bRevertToHullTrace = false,
+		bool bOnlyDoBoxCheck = false
 		) = 0;
 
 	virtual void TraceRealtime(
@@ -42,7 +43,8 @@ public:
 		int collisionGroup,
 		trace_t *ptr,
 		float maxrange = MAX_TRACE_LENGTH,
-		bool bRevertToHullTrace = false
+		bool bRevertToHullTrace = false,
+		bool bOnlyDoBoxCheck = false
 		) = 0;
 
 	virtual void TraceRealtime(CBaseCombatCharacter *pTracer) = 0;

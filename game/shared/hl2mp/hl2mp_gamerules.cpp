@@ -2408,6 +2408,7 @@ CAmmoDef *GetAmmoDef()
 		def.AddAmmoType("Grenade", DMG_BURN, TRACER_NONE, 100, 100, 3, 0, 0);
 		def.AddAmmoType("Propane", DMG_BURN, TRACER_NONE, 200, 200, 1, 0, 0);
 		def.AddAmmoType("Gravity", DMG_CLUB, TRACER_NONE, 0, 0, 8, 0, 0);
+		def.AddAmmoType("Cannister", DMG_BURN, TRACER_NONE, 15, 15, 0, 0, 0);
 
 		// func_tank related.
 		def.AddAmmoType("AR2", DMG_BULLET, TRACER_LINE_AND_WHIZ, 10, 10, 90, BULLET_IMPULSE(200, 1225), 0);

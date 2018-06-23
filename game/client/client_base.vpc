@@ -378,6 +378,7 @@ $Project
 			$File "$SRCDIR\game\shared\bb2\weapon_brick.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_famas.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_minigun.cpp"
+			$File "$SRCDIR\game\shared\bb2\weapon_flamethrower.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_hatchet.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_machete.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_propane.cpp"

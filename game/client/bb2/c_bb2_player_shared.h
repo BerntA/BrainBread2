@@ -52,6 +52,8 @@ public:
 	int GetPlayerVoteResponse(void) { return m_iPlayerVoteNum; }
 	void SetPlayerVoteResponse(int reply) { m_iPlayerVoteNum = reply; }
 
+	C_HL2MP_Player *GetCurrentViewModelOwner(void);
+
 private:
 	bool m_bHasCreated;
 

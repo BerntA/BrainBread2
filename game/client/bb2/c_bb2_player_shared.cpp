@@ -348,19 +348,24 @@ void CBB2PlayerShared::OnUpdate()
 	if (!pLocal)
 		return;
 
-	C_HL2MP_Player *pOwner = pLocal;
-	C_BaseViewModel *pViewModel = pOwner->GetViewModel();
-
-	int specTargetIndex = GetSpectatorTarget();
-	if (specTargetIndex > 0 && (pOwner->GetObserverMode() == OBS_MODE_IN_EYE))
-	{
-		pOwner = ToHL2MPPlayer(UTIL_PlayerByIndex(specTargetIndex));
-		if (pOwner)
-			pViewModel = pOwner->GetViewModel();
-	}
+	C_BaseViewModel *pViewModel = pLocal->GetViewModel();
+	C_HL2MP_Player *pOwner = pViewModel ? ToHL2MPPlayer(pViewModel->GetOwner()) : pLocal;
 
 	UpdatePlayerHands(pViewModel, pOwner);
 	UpdatePlayerBody(pOwner);
+}
+
+C_HL2MP_Player *CBB2PlayerShared::GetCurrentViewModelOwner(void)
+{
+	C_HL2MP_Player *pLocal = C_HL2MP_Player::GetLocalHL2MPPlayer();
+	if (pLocal == NULL)
+		return NULL;
+
+	int specTargetIndex = GetSpectatorTarget();
+	if ((specTargetIndex > 0) && (pLocal->GetObserverMode() == OBS_MODE_IN_EYE))
+		return ToHL2MPPlayer(UTIL_PlayerByIndex(specTargetIndex));
+
+	return pLocal;
 }
 
 static CBB2PlayerShared g_BB2PlayerShared;

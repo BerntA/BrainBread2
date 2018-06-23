@@ -140,7 +140,8 @@ public:
 		ITraceFilter *pFilter,
 		trace_t *ptr,
 		float maxrange = MAX_TRACE_LENGTH,
-		bool bRevertToHullTrace = false
+		bool bRevertToHullTrace = false,
+		bool bOnlyDoBoxCheck = false
 		);
 
 	void TraceRealtime(
@@ -153,7 +154,8 @@ public:
 		int collisionGroup,
 		trace_t *ptr,
 		float maxrange = MAX_TRACE_LENGTH,
-		bool bRevertToHullTrace = false
+		bool bRevertToHullTrace = false,
+		bool bOnlyDoBoxCheck = false
 		);
 
 	void TraceRealtime(CBaseCombatCharacter *pTracer);
@@ -180,11 +182,18 @@ private:
 		ITraceFilter *pFilter,
 		trace_t *ptr,
 		float maxrange = MAX_TRACE_LENGTH,
-		bool bRevertToHullTrace = false
+		bool bRevertToHullTrace = false,
+		bool bOnlyDoBoxCheck = false
 		);
 
 	Vector GetNearestHitboxPos(CBaseCombatCharacter *pEntity, const Vector &from, Vector &chestHBOXPos, int &hitgroup);
 	Vector GetChestHitboxPos(CBaseCombatCharacter *pEntity);
+
+	virtual void AutoCenterVector(const LagCompEntry &entry, Vector &result)
+	{
+		Vector vecTargetPos = (entry.lagCompedPos + Vector(0, 0, (0.55f * ((entry.boundsMax - entry.boundsMin).z))));
+		result = ((vecTargetPos - g_vecPlayerStartPos) + entry.differencePos);
+	}
 
 	void ClearHistory()
 	{
@@ -349,7 +358,8 @@ void CLagCompensationManager::TraceRealtime(
 	ITraceFilter *pFilter,
 	trace_t *ptr,
 	float maxrange,
-	bool bRevertToHullTrace)
+	bool bRevertToHullTrace,
+	bool bOnlyDoBoxCheck)
 {
 	CHL2MP_Player *player = ToHL2MPPlayer(pTracer);
 	if (player)
@@ -446,7 +456,7 @@ void CLagCompensationManager::TraceRealtime(
 	}
 #endif //BB2_AI
 
-	AnalyzeFastBacktracks(player, potentialEntries, vecAbsStart, vecAbsEnd, hullMin, hullMax, pFilter, ptr, maxrange, bRevertToHullTrace);
+	AnalyzeFastBacktracks(player, potentialEntries, vecAbsStart, vecAbsEnd, hullMin, hullMax, pFilter, ptr, maxrange, bRevertToHullTrace, bOnlyDoBoxCheck);
 
 	potentialEntries.Purge();
 
@@ -469,13 +479,14 @@ void CLagCompensationManager::TraceRealtime(
 	int collisionGroup,
 	trace_t *ptr,
 	float maxrange,
-	bool bRevertToHullTrace)
+	bool bRevertToHullTrace,
+	bool bOnlyDoBoxCheck)
 {
 	CTraceFilterSimple filter(ignore, collisionGroup);
 	TraceRealtime(pTracer,
 		vecAbsStart, vecAbsEnd,
 		hullMin, hullMax,
-		&filter, ptr, maxrange, bRevertToHullTrace);
+		&filter, ptr, maxrange, bRevertToHullTrace, bOnlyDoBoxCheck);
 }
 
 void CLagCompensationManager::TraceRealtime(CBaseCombatCharacter *pTracer)
@@ -668,7 +679,8 @@ void CLagCompensationManager::AnalyzeFastBacktracks(
 	ITraceFilter *pFilter,
 	trace_t *ptr,
 	float maxrange,
-	bool bRevertToHullTrace)
+	bool bRevertToHullTrace,
+	bool bOnlyDoBoxCheck)
 {
 	VPROF_BUDGET("AnalyzeFastBacktracks", "CLagCompensationManager");
 
@@ -711,10 +723,37 @@ void CLagCompensationManager::AnalyzeFastBacktracks(
 			continue;
 		}
 
-		Vector vecCurrentForward = vecForward * abs(maxrange);
 		Vector vecWepPos = vecStart + vecForward * (abs(maxrange) * 0.5f);
 
+		if (bOnlyDoBoxCheck)
+		{
+			if (IsBoxIntersectingBox(
+				entry->lagCompedPos + entry->boundsMin,
+				entry->lagCompedPos + entry->boundsMax,
+				vecWepPos - vecMeleeBounds,
+				vecWepPos + vecMeleeBounds) || 
+				IsBoxIntersectingBox(
+				entry->originalPos + entry->boundsMin,
+				entry->originalPos + entry->boundsMax,
+				vecWepPos - vecMeleeBounds,
+				vecWepPos + vecMeleeBounds))
+			{
+				if (sv_lagflushbonecache.GetBool())
+					pEntity->InvalidateBoneCache();
+
+				if (sv_showlagcompensation.GetInt() >= 1)
+					pEntity->DrawServerHitboxes((entry->lagCompedPos - entry->originalPos), 2.0f, true);
+
+				AutoCenterVector(*entry, entry->endDirection);
+				continue;
+			}
+
+			list.Remove(i);
+			continue;
+		}
+
 		CBaseTrace tr;
+		Vector vecCurrentForward = vecForward * abs(maxrange);
 		IntersectRayWithBox(vecStart, vecCurrentForward, entry->lagCompedPos + entry->boundsMin, entry->lagCompedPos + entry->boundsMax, 0.0f, &tr);
 		if (tr.fraction < 1.0f)
 		{
@@ -739,11 +778,7 @@ void CLagCompensationManager::AnalyzeFastBacktracks(
 						entry->hitgroup = HITGROUP_CHEST;
 					}
 					else
-					{
-						Vector vecAutoCorrector = (entry->lagCompedPos - tr.startpos);
-						vecAutoCorrector.z += (0.55f * (entry->boundsMax - entry->boundsMin).z);
-						entry->endDirection = vecAutoCorrector + entry->differencePos;
-					}
+						AutoCenterVector(*entry, entry->endDirection);
 				}
 			}
 
@@ -773,11 +808,7 @@ void CLagCompensationManager::AnalyzeFastBacktracks(
 				entry->hitgroup = HITGROUP_CHEST;
 			}
 			else
-			{
-				Vector vecAutoCorrector = (entry->lagCompedPos - vecStart);
-				vecAutoCorrector.z += (0.55f * (entry->boundsMax - entry->boundsMin).z);
-				entry->endDirection = vecAutoCorrector + entry->differencePos;
-			}
+				AutoCenterVector(*entry, entry->endDirection);			
 
 			continue;
 		}

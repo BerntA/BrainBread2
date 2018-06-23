@@ -50,6 +50,7 @@ weaponInfoItem pszWeapons[] =
 	{ "weapon_winchester1894", 15, false },
 
 	{ "weapon_minigun", 5, false },
+	{ "weapon_flamethrower", 3, false },
 	{ "weapon_sawedoff", 20, false },
 	{ "weapon_remington", 30, false },
 

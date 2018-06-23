@@ -829,6 +829,10 @@ bool CGameDefinitionsShared::Precache(void)
 
 	PrecacheParticleSystem("weapon_muzzle_smoke_b");
 
+	PrecacheParticleSystem("flame_tiny");
+	PrecacheParticleSystem("weapon_flame_fire_1");
+
+
 	return true;
 }
 

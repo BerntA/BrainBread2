@@ -147,13 +147,8 @@ void C_TEBulletShot::CreateEffects(void)
 	C_BasePlayer *pPlayer = ToBasePlayer(pOwnerOfWep);
 	if (pPlayer)
 	{
-		int entindexplr = pPlayer->entindex();
-		int specTargetIndex = GetSpectatorTarget();
-		C_BaseViewModel *pvm = pPlayer->GetViewModel();
-		if (pvm &&
-			(((entindexplr == GetLocalPlayerIndex()) && (!input->CAM_IsThirdPerson())) ||
-			((pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE) && (specTargetIndex == entindexplr)))
-			)
+		C_BaseViewModel *pvm = pLocalPlayer->GetViewModel();
+		if (pvm && (input->CAM_IsThirdPerson() == false) && (g_bShouldRenderLocalPlayerExternally == false) && (pPlayer == ToBasePlayer(pvm->GetOwner())))
 		{
 			pDispatcher = pvm;
 			bThirdpersonDispatch = false;
@@ -162,7 +157,7 @@ void C_TEBulletShot::CreateEffects(void)
 				pvm->DoMuzzleFlash();
 		}
 
-		if (entindexplr == GetLocalPlayerIndex())
+		if ((g_bShouldRenderLocalPlayerExternally == false) && ((pPlayer->entindex() == GetLocalPlayerIndex()) || (pPlayer->entindex() == GetSpectatorTarget())))
 			pWpn->GetBaseAnimating()->ProcessMuzzleFlashEvent();
 	}
 

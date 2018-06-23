@@ -404,9 +404,6 @@ public:
 	int						GetNumWearables( void ) { return m_hMyWearables.Count(); }
 #endif
 
-	bool					HasFiredWeapon( void ) { return m_bFiredWeapon; }
-	void					SetFiredWeapon( bool bFlag ) { m_bFiredWeapon = bFlag; }
-
 	virtual bool			CanUseFirstPersonCommand( void ){ return true; }
 	
 protected:
@@ -526,9 +523,6 @@ private:
 	int				m_nFinalPredictedTick;
 
 	EHANDLE			m_pCurrentVguiScreen;
-
-	bool			m_bFiredWeapon;
-
 
 	// Player flashlight dynamic light pointers
 	CFlashlightEffect *m_pFlashlight;

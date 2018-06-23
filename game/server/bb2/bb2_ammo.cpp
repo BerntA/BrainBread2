@@ -19,6 +19,7 @@ int GetAmmoCountMultiplier(int wepType)
 	return 2;
 }
 
+// Replenish ammo for non special weapons:
 bool CanReplenishAmmo(const char *ammoClassname, CBasePlayer *pPlayer, int amountOverride, bool bSecondaryType = false, bool bSuppressSound = false)
 {
 	if (!pPlayer)
@@ -56,6 +57,58 @@ bool CanReplenishAmmo(const char *ammoClassname, CBasePlayer *pPlayer, int amoun
 	return bReceived;
 }
 
+// Replenish ammo for special weapons:
+bool CanReplenishAmmo(const char *ammoClassname, CBasePlayer *pPlayer, bool bSuppressSound = false)
+{
+	if (!pPlayer)
+		return false;
+
+	bool bReceived = false;
+	for (int i = 0; i < MAX_WEAPONS; i++)
+	{
+		CBaseCombatWeapon *pWeapon = pPlayer->GetWeapon(i);
+		if (!pWeapon)
+			continue;
+
+		if (pWeapon->IsMeleeWeapon() || (pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL))
+			continue;
+
+		int nAmmoIndex = pWeapon->GetPrimaryAmmoType();
+		if (nAmmoIndex == -1)
+			continue;
+
+		if (strcmp(pWeapon->GetAmmoEntityLink(), ammoClassname))
+			continue;
+
+		CSingleUserRecipientFilter user(pPlayer);
+		user.MakeReliable();
+
+		if (pWeapon->m_iClip1 >= pWeapon->GetMaxClip1())
+		{
+			UserMessageBegin(user, "AmmoDenied");
+			WRITE_SHORT(nAmmoIndex);
+			MessageEnd();
+			continue;
+		}
+		else
+		{
+			if (bSuppressSound == false)
+				pPlayer->EmitSound("BaseCombatCharacter.AmmoPickup");
+
+			UserMessageBegin(user, "ItemPickup");
+			WRITE_STRING("AMMO");
+			WRITE_SHORT(nAmmoIndex);
+			MessageEnd();
+
+			bReceived = true;
+		}
+
+		pWeapon->m_iClip1 = pWeapon->GetMaxClip1();
+	}
+
+	return bReceived;
+}
+
 class CAmmoItemBase : public CItem
 {
 public:
@@ -71,6 +124,7 @@ public:
 	virtual void Spawn(void);
 	virtual void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 	virtual void SetAmmoOverrideAmount(int amount) { m_iAmmoAmountOverride = amount; }
+	virtual bool CanReplenishAmmo(CBasePlayer *pPlayer);
 
 protected:
 	int m_iAmmoAmountOverride;
@@ -88,26 +142,25 @@ void CAmmoItemBase::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE 
 	if (!pActivator)
 		return;
 
-	if (!pActivator->IsPlayer())
-		return;
-
-	if (pActivator->IsZombie())
+	if (!pActivator->IsPlayer() || pActivator->IsZombie() || !CanPickup())
 		return;
 
 	CBasePlayer *pPlayer = ToBasePlayer(pActivator);
 	if (!pPlayer)
 		return;
 
-	if (!CanPickup())
-		return;
-
-	if (CanReplenishAmmo(GetClassname(), pPlayer, m_iAmmoAmountOverride))
+	if (CanReplenishAmmo(pPlayer))
 	{
 		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
 			Respawn();
 		else
 			UTIL_Remove(this);
 	}
+}
+
+bool CAmmoItemBase::CanReplenishAmmo(CBasePlayer *pPlayer)
+{
+	return (::CanReplenishAmmo(GetClassname(), pPlayer, m_iAmmoAmountOverride));
 }
 
 #define AMMO_BASE_CLASS CAmmoItemBase
@@ -280,6 +333,31 @@ void CAmmoTrapper::Precache(void)
 	PrecacheModel("models/items/ammo_winchester.mdl");
 }
 
+class CAmmoFlamethrower : public AMMO_BASE_CLASS
+{
+public:
+	DECLARE_CLASS(CAmmoFlamethrower, AMMO_BASE_CLASS);
+
+	void Spawn(void);
+	void Precache(void);
+	bool CanReplenishAmmo(CBasePlayer *pPlayer) { return (::CanReplenishAmmo(GetClassname(), pPlayer)); }
+};
+
+LINK_ENTITY_TO_CLASS(ammo_flamethrower, CAmmoFlamethrower);
+PRECACHE_REGISTER(ammo_flamethrower);
+
+void CAmmoFlamethrower::Spawn(void)
+{
+	Precache();
+	SetModel("models/items/ammo_flamethrower.mdl");
+	BaseClass::Spawn();
+}
+
+void CAmmoFlamethrower::Precache(void)
+{
+	PrecacheModel("models/items/ammo_flamethrower.mdl");
+}
+
 #define AMMO_DROP_WAIT_TIME 1.0f
 
 CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
@@ -288,14 +366,14 @@ CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
 	if (!pPlayer)
 		return;
 
-	if (!pPlayer->IsHuman() || !pPlayer->IsAlive() || !HL2MPRules()->IsTeamplay())
+	if (!pPlayer->IsHuman() || !pPlayer->IsAlive() || !HL2MPRules()->IsTeamplay() || HL2MPRules()->IsGameoverOrScoresVisible())
 		return;
 
 	CBaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
 	if (!pWeapon)
 		return;
 
-	if (pWeapon->IsMeleeWeapon() || !pWeapon->UsesClipsForAmmo1() || !pWeapon->UsesPrimaryAmmo())
+	if (pWeapon->IsMeleeWeapon() || !pWeapon->UsesClipsForAmmo1() || !pWeapon->UsesPrimaryAmmo() || (pWeapon->GetWeaponType() == WEAPON_TYPE_SPECIAL))
 		return;
 
 	int ammoCount = pPlayer->GetAmmoCount(pWeapon->m_iPrimaryAmmoType);

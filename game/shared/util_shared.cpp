@@ -809,7 +809,7 @@ void UTIL_Tracer( const Vector &vecStart, const Vector &vecEnd, int iEntIndex,
 void UTIL_BloodDrips(const Vector &origin, const Vector &direction, int color, int amount, int hitbox)
 {
 #ifdef BB2_AI
-IPredictionSystem::SuppressHostEvents( NULL );
+	IPredictionSystem::SuppressHostEvents( NULL );
 #endif //BB2_AI
 
 	if ( !UTIL_ShouldShowBlood( color ) )

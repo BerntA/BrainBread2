@@ -248,10 +248,6 @@ void CWeaponMinigun::ItemPostFrame(void)
 
 					if (AutoFiresFullClip())
 						m_bFiringWholeClip = true;
-
-#ifdef CLIENT_DLL
-					pOwner->SetFiredWeapon(true);
-#endif
 				}
 			}
 		}
