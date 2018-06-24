@@ -390,7 +390,10 @@ $Project
 			$File "$SRCDIR\game\shared\bb2\weapon_base_pistol.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_base_pistol.h"
 			$File "$SRCDIR\game\shared\bb2\weapon_melee_chargeable.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_melee_chargeable.h"			
+			$File "$SRCDIR\game\shared\bb2\weapon_melee_chargeable.h"	
+			$File "$SRCDIR\game\shared\bb2\weapon_base_shotgun.cpp"
+			$File "$SRCDIR\game\shared\bb2\weapon_base_shotgun.h"
+			$File "$SRCDIR\game\shared\bb2\weapon_benelli_m4.cpp"			
 		}
 	}
 	

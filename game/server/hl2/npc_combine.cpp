@@ -2831,17 +2831,23 @@ void CNPC_Combine::OnEndMoveAndShoot()
 //-----------------------------------------------------------------------------
 WeaponProficiency_t CNPC_Combine::CalcWeaponProficiency( CBaseCombatWeapon *pWeapon )
 {
-	if( FClassnameIs( pWeapon, "weapon_ak47" ) )
+	if (pWeapon)
 	{
-		return WEAPON_PROFICIENCY_GOOD;
-	}
-	else if (FClassnameIs(pWeapon, "weapon_beretta") || FClassnameIs(pWeapon, "weapon_famas"))
-	{
-		return WEAPON_PROFICIENCY_VERY_GOOD;
-	}
-	else if (FClassnameIs(pWeapon, "weapon_remington") || FClassnameIs(pWeapon, "weapon_sawedoff"))
-	{
-		return WEAPON_PROFICIENCY_PERFECT;
+		switch (pWeapon->GetWeaponType())
+		{
+		case WEAPON_TYPE_RIFLE:
+		case WEAPON_TYPE_SPECIAL:
+			return WEAPON_PROFICIENCY_GOOD;
+
+		case WEAPON_TYPE_PISTOL:
+		case WEAPON_TYPE_SMG:
+			return WEAPON_PROFICIENCY_VERY_GOOD;
+
+		case WEAPON_TYPE_SHOTGUN:
+		case WEAPON_TYPE_REVOLVER:
+		case WEAPON_TYPE_SNIPER:
+			return WEAPON_PROFICIENCY_PERFECT;
+		}
 	}
 
 	return BaseClass::CalcWeaponProficiency( pWeapon );

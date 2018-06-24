@@ -2449,11 +2449,6 @@ Vector CNPC_PlayerCompanion::GetActualShootPosition( const Vector &shootOrigin )
 //------------------------------------------------------------------------------
 WeaponProficiency_t CNPC_PlayerCompanion::CalcWeaponProficiency( CBaseCombatWeapon *pWeapon )
 {
-	if( FClassnameIs( pWeapon, "weapon_ar2" ) )
-	{
-		return WEAPON_PROFICIENCY_VERY_GOOD;
-	}
-
 	return WEAPON_PROFICIENCY_PERFECT;
 }
 

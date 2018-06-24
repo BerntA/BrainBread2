@@ -7,7 +7,7 @@
 #include "cbase.h"
 #include "npcevent.h"
 #include "in_buttons.h"
-#include "weapon_hl2mpbasehlmpcombatweapon.h"
+#include "weapon_base_shotgun.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -16,71 +16,41 @@
 #define CWeaponRemington C_WeaponRemington
 #endif
 
-class CWeaponRemington : public CBaseHL2MPCombatWeapon
+class CWeaponRemington : public CHL2MPBaseShotgun
 {
 public:
-	DECLARE_CLASS(CWeaponRemington, CBaseHL2MPCombatWeapon);
+	DECLARE_CLASS(CWeaponRemington, CHL2MPBaseShotgun);
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
 	DECLARE_ACTTABLE();
 
 	CWeaponRemington(void);
 
-#ifdef BB2_AI
-#ifndef CLIENT_DLL
-	int CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
-	void Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
-	void Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary);
-	void FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool bUseWeaponAngles);
-#endif
-#endif //BB2_AI
-
-	int GetMinBurst() { return 1; }
-	int GetMaxBurst() { return 1; }
-
 	int GetOverloadCapacity() { return 4; }
-	int GetWeaponType(void) { return WEAPON_TYPE_SHOTGUN; }
-	const char *GetAmmoEntityLink(void) { return "ammo_slugs"; }
 
 	bool StartReload(void);
 	bool Reload(void);
-	void FillClip(void);
 	void FinishReload(void);
 
 	void StartHolsterSequence();
-	bool Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
-	void Drop(const Vector &vecVelocity);
 
 	void ItemPostFrame(void);
 	void PrimaryAttack(void);
-	void DryFire(void);
-	float GetFireRate(void) { return GetWpnData().m_flFireRate; }
-
-	void AffectedByPlayerSkill(int skill);
 
 private:
 	CWeaponRemington(const CWeaponRemington &);
-
-	CNetworkVar(bool, m_bInReload);
-	CNetworkVar(bool, m_bShouldReloadEmpty);
 };
 
 IMPLEMENT_NETWORKCLASS_ALIASED(WeaponRemington, DT_WeaponRemington)
 
 BEGIN_NETWORK_TABLE(CWeaponRemington, DT_WeaponRemington)
 #ifdef CLIENT_DLL
-RecvPropBool( RECVINFO( m_bInReload ) ),
-RecvPropBool( RECVINFO( m_bShouldReloadEmpty ) ),
 #else
-SendPropBool(SENDINFO(m_bInReload)),
-SendPropBool(SENDINFO(m_bShouldReloadEmpty)),
 #endif
 END_NETWORK_TABLE()
 
 #ifdef CLIENT_DLL
-BEGIN_PREDICTION_DATA( CWeaponRemington )
-DEFINE_PRED_FIELD( m_bInReload, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
-DEFINE_PRED_FIELD( m_bShouldReloadEmpty, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+BEGIN_PREDICTION_DATA(CWeaponRemington)
 END_PREDICTION_DATA()
 #endif
 
@@ -174,83 +144,12 @@ acttable_t	CWeaponRemington::m_acttable[] =
 
 IMPLEMENT_ACTTABLE(CWeaponRemington);
 
-#ifndef CLIENT_DLL
-#ifdef BB2_AI
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pOperator - 
-//-----------------------------------------------------------------------------
-void CWeaponRemington::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool bUseWeaponAngles)
+CWeaponRemington::CWeaponRemington(void)
 {
-	Vector vecShootOrigin, vecShootDir;
-	CAI_BaseNPC *npc = pOperator->MyNPCPointer();
-	Assert(npc != NULL);
-	WeaponSound(SINGLE_NPC);
-	m_iClip1 = m_iClip1 - 1;
-
-	if (bUseWeaponAngles)
-	{
-		QAngle angShootDir;
-		GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angShootDir);
-		AngleVectors(angShootDir, &vecShootDir);
-	}
-	else
-	{
-		vecShootOrigin = pOperator->Weapon_ShootPosition();
-		vecShootDir = npc->GetActualShootTrajectory(vecShootOrigin);
-	}
-
-	pOperator->FireBullets(GetWpnData().m_iPellets, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CWeaponRemington::Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary)
-{
-	m_iClip1++;
-	FireNPCPrimaryAttack(pOperator, true);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-void CWeaponRemington::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator)
-{
-	switch (pEvent->event)
-	{
-	case EVENT_WEAPON_SHOTGUN_FIRE:	
-		FireNPCPrimaryAttack(pOperator, false);
-		break;
-
-	default:
-		CBaseCombatWeapon::Operator_HandleAnimEvent(pEvent, pOperator);
-		break;
-	}
-}
-#endif // BB2_AI
-#endif
-
-void CWeaponRemington::AffectedByPlayerSkill(int skill)
-{
-	switch (skill)
-	{
-	case PLAYER_SKILL_HUMAN_GUNSLINGER:
-	case PLAYER_SKILL_HUMAN_MAGAZINE_REFILL:
-	{
-		m_bInReload = false;
-		m_bShouldReloadEmpty = false;
-		break;
-	}
-	}
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Override so only reload one shell at a time
-// Input  :
-// Output :
 //-----------------------------------------------------------------------------
 bool CWeaponRemington::StartReload(void)
 {
@@ -279,8 +178,6 @@ bool CWeaponRemington::StartReload(void)
 
 //-----------------------------------------------------------------------------
 // Purpose: Override so only reload one shell at a time
-// Input  :
-// Output :
 //-----------------------------------------------------------------------------
 bool CWeaponRemington::Reload(void)
 {
@@ -305,7 +202,7 @@ bool CWeaponRemington::Reload(void)
 	if (j <= 0)
 		return false;
 
-	FillClip();
+	FillClip(1);
 	// Play reload on different channel as otherwise steals channel away from fire sound
 	WeaponSound(RELOAD);
 
@@ -329,8 +226,6 @@ bool CWeaponRemington::Reload(void)
 
 //-----------------------------------------------------------------------------
 // Purpose: Play finish reload anim and fill clip
-// Input  :
-// Output :
 //-----------------------------------------------------------------------------
 void CWeaponRemington::FinishReload(void)
 {
@@ -355,82 +250,9 @@ void CWeaponRemington::FinishReload(void)
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Play finish reload anim and fill clip
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-void CWeaponRemington::FillClip(void)
-{
-	CBaseCombatCharacter *pOwner = GetOwner();
-	if (pOwner == NULL)
-		return;
-
-	// Add them to the clip
-	if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) > 0)
-	{
-		if (Clip1() < GetMaxClip1())
-		{
-			m_iClip1++;
-			pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//
-//
-//-----------------------------------------------------------------------------
-void CWeaponRemington::DryFire(void)
-{
-	WeaponSound(EMPTY);
-	SendWeaponAnim(ACT_VM_DRYFIRE);
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//
-//
-//-----------------------------------------------------------------------------
 void CWeaponRemington::PrimaryAttack(void)
 {
-	// Only the player fires this way so we can cast
-	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
-	if (!pPlayer)
-		return;
-
-	// MUST call sound before removing a round from the clip of a CMachineGun
-	WeaponSound(SINGLE);
-
-	SendWeaponAnim(ACT_VM_PRIMARYATTACK);
-
-	// Don't fire again until fire animation has completed
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-	m_iClip1 -= 1;
-
-	// player "shoot" animation
-	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, ACT_VM_PRIMARYATTACK);
-
-	Vector	vecSrc = pPlayer->Weapon_ShootPosition();
-	Vector	vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
-
-	FireBulletsInfo_t info(GetWpnData().m_iPellets, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
-	info.m_pAttacker = pPlayer;
-	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
-	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
-
-	// Fire the bullets, and force the first shot to be perfectly accuracy
-	pPlayer->FireBullets(info);
-#ifdef BB2_AI
-#ifndef CLIENT_DLL
-	pPlayer->SetMuzzleFlashTime(gpGlobals->curtime + 1.0);
-	CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2);
-#endif
-#endif //BB2_AI
-
-	pPlayer->ViewPunch(GetViewKickAngle());
+	BaseClass::PrimaryAttack(ACT_VM_PRIMARYATTACK, SINGLE);
 }
 
 //-----------------------------------------------------------------------------
@@ -438,13 +260,11 @@ void CWeaponRemington::PrimaryAttack(void)
 //-----------------------------------------------------------------------------
 void CWeaponRemington::ItemPostFrame(void)
 {
+	BaseClass::ItemPostFrame();
+
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (!pOwner)
 		return;
-
-	// Implement base properties:
-	if (!m_bInReload)
-		BaseClass::GenericBB2Animations();
 
 	if (m_bInReload)
 	{
@@ -457,38 +277,26 @@ void CWeaponRemington::ItemPostFrame(void)
 
 		if (m_flNextPrimaryAttack <= gpGlobals->curtime)
 		{
-			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+			if ((pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0) || (m_iClip1 >= GetMaxClip1()))
 			{
 				FinishReload();
 				return;
 			}
 
-			// If clip not full reload again
-			if (m_iClip1 < GetMaxClip1())
-			{
-				Reload();
-				return;
-			}
-			// Clip full, stop reloading
-			else
-			{
-				FinishReload();
-				return;
-			}
+			Reload();
+			return;
 		}
 	}
 
-	if (IsViewModelSequenceFinished() && (m_flNextBashAttack <= gpGlobals->curtime) && !(pOwner->m_nButtons & IN_BASH) && !(pOwner->m_nButtons & IN_ATTACK) && !(pOwner->m_nButtons & IN_RELOAD))
-	{
-		if (!m_bInReload && (gpGlobals->curtime >= m_flNextPrimaryAttack))
-			WeaponIdle();
-	}
+	WeaponIdle();
 
 	if ((pOwner->m_nButtons & IN_ATTACK) && m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
 		if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !pOwner->GetAmmoCount(m_iPrimaryAmmoType)))
+		{
 			DryFire();
-		// Fire underwater?
+			return;
+		}
 		else if (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
 		{
 			WeaponSound(EMPTY);
@@ -512,36 +320,10 @@ void CWeaponRemington::ItemPostFrame(void)
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Constructor
-//-----------------------------------------------------------------------------
-CWeaponRemington::CWeaponRemington(void)
-{
-	m_bReloadsSingly = true;
-	m_bShouldReloadEmpty = false;
-	m_bInReload = false;
-}
-
 void CWeaponRemington::StartHolsterSequence()
 {
 	if (m_bInReload)
 		FinishReload();
 
 	BaseClass::StartHolsterSequence();
-}
-
-bool CWeaponRemington::Holster(CBaseCombatWeapon *pSwitchingTo)
-{
-	m_bInReload = false;
-	m_bShouldReloadEmpty = false;
-
-	return BaseClass::Holster(pSwitchingTo);
-}
-
-void CWeaponRemington::Drop(const Vector &vecVelocity)
-{
-	m_bInReload = false;
-	m_bShouldReloadEmpty = false;
-
-	BaseClass::Drop(vecVelocity);
 }

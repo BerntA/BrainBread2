@@ -785,18 +785,19 @@ bool CNPC_CustomActor::ShouldLookForBetterWeapon()
 		{
 			bool bDefer = false;
 
-			if (FClassnameIs(pWeapon, "weapon_ak47"))
+			if (pWeapon->GetWeaponType() == WEAPON_TYPE_RIFLE)
 			{
 				// Content to keep this weapon forever
 				m_flNextWeaponSearchTime = OTHER_DEFER_SEARCH_TIME;
 				bDefer = true;
 			}
-			else if (FClassnameIs(pWeapon, "weapon_remington"))
+			else if (pWeapon->GetWeaponType() == WEAPON_TYPE_SHOTGUN)
 			{
 				// Shotgunners do not defer their weapon search indefinitely.
 				// If more than one citizen in the squad has a shotgun, we force
 				// some of them to trade for another weapon.
-				if (NumWeaponsInSquad("weapon_remington") > 1)
+				if ((NumWeaponsInSquad("weapon_remington") > 1) || (NumWeaponsInSquad("weapon_sawedoff") > 1) ||
+					(NumWeaponsInSquad("weapon_benelli_m4") > 1))
 				{
 					// Check for another weapon now. If I don't find one, this code will
 					// retry in 2 seconds or so.

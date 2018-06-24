@@ -7,7 +7,7 @@
 #include "cbase.h"
 #include "npcevent.h"
 #include "in_buttons.h"
-#include "weapon_hl2mpbasehlmpcombatweapon.h"
+#include "weapon_base_shotgun.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -16,88 +16,65 @@
 #define CWeaponSawedOff C_WeaponSawedOff
 #endif
 
-enum WeaponSawedOffFlags 
+enum WeaponSawedOffFlags
 {
 	SAWEDOFF_FIRED_LEFT = 0x01,
 	SAWEDOFF_FIRED_RIGHT = 0x02,
 };
 
-class CWeaponSawedOff : public CBaseHL2MPCombatWeapon
+class CWeaponSawedOff : public CHL2MPBaseShotgun
 {
 public:
-	DECLARE_CLASS( CWeaponSawedOff, CBaseHL2MPCombatWeapon );
-	DECLARE_NETWORKCLASS(); 
+	DECLARE_CLASS(CWeaponSawedOff, CHL2MPBaseShotgun);
+	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
 	DECLARE_ACTTABLE();
-	
+
 	CWeaponSawedOff(void);
 
-#ifdef BB2_AI
-#ifndef CLIENT_DLL
-	int CapabilitiesGet( void ) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
-	void Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
-	void Operator_ForceNPCFire( CBaseCombatCharacter *pOperator, bool bSecondary );
-	void FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles );
-#endif
-#endif //BB2_AI
-
-	int GetMinBurst() { return 1; }
-	int GetMaxBurst() { return 1; }
 	int GetOverloadCapacity() { return 1; }
-	int GetWeaponType(void) { return WEAPON_TYPE_SHOTGUN; }
-	const char *GetAmmoEntityLink(void) { return "ammo_slugs"; }
 
-	bool Reload( void );
-	void FillClip( int iAmount );
-	void StartHolsterSequence();
-	bool Holster( CBaseCombatWeapon *pSwitchingTo = NULL );
-	void Drop(const Vector &vecVelocity);
-	void ItemPostFrame( void );
+	bool Reload(void);
+	void ItemPostFrame(void);
 	void PerformAttack(bool bDouble = false);
 	void PrimaryAttack(void) { }
 	void SecondaryAttack() { }
-	void DryFire( void );
-	float GetFireRate( void ) { return GetWpnData().m_flFireRate; }
 	void AffectedByPlayerSkill(int skill);
 	const char *GetMuzzleflashAttachment(bool bPrimaryAttack);
-	
-private:
-	CWeaponSawedOff( const CWeaponSawedOff & );
 
-	CNetworkVar(bool, m_bInReload);
+private:
+	CWeaponSawedOff(const CWeaponSawedOff &);
+
 	CNetworkVar(int, m_iFiringFlags);
 	CNetworkVar(int, m_iFiringState);
 };
 
-IMPLEMENT_NETWORKCLASS_ALIASED( WeaponSawedOff, DT_WeaponSawedOff )
+IMPLEMENT_NETWORKCLASS_ALIASED(WeaponSawedOff, DT_WeaponSawedOff)
 
-	BEGIN_NETWORK_TABLE( CWeaponSawedOff, DT_WeaponSawedOff )
+BEGIN_NETWORK_TABLE(CWeaponSawedOff, DT_WeaponSawedOff)
 #ifdef CLIENT_DLL
-	RecvPropBool( RECVINFO( m_bInReload ) ),
-	RecvPropInt(RECVINFO(m_iFiringFlags)),
-	RecvPropInt(RECVINFO(m_iFiringState)),
+RecvPropInt(RECVINFO(m_iFiringFlags)),
+RecvPropInt(RECVINFO(m_iFiringState)),
 #else
-	SendPropBool(SENDINFO(m_bInReload)),
-	SendPropInt(SENDINFO(m_iFiringFlags), 2, SPROP_UNSIGNED),
-	SendPropInt(SENDINFO(m_iFiringState), 2, SPROP_UNSIGNED),
+SendPropInt(SENDINFO(m_iFiringFlags), 2, SPROP_UNSIGNED),
+SendPropInt(SENDINFO(m_iFiringState), 2, SPROP_UNSIGNED),
 #endif
-	END_NETWORK_TABLE()
+END_NETWORK_TABLE()
 
 #ifdef CLIENT_DLL
-	BEGIN_PREDICTION_DATA( CWeaponSawedOff )
-	DEFINE_PRED_FIELD( m_bInReload, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD(m_iFiringFlags, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
-	DEFINE_PRED_FIELD(m_iFiringState, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
-	END_PREDICTION_DATA()
+BEGIN_PREDICTION_DATA(CWeaponSawedOff)
+DEFINE_PRED_FIELD(m_iFiringFlags, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+DEFINE_PRED_FIELD(m_iFiringState, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+END_PREDICTION_DATA()
 #endif
 
-LINK_ENTITY_TO_CLASS( weapon_sawedoff, CWeaponSawedOff );
+LINK_ENTITY_TO_CLASS(weapon_sawedoff, CWeaponSawedOff);
 PRECACHE_WEAPON_REGISTER(weapon_sawedoff);
 
-acttable_t	CWeaponSawedOff::m_acttable[] = 
+acttable_t	CWeaponSawedOff::m_acttable[] =
 {
-	{ ACT_MP_STAND_IDLE,				ACT_HL2MP_IDLE_SHOTGUN,					false },
-	{ ACT_MP_CROUCH_IDLE,				ACT_HL2MP_IDLE_CROUCH_SHOTGUN,			false },
+	{ ACT_MP_STAND_IDLE, ACT_HL2MP_IDLE_SHOTGUN, false },
+	{ ACT_MP_CROUCH_IDLE, ACT_HL2MP_IDLE_CROUCH_SHOTGUN, false },
 
 	{ ACT_MP_INFECTED, ACT_HL2MP_GESTURE_INFECTED, false },
 	{ ACT_MP_KICK, ACT_HL2MP_GESTURE_KICK, false },
@@ -106,139 +83,87 @@ acttable_t	CWeaponSawedOff::m_acttable[] =
 	{ ACT_MP_SLIDE_IDLE, ACT_HL2MP_SLIDE_IDLE_SHOTGUN, false },
 	{ ACT_MP_WALK, ACT_HL2MP_WALK_SHOTGUN, false },
 
-	{ ACT_MP_RUN,						ACT_HL2MP_RUN_SHOTGUN,					false },
-	{ ACT_MP_CROUCHWALK,				ACT_HL2MP_WALK_CROUCH_SHOTGUN,			false },
+	{ ACT_MP_RUN, ACT_HL2MP_RUN_SHOTGUN, false },
+	{ ACT_MP_CROUCHWALK, ACT_HL2MP_WALK_CROUCH_SHOTGUN, false },
 
-	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE,	ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN,	false },
-	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE,	ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN,	false },
+	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE, ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN, false },
+	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE, ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN, false },
 
 	{ ACT_MP_RELOAD_STAND, ACT_HL2MP_GESTURE_RELOAD_SAWEDOFF, false },
 	{ ACT_MP_RELOAD_CROUCH, ACT_HL2MP_GESTURE_RELOAD_SAWEDOFF, false },
 
-	{ ACT_MP_JUMP,						ACT_HL2MP_JUMP_SHOTGUN,					false },
+	{ ACT_MP_JUMP, ACT_HL2MP_JUMP_SHOTGUN, false },
 #ifdef BB2_AI
-	{ ACT_HL2MP_IDLE,					ACT_HL2MP_IDLE_SHOTGUN,					false },
-	{ ACT_HL2MP_RUN,					ACT_HL2MP_RUN_SHOTGUN,					false },
-	{ ACT_HL2MP_IDLE_CROUCH,			ACT_HL2MP_IDLE_CROUCH_SHOTGUN,			false },
-	{ ACT_HL2MP_WALK_CROUCH,			ACT_HL2MP_WALK_CROUCH_SHOTGUN,			false },
-	{ ACT_HL2MP_GESTURE_RANGE_ATTACK,	ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN,	false },
+	{ ACT_HL2MP_IDLE, ACT_HL2MP_IDLE_SHOTGUN, false },
+	{ ACT_HL2MP_RUN, ACT_HL2MP_RUN_SHOTGUN, false },
+	{ ACT_HL2MP_IDLE_CROUCH, ACT_HL2MP_IDLE_CROUCH_SHOTGUN, false },
+	{ ACT_HL2MP_WALK_CROUCH, ACT_HL2MP_WALK_CROUCH_SHOTGUN, false },
+	{ ACT_HL2MP_GESTURE_RANGE_ATTACK, ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN, false },
 	{ ACT_HL2MP_GESTURE_RELOAD, ACT_HL2MP_GESTURE_RELOAD_SAWEDOFF, false },
-	{ ACT_HL2MP_JUMP,					ACT_HL2MP_JUMP_SHOTGUN,					false },
+	{ ACT_HL2MP_JUMP, ACT_HL2MP_JUMP_SHOTGUN, false },
 
-	{ ACT_RANGE_ATTACK1,				ACT_RANGE_ATTACK_SHOTGUN,				false },
+	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SHOTGUN, false },
 
 	// HL2
-	{ ACT_IDLE,						ACT_IDLE_SMG1,					true },	// FIXME: hook to shotgun unique
+	{ ACT_IDLE, ACT_IDLE_SMG1, true },	// FIXME: hook to shotgun unique
 
-	{ ACT_RANGE_ATTACK1,			ACT_RANGE_ATTACK_SHOTGUN,			true },
-	{ ACT_RELOAD,					ACT_RELOAD,					false },
-	{ ACT_WALK,						ACT_WALK_RIFLE,						true },
-	{ ACT_IDLE_ANGRY,				ACT_IDLE_ANGRY_SHOTGUN,				true },
+	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SHOTGUN, true },
+	{ ACT_RELOAD, ACT_RELOAD, false },
+	{ ACT_WALK, ACT_WALK_RIFLE, true },
+	{ ACT_IDLE_ANGRY, ACT_IDLE_ANGRY_SHOTGUN, true },
 
 	// Readiness activities (not aiming)
-	{ ACT_IDLE_RELAXED,				ACT_IDLE_SHOTGUN_RELAXED,		false },//never aims
-	{ ACT_IDLE_STIMULATED,			ACT_IDLE_SHOTGUN_STIMULATED,	false },
-	{ ACT_IDLE_AGITATED,			ACT_IDLE_SHOTGUN_AGITATED,		false },//always aims
+	{ ACT_IDLE_RELAXED, ACT_IDLE_SHOTGUN_RELAXED, false },//never aims
+	{ ACT_IDLE_STIMULATED, ACT_IDLE_SHOTGUN_STIMULATED, false },
+	{ ACT_IDLE_AGITATED, ACT_IDLE_SHOTGUN_AGITATED, false },//always aims
 
-	{ ACT_WALK_RELAXED,				ACT_WALK_RIFLE_RELAXED,			false },//never aims
-	{ ACT_WALK_STIMULATED,			ACT_WALK_RIFLE_STIMULATED,		false },
-	{ ACT_WALK_AGITATED,			ACT_WALK_AIM_RIFLE,				false },//always aims
+	{ ACT_WALK_RELAXED, ACT_WALK_RIFLE_RELAXED, false },//never aims
+	{ ACT_WALK_STIMULATED, ACT_WALK_RIFLE_STIMULATED, false },
+	{ ACT_WALK_AGITATED, ACT_WALK_AIM_RIFLE, false },//always aims
 
-	{ ACT_RUN_RELAXED,				ACT_RUN_RIFLE_RELAXED,			false },//never aims
-	{ ACT_RUN_STIMULATED,			ACT_RUN_RIFLE_STIMULATED,		false },
-	{ ACT_RUN_AGITATED,				ACT_RUN_AIM_RIFLE,				false },//always aims
+	{ ACT_RUN_RELAXED, ACT_RUN_RIFLE_RELAXED, false },//never aims
+	{ ACT_RUN_STIMULATED, ACT_RUN_RIFLE_STIMULATED, false },
+	{ ACT_RUN_AGITATED, ACT_RUN_AIM_RIFLE, false },//always aims
 
 	// Readiness activities (aiming)
-	{ ACT_IDLE_AIM_RELAXED,			ACT_IDLE_SMG1_RELAXED,			false },//never aims	
-	{ ACT_IDLE_AIM_STIMULATED,		ACT_IDLE_AIM_RIFLE_STIMULATED,	false },
-	{ ACT_IDLE_AIM_AGITATED,		ACT_IDLE_ANGRY_SMG1,			false },//always aims
+	{ ACT_IDLE_AIM_RELAXED, ACT_IDLE_SMG1_RELAXED, false },//never aims	
+	{ ACT_IDLE_AIM_STIMULATED, ACT_IDLE_AIM_RIFLE_STIMULATED, false },
+	{ ACT_IDLE_AIM_AGITATED, ACT_IDLE_ANGRY_SMG1, false },//always aims
 
-	{ ACT_WALK_AIM_RELAXED,			ACT_WALK_RIFLE_RELAXED,			false },//never aims
-	{ ACT_WALK_AIM_STIMULATED,		ACT_WALK_AIM_RIFLE_STIMULATED,	false },
-	{ ACT_WALK_AIM_AGITATED,		ACT_WALK_AIM_RIFLE,				false },//always aims
+	{ ACT_WALK_AIM_RELAXED, ACT_WALK_RIFLE_RELAXED, false },//never aims
+	{ ACT_WALK_AIM_STIMULATED, ACT_WALK_AIM_RIFLE_STIMULATED, false },
+	{ ACT_WALK_AIM_AGITATED, ACT_WALK_AIM_RIFLE, false },//always aims
 
-	{ ACT_RUN_AIM_RELAXED,			ACT_RUN_RIFLE_RELAXED,			false },//never aims
-	{ ACT_RUN_AIM_STIMULATED,		ACT_RUN_AIM_RIFLE_STIMULATED,	false },
-	{ ACT_RUN_AIM_AGITATED,			ACT_RUN_AIM_RIFLE,				false },//always aims
+	{ ACT_RUN_AIM_RELAXED, ACT_RUN_RIFLE_RELAXED, false },//never aims
+	{ ACT_RUN_AIM_STIMULATED, ACT_RUN_AIM_RIFLE_STIMULATED, false },
+	{ ACT_RUN_AIM_AGITATED, ACT_RUN_AIM_RIFLE, false },//always aims
 	//End readiness activities
 
-	{ ACT_WALK_AIM,					ACT_WALK_AIM_SHOTGUN,				true },
-	{ ACT_WALK_CROUCH,				ACT_WALK_CROUCH_RIFLE,				true },
-	{ ACT_WALK_CROUCH_AIM,			ACT_WALK_CROUCH_AIM_RIFLE,			true },
-	{ ACT_RUN,						ACT_RUN_RIFLE,						true },
-	{ ACT_RUN_AIM,					ACT_RUN_AIM_SHOTGUN,				true },
-	{ ACT_RUN_CROUCH,				ACT_RUN_CROUCH_RIFLE,				true },
-	{ ACT_RUN_CROUCH_AIM,			ACT_RUN_CROUCH_AIM_RIFLE,			true },
-	{ ACT_GESTURE_RANGE_ATTACK1,	ACT_GESTURE_RANGE_ATTACK_SHOTGUN,	true },
-	{ ACT_RANGE_ATTACK1_LOW,		ACT_RANGE_ATTACK_SHOTGUN_LOW,		true },
-	{ ACT_RELOAD_LOW,				ACT_RELOAD,				false },
-	{ ACT_GESTURE_RELOAD,			ACT_GESTURE_RELOAD,			false },
+	{ ACT_WALK_AIM, ACT_WALK_AIM_SHOTGUN, true },
+	{ ACT_WALK_CROUCH, ACT_WALK_CROUCH_RIFLE, true },
+	{ ACT_WALK_CROUCH_AIM, ACT_WALK_CROUCH_AIM_RIFLE, true },
+	{ ACT_RUN, ACT_RUN_RIFLE, true },
+	{ ACT_RUN_AIM, ACT_RUN_AIM_SHOTGUN, true },
+	{ ACT_RUN_CROUCH, ACT_RUN_CROUCH_RIFLE, true },
+	{ ACT_RUN_CROUCH_AIM, ACT_RUN_CROUCH_AIM_RIFLE, true },
+	{ ACT_GESTURE_RANGE_ATTACK1, ACT_GESTURE_RANGE_ATTACK_SHOTGUN, true },
+	{ ACT_RANGE_ATTACK1_LOW, ACT_RANGE_ATTACK_SHOTGUN_LOW, true },
+	{ ACT_RELOAD_LOW, ACT_RELOAD, false },
+	{ ACT_GESTURE_RELOAD, ACT_GESTURE_RELOAD, false },
 #endif //BB2_AI
 };
 
 IMPLEMENT_ACTTABLE(CWeaponSawedOff);
 
-#ifndef CLIENT_DLL
-#ifdef BB2_AI
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pOperator - 
-//-----------------------------------------------------------------------------
-void CWeaponSawedOff::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles )
+CWeaponSawedOff::CWeaponSawedOff(void)
 {
-	Vector vecShootOrigin, vecShootDir;
-	CAI_BaseNPC *npc = pOperator->MyNPCPointer();
-	Assert( npc != NULL );
-	WeaponSound( SINGLE_NPC );
-	m_iClip1 = m_iClip1 - 1;
-
-	if ( bUseWeaponAngles )
-	{
-		QAngle	angShootDir;
-		GetAttachment( LookupAttachment( "muzzle" ), vecShootOrigin, angShootDir );
-		AngleVectors( angShootDir, &vecShootDir );
-	}
-	else 
-	{
-		vecShootOrigin = pOperator->Weapon_ShootPosition();
-		vecShootDir = npc->GetActualShootTrajectory( vecShootOrigin );
-	}
-
-	pOperator->FireBullets( GetWpnData().m_iPellets, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0 );
+	m_iFiringFlags = m_iFiringState = 0;
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CWeaponSawedOff::Operator_ForceNPCFire( CBaseCombatCharacter *pOperator, bool bSecondary )
-{
-	m_iClip1++;
-	FireNPCPrimaryAttack( pOperator, true );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-void CWeaponSawedOff::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator )
-{
-	switch( pEvent->event )
-	{
-	case EVENT_WEAPON_SHOTGUN_FIRE:		
-		FireNPCPrimaryAttack( pOperator, false );
-		break;
-
-	default:
-		CBaseCombatWeapon::Operator_HandleAnimEvent( pEvent, pOperator );
-		break;
-	}
-}
-#endif //BB2_AI
-#endif
 
 void CWeaponSawedOff::AffectedByPlayerSkill(int skill)
 {
+	BaseClass::AffectedByPlayerSkill(skill);
+
 	switch (skill)
 	{
 	case PLAYER_SKILL_HUMAN_GUNSLINGER:
@@ -265,10 +190,8 @@ const char *CWeaponSawedOff::GetMuzzleflashAttachment(bool bPrimaryAttack)
 
 //-----------------------------------------------------------------------------
 // Purpose: Override so only reload one shell at a time
-// Input  :
-// Output :
 //-----------------------------------------------------------------------------
-bool CWeaponSawedOff::Reload( void )
+bool CWeaponSawedOff::Reload(void)
 {
 	CHL2MP_Player *pOwner = ToHL2MPPlayer(GetOwner());
 	if (!pOwner)
@@ -307,91 +230,25 @@ bool CWeaponSawedOff::Reload( void )
 	return true;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Play finish reload anim and fill clip
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-void CWeaponSawedOff::FillClip( int iAmount )
-{
-	CBaseCombatCharacter *pOwner = GetOwner();
-	if ( pOwner == NULL )
-		return;
-
-	// Add them to the clip
-	if ( pOwner->GetAmmoCount( m_iPrimaryAmmoType ) > 0 )
-	{
-		if ( Clip1() < GetMaxClip1() )
-		{
-			m_iClip1 += iAmount;
-			pOwner->RemoveAmmo( iAmount, m_iPrimaryAmmoType );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//
-//
-//-----------------------------------------------------------------------------
-void CWeaponSawedOff::DryFire( void )
-{
-	WeaponSound(EMPTY);
-	SendWeaponAnim( ACT_VM_DRYFIRE );
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-}
-
 void CWeaponSawedOff::PerformAttack(bool bDouble)
 {
-	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
-	if (!pPlayer)
-		return;
-
-	// MUST call sound before removing a round from the clip of a CMachineGun
-	WeaponSound((bDouble ? WPN_DOUBLE : SINGLE));
-
 	Activity shootActivity = (m_iFiringState == SAWEDOFF_FIRED_LEFT) ? ACT_VM_SHOOT_LEFT : ACT_VM_SHOOT_RIGHT;
 	if (bDouble)
 		shootActivity = ACT_VM_SHOOT_BOTH;
 
-	SendWeaponAnim(shootActivity);
-
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-	m_iClip1 -= 1;
-
-	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, shootActivity);
-
-	Vector vecSrc = pPlayer->Weapon_ShootPosition();
-	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
-
-	FireBulletsInfo_t info(GetWpnData().m_iPellets, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, !bDouble);
-	info.m_pAttacker = pPlayer;
-	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
-	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
-	pPlayer->FireBullets(info);
-
-#ifdef BB2_AI
-#ifndef CLIENT_DLL
-	pPlayer->SetMuzzleFlashTime(gpGlobals->curtime + 1.0);
-	CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2);
-#endif
-#endif //BB2_AI
-
-	pPlayer->ViewPunch(GetViewKickAngle());
+	BaseClass::PrimaryAttack(shootActivity, (bDouble ? WPN_DOUBLE : SINGLE), !bDouble);
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Override so shotgun can do mulitple reloads in a row
 //-----------------------------------------------------------------------------
-void CWeaponSawedOff::ItemPostFrame( void )
+void CWeaponSawedOff::ItemPostFrame(void)
 {
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	BaseClass::ItemPostFrame();
+
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (!pOwner)
 		return;
-
-	// Implement base properties:
-	if (!m_bInReload)
-		BaseClass::GenericBB2Animations();
 
 	if (m_bInReload)
 	{
@@ -408,8 +265,7 @@ void CWeaponSawedOff::ItemPostFrame( void )
 		}
 	}
 
-	if (!m_bInReload && IsViewModelSequenceFinished() && (m_flNextBashAttack <= gpGlobals->curtime) && !(pOwner->m_nButtons & (IN_BASH | IN_ATTACK | IN_ATTACK2)) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
-		WeaponIdle();
+	WeaponIdle();
 
 	if (m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
@@ -459,33 +315,9 @@ void CWeaponSawedOff::ItemPostFrame( void )
 		}
 	}
 
-	if ( (pOwner->m_nButtons & IN_RELOAD) && UsesClipsForAmmo1() && !m_bInReload ) 
+	if ((pOwner->m_nButtons & IN_RELOAD) && UsesClipsForAmmo1() && !m_bInReload)
 	{
-		if ( (m_iClip1 < GetMaxClip1()) && (pOwner->GetAmmoCount(m_iPrimaryAmmoType) >= 1) )
+		if ((m_iClip1 < GetMaxClip1()) && (pOwner->GetAmmoCount(m_iPrimaryAmmoType) >= 1))
 			Reload();
 	}
-}
-
-CWeaponSawedOff::CWeaponSawedOff( void )
-{
-	m_bReloadsSingly = true;
-	m_iFiringFlags = m_iFiringState = 0;
-}
-
-void CWeaponSawedOff::StartHolsterSequence()
-{
-	m_bInReload = false;
-	BaseClass::StartHolsterSequence();
-}
-
-bool CWeaponSawedOff::Holster( CBaseCombatWeapon *pSwitchingTo )
-{
-	m_bInReload = false;
-	return BaseClass::Holster( pSwitchingTo );
-}
-
-void CWeaponSawedOff::Drop(const Vector &vecVelocity)
-{
-	m_bInReload = false;
-	BaseClass::Drop(vecVelocity);
 }

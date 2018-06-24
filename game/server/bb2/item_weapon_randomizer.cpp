@@ -53,6 +53,7 @@ weaponInfoItem pszWeapons[] =
 	{ "weapon_flamethrower", 3, false },
 	{ "weapon_sawedoff", 20, false },
 	{ "weapon_remington", 30, false },
+	{ "weapon_benelli_m4", 25, false },
 
 	{ "weapon_m9_bayonet", 100, true },
 	{ "weapon_fireaxe", 55, true },
