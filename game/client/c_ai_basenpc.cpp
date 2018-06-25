@@ -1,9 +1,8 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//=========       Copyright © Reperio Studios 2013-2019 @ Bernt Andreas Eide!       ============//
 //
-// Purpose: 
+// Purpose: NPC BaseClass.
 //
-// $NoKeywords: $
-//=============================================================================//
+//==============================================================================================//
 
 #include "cbase.h"
 #include "c_ai_basenpc.h"
@@ -18,9 +17,9 @@
 #include "tier0/memdbgon.h"
 
 IMPLEMENT_CLIENTCLASS_DT( C_AI_BaseNPC, DT_AI_BaseNPC, CAI_BaseNPC )
-	RecvPropInt( RECVINFO( m_lifeState ) ),
-	RecvPropBool( RECVINFO( m_bPerformAvoidance ) ),
-	RecvPropBool( RECVINFO( m_bIsMoving ) ),
+	RecvPropInt(RECVINFO(m_lifeState)),
+	RecvPropBool(RECVINFO(m_bPerformAvoidance)),
+	RecvPropBool(RECVINFO(m_bIsMoving)),
 	RecvPropInt(RECVINFO(m_iHealth)),
 	RecvPropInt(RECVINFO(m_iMaxHealth)),
 	RecvPropString(RECVINFO(m_szNPCName)),
@@ -30,6 +29,12 @@ END_RECV_TABLE()
 C_AI_BaseNPC::C_AI_BaseNPC()
 {
 	m_bCreatedHealthBar = false;
+}
+
+C_AI_BaseNPC::~C_AI_BaseNPC()
+{
+	if (m_bCreatedHealthBar && GetHealthBarHUD())
+		GetHealthBarHUD()->RemoveHealthBarItem(entindex());
 }
 
 //-----------------------------------------------------------------------------

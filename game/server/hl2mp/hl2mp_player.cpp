@@ -842,6 +842,35 @@ void CHL2MP_Player::OnZombieInfectionComplete(void)
 	RefreshSpeed();
 }
 
+void CHL2MP_Player::OnAffectedBySkill(const CTakeDamageInfo &info)
+{
+	int skillFlag = info.GetSkillFlags();
+	if (!skillFlag || !(skillFlag & SKILL_FLAG_BLAZINGAMMO) || (info.GetInflictor() == NULL) || IsMaterialOverlayFlagActive(MAT_OVERLAY_SPAWNPROTECTION) || !IsAlive() || IsObserver())
+		return;
+
+	CHL2MP_Player *pAttacker = ToHL2MPPlayer(info.GetAttacker());
+	if (!pAttacker)
+		return;
+
+	if (!FClassnameIs(info.GetInflictor(), "weapon_flamethrower") || IsAffectedBySkillFlag(skillFlag))
+		return;
+
+	AddMaterialOverlayFlag(MAT_OVERLAY_BURNING);
+
+	playerSkillAffectionItem_t item;
+	item.flag = SKILL_FLAG_BLAZINGAMMO;
+	item.overlayFlag = MAT_OVERLAY_BURNING;
+	item.damage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flBurnDamage;
+	item.duration = (gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flBurnDuration);
+	item.nextTimeToTakeDamage = 0.0f;
+	item.timeToTakeDamage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flBurnFrequency;
+	item.m_pAttacker = pAttacker;
+
+	m_pActiveSkillEffects.AddToTail(item);
+
+	OnSkillFlagState(SKILL_FLAG_BLAZINGAMMO, true);
+}
+
 bool CHL2MP_Player::DoHighPingCheck(void)
 {
 	if (m_bFinishedPingCheck || IsBot())

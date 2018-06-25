@@ -148,6 +148,9 @@ public:
 	virtual int GetIdleState(void) { return 0; }
 	virtual void SetIdleState(int state) {}
 
+	virtual float		GetIdealSpeed() const;
+	virtual float		GetIdealAccel() const;
+
 protected:
 
 	int m_iNumGrenades;

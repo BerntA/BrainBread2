@@ -102,7 +102,7 @@ private:
 
 	int m_nClientEffectFlags;
 #else
-
+	float GetActualDamage(void);
 #endif
 };
 
@@ -365,9 +365,9 @@ void CWeaponFlamethrower::PrimaryAttack(CBasePlayer *pOwner, CBaseViewModel *pVM
 		CBaseEntity *pHitEnt = traceHit.m_pEnt;
 		if (pHitEnt)
 		{
-			float flProperDamage = GameBaseShared()->GetDropOffDamage(vecStart, traceHit.endpos, ((float)GetHL2MPWpnData().m_iPlayerDamage), GetWpnData().m_flDropOffDistance);
+			float flProperDamage = GameBaseShared()->GetDropOffDamage(vecStart, traceHit.endpos, GetActualDamage(), GetWpnData().m_flDropOffDistance);
 
-			CTakeDamageInfo info(this, pOwner, flProperDamage, DMG_BLAST);
+			CTakeDamageInfo info(this, pOwner, flProperDamage, DMG_BULLET);
 			info.SetSkillFlags(SKILL_FLAG_BLAZINGAMMO);
 			CalculateMeleeDamageForce(&info, vecForward, traceHit.endpos);
 			pHitEnt->DispatchTraceAttack(info, vecForward, &traceHit);
@@ -463,5 +463,27 @@ void C_WeaponFlamethrower::RemoveParticleEffect(CNewParticleEffect *effect, bool
 		::ParticleMgr()->RemoveEffect(effect);
 	else
 		effect->StopEmission(false, false, true);
+}
+#else
+float CWeaponFlamethrower::GetActualDamage(void)
+{
+	float baseDmg = ((float)GetHL2MPWpnData().m_iPlayerDamage);
+
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
+	if (pPlayer)
+	{
+		int m_iTeamBonusDamage = (pPlayer->m_BB2Local.m_iPerkTeamBonus - 5);
+		if (m_iTeamBonusDamage > 0)
+			baseDmg += ((baseDmg / 100.0f) * (m_iTeamBonusDamage * GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iTeamBonusDamageIncrease));
+
+		if (pPlayer->IsPerkFlagActive(PERK_POWERUP_CRITICAL))
+		{
+			const DataPlayerItem_Player_PowerupItem_t *data = GameBaseShared()->GetSharedGameDetails()->GetPlayerPowerupData(PERK_POWERUP_CRITICAL);
+			if (data)
+				baseDmg += ((baseDmg / 100.0f) * data->flExtraFactor);
+		}
+	}
+
+	return baseDmg;
 }
 #endif

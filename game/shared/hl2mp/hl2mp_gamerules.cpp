@@ -2357,7 +2357,7 @@ bool CHL2MPRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 	if ( pPlayer->ClientCommand( args ) )
 		return true;
 
-	if (pPlayer && (args.ArgC() == 2) && m_bEndMapVotingEnabled && FStrEq(args[0], "player_vote_endmap_choice") && pPlayer->ShouldRunRateLimitedCommand(args))
+	if (pPlayer && (args.ArgC() == 2) && m_bEndMapVotingEnabled && FStrEq(args[0], "player_vote_endmap_choice"))
 	{
 		int playerIndex = (pPlayer->entindex() - 1);
 		if (playerIndex >= 0 && playerIndex < MAX_PLAYERS)

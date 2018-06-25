@@ -37,6 +37,7 @@ public:
 	void Reset(void);
 	bool ShouldDraw(void);
 	void AddHealthBarItem(C_BaseEntity *pEntity, int index, bool bIsBoss);
+	void RemoveHealthBarItem(int index);
 	void Cleanup(void) { pszNPCHealthBarList.Purge(); }
 
 protected:

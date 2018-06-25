@@ -230,5 +230,5 @@ void CEndMapVoteMenu::OnPlayerVote(KeyValues *data)
 			m_pVoteOption[i]->SetSelection(true);
 	}
 
-	engine->ClientCmd(VarArgs("player_vote_endmap_choice %i\n", (choice + 1)));
+	engine->ClientCmd_Unrestricted(VarArgs("player_vote_endmap_choice %i\n", (choice + 1)));
 }

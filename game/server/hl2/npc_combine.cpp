@@ -2165,6 +2165,16 @@ void CNPC_Combine::OnStartSchedule( int scheduleType )
 {
 }
 
+float CNPC_Combine::GetIdealSpeed() const
+{
+	return (BaseClass::GetIdealSpeed() * m_flSpeedFactorValue);
+}
+
+float CNPC_Combine::GetIdealAccel() const
+{
+	return (BaseClass::GetIdealAccel() * m_flSpeedFactorValue);
+}
+
 //=========================================================
 // HandleAnimEvent - catches the monster-specific messages
 // that occur when tagged animation frames are played.

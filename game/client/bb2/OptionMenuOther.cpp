@@ -106,6 +106,9 @@ OptionMenuOther::OptionMenuOther(vgui::Panel *parent, char const *panelName) : B
 		"crosshair_color_alpha",
 	};
 
+	m_pViewmodelFOVSlider = vgui::SETUP_PANEL(new vgui::GraphicalOverlay(this, "ViewmodelFOVSlider", "#GameUI_ViewmodelFOV", "viewmodel_fov", 30, 130, false, GraphicalOverlay::RawValueType::TYPE_INT));
+	m_pViewmodelFOVSlider->SetZPos(60);
+
 	for (int i = 0; i < _ARRAYSIZE(m_pCrosshairColorSlider); i++)
 	{
 		m_pCrosshairColorSlider[i] = vgui::SETUP_PANEL(new vgui::GraphicalOverlay(this, "CrosshairSlider", szSliderOptions[i], szCVARS[i], 0, 255, false, GraphicalOverlay::RawValueType::TYPE_INT));
@@ -165,6 +168,8 @@ void OptionMenuOther::OnUpdate(bool bInGame)
 		for (int i = 0; i < _ARRAYSIZE(m_pCrosshairColorSlider); i++)
 			m_pCrosshairColorSlider[i]->OnUpdate(bInGame);
 
+		m_pViewmodelFOVSlider->OnUpdate(bInGame);
+
 		m_pApplyButton->OnUpdate();
 	}
 }
@@ -205,8 +210,6 @@ void OptionMenuOther::SetupLayout(void)
 		static ConVarRef bb2_render_damage_text("bb2_render_damage_text");
 		static ConVarRef bb2_scope_refraction("bb2_scope_refraction");
 
-		static ConVarRef crosshair("crosshair");
-
 		m_pCheckBoxVar[0]->SetCheckedStatus(bb2_enable_healthbar_for_all.GetBool());
 		m_pCheckBoxVar[1]->SetCheckedStatus(bb2_show_details.GetBool());
 		m_pCheckBoxVar[2]->SetCheckedStatus(hud_fastswitch.GetBool());
@@ -233,18 +236,20 @@ void OptionMenuOther::SetupLayout(void)
 		m_pCheckBoxVar[i]->SetPos(scheme()->GetProportionalScaledValue(DIVIDER_START_XPOS), scheme()->GetProportionalScaledValue(55) + (i * (hz + scheme()->GetProportionalScaledValue(8))));
 	}
 
+	m_pViewmodelFOVSlider->SetSize(scheme()->GetProportionalScaledValue(300), scheme()->GetProportionalScaledValue(20));
+	m_pViewmodelFOVSlider->SetPos(scheme()->GetProportionalScaledValue(DIVIDER_START_XPOS), scheme()->GetProportionalScaledValue(155));
+
 	for (int i = 0; i < _ARRAYSIZE(m_pComboImgList); i++)
 	{
 		m_pComboImgList[i]->SetSize(scheme()->GetProportionalScaledValue(300), scheme()->GetProportionalScaledValue(60));
-		m_pComboImgList[i]->GetSize(wz, hz);
-		m_pComboImgList[i]->SetPos(scheme()->GetProportionalScaledValue(DIVIDER_START_XPOS), scheme()->GetProportionalScaledValue(147));
+		m_pComboImgList[i]->SetPos(scheme()->GetProportionalScaledValue(DIVIDER_START_XPOS), scheme()->GetProportionalScaledValue(176));
 	}
 
 	for (int i = 0; i < _ARRAYSIZE(m_pCrosshairColorSlider); i++)
 	{
 		m_pCrosshairColorSlider[i]->SetSize(scheme()->GetProportionalScaledValue(300), scheme()->GetProportionalScaledValue(20));
 		m_pCrosshairColorSlider[i]->GetSize(wz, hz);
-		m_pCrosshairColorSlider[i]->SetPos(scheme()->GetProportionalScaledValue(DIVIDER_START_XPOS), scheme()->GetProportionalScaledValue(209) + (i * (hz + scheme()->GetProportionalScaledValue(4))));
+		m_pCrosshairColorSlider[i]->SetPos(scheme()->GetProportionalScaledValue(DIVIDER_START_XPOS), scheme()->GetProportionalScaledValue(237) + (i * (hz + scheme()->GetProportionalScaledValue(4))));
 	}
 
 	for (int i = 0; i < _ARRAYSIZE(m_pComboSoundSet); i++)

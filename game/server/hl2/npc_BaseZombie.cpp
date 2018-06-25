@@ -75,6 +75,7 @@ envelopePoint_t envDefaultZombieMoanVolume[] =
 #define ZOMBIE_FLINCH_DELAY			3
 #define ZOMBIE_BURN_TIME		10 // If ignited, burn for this many seconds
 #define ZOMBIE_BURN_TIME_NOISE	2  // Give or take this many seconds.
+#define ZOMBIE_LIFETIME (gpGlobals->curtime + ((random->RandomFloat(bb2_zombie_lifespan_min.GetFloat(), bb2_zombie_lifespan_max.GetFloat())) * 60.0f))
 
 //=========================================================
 // private activities
@@ -387,8 +388,12 @@ int CNPC_BaseZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 	CBaseEntity *pAttacker = inputInfo.GetAttacker();
 	if (pAttacker)
 	{
-		if ((pAttacker->Classify() == CLASS_PLAYER_ZOMB) && (HL2MPRules()->m_bRoundStarted))
+		if (pAttacker->Classify() == CLASS_PLAYER_ZOMB)
 			return 0;
+
+		// Update lifetime if attacked by a non zomb plr.
+		if (pAttacker->IsPlayer() && pAttacker->IsHuman())
+			m_flSpawnTime = ZOMBIE_LIFETIME;
 	}
 
 	if( inputInfo.GetDamageType() & DMG_BURN )
@@ -916,7 +921,7 @@ void CNPC_BaseZombie::Spawn( void )
 	m_ActBusyBehavior.SetUseRenderBounds(true);
 
 	SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE);
-	m_flSpawnTime = gpGlobals->curtime + ((random->RandomFloat(bb2_zombie_lifespan_min.GetFloat(), bb2_zombie_lifespan_max.GetFloat())) * 60.0f);
+	m_flSpawnTime = ZOMBIE_LIFETIME;
 
 	if (!IsBoss() && !HL2MPRules()->CanSpawnZombie())
 	{
@@ -1175,6 +1180,7 @@ void CNPC_BaseZombie::PrescheduleThink(void)
 		if ((GetLifeSpan() < gpGlobals->curtime) && !m_bLifeTimeOver)
 		{
 			m_bLifeTimeOver = true;
+			SetLastHitGroup(HITGROUP_GENERIC);
 			KillMe();
 		}
 	}

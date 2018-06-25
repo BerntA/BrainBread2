@@ -244,6 +244,13 @@ int C_HL2MP_Player::DrawModel( int flags )
 				BaseClass::DrawModel(STUDIO_RENDER | STUDIO_TRANSPARENCY);
 				modelrender->ForcedMaterialOverride(0);
 			}
+
+			if (IsMaterialOverlayFlagActive(MAT_OVERLAY_BURNING))
+			{
+				modelrender->ForcedMaterialOverride(GlobalRenderEffects->GetBurnOverlay());
+				BaseClass::DrawModel(STUDIO_RENDER | STUDIO_TRANSPARENCY);
+				modelrender->ForcedMaterialOverride(0);
+			}
 		}
 	}
 

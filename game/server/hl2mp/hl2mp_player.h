@@ -134,6 +134,8 @@ public:
 	virtual bool IsValidObserverTarget(CBaseEntity * target); 
 	virtual void OnZombieInfectionComplete(void);
 
+	virtual void OnAffectedBySkill(const CTakeDamageInfo &info);
+
 	void OnUpdateInfected(void);
 	void SharedPostThinkHL2MP(void);
 	bool IsSliding(void) const;

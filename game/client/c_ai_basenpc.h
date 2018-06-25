@@ -22,6 +22,7 @@ public:
 	DECLARE_CLIENTCLASS();
 
 	C_AI_BaseNPC();
+	virtual ~C_AI_BaseNPC();
 
 	virtual unsigned int	PhysicsSolidMaskForEntity( void ) const;
 	virtual bool			IsNPC( void ) { return true; }

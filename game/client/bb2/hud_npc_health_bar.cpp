@@ -103,11 +103,8 @@ void CHudNPCHealthBar::Paint()
 	{
 		const HealthBarItem_t *item = &pszNPCHealthBarList[i];
 		C_AI_BaseNPC *pObject = dynamic_cast<C_AI_BaseNPC*> (ClientEntityList().GetBaseEntity(item->index));
-		if (pObject == NULL)
-		{
-			pszNPCHealthBarList.Remove(i);
+		if (pObject == NULL) // Shouldn't happen!
 			continue;
-		}
 
 		if (pObject->IsDormant() || !pObject->ShouldDraw())
 			continue;
@@ -212,6 +209,15 @@ void CHudNPCHealthBar::AddHealthBarItem(C_BaseEntity *pEntity, int index, bool b
 	pEntity->GetRenderBounds(pItem.vecMins, pItem.vecMaxs);
 
 	pszNPCHealthBarList.AddToTail(pItem);
+}
+
+void CHudNPCHealthBar::RemoveHealthBarItem(int index)
+{
+	for (int i = (pszNPCHealthBarList.Count() - 1); i >= 0; i--)
+	{
+		if (pszNPCHealthBarList[i].index == index)
+			pszNPCHealthBarList.Remove(i);
+	}
 }
 
 void CHudNPCHealthBar::ApplySchemeSettings(vgui::IScheme *scheme)

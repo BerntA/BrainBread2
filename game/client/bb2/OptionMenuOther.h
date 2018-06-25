@@ -46,6 +46,8 @@ namespace vgui
 
 		vgui::ComboImageList *m_pComboImgList[1];
 
+		vgui::GraphicalOverlay *m_pViewmodelFOVSlider;
+
 		vgui::GraphicalOverlay *m_pCrosshairColorSlider[4];
 
 		vgui::InlineMenuButton *m_pApplyButton;

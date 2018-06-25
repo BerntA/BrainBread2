@@ -2315,28 +2315,18 @@ float CBaseCombatCharacter::GetIdealAccel() const
 // The NPC or player has been affected by a skill!
 void CBaseCombatCharacter::OnAffectedBySkill(const CTakeDamageInfo &info)
 {
-	if (!IsNPC())
-		return;
-
 	int skillFlag = info.GetSkillFlags();
-	if (!skillFlag)
+	if (!IsNPC() || !skillFlag)
 		return;
 
-	CBaseEntity *pAttacker = info.GetAttacker();
+	CHL2MP_Player *pAttacker = ToHL2MPPlayer(info.GetAttacker());
 	if (!pAttacker)
-		return;
-
-	CHL2MP_Player *pPlayerKiller = ToHL2MPPlayer(pAttacker);
-	if (!pPlayerKiller)
-		return;
-
-	if (!pAttacker->IsPlayer() || !HL2MPRules()->CanUseSkills())
 		return;
 
 	if (IsAffectedBySkillFlag(skillFlag))
 		return;
 
-	CBaseCombatWeapon *pKillerWeapon = pPlayerKiller->GetActiveWeapon();
+	CBaseCombatWeapon *pKillerWeapon = pAttacker->GetActiveWeapon();
 
 	int nFlag = 0;
 	int nOverlayFlag = 0;
@@ -2412,7 +2402,7 @@ bool CBaseCombatCharacter::IsAffectedBySkillFlag(int flag) const
 
 void CBaseCombatCharacter::CheckSkillAffections(void)
 {
-	if (!m_pActiveSkillEffects.Count() || !HL2MPRules()->CanUseSkills())
+	if (!m_pActiveSkillEffects.Count())
 		return;
 
 	for (int i = (m_pActiveSkillEffects.Count() - 1); i >= 0; i--)
