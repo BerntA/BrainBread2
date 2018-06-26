@@ -2270,13 +2270,10 @@ bool CSceneEntity::CheckActors()
 			if ( pActor )
 			{
 				bool bShouldWait = false;
-				if ( hl2_episodic.GetBool() )
+
+				if (IsRunningScriptedSceneWithSpeech(pActor))
 				{
-					// Episodic waits until the NPC is fully finished with any .vcd with speech in it
-					if ( IsRunningScriptedSceneWithSpeech( pActor ) )
-					{
-						bShouldWait = true;
-					}				
+					bShouldWait = true;
 				}
 
 				if ( pActor->GetExpresser() && pActor->GetExpresser()->IsSpeaking() )

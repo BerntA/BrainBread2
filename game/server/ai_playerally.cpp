@@ -422,26 +422,6 @@ void CAI_PlayerAlly::GatherEnemyConditions( CBaseEntity *pEnemy )
 #ifdef HL2_DLL
 		if ( HasCondition( COND_SEE_ENEMY ) && ( pEnemy->Classify() != CLASS_BULLSEYE ) )
 		{
-			if( Classify() == CLASS_PLAYER_ALLY_VITAL && hl2_episodic.GetBool() )
-			{
-				CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
-				if( pPlayer )
-				{			
-					// If I can see the player, and the player would see this enemy if he turned around...
-					if( !pPlayer->FInViewCone(pEnemy) && FVisible( pPlayer ) && pPlayer->FVisible(pEnemy) )
-					{
-						Vector2D vecPlayerView = pPlayer->EyeDirection2D().AsVector2D();
-						Vector2D vecToEnemy = ( pEnemy->GetAbsOrigin() - pPlayer->GetAbsOrigin() ).AsVector2D();
-						Vector2DNormalize( vecToEnemy );
-						
-						if( DotProduct2D(vecPlayerView, vecToEnemy) <= -0.75 )
-						{
-							SpeakIfAllowed( TLK_WATCHOUT, "dangerloc:behind" );
-							return;
-						}
-					}
-				}
-			}
 			SpeakIfAllowed( TLK_STARTCOMBAT );
 		}
 #else

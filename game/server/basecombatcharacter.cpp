@@ -2425,7 +2425,7 @@ void CBaseCombatCharacter::CheckSkillAffections(void)
 			{
 				m_pActiveSkillEffects[i].nextTimeToTakeDamage = gpGlobals->curtime + m_pActiveSkillEffects[i].timeToTakeDamage;
 
-				CTakeDamageInfo info(pAttacker, pAttacker, m_pActiveSkillEffects[i].damage, DMG_CLUB);
+				CTakeDamageInfo info(pAttacker, pAttacker, m_pActiveSkillEffects[i].damage, GetSkillAffectionDamageType(m_pActiveSkillEffects[i].flag));
 				info.SetSkillFlags(m_pActiveSkillEffects[i].flag);
 
 				int activeFlag = m_pActiveSkillEffects[i].flag;

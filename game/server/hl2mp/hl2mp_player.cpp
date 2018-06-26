@@ -871,6 +871,14 @@ void CHL2MP_Player::OnAffectedBySkill(const CTakeDamageInfo &info)
 	OnSkillFlagState(SKILL_FLAG_BLAZINGAMMO, true);
 }
 
+int CHL2MP_Player::GetSkillAffectionDamageType(int skillFlag)
+{
+	if (skillFlag & SKILL_FLAG_BLAZINGAMMO)
+		return DMG_BURN;
+
+	return DMG_CLUB;
+}
+
 bool CHL2MP_Player::DoHighPingCheck(void)
 {
 	if (m_bFinishedPingCheck || IsBot())

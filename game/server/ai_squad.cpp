@@ -501,7 +501,7 @@ void CAI_Squad::SquadNewEnemy( CBaseEntity *pEnemy )
 				   gpGlobals->curtime - pMember->GetEnemyLastTimeSeen() > 3.0 ) )
 			{
 				// give them a new enemy
-				if( !hl2_episodic.GetBool() || pMember->IsValidEnemy(pEnemy) )
+				if( pMember->IsValidEnemy(pEnemy) )
 				{
 					pMember->SetEnemy( pEnemy );
 				}

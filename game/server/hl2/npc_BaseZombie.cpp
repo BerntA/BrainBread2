@@ -396,7 +396,7 @@ int CNPC_BaseZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 			m_flSpawnTime = ZOMBIE_LIFETIME;
 	}
 
-	if( inputInfo.GetDamageType() & DMG_BURN )
+	if ((inputInfo.GetDamageType() & DMG_BURN) && !(info.GetSkillFlags() & SKILL_FLAG_BLAZINGAMMO))
 	{
 		// If a zombie is on fire it only takes damage from the fire that's attached to it. (DMG_DIRECT)
 		// This is to stop zombies from burning to death 10x faster when they're standing around
@@ -519,7 +519,7 @@ bool CNPC_BaseZombie::ShouldIgnite( const CTakeDamageInfo &info )
 		return false;
 	}
 
-	if ( info.GetDamageType() & DMG_BURN )
+	if ( (info.GetDamageType() & DMG_BURN) && !(info.GetSkillFlags() & SKILL_FLAG_BLAZINGAMMO) )
 	{
 		//
 		// If we take more than ten percent of our health in burn damage within a five

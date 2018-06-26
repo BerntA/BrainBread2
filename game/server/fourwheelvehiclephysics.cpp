@@ -664,10 +664,6 @@ int CFourWheelVehiclePhysics::DrawDebugTextOverlays( int nOffset )
 //----------------------------------------------------
 void CFourWheelVehiclePhysics::PlaceWheelDust( int wheelIndex, bool ignoreSpeed )
 {
-	// New vehicles handle this deeper into the base class
-	if ( hl2_episodic.GetBool() )
-		return;
-
 	// Old dust
 	Vector	vecPos, vecVel;
 	m_pVehicle->GetWheelContactPoint( wheelIndex, &vecPos, NULL );

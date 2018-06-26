@@ -1328,14 +1328,6 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 	float flPunch = -2;
 
-	if( hl2_episodic.GetBool() && info.GetAttacker() && !FInViewCone( info.GetAttacker() ) )
-	{
-		if( info.GetDamage() > 10.0f )
-			flPunch = -10;
-		else
-			flPunch = RandomFloat( -5, -7 );
-	}
-
 	m_Local.m_vecPunchAngle.SetX( flPunch );
 
 	// if we're taking time based damage, warn about its continuing effects

@@ -2844,7 +2844,7 @@ int CPhysicsProp::ObjectCaps()
 	{
 		caps |= FCAP_IMPULSE_USE;
 
-		if( hl2_episodic.GetBool() && HasInteraction( PROPINTER_PHYSGUN_CREATE_FLARE )  )
+		if( HasInteraction( PROPINTER_PHYSGUN_CREATE_FLARE )  )
 		{
 			caps |= FCAP_USE_IN_RADIUS;
 		}
@@ -3074,22 +3074,11 @@ int CPhysicsProp::OnTakeDamage( const CTakeDamageInfo &info )
 				VPhysicsGetObject()->GetVelocity( &vel, NULL );
 
 				int dangerRadius = 256; // generous radius to begin with
-
-				if( hl2_episodic.GetBool() )
+				if (GetHealth() < 1)
 				{
-					// In Episodic, burning items (such as destroyed APCs) are making very large
-					// danger sounds which frighten NPCs. This danger sound was designed to frighten
-					// NPCs away from burning objects that are about to explode (barrels, etc). 
-					// So if this item has no more health (ie, has died but hasn't exploded), 
-					// make a smaller danger sound, just to keep NPCs away from the flames. 
-					// I suspect this problem didn't appear in HL2 simply because we didn't have 
-					// NPCs in such close proximity to destroyed NPCs. (sjb)
-					if( GetHealth() < 1 )
-					{
-						// This item has no health, but still exists. That means that it may keep
-						// burning, but isn't likely to explode, so don't frighten over such a large radius.
-						dangerRadius = 120;
-					}
+					// This item has no health, but still exists. That means that it may keep
+					// burning, but isn't likely to explode, so don't frighten over such a large radius.
+					dangerRadius = 120;
 				}
 
 				trace_t tr;

@@ -351,6 +351,7 @@ protected:
 	virtual void OnSkillFlagState(int flag, bool state) { }
 	virtual bool IsAffectedBySkillFlag(int flag) const;
 	virtual void CheckSkillAffections(void);
+	virtual int GetSkillAffectionDamageType(int skillFlag) { return DMG_CLUB; }
 	CUtlVector<playerSkillAffectionItem_t> m_pActiveSkillEffects;
 
 	// Material Overlay Logic:

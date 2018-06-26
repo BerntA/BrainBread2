@@ -654,7 +654,7 @@ void CBaseCombatWeapon::Drop( const Vector &vecVelocity )
 
 	//If it was dropped then there's no need to respawn it.
 	AddSpawnFlags( SF_NORESPAWN );
-	RemoveSpawnFlags(SF_WEAPON_NO_MOTION);
+	RemoveSpawnFlags(SF_WEAPON_NO_MOTION | SF_WEAPON_NO_PLAYER_PICKUP);
 	ResetAllParticles();
 	StopAnimation();
 	StopFollowingEntity( );
@@ -668,11 +668,6 @@ void CBaseCombatWeapon::Drop( const Vector &vecVelocity )
 	SetGroundEntity( NULL );
 	SetThink( &CBaseCombatWeapon::SetPickupTouch );
 	SetTouch(NULL);
-
-	if( hl2_episodic.GetBool() )
-	{
-		RemoveSpawnFlags( SF_WEAPON_NO_PLAYER_PICKUP );
-	}
 
 	IPhysicsObject *pObj = VPhysicsGetObject();
 	if ( pObj != NULL )

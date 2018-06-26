@@ -367,7 +367,7 @@ void CWeaponFlamethrower::PrimaryAttack(CBasePlayer *pOwner, CBaseViewModel *pVM
 		{
 			float flProperDamage = GameBaseShared()->GetDropOffDamage(vecStart, traceHit.endpos, GetActualDamage(), GetWpnData().m_flDropOffDistance);
 
-			CTakeDamageInfo info(this, pOwner, flProperDamage, DMG_BULLET);
+			CTakeDamageInfo info(this, pOwner, flProperDamage, DMG_BURN);
 			info.SetSkillFlags(SKILL_FLAG_BLAZINGAMMO);
 			CalculateMeleeDamageForce(&info, vecForward, traceHit.endpos);
 			pHitEnt->DispatchTraceAttack(info, vecForward, &traceHit);

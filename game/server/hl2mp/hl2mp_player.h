@@ -135,6 +135,7 @@ public:
 	virtual void OnZombieInfectionComplete(void);
 
 	virtual void OnAffectedBySkill(const CTakeDamageInfo &info);
+	virtual int GetSkillAffectionDamageType(int skillFlag);
 
 	void OnUpdateInfected(void);
 	void SharedPostThinkHL2MP(void);

@@ -307,7 +307,7 @@ void CEntityFlame::FlameThink( void )
 		// distance that the radius damage code uses to determine how much damage to inflict)
 		m_hEntAttached->TakeDamage( CTakeDamageInfo( this, this, FLAME_DIRECT_DAMAGE, DMG_BURN | DMG_DIRECT ) );
 
-		if( !m_hEntAttached->IsNPC() && hl2_episodic.GetBool() )
+		if( !m_hEntAttached->IsNPC() )
 		{
 			const float ENTITYFLAME_MOVE_AWAY_DIST = 24.0f;
 			// Make a sound near my origin, and up a little higher (in case I'm on the ground, so NPC's still hear it)
