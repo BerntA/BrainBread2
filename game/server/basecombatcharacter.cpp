@@ -2351,9 +2351,9 @@ void CBaseCombatCharacter::OnAffectedBySkill(const CTakeDamageInfo &info)
 		nFlag = SKILL_FLAG_BLAZINGAMMO;
 		nOverlayFlag = MAT_OVERLAY_BURNING;
 
-		duration = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flBurnDuration;
-		damage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flBurnDamage;
-		timeBetweenDamage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flBurnFrequency;
+		duration = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flNPCBurnDuration;
+		damage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flNPCBurnDamage;
+		timeBetweenDamage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flNPCBurnFrequency;
 	}
 	else if (skillFlag & SKILL_FLAG_COLDSNAP)
 	{

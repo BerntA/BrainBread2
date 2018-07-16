@@ -27,6 +27,7 @@ public:
 	CWeaponBenelliM4(void);
 
 	int GetOverloadCapacity() { return 3; }
+	int GetUniqueWeaponID() { return WEAPON_ID_BENELLIM4; }
 
 	bool StartReload(void);
 	bool Reload(void);

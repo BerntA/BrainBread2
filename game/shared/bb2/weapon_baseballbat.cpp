@@ -25,6 +25,9 @@ public:
 	DECLARE_ACTTABLE();
 
 	CWeaponBaseballbat();
+	int GetUniqueWeaponID() { return WEAPON_ID_BASEBALLBAT; }
+
+private:
 	CWeaponBaseballbat(const CWeaponBaseballbat &);
 };
 

@@ -919,23 +919,28 @@ bool CGameBaseShared::HasObjectiveGlowItems(CHL2MP_Player *pClient)
 // Called when the player kills any entity.
 // Achievement progressing.
 ///////////////////////////////////////////////
-void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pVictim, CBaseEntity *pInflictor)
+void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pVictim, CBaseEntity *pInflictor, int forcedWeaponID)
 {
-	if (!pKiller || !pVictim || !pInflictor)
+	if (!pKiller || !pVictim || !pInflictor || !GetAchievementManager())
 		return;
 
 	if (!pKiller->IsPlayer())
 		return;
 
 	CHL2MP_Player *pClient = ToHL2MPPlayer(pKiller);
-	if (!pClient)
+	if (!pClient || pClient->IsBot())
 		return;
 
-	if (pClient->IsBot())
+	if (pClient->GetTeamNumber() == TEAM_HUMANS)
+	{
+		if (!pClient->GetPerkFlags())
+			pClient->m_iNumPerkKills++;
+	}
+
+	if (!HL2MPRules()->CanUseSkills() || (GameBaseServer()->CanStoreSkills() != PROFILE_GLOBAL))
 		return;
 
-	if (!GetAchievementManager())
-		return;
+	int uniqueWepID = forcedWeaponID;
 
 	if (pClient->GetTeamNumber() == TEAM_HUMANS)
 	{
@@ -953,70 +958,130 @@ void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pV
 			// TODO...
 		}
 
-		CBaseCombatWeapon *pWeapon = pClient->GetActiveWeapon();
-		if (pWeapon && FClassnameIs(pInflictor, "player"))
+		if (uniqueWepID == WEAPON_ID_NONE)
 		{
-			if (FClassnameIs(pWeapon, "weapon_beretta"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_BERETTA");
-			else if (FClassnameIs(pWeapon, "weapon_ak47"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_AK74");
-			else if (FClassnameIs(pWeapon, "weapon_g36c"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_G36C");
-			else if (FClassnameIs(pWeapon, "weapon_m9_bayonet"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_M9PHROBIS");
-			else if (FClassnameIs(pWeapon, "weapon_fireaxe"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_FIREAXE");
-			else if (FClassnameIs(pWeapon, "weapon_remington"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_870");
-			else if (FClassnameIs(pWeapon, "weapon_sawedoff"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_SAWOFF");
-			else if (FClassnameIs(pWeapon, "weapon_hands"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_FISTS");
-			else if (FClassnameIs(pWeapon, "weapon_machete"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_MACHETE");
-			else if (FClassnameIs(pWeapon, "weapon_baseballbat"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_BASEBALLBAT");
-			else if (FClassnameIs(pWeapon, "weapon_famas"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_FAMAS");
-			else if (FClassnameIs(pWeapon, "weapon_sledgehammer"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_SLEDGEHAMMER");
-			else if (FClassnameIs(pWeapon, "weapon_hatchet"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_HATCHET");
-			else if (FClassnameIs(pWeapon, "weapon_minigun"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_MINIGUN");
-			else if (FClassnameIs(pWeapon, "weapon_mp7"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_HKMP7");
-			else if (FClassnameIs(pWeapon, "weapon_mac11"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_MAC11");
-			else if (FClassnameIs(pWeapon, "weapon_microuzi"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_UZI");
-			else if (FClassnameIs(pWeapon, "weapon_glock17"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_GLOCK17");
-			else if (FClassnameIs(pWeapon, "weapon_remington700"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_REM700");
-			else if (FClassnameIs(pWeapon, "weapon_winchester1894"))
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_TRAPPER");
-
-			if (pWeapon->IsAkimboWeapon())
-				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_AKIMBO");
+			CBaseCombatWeapon *pWeapon = pClient->GetActiveWeapon();
+			if (pWeapon && FClassnameIs(pInflictor, "player"))
+			{
+				uniqueWepID = pWeapon->GetUniqueWeaponID();
+				if (pWeapon->IsAkimboWeapon())
+					GetAchievementManager()->WriteToStat(pClient, "BBX_KI_AKIMBO");
+			}
+			else if (FClassnameIs(pInflictor, "npc_grenade_frag"))
+				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_EXPLOSIVES");
+			else if (FClassnameIs(pInflictor, "prop_propane_explosive"))
+			{
+				GetAchievementManager()->WriteToAchievement(pClient, "ACH_GM_SURVIVAL_PROPANE");
+				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_EXPLOSIVES");
+			}
+			else if (FClassnameIs(pInflictor, "prop_thrown_brick"))
+			{
+				GetAchievementManager()->WriteToAchievement(pClient, "ACH_WEP_BRICK");
+				GetAchievementManager()->WriteToStat(pClient, "BBX_KI_BRICK");
+			}
 		}
-		else if (FClassnameIs(pInflictor, "npc_grenade_frag"))
-			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_EXPLOSIVES");
-		else if (FClassnameIs(pInflictor, "prop_propane_explosive"))
-		{
-			GetAchievementManager()->WriteToAchievement(pClient, "ACH_GM_SURVIVAL_PROPANE");
-			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_EXPLOSIVES");
-		}
-		else if (FClassnameIs(pInflictor, "prop_thrown_brick"))
-			GetAchievementManager()->WriteToAchievement(pClient, "ACH_WEP_BRICK");
-
-		if (!pClient->GetPerkFlags())
-			pClient->m_iNumPerkKills++;
 	}
 	else
 	{
 		if (pVictim->IsHuman())
 			GetAchievementManager()->WriteToAchievement(pClient, "ACH_ZOMBIE_KILL_HUMAN");
+	}
+
+	if (uniqueWepID > WEAPON_ID_NONE)
+	{
+		switch (uniqueWepID)
+		{
+		case WEAPON_ID_BERETTA:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_BERETTA");
+			break;
+		case WEAPON_ID_GLOCK17:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_GLOCK17");
+			break;
+
+		case WEAPON_ID_REXMP412:
+			break;
+		case WEAPON_ID_REXMP412_AKIMBO:
+			break;
+
+		case WEAPON_ID_AK74:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_AK74");
+			break;
+		case WEAPON_ID_FAMAS:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_FAMAS");
+			break;
+		case WEAPON_ID_G36C:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_G36C");
+			break;
+		case WEAPON_ID_WINCHESTER1894:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_TRAPPER");
+			break;
+
+		case WEAPON_ID_REMINGTON700:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_REM700");
+			break;
+
+		case WEAPON_ID_REMINGTON870:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_870");
+			break;
+		case WEAPON_ID_BENELLIM4:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_BENELLIM4");
+			break;
+		case WEAPON_ID_SAWEDOFF:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_SAWOFF");
+			break;
+
+		case WEAPON_ID_MINIGUN:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_MINIGUN");
+			break;
+		case WEAPON_ID_FLAMETHROWER:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_FLAMETHROWER");
+			break;
+
+		case WEAPON_ID_MAC11:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_MAC11");
+			break;
+		case WEAPON_ID_MP7:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_HKMP7");
+			break;
+		case WEAPON_ID_MICROUZI:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_UZI");
+			break;
+
+		case WEAPON_ID_HANDS:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_FISTS");
+			break;
+		case WEAPON_ID_ZOMBHANDS:
+			break;
+		case WEAPON_ID_BRICK:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_BRICK");
+			break;
+		case WEAPON_ID_KICK:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_KICK");
+			break;
+		case WEAPON_ID_M9BAYONET:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_M9PHROBIS");
+			break;
+		case WEAPON_ID_FIREAXE:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_FIREAXE");
+			break;
+		case WEAPON_ID_MACHETE:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_MACHETE");
+			break;
+		case WEAPON_ID_HATCHET:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_HATCHET");
+			break;
+		case WEAPON_ID_SLEDGEHAMMER:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_SLEDGEHAMMER");
+			break;
+		case WEAPON_ID_BASEBALLBAT:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_BASEBALLBAT");
+			break;
+
+		case WEAPON_ID_PROPANE:
+			break;
+		case WEAPON_ID_FRAG:
+			break;
+		}
 	}
 
 	GetAchievementManager()->WriteToStat(pClient, "BBX_ST_KILLS");

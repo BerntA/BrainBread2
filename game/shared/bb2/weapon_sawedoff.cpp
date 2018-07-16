@@ -33,6 +33,7 @@ public:
 	CWeaponSawedOff(void);
 
 	int GetOverloadCapacity() { return 1; }
+	int GetUniqueWeaponID() { return WEAPON_ID_SAWEDOFF; }
 
 	bool Reload(void);
 	void ItemPostFrame(void);

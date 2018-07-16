@@ -64,8 +64,6 @@ public:
 	Vector			GetDamageForce() const;
 	void			SetDamageForce( const Vector &damageForce );
 	void			ScaleDamageForce( float flScaleAmount );
-	float			GetDamageForForceCalc() const;
-	void			SetDamageForForceCalc( const float flScaleAmount );	
 
 	Vector			GetDamagePosition() const;
 	void			SetDamagePosition( const Vector &damagePosition );
@@ -89,6 +87,9 @@ public:
 
 	int             GetSkillFlags() const;
 	void            SetSkillFlags(int flags);
+
+	int				GetForcedWeaponID() const;
+	void			SetForcedWeaponID(int id);
 
 	int				GetPlayerPenetrationCount() const { return m_iPlayerPenetrationCount; }
 	void			SetPlayerPenetrationCount( int iPlayerPenetrationCount ) { m_iPlayerPenetrationCount = iPlayerPenetrationCount; }
@@ -134,8 +135,8 @@ protected:
 	EHANDLE			m_hDamageBonusProvider;	// Who gave us the ability to do extra damage?
 	bool			m_bForceFriendlyFire;	// Ideally this would be a dmg type, but we can't add more
 
-	float			m_flDamageForForce;	
 	int				m_nSkillFlags;
+	int				m_iWeaponIDForced;
 
 	DECLARE_SIMPLE_DATADESC();
 };
@@ -297,16 +298,6 @@ inline void	CTakeDamageInfo::ScaleDamageForce( float flScaleAmount )
 	m_vecDamageForce *= flScaleAmount;
 }
 
-inline float CTakeDamageInfo::GetDamageForForceCalc() const
-{
-	return m_flDamageForForce;
-}
-
-inline void CTakeDamageInfo::SetDamageForForceCalc( float flDamage )
-{
-	m_flDamageForForce = flDamage;
-}
-
 inline Vector CTakeDamageInfo::GetDamagePosition() const
 {
 	return m_vecDamagePosition;
@@ -387,6 +378,16 @@ inline void CTakeDamageInfo::SetSkillFlags(int flags)
 inline void CTakeDamageInfo::CopyDamageToBaseDamage()
 { 
 	m_flBaseDamage = m_flDamage;
+}
+
+inline int CTakeDamageInfo::GetForcedWeaponID() const
+{
+	return m_iWeaponIDForced;
+}
+
+inline void CTakeDamageInfo::SetForcedWeaponID(int id)
+{
+	m_iWeaponIDForced = id;
 }
 
 // -------------------------------------------------------------------------------------------------- //

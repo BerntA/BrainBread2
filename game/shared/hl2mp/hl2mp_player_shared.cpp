@@ -228,6 +228,7 @@ void CHL2MP_Player::DoPlayerKick(void)
 #ifndef CLIENT_DLL
 			CTakeDamageInfo info(this, this, damage, DMG_CLUB);
 			info.SetSkillFlags(0);
+			info.SetForcedWeaponID(WEAPON_ID_KICK);
 			info.SetDamageCustom(DMG_CLUB);
 			CalculateMeleeDamageForce(&info, forward, traceHit.endpos);
 			pHitEnt->DispatchTraceAttack(info, forward, &traceHit);

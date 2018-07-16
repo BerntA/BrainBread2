@@ -27,6 +27,7 @@ public:
 	CWeaponMicroUZI();
 
 	int GetOverloadCapacity() { return 6; }
+	int GetUniqueWeaponID() { return WEAPON_ID_MICROUZI; }
 	int GetWeaponType(void) { return WEAPON_TYPE_SMG; }
 	const char *GetAmmoEntityLink(void) { return "ammo_smg"; }
 

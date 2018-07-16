@@ -25,6 +25,9 @@ public:
 	DECLARE_ACTTABLE();
 
 	CWeaponFireaxe();
+	int GetUniqueWeaponID() { return WEAPON_ID_FIREAXE; }
+
+private:
 	CWeaponFireaxe(const CWeaponFireaxe &);
 };
 

@@ -27,6 +27,7 @@ public:
 	CWeaponMP7();
 
 	int GetOverloadCapacity() { return 12; }
+	int GetUniqueWeaponID() { return WEAPON_ID_MP7; }
 	int GetWeaponType(void) { return WEAPON_TYPE_SMG; }
 	const char *GetAmmoEntityLink(void) { return "ammo_smg"; }	
 

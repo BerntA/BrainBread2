@@ -2037,7 +2037,7 @@ void CHL2MPRules::DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info)
 	if (pVictim->IsNPC() && (pVictim == pKiller))
 		return;
 
-	GameBaseShared()->EntityKilledByPlayer(pKiller, pVictim, pInflictor);
+	GameBaseShared()->EntityKilledByPlayer(pKiller, pVictim, pInflictor, info.GetForcedWeaponID());
 	GameAnnouncer->DeathNotice(info, pVictim, pKiller);
 
 	int iLastHitGroup = HITGROUP_GENERIC;

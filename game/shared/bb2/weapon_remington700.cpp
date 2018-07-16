@@ -26,6 +26,7 @@ public:
 	CWeaponRemington700();
 
 	int GetMaxZoomLevel(void) { return 2; }
+	int GetUniqueWeaponID() { return WEAPON_ID_REMINGTON700; }
 
 private:
 	CWeaponRemington700(const CWeaponRemington700 &);

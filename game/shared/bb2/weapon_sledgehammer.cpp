@@ -25,6 +25,9 @@ public:
 	DECLARE_ACTTABLE();
 
 	CWeaponSledgehammer();
+	int GetUniqueWeaponID() { return WEAPON_ID_SLEDGEHAMMER; }
+
+private:
 	CWeaponSledgehammer(const CWeaponSledgehammer &);
 };
 

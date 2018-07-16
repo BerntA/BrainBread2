@@ -24,15 +24,17 @@ public:
 	void Spawn();
 
 	bool IsEnabled() { return m_bIsEnabled; }
+	bool IsMaster() { return m_bIsMaster; }
+
+private:
 
 	void InputState(inputdata_t &inputdata);
 
 	COutputEvent m_OnEnabled;
 	COutputEvent m_OnDisabled;
 
-private:
-
 	bool m_bIsEnabled;
+	bool m_bIsMaster;
 };
 
 #endif // SPAWN_POINT_BASE_H

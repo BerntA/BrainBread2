@@ -30,11 +30,11 @@ public:
 	DECLARE_ACTTABLE();
 
 	CWeaponZombieHands();
-	CWeaponZombieHands(const CWeaponZombieHands &);
 
 	float GetDamageForActivity(Activity hitActivity);
 	int GetMeleeSkillFlags(void) { return 0; }
 	int GetMeleeDamageType() { return DMG_ZOMBIE; }
+	int GetUniqueWeaponID() { return WEAPON_ID_ZOMBHANDS; }
 
 	void PrimaryAttack(void);
 	void Drop(const Vector &vecVelocity);
@@ -42,6 +42,9 @@ public:
 	bool VisibleInWeaponSelection() { return false; }
 
 	Activity GetCustomActivity(int bIsSecondary);
+
+private:
+	CWeaponZombieHands(const CWeaponZombieHands &);
 };
 
 IMPLEMENT_NETWORKCLASS_ALIASED( WeaponZombieHands, DT_WeaponZombieHands )

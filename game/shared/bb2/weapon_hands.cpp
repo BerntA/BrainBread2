@@ -30,7 +30,7 @@ public:
 	DECLARE_ACTTABLE();
 
 	CWeaponHands();
-	CWeaponHands(const CWeaponHands &);
+	int GetUniqueWeaponID() { return WEAPON_ID_HANDS; }
 
 	int GetMeleeDamageType() { return DMG_CLUB; }
 	int GetMeleeSkillFlags(void) { return 0; }
@@ -39,6 +39,9 @@ public:
 	bool VisibleInWeaponSelection() { return false; }
 
 	Activity GetCustomActivity(int bIsSecondary);
+
+private:
+	CWeaponHands(const CWeaponHands &);
 };
 
 IMPLEMENT_NETWORKCLASS_ALIASED(WeaponHands, DT_WeaponHands)

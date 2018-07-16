@@ -53,6 +53,7 @@ public:
 	float GetMinRestTime() { return 0; }
 	float GetMaxRestTime() { return 0; }
 
+	int GetUniqueWeaponID() { return WEAPON_ID_FLAMETHROWER; }
 	int GetWeaponType(void) { return WEAPON_TYPE_SPECIAL; }
 	float GetFireRate(void) { return GetWpnData().m_flFireRate; }
 	float GetRange(void) { return ((float)GetWpnData().m_iRangeMax); }
@@ -68,7 +69,7 @@ public:
 	void Drop(const Vector &vecVelocity);
 	void UpdateOnRemove(void);
 
-	const char *GetAmmoEntityLink(void) { return "ammo_flamethrower"; }
+	const char *GetAmmoEntityLink(void) { return "ammo_cannister"; }
 
 #ifdef CLIENT_DLL
 	void ClientThink(void);

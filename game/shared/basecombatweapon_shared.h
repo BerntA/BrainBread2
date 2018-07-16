@@ -272,6 +272,7 @@ public:
 	virtual int GetWeaponType(void) { return WEAPON_TYPE_RIFLE; }
 	virtual bool IsAkimboWeapon(void) { return false; }
 	virtual const char *GetAmmoEntityLink(void) { return ""; }
+	virtual int GetUniqueWeaponID() { return WEAPON_ID_NONE; }
 
 	// Melee Base:
 	virtual bool CanPerformMeleeAttacks() { return true; }

@@ -175,9 +175,15 @@ bool CGameDefinitionsShared::LoadData(void)
 		{
 			pszPlayerMiscSkillData.flBleedDuration = pkvSkills->GetFloat("BleedDuration");
 			pszPlayerMiscSkillData.flBleedFrequency = pkvSkills->GetFloat("BleedFrequency");
-			pszPlayerMiscSkillData.flBurnDuration = pkvSkills->GetFloat("BurnDuration");
-			pszPlayerMiscSkillData.flBurnDamage = pkvSkills->GetFloat("BurnDamage");
-			pszPlayerMiscSkillData.flBurnFrequency = pkvSkills->GetFloat("BurnFrequency");
+
+			pszPlayerMiscSkillData.flNPCBurnDuration = pkvSkills->GetFloat("BurnDurationNPC");
+			pszPlayerMiscSkillData.flNPCBurnDamage = pkvSkills->GetFloat("BurnDamageNPC");
+			pszPlayerMiscSkillData.flNPCBurnFrequency = pkvSkills->GetFloat("BurnFrequencyNPC");
+
+			pszPlayerMiscSkillData.flPlayerBurnDuration = pkvSkills->GetFloat("BurnDurationPlayer");
+			pszPlayerMiscSkillData.flPlayerBurnDamage = pkvSkills->GetFloat("BurnDamagePlayer");
+			pszPlayerMiscSkillData.flPlayerBurnFrequency = pkvSkills->GetFloat("BurnFrequencyPlayer");
+
 			pszPlayerMiscSkillData.flStunDuration = pkvSkills->GetFloat("StunDuration");
 			pszPlayerMiscSkillData.flSlowDownDuration = pkvSkills->GetFloat("SlowDownDuration");
 			pszPlayerMiscSkillData.flSlowDownPercent = pkvSkills->GetFloat("SlowDownPercent");
@@ -1808,11 +1814,13 @@ const achievementStatItem_t GAME_STAT_AND_ACHIEVEMENT_DATA[CURRENT_ACHIEVEMENT_N
 
 	// Shotguns
 	{ "ACH_WEP_870", "BBX_KI_870", 210, ACHIEVEMENT_TYPE_DEFAULT, 150, false },
+	{ "ACH_WEP_BENELLIM4", "BBX_KI_BENELLIM4", 275, ACHIEVEMENT_TYPE_DEFAULT, 185, false },
 	{ "ACH_WEP_DOUBLEBARREL", "BBX_KI_SAWOFF", 200, ACHIEVEMENT_TYPE_DEFAULT, 200, false },
 	{ "ACH_WEP_WINCHESTER", "BBX_KI_TRAPPER", 240, ACHIEVEMENT_TYPE_DEFAULT, 400, false },
 
 	// Special & Snipers
 	{ "ACH_WEP_MINIGUN", "BBX_KI_MINIGUN", 12000, ACHIEVEMENT_TYPE_DEFAULT, 3000, false },
+	{ "ACH_WEP_FLAMETHROWER", "BBX_KI_FLAMETHROWER", 340, ACHIEVEMENT_TYPE_DEFAULT, 750, false },
 	{ "ACH_WEP_50CAL", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 0, true },
 	{ "ACH_WEP_700", "BBX_KI_REM700", 150, ACHIEVEMENT_TYPE_DEFAULT, 500, false },
 	{ "ACH_WEP_CROSSBOW", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 0, true },
@@ -1828,6 +1836,8 @@ const achievementStatItem_t GAME_STAT_AND_ACHIEVEMENT_DATA[CURRENT_ACHIEVEMENT_N
 	{ "ACH_WEP_HATCHET", "BBX_KI_HATCHET", 120, ACHIEVEMENT_TYPE_DEFAULT, 240, false },
 	{ "ACH_WEP_SLEDGE", "BBX_KI_SLEDGEHAMMER", 280, ACHIEVEMENT_TYPE_DEFAULT, 500, false },
 	{ "ACH_WEP_MACHETE", "BBX_KI_MACHETE", 280, ACHIEVEMENT_TYPE_DEFAULT, 300, false },
+	{ "ACH_WEP_BRICKED", "BBX_KI_BRICK", 99, ACHIEVEMENT_TYPE_DEFAULT, 250, false },
+	{ "ACH_WEP_TRICKSTER", "BBX_KI_KICK", 35, ACHIEVEMENT_TYPE_DEFAULT, 300, false },
 	{ "ACH_WEP_FISTS", "BBX_KI_FISTS", 100, ACHIEVEMENT_TYPE_DEFAULT, 400, false },
 
 	// Special End Game:

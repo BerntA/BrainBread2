@@ -220,7 +220,7 @@ public:
 	DECLARE_ACTTABLE();
 
 	CWeaponBrick();
-	CWeaponBrick(const CWeaponBrick &);
+	int GetUniqueWeaponID() { return WEAPON_ID_BRICK; }
 
 	void SecondaryAttack();
 	void Drop(const Vector &vecVelocity);
@@ -230,6 +230,9 @@ public:
 	void Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
 	bool m_bThrewWeapon;
 #endif
+
+private:
+	CWeaponBrick(const CWeaponBrick &);
 };
 
 IMPLEMENT_NETWORKCLASS_ALIASED(WeaponBrick, DT_WeaponBrick)

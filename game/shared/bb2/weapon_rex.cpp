@@ -31,6 +31,7 @@ public:
 	bool Reload(void);
 
 	int GetOverloadCapacity() { return 2; }
+	int GetUniqueWeaponID() { return WEAPON_ID_REXMP412; }
 	int GetWeaponType(void) { return WEAPON_TYPE_REVOLVER; }
 	const char *GetAmmoEntityLink(void) { return "ammo_revolver"; }
 
@@ -189,6 +190,7 @@ public:
 	bool Reload(void);
 
 	int GetOverloadCapacity() { return 3; }
+	int GetUniqueWeaponID() { return WEAPON_ID_REXMP412_AKIMBO; }
 	int GetWeaponType(void) { return WEAPON_TYPE_REVOLVER; }
 	const char *GetAmmoEntityLink(void) { return "ammo_revolver"; }
 	bool IsAkimboWeapon(void) { return true; }

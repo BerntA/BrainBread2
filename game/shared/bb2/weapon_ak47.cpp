@@ -27,6 +27,7 @@ public:
 	CWeaponAK47();
 
 	int GetOverloadCapacity() { return 10; }
+	int GetUniqueWeaponID() { return WEAPON_ID_AK74; }
 	const char *GetAmmoEntityLink(void) { return "ammo_rifle"; }	
 
 private:

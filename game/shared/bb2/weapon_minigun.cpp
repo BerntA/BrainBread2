@@ -37,6 +37,7 @@ public:
 	CWeaponMinigun();
 
 	int GetOverloadCapacity() { return 25; }
+	int GetUniqueWeaponID() { return WEAPON_ID_MINIGUN; }
 
 	int GetMinBurst() { return 1; }
 	int GetMaxBurst() { return 1; }

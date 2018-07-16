@@ -333,27 +333,27 @@ void CAmmoTrapper::Precache(void)
 	PrecacheModel("models/items/ammo_winchester.mdl");
 }
 
-class CAmmoFlamethrower : public AMMO_BASE_CLASS
+class CAmmoCannister : public AMMO_BASE_CLASS
 {
 public:
-	DECLARE_CLASS(CAmmoFlamethrower, AMMO_BASE_CLASS);
+	DECLARE_CLASS(CAmmoCannister, AMMO_BASE_CLASS);
 
 	void Spawn(void);
 	void Precache(void);
 	bool CanReplenishAmmo(CBasePlayer *pPlayer) { return (::CanReplenishAmmo(GetClassname(), pPlayer)); }
 };
 
-LINK_ENTITY_TO_CLASS(ammo_flamethrower, CAmmoFlamethrower);
-PRECACHE_REGISTER(ammo_flamethrower);
+LINK_ENTITY_TO_CLASS(ammo_cannister, CAmmoCannister);
+PRECACHE_REGISTER(ammo_cannister);
 
-void CAmmoFlamethrower::Spawn(void)
+void CAmmoCannister::Spawn(void)
 {
 	Precache();
 	SetModel("models/items/ammo_flamethrower.mdl");
 	BaseClass::Spawn();
 }
 
-void CAmmoFlamethrower::Precache(void)
+void CAmmoCannister::Precache(void)
 {
 	PrecacheModel("models/items/ammo_flamethrower.mdl");
 }

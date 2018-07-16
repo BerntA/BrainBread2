@@ -25,6 +25,9 @@ public:
 	DECLARE_ACTTABLE();
 
 	CWeaponMachete();
+	int GetUniqueWeaponID() { return WEAPON_ID_MACHETE; }
+
+private:
 	CWeaponMachete(const CWeaponMachete &);
 };
 

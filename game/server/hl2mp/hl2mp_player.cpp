@@ -860,10 +860,10 @@ void CHL2MP_Player::OnAffectedBySkill(const CTakeDamageInfo &info)
 	playerSkillAffectionItem_t item;
 	item.flag = SKILL_FLAG_BLAZINGAMMO;
 	item.overlayFlag = MAT_OVERLAY_BURNING;
-	item.damage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flBurnDamage;
-	item.duration = (gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flBurnDuration);
+	item.damage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flPlayerBurnDamage;
+	item.duration = (gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flPlayerBurnDuration);
 	item.nextTimeToTakeDamage = 0.0f;
-	item.timeToTakeDamage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flBurnFrequency;
+	item.timeToTakeDamage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flPlayerBurnFrequency;
 	item.m_pAttacker = pAttacker;
 
 	m_pActiveSkillEffects.AddToTail(item);
@@ -2631,6 +2631,7 @@ CBaseEntity* CHL2MP_Player::EntSelectSpawnPoint(void)
 {
 	CUtlVector<CBaseEntity*> pSpawnPointsValid;
 	CUtlVector<CBaseEntity*> pSpawnPointsInValid;
+	CUtlVector<CBaseEntity*> pSpawnPointsLastResort;
 
 	CBaseEntity *pFinalSpawnPoint = NULL;
 
@@ -2654,12 +2655,18 @@ CBaseEntity* CHL2MP_Player::EntSelectSpawnPoint(void)
 		if (bUseCameraSpawn == false)
 		{
 			CBaseSpawnPoint *pPoint = dynamic_cast<CBaseSpawnPoint*> (pEntity);
-			if (pPoint && pPoint->IsEnabled())
+			if (pPoint)
 			{
-				if (g_pGameRules->IsSpawnPointValid(pEntity, this))
-					pSpawnPointsValid.AddToTail(pEntity);
-				else
-					pSpawnPointsInValid.AddToTail(pEntity);
+				if (pPoint->IsEnabled())
+				{
+					if (g_pGameRules->IsSpawnPointValid(pEntity, this))
+						pSpawnPointsValid.AddToTail(pEntity);
+					else
+						pSpawnPointsInValid.AddToTail(pEntity);
+				}
+
+				if (pPoint->IsMaster())
+					pSpawnPointsLastResort.AddToTail(pEntity);
 			}
 		}
 		else
@@ -2670,11 +2677,17 @@ CBaseEntity* CHL2MP_Player::EntSelectSpawnPoint(void)
 
 	int iValidSpawns = pSpawnPointsValid.Count();
 	int iInvalidSpawns = pSpawnPointsInValid.Count();
+	int iLastResortSpawns = pSpawnPointsLastResort.Count();
 
 	if ((iValidSpawns <= 0) && (iInvalidSpawns <= 0))
 	{
-		Warning("No available spawn point!\nForcing (0,0,0)!\n");
-		pFinalSpawnPoint = GetWorldEntity();
+		if (iLastResortSpawns > 0)
+			pFinalSpawnPoint = pSpawnPointsLastResort[random->RandomInt(0, (iLastResortSpawns - 1))];
+		else
+		{
+			Warning("No available spawn point!\nForcing (0,0,0)!\n");
+			pFinalSpawnPoint = GetWorldEntity();
+		}
 	}
 	else if (iValidSpawns > 0)
 		pFinalSpawnPoint = pSpawnPointsValid[random->RandomInt(0, (iValidSpawns - 1))];
@@ -2686,6 +2699,7 @@ CBaseEntity* CHL2MP_Player::EntSelectSpawnPoint(void)
 
 	pSpawnPointsValid.RemoveAll();
 	pSpawnPointsInValid.RemoveAll();
+	pSpawnPointsLastResort.RemoveAll();
 
 	// Allow dyn. respawns in story mode.
 	if (GameBaseServer()->IsStoryMode() && HL2MPRules()->m_bRoundStarted && !HL2MPRules()->IsGameoverOrScoresVisible()

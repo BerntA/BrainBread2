@@ -27,6 +27,7 @@ public:
 	CWeaponRemington(void);
 
 	int GetOverloadCapacity() { return 4; }
+	int GetUniqueWeaponID() { return WEAPON_ID_REMINGTON870; }
 
 	bool StartReload(void);
 	bool Reload(void);

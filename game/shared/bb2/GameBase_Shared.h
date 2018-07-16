@@ -309,7 +309,7 @@ public:
 
 	// Achievement Checks
 	CAchievementManager *GetAchievementManager() { return m_pAchievementManager; }
-	void EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pVictim, CBaseEntity *pInflictor);
+	void EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pVictim, CBaseEntity *pInflictor, int forcedWeaponID = WEAPON_ID_NONE);
 	void OnGameOver(float timeLeft, int iWinner);
 
 	// Workshop Handler:

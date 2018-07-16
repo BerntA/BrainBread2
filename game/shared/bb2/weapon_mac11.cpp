@@ -27,6 +27,7 @@ public:
 	CWeaponMAC11();
 
 	int GetOverloadCapacity() { return 8; }
+	int GetUniqueWeaponID() { return WEAPON_ID_MAC11; }
 	int GetWeaponType(void) { return WEAPON_TYPE_SMG; }
 	const char *GetAmmoEntityLink(void) { return "ammo_smg"; }	
 

@@ -29,6 +29,8 @@ BEGIN_SIMPLE_DATADESC( CTakeDamageInfo )
 	DEFINE_FIELD( m_iDamageStats, FIELD_INTEGER),
 	DEFINE_FIELD( m_iAmmoType, FIELD_INTEGER),
 	DEFINE_FIELD( m_iDamagedOtherPlayers, FIELD_INTEGER),
+	DEFINE_FIELD(m_nSkillFlags, FIELD_INTEGER),
+	DEFINE_FIELD(m_iWeaponIDForced, FIELD_INTEGER),
 END_DATADESC()
 
 void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBaseEntity *pWeapon, const Vector &damageForce, const Vector &damagePosition, const Vector &reportedPosition, float flDamage, int bitsDamageType, int iCustomDamage )
@@ -63,6 +65,7 @@ void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBa
 	m_flDamageBonus = 0.f;
 	m_bForceFriendlyFire = false;
 	m_nSkillFlags = 0;
+	m_iWeaponIDForced = WEAPON_ID_NONE;
 }
 
 CTakeDamageInfo::CTakeDamageInfo()
@@ -247,6 +250,7 @@ void AddMultiDamage( const CTakeDamageInfo &info, CBaseEntity *pEntity )
 	g_MultiDamage.SetMaxDamage( MAX( g_MultiDamage.GetMaxDamage(), info.GetDamage() ) );
 	g_MultiDamage.SetAmmoType( info.GetAmmoType() );
 	g_MultiDamage.SetSkillFlags(info.GetSkillFlags());
+	g_MultiDamage.SetForcedWeaponID(info.GetForcedWeaponID());
 
 	if ( g_MultiDamage.GetPlayerPenetrationCount() == 0 )
 	{

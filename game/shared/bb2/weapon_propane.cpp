@@ -258,6 +258,8 @@ public:
 	bool CanPickupWeaponAsAmmo() { return true; }
 	bool CanPerformMeleeAttacks() { return false; }
 
+	int GetUniqueWeaponID() { return WEAPON_ID_PROPANE; }
+
 private:
 	CWeaponPropane(const CWeaponPropane &);
 

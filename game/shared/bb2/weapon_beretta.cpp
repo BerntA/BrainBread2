@@ -20,6 +20,7 @@ public:
 	DECLARE_CLASS(CWeaponBeretta, CHL2MPBasePistol);
 
 	CWeaponBeretta(void);
+	int GetUniqueWeaponID() { return WEAPON_ID_BERETTA; }
 
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();

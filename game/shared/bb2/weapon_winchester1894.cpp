@@ -32,6 +32,7 @@ public:
 	int GetMaxZoomLevel(void) { return 1; }
 	int GetOverloadCapacity() { return 3; }
 	int GetWeaponType(void) { return WEAPON_TYPE_RIFLE; }
+	int GetUniqueWeaponID() { return WEAPON_ID_WINCHESTER1894; }
 	const char *GetAmmoEntityLink(void) { return "ammo_trapper"; }
 
 	bool StartReload(void);

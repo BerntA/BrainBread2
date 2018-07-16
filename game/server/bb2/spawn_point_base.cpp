@@ -12,7 +12,8 @@
 
 BEGIN_DATADESC( CBaseSpawnPoint )
 
-	DEFINE_KEYFIELD( m_bIsEnabled, FIELD_BOOLEAN, "StartEnabled" ),
+	DEFINE_KEYFIELD(m_bIsEnabled, FIELD_BOOLEAN, "StartEnabled"),
+	DEFINE_KEYFIELD(m_bIsMaster, FIELD_BOOLEAN, "IsMasterSpawn"),
 
 	DEFINE_OUTPUT( m_OnEnabled, "OnEnabledSpawn" ),
 	DEFINE_OUTPUT( m_OnDisabled, "OnDisabledSpawn" ),
@@ -24,6 +25,7 @@ END_DATADESC()
 CBaseSpawnPoint::CBaseSpawnPoint( void )
 {
 	m_bIsEnabled = true;
+	m_bIsMaster = false;
 }
 
 void CBaseSpawnPoint::Spawn()

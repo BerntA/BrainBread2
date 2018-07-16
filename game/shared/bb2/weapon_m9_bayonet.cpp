@@ -25,6 +25,9 @@ public:
 	DECLARE_ACTTABLE();
 
 	CWeaponM9Phrobis();
+	int GetUniqueWeaponID() { return WEAPON_ID_M9BAYONET; }
+
+private:
 	CWeaponM9Phrobis(const CWeaponM9Phrobis &);
 };
 

@@ -68,6 +68,8 @@ public:
 
 	bool CanPickupWeaponAsAmmo() { return true; }
 	bool CanPerformMeleeAttacks() { return false; }
+
+	int GetUniqueWeaponID() { return WEAPON_ID_FRAG; }
 	
 private:
 

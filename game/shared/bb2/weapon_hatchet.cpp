@@ -25,6 +25,9 @@ public:
 	DECLARE_ACTTABLE();
 
 	CWeaponHatchet();
+	int GetUniqueWeaponID() { return WEAPON_ID_HATCHET; }
+
+private:
 	CWeaponHatchet(const CWeaponHatchet &);
 };
 
