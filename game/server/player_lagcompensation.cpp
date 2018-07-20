@@ -141,7 +141,8 @@ public:
 		trace_t *ptr,
 		float maxrange = MAX_TRACE_LENGTH,
 		bool bRevertToHullTrace = false,
-		bool bOnlyDoBoxCheck = false
+		bool bOnlyDoBoxCheck = false,
+		bool bFirearm = false
 		);
 
 	void TraceRealtime(
@@ -155,7 +156,8 @@ public:
 		trace_t *ptr,
 		float maxrange = MAX_TRACE_LENGTH,
 		bool bRevertToHullTrace = false,
-		bool bOnlyDoBoxCheck = false
+		bool bOnlyDoBoxCheck = false,
+		bool bFirearm = false
 		);
 
 	void TraceRealtime(CBaseCombatCharacter *pTracer);
@@ -183,7 +185,8 @@ private:
 		trace_t *ptr,
 		float maxrange = MAX_TRACE_LENGTH,
 		bool bRevertToHullTrace = false,
-		bool bOnlyDoBoxCheck = false
+		bool bOnlyDoBoxCheck = false,
+		bool bFirearm = false
 		);
 
 	Vector GetNearestHitboxPos(CBaseCombatCharacter *pEntity, const Vector &from, Vector &chestHBOXPos, int &hitgroup);
@@ -359,7 +362,8 @@ void CLagCompensationManager::TraceRealtime(
 	trace_t *ptr,
 	float maxrange,
 	bool bRevertToHullTrace,
-	bool bOnlyDoBoxCheck)
+	bool bOnlyDoBoxCheck,
+	bool bFirearm)
 {
 	CHL2MP_Player *player = ToHL2MPPlayer(pTracer);
 	if (player)
@@ -412,7 +416,10 @@ void CLagCompensationManager::TraceRealtime(
 		// Do a simple double check if this ent can be reached:
 		AI_TraceLine(vecAbsStart, item.lagCompedPos, MASK_SHOT, &trFilter, &trVerify);
 		if (trVerify.DidHit())
-			continue;
+		{
+			if ((bFirearm == false) || (TryPenetrateSurface(&trVerify, &trFilter) == vec3_invalid))
+				continue;
+		}
 
 		potentialEntries.AddToTail(item);
 	}
@@ -450,13 +457,16 @@ void CLagCompensationManager::TraceRealtime(
 		// Do a simple double check if this ent can be reached:
 		AI_TraceLine(vecAbsStart, item.lagCompedPos, MASK_SHOT, &trFilter, &trVerify);
 		if (trVerify.DidHit())
-			continue;
+		{
+			if ((bFirearm == false) || (TryPenetrateSurface(&trVerify, &trFilter) == vec3_invalid))
+				continue;
+		}
 
 		potentialEntries.AddToTail(item);
 	}
 #endif //BB2_AI
 
-	AnalyzeFastBacktracks(player, potentialEntries, vecAbsStart, vecAbsEnd, hullMin, hullMax, pFilter, ptr, maxrange, bRevertToHullTrace, bOnlyDoBoxCheck);
+	AnalyzeFastBacktracks(player, potentialEntries, vecAbsStart, vecAbsEnd, hullMin, hullMax, pFilter, ptr, maxrange, bRevertToHullTrace, bOnlyDoBoxCheck, bFirearm);
 
 	potentialEntries.Purge();
 
@@ -480,13 +490,14 @@ void CLagCompensationManager::TraceRealtime(
 	trace_t *ptr,
 	float maxrange,
 	bool bRevertToHullTrace,
-	bool bOnlyDoBoxCheck)
+	bool bOnlyDoBoxCheck,
+	bool bFirearm)
 {
 	CTraceFilterSimple filter(ignore, collisionGroup);
 	TraceRealtime(pTracer,
 		vecAbsStart, vecAbsEnd,
 		hullMin, hullMax,
-		&filter, ptr, maxrange, bRevertToHullTrace, bOnlyDoBoxCheck);
+		&filter, ptr, maxrange, bRevertToHullTrace, bOnlyDoBoxCheck, bFirearm);
 }
 
 void CLagCompensationManager::TraceRealtime(CBaseCombatCharacter *pTracer)
@@ -504,7 +515,11 @@ void CLagCompensationManager::TraceRealtime(CBaseCombatCharacter *pTracer)
 		-Vector(3, 3, 3),
 		Vector(3, 3, 3),
 		NULL,
-		NULL);
+		NULL,
+		MAX_TRACE_LENGTH,
+		false,
+		false,
+		true);
 }
 
 float CLagCompensationManager::GetSimulationTime(CBasePlayer *player)
@@ -680,7 +695,8 @@ void CLagCompensationManager::AnalyzeFastBacktracks(
 	trace_t *ptr,
 	float maxrange,
 	bool bRevertToHullTrace,
-	bool bOnlyDoBoxCheck)
+	bool bOnlyDoBoxCheck,
+	bool bFirearm)
 {
 	VPROF_BUDGET("AnalyzeFastBacktracks", "CLagCompensationManager");
 
@@ -837,18 +853,24 @@ void CLagCompensationManager::AnalyzeFastBacktracks(
 		Vector vecEndPos = (vecStart + entry->endDirection);
 		VectorNormalize(entry->endDirection);
 
+		// Draw hitboxes + hit pos.
+		if (sv_showlagcompensation.GetInt() >= 1)
+		{
+			NDebugOverlay::BoxDirection(vecEndPos, hullMin, hullMax, entry->endDirection, 100, 255, 255, 20, 4.0f);
+			pEntity->DrawServerHitboxes(4.0f, true);
+		}
+
+		if (bFirearm)
+		{
+			player->SetLagCompVecPos((vecEndPos - vecAbsStart));
+			break;
+		}
+
 		// Check if this pos is invalid:
 		if (ptr == NULL)
 			UTIL_TraceLine(vecStart, vecEndPos, MASK_SHOT, &filter, &trace);
 		else
 			UTIL_TraceHull(vecStart, vecEndPos, hullMin, hullMax, MASK_SHOT_HULL, &filter, &trace);
-
-		// Draw hitboxes + hit pos.
-		if (sv_showlagcompensation.GetInt() >= 1)
-		{
-			NDebugOverlay::BoxDirection(trace.endpos, hullMin, hullMax, entry->endDirection, 100, 255, 255, 20, 4.0f);
-			pEntity->DrawServerHitboxes(4.0f, true);
-		}
 
 		if (trace.DidHit() && (trace.m_pEnt != pEntity))
 			continue;

@@ -750,8 +750,10 @@ bool CGameDefinitionsShared::Precache(void)
 
 	for (int i = 0; i < pszItemSharedData.Count(); i++)
 	{
+#ifndef CLIENT_DLL
 		CBaseAnimating::PrecacheScriptSound(pszItemSharedData[i].szSoundScriptSuccess);
 		CBaseAnimating::PrecacheScriptSound(pszItemSharedData[i].szSoundScriptFailure);
+#endif
 		CBaseAnimating::PrecacheModel(pszItemSharedData[i].szModelPath);
 	}
 
@@ -1248,7 +1250,6 @@ void CGameDefinitionsShared::ParseInventoryData(KeyValues *pkvData, bool bIsMapI
 		{
 			DataInventoryItem_Base_t item;
 			item.iItemID = (uint)atol(sub->GetName());
-			item.iLevelReq = sub->GetInt("LevelReq");
 			item.iType = sub->GetInt("Type");
 			item.iSubType = sub->GetInt("SubType");
 			item.iWeight = sub->GetInt("Weight");
@@ -1256,15 +1257,39 @@ void CGameDefinitionsShared::ParseInventoryData(KeyValues *pkvData, bool bIsMapI
 			item.iSkin = 0;
 			item.bIsMapItem = bIsMapItem;
 
-			Q_strncpy(item.szSoundScriptSuccess, sub->GetString("PickupSound", "ItemShared.Pickup"), 32);
-			Q_strncpy(item.szSoundScriptFailure, sub->GetString("DenySound", "ItemShared.Deny"), 32);
+#ifndef CLIENT_DLL
+			item.flScale = 1.0f;
+			item.angOffset = QAngle(0, 0, 0);
+#endif
 
 			KeyValues *pkvModel = sub->FindKey("model");
 			if (pkvModel)
 			{
 				Q_strncpy(item.szModelPath, pkvModel->GetString("modelname"), MAX_WEAPON_STRING);
 				item.iSkin = pkvModel->GetInt("skin");
+#ifndef CLIENT_DLL
+				item.flScale = pkvModel->GetFloat("scale", 1.0f);
+				item.angOffset = QAngle(
+					pkvModel->GetFloat("ang_off_x"),
+					pkvModel->GetFloat("ang_off_y"),
+					pkvModel->GetFloat("ang_off_z"));
+#endif
 			}
+
+#ifdef CLIENT_DLL
+			const char *hudIconPath = sub->GetString("HUDIconTexture");
+			int hudTextureID = -1;
+			if (strlen(hudIconPath) > 0)
+			{
+				hudTextureID = vgui::surface()->CreateNewTextureID();
+				vgui::surface()->DrawSetTextureFile(hudTextureID, hudIconPath, true, false);
+			}
+			item.iHUDTextureID = hudTextureID;
+#else
+			item.iLevelReq = sub->GetInt("LevelReq");
+
+			Q_strncpy(item.szSoundScriptSuccess, sub->GetString("PickupSound", "ItemShared.Pickup"), 32);
+			Q_strncpy(item.szSoundScriptFailure, sub->GetString("DenySound", "ItemShared.Deny"), 32);
 
 			const char *pszObjIconTexture = sub->GetString("ObjectiveIconTexture");
 
@@ -1286,21 +1311,16 @@ void CGameDefinitionsShared::ParseInventoryData(KeyValues *pkvData, bool bIsMapI
 					);
 			}
 
-#ifdef CLIENT_DLL
-			const char *hudIconPath = sub->GetString("HUDIconTexture");
-			int hudTextureID = -1;
-			if (strlen(hudIconPath) > 0)
-			{
-				hudTextureID = vgui::surface()->CreateNewTextureID();
-				vgui::surface()->DrawSetTextureFile(hudTextureID, hudIconPath, true, false);
-			}
-			item.iHUDTextureID = hudTextureID;
+			const char *pszEntityLink = sub->GetString("EntityLink");
+
+			item.bHasEntityLink = (strlen(pszEntityLink) > 0);
+			Q_strncpy(item.szEntityLink, pszEntityLink, 64);
 #endif
 
 			pszItemSharedData.AddToTail(item);
+			}
 		}
 	}
-}
 
 void CGameDefinitionsShared::RemoveMapInventoryItems(void)
 {
@@ -1901,4 +1921,29 @@ const DataPenetrationItem_t *GetPenetrationDataForMaterial(unsigned short materi
 	}
 
 	return NULL;
+}
+
+Vector TryPenetrateSurface(trace_t *tr, ITraceFilter *filter)
+{
+	if (tr && filter && strcmp(tr->surface.name, "tools/toolsblockbullets"))
+	{
+		surfacedata_t *p_penetrsurf = physprops->GetSurfaceData(tr->surface.surfaceProps);
+		if (p_penetrsurf)
+		{
+			const DataPenetrationItem_t *penetrationInfo = GetPenetrationDataForMaterial(p_penetrsurf->game.material);
+			if (penetrationInfo)
+			{
+				Vector vecDir = (tr->endpos - tr->startpos);
+				VectorNormalize(vecDir);
+
+				Vector vecNewStart = tr->endpos + vecDir * penetrationInfo->depth;
+				trace_t trPeneTest;
+				UTIL_TraceLine(vecNewStart, vecNewStart + vecDir * MAX_TRACE_LENGTH, MASK_SHOT, filter, &trPeneTest);
+				if (!trPeneTest.startsolid)
+					return vecNewStart;
+			}
+		}
+	}
+
+	return vec3_invalid;
 }

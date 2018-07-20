@@ -30,7 +30,7 @@ ConVar bb2_inventory_angle_z("bb2_inventory_angle_z", "0", FCVAR_CLIENTDLL, "Cha
 
 static void __MsgFunc_InventoryUpdate(bf_read &msg)
 {
-	int iAction = msg.ReadShort();
+	int iAction = msg.ReadByte();
 
 	if (iAction == INV_ACTION_PURGE)
 	{
@@ -39,26 +39,21 @@ static void __MsgFunc_InventoryUpdate(bf_read &msg)
 	}
 
 	uint iItemID = msg.ReadShort();
-	bool bMapItem = ((msg.ReadShort() >= 1));
-
-	char pszEntityLink[80];
-	pszEntityLink[0] = 0;
-
-	if (iAction >= INV_ACTION_ADD)
-		msg.ReadString(pszEntityLink, 80);
-
-	int itemIndex = GameBaseShared()->GetInventoryItemIndex(iItemID, bMapItem);
-	if ((itemIndex == -1) && (iAction == INV_ACTION_REMOVE))
-		return;
+	bool bMapItem = ((msg.ReadByte() >= 1));
 
 	if (iAction == INV_ACTION_REMOVE)
+	{
+		int itemIndex = GameBaseShared()->GetInventoryItemIndex(iItemID, bMapItem);
+		if (itemIndex == -1)
+			return;
+
 		GameBaseShared()->GetGameInventory().Remove(itemIndex);
+	}
 	else if (iAction == INV_ACTION_ADD)
 	{
 		InventoryItem_t invItem;
 		invItem.m_iItemID = iItemID;
 		invItem.bIsMapItem = bMapItem;
-		Q_strncpy(invItem.szEntityLink, pszEntityLink, MAX_WEAPON_STRING);
 		GameBaseShared()->GetGameInventory().AddToTail(invItem);
 	}
 }
@@ -583,13 +578,17 @@ int CGameBaseShared::GetInventoryItemIndex(uint itemID, bool bIsMapItem)
 // Purpose:
 // Add an inv. item to the deisred player.
 ///////////////////////////////////////////////
-void CGameBaseShared::AddInventoryItem(int iPlayerIndex, uint iItemID, const char *szEntLink, bool bIsMapItem)
+void CGameBaseShared::AddInventoryItem(int iPlayerIndex, const DataInventoryItem_Base_t *itemData, bool bIsMapItem)
 {
-	InventoryServerItem_t pInvItem;
+	if (itemData == NULL)
+		return;
+
+	uint iItemID = itemData->iItemID;
+
+	InventoryItem_t pInvItem;
 	pInvItem.m_iPlayerIndex = iPlayerIndex;
 	pInvItem.m_iItemID = iItemID;
 	pInvItem.bIsMapItem = bIsMapItem;
-	Q_strncpy(pInvItem.szEntityLink, szEntLink, MAX_WEAPON_STRING);
 	pszInventoryList.AddToTail(pInvItem);
 
 	DevMsg(2, "Player %i picked up inventory item %u!\n", iPlayerIndex, iItemID);
@@ -600,15 +599,13 @@ void CGameBaseShared::AddInventoryItem(int iPlayerIndex, uint iItemID, const cha
 		CSingleUserRecipientFilter filter(pClient);
 		filter.MakeReliable();
 		UserMessageBegin(filter, "InventoryUpdate");
-		WRITE_SHORT(INV_ACTION_ADD);
+		WRITE_BYTE(INV_ACTION_ADD);
 		WRITE_SHORT(iItemID);
-		WRITE_SHORT((bIsMapItem ? 1 : 0));
-		WRITE_STRING(pInvItem.szEntityLink);
+		WRITE_BYTE((bIsMapItem ? 1 : 0));
 		MessageEnd();
 
-		const DataInventoryItem_Base_t *itemData = GetSharedGameDetails()->GetInventoryData(iItemID, bIsMapItem);
-		int iType = itemData ? itemData->iType : 0;
-		int iSubType = itemData ? itemData->iSubType : 0;
+		int iType = itemData->iType;
+		int iSubType = itemData->iSubType;
 
 		ComputePlayerWeight(pClient);
 		if ((iType == TYPE_OBJECTIVE) && ((iSubType == TYPE_REMOVABLE_GLOW) || (iSubType == TYPE_VITAL)))
@@ -657,16 +654,16 @@ bool CGameBaseShared::UseInventoryItem(int iPlayerIndex, uint iItemID, bool bIsM
 	//
 	if ((iType == TYPE_OBJECTIVE) && !bAutoConsume)
 	{
-		if (strlen(pszInventoryList[plrInvItemIndex].szEntityLink) <= 0)
+		if (itemData->bHasEntityLink == false)
 		{
 			Warning("No entity link for obj. itemID %u\n", iItemID);
 			return false;
 		}
 
-		CBaseEntity *pEntity = gEntList.FindEntityByName(NULL, pszInventoryList[plrInvItemIndex].szEntityLink);
+		CBaseEntity *pEntity = gEntList.FindEntityByName(NULL, itemData->szEntityLink);
 		if (!pEntity)
 		{
-			Warning("Couldn't find the entity link %s\n", pszInventoryList[plrInvItemIndex].szEntityLink);
+			Warning("Couldn't find the entity link %s\n", itemData->szEntityLink);
 			return false;
 		}
 
@@ -733,9 +730,9 @@ bool CGameBaseShared::UseInventoryItem(int iPlayerIndex, uint iItemID, bool bIsM
 		CSingleUserRecipientFilter filter(pClient);
 		filter.MakeReliable();
 		UserMessageBegin(filter, "InventoryUpdate");
-		WRITE_SHORT(INV_ACTION_REMOVE);
+		WRITE_BYTE(INV_ACTION_REMOVE);
 		WRITE_SHORT(iItemID);
-		WRITE_SHORT((bIsMapItem ? 1 : 0));
+		WRITE_BYTE((bIsMapItem ? 1 : 0));
 		MessageEnd();
 
 		pszInventoryList.Remove(plrInvItemIndex);
@@ -776,7 +773,6 @@ void CGameBaseShared::RemoveInventoryItem(int iPlayerIndex, const Vector &vecAbs
 			}
 
 			uint iID = pszInventoryList[i].m_iItemID;
-			const char *szModel = GetSharedGameDetails()->GetInventoryItemModel(iID, pszInventoryList[i].bIsMapItem);
 
 			if (!bDeleteItem)
 			{
@@ -795,7 +791,7 @@ void CGameBaseShared::RemoveInventoryItem(int iPlayerIndex, const Vector &vecAbs
 
 					Vector endPoint = tr.endpos;
 					pEntity->SetLocalOrigin(endPoint);
-					pEntity->SetItem(szModel, iID, pszInventoryList[i].szEntityLink, pszInventoryList[i].bIsMapItem);
+					pEntity->SetItem(iID, pszInventoryList[i].bIsMapItem);
 					pEntity->Spawn();
 
 					const model_t *pModel = modelinfo->GetModel(pEntity->GetModelIndex());
@@ -814,9 +810,9 @@ void CGameBaseShared::RemoveInventoryItem(int iPlayerIndex, const Vector &vecAbs
 				CSingleUserRecipientFilter filter(pClient);
 				filter.MakeReliable();
 				UserMessageBegin(filter, "InventoryUpdate");
-				WRITE_SHORT(INV_ACTION_REMOVE);
+				WRITE_BYTE(INV_ACTION_REMOVE);
 				WRITE_SHORT(iID);
-				WRITE_SHORT((pszInventoryList[i].bIsMapItem ? 1 : 0));
+				WRITE_BYTE((pszInventoryList[i].bIsMapItem ? 1 : 0));
 				MessageEnd();
 			}
 
@@ -853,7 +849,7 @@ void CGameBaseShared::RemoveInventoryItems(void)
 		CSingleUserRecipientFilter filter(pClient);
 		filter.MakeReliable();
 		UserMessageBegin(filter, "InventoryUpdate");
-		WRITE_SHORT(INV_ACTION_PURGE);
+		WRITE_BYTE(INV_ACTION_PURGE);
 		MessageEnd();
 	}
 }

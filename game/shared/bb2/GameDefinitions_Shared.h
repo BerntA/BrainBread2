@@ -271,24 +271,34 @@ struct DataInventoryItem_Base_t
 {
 	uint iItemID;
 	bool bIsMapItem;
+
 	int iType;
 	int iSubType;
 	int iRarity;
-	int iLevelReq;
 	int iWeight;
 	int iSkin;
 	char szModelPath[MAX_WEAPON_STRING];
+
+#ifdef CLIENT_DLL
+	int iHUDTextureID;
+#else
+	int iLevelReq;
+
 	char szSoundScriptSuccess[32];
 	char szSoundScriptFailure[32];
 
 	Color clGlowColor;
 	bool bGlobalGlow;
 	bool bAutoConsume;
+
 	bool bEnableObjectiveIcon;
 	char szObjectiveIconTexture[MAX_WEAPON_STRING];
 
-#ifdef CLIENT_DLL
-	int iHUDTextureID;
+	bool bHasEntityLink;
+	char szEntityLink[64];
+
+	float flScale;
+	QAngle angOffset;
 #endif
 };
 
@@ -477,5 +487,6 @@ extern int GetGamemodeForMap(const char *map);
 
 extern const achievementStatItem_t GAME_STAT_AND_ACHIEVEMENT_DATA[CURRENT_ACHIEVEMENT_NUMBER];
 extern const DataPenetrationItem_t *GetPenetrationDataForMaterial(unsigned short material);
+extern Vector TryPenetrateSurface(trace_t *tr, ITraceFilter *filter);
 
 #endif // GAME_DEFINITIONS_SHARED_H

@@ -191,17 +191,11 @@ enum
 
 struct InventoryItem_t
 {
-	uint m_iItemID;
-	bool bIsMapItem;
-	char szEntityLink[MAX_WEAPON_STRING];
-};
-
-struct InventoryServerItem_t
-{
+#ifndef CLIENT_DLL
 	int m_iPlayerIndex;
+#endif
 	uint m_iItemID;
 	bool bIsMapItem;
-	char szEntityLink[MAX_WEAPON_STRING];
 };
 
 struct ObjectiveItem_t
@@ -298,8 +292,8 @@ public:
 	CSteamServerLister *GetSteamServerManager() { return m_pSteamServers; }
 #else
 	// Inventory
-	CUtlVector<InventoryServerItem_t> &GetServerInventory() { return pszInventoryList; }
-	void AddInventoryItem(int iPlayerIndex, uint iItemID, const char *szEntLink, bool bIsMapItem);
+	CUtlVector<InventoryItem_t> &GetServerInventory() { return pszInventoryList; }
+	void AddInventoryItem(int iPlayerIndex, const DataInventoryItem_Base_t *itemData, bool bIsMapItem);
 	void RemoveInventoryItem(int iPlayerIndex, const Vector &vecAbsOrigin, int iType = -1, uint iItemID = 0, bool bDeleteItem = false, int forceIndex = -1);
 	void RemoveInventoryItems(void);
 	bool UseInventoryItem(int iPlayerIndex, uint iItemID, bool bIsMapItem, bool bAutoConsume = false, bool bDelayedUse = false, int forceIndex = -1);
@@ -346,7 +340,7 @@ private:
 	CUtlVector<InventoryItem_t> pszTemporaryInventoryList; // Can be organized from the game, stores temp items, some will be lost on death. (obj. items)
 #else
 	// Stores ALL items on the server (all player items in one list) MAX items = 12(maxclients) * 12(maxitems pr user).
-	CUtlVector<InventoryServerItem_t> pszInventoryList;
+	CUtlVector<InventoryItem_t> pszInventoryList;
 
 	// Stat and Achievement Handler
 	CAchievementManager *m_pAchievementManager;

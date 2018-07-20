@@ -223,11 +223,6 @@ void CNPCBaseSoldierStatic::PrescheduleThink()
 {
 	BaseClass::PrescheduleThink();
 
-	if (IsOnFire())
-		SetCondition(COND_SOLDIER_ON_FIRE);
-	else
-		ClearCondition(COND_SOLDIER_ON_FIRE);
-
 	extern ConVar ai_debug_shoot_positions;
 	if (ai_debug_shoot_positions.GetBool())
 		NDebugOverlay::Cross3D(EyePosition(), 16, 0, 255, 0, false, 0.1);
@@ -583,20 +578,12 @@ void CNPCBaseSoldierStatic::BuildScheduleTestBits(void)
 		ClearCustomInterruptCondition(COND_CAN_RANGE_ATTACK1);
 		ClearCustomInterruptCondition(COND_CAN_RANGE_ATTACK2);
 	}
-
-	if (!IsCurSchedule(SCHED_SOLDIER_BURNING_STAND))
-	{
-		SetCustomInterruptCondition(COND_SOLDIER_ON_FIRE);
-	}
 }
 
 Activity CNPCBaseSoldierStatic::NPC_TranslateActivity(Activity eNewActivity)
 {
 	if (ai_show_active_military_activities.GetBool())
 		Msg("Running Activity %i Act Name: %s\n", eNewActivity, GetActivityName(eNewActivity));
-
-	if (HasCondition(COND_SOLDIER_ON_FIRE))
-		return BaseClass::NPC_TranslateActivity(ACT_IDLE_ON_FIRE);
 
 	if (eNewActivity == ACT_RANGE_ATTACK2)
 	{
@@ -793,9 +780,6 @@ int CNPCBaseSoldierStatic::SelectCombatSchedule()
 
 int CNPCBaseSoldierStatic::SelectSchedule(void)
 {
-	if (HasCondition(COND_SOLDIER_ON_FIRE))
-		return SCHED_SOLDIER_BURNING_STAND;
-
 	int nSched = SelectFlinchSchedule();
 	if (nSched != SCHED_NONE)
 		return nSched;
@@ -1541,7 +1525,6 @@ DECLARE_SQUADSLOT(SQUAD_SLOT_GRENADE2)
 DECLARE_CONDITION(COND_SOLDIER_NO_FIRE)
 DECLARE_CONDITION(COND_SOLDIER_DEAD_FRIEND)
 DECLARE_CONDITION(COND_SOLDIER_DROP_GRENADE)
-DECLARE_CONDITION(COND_SOLDIER_ON_FIRE)
 DECLARE_CONDITION(COND_SOLDIER_ATTACK_SLOT_AVAILABLE)
 
 DECLARE_INTERACTION(g_interactionSoldierBash);
@@ -1706,21 +1689,6 @@ SCHED_SOLDIER_DROP_GRENADE,
 "		TASK_PLAY_SEQUENCE					ACTIVITY:ACT_SPECIAL_ATTACK2"
 "		TASK_SET_SCHEDULE					SCHEDULE:SCHED_SOLDIER_RANGE_ATTACK1"	// spray while you can!
 ""
-"	Interrupts"
-)
-
-DEFINE_SCHEDULE
-(
-SCHED_SOLDIER_BURNING_STAND,
-
-"	Tasks"
-"		TASK_SET_ACTIVITY				ACTIVITY:ACT_COMBINE_BUGBAIT"
-"		TASK_RANDOMIZE_FRAMERATE		20"
-"		TASK_WAIT						2"
-"		TASK_WAIT_RANDOM				3"
-"		TASK_SOLDIER_DIE_INSTANTLY		DMG_BURN"
-"		TASK_WAIT						1.0"
-"	"
 "	Interrupts"
 )
 

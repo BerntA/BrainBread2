@@ -15,6 +15,7 @@
 #include "entityoutput.h"
 #include "player_pickup.h"
 
+struct DataInventoryItem_Base_t;
 class CItem : public CBaseAnimating, public CDefaultPlayerPickupVPhysics
 {
 public:
@@ -23,7 +24,8 @@ public:
 	CItem();
 
 	// Inventory accessor
-	virtual void SetItem(const char *model, uint iID, const char *entityLink, bool bMapItem) { }
+	virtual bool SetItem(const DataInventoryItem_Base_t &data, bool bMapItem) { return false; }
+	virtual bool SetItem(uint itemID, bool bMapItem) { return false; }
 	virtual void SetParam(const char *param) { }
 	virtual void SetParam(float param) { }
 	virtual bool EnablePhysics() { return false; }

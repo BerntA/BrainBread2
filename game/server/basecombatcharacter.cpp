@@ -2382,6 +2382,7 @@ void CBaseCombatCharacter::OnAffectedBySkill(const CTakeDamageInfo &info)
 	item.duration = gpGlobals->curtime + duration;
 	item.nextTimeToTakeDamage = 0.0f;
 	item.timeToTakeDamage = timeBetweenDamage;
+	item.misc = info.GetForcedWeaponID();
 	item.m_pAttacker = pAttacker;
 
 	m_pActiveSkillEffects.AddToTail(item);
@@ -2407,28 +2408,30 @@ void CBaseCombatCharacter::CheckSkillAffections(void)
 
 	for (int i = (m_pActiveSkillEffects.Count() - 1); i >= 0; i--)
 	{
-		CBaseEntity *pAttacker = m_pActiveSkillEffects[i].m_pAttacker.Get();
+		playerSkillAffectionItem_t *effectItem = &m_pActiveSkillEffects[i];
+		CBaseEntity *pAttacker = effectItem->m_pAttacker.Get();
 
-		if ((m_pActiveSkillEffects[i].duration < gpGlobals->curtime) || !pAttacker)
+		if ((effectItem->duration < gpGlobals->curtime) || !pAttacker)
 		{
-			int flag = m_pActiveSkillEffects[i].flag;
-			RemoveMaterialOverlayFlag(m_pActiveSkillEffects[i].overlayFlag);
+			int flag = effectItem->flag;
+			RemoveMaterialOverlayFlag(effectItem->overlayFlag);
 			m_pActiveSkillEffects.Remove(i);
 			OnSkillFlagState(flag, false);
 			continue;
 		}
 
 		// If we want to take damage, then take damage when the frequency has run out.
-		if (m_pActiveSkillEffects[i].damage > 0)
+		if (effectItem->damage > 0)
 		{
-			if (m_pActiveSkillEffects[i].nextTimeToTakeDamage <= gpGlobals->curtime)
+			if (effectItem->nextTimeToTakeDamage <= gpGlobals->curtime)
 			{
-				m_pActiveSkillEffects[i].nextTimeToTakeDamage = gpGlobals->curtime + m_pActiveSkillEffects[i].timeToTakeDamage;
+				effectItem->nextTimeToTakeDamage = gpGlobals->curtime + effectItem->timeToTakeDamage;
 
-				CTakeDamageInfo info(pAttacker, pAttacker, m_pActiveSkillEffects[i].damage, GetSkillAffectionDamageType(m_pActiveSkillEffects[i].flag));
-				info.SetSkillFlags(m_pActiveSkillEffects[i].flag);
+				CTakeDamageInfo info(pAttacker, pAttacker, effectItem->damage, GetSkillAffectionDamageType(effectItem->flag));
+				info.SetSkillFlags(effectItem->flag);
+				info.SetForcedWeaponID(effectItem->misc);
 
-				int activeFlag = m_pActiveSkillEffects[i].flag;
+				int activeFlag = effectItem->flag;
 				if (activeFlag == SKILL_FLAG_BLAZINGAMMO)
 					info.SetDamageCustom(DMG_BURN);
 				else if (activeFlag == SKILL_FLAG_BLEED)

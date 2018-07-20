@@ -370,6 +370,7 @@ void CWeaponFlamethrower::PrimaryAttack(CBasePlayer *pOwner, CBaseViewModel *pVM
 
 			CTakeDamageInfo info(this, pOwner, flProperDamage, DMG_BURN);
 			info.SetSkillFlags(SKILL_FLAG_BLAZINGAMMO);
+			info.SetForcedWeaponID(WEAPON_ID_FLAMETHROWER);
 			CalculateMeleeDamageForce(&info, vecForward, traceHit.endpos);
 			pHitEnt->DispatchTraceAttack(info, vecForward, &traceHit);
 			ApplyMultiDamage();

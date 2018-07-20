@@ -30,7 +30,8 @@ public:
 		trace_t *ptr,
 		float maxrange = MAX_TRACE_LENGTH,
 		bool bRevertToHullTrace = false,
-		bool bOnlyDoBoxCheck = false
+		bool bOnlyDoBoxCheck = false,
+		bool bFirearm = false
 		) = 0;
 
 	virtual void TraceRealtime(
@@ -44,7 +45,8 @@ public:
 		trace_t *ptr,
 		float maxrange = MAX_TRACE_LENGTH,
 		bool bRevertToHullTrace = false,
-		bool bOnlyDoBoxCheck = false
+		bool bOnlyDoBoxCheck = false,
+		bool bFirearm = false
 		) = 0;
 
 	virtual void TraceRealtime(CBaseCombatCharacter *pTracer) = 0;

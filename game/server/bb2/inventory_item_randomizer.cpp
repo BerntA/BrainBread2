@@ -97,8 +97,7 @@ CBaseEntity *CInventoryItemRandomizer::SpawnNewEntity(void)
 		vecOrigin.z += OBJECTIVE_ICON_EXTRA_HEIGHT;
 
 		pItem->SetAbsOrigin(vecOrigin);
-		pItem->SetAbsAngles(QAngle(0, 0, 0));
-		pItem->SetItem(data->szModelPath, data->iItemID, NULL, false);
+		pItem->SetItem((*data), false);
 		pItem->Spawn();
 		UTIL_DropToFloor(pItem, MASK_SOLID_BRUSHONLY, this);
 	}

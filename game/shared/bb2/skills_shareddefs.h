@@ -137,6 +137,7 @@ struct playerSkillAffectionItem_t
 	float timeToTakeDamage; // When do we want to take damage.
 	int flag; // Which flag are we affected by?
 	int overlayFlag; // Which overlay is drawn on the client?
+	int misc; // Misc data, such as weapon ID, etc...
 	EHANDLE m_pAttacker; // Who attacked us?
 };
 

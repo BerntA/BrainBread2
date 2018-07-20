@@ -864,6 +864,7 @@ void CHL2MP_Player::OnAffectedBySkill(const CTakeDamageInfo &info)
 	item.duration = (gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flPlayerBurnDuration);
 	item.nextTimeToTakeDamage = 0.0f;
 	item.timeToTakeDamage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flPlayerBurnFrequency;
+	item.misc = info.GetForcedWeaponID();
 	item.m_pAttacker = pAttacker;
 
 	m_pActiveSkillEffects.AddToTail(item);
