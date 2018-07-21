@@ -122,6 +122,8 @@ $Project
 			$File "bb2/c_firstperson_body.h"
 			$File "bb2/c_client_attachment.cpp"
 			$File "bb2/c_client_attachment.h"
+			$File "bb2/c_playermodel.cpp"
+			$File "bb2/c_playermodel.h"
 		}
 		
 		$Folder "TempEnts"

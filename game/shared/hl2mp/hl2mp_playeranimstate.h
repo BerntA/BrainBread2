@@ -32,6 +32,7 @@ public:
 	void InitHL2MPAnimState( CHL2MP_Player *pPlayer );
 	CHL2MP_Player *GetHL2MPPlayer( void )							{ return m_pHL2MPPlayer; }
 
+	virtual CBaseAnimatingOverlay *GetBaseAnimatable(void);
 	virtual void ClearAnimationState();
 	virtual Activity TranslateActivity( Activity actDesired );
 	virtual void Update( float eyeYaw, float eyePitch );

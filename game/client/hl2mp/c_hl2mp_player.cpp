@@ -24,6 +24,8 @@
 #include "model_types.h"
 #include "GlobalRenderEffects.h"
 #include "c_bb2_player_shared.h"
+#include "c_client_attachment.h"
+#include "c_playermodel.h"
 #include "eventlist.h"
 
 // Don't alias here
@@ -87,7 +89,7 @@ C_HL2MP_Player::C_HL2MP_Player() : m_iv_angEyeAngles("C_HL2MP_Player::m_iv_angEy
 
 	AddVar( &m_angEyeAngles, &m_iv_angEyeAngles, LATCH_SIMULATION_VAR );
 
-	//m_EntClientFlags |= ENTCLIENTFLAG_DONTUSEIK;
+	m_pNewPlayerModel = CreateClientPlayermodel(this);
 	m_PlayerAnimState = CreateHL2MPPlayerAnimState(this);
 
 	m_pFlashlightBeam = NULL;
@@ -111,13 +113,19 @@ C_HL2MP_Player::~C_HL2MP_Player( void )
 		}
 	}
 
-	if (HasAnyClientAttachments())
+	for (int i = (_ARRAYSIZE(m_pAttachments) - 1); i >= 0; i--)
 	{
-		for (int i = (_ARRAYSIZE(m_pAttachments) - 1); i >= 0; i--)
+		if (m_pAttachments[i] != NULL)
 		{
-			if (m_pAttachments[i] != NULL)
-				m_pAttachments[i]->ReleaseSafely();
+			m_pAttachments[i]->ReleaseSafely();
+			m_pAttachments[i] = NULL;
 		}
+	}
+
+	if (m_pNewPlayerModel != NULL)
+	{
+		m_pNewPlayerModel->Release();
+		m_pNewPlayerModel = NULL;
 	}
 
 	ReleaseFlashlight();
@@ -169,16 +177,29 @@ C_HL2MP_Player* C_HL2MP_Player::GetLocalHL2MPPlayer()
 	return (C_HL2MP_Player*)C_BasePlayer::GetLocalPlayer();
 }
 
+/*static*/ void C_HL2MP_Player::ResetAllClientEntities(void) // Clear invalid pntrs.
+{
+	for (int i = 1; i <= MAX_PLAYERS; i++)
+	{
+		C_HL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+		if (!pPlayer)
+			continue;
+
+		for (int i = (_ARRAYSIZE(pPlayer->m_pAttachments) - 1); i >= 0; i--)
+			pPlayer->m_pAttachments[i] = NULL;
+
+		pPlayer->m_pNewPlayerModel = NULL;
+	}
+}
+
 void C_HL2MP_Player::Initialize( void )
 {
 	CStudioHdr *hdr = GetModelPtr();
 	if (hdr == NULL)
 		return;
 
-	for ( int i = 0; i < hdr->GetNumPoseParameters() ; i++ )
-	{
-		SetPoseParameter( hdr, i, 0.0 );
-	}
+	for (int i = 0; i < hdr->GetNumPoseParameters(); i++)
+		SetPoseParameter(hdr, i, 0.0);
 }
 
 CStudioHdr *C_HL2MP_Player::OnNewModel( void )
@@ -206,55 +227,7 @@ void C_HL2MP_Player::ClientThink( void )
 //-----------------------------------------------------------------------------
 int C_HL2MP_Player::DrawModel( int flags )
 {
-	if ( !m_bReadyToDraw )
-		return 0;
-
-	bool bShouldDrawOverrides = (!(flags & STUDIO_SKIP_MATERIAL_OVERRIDES));
-
-	if (IsPerkFlagActive(PERK_POWERUP_PREDATOR) && bShouldDrawOverrides)
-	{
-		modelrender->ForcedMaterialOverride(GlobalRenderEffects->GetCloakOverlay());
-		int retVal = BaseClass::DrawModel(STUDIO_RENDER | STUDIO_TRANSPARENCY);
-		modelrender->ForcedMaterialOverride(0);
-		return retVal;
-	}
-
-	int retVal = BaseClass::DrawModel(flags);
-
-	if (bShouldDrawOverrides)
-	{
-		if (IsMaterialOverlayFlagActive(MAT_OVERLAY_SPAWNPROTECTION))
-		{
-			modelrender->ForcedMaterialOverride(GlobalRenderEffects->GetSpawnProtectionOverlay());
-			BaseClass::DrawModel(STUDIO_RENDER | STUDIO_TRANSPARENCY);
-			modelrender->ForcedMaterialOverride(0);
-		}
-		else if (GlobalRenderEffects->CanDrawOverlay(this))
-		{
-			if (IsMaterialOverlayFlagActive(MAT_OVERLAY_BLOOD))
-			{
-				modelrender->ForcedMaterialOverride(GlobalRenderEffects->GetBloodOverlay());
-				BaseClass::DrawModel(STUDIO_RENDER | STUDIO_TRANSPARENCY);
-				modelrender->ForcedMaterialOverride(0);
-			}
-
-			if (GetPerkFlags())
-			{
-				modelrender->ForcedMaterialOverride(GlobalRenderEffects->GetPerkOverlay());
-				BaseClass::DrawModel(STUDIO_RENDER | STUDIO_TRANSPARENCY);
-				modelrender->ForcedMaterialOverride(0);
-			}
-
-			if (IsMaterialOverlayFlagActive(MAT_OVERLAY_BURNING))
-			{
-				modelrender->ForcedMaterialOverride(GlobalRenderEffects->GetBurnOverlay());
-				BaseClass::DrawModel(STUDIO_RENDER | STUDIO_TRANSPARENCY);
-				modelrender->ForcedMaterialOverride(0);
-			}
-		}
-	}
-
-	return retVal;
+	return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -262,17 +235,7 @@ int C_HL2MP_Player::DrawModel( int flags )
 //-----------------------------------------------------------------------------
 bool C_HL2MP_Player::ShouldReceiveProjectedTextures( int flags )
 {
-	Assert( flags & SHADOW_FLAGS_PROJECTED_TEXTURE_TYPE_MASK );
-
-	if ( IsEffectActive( EF_NODRAW ) || IsPerkFlagActive(PERK_POWERUP_PREDATOR) )
-		 return false;
-
-	if( flags & SHADOW_FLAGS_FLASHLIGHT )
-	{
-		return true;
-	}
-
-	return BaseClass::ShouldReceiveProjectedTextures( flags );
+	return false;
 }
 
 void C_HL2MP_Player::DoImpactEffect( trace_t &tr, int nDamageType )
@@ -319,7 +282,7 @@ void C_HL2MP_Player::AddEntity( void )
 		if ( IsEffectActive( EF_DIMLIGHT ) )
 		{
 			bool bGetWeaponAttachment = false;
-			int iAttachment = LookupAttachment( "anim_attachment_RH" );
+			int iAttachment = m_pNewPlayerModel ? m_pNewPlayerModel->LookupAttachment("anim_attachment_RH") : LookupAttachment("anim_attachment_RH");
 
 			if ( GetActiveWeapon() )
 			{
@@ -334,7 +297,7 @@ void C_HL2MP_Player::AddEntity( void )
 			QAngle eyeAngles = m_angEyeAngles;
 
 			if ( !bGetWeaponAttachment )
-				GetAttachment( iAttachment, vecOrigin, eyeAngles );
+				m_pNewPlayerModel ? m_pNewPlayerModel->GetAttachment(iAttachment, vecOrigin, eyeAngles) : GetAttachment(iAttachment, vecOrigin, eyeAngles);
 			else
 				GetActiveWeapon()->GetAttachment( iAttachment, vecOrigin, eyeAngles );
 
@@ -442,13 +405,7 @@ void C_HL2MP_Player::SetZombieVision(bool state)
 
 ShadowType_t C_HL2MP_Player::ShadowCastType( void ) 
 {
-	if (!IsVisible() || IsPerkFlagActive(PERK_POWERUP_PREDATOR))
-		 return SHADOWS_NONE;
-
-	if (IsLocalPlayer() && !ShouldDrawThisPlayer())
-		return SHADOWS_NONE;
-
-	return SHADOWS_RENDER_TO_TEXTURE_DYNAMIC;
+	return SHADOWS_NONE;
 }
 
 
@@ -505,6 +462,14 @@ void C_HL2MP_Player::OnDataChanged( DataUpdateType_t type )
 	}
 
 	UpdateVisibility();
+}
+
+void C_HL2MP_Player::UpdateVisibility()
+{
+	BaseClass::UpdateVisibility();
+
+	if (m_pNewPlayerModel != NULL)
+		m_pNewPlayerModel->UpdateVisibility();
 }
 
 void C_HL2MP_Player::PostDataUpdate( DataUpdateType_t updateType )
@@ -747,6 +712,9 @@ void C_HL2MP_Player::UpdateClientSideAnimation()
 	m_PlayerAnimState->Update(EyeAngles()[YAW], EyeAngles()[PITCH]);
 	BB2PlayerGlobals->BodyUpdate(this);
 
+	if (m_pNewPlayerModel != NULL)
+		m_pNewPlayerModel->OnUpdate();
+
 	BaseClass::UpdateClientSideAnimation();
 }
 
@@ -758,6 +726,9 @@ void C_HL2MP_Player::OnDormantStateChange(void)
 		if (m_pAttachments[i] != NULL)
 			m_pAttachments[i]->PerformUpdateCheck();
 	}
+
+	if (m_pNewPlayerModel != NULL)
+		m_pNewPlayerModel->OnDormantStateChange();
 }
 
 // -------------------------------------------------------------------------------- //
@@ -892,4 +863,23 @@ void C_HL2MP_Player::CalculateIKLocks(float currentTime)
 
 	CBaseEntity::PopEnableAbsRecomputations();
 	partition->SuppressLists(curSuppressed, true);
+}
+
+CON_COMMAND_F(setmodel, "Set the playermodel to use, client-only. Can be a number, chooses between playermodels via script.", FCVAR_CHEAT)
+{
+	C_HL2MP_Player *pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
+	if ((pPlayer == NULL) || (pPlayer->GetNewPlayerModel() == NULL) || (args.ArgC() != 2))
+		return;
+
+	const char *mdl = args[1];
+	int idx = atoi(args[1]);
+
+	if ((idx == 0) && (strlen(mdl) > 2))
+		pPlayer->GetNewPlayerModel()->SetModel(mdl);
+	else
+	{
+		const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(idx);
+		if (data)
+			pPlayer->GetNewPlayerModel()->SetModelPointer((pPlayer->GetTeamNumber() == TEAM_HUMANS) ? data->m_pClientModelPtrHuman : data->m_pClientModelPtrZombie);
+	}
 }

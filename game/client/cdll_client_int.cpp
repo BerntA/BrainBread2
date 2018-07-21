@@ -125,6 +125,7 @@
 #include "GameBase_Shared.h"
 #include "c_client_gib.h"
 #include "c_client_attachment.h"
+#include "c_playermodel.h"
 
 // NVNT includes
 #include "hud_macros.h"
@@ -1645,8 +1646,10 @@ void CHLClient::LevelShutdown( void )
 	IGameSystem::LevelShutdownPreEntityAllSystems();
 
 	C_PhysPropClientside::DestroyAll();
+	C_HL2MP_Player::ResetAllClientEntities();
 	RemoveAllClientGibs();
 	RemoveAllClientAttachments();
+	RemoveAllClientPlayermodels();
 
 	modemanager->LevelShutdown();
 

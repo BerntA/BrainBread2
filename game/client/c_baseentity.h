@@ -1449,6 +1449,8 @@ public:
 	bool InitializeAsClientEntityByIndex(int iIndex, RenderGroup_t renderGroup);	
 	void TrackAngRotation( bool bTrack );
 
+	virtual C_BaseEntity *GetOverridenParentEntity(C_BaseEntity *pOriginalParent);
+
 private:
 	friend void OnRenderStart();
 
@@ -1495,7 +1497,7 @@ private:
 	void ComputePackedOffsets(void);
 	int ComputePackedSize_R(datamap_t *map);
 	int GetIntermediateDataSize(void);
-
+	
 	void UnlinkChild(C_BaseEntity *pParent, C_BaseEntity *pChild);
 	void LinkChild(C_BaseEntity *pParent, C_BaseEntity *pChild);
 	void HierarchySetParent(C_BaseEntity *pNewParent);

@@ -197,8 +197,10 @@ protected:
 	virtual void Init( CBasePlayer *pPlayer, MultiPlayerMovementData_t &movementData ); 
 	CBasePlayer *GetBasePlayer( void )				{ return m_pPlayer; }
 
+	virtual CBaseAnimatingOverlay *GetBaseAnimatable(void);
+
 	// Allow inheriting classes to override SelectWeightedSequence
-	virtual int SelectWeightedSequence( Activity activity ) { return GetBasePlayer()->SelectWeightedSequence( activity ); }
+	virtual int SelectWeightedSequence(Activity activity) { return GetBaseAnimatable()->SelectWeightedSequence(activity); }
 	virtual void RestartMainSequence();
 
 	virtual void GetOuterAbsVelocity( Vector& vel );

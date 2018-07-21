@@ -20,6 +20,7 @@
 #include "weapon_hl2mpbase.h"
 #include "iinput.h"
 #include "c_playerresource.h"
+#include "c_playermodel.h"
 #include "model_types.h"
 #include "GlobalRenderEffects.h"
 #include "view.h"
@@ -53,14 +54,6 @@ bool RemoveAllClientAttachments()
 		C_ClientAttachment *p = s_ClientAttachmentList[0];
 		p->Release();
 	}
-
-	return true;
-}
-
-bool HasAnyClientAttachments()
-{
-	if (!s_ClientAttachmentList.Count())
-		return false;
 
 	return true;
 }
@@ -199,8 +192,7 @@ void C_ClientAttachment::ClientThink(void)
 					m_bNeedsUpdate = false;
 					m_pOther = pWeapon;
 					SetModel(pWeapon->GetWorldModel());
-					int iAttachment = pPlayer->LookupAttachment(pWeapon->GetAttachmentLink());
-					AttachmentFollow(pPlayer, false, iAttachment);
+					AttachmentFollow(pPlayer, false, GetOverridenParentEntity(pPlayer)->GetBaseAnimating()->LookupAttachment(pWeapon->GetAttachmentLink()));
 				}
 
 				if (!m_bShouldHide)

@@ -17,6 +17,7 @@
 #include "c_hl2mp_player.h"
 #include "c_playerresource.h"
 #include "c_bb2_player_shared.h"
+#include "c_playermodel.h"
 #else
 #include "hl2mp_player.h"
 #endif
@@ -88,6 +89,19 @@ void CHL2MPPlayerAnimState::InitHL2MPAnimState( CHL2MP_Player *pPlayer )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Allows us to use the new player model object for the client only.
+//-----------------------------------------------------------------------------
+CBaseAnimatingOverlay *CHL2MPPlayerAnimState::GetBaseAnimatable(void)
+{
+#ifdef CLIENT_DLL
+	if (m_pHL2MPPlayer && m_pHL2MPPlayer->GetNewPlayerModel())
+		return m_pHL2MPPlayer->GetNewPlayerModel();
+#endif
+
+	return m_pHL2MPPlayer;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CHL2MPPlayerAnimState::ClearAnimationState( void )
@@ -120,13 +134,12 @@ void CHL2MPPlayerAnimState::Update( float eyeYaw, float eyePitch )
 	// Profile the animation update.
 	VPROF( "CHL2MPPlayerAnimState::Update" );
 
-	// Get the HL2MP player.
-	CHL2MP_Player *pHL2MPPlayer = GetHL2MPPlayer();
-	if ( !pHL2MPPlayer )
+	CBaseAnimatingOverlay *pAnimating = GetBaseAnimatable();
+	if (!pAnimating)
 		return;
 
 	// Get the studio header for the player.
-	CStudioHdr *pStudioHdr = pHL2MPPlayer->GetModelPtr();
+	CStudioHdr *pStudioHdr = pAnimating->GetModelPtr();
 	if ( !pStudioHdr )
 		return;
 
@@ -159,7 +172,7 @@ void CHL2MPPlayerAnimState::Update( float eyeYaw, float eyePitch )
 #ifdef CLIENT_DLL 
 	if ( C_BasePlayer::ShouldDrawLocalPlayer() )
 	{
-		m_pHL2MPPlayer->SetPlaybackRate( 1.0f );
+		pAnimating->SetPlaybackRate(1.0f);
 	}
 #endif
 }
@@ -356,9 +369,6 @@ bool CHL2MPPlayerAnimState::HandleDucking( Activity &idealActivity )
 // Purpose: 
 bool CHL2MPPlayerAnimState::HandleJumping( Activity &idealActivity )
 {
-	Vector vecVelocity;
-	GetOuterAbsVelocity( vecVelocity );
-
 	if ( m_bJumping )
 	{
 		static bool bNewJump = false; //Tony; hl2mp players only have a 'hop'
@@ -455,18 +465,18 @@ bool CHL2MPPlayerAnimState::SetupPoseParameters( CStudioHdr *pStudioHdr )
 		return false;
 
 	// Tony; just set them both to the same for now.
-	m_PoseParameterData.m_iMoveX = GetBasePlayer()->LookupPoseParameter( pStudioHdr, "move_yaw" );
-	m_PoseParameterData.m_iMoveY = GetBasePlayer()->LookupPoseParameter( pStudioHdr, "move_yaw" );
+	m_PoseParameterData.m_iMoveX = GetBaseAnimatable()->LookupPoseParameter( pStudioHdr, "move_yaw" );
+	m_PoseParameterData.m_iMoveY = GetBaseAnimatable()->LookupPoseParameter( pStudioHdr, "move_yaw" );
 	if ( ( m_PoseParameterData.m_iMoveX < 0 ) || ( m_PoseParameterData.m_iMoveY < 0 ) )
 		return false;
 
 	// Look for the aim pitch blender.
-	m_PoseParameterData.m_iAimPitch = GetBasePlayer()->LookupPoseParameter( pStudioHdr, "aim_pitch" );
+	m_PoseParameterData.m_iAimPitch = GetBaseAnimatable()->LookupPoseParameter( pStudioHdr, "aim_pitch" );
 	if ( m_PoseParameterData.m_iAimPitch < 0 )
 		return false;
 
 	// Look for aim yaw blender.
-	m_PoseParameterData.m_iAimYaw = GetBasePlayer()->LookupPoseParameter( pStudioHdr, "aim_yaw" );
+	m_PoseParameterData.m_iAimYaw = GetBaseAnimatable()->LookupPoseParameter( pStudioHdr, "aim_yaw" );
 	if ( m_PoseParameterData.m_iAimYaw < 0 )
 		return false;
 
@@ -585,8 +595,8 @@ void CHL2MPPlayerAnimState::ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr )
 		vecCurrentMoveYaw.y = -sin( DEG2RAD( flYaw ) ) * flPlaybackRate;
 	}
 
-	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveX, vecCurrentMoveYaw.x );
-	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveY, vecCurrentMoveYaw.y );
+	GetBaseAnimatable()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveX, vecCurrentMoveYaw.x );
+	GetBaseAnimatable()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveY, vecCurrentMoveYaw.y );
 
 	m_DebugAnimData.m_vecMoveYaw = vecCurrentMoveYaw;
 #else
@@ -620,7 +630,7 @@ void CHL2MPPlayerAnimState::ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr )
 	}
 
 	//Tony; oops, i inverted this previously above.
-	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveY, flYaw );
+	GetBaseAnimatable()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveY, flYaw );
 
 #endif
 	
@@ -635,7 +645,7 @@ void CHL2MPPlayerAnimState::ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr )
 	float flAimPitch = m_flEyePitch;
 
 	// Set the aim pitch pose parameter and save.
-	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimPitch, flAimPitch );
+	GetBaseAnimatable()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimPitch, flAimPitch );
 	m_DebugAnimData.m_flAimPitch = flAimPitch;
 }
 
@@ -704,7 +714,7 @@ void CHL2MPPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 	flAimYaw = AngleNormalize( flAimYaw );
 
 	// Set the aim yaw and save.
-	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimYaw, flAimYaw );
+	GetBaseAnimatable()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimYaw, flAimYaw );
 	m_DebugAnimData.m_flAimYaw	= flAimYaw;
 
 	// Turn off a force aim yaw - either we have already updated or we don't need to.
@@ -725,13 +735,13 @@ void CHL2MPPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 //-----------------------------------------------------------------------------
 float CHL2MPPlayerAnimState::GetCurrentMaxGroundSpeed()
 {
-	CStudioHdr *pStudioHdr = GetBasePlayer()->GetModelPtr();
+	CStudioHdr *pStudioHdr = GetBaseAnimatable()->GetModelPtr();
 
 	if ( pStudioHdr == NULL )
 		return 1.0f;
 
-//	float prevX = GetBasePlayer()->GetPoseParameter( m_PoseParameterData.m_iMoveX );
-	float prevY = GetBasePlayer()->GetPoseParameter( m_PoseParameterData.m_iMoveY );
+//	float prevX = GetBaseAnimatable()->GetPoseParameter( m_PoseParameterData.m_iMoveX );
+	float prevY = GetBaseAnimatable()->GetPoseParameter( m_PoseParameterData.m_iMoveY );
 
 	float d = sqrt( /*prevX * prevX + */prevY * prevY );
 	float newY;//, newX;
@@ -746,13 +756,13 @@ float CHL2MPPlayerAnimState::GetCurrentMaxGroundSpeed()
 		newY = prevY / d;
 	}
 
-//	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveX, newX );
-	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveY, newY );
+//	GetBaseAnimatable()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveX, newX );
+	GetBaseAnimatable()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveY, newY );
 
-	float speed = GetBasePlayer()->GetSequenceGroundSpeed( GetBasePlayer()->GetSequence() );
+	float speed = GetBaseAnimatable()->GetSequenceGroundSpeed( GetBaseAnimatable()->GetSequence() );
 
-//	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveX, prevX );
-	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveY, prevY );
+//	GetBaseAnimatable()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveX, prevX );
+	GetBaseAnimatable()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveY, prevY );
 
 	return speed;
 }

@@ -40,6 +40,8 @@
 #include "cdll_bounded_cvars.h"
 #include "inetchannelinfo.h"
 #include "proto_version.h"
+#include "c_playermodel.h"
+#include "c_hl2mp_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -3057,7 +3059,8 @@ C_BaseEntity *CBaseEntity::GetFollowedEntity()
 {
 	if (!IsFollowingEntity())
 		return NULL;
-	return GetMoveParent();
+
+	return GetOverridenParentEntity(GetMoveParent());
 }
 
 
@@ -4326,7 +4329,7 @@ matrix3x4_t& C_BaseEntity::GetParentToWorldTransform(matrix3x4_t &tempMatrix)
 	{
 		Vector vOrigin;
 		QAngle vAngles;
-		if (pMoveParent->GetAttachment(m_iParentAttachment, vOrigin, vAngles))
+		if (GetOverridenParentEntity(pMoveParent)->GetAttachment(m_iParentAttachment, vOrigin, vAngles))
 		{
 			AngleMatrix(vAngles, vOrigin, tempMatrix);
 			return tempMatrix;
@@ -4450,7 +4453,7 @@ void C_BaseEntity::CalcAbsoluteVelocity()
 	{
 		Vector vOriginVel;
 		Quaternion vAngleVel;
-		if (pMoveParent->GetAttachmentVelocity(m_iParentAttachment, vOriginVel, vAngleVel))
+		if (GetOverridenParentEntity(pMoveParent)->GetAttachmentVelocity(m_iParentAttachment, vOriginVel, vAngleVel))
 		{
 			m_vecAbsVelocity += vOriginVel;
 			return;
@@ -6416,6 +6419,20 @@ void C_BaseEntity::DontRecordInTools()
 int C_BaseEntity::GetCreationTick() const
 {
 	return m_nCreationTick;
+}
+
+// MAKES SURE THAT WE USE THE RIGHT CLIENT-SIDED PLAYER MODEL!
+C_BaseEntity *C_BaseEntity::GetOverridenParentEntity(C_BaseEntity *pOriginalParent)
+{
+	C_BaseEntity *pNewParent = pOriginalParent;
+	if (pNewParent && pNewParent->IsPlayer())
+	{
+		C_HL2MP_Player *pPlayer = ToHL2MPPlayer(pNewParent);
+		if (pPlayer && pPlayer->GetNewPlayerModel())
+			pNewParent = pPlayer->GetNewPlayerModel();
+	}
+
+	return pNewParent;
 }
 
 //------------------------------------------------------------------------------

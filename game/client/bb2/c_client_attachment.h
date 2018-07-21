@@ -70,7 +70,6 @@ protected:
 };
 
 extern bool RemoveAllClientAttachments();
-extern bool HasAnyClientAttachments();
 extern C_ClientAttachment *CreateClientAttachment(C_HL2MP_Player *pParent, int type, int param, bool bonemerge);
 
 #endif // C_CLIENT_ATTACHMENT_H

@@ -926,22 +926,6 @@ CON_COMMAND( fov, "Change players FOV" )
 	}
 }
 
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-void CC_Player_SetModel( const CCommand &args )
-{
-	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() );
-	if ( pPlayer && args.ArgC() == 2)
-	{
-		static char szName[256];
-		Q_snprintf( szName, sizeof( szName ), "models/%s.mdl", args[1] );
-		pPlayer->SetModel( szName );
-		UTIL_SetSize(pPlayer, VEC_HULL_MIN, VEC_HULL_MAX);
-	}
-}
-static ConCommand setmodel("setmodel", CC_Player_SetModel, "Changes's player's model", FCVAR_CHEAT );
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

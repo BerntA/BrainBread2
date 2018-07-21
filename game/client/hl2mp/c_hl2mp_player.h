@@ -14,9 +14,9 @@
 #include "beamdraw.h"
 #include "skills_shareddefs.h"
 #include "c_bb2_playerlocaldata.h"
-#include "c_client_attachment.h"
 
 class C_ClientAttachment;
+class C_Playermodel;
 //=============================================================================
 // >> HL2MP_Player
 //=============================================================================
@@ -35,6 +35,7 @@ public:
 	void ClientThink( void );
 
 	static C_HL2MP_Player* GetLocalHL2MPPlayer();
+	static void ResetAllClientEntities(void);
 
 	virtual int DrawModel( int flags );
 	virtual void AddEntity( void );
@@ -48,6 +49,8 @@ public:
 	virtual const QAngle& GetRenderAngles();
 	virtual bool ShouldDraw( void );
 	virtual void OnDataChanged( DataUpdateType_t type );
+	virtual void UpdateVisibility();
+	virtual C_Playermodel *GetNewPlayerModel(void) { return m_pNewPlayerModel; }
 	virtual float GetFOV( void );
 	virtual CStudioHdr *OnNewModel( void );
 	virtual void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
@@ -112,7 +115,7 @@ public:
 	void SetPlayerSlideState(bool value) { m_bIsInSlide = value; }
 
 	void SetZombieVision(bool state);
-	bool IsZombieVisionOn(void) { return m_bIsZombieVisionEnabled; }
+	bool IsZombieVisionOn(void) { return m_bIsZombieVisionEnabled; }	
 
 protected:
 	virtual void DoPlayerKick(void);
@@ -144,6 +147,9 @@ private:
 	bool m_bIsZombieVisionEnabled;
 
 	C_ClientAttachment *m_pAttachments[3];
+	C_Playermodel *m_pNewPlayerModel;
+
+	friend class C_Playermodel;
 };
 
 inline C_HL2MP_Player *ToHL2MPPlayer( CBaseEntity *pEntity )
