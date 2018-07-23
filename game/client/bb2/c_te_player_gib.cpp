@@ -93,7 +93,7 @@ void SpawnGibOrRagdollForPlayer(C_BaseAnimating *pFrom, int index, int team, con
 		Assert(pRagdoll != NULL);
 
 		pRagdoll->m_nGibFlags = flags;
-		pRagdoll->SetPlayerLink(index, team, survivor);
+		pRagdoll->SetPlayerLink(index, team, data->szSurvivorName);
 
 		if (index == GetLocalPlayerIndex())
 			m_pPlayerRagdoll = pRagdoll;
