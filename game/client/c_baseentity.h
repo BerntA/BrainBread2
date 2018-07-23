@@ -73,6 +73,8 @@ typedef unsigned int			AimEntsListHandle_t;
 
 extern void RecvProxy_IntToColor32(const CRecvProxyData *pData, void *pStruct, void *pOut);
 extern void RecvProxy_LocalVelocity(const CRecvProxyData *pData, void *pStruct, void *pOut);
+extern int LookupClientModelIndex(const model_t *model);
+extern const model_t *LookupClientModelPointer(int index);
 
 enum CollideType_t
 {
@@ -1311,6 +1313,7 @@ protected:
 	// Client-side model fixes
 	const model_t					*oldModel;
 	bool							m_bPreferModelPointerOverIndex;
+	int								m_nFakeModelIndex;
 
 public:
 	// Time animation sequence or frame was last changed

@@ -87,4 +87,8 @@ struct gibSharedDataItem
 
 extern const char *PLAYER_BODY_ACCESSORY_BODYGROUPS[PLAYER_ACCESSORY_MAX];
 
+#ifdef CLIENT_DLL
+extern void OnClientPlayerRagdollSpawned(C_ClientRagdollGib *ragdoll, int gibFlags);
+#endif
+
 #endif // GIBS_SHARED_H

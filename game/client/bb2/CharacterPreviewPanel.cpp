@@ -503,18 +503,12 @@ void CharacterPreviewPanel::CalculateFrameDistanceInternal(const model_t *pModel
 //-----------------------------------------------------------------------------
 void CharacterPreviewPanel::CalculateFrameDistance(void)
 {
-	if (!m_hModel)
+	if (!m_hModel || !m_hModel->GetModel())
 		return;
 
 	// Compute a bounding radius for the model
-	const model_t *mod = modelinfo->GetModel(m_hModel->GetModelIndex());
-	if (!mod)
-		return;
-
 	if (m_bStartFramed)
-	{
-		CalculateFrameDistanceInternal(mod);
-	}
+		CalculateFrameDistanceInternal(m_hModel->GetModel());
 }
 
 void CharacterPreviewPanel::OnCheckCameraRotationOrZoom(void)

@@ -111,6 +111,9 @@ bool C_ClientSideGibBase::Initialize(int type)
 	if ((InitializeAsClientEntity(STRING(GetModelName()), RENDER_GROUP_OPAQUE_ENTITY) == false) || engine->IsInEditMode())
 		return false;
 
+	AddEFlags(EFL_USE_PARTITION_WHEN_NOT_SOLID);
+	m_EntClientFlags |= ENTCLIENTFLAG_DONTUSEIK;
+
 	m_iGibType = type;
 	m_takedamage = DAMAGE_EVENTS_ONLY;
 	return true;
@@ -123,6 +126,9 @@ bool C_ClientSideGibBase::Initialize(int type, const model_t *model)
 
 	SetModelName(modelinfo->GetModelName(model));
 	SetModelPointer(model);
+
+	AddEFlags(EFL_USE_PARTITION_WHEN_NOT_SOLID);
+	m_EntClientFlags |= ENTCLIENTFLAG_DONTUSEIK;
 
 	m_iGibType = type;
 	m_takedamage = DAMAGE_EVENTS_ONLY;
@@ -253,6 +259,9 @@ void C_ClientSideGibBase::OnFullyInitialized(void)
 			}
 		}
 	}
+
+	AddEffects(EF_NOINTERP);
+	SetCollisionGroup(COLLISION_GROUP_WEAPON);
 }
 
 void C_ClientSideGibBase::StartTouch(C_BaseEntity *pOther)
@@ -285,10 +294,7 @@ void C_ClientSideGibBase::HitSurface(C_BaseEntity *pOther)
 
 void C_ClientSideGibBase::DoBloodSpray(trace_t *pTrace)
 {
-	if (!bb2_gibs_spawn_blood.GetBool())
-		return;
-
-	if (random->RandomInt(0, 100) > bb2_gibs_blood_chance.GetInt())
+	if (!bb2_gibs_spawn_blood.GetBool() || (random->RandomInt(0, 100) > bb2_gibs_blood_chance.GetInt()))
 		return;
 
 	if (m_iGibType > CLIENT_GIB_PROP)
@@ -570,4 +576,17 @@ void C_ClientPhysicsGib::LoadPhysics()
 	SetBlocksLOS(false);
 	UpdateVisibility();
 	SetNextClientThink(CLIENT_THINK_ALWAYS);
+}
+
+void C_ClientPhysicsGib::OnFullyInitialized(void)
+{
+	BaseClass::OnFullyInitialized();
+
+	if (m_iGibType > CLIENT_GIB_PROP)
+	{
+		if (!bb2_gibs_spawn_blood.GetBool())
+			return;
+
+		DispatchParticleEffect(GameBaseShared()->GetSharedGameDetails()->GetBloodParticle(GameBaseClient->IsExtremeGore()), PATTACH_ABSORIGIN_FOLLOW, this);
+	}
 }

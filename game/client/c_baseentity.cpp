@@ -529,6 +529,8 @@ DEFINE_FIELD(m_nWaterType, FIELD_CHARACTER),
 DEFINE_FIELD(m_vecAngVelocity, FIELD_VECTOR),
 //	DEFINE_FIELD( m_vecAbsAngVelocity, FIELD_VECTOR ),
 
+DEFINE_FIELD(m_nFakeModelIndex, FIELD_INTEGER),
+DEFINE_FIELD(m_bPreferModelPointerOverIndex, FIELD_BOOLEAN),
 
 //	DEFINE_FIELD( model, FIELD_INTEGER ), // writing pointer literally
 //	DEFINE_FIELD( index, FIELD_INTEGER ),
@@ -932,6 +934,7 @@ m_iv_vecVelocity("C_BaseEntity::m_iv_vecVelocity")
 
 	m_bPreferModelPointerOverIndex = false;
 	oldModel = NULL;
+	m_nFakeModelIndex = -1;
 
 #ifdef _DEBUG
 	m_vecAbsOrigin = vec3_origin;
@@ -1718,17 +1721,19 @@ void C_BaseEntity::SetModelPointer(const model_t *pModel)
 		OnNewModel();
 
 		UpdateVisibility();
+
+		if (ShouldUseModelPointer())
+			m_nFakeModelIndex = LookupClientModelIndex(pModel);
 	}
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: IMPORTANT - Gives us a fake model index. (A little expensive!)
+// Purpose: IMPORTANT - Gives us a fake model index.
 //-----------------------------------------------------------------------------
-extern int LookupClientModelIndex(const model_t *model);
 int C_BaseEntity::GetModelIndex(void) const
 {
 	if (GetModel() && ShouldUseModelPointer())
-		return LookupClientModelIndex(GetModel());
+		return m_nFakeModelIndex;
 
 	return m_nModelIndex;
 }
@@ -5854,7 +5859,16 @@ void C_BaseEntity::OnPostRestoreData()
 	// If our model index has changed, then make sure it's reflected in our model pointer.
 	// (Mostly superseded by new modelindex delta check in RestoreData, but I'm leaving it
 	// because it might be band-aiding any other missed calls to SetModelByIndex --henryg)
-	if (GetModel() != modelinfo->GetModel(GetModelIndex()))
+	if (ShouldUseModelPointer())
+	{
+		const model_t *wanted = LookupClientModelPointer(m_nFakeModelIndex);
+		if (GetModel() != wanted)
+		{
+			MDLCACHE_CRITICAL_SECTION();
+			SetModelPointer(wanted);
+		}
+	}
+	else if (GetModel() != modelinfo->GetModel(GetModelIndex()))
 	{
 		MDLCACHE_CRITICAL_SECTION();
 		SetModelByIndex(GetModelIndex());

@@ -25,7 +25,6 @@ However, if you create a pull request, be sure to test your changes properly bef
 - [ ] Improve movement mechanics, such as camera movement when reloading weapons.
 - [ ] New GUI for the inventory and quest system.
 - [ ] Fix tiny HUD / GUI text for some languages like Russian, Chinese, etc...
-- [ ] Allow players to actually use unique player models similar to GoldSource, change how player models are rendered @ client.
 
 ### Current Bugs
 * Writing 'connect ip:port' in the console while in-game will bug if the server is password protected, you have to open the main menu in order to write in the desired password. (assuming you're using the console when the main menu isn't up)

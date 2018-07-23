@@ -98,7 +98,7 @@ void SpawnGibOrRagdollForPlayer(C_BaseAnimating *pFrom, int index, int team, con
 		if (index == GetLocalPlayerIndex())
 			m_pPlayerRagdoll = pRagdoll;
 
-		// TODO setup bodygrp! (gib ungibbed stuff) + remove associated gear if need to gib.
+		OnClientPlayerRagdollSpawned(pRagdoll, flags);
 	}
 
 	if (bIsRagdollGib && !pEntity->LoadRagdoll())

@@ -80,6 +80,22 @@ int LookupClientModelIndex(const model_t *model)
 
 	return -1;
 }
+
+const model_t *LookupClientModelPointer(int index)
+{
+	int count = m_pClientModelList.Count();
+	if (count && (index >= CLIENT_MODEL_START_INDEX))
+	{
+		for (int i = 0; i < count; i++)
+		{
+			ClientModelItem *item = &m_pClientModelList[i];
+			if (item->id == index)
+				return item->model;
+		}
+	}
+
+	return modelinfo->GetModel(index); // Revert to default!
+}
 #else
 #include "GameBase_Server.h"
 #endif

@@ -34,6 +34,7 @@ public:
 	virtual RenderGroup_t GetRenderGroup() { return RENDER_GROUP_OPAQUE_ENTITY; }
 	virtual void GetRenderBounds(Vector &mins, Vector &maxs);
 	virtual void StudioFrameAdvance();
+	virtual bool IsClientCreated(void) const { return true; }
 };
 
 extern ConVar bb2_render_body;

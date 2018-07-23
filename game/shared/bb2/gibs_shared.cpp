@@ -227,6 +227,40 @@ bool C_ClientRagdollGib::CanGibEntity(const Vector &velocity, int hitgroup, int 
 	OnGibbedGroup(hitgroup, false);
 	return true;
 }
+
+void OnClientPlayerRagdollSpawned(C_ClientRagdollGib *ragdoll, int gibFlags)
+{
+	if (ragdoll == NULL)
+		return;
+
+	if (ragdoll->IsGibFlagActive(GIB_FULL_EXPLODE))
+	{
+		ragdoll->m_nBody = 0;
+		for (int i = 0; i < _ARRAYSIZE(GIB_BODYGROUPS); i++)
+		{
+			int gib_bodygroup = ragdoll->FindBodygroupByName(GIB_BODYGROUPS[i].bodygroup);
+			if (gib_bodygroup == -1)
+				continue;
+
+			ragdoll->SetBodygroup(gib_bodygroup, 1);
+		}
+
+		return;
+	}
+
+	for (int i = 0; i < _ARRAYSIZE(GIB_BODYGROUPS); i++)
+	{
+		if (ragdoll->IsGibFlagActive(GIB_BODYGROUPS[i].flag) == false)
+			continue;
+
+		int gib_bodygroup = ragdoll->FindBodygroupByName(GIB_BODYGROUPS[i].bodygroup);
+		if (gib_bodygroup == -1)
+			continue;
+
+		ragdoll->SetBodygroup(gib_bodygroup, 1);
+		ragdoll->OnGibbedGroup(GIB_BODYGROUPS[i].hitgroup, false);
+	}
+}
 #else
 const char *GetGibModel(CBaseCombatCharacter *pVictim, const char *gib)
 {

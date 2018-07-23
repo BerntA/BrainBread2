@@ -589,12 +589,17 @@ public:
 
 	//---------------------------------
 	
-	string_t GetModelName( IPhysicsObject *pObject )
+	string_t GetModelName(IPhysicsObject *pObject)
 	{
-		int i = m_PhysObjectModels.Find( pObject );
-		if ( i == m_PhysObjectModels.InvalidIndex() )
+		int i = m_PhysObjectModels.Find(pObject);
+		if (i == m_PhysObjectModels.InvalidIndex())
 			return NULL_STRING;
-		return AllocPooledString( modelinfo->GetModelName( modelinfo->GetModel( m_PhysObjectModels[i] ) ) );
+
+#ifdef CLIENT_DLL
+		return AllocPooledString(modelinfo->GetModelName(LookupClientModelPointer(m_PhysObjectModels[i])));
+#else
+		return AllocPooledString(modelinfo->GetModelName(modelinfo->GetModel(m_PhysObjectModels[i])));
+#endif
 	}
 	
 	//---------------------------------

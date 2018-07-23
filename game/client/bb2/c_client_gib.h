@@ -13,7 +13,7 @@
 #include "gibs_shared.h"
 #include "takedamageinfo.h"
 
-class C_ClientSideGibBase : public C_BaseAnimating
+abstract_class C_ClientSideGibBase : public C_BaseAnimating
 {
 public:
 	DECLARE_CLASS(C_ClientSideGibBase, C_BaseAnimating);
@@ -116,6 +116,7 @@ public:
 	bool Initialize(int type);
 	bool Initialize(int type, const model_t *model);
 	void LoadPhysics();
+	void OnFullyInitialized(void);
 };
 
 extern ConVar bb2_gibs_fadeout_time;
