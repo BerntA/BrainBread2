@@ -128,7 +128,7 @@ void TE_ConcussiveExplosion( IRecipientFilter& filter, float delay, KeyValues *p
 void TE_ClientProjectile( IRecipientFilter& filter, float delay,
 	 const Vector* vecOrigin, const Vector* vecVelocity, int modelindex, int lifetime, CBaseEntity *pOwner );
 void TE_ClientSideGib(IRecipientFilter& filter, float delay, int modelindex, int body, int skin,
-	const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects, int gibType, int playerIndex);
+	const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects, int gibType);
 void TE_ClientSideGib(IRecipientFilter& filter, float delay, KeyValues *pKeyValues);
 
 class C_TempEntsSystem : public ITempEntsSystem
@@ -528,11 +528,11 @@ public:
 		}
 	}
 	virtual void ClientSideGib(IRecipientFilter& filter, float delay, int modelindex, int body, int skin,
-		const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects, int gibType, int playerIndex)
+		const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects, int gibType)
 	{
 		if (!SuppressTE(filter))
 		{
-			TE_ClientSideGib(filter, delay, modelindex, body, skin, pos, angles, vel, flags, effects, gibType, playerIndex);
+			TE_ClientSideGib(filter, delay, modelindex, body, skin, pos, angles, vel, flags, effects, gibType);
 		}
 	}
 

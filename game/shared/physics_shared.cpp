@@ -112,9 +112,17 @@ IPhysicsObject *PhysModelCreateBox( CBaseEntity *pEntity, const Vector &mins, co
 	Vector dims = maxs - mins;
 	solid.params.volume = dims.x * dims.y * dims.z;
 
-	if ( modelIndex )
+#ifdef CLIENT_DLL
+	if ( modelIndex || pEntity->ShouldUseModelPointer() )
+#else
+	if (modelIndex)
+#endif
 	{
-		const model_t *model = modelinfo->GetModel( modelIndex );
+#ifdef CLIENT_DLL
+		const model_t *model = pEntity->ShouldUseModelPointer() ? pEntity->GetModel() : modelinfo->GetModel(modelIndex);
+#else
+		const model_t *model = modelinfo->GetModel(modelIndex);
+#endif
 		if ( model )
 		{
 			CStudioHdr studioHdr( modelinfo->GetStudiomodel( model ), mdlcache );
@@ -152,9 +160,17 @@ IPhysicsObject *PhysModelCreateOBB( CBaseEntity *pEntity, const Vector &mins, co
 	Vector dims = maxs - mins;
 	solid.params.volume = dims.x * dims.y * dims.z;
 
-	if ( modelIndex )
+#ifdef CLIENT_DLL
+	if (modelIndex || pEntity->ShouldUseModelPointer())
+#else
+	if (modelIndex)
+#endif
 	{
-		const model_t *model = modelinfo->GetModel( modelIndex );
+#ifdef CLIENT_DLL
+		const model_t *model = pEntity->ShouldUseModelPointer() ? pEntity->GetModel() : modelinfo->GetModel(modelIndex);
+#else
+		const model_t *model = modelinfo->GetModel(modelIndex);
+#endif
 		if ( model )
 		{
 			CStudioHdr studioHdr( modelinfo->GetStudiomodel( model ), mdlcache );
@@ -184,7 +200,11 @@ IPhysicsObject *PhysModelCreateOBB( CBaseEntity *pEntity, const Vector &mins, co
 //-----------------------------------------------------------------------------
 bool PhysModelParseSolidByIndex( solid_t &solid, CBaseEntity *pEntity, int modelIndex, int solidIndex )
 {
+#ifdef CLIENT_DLL
+	vcollide_t *pCollide = pEntity ? pEntity->ShouldUseModelPointer() ? modelinfo->GetVCollide( pEntity->GetModel() ) : modelinfo->GetVCollide( modelIndex ) : modelinfo->GetVCollide( modelIndex );
+#else
 	vcollide_t *pCollide = modelinfo->GetVCollide( modelIndex );
+#endif
 	if ( !pCollide )
 		return false;
 
@@ -306,7 +326,11 @@ IPhysicsObject *PhysModelCreate( CBaseEntity *pEntity, int modelIndex, const Vec
 	if ( !physenv )
 		return NULL;
 
+#ifdef CLIENT_DLL
+	vcollide_t *pCollide = pEntity ? pEntity->ShouldUseModelPointer() ? modelinfo->GetVCollide( pEntity->GetModel() ) : modelinfo->GetVCollide( modelIndex ) : modelinfo->GetVCollide( modelIndex );
+#else
 	vcollide_t *pCollide = modelinfo->GetVCollide( modelIndex );
+#endif
 	if ( !pCollide || !pCollide->solidCount )
 		return NULL;
 	
@@ -328,8 +352,8 @@ IPhysicsObject *PhysModelCreate( CBaseEntity *pEntity, int modelIndex, const Vec
 
 	if ( pObject )
 	{
-		if ( modelinfo->GetModelType(modelinfo->GetModel(modelIndex)) == mod_brush )
-		{
+		if (modelinfo->GetModelType(modelinfo->GetModel(modelIndex)) == mod_brush)
+		{			
 			unsigned int contents = modelinfo->GetModelContents( modelIndex );
 			Assert(contents!=0);
 			// HACKHACK: contents is used to filter collisions
@@ -364,7 +388,11 @@ IPhysicsObject *PhysModelCreateUnmoveable( CBaseEntity *pEntity, int modelIndex,
 	if ( !physenv )
 		return NULL;
 
-	vcollide_t *pCollide = modelinfo->GetVCollide( modelIndex );
+#ifdef CLIENT_DLL
+	vcollide_t *pCollide = pEntity ? pEntity->ShouldUseModelPointer() ? modelinfo->GetVCollide(pEntity->GetModel()) : modelinfo->GetVCollide(modelIndex) : modelinfo->GetVCollide(modelIndex);
+#else
+	vcollide_t *pCollide = modelinfo->GetVCollide(modelIndex);
+#endif
 	if ( !pCollide || !pCollide->solidCount )
 		return NULL;
 

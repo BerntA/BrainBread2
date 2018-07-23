@@ -1191,6 +1191,10 @@ public:
 	//  this function, tests for NULL, and Asserts m_pAttributes == dynamic_cast.
 	inline IHasAttributes *GetHasAttributesInterfacePtr() const { return m_pAttributes; }
 
+	// Client-Side Player Model logic, the indexes returned for client based mdls are 90% invalid. Use pointer instead!!!
+	virtual bool ShouldUseModelPointer(void) const { return m_bPreferModelPointerOverIndex; }
+	virtual void SetShouldPreferModelPointer(bool value) { m_bPreferModelPointerOverIndex = value; }
+
 protected:
 	// NOTE: m_pAttributes needs to be set in the leaf class constructor.
 	IHasAttributes *m_pAttributes;
@@ -1301,6 +1305,12 @@ private:
 
 	// Model for rendering
 	const model_t					*model;
+
+protected:
+
+	// Client-side model fixes
+	const model_t					*oldModel;
+	bool							m_bPreferModelPointerOverIndex;
 
 public:
 	// Time animation sequence or frame was last changed
@@ -1805,11 +1815,6 @@ inline const QAngle& C_BaseEntity::GetNetworkAngles() const
 inline const model_t *C_BaseEntity::GetModel(void) const
 {
 	return model;
-}
-
-inline int C_BaseEntity::GetModelIndex(void) const
-{
-	return m_nModelIndex;
 }
 
 //-----------------------------------------------------------------------------

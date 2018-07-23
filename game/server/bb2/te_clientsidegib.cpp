@@ -27,7 +27,6 @@ public:
 	CNetworkVar(int, m_nFlags);
 	CNetworkVar(int, m_nEffects);
 	CNetworkVar(int, m_iGibType);
-	CNetworkVar(int, m_iPlayerIndex);
 };
 
 IMPLEMENT_SERVERCLASS_ST(CTEClientSideGib, DT_TEClientSideGib)
@@ -42,7 +41,6 @@ SendPropInt(SENDINFO(m_nSkin), ANIMATION_SKIN_BITS),
 SendPropInt(SENDINFO(m_nFlags), MAX_GIB_BITS, SPROP_UNSIGNED),
 SendPropInt(SENDINFO(m_nEffects), EF_MAX_BITS, SPROP_UNSIGNED),
 SendPropInt(SENDINFO(m_iGibType), 2, SPROP_UNSIGNED),
-SendPropInt(SENDINFO(m_iPlayerIndex), 5, SPROP_UNSIGNED),
 END_SEND_TABLE()
 
 CTEClientSideGib::CTEClientSideGib(const char *name) : CBaseTempEntity(name)
@@ -56,13 +54,12 @@ CTEClientSideGib::CTEClientSideGib(const char *name) : CBaseTempEntity(name)
 	m_nFlags = 0;
 	m_nEffects = 0;
 	m_iGibType = 0;
-	m_iPlayerIndex = 0;
 }
 
 static CTEClientSideGib g_TEClientSideGib("clientsidegib");
 
 void TE_ClientSideGib(IRecipientFilter& filter, float delay, int modelindex, int body, int skin,
-	const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects, int gibType, int playerIndex)
+	const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects, int gibType)
 {
 	g_TEClientSideGib.m_vecOrigin = pos;
 	g_TEClientSideGib.m_angRotation = angles;
@@ -73,7 +70,6 @@ void TE_ClientSideGib(IRecipientFilter& filter, float delay, int modelindex, int
 	g_TEClientSideGib.m_nFlags = flags;
 	g_TEClientSideGib.m_nEffects = effects;
 	g_TEClientSideGib.m_iGibType = gibType;
-	g_TEClientSideGib.m_iPlayerIndex = playerIndex;
 
 	g_TEClientSideGib.Create(filter, delay);
 }

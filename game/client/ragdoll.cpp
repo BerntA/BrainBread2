@@ -102,7 +102,7 @@ void CRagdoll::Init(
 	ragdollparams_t params;
 	params.pGameData = static_cast<void *>( ent );
 	params.modelIndex = ent->GetModelIndex();
-	params.pCollide = modelinfo->GetVCollide( params.modelIndex );
+	params.pCollide = ent->ShouldUseModelPointer() ? modelinfo->GetVCollide(ent->GetModel()) : modelinfo->GetVCollide(params.modelIndex);
 	params.pStudioHdr = pstudiohdr;
 	params.forceVector = forceVector;
 	params.forceBoneIndex = forceBone;

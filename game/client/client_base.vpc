@@ -130,6 +130,7 @@ $Project
 		{
 		    $File "bb2/c_te_clientsidegib.cpp"
 			$File "bb2/c_te_bullet_shot.cpp"
+			$File "bb2/c_te_player_gib.cpp"
 		}
 		
 		$Folder "GAME_UI"

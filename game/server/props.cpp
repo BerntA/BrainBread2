@@ -6413,7 +6413,7 @@ void CPropDoorBreakable::SpawnGibs(int newHealth, int oldHealth, const CTakeDama
 				if (modelIndex)
 				{
 					CPASFilter filter(WorldSpaceCenter());
-					te->ClientSideGib(filter, -1, modelIndex, 0, m_nSkin, GetAbsOrigin(), GetAbsAngles(), vecNewVelocity, 0, 0, CLIENT_GIB_PROP, 0);
+					te->ClientSideGib(filter, -1, modelIndex, 0, m_nSkin, GetAbsOrigin(), GetAbsAngles(), vecNewVelocity, 0, 0, CLIENT_GIB_PROP);
 					PhysBreakSound(this, VPhysicsGetObject(), GetAbsOrigin());
 				}
 				else

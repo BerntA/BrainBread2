@@ -556,6 +556,9 @@ void CNPCWalker::LeaveCrawlMode(void)
 
 void CNPCWalker::BecomeCrawler(void)
 {
+	if (m_bIsInCrawlMode)
+		return;
+
 	bool bWasMoving = IsMoving();
 	if (bWasMoving)
 		GetMotor()->MoveStop();
@@ -575,6 +578,8 @@ void CNPCWalker::BecomeCrawler(void)
 
 	if (bWasMoving)
 		GetMotor()->MoveStart();
+
+	m_bIsInCrawlMode = true;
 }
 
 float CNPCWalker::MaxYawSpeed(void)

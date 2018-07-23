@@ -248,7 +248,8 @@ void ProfileMenuCharacterPanel::ShowInfoForCharacter(int index, bool bLoadSelf)
 	}
 
 	const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(index);
-	Assert(data != NULL);
+	if (data == NULL)
+		return;
 
 	m_pSelectedModel->LoadModel(data->szSurvivorName, TEAM_HUMANS);
 	m_pSelectedModel->SetProperties(m_iCustomizationNum[0], m_iCustomizationNum[1], m_iCustomizationNum[2], m_iCustomizationNum[3], m_iCustomizationNum[4]);
@@ -327,7 +328,8 @@ void ProfileMenuCharacterPanel::ShowInfoForCharacter(int index, bool bLoadSelf)
 void ProfileMenuCharacterPanel::ApplyChanges(void)
 {
 	const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(m_iCurrentSelectedItem);
-	Assert(data != NULL);
+	if (data == NULL)
+		return;
 
 	static ConVarRef survivor_choice("bb2_survivor_choice");
 	static ConVarRef human_voiceset("bb2_sound_player_human");
@@ -394,7 +396,8 @@ void ProfileMenuCharacterPanel::OnCommand(const char* pcCommand)
 	BaseClass::OnCommand(pcCommand);
 
 	const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(m_iCurrentSelectedItem);
-	Assert(data != NULL);
+	if (data == NULL)
+		return;
 
 	int customArray[MAX_CUSTOMIZABLE_ITEMS] =
 	{

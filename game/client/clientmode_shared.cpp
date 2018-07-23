@@ -1128,13 +1128,19 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 		int iPlayerIndexForce = event->GetInt("playerindex");
 		bool bGender = event->GetBool("gender");
 		const char *szOriginal = event->GetString("original");
-		const char *szGender = (bGender) ? "Male" : "Female";
+		const char *szGender = bGender ? "Male" : "Female";
 		const char *szSurvivorLink = event->GetString("survivorlink");
 		const char *szSoundsetPrefix = event->GetString("survivorprefix");
 		char szSoundToEmit[256];
 		szSoundToEmit[0] = 0;
 		bool bIsDeathmatchAnnouncer = ((iEntIndex == -1) && (iType == BB2_SoundTypes::TYPE_ANNOUNCER));
 		bool bIsPlayerSound = ((iType == BB2_SoundTypes::TYPE_PLAYER) || (iType == BB2_SoundTypes::TYPE_DECEASED));
+		if (bIsPlayerSound)
+		{
+			const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(szSurvivorLink, true);
+			if (data != NULL) // Override gender check:			
+				szGender = data->bGender ? "Male" : "Female";
+		}
 
 		if (pClient && g_PR)
 		{

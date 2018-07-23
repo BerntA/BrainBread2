@@ -119,7 +119,7 @@ public:
 	virtual void PhysicsProp( IRecipientFilter& filter, float delay, int modelindex, int skin, 
 		const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects ) = 0;
 	virtual void ClientSideGib(IRecipientFilter& filter, float delay, int modelindex, int body, int skin,
-		const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects, int gibType, int playerIndex) = 0;
+		const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects, int gibType) = 0;
 
 	// For playback from external tools
 	virtual void TriggerTempEntity( KeyValues *pKeyValues ) = 0;

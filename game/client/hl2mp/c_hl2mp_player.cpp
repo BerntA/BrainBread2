@@ -55,6 +55,11 @@ IMPLEMENT_CLIENTCLASS_DT(C_HL2MP_Player, DT_HL2MP_Player, CHL2MP_Player)
 	RecvPropBool( RECVINFO( m_fIsWalking ) ),
 	RecvPropInt(RECVINFO(m_nPerkFlags)), 
 	RecvPropBool(RECVINFO(m_bIsInSlide)),
+
+	// Client-Sided Player Model Logic:
+	RecvPropArray3(RECVINFO_ARRAY(m_iCustomizationChoices), RecvPropInt(RECVINFO(m_iCustomizationChoices[0]))),
+	RecvPropString(RECVINFO(m_szModelChoice)),
+	RecvPropInt(RECVINFO(m_iModelIncrementor)),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_HL2MP_Player )
@@ -79,13 +84,18 @@ ConVar bb2_zombie_vision_color_b("bb2_zombie_vision_color_b", "15", FCVAR_CLIENT
 
 void SpawnBlood (Vector vecSpot, const Vector &vecDir, int bloodColor, float flDamage, int hitbox);
 
-EHANDLE m_pPlayerRagdoll = NULL;
+C_ClientRagdollGib *m_pPlayerRagdoll = NULL;
 dlight_t *m_pZombieLighting = 0;
 
 C_HL2MP_Player::C_HL2MP_Player() : m_iv_angEyeAngles("C_HL2MP_Player::m_iv_angEyeAngles")
 {
 	m_bIsZombieVisionEnabled = false;
 	m_iSpawnInterpCounterCache = 0;
+
+	// Client-Sided Player Model Logic:
+	memset(m_iCustomizationChoices, 0, sizeof(m_iCustomizationChoices));
+	Q_strncpy(m_szModelChoice, "", MAX_MAP_NAME);
+	m_iModelIncrementor = m_iOldModelIncrementor = 0;
 
 	AddVar( &m_angEyeAngles, &m_iv_angEyeAngles, LATCH_SIMULATION_VAR );
 
@@ -202,19 +212,10 @@ void C_HL2MP_Player::Initialize( void )
 		SetPoseParameter(hdr, i, 0.0);
 }
 
-CStudioHdr *C_HL2MP_Player::OnNewModel( void )
+CStudioHdr *C_HL2MP_Player::OnNewModel(void)
 {
 	CStudioHdr *hdr = BaseClass::OnNewModel();
-	
-	Initialize( );
-
-	// Reset the players animation states, gestures
-	if (m_PlayerAnimState)
-	{
-		m_PlayerAnimState->OnNewModel();
-	}
-
-	BB2PlayerGlobals->OnNewModel();
+	Initialize();
 	return hdr;
 }
 
@@ -491,6 +492,13 @@ void C_HL2MP_Player::PostDataUpdate( DataUpdateType_t updateType )
 		BB2PlayerGlobals->CreateEntities();
 
 	BaseClass::PostDataUpdate( updateType );
+
+	// Client-Side Player Model Changed:
+	if ((m_iOldModelIncrementor != m_iModelIncrementor) && m_pNewPlayerModel)
+	{
+		m_iOldModelIncrementor = m_iModelIncrementor;
+		m_pNewPlayerModel->UpdateModel();
+	}
 }
 
 void C_HL2MP_Player::ReleaseFlashlight( void )
@@ -598,13 +606,9 @@ void C_HL2MP_Player::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNea
 	if ( m_lifeState != LIFE_ALIVE && !IsObserver() )
 	{
 		// BB2 FP Death
-		if ( cl_fp_ragdoll.GetBool() && m_pPlayerRagdoll.Get() )
+		if ( cl_fp_ragdoll.GetBool() && m_pPlayerRagdoll )
 		{
-			// pointer to the ragdoll
-			C_ClientRagdollGib *pRagdoll = (C_ClientRagdollGib*)m_pPlayerRagdoll.Get();
-
-			// gets its origin and angles
-			pRagdoll->GetAttachment( pRagdoll->LookupAttachment( "eyes" ), eyeOrigin, eyeAngles );
+			m_pPlayerRagdoll->GetAttachment(m_pPlayerRagdoll->LookupAttachment("eyes"), eyeOrigin, eyeAngles);
 			Vector vForward; 
 			AngleVectors( eyeAngles, &vForward );
 
@@ -612,7 +616,7 @@ void C_HL2MP_Player::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNea
 			{
 				// DM: Don't use first person view when we are very close to something
 				trace_t tr;
-				UTIL_TraceLine( eyeOrigin, eyeOrigin + ( vForward * 5 ), MASK_ALL, pRagdoll, COLLISION_GROUP_NONE, &tr );
+				UTIL_TraceLine(eyeOrigin, eyeOrigin + (vForward * 5), MASK_ALL, m_pPlayerRagdoll, COLLISION_GROUP_NONE, &tr);
 
 				if ( (!(tr.fraction < 1) || (tr.endpos.DistTo(eyeOrigin) > 25)) )
 					return;
@@ -664,10 +668,9 @@ void C_HL2MP_Player::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNea
 
 IRagdoll* C_HL2MP_Player::GetRepresentativeRagdoll() const
 {
-	if ( m_pPlayerRagdoll.Get() )
+	if (m_pPlayerRagdoll)
 	{
-		C_ClientRagdollGib *pRagdoll = (C_ClientRagdollGib*)m_pPlayerRagdoll.Get();
-		return pRagdoll->GetIRagdoll();
+		return m_pPlayerRagdoll->GetIRagdoll();
 	}
 	else
 	{
@@ -880,6 +883,6 @@ CON_COMMAND_F(setmodel, "Set the playermodel to use, client-only. Can be a numbe
 	{
 		const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(idx);
 		if (data)
-			pPlayer->GetNewPlayerModel()->SetModelPointer((pPlayer->GetTeamNumber() == TEAM_HUMANS) ? data->m_pClientModelPtrHuman : data->m_pClientModelPtrZombie);
+			pPlayer->GetNewPlayerModel()->SetModelPointer((pPlayer->GetTeamNumber() == TEAM_DECEASED) ? data->m_pClientModelPtrZombie : data->m_pClientModelPtrHuman);
 	}
 }

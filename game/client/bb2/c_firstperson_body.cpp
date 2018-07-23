@@ -21,6 +21,7 @@ ConVar bb2_render_body("bb2_render_body", "1", FCVAR_CHEAT, "Render firstperson 
 
 C_FirstpersonBody::C_FirstpersonBody()
 {
+	m_bPreferModelPointerOverIndex = true;
 }
 
 void C_FirstpersonBody::Spawn()

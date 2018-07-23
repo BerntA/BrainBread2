@@ -22,8 +22,8 @@ public:
 	virtual ~C_ClientSideGibBase();
 
 	virtual bool Initialize(int type);
+	virtual bool Initialize(int type, const model_t *model);
 	virtual bool LoadRagdoll();
-	virtual void Spawn();
 	virtual void OnFullyInitialized(void);
 
 	virtual bool IsDormant(void) { return false; }
@@ -51,8 +51,14 @@ public:
 
 	virtual IRagdoll* GetIRagdoll() const;
 
-	virtual void SetPlayerIndexLink(int index) { m_iPlayerIndexLink = index; }
-	virtual int GetPlayerIndexLink(void) { return m_iPlayerIndexLink; }
+	virtual void SetPlayerLink(int index, int team, const char *survivor)
+	{
+		m_iPlayerIndex = index;
+		m_iPlayerTeam = team;
+		Q_strncpy(m_szSurvivor, survivor, MAX_MAP_NAME);
+	}
+	virtual int GetPlayerLinkTeam(void) { return m_iPlayerTeam; }
+	virtual const char *GetPlayerLinkSurvivor(void) { return m_szSurvivor; }
 
 	virtual void DoBloodSpray(trace_t *pTrace);
 
@@ -65,8 +71,11 @@ protected:
 	bool m_bFadingOut;
 	bool m_bReleaseGib;
 	bool m_bForceFade;
-	int m_iPlayerIndexLink;
 	int m_iGibType;
+
+	int m_iPlayerIndex;
+	int m_iPlayerTeam;
+	char m_szSurvivor[MAX_MAP_NAME];
 };
 
 class C_ClientRagdollGib : public C_ClientSideGibBase
@@ -77,7 +86,6 @@ public:
 	C_ClientRagdollGib(void);
 	virtual ~C_ClientRagdollGib();
 
-	bool Initialize(int type);
 	bool IsClientRagdoll(void) { return true; }
 	bool LoadRagdoll();
 
@@ -106,11 +114,14 @@ public:
 	virtual ~C_ClientPhysicsGib();
 
 	bool Initialize(int type);
+	bool Initialize(int type, const model_t *model);
+	void LoadPhysics();
 };
 
 extern ConVar bb2_gibs_fadeout_time;
 extern ConVar bb2_gibs_blood_chance;
 
 extern bool RemoveAllClientGibs();
+extern void SpawnGibOrRagdollForPlayer(C_BaseAnimating *pFrom, int index, int team, const char *survivor, int flags, int type, const Vector &origin, const Vector &velocity, const QAngle &angles);
 
 #endif // C_CLIENT_GIB_H

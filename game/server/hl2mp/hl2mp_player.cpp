@@ -37,6 +37,7 @@
 #include "viewport_panel_names.h"
 #include "BaseKeyPadEntity.h"
 #include "items.h"
+#include "te_player_gib.h"
 
 #include "tier0/memdbgon.h"
 
@@ -211,21 +212,16 @@ SendPropDataTable("hl2mpnonlocaldata", 0, &REFERENCE_SEND_TABLE(DT_HL2MPNonLocal
 SendPropInt(SENDINFO(m_iSpawnInterpCounter), 4),
 SendPropInt(SENDINFO(m_nPerkFlags), PERK_MAX_BITS, SPROP_UNSIGNED),
 SendPropBool(SENDINFO(m_bIsInSlide)),
+
+// Client-Sided Player Model Logic:
+SendPropArray3(SENDINFO_ARRAY3(m_iCustomizationChoices), SendPropInt(SENDINFO_ARRAY(m_iCustomizationChoices), 5, SPROP_UNSIGNED)),
+SendPropString(SENDINFO(m_szModelChoice)),
+SendPropInt(SENDINFO(m_iModelIncrementor), 11, SPROP_UNSIGNED),
 END_SEND_TABLE()
 
 BEGIN_DATADESC(CHL2MP_Player)
 DEFINE_EMBEDDED(m_BB2Local),
 END_DATADESC()
-
-const char *g_ppszRandomHumanModels[] =
-{
-	"models/characters/player/marine.mdl",
-};
-
-const char *g_ppszRandomZombieModels[] =
-{
-	"models/characters/player/marine_zombie.mdl",
-};
 
 #define HL2MPPLAYER_PHYSDAMAGE_SCALE 4.0f
 
@@ -284,6 +280,12 @@ CHL2MP_Player::CHL2MP_Player()
 
 	m_ullCachedSteamID = 0;
 
+	// Client-Sided Player Model Logic:
+	for (int i = 0; i < PLAYER_ACCESSORY_MAX; i++)
+		m_iCustomizationChoices.Set(i, 0);
+	Q_strncpy(m_szModelChoice.GetForModify(), "", MAX_MAP_NAME);
+	m_iModelIncrementor = 0;
+
 	BaseClass::ChangeTeam(0);
 }
 
@@ -304,16 +306,8 @@ void CHL2MP_Player::Precache(void)
 
 	PrecacheModel("sprites/glow01.vmt");
 
-	//Precache Zombie models
-	int i;
-	int nHeads = ARRAYSIZE(g_ppszRandomZombieModels);
-	for (i = 0; i < nHeads; ++i)
-		PrecacheModel(g_ppszRandomZombieModels[i]);
-
-	//Precache Human Models
-	nHeads = ARRAYSIZE(g_ppszRandomHumanModels);
-	for (i = 0; i < nHeads; ++i)
-		PrecacheModel(g_ppszRandomHumanModels[i]);
+	PrecacheModel(DEFAULT_PLAYER_MODEL(TEAM_HUMANS));
+	PrecacheModel(DEFAULT_PLAYER_MODEL(TEAM_DECEASED));
 
 	// Extra handy stuff...
 	PrecacheScriptSound("BaseEnemyHumanoid.Die");
@@ -702,28 +696,17 @@ void CHL2MP_Player::PickupObject(CBaseEntity *pObject, bool bLimitMassAndSize)
 
 void CHL2MP_Player::SetPlayerModel(int overrideTeam)
 {
-	const char *szModelName = g_ppszRandomHumanModels[0];
 	int teamNum = GetTeamNumber();
 	if (overrideTeam != -1)
 		teamNum = overrideTeam;
 
 	const char *survivorChoice = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "bb2_survivor_choice");
 	if (survivorChoice != NULL && (strlen(survivorChoice) > 0))
-		szModelName = GameBaseShared()->GetSharedGameDetails()->GetPlayerSurvivorModel(survivorChoice, teamNum);
+		Q_strncpy(m_szModelChoice.GetForModify(), survivorChoice, MAX_MAP_NAME);
 	else
-		szModelName = (teamNum == TEAM_DECEASED ? g_ppszRandomZombieModels[0] : g_ppszRandomHumanModels[0]);
+		Q_strncpy(m_szModelChoice.GetForModify(), "survivor1", MAX_MAP_NAME);
 
-	if (strlen(szModelName) <= 0)
-		szModelName = (teamNum == TEAM_DECEASED ? g_ppszRandomZombieModels[0] : g_ppszRandomHumanModels[0]);
-	else if (!engine->IsModelPrecached(szModelName))
-	{
-		int tryPrecache = PrecacheModel(szModelName);
-		if (tryPrecache == -1)
-			szModelName = (teamNum == TEAM_DECEASED ? g_ppszRandomZombieModels[0] : g_ppszRandomHumanModels[0]);
-	}
-
-	SetModel(szModelName);
-
+	SetModel(DEFAULT_PLAYER_MODEL(teamNum));
 	SetupCustomization();
 
 	// Soundset Logic:
@@ -737,20 +720,23 @@ void CHL2MP_Player::SetPlayerModel(int overrideTeam)
 
 	Q_strncpy(pchSoundsetSurvivorLink, survivorLink, 64);
 	Q_strncpy(pchSoundsetPrefix, soundsetPrefix, 64);
-	m_bSoundsetGender = ((Q_stristr(STRING(GetModelName()), "female")) ? false : true);
+	m_bSoundsetGender = true; // Obsolete, set "gender" "X" <- in character mdl script.
+
+	m_iModelIncrementor++; // Let clients register a change, easily...
 }
 
 void CHL2MP_Player::SetupCustomization(void)
 {
-	m_nBody = 0;
-	m_nSkin = 0;
+	m_nBody = m_nSkin = 0;
+	for (int i = 0; i < PLAYER_ACCESSORY_MAX; i++)
+		m_iCustomizationChoices.Set(i, 0);
 
 	const char *skinChoice = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "bb2_survivor_choice_skin");
 	const char *headChoice = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "bb2_survivor_choice_extra_head");
 	const char *bodyChoice = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "bb2_survivor_choice_extra_body");
 	const char *rightLegChoice = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "bb2_survivor_choice_extra_leg_right");
 	const char *leftLegChoice = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "bb2_survivor_choice_extra_leg_left");
-	
+
 	if ((skinChoice != NULL) && (headChoice != NULL) && (bodyChoice != NULL) && (rightLegChoice != NULL) && (leftLegChoice != NULL))
 	{
 		m_nSkin = atoi(skinChoice);
@@ -764,13 +750,7 @@ void CHL2MP_Player::SetupCustomization(void)
 		};
 
 		for (int i = 0; i < PLAYER_ACCESSORY_MAX; i++)
-		{
-			int accessoryGroup = FindBodygroupByName(PLAYER_BODY_ACCESSORY_BODYGROUPS[i]);
-			if (accessoryGroup == -1)
-				continue;
-
-			SetBodygroup(accessoryGroup, bodygroupAccessoryValues[i]);
-		}
+			m_iCustomizationChoices.Set(i, bodygroupAccessoryValues[i]);
 	}
 }
 
@@ -2392,10 +2372,9 @@ void CHL2MP_Player::CreateRagdollEntity(void)
 	vecNewVelocity.x += random->RandomFloat(-0.15, 0.15);
 	vecNewVelocity.y += random->RandomFloat(-0.15, 0.15);
 	vecNewVelocity.z += random->RandomFloat(-0.15, 0.15);
-	vecNewVelocity *= 900;
+	vecNewVelocity *= 900.0f;
 
-	CPASFilter filter(WorldSpaceCenter());
-	te->ClientSideGib(filter, -1, GetModelIndex(), m_nBody, m_nSkin, GetAbsOrigin(), GetAbsAngles(), vecNewVelocity, GetGibFlags(), 0, CLIENT_GIB_RAGDOLL, entindex());
+	TE_PlayerGibRagdoll(entindex(), GetGibFlags(), CLIENT_RAGDOLL, WorldSpaceCenter(), GetAbsOrigin(), vecNewVelocity, GetAbsAngles());
 }
 
 int CHL2MP_Player::AllowEntityToBeGibbed(void)
@@ -2404,40 +2383,6 @@ int CHL2MP_Player::AllowEntityToBeGibbed(void)
 		return GIB_NO_GIBS;
 
 	return GIB_FULL_GIBS;
-}
-
-void CHL2MP_Player::OnGibbedGroup(int hitgroup, bool bExploded)
-{
-	if (bExploded)
-	{
-		for (int i = 0; i < PLAYER_ACCESSORY_MAX; i++)
-		{
-			int accessoryGroup = FindBodygroupByName(PLAYER_BODY_ACCESSORY_BODYGROUPS[i]);
-			if (accessoryGroup == -1)
-				continue;
-
-			SetBodygroup(accessoryGroup, 0);
-		}
-
-		return;
-	}
-
-	int iAccessoryGroup = -1;
-	if (hitgroup == HITGROUP_HEAD)
-		iAccessoryGroup = 0;
-	else if (hitgroup == HITGROUP_LEFTLEG)
-		iAccessoryGroup = 2;
-	else if (hitgroup == HITGROUP_RIGHTLEG)
-		iAccessoryGroup = 3;
-
-	if (iAccessoryGroup == -1 || (iAccessoryGroup < 0) || (iAccessoryGroup >= PLAYER_ACCESSORY_MAX))
-		return;
-
-	int accessoryGroup = FindBodygroupByName(PLAYER_BODY_ACCESSORY_BODYGROUPS[iAccessoryGroup]);
-	if (accessoryGroup == -1)
-		return;
-
-	SetBodygroup(accessoryGroup, 0);
 }
 
 //-----------------------------------------------------------------------------

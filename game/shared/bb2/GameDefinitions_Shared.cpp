@@ -37,6 +37,49 @@ static ConVar bb2_survivor_choice_extra_body("bb2_survivor_choice_extra_body", "
 static ConVar bb2_survivor_choice_extra_leg_right("bb2_survivor_choice_extra_leg_right", "0", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_SERVER_CAN_EXECUTE, "Selected player model bodygroup for extra right leg.");
 static ConVar bb2_survivor_choice_extra_leg_left("bb2_survivor_choice_extra_leg_left", "0", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_SERVER_CAN_EXECUTE, "Selected player model bodygroup for extra left leg.");
 
+#define CLIENT_MODEL_START_INDEX 8192 // Make sure we don't collide with anything edict related! Must be > 4096!
+struct ClientModelItem
+{
+	ClientModelItem(int id, const model_t *mdl)
+	{
+		this->id = id;
+		this->model = mdl;
+	}
+
+	~ClientModelItem()
+	{
+		model = NULL;
+	}
+
+	int id;
+	const model_t *model;
+};
+static CUtlVector<ClientModelItem> m_pClientModelList;
+
+static const model_t *LoadClientModel(const char *path)
+{
+	int newID = (CLIENT_MODEL_START_INDEX + m_pClientModelList.Count());
+
+	const model_t *model = engine->LoadModel(path);
+	m_pClientModelList.AddToTail(ClientModelItem(newID, model));
+	return model;
+}
+
+int LookupClientModelIndex(const model_t *model)
+{
+	int count = m_pClientModelList.Count();
+	if (count)
+	{
+		for (int i = 0; i < count; i++)
+		{
+			ClientModelItem *item = &m_pClientModelList[i];
+			if (item->model == model)
+				return item->id;
+		}
+	}
+
+	return -1;
+}
 #else
 #include "GameBase_Server.h"
 #endif
@@ -71,12 +114,13 @@ void CGameDefinitionsShared::Cleanup(void)
 
 	pszLoadingTipData.Purge();
 	pszSoundPrefixesData.Purge();
+	pszPlayerSurvivorData.Purge();
+	m_pClientModelList.Purge();
 #endif
 
 	pszPlayerData.Purge();
 	pszPlayerLimbData.Purge();
-	pszPlayerWeaponData.Purge();
-	pszPlayerSurvivorData.Purge();
+	pszPlayerWeaponData.Purge();	
 	pszPlayerPowerupData.Purge();
 	pszItemSharedData.Purge();
 	pszItemMiscData.Purge();
@@ -544,10 +588,10 @@ bool CGameDefinitionsShared::LoadData(void)
 	else
 		Warning("Failed to parse: data/game/inventory_items!\n");
 
+#ifdef CLIENT_DLL
 	FileFindHandle_t findHandle;
 	const char *pFilename = NULL;
 
-#ifdef CLIENT_DLL
 	pkvParseData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/soundsets/default");
 	if (pkvParseData)
 	{
@@ -626,7 +670,6 @@ bool CGameDefinitionsShared::LoadData(void)
 	}
 	else
 		Warning("Failed to parse: data/settings/Tips!\n");
-#endif
 
 	pFilename = filesystem->FindFirstEx("data/characters/*.txt", "MOD", &findHandle);
 	while (pFilename)
@@ -643,6 +686,7 @@ bool CGameDefinitionsShared::LoadData(void)
 				{
 					DataPlayerItem_Survivor_Shared_t item;
 					Q_strncpy(item.szSurvivorName, sub->GetName(), MAX_MAP_NAME);
+					item.bGender = (sub->GetInt("gender", 1) >= 1); // TRUE = male, FALSE = female...
 
 					// Model Info
 					Q_strncpy(item.szHumanModelPath, sub->GetString("modelname"), MAX_WEAPON_STRING);
@@ -668,7 +712,6 @@ bool CGameDefinitionsShared::LoadData(void)
 					Q_strncpy(item.szDeceasedGibLegRight, pkvGibInfo ? pkvGibInfo->GetString("legs_right") : "", MAX_WEAPON_STRING);
 					Q_strncpy(item.szDeceasedGibLegLeft, pkvGibInfo ? pkvGibInfo->GetString("legs_left") : "", MAX_WEAPON_STRING);
 
-#ifdef CLIENT_DLL
 					Q_strncpy(item.szFriendlySurvivorName, sub->GetString("name"), MAX_MAP_NAME);
 					Q_strncpy(item.szFriendlyDescription, sub->GetString("description"), 128);
 					Q_strncpy(item.szSequence, sub->GetString("sequence"), MAX_MAP_NAME);
@@ -687,7 +730,6 @@ bool CGameDefinitionsShared::LoadData(void)
 
 					item.m_pClientModelPtrHuman = engine->LoadModel(item.szHumanModelPath);
 					item.m_pClientModelPtrZombie = engine->LoadModel(item.szZombieModelPath);
-#endif
 
 					pszPlayerSurvivorData.AddToTail(item);
 				}
@@ -701,6 +743,7 @@ bool CGameDefinitionsShared::LoadData(void)
 		pFilename = filesystem->FindNext(findHandle);
 	}
 	filesystem->FindClose(findHandle);
+#endif
 
 	return true;
 }
@@ -757,51 +800,6 @@ bool CGameDefinitionsShared::Precache(void)
 		CBaseAnimating::PrecacheModel(pszItemSharedData[i].szModelPath);
 	}
 
-	for (int i = 0; i < pszPlayerSurvivorData.Count(); i++)
-	{
-		CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szHumanHandsPath);
-		CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szHumanModelPath);
-		CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szHumanBodyPath);
-
-		CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szZombieHandsPath);
-		CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szZombieModelPath);
-		CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szZombieBodyPath);
-
-		// Check if there's any gibs:
-
-		// Humans:
-		if (strlen(pszPlayerSurvivorData[i].szHumanGibHead) > 0)
-			CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szHumanGibHead);
-
-		if (strlen(pszPlayerSurvivorData[i].szHumanGibArmLeft) > 0)
-			CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szHumanGibArmLeft);
-
-		if (strlen(pszPlayerSurvivorData[i].szHumanGibArmRight) > 0)
-			CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szHumanGibArmRight);
-
-		if (strlen(pszPlayerSurvivorData[i].szHumanGibLegLeft) > 0)
-			CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szHumanGibLegLeft);
-
-		if (strlen(pszPlayerSurvivorData[i].szHumanGibLegRight) > 0)
-			CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szHumanGibLegRight);
-
-		// Zombies:
-		if (strlen(pszPlayerSurvivorData[i].szDeceasedGibHead) > 0)
-			CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szDeceasedGibHead);
-
-		if (strlen(pszPlayerSurvivorData[i].szDeceasedGibArmLeft) > 0)
-			CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szDeceasedGibArmLeft);
-
-		if (strlen(pszPlayerSurvivorData[i].szDeceasedGibArmRight) > 0)
-			CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szDeceasedGibArmRight);
-
-		if (strlen(pszPlayerSurvivorData[i].szDeceasedGibLegLeft) > 0)
-			CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szDeceasedGibLegLeft);
-
-		if (strlen(pszPlayerSurvivorData[i].szDeceasedGibLegRight) > 0)
-			CBaseAnimating::PrecacheModel(pszPlayerSurvivorData[i].szDeceasedGibLegRight);
-	}
-
 	for (int i = 0; i < pszPlayerPowerupData.Count(); i++)
 	{
 		if (strlen(pszPlayerPowerupData[i].pchModelPath) > 0)
@@ -844,6 +842,64 @@ bool CGameDefinitionsShared::Precache(void)
 	return true;
 }
 
+#ifdef CLIENT_DLL
+void CGameDefinitionsShared::LoadClientModels(void)
+{
+	m_pClientModelList.Purge();
+
+	int numCharacters = pszPlayerSurvivorData.Count();
+	if (numCharacters <= 0)
+		return;
+
+	for (int i = 0; i < numCharacters; i++)
+	{
+		DataPlayerItem_Survivor_Shared_t &item = pszPlayerSurvivorData[i];
+
+		item.m_pClientModelPtrHuman = LoadClientModel(item.szHumanModelPath);
+		item.m_pClientModelPtrHumanHands = LoadClientModel(item.szHumanHandsPath);
+		item.m_pClientModelPtrHumanBody = LoadClientModel(item.szHumanBodyPath);
+
+		item.m_pClientModelPtrZombie = LoadClientModel(item.szZombieModelPath);
+		item.m_pClientModelPtrZombieHands = LoadClientModel(item.szZombieHandsPath);
+		item.m_pClientModelPtrZombieBody = LoadClientModel(item.szZombieBodyPath);
+
+		const char *humanGibs[PLAYER_GIB_GROUPS_MAX] = {
+			item.szHumanGibHead,
+			item.szHumanGibArmLeft,
+			item.szHumanGibArmRight,
+			item.szHumanGibLegLeft,
+			item.szHumanGibLegRight
+		};
+
+		const char *zombieGibs[PLAYER_GIB_GROUPS_MAX] = {
+			item.szDeceasedGibHead,
+			item.szDeceasedGibArmLeft,
+			item.szDeceasedGibArmRight,
+			item.szDeceasedGibLegLeft,
+			item.szDeceasedGibLegRight
+		};
+
+		for (int i = 0; i < PLAYER_GIB_GROUPS_MAX; i++)
+		{
+			item.m_pClientModelPtrGibsHuman[i] = NULL;
+			if (strlen(humanGibs[i]) <= 0)
+				continue;
+
+			item.m_pClientModelPtrGibsHuman[i] = LoadClientModel(humanGibs[i]);
+		}
+
+		for (int i = 0; i < PLAYER_GIB_GROUPS_MAX; i++)
+		{
+			item.m_pClientModelPtrGibsZombie[i] = NULL;
+			if (strlen(zombieGibs[i]) <= 0)
+				continue;
+
+			item.m_pClientModelPtrGibsZombie[i] = LoadClientModel(zombieGibs[i]);
+		}
+	}
+}
+#endif
+
 // Player Data:
 const DataPlayerItem_Shared_t *CGameDefinitionsShared::GetPlayerSharedData(void)
 {
@@ -883,13 +939,57 @@ const DataPlayerItem_ZombieRageMode_t *CGameDefinitionsShared::GetPlayerZombieRa
 	return &pszZombieRageModeData;
 }
 
+#ifdef CLIENT_DLL
 const DataPlayerItem_Survivor_Shared_t *CGameDefinitionsShared::GetSurvivorDataForIndex(int index)
 {
-	if (index >= 0 && index < pszPlayerSurvivorData.Count())
+	if ((index >= 0) && (index < pszPlayerSurvivorData.Count()))
 		return &pszPlayerSurvivorData[index];
 
-	return &pszPlayerSurvivorData[0];
+	// Return a default, if we couldn't find the default military mdl, return the fist item:
+	int itemCount = pszPlayerSurvivorData.Count();
+	if (itemCount)
+	{
+		const char *defaultHuman = DEFAULT_PLAYER_MODEL(TEAM_HUMANS);
+		for (int i = 0; i < itemCount; i++)
+		{
+			if (!strcmp(pszPlayerSurvivorData[i].szHumanModelPath, defaultHuman))
+				return &pszPlayerSurvivorData[i];
+		}
+
+		return &pszPlayerSurvivorData[0];
+	}
+
+	return NULL;
 }
+
+const DataPlayerItem_Survivor_Shared_t *CGameDefinitionsShared::GetSurvivorDataForIndex(const char *name, bool bNoDefault)
+{
+	int itemCount = pszPlayerSurvivorData.Count();
+	if (itemCount)
+	{
+		for (int i = 0; i < itemCount; i++)
+		{
+			if (!strcmp(pszPlayerSurvivorData[i].szSurvivorName, name))
+				return &pszPlayerSurvivorData[i];
+		}
+
+		// Return a default, if we couldn't find the default military mdl, return the fist item:
+		if (bNoDefault == false)
+		{
+			const char *defaultHuman = DEFAULT_PLAYER_MODEL(TEAM_HUMANS);
+			for (int i = 0; i < itemCount; i++)
+			{
+				if (!strcmp(pszPlayerSurvivorData[i].szHumanModelPath, defaultHuman))
+					return &pszPlayerSurvivorData[i];
+			}
+
+			return &pszPlayerSurvivorData[0];
+		}
+	}
+
+	return NULL;
+}
+#endif
 
 const DataPlayerItem_Player_PowerupItem_t *CGameDefinitionsShared::GetPlayerPowerupData(const char *powerupName)
 {
@@ -1057,17 +1157,6 @@ float CGameDefinitionsShared::GetPlayerSkillValue(int iSkillType, int iTeam, int
 	return 0;
 }
 
-int CGameDefinitionsShared::GetIndexForSurvivor(const char *name)
-{
-	for (int i = 0; i < pszPlayerSurvivorData.Count(); ++i)
-	{
-		if (!strcmp(pszPlayerSurvivorData[i].szSurvivorName, name))
-			return i;
-	}
-
-	return -1;
-}
-
 int CGameDefinitionsShared::GetIndexForPowerup(const char *name) const
 {
 	for (int i = 0; i < pszPlayerPowerupData.Count(); ++i)
@@ -1079,132 +1168,70 @@ int CGameDefinitionsShared::GetIndexForPowerup(const char *name) const
 	return -1;
 }
 
-const char *CGameDefinitionsShared::GetPlayerSurvivorModel(const char *name, int iTeam)
+#ifdef CLIENT_DLL
+const model_t *CGameDefinitionsShared::GetPlayerGibModelPtrForGibID(const DataPlayerItem_Survivor_Shared_t &data, bool bHuman, int gibID)
 {
-	int index = -1;
-	for (int i = 0; i < pszPlayerSurvivorData.Count(); ++i)
+	switch (gibID)
 	{
-		if (!strcmp(pszPlayerSurvivorData[i].szSurvivorName, name))
-		{
-			index = i;
-			break;
-		}
+	case GIB_NO_HEAD:
+		return (bHuman ? data.m_pClientModelPtrGibsHuman[0] : data.m_pClientModelPtrGibsZombie[0]);		
+	case GIB_NO_ARM_LEFT:
+		return (bHuman ? data.m_pClientModelPtrGibsHuman[1] : data.m_pClientModelPtrGibsZombie[1]);
+	case GIB_NO_ARM_RIGHT:
+		return (bHuman ? data.m_pClientModelPtrGibsHuman[2] : data.m_pClientModelPtrGibsZombie[2]);
+	case GIB_NO_LEG_LEFT:
+		return (bHuman ? data.m_pClientModelPtrGibsHuman[3] : data.m_pClientModelPtrGibsZombie[3]);
+	case GIB_NO_LEG_RIGHT:
+		return (bHuman ? data.m_pClientModelPtrGibsHuman[4] : data.m_pClientModelPtrGibsZombie[4]);
 	}
 
-	if (index != -1)
-	{
-		if (iTeam == TEAM_HUMANS)
-			return pszPlayerSurvivorData[index].szHumanModelPath;
-		else if (iTeam == TEAM_DECEASED)
-			return pszPlayerSurvivorData[index].szZombieModelPath;
-	}
+	return NULL;
+}
+
+const char *CGameDefinitionsShared::GetPlayerGibForModel(const char *survivor, bool bHuman, const char *gib)
+{
+	const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(survivor);
+	if (data == NULL)
+		return "";
+
+	if (!strcmp(gib, "head"))
+		return (bHuman ? data->szHumanGibHead : data->szDeceasedGibHead);
+	else if (!strcmp(gib, "arms_left"))
+		return (bHuman ? data->szHumanGibArmLeft : data->szDeceasedGibArmLeft);
+	else if (!strcmp(gib, "arms_right"))
+		return (bHuman ? data->szHumanGibArmRight : data->szDeceasedGibArmRight);
+	else if (!strcmp(gib, "legs_left"))
+		return (bHuman ? data->szHumanGibLegLeft : data->szDeceasedGibLegLeft);
+	else if (!strcmp(gib, "legs_right"))
+		return (bHuman ? data->szHumanGibLegRight : data->szDeceasedGibLegRight);
 
 	return "";
 }
 
-const char *CGameDefinitionsShared::GetPlayerHandModel(const char *model)
+bool CGameDefinitionsShared::DoesPlayerHaveGibForLimb(const char *survivor, bool bHuman, int gibID)
 {
-	for (int i = 0; i < pszPlayerSurvivorData.Count(); ++i)
-	{
-		if (!strcmp(pszPlayerSurvivorData[i].szHumanModelPath, model))
-			return pszPlayerSurvivorData[i].szHumanHandsPath;
-		else if (!strcmp(pszPlayerSurvivorData[i].szZombieModelPath, model))
-			return pszPlayerSurvivorData[i].szZombieHandsPath;
-	}
+	const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(survivor);
+	if (data == NULL)
+		return false;
 
-	return "";
-}
+	if ((gibID == GIB_NO_HEAD) && (bHuman ? (data->m_pClientModelPtrGibsHuman[0] != NULL) : (data->m_pClientModelPtrGibsZombie[0] != NULL)))
+		return true;
 
-const char *CGameDefinitionsShared::GetPlayerBodyModel(const char *model)
-{
-	for (int i = 0; i < pszPlayerSurvivorData.Count(); ++i)
-	{
-		if (!strcmp(pszPlayerSurvivorData[i].szHumanModelPath, model))
-			return pszPlayerSurvivorData[i].szHumanBodyPath;
-		else if (!strcmp(pszPlayerSurvivorData[i].szZombieModelPath, model))
-			return pszPlayerSurvivorData[i].szZombieBodyPath;
-	}
+	if ((gibID == GIB_NO_ARM_LEFT) && (bHuman ? (data->m_pClientModelPtrGibsHuman[1] != NULL) : (data->m_pClientModelPtrGibsZombie[1] != NULL)))
+		return true;
 
-	return "";
-}
+	if ((gibID == GIB_NO_ARM_RIGHT) && (bHuman ? (data->m_pClientModelPtrGibsHuman[2] != NULL) : (data->m_pClientModelPtrGibsZombie[2] != NULL)))
+		return true;
 
-const char *CGameDefinitionsShared::GetPlayerGibForModel(const char *gib, const char *model)
-{
-	for (int i = 0; i < pszPlayerSurvivorData.Count(); ++i)
-	{
-		if (!strcmp(pszPlayerSurvivorData[i].szHumanModelPath, model))
-		{
-			if (!strcmp(gib, "head"))
-				return pszPlayerSurvivorData[i].szHumanGibHead;
-			else if (!strcmp(gib, "arms_left"))
-				return pszPlayerSurvivorData[i].szHumanGibArmLeft;
-			else if (!strcmp(gib, "arms_right"))
-				return pszPlayerSurvivorData[i].szHumanGibArmRight;
-			else if (!strcmp(gib, "legs_left"))
-				return pszPlayerSurvivorData[i].szHumanGibLegLeft;
-			else if (!strcmp(gib, "legs_right"))
-				return pszPlayerSurvivorData[i].szHumanGibLegRight;
-		}
-		else if (!strcmp(pszPlayerSurvivorData[i].szZombieModelPath, model))
-		{
-			if (!strcmp(gib, "head"))
-				return pszPlayerSurvivorData[i].szDeceasedGibHead;
-			else if (!strcmp(gib, "arms_left"))
-				return pszPlayerSurvivorData[i].szDeceasedGibArmLeft;
-			else if (!strcmp(gib, "arms_right"))
-				return pszPlayerSurvivorData[i].szDeceasedGibArmRight;
-			else if (!strcmp(gib, "legs_left"))
-				return pszPlayerSurvivorData[i].szDeceasedGibLegLeft;
-			else if (!strcmp(gib, "legs_right"))
-				return pszPlayerSurvivorData[i].szDeceasedGibLegRight;
-		}
-	}
+	if ((gibID == GIB_NO_LEG_LEFT) && (bHuman ? (data->m_pClientModelPtrGibsHuman[3] != NULL) : (data->m_pClientModelPtrGibsZombie[3] != NULL)))
+		return true;
 
-	return "";
-}
-
-bool CGameDefinitionsShared::DoesPlayerHaveGibForLimb(const char *model, int gibID)
-{
-	for (int i = 0; i < pszPlayerSurvivorData.Count(); ++i)
-	{
-		if (!strcmp(pszPlayerSurvivorData[i].szHumanModelPath, model))
-		{
-			if ((gibID == GIB_NO_HEAD) && (strlen(pszPlayerSurvivorData[i].szHumanGibHead) > 0))
-				return true;
-
-			if ((gibID == GIB_NO_ARM_LEFT) && (strlen(pszPlayerSurvivorData[i].szHumanGibArmLeft) > 0))
-				return true;
-
-			if ((gibID == GIB_NO_ARM_RIGHT) && (strlen(pszPlayerSurvivorData[i].szHumanGibArmRight) > 0))
-				return true;
-
-			if ((gibID == GIB_NO_LEG_LEFT) && (strlen(pszPlayerSurvivorData[i].szHumanGibLegLeft) > 0))
-				return true;
-
-			if ((gibID == GIB_NO_LEG_RIGHT) && (strlen(pszPlayerSurvivorData[i].szHumanGibLegRight) > 0))
-				return true;
-		}
-		else if (!strcmp(pszPlayerSurvivorData[i].szZombieModelPath, model))
-		{
-			if ((gibID == GIB_NO_HEAD) && (strlen(pszPlayerSurvivorData[i].szDeceasedGibHead) > 0))
-				return true;
-
-			if ((gibID == GIB_NO_ARM_LEFT) && (strlen(pszPlayerSurvivorData[i].szDeceasedGibArmLeft) > 0))
-				return true;
-
-			if ((gibID == GIB_NO_ARM_RIGHT) && (strlen(pszPlayerSurvivorData[i].szDeceasedGibArmRight) > 0))
-				return true;
-
-			if ((gibID == GIB_NO_LEG_LEFT) && (strlen(pszPlayerSurvivorData[i].szDeceasedGibLegLeft) > 0))
-				return true;
-
-			if ((gibID == GIB_NO_LEG_RIGHT) && (strlen(pszPlayerSurvivorData[i].szDeceasedGibLegRight) > 0))
-				return true;
-		}
-	}
+	if ((gibID == GIB_NO_LEG_RIGHT) && (bHuman ? (data->m_pClientModelPtrGibsHuman[4] != NULL) : (data->m_pClientModelPtrGibsZombie[4] != NULL)))
+		return true;
 
 	return false;
 }
+#endif
 
 float CGameDefinitionsShared::GetPlayerFirearmDamageScale(const char *weapon, int entityType, int team)
 {

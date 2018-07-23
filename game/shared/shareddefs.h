@@ -945,4 +945,6 @@ enum WeaponUniqueIDs
 	WEAPON_ID_COUNT
 };
 
+#define DEFAULT_PLAYER_MODEL(team) ( ( team == TEAM_DECEASED ) ? ( "models/characters/player/marine_zombie.mdl" ) : ( "models/characters/player/marine.mdl" ) )
+
 #endif // SHAREDDEFS_H

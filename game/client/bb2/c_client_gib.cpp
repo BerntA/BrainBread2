@@ -84,7 +84,9 @@ bool RemoveAllClientGibs()
 
 C_ClientSideGibBase::C_ClientSideGibBase(void)
 {
-	m_iPlayerIndexLink = 0;
+	m_iPlayerTeam = 0;
+	m_iPlayerIndex = 0;
+	m_szSurvivor[0] = 0;
 	m_flTouchDelta = 0;
 	m_iGibType = 0;
 	m_bReleaseGib = false;
@@ -106,13 +108,24 @@ C_ClientSideGibBase::~C_ClientSideGibBase()
 
 bool C_ClientSideGibBase::Initialize(int type)
 {
-	if (InitializeAsClientEntity(STRING(GetModelName()), RENDER_GROUP_OPAQUE_ENTITY) == false)
-		return false;
-
-	if (engine->IsInEditMode())
+	if ((InitializeAsClientEntity(STRING(GetModelName()), RENDER_GROUP_OPAQUE_ENTITY) == false) || engine->IsInEditMode())
 		return false;
 
 	m_iGibType = type;
+	m_takedamage = DAMAGE_EVENTS_ONLY;
+	return true;
+}
+
+bool C_ClientSideGibBase::Initialize(int type, const model_t *model)
+{
+	if ((InitializeAsClientEntity(NULL, RENDER_GROUP_OPAQUE_ENTITY) == false) || engine->IsInEditMode())
+		return false;
+
+	SetModelName(modelinfo->GetModelName(model));
+	SetModelPointer(model);
+
+	m_iGibType = type;
+	m_takedamage = DAMAGE_EVENTS_ONLY;
 	return true;
 }
 
@@ -214,13 +227,6 @@ void C_ClientSideGibBase::FadeOut(void)
 
 	if (iAlpha == 0)
 		m_bReleaseGib = true;
-}
-
-void C_ClientSideGibBase::Spawn()
-{
-	BaseClass::Spawn();
-
-	m_takedamage = DAMAGE_EVENTS_ONLY;
 }
 
 void C_ClientSideGibBase::OnFullyInitialized(void)
@@ -379,16 +385,8 @@ C_ClientRagdollGib::C_ClientRagdollGib(void)
 
 C_ClientRagdollGib::~C_ClientRagdollGib()
 {
-}
-
-bool C_ClientRagdollGib::Initialize(int type)
-{
-	bool ret = BaseClass::Initialize(type);
-	if (!ret)
-		return false;
-
-	Spawn();
-	return true;
+	if (m_iPlayerIndex == GetLocalPlayerIndex())
+		m_pPlayerRagdoll = NULL;
 }
 
 bool C_ClientRagdollGib::LoadRagdoll()
@@ -456,7 +454,7 @@ void C_ClientRagdollGib::ImpactTrace(trace_t *pTrace, int iDamageType, const cha
 void C_ClientRagdollGib::OnGibbedGroup(int hitgroup, bool bExploded)
 {
 	// We only care about this for plr. models...
-	if (GetPlayerIndexLink() <= 0)
+	if (m_iPlayerTeam <= 0)
 		return;
 
 	if (bExploded)
@@ -526,7 +524,22 @@ bool C_ClientPhysicsGib::Initialize(int type)
 	if (!ret)
 		return false;
 
-	Spawn();
+	LoadPhysics();
+	return true;
+}
+
+bool C_ClientPhysicsGib::Initialize(int type, const model_t *model)
+{
+	bool ret = BaseClass::Initialize(type, model);
+	if (!ret)
+		return false;
+
+	LoadPhysics();
+	return true;
+}
+
+void C_ClientPhysicsGib::LoadPhysics()
+{
 	SetMoveType(MOVETYPE_PUSH);
 
 	solid_t tmpSolid;
@@ -557,6 +570,4 @@ bool C_ClientPhysicsGib::Initialize(int type)
 	SetBlocksLOS(false);
 	UpdateVisibility();
 	SetNextClientThink(CLIENT_THINK_ALWAYS);
-
-	return true;
 }

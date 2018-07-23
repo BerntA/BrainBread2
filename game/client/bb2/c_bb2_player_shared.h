@@ -30,8 +30,8 @@ public:
 	void UpdatePlayerHands(C_BaseViewModel *pParent, C_HL2MP_Player *pOwner = NULL);
 	void UpdatePlayerBody(C_HL2MP_Player *pOwner);
 
-	const char *GetPlayerHandModel(C_HL2MP_Player *pOwner);
-	const char *GetPlayerBodyModel(C_HL2MP_Player *pOwner);
+	const model_t *GetPlayerHandModel(C_HL2MP_Player *pOwner);
+	const model_t *GetPlayerBodyModel(C_HL2MP_Player *pOwner);
 
 	bool IsBodyOwner(C_BaseAnimating *pTarget);
 

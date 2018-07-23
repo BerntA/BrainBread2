@@ -103,7 +103,7 @@ void TE_DispatchEffect( IRecipientFilter& filter, float delay,
 void TE_PhysicsProp( IRecipientFilter& filter, float delay,
 	int modelindex, int skin, const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects );
 void TE_ClientSideGib(IRecipientFilter& filter, float delay, int modelindex, int body, int skin,
-	const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects, int gibType, int playerIndex);
+	const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects, int gibType);
 void TE_ClientProjectile( IRecipientFilter& filter, float delay,
 	 const Vector* vecOrigin, const Vector* vecVelocity, int modelindex, int lifetime, CBaseEntity *pOwner );
 
@@ -508,11 +508,11 @@ public:
 	}
 
 	virtual void ClientSideGib(IRecipientFilter& filter, float delay, int modelindex, int body, int skin,
-		const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects, int gibType, int playerIndex)
+		const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects, int gibType)
 	{
 		if (!SuppressTE(filter))
 		{
-			TE_ClientSideGib(filter, delay, modelindex, body, skin, pos, angles, vel, flags, effects, gibType, playerIndex);
+			TE_ClientSideGib(filter, delay, modelindex, body, skin, pos, angles, vel, flags, effects, gibType);
 		}
 	}
 

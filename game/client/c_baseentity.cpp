@@ -930,6 +930,9 @@ m_iv_vecVelocity("C_BaseEntity::m_iv_vecVelocity")
 	m_bAnimatedEveryTick = false;
 	m_pPhysicsObject = NULL;
 
+	m_bPreferModelPointerOverIndex = false;
+	oldModel = NULL;
+
 #ifdef _DEBUG
 	m_vecAbsOrigin = vec3_origin;
 	m_angAbsRotation = vec3_angle;
@@ -1716,6 +1719,18 @@ void C_BaseEntity::SetModelPointer(const model_t *pModel)
 
 		UpdateVisibility();
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: IMPORTANT - Gives us a fake model index. (A little expensive!)
+//-----------------------------------------------------------------------------
+extern int LookupClientModelIndex(const model_t *model);
+int C_BaseEntity::GetModelIndex(void) const
+{
+	if (GetModel() && ShouldUseModelPointer())
+		return LookupClientModelIndex(GetModel());
+
+	return m_nModelIndex;
 }
 
 //-----------------------------------------------------------------------------

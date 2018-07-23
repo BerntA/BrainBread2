@@ -16,6 +16,8 @@
 #include "ComboList.h"
 #endif
 
+#define PLAYER_GIB_GROUPS_MAX 5
+
 enum SharedDamageScaleTypes
 {
 	DAMAGE_SCALE_TO_PLAYER = 0,
@@ -220,9 +222,11 @@ struct DataPlayerItem_Shared_LimbInfo_t
 	int iGameMode;
 };
 
+#ifdef CLIENT_DLL
 struct DataPlayerItem_Survivor_Shared_t
 {
 	char szSurvivorName[MAX_MAP_NAME];
+	bool bGender;
 
 	// Models
 	char szHumanHandsPath[MAX_WEAPON_STRING];
@@ -246,7 +250,6 @@ struct DataPlayerItem_Survivor_Shared_t
 	char szDeceasedGibLegLeft[MAX_WEAPON_STRING];
 	char szDeceasedGibLegRight[MAX_WEAPON_STRING];
 
-#ifdef CLIENT_DLL
 	char szFriendlySurvivorName[MAX_MAP_NAME];
 	char szFriendlyDescription[128];
 	char szSequence[MAX_MAP_NAME];
@@ -263,9 +266,17 @@ struct DataPlayerItem_Survivor_Shared_t
 	Vector vecPosition;
 
 	const model_t *m_pClientModelPtrHuman;
+	const model_t *m_pClientModelPtrHumanHands;
+	const model_t *m_pClientModelPtrHumanBody;
+
 	const model_t *m_pClientModelPtrZombie;
-#endif
+	const model_t *m_pClientModelPtrZombieHands;
+	const model_t *m_pClientModelPtrZombieBody;
+
+	const model_t *m_pClientModelPtrGibsHuman[PLAYER_GIB_GROUPS_MAX];
+	const model_t *m_pClientModelPtrGibsZombie[PLAYER_GIB_GROUPS_MAX];
 };
+#endif
 
 struct DataInventoryItem_Base_t
 {
@@ -372,6 +383,9 @@ public:
 	void Cleanup(void);
 	bool LoadData(void);
 	bool Precache(void);
+#ifdef CLIENT_DLL
+	void LoadClientModels(void);
+#endif
 
 	// Gamemode Data:
 	const DataGamemodeItem_Shared_t *GetGamemodeData(void) { return &pszGamemodeData; }
@@ -383,22 +397,24 @@ public:
 	const DataPlayerItem_Humans_Skills_t *GetPlayerHumanSkillData(void);
 	const DataPlayerItem_Zombies_Skills_t *GetPlayerZombieSkillData(void);
 	const DataPlayerItem_ZombieRageMode_t *GetPlayerZombieRageData(void);
-	const DataPlayerItem_Survivor_Shared_t *GetSurvivorDataForIndex(int index);
 	const DataPlayerItem_Player_PowerupItem_t *GetPlayerPowerupData(const char *powerupName);
 	const DataPlayerItem_Player_PowerupItem_t *GetPlayerPowerupData(int powerupFlag);
-	CUtlVector<DataPlayerItem_Survivor_Shared_t> &GetSurvivorDataList(void) { return pszPlayerSurvivorData; }
 	float GetPlayerSharedValue(const char *name, int iTeam);
 	float GetPlayerSkillValue(int iSkillType, int iTeam, int iSubType);
 
-	int GetIndexForSurvivor(const char *name);
 	int GetIndexForPowerup(const char *name) const;
-	const char *GetPlayerSurvivorModel(const char *name, int iTeam);
-	const char *GetPlayerHandModel(const char *model);
-	const char *GetPlayerBodyModel(const char *model);
-	const char *GetPlayerGibForModel(const char *gib, const char *model);
-	bool DoesPlayerHaveGibForLimb(const char *model, int gibID);
 	float GetPlayerFirearmDamageScale(const char *weapon, int entityType, int team);
 	float GetPlayerLimbData(const char *limb, int team, bool bHealth = false);
+
+	// Player Model Data:
+#ifdef CLIENT_DLL
+	const DataPlayerItem_Survivor_Shared_t *GetSurvivorDataForIndex(int index);
+	const DataPlayerItem_Survivor_Shared_t *GetSurvivorDataForIndex(const char *name, bool bNoDefault = false);
+	CUtlVector<DataPlayerItem_Survivor_Shared_t> &GetSurvivorDataList(void) { return pszPlayerSurvivorData; }
+	const model_t *GetPlayerGibModelPtrForGibID(const DataPlayerItem_Survivor_Shared_t &data, bool bHuman, int gibID);
+	const char *GetPlayerGibForModel(const char *survivor, bool bHuman, const char *gib);
+	bool DoesPlayerHaveGibForLimb(const char *survivor, bool bHuman, int gibID);
+#endif
 
 	// Inventory Data
 	void ParseInventoryData(KeyValues *pkvData = NULL, bool bIsMapItem = false);
@@ -447,7 +463,9 @@ private:
 	DataPlayerItem_Zombies_Skills_t pszZombieSkillData;
 	DataPlayerItem_ZombieRageMode_t pszZombieRageModeData;
 	CUtlVector<DataPlayerItem_Player_Shared_t> pszPlayerData;
+#ifdef CLIENT_DLL
 	CUtlVector<DataPlayerItem_Survivor_Shared_t> pszPlayerSurvivorData;
+#endif
 	CUtlVector<DataPlayerItem_Shared_WeaponInfo_t> pszPlayerWeaponData;
 	CUtlVector<DataPlayerItem_Shared_LimbInfo_t> pszPlayerLimbData;
 	CUtlVector<DataPlayerItem_Player_PowerupItem_t> pszPlayerPowerupData;

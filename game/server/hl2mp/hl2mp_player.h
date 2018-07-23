@@ -211,7 +211,6 @@ public:
 	bool SaveGlobalStatsForPlayer(void);
 
 	int AllowEntityToBeGibbed(void);
-	void OnGibbedGroup(int hitgroup, bool bExploded);
 
 	void Reset();
 	void ResetSlideVars();
@@ -292,6 +291,8 @@ public:
 	void CheckShouldEnableFlashlightOnSwitch(void);
 	bool ShouldRunRateLimitedCommand(const CCommand &args);
 
+	virtual const char *GetSurvivorChoice(void) { return m_szModelChoice.Get(); }
+
 	static bool IsWeaponEquippedByDefault(const char *weaponName);
 
 private:
@@ -351,6 +352,11 @@ private:
 	float m_flLastTimeCheckedPing;
 	float m_flTimeUntilEndCheckPing;
 	bool m_bFinishedPingCheck;
+
+	// Client-Sided Player Model Logic:
+	CNetworkArray(int, m_iCustomizationChoices, PLAYER_ACCESSORY_MAX);
+	CNetworkString(m_szModelChoice, MAX_MAP_NAME);
+	CNetworkVar(int, m_iModelIncrementor);
 
 protected:
 	virtual void HandlePainSound(int iMajor, int iDamageTypeBits);

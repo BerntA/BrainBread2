@@ -1300,6 +1300,7 @@ CON_COMMAND(reload_gamebase_client, "Reload the game base content.(full reparse)
 	GameBaseShared()->LoadBase();
 
 	GameBaseShared()->GetSharedGameDetails()->Precache();
+	GameBaseShared()->GetSharedGameDetails()->LoadClientModels();
 	GameBaseShared()->GetNPCData()->Precache();
 	GameBaseShared()->GetSharedMapData()->ReloadDataForMap();
 

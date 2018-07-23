@@ -18,6 +18,7 @@
 #else
 #include "ai_basenpc.h"
 #include "basecombatcharacter.h"
+#include "te_player_gib.h"
 #endif
 
 const char *PLAYER_BODY_ACCESSORY_BODYGROUPS[PLAYER_ACCESSORY_MAX] =
@@ -29,7 +30,7 @@ const char *PLAYER_BODY_ACCESSORY_BODYGROUPS[PLAYER_ACCESSORY_MAX] =
 };
 
 // WHEN WE EXPLODE THIS IS THE GIB 'LIST' TO SPAWN, IF ONE OF THESE GIBS HAVE BEEN SET ALREADY THEN IT WILL SKIP TO THE NEXT.
-gibDataInfo GIB_BODYGROUPS[5] =
+gibDataInfo GIB_BODYGROUPS[PLAYER_GIB_GROUPS_MAX] =
 {
 	{ "head", "gore_head", GIB_NO_HEAD, HITGROUP_HEAD },
 	{ "arms_left", "gore_arm_left", GIB_NO_ARM_LEFT, HITGROUP_LEFTARM },
@@ -60,6 +61,42 @@ void DispatchClientSideGib(CBaseCombatCharacter *pVictim, const char *gib, int g
 	if (!pVictim)
 		return;
 
+	Vector vecNewVelocity;
+#ifndef CLIENT_DLL
+	vecNewVelocity = g_vecAttackDir * -1;
+	vecNewVelocity.x += random->RandomFloat(-0.15, 0.15);
+	vecNewVelocity.y += random->RandomFloat(-0.15, 0.15);
+	vecNewVelocity.z += random->RandomFloat(-0.15, 0.15);
+	vecNewVelocity *= 900;
+
+	if (pVictim->IsPlayer())
+	{
+		TE_PlayerGibRagdoll(
+			pVictim->entindex(),
+			gibType,
+			(gibType == GIB_NO_HEAD) ? CLIENT_GIB_RAGDOLL_NORMAL_PHYSICS : CLIENT_GIB_RAGDOLL,
+			pVictim->WorldSpaceCenter(),
+			pVictim->GetAbsOrigin(),
+			vecNewVelocity,
+			pVictim->GetAbsAngles());
+		return;
+	}
+#else
+	vecNewVelocity = velocity;
+
+	if (pVictim->GetPlayerLinkTeam() > 0)
+	{
+		SpawnGibOrRagdollForPlayer(
+			pVictim,
+			0, pVictim->GetPlayerLinkTeam(),
+			pVictim->GetPlayerLinkSurvivor(),
+			gibType,
+			(gibType == GIB_NO_HEAD) ? CLIENT_GIB_RAGDOLL_NORMAL_PHYSICS : CLIENT_GIB_RAGDOLL,
+			pVictim->GetAbsOrigin(), vecNewVelocity, pVictim->GetAbsAngles());
+		return;
+	}
+#endif
+
 	CPASFilter filter(pVictim->WorldSpaceCenter());
 	int modelIndex = modelinfo->GetModelIndex(gib);
 	if (!modelIndex)
@@ -68,24 +105,13 @@ void DispatchClientSideGib(CBaseCombatCharacter *pVictim, const char *gib, int g
 		return;
 	}
 
-	Vector vecNewVelocity;
-#ifndef CLIENT_DLL
-	vecNewVelocity = g_vecAttackDir * -1;
-	vecNewVelocity.x += random->RandomFloat(-0.15, 0.15);
-	vecNewVelocity.y += random->RandomFloat(-0.15, 0.15);
-	vecNewVelocity.z += random->RandomFloat(-0.15, 0.15);
-	vecNewVelocity *= 900;
-#else
-	vecNewVelocity = velocity;
-#endif
-
 	if (gibType == GIB_NO_HEAD)
 	{
-		te->ClientSideGib(filter, -1, modelIndex, 0, pVictim->m_nSkin, pVictim->GetAbsOrigin(), pVictim->GetAbsAngles(), vecNewVelocity, 0, 0, CLIENT_GIB_RAGDOLL_NORMAL_PHYSICS, 0);
+		te->ClientSideGib(filter, -1, modelIndex, 0, pVictim->m_nSkin, pVictim->GetAbsOrigin(), pVictim->GetAbsAngles(), vecNewVelocity, 0, 0, CLIENT_GIB_RAGDOLL_NORMAL_PHYSICS);
 		return;
 	}
 
-	te->ClientSideGib(filter, -1, modelIndex, 0, pVictim->m_nSkin, pVictim->GetAbsOrigin(), pVictim->GetAbsAngles(), vecNewVelocity, 0, 0, CLIENT_GIB_RAGDOLL, 0);
+	te->ClientSideGib(filter, -1, modelIndex, 0, pVictim->m_nSkin, pVictim->GetAbsOrigin(), pVictim->GetAbsAngles(), vecNewVelocity, 0, 0, CLIENT_GIB_RAGDOLL);
 }
 
 #ifdef CLIENT_DLL
@@ -93,8 +119,8 @@ const char *GetGibModel(C_ClientRagdollGib *pVictim, const char *gib)
 {
 	if (pVictim && strlen(pVictim->pchNPCName) > 0)
 		return GameBaseShared()->GetNPCData()->GetModelForGib(pVictim->pchNPCName, gib, STRING(pVictim->GetModelName()));
-	else if (pVictim && (pVictim->GetPlayerIndexLink() > 0))
-		return GameBaseShared()->GetSharedGameDetails()->GetPlayerGibForModel(gib, STRING(pVictim->GetModelName()));
+	else if (pVictim && (pVictim->GetPlayerLinkTeam() > 0))
+		return GameBaseShared()->GetSharedGameDetails()->GetPlayerGibForModel(pVictim->GetPlayerLinkSurvivor(), !(pVictim->GetPlayerLinkTeam() == TEAM_DECEASED), gib);
 
 	return "";
 }
@@ -109,7 +135,7 @@ bool C_ClientRagdollGib::CanGibEntity(const Vector &velocity, int hitgroup, int 
 		return false;
 
 	bool bIsNPC = (strlen(pchNPCName) > 0);
-	bool bIsPlayer = (GetPlayerIndexLink() > 0);
+	bool bIsPlayer = (GetPlayerLinkTeam() > 0);
 	if (!bIsNPC && !bIsPlayer)
 		return false;
 
@@ -118,8 +144,8 @@ bool C_ClientRagdollGib::CanGibEntity(const Vector &velocity, int hitgroup, int 
 	if (bIsNPC && !GameBaseShared()->GetNPCData()->DoesNPCHaveGibForLimb(pchNPCName, STRING(GetModelName()), gibInfo->gibFlag))
 		return false;
 
-	if (bIsPlayer && !GameBaseShared()->GetSharedGameDetails()->DoesPlayerHaveGibForLimb(STRING(GetModelName()), gibInfo->gibFlag))
-		return false;
+	if (bIsPlayer && !GameBaseShared()->GetSharedGameDetails()->DoesPlayerHaveGibForLimb(GetPlayerLinkSurvivor(), !(GetPlayerLinkTeam() == TEAM_DECEASED), gibInfo->gibFlag))
+		return false;	
 
 	int nGibFlag = gibInfo->gibFlag;
 	bool bCanPopHead = ((damageType == DMG_BUCKSHOT) || (damageType == DMG_BULLET) || (damageType == DMG_BLAST));
@@ -206,8 +232,6 @@ const char *GetGibModel(CBaseCombatCharacter *pVictim, const char *gib)
 {
 	if (pVictim && pVictim->IsNPC() && pVictim->MyNPCPointer())
 		return GameBaseShared()->GetNPCData()->GetModelForGib(pVictim->MyNPCPointer()->GetFriendlyName(), gib, STRING(pVictim->GetModelName()));
-	else if (pVictim && pVictim->IsPlayer())
-		return GameBaseShared()->GetSharedGameDetails()->GetPlayerGibForModel(gib, STRING(pVictim->GetModelName()));
 
 	return "";
 }
@@ -246,6 +270,7 @@ bool CBaseCombatCharacter::CanGibEntity(const CTakeDamageInfo &info)
 	float flGibHealth = GetExplodeFactor();
 	float flDamage = info.GetDamage();
 
+	bool bIsPlayer = IsPlayer();
 	bool bCanPopHead = ((info.GetDamageType() & DMG_BUCKSHOT) || (info.GetDamageType() & DMG_BULLET) || (info.GetDamageType() & DMG_BLAST));
 	bool bCanExplode = gibInfo->bCanExplode;
 	int nGibFlag = gibInfo->gibFlag;
@@ -289,17 +314,21 @@ bool CBaseCombatCharacter::CanGibEntity(const CTakeDamageInfo &info)
 			if (IsGibFlagActive(iGibFlag))
 				continue;
 
-			const char *pszGib = GetGibModel(this, GIB_BODYGROUPS[i].bodygroup);
-			if (strlen(pszGib) <= 0)
-				continue;
+			const char *pszGib = "";
+			if (bIsPlayer == false)
+			{
+				pszGib = GetGibModel(this, GIB_BODYGROUPS[i].bodygroup);
+				if (strlen(pszGib) <= 0)
+					continue;
 
-			int gib_bodygroup = FindBodygroupByName(GIB_BODYGROUPS[i].bodygroup);
-			if (gib_bodygroup == -1)
-				continue;
+				int gib_bodygroup = FindBodygroupByName(GIB_BODYGROUPS[i].bodygroup);
+				if (gib_bodygroup == -1)
+					continue;
+
+				SetBodygroup(gib_bodygroup, 1);
+			}
 
 			AddGibFlag(iGibFlag);
-			SetBodygroup(gib_bodygroup, 1);
-
 			if (bCanDispatch)
 				DispatchClientSideGib(this, pszGib, iGibFlag);
 		}
@@ -317,20 +346,25 @@ bool CBaseCombatCharacter::CanGibEntity(const CTakeDamageInfo &info)
 	if ((nGibFlag == GIB_NO_HEAD) && (m_iHealth > 0))
 		return false;
 
-	const char *pszGib = GetGibModel(this, pszHitGroup);
-	if (strlen(pszGib) <= 0)
-		return false;
+	const char *pszGib = "";
+	if (bIsPlayer == false)
+	{
+		pszGib = GetGibModel(this, pszHitGroup);
+		if (strlen(pszGib) <= 0)
+			return false;
 
-	int gib_bodygroup = FindBodygroupByName(pszHitGroup);
-	if (gib_bodygroup == -1)
-		return false;
+		int gib_bodygroup = FindBodygroupByName(pszHitGroup);
+		if (gib_bodygroup == -1)
+			return false;
+
+		SetBodygroup(gib_bodygroup, 1);
+	}
 
 	bool bCanDispatch = true;
 	if (iHitGroup == HITGROUP_HEAD)
 		bCanDispatch = !bCanPopHead;
 
 	AddGibFlag(nGibFlag);
-	SetBodygroup(gib_bodygroup, 1);
 
 	if (bCanDispatch)
 		DispatchClientSideGib(this, pszGib, nGibFlag);

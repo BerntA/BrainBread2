@@ -12,6 +12,7 @@
 #include "GameBase_Client.h"
 #include "view.h"
 #include "cdll_util.h"
+#include "c_playermodel.h"
 
 static ConVar bb2_legs_angle_shift("bb2_legs_angle_shift", "0", FCVAR_CHEAT, "Rotate the legs counter-clockwise or clockwise with its origin.");
 static ConVar bb2_legs_angle_shift_crouch("bb2_legs_angle_shift_crouch", "4", FCVAR_CHEAT, "Rotate the legs counter-clockwise or clockwise with its origin.");
@@ -64,8 +65,8 @@ void CBB2PlayerShared::CreateEntities()
 	m_bHasCreated = true;
 
 	m_pPlayerBody = new C_FirstpersonBody();
-	m_pPlayerBody->InitializeAsClientEntity(GetPlayerBodyModel(pLocal), RENDER_GROUP_OPAQUE_ENTITY);
-	m_pPlayerBody->SetModelName(GetPlayerBodyModel(pLocal));
+	m_pPlayerBody->InitializeAsClientEntity(NULL, RENDER_GROUP_OPAQUE_ENTITY);
+	m_pPlayerBody->SetModelPointer(GetPlayerBodyModel(pLocal));
 	m_pPlayerBody->SetPlaybackRate(1.0f);
 	m_pPlayerBody->SetNumAnimOverlays(3);
 
@@ -82,8 +83,8 @@ void CBB2PlayerShared::CreateEntities()
 	m_pPlayerBody->DestroyShadow();
 
 	m_pPlayerHands = new C_ViewModelAttachment();
-	m_pPlayerHands->InitializeAsClientEntity(GetPlayerHandModel(pLocal), RENDER_GROUP_VIEW_MODEL_OPAQUE);
-	m_pPlayerHands->SetModelName(GetPlayerHandModel(pLocal));
+	m_pPlayerHands->InitializeAsClientEntity(NULL, RENDER_GROUP_VIEW_MODEL_OPAQUE);
+	m_pPlayerHands->SetModelPointer(GetPlayerHandModel(pLocal));
 
 	// Run default idle anim on body: (prevent T-pose)
 	m_pPlayerBody->m_flAnimTime = gpGlobals->curtime;
@@ -104,22 +105,22 @@ void CBB2PlayerShared::OnNewModel()
 	if (m_pPlayerBody)
 	{
 		pOwner = ToHL2MPPlayer(m_pPlayerBody->GetOwnerEntity());
-		if (pOwner)
+		if (pOwner && pOwner->GetNewPlayerModel())
 		{
-			m_pPlayerBody->SetModel(GetPlayerBodyModel(pOwner));
-			m_pPlayerBody->m_nBody = pOwner->GetBody();
-			m_pPlayerBody->m_nSkin = pOwner->GetSkin();
+			m_pPlayerBody->SetModelPointer(GetPlayerBodyModel(pOwner));
+			m_pPlayerBody->m_nBody = pOwner->GetNewPlayerModel()->GetBody();
+			m_pPlayerBody->m_nSkin = pOwner->GetNewPlayerModel()->GetSkin();
 		}
 	}
 
 	if (m_pPlayerHands)
 	{
 		pOwner = ToHL2MPPlayer(m_pPlayerHands->GetOwner());
-		if (pOwner)
+		if (pOwner && pOwner->GetNewPlayerModel())
 		{
-			m_pPlayerHands->SetWeaponModel(GetPlayerHandModel(pOwner), NULL);
-			m_pPlayerHands->m_nSkin = pOwner->GetSkin();
-			m_pPlayerHands->m_nBody = pOwner->GetBody();
+			m_pPlayerHands->SetModelPointer(GetPlayerHandModel(pOwner));
+			m_pPlayerHands->m_nSkin = pOwner->GetNewPlayerModel()->GetSkin();
+			m_pPlayerHands->m_nBody = pOwner->GetNewPlayerModel()->GetBody();
 		}
 	}
 }
@@ -169,36 +170,28 @@ void CBB2PlayerShared::UpdatePlayerHands(C_BaseViewModel *pParent, C_HL2MP_Playe
 	//m_pPlayerHands->StudioFrameAdvance();
 }
 
-const char *CBB2PlayerShared::GetPlayerHandModel(C_HL2MP_Player *pOwner)
+const model_t *CBB2PlayerShared::GetPlayerHandModel(C_HL2MP_Player *pOwner)
 {
-	if (!pOwner)
-		return "";
+	if (!pOwner || !pOwner->GetNewPlayerModel())
+		return NULL;
 
-	const model_t *model = modelinfo->GetModel(pOwner->GetModelIndex());
-	if (!model)
-		return "";
+	const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(pOwner->GetSurvivorChoice());
+	if (data == NULL)
+		return NULL;
 
-	const char *pchModel = modelinfo->GetModelName(model);
-	if (!pchModel || (strlen(pchModel) <= 0))
-		return "";
-
-	return (GameBaseShared()->GetSharedGameDetails()->GetPlayerHandModel(pchModel));
+	return ((pOwner->GetTeamNumber() == TEAM_DECEASED) ? data->m_pClientModelPtrZombieHands : data->m_pClientModelPtrHumanHands);
 }
 
-const char *CBB2PlayerShared::GetPlayerBodyModel(C_HL2MP_Player *pOwner)
+const model_t *CBB2PlayerShared::GetPlayerBodyModel(C_HL2MP_Player *pOwner)
 {
-	if (!pOwner)
-		return "";
+	if (!pOwner || !pOwner->GetNewPlayerModel())
+		return NULL;
 
-	const model_t *model = modelinfo->GetModel(pOwner->GetModelIndex());
-	if (!model)
-		return "";
+	const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(pOwner->GetSurvivorChoice());
+	if (data == NULL)
+		return NULL;
 
-	const char *pchModel = modelinfo->GetModelName(model);
-	if (!pchModel || (strlen(pchModel) <= 0))
-		return "";
-
-	return (GameBaseShared()->GetSharedGameDetails()->GetPlayerBodyModel(pchModel));
+	return ((pOwner->GetTeamNumber() == TEAM_DECEASED) ? data->m_pClientModelPtrZombieBody : data->m_pClientModelPtrHumanBody);
 }
 
 bool CBB2PlayerShared::IsBodyOwner(C_BaseAnimating *pTarget)

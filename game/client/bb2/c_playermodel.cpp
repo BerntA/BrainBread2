@@ -52,7 +52,7 @@ C_Playermodel *CreateClientPlayermodel(C_HL2MP_Player *pParent)
 		return NULL;
 	}
 
-	pClientPlayermdl->SetModelPointer(GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(-1)->m_pClientModelPtrHuman); // TODO ?
+	pClientPlayermdl->SetModel(DEFAULT_PLAYER_MODEL(pParent->GetTeamNumber()));
 	return pClientPlayermdl;
 }
 
@@ -60,6 +60,7 @@ C_Playermodel::C_Playermodel(void)
 {
 	m_pPlayer = NULL;
 	m_bNoModelParticles = false;
+	m_bPreferModelPointerOverIndex = true;
 	ForceClientSideAnimationOn();
 	s_ClientPlayermodelList.AddToTail(this);
 }
@@ -72,7 +73,7 @@ C_Playermodel::~C_Playermodel()
 
 bool C_Playermodel::Initialize(void)
 {
-	if (InitializeAsClientEntity(STRING(GetModelName()), RENDER_GROUP_OPAQUE_ENTITY) == false)
+	if (InitializeAsClientEntity(NULL, RENDER_GROUP_OPAQUE_ENTITY) == false)
 		return false;
 
 	if (engine->IsInEditMode())
@@ -233,7 +234,7 @@ void C_Playermodel::OnUpdate(void)
 	SetAbsOrigin(pOwner->GetLocalOrigin());
 	SetAbsAngles(angles);
 
-	if ((GetModel() != NULL) && (GetShadowHandle() == CLIENTSHADOW_INVALID_HANDLE))
+	if (GetModel() != NULL)
 		CreateShadow();
 }
 
@@ -254,4 +255,33 @@ CStudioHdr *C_Playermodel::OnNewModel(void)
 
 	DestroyShadow();
 	return hdr;
+}
+
+void C_Playermodel::UpdateModel(void)
+{
+	C_HL2MP_Player *pOwner = GetPlayerOwner();
+	if (pOwner == NULL || GameBaseShared() == NULL || GameBaseShared()->GetSharedGameDetails() == NULL)
+		return;
+
+	const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(pOwner->m_szModelChoice, true);
+	if (data == NULL)
+	{
+		SetModel(DEFAULT_PLAYER_MODEL(pOwner->GetTeamNumber()));
+		m_nSkin = m_nBody = 0;
+		return;
+	}
+	else
+		SetModelPointer((pOwner->GetTeamNumber() == TEAM_DECEASED) ? data->m_pClientModelPtrZombie : data->m_pClientModelPtrHuman);
+
+	m_nSkin = pOwner->m_nSkin;
+	m_nBody = 0;
+
+	for (int i = 0; i < PLAYER_ACCESSORY_MAX; i++)
+	{
+		int accessoryGroup = FindBodygroupByName(PLAYER_BODY_ACCESSORY_BODYGROUPS[i]);
+		if (accessoryGroup == -1)
+			continue;
+
+		SetBodygroup(accessoryGroup, pOwner->m_iCustomizationChoices[i]);
+	}
 }

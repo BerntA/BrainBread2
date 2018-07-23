@@ -35,7 +35,6 @@ public:
 	int				m_nFlags;
 	int				m_nEffects;
 	int             m_iGibType;
-	int             m_iPlayerIndex;
 };
 
 C_TEClientSideGib::C_TEClientSideGib(void)
@@ -49,14 +48,13 @@ C_TEClientSideGib::C_TEClientSideGib(void)
 	m_nFlags = 0;
 	m_nEffects = 0;
 	m_iGibType = 0;
-	m_iPlayerIndex = 0;
 }
 
 //-----------------------------------------------------------------------------
 // Recording 
 //-----------------------------------------------------------------------------
 static inline void RecordClientGib(const Vector& start, const QAngle &angles,
-	const Vector& vel, int nModelIndex, int nFlags, int nBody, int nSkin, int nEffects, int iGibType, int iPlayerIndex)
+	const Vector& vel, int nModelIndex, int nFlags, int nBody, int nSkin, int nEffects, int iGibType)
 {
 	if (!ToolsEnabled())
 		return;
@@ -86,7 +84,6 @@ static inline void RecordClientGib(const Vector& start, const QAngle &angles,
 		msg->SetInt("skin", nSkin);
 		msg->SetInt("effects", nEffects);
 		msg->SetInt("gibtype", iGibType);
-		msg->SetInt("playerindex", iPlayerIndex);
 
 		ToolFramework_PostToolMessage(HTOOLHANDLE_INVALID, msg);
 		msg->deleteThis();
@@ -94,18 +91,18 @@ static inline void RecordClientGib(const Vector& start, const QAngle &angles,
 }
 
 void TE_ClientSideGib(IRecipientFilter& filter, float delay, int modelindex, int body, int skin,
-	const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects, int gibType, int playerIndex)
+	const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects, int gibType)
 {
-	tempents->ClientSideGib(modelindex, body, skin, pos, angles, vel, flags, effects, gibType, playerIndex);
-	RecordClientGib(pos, angles, vel, modelindex, flags, body, skin, effects, gibType, playerIndex);
+	tempents->ClientSideGib(modelindex, body, skin, pos, angles, vel, flags, effects, gibType);
+	RecordClientGib(pos, angles, vel, modelindex, flags, body, skin, effects, gibType);
 }
 
 void C_TEClientSideGib::PostDataUpdate(DataUpdateType_t updateType)
 {
 	VPROF("C_TEClientSideGib::PostDataUpdate");
 
-	tempents->ClientSideGib(m_nModelIndex, m_nBody, m_nSkin, m_vecOrigin, m_angRotation, m_vecVelocity, m_nFlags, m_nEffects, m_iGibType, m_iPlayerIndex);
-	RecordClientGib(m_vecOrigin, m_angRotation, m_vecVelocity, m_nModelIndex, m_nFlags, m_nBody, m_nSkin, m_nEffects, m_iGibType, m_iPlayerIndex);
+	tempents->ClientSideGib(m_nModelIndex, m_nBody, m_nSkin, m_vecOrigin, m_angRotation, m_vecVelocity, m_nFlags, m_nEffects, m_iGibType);
+	RecordClientGib(m_vecOrigin, m_angRotation, m_vecVelocity, m_nModelIndex, m_nFlags, m_nBody, m_nSkin, m_nEffects, m_iGibType);
 }
 
 void TE_ClientSideGib(IRecipientFilter& filter, float delay, KeyValues *pKeyValues)
@@ -129,9 +126,8 @@ void TE_ClientSideGib(IRecipientFilter& filter, float delay, KeyValues *pKeyValu
 	int nFlags = pKeyValues->GetInt("flags");
 	int nEffects = pKeyValues->GetInt("effects");
 	int iGibType = pKeyValues->GetInt("gibtype");
-	int iPlayerIndex = pKeyValues->GetInt("playerindex");
 
-	TE_ClientSideGib(filter, delay, nModelIndex, nBody, nSkin, vecOrigin, angles, vecVel, nFlags, nEffects, iGibType, iPlayerIndex);
+	TE_ClientSideGib(filter, delay, nModelIndex, nBody, nSkin, vecOrigin, angles, vecVel, nFlags, nEffects, iGibType);
 }
 
 IMPLEMENT_CLIENTCLASS_EVENT_DT(C_TEClientSideGib, DT_TEClientSideGib, CTEClientSideGib)
@@ -146,5 +142,4 @@ RecvPropInt(RECVINFO(m_nBody)),
 RecvPropInt(RECVINFO(m_nSkin)),
 RecvPropInt(RECVINFO(m_nEffects)),
 RecvPropInt(RECVINFO(m_iGibType)),
-RecvPropInt(RECVINFO(m_iPlayerIndex)),
 END_RECV_TABLE()

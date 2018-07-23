@@ -190,11 +190,7 @@ void CharacterPreviewPanel::SetupModel(void)
 	if (!GameBaseShared()->GetSharedGameDetails())
 		return;
 
-	int survivorIndex = GameBaseShared()->GetSharedGameDetails()->GetIndexForSurvivor(pchSurvivorName);
-	if (survivorIndex == -1)
-		return;
-
-	const DataPlayerItem_Survivor_Shared_t *modelInfo = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(survivorIndex);
+	const DataPlayerItem_Survivor_Shared_t *modelInfo = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(pchSurvivorName);
 	if (modelInfo == NULL)
 		return;
 

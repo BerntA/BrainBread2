@@ -40,6 +40,8 @@ public:
 	virtual void SetPlayerOwner(C_HL2MP_Player *pPlayer) { m_pPlayer = pPlayer; }
 	virtual C_HL2MP_Player *GetPlayerOwner() { return m_pPlayer; }
 
+	virtual void UpdateModel(void);
+
 protected:
 	C_HL2MP_Player *m_pPlayer;
 };

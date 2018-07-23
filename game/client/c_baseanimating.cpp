@@ -3238,7 +3238,7 @@ void C_BaseAnimating::DoInternalDrawModel( ClientModelRenderInfo_t *pInfo, DrawM
 		}
 		else if ( IsSolid() && CollisionProp()->GetSolid() == SOLID_VPHYSICS )
 		{
-			vcollide_t *pCollide = modelinfo->GetVCollide( GetModelIndex() );
+			vcollide_t *pCollide = ShouldUseModelPointer() ? modelinfo->GetVCollide(GetModel()) : modelinfo->GetVCollide(GetModelIndex());
 			if ( pCollide && pCollide->solidCount == 1 )
 			{
 				static color32 debugColor = {0,255,255,0};
@@ -4806,11 +4806,19 @@ void C_BaseAnimating::OnDataChanged( DataUpdateType_t updateType )
 
 	// UNDONE: The base class does this as well.  So this is kind of ugly
 	// but getting a model by index is pretty cheap...
-	const model_t *pModel = modelinfo->GetModel( GetModelIndex() );
-	
-	if ( pModel != GetModel() )
+	if (ShouldUseModelPointer())
 	{
-		modelchanged = true;
+		if (oldModel != GetModel())
+		{
+			oldModel = GetModel();
+			modelchanged = true;
+		}
+	}
+	else
+	{
+		const model_t *pModel = modelinfo->GetModel(GetModelIndex());
+		if (pModel != GetModel())	
+			modelchanged = true;		
 	}
 
 	BaseClass::OnDataChanged( updateType );

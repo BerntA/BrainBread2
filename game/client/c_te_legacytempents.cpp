@@ -37,6 +37,7 @@
 #include "c_basedoor.h"
 #include "c_client_gib.h"
 #include "c_hl2mp_player.h"
+#include "GameBase_Shared.h"
 
 // NOTE: Always include this last!
 #include "tier0/memdbgon.h"
@@ -1130,7 +1131,7 @@ void CTempEnts::PhysicsProp( int modelindex, int skin, const Vector& pos, const 
 	}
 }
 
-void CTempEnts::ClientSideGib(int modelindex, int body, int skin, const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects, int gibType, int playerIndex)
+void CTempEnts::ClientSideGib(int modelindex, int body, int skin, const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects, int gibType)
 {
 	const model_t *model = modelinfo->GetModel(modelindex);
 	if (!model)
@@ -1139,73 +1140,19 @@ void CTempEnts::ClientSideGib(int modelindex, int body, int skin, const Vector& 
 		return;
 	}
 
-	// Spawn a ragdoll based gib:
-	if (gibType > CLIENT_GIB_RAGDOLL_NORMAL_PHYSICS)
-	{
-		C_ClientRagdollGib *pEntity = new C_ClientRagdollGib();
-		if (!pEntity)
-			return;
-
-		pEntity->SetModelName(modelinfo->GetModelName(model));
-		pEntity->m_nBody = body;
-		pEntity->m_nSkin = skin;
-		pEntity->SetAbsOrigin(pos);
-		pEntity->SetAbsAngles(angles);
-		pEntity->SetEffects(effects);
-
-		if (!pEntity->Initialize(gibType))
-		{
-			pEntity->Release();
-			return;
-		}
-
-		if (!pEntity->LoadRagdoll())
-		{
-			pEntity->Release();
-			return;
-		}
-
-		IPhysicsObject *pPhysicsObject = pEntity->VPhysicsGetObject();
-		if (pPhysicsObject)
-		{
-			pPhysicsObject->AddVelocity(&vel, NULL);
-		}
-		else
-		{
-			// failed to create a physics object
-			pEntity->Release();
-			return;
-		}
-
-		C_HL2MP_Player *pPlayerLink = ToHL2MPPlayer(UTIL_PlayerByIndex(playerIndex));
-		if (pPlayerLink)
-		{
-			pEntity->SetGibType(CLIENT_RAGDOLL);
-			pEntity->m_nGibFlags = flags;
-			pEntity->SetPlayerIndexLink(playerIndex);
-
-			if (pPlayerLink->IsLocalPlayer())			
-				m_pPlayerRagdoll = pEntity;			
-
-			pEntity->OnBecomeRagdoll();
-		}
-
-		pEntity->SetForceFade();
-		pEntity->OnFullyInitialized();
-		return;
-	}
-
-	// Spawn a pure physics based prop:
-	C_ClientPhysicsGib *pEntity = new C_ClientPhysicsGib();
-	if (!pEntity)
-		return;
+	C_ClientSideGibBase *pEntity = NULL;
+	bool bIsRagdollGib = (gibType > CLIENT_GIB_RAGDOLL_NORMAL_PHYSICS);
+	if (bIsRagdollGib)
+		pEntity = new C_ClientRagdollGib();
+	else
+		pEntity = new C_ClientPhysicsGib();
 
 	pEntity->SetModelName(modelinfo->GetModelName(model));
 	pEntity->m_nBody = body;
 	pEntity->m_nSkin = skin;
 	pEntity->SetAbsOrigin(pos);
 	pEntity->SetAbsAngles(angles);
-	pEntity->SetEffects(effects);	
+	pEntity->SetEffects(effects);
 
 	if (!pEntity->Initialize(gibType))
 	{
@@ -1213,14 +1160,17 @@ void CTempEnts::ClientSideGib(int modelindex, int body, int skin, const Vector& 
 		return;
 	}
 
+	if (bIsRagdollGib && !pEntity->LoadRagdoll())
+	{
+		pEntity->Release();
+		return;
+	}
+
 	IPhysicsObject *pPhysicsObject = pEntity->VPhysicsGetObject();
 	if (pPhysicsObject)
-	{
 		pPhysicsObject->AddVelocity(&vel, NULL);
-	}
 	else
 	{
-		// failed to create a physics object
 		pEntity->Release();
 		return;
 	}
@@ -2486,6 +2436,9 @@ void CTempEnts::LevelInit()
 	m_pShells[0] = (model_t *) engine->LoadModel( "models/weapons/shell.mdl" );
 	m_pShells[1] = (model_t *) engine->LoadModel( "models/weapons/rifleshell.mdl" );
 	m_pShells[2] = (model_t *) engine->LoadModel( "models/weapons/shotgun_shell.mdl" );
+
+	if (GameBaseShared() && GameBaseShared()->GetSharedGameDetails())
+		GameBaseShared()->GetSharedGameDetails()->LoadClientModels();
 }
 
 

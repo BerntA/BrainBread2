@@ -10,6 +10,7 @@
 
 C_ViewModelAttachment::C_ViewModelAttachment()
 {
+	m_bPreferModelPointerOverIndex = true;
 }
 
 void C_ViewModelAttachment::Spawn()

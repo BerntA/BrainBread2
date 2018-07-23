@@ -161,7 +161,9 @@ $Project
 		{
 		    $File "bb2\te_clientsidegib.cpp"
 			$File "bb2\te_bullet_shot.cpp"
-			$File "bb2\te_bullet_shot.h"
+			$File "bb2\te_bullet_shot.h"			
+			$File "bb2\te_player_gib.cpp"
+			$File "bb2\te_player_gib.h"
 		}
 		
 		$Folder "NPCS"

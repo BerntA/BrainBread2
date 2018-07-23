@@ -14,6 +14,7 @@
 #include "beamdraw.h"
 #include "skills_shareddefs.h"
 #include "c_bb2_playerlocaldata.h"
+#include "gibs_shared.h"
 
 class C_ClientAttachment;
 class C_Playermodel;
@@ -117,6 +118,8 @@ public:
 	void SetZombieVision(bool state);
 	bool IsZombieVisionOn(void) { return m_bIsZombieVisionEnabled; }	
 
+	virtual const char *GetSurvivorChoice(void) { return m_szModelChoice; }
+
 protected:
 	virtual void DoPlayerKick(void);
 
@@ -147,7 +150,13 @@ private:
 	bool m_bIsZombieVisionEnabled;
 
 	C_ClientAttachment *m_pAttachments[3];
+
+	// Client-Sided Player Model Logic:
 	C_Playermodel *m_pNewPlayerModel;
+	int m_iCustomizationChoices[PLAYER_ACCESSORY_MAX];
+	char m_szModelChoice[MAX_MAP_NAME];	// Survivor choice
+	int m_iModelIncrementor;
+	int m_iOldModelIncrementor;
 
 	friend class C_Playermodel;
 };
@@ -160,6 +169,6 @@ inline C_HL2MP_Player *ToHL2MPPlayer( CBaseEntity *pEntity )
 	return dynamic_cast<C_HL2MP_Player*>( pEntity );
 }
 
-extern EHANDLE m_pPlayerRagdoll;
+extern C_ClientRagdollGib *m_pPlayerRagdoll;
 
 #endif //HL2MP_PLAYER_H
