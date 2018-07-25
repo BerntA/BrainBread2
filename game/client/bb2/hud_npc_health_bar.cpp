@@ -106,7 +106,7 @@ void CHudNPCHealthBar::Paint()
 		if (pObject == NULL) // Shouldn't happen!
 			continue;
 
-		if (pObject->IsDormant() || !pObject->ShouldDraw())
+		if (pObject->IsDormant() || !pObject->ShouldDraw() || (pObject->GetRenderColor().a < 255))
 			continue;
 
 		float flAlpha = clamp(((gpGlobals->curtime - item->flTime) / FADE_TIME), 0.0f, 1.0f) * 255.0f;

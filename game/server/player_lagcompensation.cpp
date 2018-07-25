@@ -670,6 +670,34 @@ void CLagCompensationManager::DoFastBacktrack(CBaseCombatCharacter *pEntity, flo
 	entry.boundsMax = maxs;
 }
 
+class CTraceFilterSpecific : public CTraceFilterSimple // Only hit one specific ent! To populate trace struct.
+{
+public:
+	DECLARE_CLASS(CTraceFilterSpecific, CTraceFilterSimple);
+
+	CTraceFilterSpecific(int index) : BaseClass(NULL, COLLISION_GROUP_NONE)
+	{
+		m_iTargetIndex = index;
+	}
+
+	bool ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask)
+	{
+		CBaseEntity *pEntity = EntityFromEntityHandle(pHandleEntity);
+		if (!pEntity)
+			return false;
+
+		return (pEntity->entindex() == m_iTargetIndex);
+	}
+
+	TraceType_t	GetTraceType() const
+	{
+		return TRACE_ENTITIES_ONLY;
+	}
+
+private:
+	int m_iTargetIndex;
+};
+
 int __cdecl SortLagCompEntriesPredicate(const LagCompEntry *data1, const LagCompEntry *data2)
 {
 	int dist1 = data1->distanceFromCaller();
@@ -878,6 +906,9 @@ void CLagCompensationManager::AnalyzeFastBacktracks(
 		// Force a 'hit':
 		if (ptr)
 		{
+			CTraceFilterSpecific fakeFilter(pEntity->entindex());
+			UTIL_TraceHull(vecStart, pEntity->WorldSpaceCenter(), hullMin, hullMax, MASK_SHOT_HULL, &fakeFilter, ptr);
+
 			ptr->m_pEnt = (CBaseEntity*)pEntity;
 			ptr->fraction = 0.0f;
 			ptr->allsolid = ptr->startsolid = false;

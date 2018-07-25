@@ -62,7 +62,11 @@ void CSoundscapeSystem::AddSoundscapeFile( const char *filename )
 	MEM_ALLOC_CREDIT();
 	// Open the soundscape data file, and abort if we can't
 	KeyValues *pKeyValuesData = new KeyValues( filename );
-	if ( filesystem->LoadKeyValues( *pKeyValuesData, IFileSystem::TYPE_SOUNDSCAPE, filename, "GAME" ) )
+#ifdef POSIX
+	if (pKeyValuesData->LoadFromFile(filesystem, filename, "MOD"))
+#else
+	if (filesystem->LoadKeyValues(*pKeyValuesData, IFileSystem::TYPE_SOUNDSCAPE, filename, "MOD"))
+#endif
 	{
 		// parse out all of the top level sections and save their names
 		KeyValues *pKeys = pKeyValuesData;
@@ -136,8 +140,12 @@ bool CSoundscapeSystem::Init()
 		mapSoundscapeFilename = UTIL_VarArgs( "scripts/soundscapes_%s.txt", mapname );
 	}
 
-	KeyValues *manifest = new KeyValues( SOUNDSCAPE_MANIFEST_FILE );
-	if ( filesystem->LoadKeyValues( *manifest, IFileSystem::TYPE_SOUNDSCAPE, SOUNDSCAPE_MANIFEST_FILE, "GAME" ) )
+	KeyValues *manifest = new KeyValues( SOUNDSCAPE_MANIFEST_FILE );	
+#ifdef POSIX
+	if (manifest->LoadFromFile(filesystem, SOUNDSCAPE_MANIFEST_FILE, "MOD"))
+#else
+	if (filesystem->LoadKeyValues(*manifest, IFileSystem::TYPE_SOUNDSCAPE, SOUNDSCAPE_MANIFEST_FILE, "MOD"))
+#endif
 	{
 		for ( KeyValues *sub = manifest->GetFirstSubKey(); sub != NULL; sub = sub->GetNextKey() )
 		{

@@ -269,28 +269,28 @@ void Soundscape_Update( audioparams_t &audio )
 
 void C_SoundscapeSystem::AddSoundScapeFile( const char *filename )
 {
-	KeyValues *script = new KeyValues( filename );
+	KeyValues *script = new KeyValues(filename);
 #ifndef _XBOX
-	if ( script->LoadFromFile( filesystem, filename ) )
+	if (script->LoadFromFile(filesystem, filename, "MOD"))
 #else
-	if ( filesystem->LoadKeyValues( *script, IFileSystem::TYPE_SOUNDSCAPE, filename, "GAME" ) )
+	if ( filesystem->LoadKeyValues( *script, IFileSystem::TYPE_SOUNDSCAPE, filename, "MOD" ) )
 #endif
 	{
 		// parse out all of the top level sections and save their names
 		KeyValues *pKeys = script;
-		while ( pKeys )
+		while (pKeys)
 		{
 			// save pointers to all sections in the root
 			// each one is a soundscape
-			if ( pKeys->GetFirstSubKey() )
+			if (pKeys->GetFirstSubKey())
 			{
-				m_soundscapes.AddToTail( pKeys );
+				m_soundscapes.AddToTail(pKeys);
 			}
 			pKeys = pKeys->GetNextKey();
 		}
 
 		// Keep pointer around so we can delete it at exit
-		m_SoundscapeScripts.AddToTail( script );
+		m_SoundscapeScripts.AddToTail(script);
 	}
 	else
 	{
@@ -310,8 +310,12 @@ bool C_SoundscapeSystem::Init()
 		mapSoundscapeFilename = VarArgs( "scripts/soundscapes_%s.txt", mapname );
 	}
 
-	KeyValues *manifest = new KeyValues( SOUNDSCAPE_MANIFEST_FILE );
-	if ( filesystem->LoadKeyValues( *manifest, IFileSystem::TYPE_SOUNDSCAPE, SOUNDSCAPE_MANIFEST_FILE, "GAME" ) )
+	KeyValues *manifest = new KeyValues( SOUNDSCAPE_MANIFEST_FILE );	
+#ifdef POSIX
+	if (manifest->LoadFromFile(filesystem, SOUNDSCAPE_MANIFEST_FILE, "MOD"))
+#else
+	if (filesystem->LoadKeyValues(*manifest, IFileSystem::TYPE_SOUNDSCAPE, SOUNDSCAPE_MANIFEST_FILE, "MOD"))
+#endif
 	{
 		for ( KeyValues *sub = manifest->GetFirstSubKey(); sub != NULL; sub = sub->GetNextKey() )
 		{
@@ -808,7 +812,7 @@ void C_SoundscapeSystem::ProcessPlayLooping( KeyValues *pAmbient, const subsound
 
 void C_SoundscapeSystem::TouchSoundFile( char const *wavefile )
 {
-	filesystem->GetFileTime( VarArgs( "sound/%s", PSkipSoundChars( wavefile ) ), "GAME" );
+	filesystem->GetFileTime( VarArgs( "sound/%s", PSkipSoundChars( wavefile ) ), "MOD" );
 }
 
 // start a new looping sound

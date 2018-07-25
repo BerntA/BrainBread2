@@ -874,15 +874,9 @@ CON_COMMAND_F(setmodel, "Set the playermodel to use, client-only. Can be a numbe
 	if ((pPlayer == NULL) || (pPlayer->GetNewPlayerModel() == NULL) || (args.ArgC() != 2))
 		return;
 
-	const char *mdl = args[1];
-	int idx = atoi(args[1]);
+	const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(args[1]);
+	if (data == NULL)
+		return;
 
-	if ((idx == 0) && (strlen(mdl) > 2))
-		pPlayer->GetNewPlayerModel()->SetModel(mdl);
-	else
-	{
-		const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(idx);
-		if (data)
-			pPlayer->GetNewPlayerModel()->SetModelPointer((pPlayer->GetTeamNumber() == TEAM_DECEASED) ? data->m_pClientModelPtrZombie : data->m_pClientModelPtrHuman);
-	}
+	pPlayer->GetNewPlayerModel()->SetModelPointer((pPlayer->GetTeamNumber() == TEAM_DECEASED) ? data->m_pClientModelPtrZombie : data->m_pClientModelPtrHuman);
 }

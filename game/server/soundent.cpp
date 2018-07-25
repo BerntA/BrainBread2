@@ -447,7 +447,7 @@ void CSoundEnt::InsertSound ( int iType, const Vector &vecOrigin, int iVolume, f
 
 	if ( iThisSound == SOUNDLIST_EMPTY )
 	{
-		DevMsg( "Could not AllocSound() for InsertSound() (Game DLL)\n" );
+		DevWarning(2, "Could not AllocSound() for InsertSound() (Game DLL)\n");
 		return;
 	}
 
@@ -549,7 +549,7 @@ void CSoundEnt::Initialize ( void )
 
 		if ( iSound == SOUNDLIST_EMPTY )
 		{
-			DevMsg( "Could not AllocSound() for Client Reserve! (DLL)\n" );
+			DevWarning(2, "Could not AllocSound() for Client Reserve! (DLL)\n");
 			return;
 		}
 

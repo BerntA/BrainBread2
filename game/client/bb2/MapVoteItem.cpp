@@ -122,6 +122,8 @@ void MapVoteItem::SetMapLink(const char *map)
 			m_pLabelTitle->SetText(VarArgs("%s - %s", mapItem->pszMapTitle, GetGamemodeNameForPrefix(pchMapLink)));
 			m_pMapImage->SetImage(VarArgs("loading/%s_0", pchMapLink));
 		}
+		else
+			m_pLabelTitle->SetText(VarArgs("%s - %s", pchMapLink, GetGamemodeNameForPrefix(pchMapLink)));
 	}
 
 	PerformLayout();

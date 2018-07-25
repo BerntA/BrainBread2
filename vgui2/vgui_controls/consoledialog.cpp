@@ -389,14 +389,6 @@ void CConsolePanel::ColorPrint( const Color& clr, const char *msg )
 		Clear();
 	}
 
-	// Bernt; Prevent spam:
-	if (Q_strstr(msg, "Cannot update control point") ||
-		Q_strstr(msg, "Playing sequence ") ||
-		Q_strstr(msg, "Could not AllocSound() for InsertSound()"))
-	{
-		return;
-	}
-
 	m_pHistory->InsertColorChange( clr );
 	m_pHistory->InsertString( msg );
 }
