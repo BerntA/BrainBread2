@@ -88,11 +88,11 @@ bool CAI_TacticalServices::FindLos(const Vector &threatPos, const Vector &threat
 	// Try to find a position using navmesh first:
 	if (GetOuter()->UsesNavMesh() && TheNavMesh)
 	{
-		CNavArea *pLosArea = FindLosNavArea(threatPos, threatEyePos,
+		const Vector pLosPos = FindLosNavArea(threatPos, threatEyePos,
 			minThreatDist, maxThreatDist, eFlankType, vecFlankRefPos, flFlankParam);
-		if (pLosArea != NULL)
+		if (pLosPos != vec3_invalid)
 		{
-			*pResult = pLosArea->GetCenter();
+			*pResult = pLosPos;
 			return true;
 		}
 	}
@@ -131,10 +131,10 @@ bool CAI_TacticalServices::FindBackAwayPos(const Vector &vecThreat, Vector *pRes
 #ifdef BB2_USE_NAVMESH
 	if (GetOuter()->UsesNavMesh() && TheNavMesh)
 	{
-		CNavArea *pArea = FindBackAwayNavArea(vecThreat);
-		if (pArea)
+		const Vector pBackAwayPos = FindBackAwayNavArea(vecThreat);
+		if (pBackAwayPos != vec3_invalid)
 		{
-			*pResult = pArea->GetCenter();
+			*pResult = pBackAwayPos;
 			return true;
 		}
 	}
@@ -719,10 +719,10 @@ int CAI_TacticalServices::FindLosNode(const Vector &vThreatPos, const Vector &vT
 }
 
 #ifdef BB2_USE_NAVMESH
-CNavArea *CAI_TacticalServices::FindLosNavArea(const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinThreatDist, float flMaxThreatDist, FlankType_t eFlankType, const Vector &vecFlankRefPos, float flFlankParam)
+const Vector CAI_TacticalServices::FindLosNavArea(const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinThreatDist, float flMaxThreatDist, FlankType_t eFlankType, const Vector &vecFlankRefPos, float flFlankParam)
 {
 	if (!TheNavMesh->IsLoaded())
-		return NULL;
+		return vec3_invalid;
 
 	AI_PROFILE_SCOPE(CAI_TacticalServices_FindLosNavArea);
 
@@ -730,14 +730,14 @@ CNavArea *CAI_TacticalServices::FindLosNavArea(const Vector &vThreatPos, const V
 
 	CNavArea *pArea = TheNavMesh->GetNearestNavArea(GetOuter());
 	if (pArea == NULL)
-		return NULL;
+		return vec3_invalid;
 
 	CUtlVector<CNavArea *> pNearbyAreas;
 	CollectSurroundingAreas(&pNearbyAreas, pArea, (flMaxThreatDist * 1.5f));
 	for (int i = 0; i < pNearbyAreas.Count(); i++)
 	{
 		CNavArea *pCurrArea = pNearbyAreas[i];
-		if (!pCurrArea || (pCurrArea == pArea))
+		if (!pCurrArea)
 			continue;
 
 		int navID = pCurrArea->GetID();
@@ -749,12 +749,13 @@ CNavArea *CAI_TacticalServices::FindLosNavArea(const Vector &vThreatPos, const V
 		{
 
 		case FLANKTYPE_NONE:
+			navOrigin = pCurrArea->GetRandomPoint(vThreatPos, (flMinThreatDist + 1.0f), (flMaxThreatDist - 1.0f));
 			break;
 
 		case FLANKTYPE_RADIUS:
 		{
-			Vector vecDist = navOrigin - vecFlankRefPos;
-			if (vecDist.Length() < flFlankParam)
+			navOrigin = pCurrArea->GetRandomPoint(vecFlankRefPos, flFlankParam, flMaxThreatDist);
+			if (navOrigin == vec3_invalid)
 				skip = true;
 
 			break;
@@ -778,48 +779,48 @@ CNavArea *CAI_TacticalServices::FindLosNavArea(const Vector &vThreatPos, const V
 
 		}
 
-		if (!skip)
-		{
-			// Now check its distance and only accept if in range
-			float flThreatDist = (navOrigin - vThreatPos).Length();
-			if (flThreatDist < flMaxThreatDist &&
-				flThreatDist > flMinThreatDist)
-			{
-				if (GetOuter()->TestShootPosition(navOrigin, vThreatEyePos))
-				{
-					if (ShouldDebugLos(nodeIndex))
-						NDebugOverlay::Text(navOrigin, CFmtStr("%d:los!", navID), false, 1);
+		if (skip)
+			continue;
 
-					return pCurrArea;
-				}
-				else
-				{
-					if (ShouldDebugLos(nodeIndex))
-						NDebugOverlay::Text(navOrigin, CFmtStr("%d:!shoot", navID), false, 1);
-				}
+		// Now check its distance and only accept if in range
+		float flThreatDist = (navOrigin - vThreatPos).Length();
+		if (flThreatDist < flMaxThreatDist &&
+			flThreatDist > flMinThreatDist)
+		{
+			if (GetOuter()->TestShootPosition(navOrigin, vThreatEyePos))
+			{
+				if (ShouldDebugLos(nodeIndex))
+					NDebugOverlay::Text(navOrigin, CFmtStr("%d:los!", navID), false, 1);
+
+				return navOrigin;
 			}
 			else
 			{
 				if (ShouldDebugLos(nodeIndex))
-				{
-					CFmtStr msg("%d:%s", navID, (flThreatDist < flMaxThreatDist) ? "too close" : "too far");
-					NDebugOverlay::Text(navOrigin, msg, false, 1);
-				}
+					NDebugOverlay::Text(navOrigin, CFmtStr("%d:!shoot", navID), false, 1);
+			}
+		}
+		else
+		{
+			if (ShouldDebugLos(nodeIndex))
+			{
+				CFmtStr msg("%d:%s", navID, (flThreatDist < flMaxThreatDist) ? "too close" : "too far");
+				NDebugOverlay::Text(navOrigin, msg, false, 1);
 			}
 		}
 	}
 
-	return NULL;
+	return vec3_invalid;
 }
 
-CNavArea *CAI_TacticalServices::FindBackAwayNavArea(const Vector &vecFrom)
+const Vector CAI_TacticalServices::FindBackAwayNavArea(const Vector &vecFrom)
 {
 	if (!TheNavMesh->IsLoaded())
-		return NULL;
+		return vec3_invalid;
 
 	CNavArea *pNearestFromNPC = TheNavMesh->GetNearestNavArea(GetOuter());
 	if (pNearestFromNPC == NULL)
-		return NULL;
+		return vec3_invalid;
 
 	// A vector pointing to the threat.
 	Vector vecToThreat;
@@ -834,24 +835,23 @@ CNavArea *CAI_TacticalServices::FindBackAwayNavArea(const Vector &vecFrom)
 	for (int i = 0; i < pNearbyAreas.Count(); i++)
 	{
 		CNavArea *pCurrArea = pNearbyAreas[i];
-		if (!pCurrArea || (pCurrArea == pNearestFromNPC))
+		if (!pCurrArea)
 			continue;
 
-		Vector navOrigin = pCurrArea->GetCenter();
-		float flTestDist = (vecFrom - navOrigin).Length();
-		if (flTestDist > flCurDist)
-		{
-			// Make sure this navarea doesn't take me past the enemy's position.
-			Vector vecToArea;
-			vecToArea = navOrigin - GetLocalOrigin();
-			VectorNormalize(vecToArea);
+		Vector navOrigin = pCurrArea->GetRandomPoint(vecFrom, (flCurDist + 1.0f), (GetOuter()->CoverRadius() * 1.5f));
+		if (navOrigin == vec3_invalid)
+			continue;
 
-			if (DotProduct(vecToArea, vecToThreat) < 0.0)
-				return pCurrArea;
-		}
+		// Make sure this navarea doesn't take me past the enemy's position.
+		Vector vecToArea;
+		vecToArea = navOrigin - GetLocalOrigin();
+		VectorNormalize(vecToArea);
+
+		if (DotProduct(vecToArea, vecToThreat) < 0.0)
+			return navOrigin;
 	}
 
-	return NULL;
+	return vec3_invalid;
 }
 
 const Vector CAI_TacticalServices::FindCoverNavArea(const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinDist, float flMaxDist)
@@ -862,11 +862,11 @@ const Vector CAI_TacticalServices::FindCoverNavArea(const Vector &vThreatPos, co
 // We don't care about hintgroups nor ducking/cover, we just want to find a potential 'safe' spot / a spot far away from our enemy. (fallback spot)
 const Vector CAI_TacticalServices::FindCoverNavArea(const Vector &vNearPos, const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinDist, float flMaxDist)
 {
-	AI_PROFILE_SCOPE(CAI_TacticalServices_FindCoverNavArea);
-	MARK_TASK_EXPENSIVE();
-
 	if (!TheNavMesh->IsLoaded())
 		return vec3_invalid;
+
+	AI_PROFILE_SCOPE(CAI_TacticalServices_FindCoverNavArea);
+	MARK_TASK_EXPENSIVE();
 
 	CNavArea *pNearestFromNPC = TheNavMesh->GetNearestNavArea(vNearPos);
 	if (pNearestFromNPC == NULL)
@@ -878,33 +878,23 @@ const Vector CAI_TacticalServices::FindCoverNavArea(const Vector &vNearPos, cons
 	if (flMinDist > 0.5 * flMaxDist)
 		flMinDist = 0.5 * flMaxDist;
 
-	float flMinDistSqr = flMinDist*flMinDist;
-	float flMaxDistSqr = flMaxDist*flMaxDist;
-
-	unsigned int nSearchRandomizer = 0;
-
 	CUtlVector<CNavArea *> pNearbyAreas;
 	CollectSurroundingAreas(&pNearbyAreas, pNearestFromNPC, flMaxDist);
 	for (int i = 0; i < pNearbyAreas.Count(); i++)
 	{
 		CNavArea *pCurrArea = pNearbyAreas[i];
-		if (!pCurrArea || (pCurrArea == pNearestFromNPC))
+		if (!pCurrArea)
 			continue;
 
-		if (nSearchRandomizer != 0 && (pCurrArea->GetID() == nSearchRandomizer))
+		Vector navOrigin = pCurrArea->GetRandomPoint(vNearPos, flMinDist, flMaxDist);
+		if (navOrigin == vec3_invalid)
 			continue;
 
-		Vector navOrigin = pCurrArea->GetRandomPoint();
-		float dist = (vNearPos - navOrigin).LengthSqr();
-		if (dist >= flMinDistSqr && dist < flMaxDistSqr)
-		{
-			nSearchRandomizer = pCurrArea->GetID();
-			const HidingSpotVector *extraSpots = pCurrArea->GetHidingSpots();
-			if (extraSpots && extraSpots->Count())
-				return extraSpots->Element(random->RandomInt(0, (extraSpots->Count() - 1)))->GetPosition();
-
-			return navOrigin;
-		}
+		const HidingSpotVector *extraSpots = pCurrArea->GetHidingSpots();
+		if (extraSpots && extraSpots->Count())		
+			navOrigin = extraSpots->Element(random->RandomInt(0, (extraSpots->Count() - 1)))->GetPosition();		
+		
+		return navOrigin;
 	}
 
 	return vec3_invalid;

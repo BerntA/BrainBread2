@@ -63,7 +63,7 @@ int GetExperienceReward(CBaseEntity *pEntity)
 	if (pGetZombieInstance)
 		reward = pGetZombieInstance->GetXP();
 
-	CNPC_Combine *pSoldierHumanoid = dynamic_cast<CNPC_Combine*> (pEntity);
+	CNPC_BaseSoldier *pSoldierHumanoid = dynamic_cast<CNPC_BaseSoldier*> (pEntity);
 	if (pSoldierHumanoid)
 		reward = pSoldierHumanoid->GetXP();
 

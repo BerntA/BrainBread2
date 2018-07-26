@@ -61,8 +61,8 @@ private:
 	int				FindLosNode(const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinThreatDist, float flMaxThreatDist, float flBlockTime, FlankType_t eFlankType, const Vector &vThreatFacing, float flFlankParam);
 
 #ifdef BB2_USE_NAVMESH // Helpful stuff ported from Infestus.
-	CNavArea		*FindLosNavArea(const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinThreatDist, float flMaxThreatDist, FlankType_t eFlankType, const Vector &vThreatFacing, float flFlankParam);
-	CNavArea		*FindBackAwayNavArea(const Vector &vecFrom);
+	const Vector	FindLosNavArea(const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinThreatDist, float flMaxThreatDist, FlankType_t eFlankType, const Vector &vThreatFacing, float flFlankParam);
+	const Vector	FindBackAwayNavArea(const Vector &vecFrom);
 	const Vector	FindCoverNavArea(const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinDist, float flMaxDist);
 	const Vector	FindCoverNavArea(const Vector &vNearPos, const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinDist, float flMaxDist);
 #endif // BB2_USE_NAVMESH

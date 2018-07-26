@@ -841,7 +841,7 @@ bool CAI_BaseNPC::FindCoverPos( CBaseEntity *pEntity, Vector *pResult )
 
 	if ( !GetTacticalServices()->FindLateralCover( pEntity->EyePosition(), 0, pResult ) )
 	{
-		if ( !GetTacticalServices()->FindCoverPos( pEntity->GetAbsOrigin(), pEntity->EyePosition(), 0, CoverRadius(), pResult ) ) 
+		if ( !GetTacticalServices()->FindCoverPos( pEntity->GetAbsOrigin(), pEntity->EyePosition(), MinFleeDistance(), CoverRadius(), pResult ) ) 
 		{
 			return false;
 		}
@@ -1492,7 +1492,7 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 	case TASK_FIND_COVER_FROM_ENEMY:
 		{	
 			bool 	bNodeCover 		= ( task != TASK_FIND_COVER_FROM_ENEMY );
-			float 	flMinDistance 	= ( task == TASK_FIND_FAR_NODE_COVER_FROM_ENEMY ) ? pTask->flTaskData : 0.0;
+			float 	flMinDistance 	= ( task == TASK_FIND_FAR_NODE_COVER_FROM_ENEMY ) ? pTask->flTaskData : MinFleeDistance();
 			float 	flMaxDistance 	= ( task == TASK_FIND_NEAR_NODE_COVER_FROM_ENEMY ) ? pTask->flTaskData : FLT_MAX;
 			
 			if ( FindCoverFromEnemy( bNodeCover, flMinDistance, flMaxDistance ) )

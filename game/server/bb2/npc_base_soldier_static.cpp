@@ -62,7 +62,6 @@ int	g_interactionSoldierBash = 0; // melee bash attack
 // Soldier activities
 //=========================================================
 extern Activity ACT_COMBINE_THROW_GRENADE;
-extern Activity ACT_COMBINE_LAUNCH_GRENADE;
 
 // -----------------------------------------------
 //	> Squad slots
@@ -1517,7 +1516,6 @@ DECLARE_TASK(TASK_SOLDIER_DIE_INSTANTLY)
 
 //Activities
 DECLARE_ACTIVITY(ACT_COMBINE_THROW_GRENADE)
-DECLARE_ACTIVITY(ACT_COMBINE_LAUNCH_GRENADE)
 
 DECLARE_SQUADSLOT(SQUAD_SLOT_GRENADE1)
 DECLARE_SQUADSLOT(SQUAD_SLOT_GRENADE2)

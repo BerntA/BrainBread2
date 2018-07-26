@@ -30,12 +30,9 @@ public:
 	void		Precache(void);
 	void		DeathSound(const CTakeDamageInfo &info);
 	int         OnTakeDamage(const CTakeDamageInfo &info);
-
-	void ClearAttackConditions(void);
-
-	bool IsHeavyDamage(const CTakeDamageInfo &info);
-	bool AllowedToIgnite(void) { return true; }
-
+	void		ClearAttackConditions(void);
+	bool		IsHeavyDamage(const CTakeDamageInfo &info);
+	bool		AllowedToIgnite(void) { return true; }
 	const char *GetNPCName() { return "Military"; }
 };
 
@@ -55,8 +52,7 @@ int CNPCMilitaryStatic::OnTakeDamage(const CTakeDamageInfo &info)
 	else
 		HL2MPRules()->EmitSoundToClient(this, "Pain", GetNPCType(), GetGender());
 
-	int tookDamage = BaseClass::OnTakeDamage(info);
-	return tookDamage;
+	return BaseClass::OnTakeDamage(info);
 }
 
 //-----------------------------------------------------------------------------
@@ -120,14 +116,6 @@ void CNPCMilitaryStatic::ClearAttackConditions()
 //-----------------------------------------------------------------------------
 bool CNPCMilitaryStatic::IsHeavyDamage(const CTakeDamageInfo &info)
 {
-	if (info.GetAmmoType() == GetAmmoDef()->Index("AK47"))
-		return true;
-
-	// 357 rounds are heavy damage
-	if (info.GetAmmoType() == GetAmmoDef()->Index("357"))
-		return true;
-
-	// Shotgun blasts where at least half the pellets hit me are heavy damage
 	if (info.GetDamageType() & DMG_BUCKSHOT)
 		return true;
 

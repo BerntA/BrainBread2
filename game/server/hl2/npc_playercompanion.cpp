@@ -1682,9 +1682,6 @@ bool CNPC_PlayerCompanion::IsReadinessCapable()
 	if( GetActiveWeapon() && LookupActivity("ACT_IDLE_AIM_RIFLE_STIMULATED") == ACT_INVALID )
 		return false;
 
-	if( GetActiveWeapon() && FClassnameIs( GetActiveWeapon(), "weapon_rpg" ) )
-		return false;
-
 	return true;
 }
 

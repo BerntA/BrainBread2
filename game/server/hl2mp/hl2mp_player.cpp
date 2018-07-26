@@ -832,7 +832,7 @@ void CHL2MP_Player::OnAffectedBySkill(const CTakeDamageInfo &info)
 	if (!pAttacker)
 		return;
 
-	if (!FClassnameIs(info.GetInflictor(), "weapon_flamethrower") || IsAffectedBySkillFlag(skillFlag))
+	if (IsAffectedBySkillFlag(skillFlag) || !FClassnameIs(info.GetInflictor(), "weapon_flamethrower"))
 		return;
 
 	AddMaterialOverlayFlag(MAT_OVERLAY_BURNING);

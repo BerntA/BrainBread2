@@ -412,6 +412,7 @@ public:
 	void GetExtent( Extent *extent ) const;						// return a computed extent (XY is in m_nwCorner and m_seCorner, Z is computed)
 	const Vector &GetCenter( void ) const	{ return m_center; }
 	Vector GetRandomPoint( void ) const;
+	Vector GetRandomPoint(const Vector &from, float minDist, float maxDist) const;
 	Vector GetCorner( NavCornerType corner ) const;
 	void SetCorner( NavCornerType corner, const Vector& newPosition );
 	void ComputeNormal( Vector *normal, bool alternate = false ) const;	// Computes the area's normal based on m_nwCorner.  If 'alternate' is specified, m_seCorner is used instead.

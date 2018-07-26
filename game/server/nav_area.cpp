@@ -5871,18 +5871,38 @@ Vector CNavArea::GetRandomPoint( void ) const
 	return spot;
 }
 
+// Find a random point within the satisfied min max dist inside the extents.
+Vector CNavArea::GetRandomPoint(const Vector &from, float minDist, float maxDist) const
+{
+	Extent extent;
+	GetExtent(&extent);
 
+	const Vector &vecCenter = GetCenter();
+	Vector vecDir = (vecCenter - from);
+	VectorNormalize(vecDir);
 
+	Vector spot;
+	Vector vecMin = vecDir * minDist;
+	Vector vecMax = vecDir * maxDist;
 
+	float distX = (extent.SizeX() / 2.0f), distY = (extent.SizeY() / 2.0f);
+	distX = abs(distX);
+	distY = abs(distY);
 
+	vecMin.x = clamp(vecMin.x, -distX, distX);
+	vecMin.y = clamp(vecMin.y, -distY, distY);
 
+	vecMax.x = clamp(vecMax.x, -distX, distX);
+	vecMax.y = clamp(vecMax.y, -distY, distY);
 
+	spot = from + vecMin + Vector(random->RandomFloat(0.0f, (vecMax.x - vecMin.x)), random->RandomFloat(0.0f, (vecMax.y - vecMin.y)), 0.0f);
+	spot.z = GetZ(spot.x, spot.y);
 
+	trace_t tr;
+	CTraceFilterNoNPCsOrPlayer filter(NULL, COLLISION_GROUP_NPC);
+	UTIL_TraceLine(from, spot, MASK_NPCSOLID_BRUSHONLY, &filter, &tr);
+	if (tr.fraction != 1.0f)
+		return vec3_invalid;
 
-
-
-
-
-
-
-
+	return spot;
+}

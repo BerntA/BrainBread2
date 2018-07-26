@@ -1,11 +1,11 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//=========       Copyright © Reperio Studios 2013-2018 @ Bernt Andreas Eide!       ============//
 //
-// Purpose: 
+// Purpose: Base Soldier Class AI.
 //
-//=============================================================================//
+//==============================================================================================//
 
-#ifndef NPC_COMBINE_H
-#define NPC_COMBINE_H
+#ifndef NPC_BASE_SOLDIER_H
+#define NPC_BASE_SOLDIER_H
 #ifdef _WIN32
 #pragma once
 #endif
@@ -23,21 +23,17 @@
 #include "ai_baseactor.h"
 #include "npc_base_properties.h"
 
-// Used when only what combine to react to what the spotlight sees
-#define SF_COMBINE_NO_LOOK	(1 << 16)
-#define SF_COMBINE_NO_GRENADEDROP ( 1 << 17 )
+// Used when only what soldier to react to what the spotlight sees
+#define SF_SOLDIER_NO_LOOK	(1 << 16)
 
-//=========================================================
-//	>> CNPC_Combine
-//=========================================================
-class CNPC_Combine : public CAI_BaseActor, public CNPCBaseProperties
+class CNPC_BaseSoldier : public CAI_BaseActor, public CNPCBaseProperties
 {
 	DECLARE_DATADESC();
 	DEFINE_CUSTOM_AI;
-	DECLARE_CLASS( CNPC_Combine, CAI_BaseActor );
+	DECLARE_CLASS( CNPC_BaseSoldier, CAI_BaseActor );
 
 public:
-	CNPC_Combine();
+	CNPC_BaseSoldier();
 
 	// Create components
 	virtual bool	CreateComponents();
@@ -51,8 +47,12 @@ public:
 	bool			FVisible( CBaseEntity *pEntity, int traceMask = MASK_BLOCKLOS, CBaseEntity **ppBlocker = NULL );
 	virtual bool	IsCurTaskContinuousMove();
 
-	virtual float	GetJumpGravity() const		{ return 1.8f; }
+	virtual float GetJumpGravity() const	{ return 1.8f; }
 	virtual bool CanFlinch(void) { return false; }
+	virtual float CoverRadius(void) { return 700.0f; } // Default cover radius
+	virtual Activity GetCoverActivity(CAI_Hint* pHint) { return ACT_IDLE; }
+	virtual bool ValidateNavGoal() { return true; }
+	virtual float MinFleeDistance(void) { return 20.0f; }
 
 	virtual Vector  GetCrouchEyeOffset( void );
 
@@ -67,7 +67,6 @@ public:
 	void InputStartPatrolling( inputdata_t &inputdata );
 	void InputStopPatrolling( inputdata_t &inputdata );
 	void InputAssault( inputdata_t &inputdata );
-	void InputHitByBugbait( inputdata_t &inputdata );
 	void InputThrowGrenadeAtTarget( inputdata_t &inputdata );
 
 	bool			UpdateEnemyMemory( CBaseEntity *pEnemy, const Vector &position, CBaseEntity *pInformer = NULL );
@@ -79,7 +78,7 @@ public:
 	virtual Class_T Classify( void );
 	float			MaxYawSpeed( void );
 	bool			ShouldMoveAndShoot();
-	bool			OverrideMoveFacing( const AILocalMoveGoal_t &move, float flInterval );;
+	bool			OverrideMoveFacing( const AILocalMoveGoal_t &move, float flInterval );
 	void			HandleAnimEvent( animevent_t *pEvent );
 	Vector			Weapon_ShootPosition( );
 
@@ -92,7 +91,6 @@ public:
 	void			PostNPCInit();
 	void			GatherConditions();
 	virtual void	PrescheduleThink();
-	virtual int OnTakeDamage(const CTakeDamageInfo &info);
 	virtual void FireBullets(const FireBulletsInfo_t &info);
 	virtual int AllowEntityToBeGibbed(void);
 
@@ -120,6 +118,9 @@ public:
 
 	bool			IsRunningApproachEnemySchedule();
 
+	virtual bool	IsLightDamage(const CTakeDamageInfo &info);
+	virtual bool	IsHeavyDamage(const CTakeDamageInfo &info);
+
 	// -------------
 	// Sounds
 	// -------------
@@ -139,9 +140,6 @@ public:
 	int				GetSoundInterests( void );
 	virtual bool	QueryHearSound( CSound *pSound );
 
-	// Speaking
-	void			SpeakSentence( int sentType );
-
 	virtual int		TranslateSchedule( int scheduleType );
 	void			OnStartSchedule( int scheduleType );
 
@@ -156,7 +154,6 @@ protected:
 	int m_iNumGrenades;
 	virtual BB2_SoundTypes GetNPCType() { return TYPE_SOLDIER; }
 	void SetKickDamage( int nDamage ) { m_nKickDamage = nDamage; }
-	CAI_Sentence< CNPC_Combine > *GetSentences() { return &m_Sentences; }
 
 	// Select the combat schedule
 	virtual int SelectCombatSchedule();
@@ -166,73 +163,56 @@ protected:
 
 private:
 	//=========================================================
-	// Combine S schedules
+	// Soldier schedules
 	//=========================================================
 	enum
 	{
-		SCHED_COMBINE_SUPPRESS = BaseClass::NEXT_SCHEDULE,
-		SCHED_COMBINE_COMBAT_FAIL,
-		SCHED_COMBINE_VICTORY_DANCE,
-		SCHED_COMBINE_COMBAT_FACE,
-		SCHED_COMBINE_HIDE_AND_RELOAD,
-		SCHED_COMBINE_SIGNAL_SUPPRESS,
-		SCHED_COMBINE_ENTER_OVERWATCH,
-		SCHED_COMBINE_OVERWATCH,
-		SCHED_COMBINE_ASSAULT,
-		SCHED_COMBINE_ESTABLISH_LINE_OF_FIRE,
-		SCHED_COMBINE_PRESS_ATTACK,
-		SCHED_COMBINE_WAIT_IN_COVER,
-		SCHED_COMBINE_RANGE_ATTACK1,
-		SCHED_COMBINE_RANGE_ATTACK2,
-		SCHED_COMBINE_TAKE_COVER1,
-		SCHED_COMBINE_TAKE_COVER_FROM_BEST_SOUND,
-		SCHED_COMBINE_RUN_AWAY_FROM_BEST_SOUND,
-		SCHED_COMBINE_GRENADE_COVER1,
-		SCHED_COMBINE_TOSS_GRENADE_COVER1,
-		SCHED_COMBINE_TAKECOVER_FAILED,
-		SCHED_COMBINE_GRENADE_AND_RELOAD,
-		SCHED_COMBINE_PATROL,
-		SCHED_COMBINE_BUGBAIT_DISTRACTION,
-		SCHED_COMBINE_CHARGE_TURRET,
-		SCHED_COMBINE_DROP_GRENADE,
-		SCHED_COMBINE_CHARGE_PLAYER,
-		SCHED_COMBINE_PATROL_ENEMY,
-		SCHED_COMBINE_BURNING_STAND,
-		SCHED_COMBINE_FORCED_GRENADE_THROW,
-		SCHED_COMBINE_MOVE_TO_FORCED_GREN_LOS,
-		SCHED_COMBINE_FACE_IDEAL_YAW,
-		SCHED_COMBINE_MOVE_TO_MELEE,
+		SCHED_SOLDIER_SUPPRESS = BaseClass::NEXT_SCHEDULE,
+		SCHED_SOLDIER_COMBAT_FAIL,
+		SCHED_SOLDIER_HIDE_AND_RELOAD,
+		SCHED_SOLDIER_ASSAULT,
+		SCHED_SOLDIER_ESTABLISH_LINE_OF_FIRE,
+		SCHED_SOLDIER_PRESS_ATTACK,
+		SCHED_SOLDIER_WAIT_IN_COVER,
+		SCHED_SOLDIER_RANGE_ATTACK1,
+		SCHED_SOLDIER_RANGE_ATTACK2,
+		SCHED_SOLDIER_TAKE_COVER1,
+		SCHED_SOLDIER_TAKE_COVER_FROM_BEST_SOUND,
+		SCHED_SOLDIER_RUN_AWAY_FROM_BEST_SOUND,
+		SCHED_SOLDIER_GRENADE_COVER1,
+		SCHED_SOLDIER_TOSS_GRENADE_COVER1,
+		SCHED_SOLDIER_TAKECOVER_FAILED,
+		SCHED_SOLDIER_GRENADE_AND_RELOAD,
+		SCHED_SOLDIER_PATROL,
+		SCHED_SOLDIER_CHARGE_PLAYER,
+		SCHED_SOLDIER_PATROL_ENEMY,
+		SCHED_SOLDIER_FORCED_GRENADE_THROW,
+		SCHED_SOLDIER_MOVE_TO_FORCED_GREN_LOS,
+		SCHED_SOLDIER_FACE_IDEAL_YAW,
+		SCHED_SOLDIER_MOVE_TO_MELEE,
 		NEXT_SCHEDULE,
 	};
 
 	//=========================================================
-	// Combine Tasks
+	// Soldier Tasks
 	//=========================================================
 	enum 
 	{
-		TASK_COMBINE_FACE_TOSS_DIR = BaseClass::NEXT_TASK,
-		TASK_COMBINE_IGNORE_ATTACKS,
-		TASK_COMBINE_SIGNAL_BEST_SOUND,
-		TASK_COMBINE_DEFER_SQUAD_GRENADES,
-		TASK_COMBINE_CHASE_ENEMY_CONTINUOUSLY,
-		TASK_COMBINE_DIE_INSTANTLY,
-		TASK_COMBINE_GET_PATH_TO_FORCED_GREN_LOS,
-		TASK_COMBINE_SET_STANDING,
+		TASK_SOLDIER_FACE_TOSS_DIR = BaseClass::NEXT_TASK,
+		TASK_SOLDIER_IGNORE_ATTACKS,
+		TASK_SOLDIER_DEFER_SQUAD_GRENADES,
+		TASK_SOLDIER_CHASE_ENEMY_CONTINUOUSLY,
+		TASK_SOLDIER_GET_PATH_TO_FORCED_GREN_LOS,
 		NEXT_TASK
 	};
 
 	//=========================================================
-	// Combine Conditions
+	// Soldier Conditions
 	//=========================================================
-	enum Combine_Conds
+	enum 
 	{
-		COND_COMBINE_NO_FIRE = BaseClass::NEXT_CONDITION,
-		COND_COMBINE_DEAD_FRIEND,
-		COND_COMBINE_SHOULD_PATROL,
-		COND_COMBINE_HIT_BY_BUGBAIT,
-		COND_COMBINE_DROP_GRENADE,
-		COND_COMBINE_ON_FIRE,
-		COND_COMBINE_ATTACK_SLOT_AVAILABLE,
+		COND_SOLDIER_SHOULD_PATROL = BaseClass::NEXT_CONDITION,
+		COND_SOLDIER_ATTACK_SLOT_AVAILABLE,
 		NEXT_CONDITION
 	};
 
@@ -242,9 +222,9 @@ private:
 	void StartTaskChaseEnemyContinuously( const Task_t *pTask );
 	void RunTaskChaseEnemyContinuously( const Task_t *pTask );
 
-	class CCombineStandoffBehavior : public CAI_ComponentWithOuter<CNPC_Combine, CAI_StandoffBehavior>
+	class CSoldierStandoffBehavior : public CAI_ComponentWithOuter<CNPC_BaseSoldier, CAI_StandoffBehavior>
 	{
-		typedef CAI_ComponentWithOuter<CNPC_Combine, CAI_StandoffBehavior> BaseClass;
+		typedef CAI_ComponentWithOuter<CNPC_BaseSoldier, CAI_StandoffBehavior> BaseClass;
 
 		virtual int SelectScheduleAttack()
 		{
@@ -265,7 +245,6 @@ private:
 	Vector			m_vecTossVelocity;
 	EHANDLE			m_hForcedGrenadeTarget;
 	bool			m_bShouldPatrol;
-	bool			m_bFirstEncounter;// only put on the handsign show in the squad's first encounter.
 
 	// Time Variables
 	float			m_flNextPainSoundTime;
@@ -278,11 +257,9 @@ private:
 	float			m_flShotDelay;
 	float			m_flStopMoveShootTime;
 
-	CAI_Sentence< CNPC_Combine > m_Sentences;
-
 protected:
 	CAI_AssaultBehavior			m_AssaultBehavior;
-	CCombineStandoffBehavior	m_StandoffBehavior;
+	CSoldierStandoffBehavior	m_StandoffBehavior;
 	CAI_FollowBehavior			m_FollowBehavior;
 	CAI_FuncTankBehavior		m_FuncTankBehavior;
 	CAI_RappelBehavior			m_RappelBehavior;
@@ -294,4 +271,4 @@ public:
 	int				m_iPathfindingVariant;
 };
 
-#endif // NPC_COMBINE_H
+#endif // NPC_BASE_SOLDIER_H

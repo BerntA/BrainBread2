@@ -14,41 +14,29 @@
 
 int g_pMilitaryQuestion = 0;
 
-//=========================================================
-//	>> CNPCMilitary
-//=========================================================
-class CNPCMilitary : public CNPC_Combine
+class CNPCMilitary : public CNPC_BaseSoldier
 {
-	DECLARE_CLASS( CNPCMilitary, CNPC_Combine );
+	DECLARE_CLASS(CNPCMilitary, CNPC_BaseSoldier);
 
 public: 
 	void		Spawn( void );
 	void		Precache( void );
 	void		DeathSound( const CTakeDamageInfo &info );
-	void		PrescheduleThink( void );
 	void		BuildScheduleTestBits( void );
-	int			SelectSchedule ( void );
-	float		GetHitgroupDamageMultiplier( int iHitGroup, const CTakeDamageInfo &info );
 	void		HandleAnimEvent( animevent_t *pEvent );
 	void		OnChangeActivity( Activity eNewActivity );
-	void		Event_Killed( const CTakeDamageInfo &info );
 	void		OnListened();
-	virtual int OnTakeDamage( const CTakeDamageInfo &info );
-	virtual bool UsesNavMesh(void) { return true; }
-
+	int			OnTakeDamage( const CTakeDamageInfo &info );
+	bool		UsesNavMesh(void) { return true; }
 	void		ClearAttackConditions( void );
-
-	bool		m_fIsBlocking;
-
-	bool		IsLightDamage( const CTakeDamageInfo &info );
-	bool		IsHeavyDamage( const CTakeDamageInfo &info );
-
-	virtual	bool		AllowedToIgnite( void ) { return true; }
-
+	bool		AllowedToIgnite( void ) { return true; }
 	const char *GetNPCName() { return "Military"; }
 
-	int GetIdleState(void) { return g_pMilitaryQuestion; }
-	void SetIdleState(int state) { g_pMilitaryQuestion = state; }
+	int			GetIdleState(void) { return g_pMilitaryQuestion; }
+	void		SetIdleState(int state) { g_pMilitaryQuestion = state; }
+
+private:
+	bool		m_fIsBlocking;
 };
 
 #endif // NPC_MILITARY_H

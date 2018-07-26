@@ -174,6 +174,7 @@ public:
 	// make a sound Alyx can hear when in darkness mode
 	void		 MakeAISpookySound(float volume, float duration = 0.5);
 
+	virtual bool ValidateNavGoal() { return true; }
 	virtual bool CanPlayMoanSound();
 	virtual void MoanSound(envelopePoint_t *pEnvelope, int iEnvelopeSize);
 	bool ShouldPlayIdleSound(void) { return false; }

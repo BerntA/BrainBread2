@@ -31,8 +31,7 @@ LINK_ENTITY_TO_CLASS(npc_bandit, CNPCBandit);
 int CNPCBandit::OnTakeDamage(const CTakeDamageInfo &info)
 {
 	HL2MPRules()->EmitSoundToClient(this, "Pain", GetNPCType(), GetGender());
-	int tookDamage = BaseClass::OnTakeDamage(info);
-	return tookDamage;
+	return BaseClass::OnTakeDamage(info);
 }
 
 //-----------------------------------------------------------------------------
@@ -93,11 +92,6 @@ void CNPCBandit::ClearAttackConditions()
 	}
 }
 
-void CNPCBandit::PrescheduleThink(void)
-{
-	BaseClass::PrescheduleThink();
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Allows for modification of the interrupt mask for the current schedule.
 //			In the most cases the base implementation should be called first.
@@ -113,25 +107,6 @@ void CNPCBandit::BuildScheduleTestBits(void)
 	BaseClass::BuildScheduleTestBits();
 }
 
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-int CNPCBandit::SelectSchedule(void)
-{
-	return BaseClass::SelectSchedule();
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-float CNPCBandit::GetHitgroupDamageMultiplier(int iHitGroup, const CTakeDamageInfo &info)
-{
-	return BaseClass::GetHitgroupDamageMultiplier(iHitGroup, info);
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
 void CNPCBandit::HandleAnimEvent(animevent_t *pEvent)
 {
 	switch (pEvent->event)
@@ -165,47 +140,6 @@ void CNPCBandit::OnListened()
 			ClearCondition(COND_HEAR_PHYSICS_DANGER);
 		}
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : &info - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-void CNPCBandit::Event_Killed(const CTakeDamageInfo &info)
-{
-	BaseClass::Event_Killed(info);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : &info - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CNPCBandit::IsLightDamage(const CTakeDamageInfo &info)
-{
-	return BaseClass::IsLightDamage(info);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : &info - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CNPCBandit::IsHeavyDamage(const CTakeDamageInfo &info)
-{
-	if (info.GetAmmoType() == GetAmmoDef()->Index("AK47"))
-		return true;
-
-	// 357 rounds are heavy damage
-	if (info.GetAmmoType() == GetAmmoDef()->Index("357"))
-		return true;
-
-	// Shotgun blasts where at least half the pellets hit me are heavy damage
-	if (info.GetDamageType() & DMG_BUCKSHOT)
-		return true;
-
-	return BaseClass::IsHeavyDamage(info);
 }
 
 Class_T	CNPCBandit::Classify(void)

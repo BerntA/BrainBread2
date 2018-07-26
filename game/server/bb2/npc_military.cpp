@@ -101,11 +101,6 @@ void CNPCMilitary::ClearAttackConditions( )
 	}
 }
 
-void CNPCMilitary::PrescheduleThink( void )
-{
-	BaseClass::PrescheduleThink();
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Allows for modification of the interrupt mask for the current schedule.
 //			In the most cases the base implementation should be called first.
@@ -121,25 +116,6 @@ void CNPCMilitary::BuildScheduleTestBits( void )
 	BaseClass::BuildScheduleTestBits();
 }
 
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-int CNPCMilitary::SelectSchedule ( void )
-{
-	return BaseClass::SelectSchedule();
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-float CNPCMilitary::GetHitgroupDamageMultiplier( int iHitGroup, const CTakeDamageInfo &info )
-{
-	return BaseClass::GetHitgroupDamageMultiplier( iHitGroup, info );
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
 void CNPCMilitary::HandleAnimEvent( animevent_t *pEvent )
 {
 	switch( pEvent->event )
@@ -173,45 +149,4 @@ void CNPCMilitary::OnListened()
 			ClearCondition( COND_HEAR_PHYSICS_DANGER );
 		}
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : &info - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-void CNPCMilitary::Event_Killed( const CTakeDamageInfo &info )
-{
-	BaseClass::Event_Killed( info );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : &info - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CNPCMilitary::IsLightDamage( const CTakeDamageInfo &info )
-{
-	return BaseClass::IsLightDamage( info );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : &info - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CNPCMilitary::IsHeavyDamage( const CTakeDamageInfo &info )
-{
-	if ( info.GetAmmoType() == GetAmmoDef()->Index("AK47") )
-		return true;
-
-	// 357 rounds are heavy damage
-	if ( info.GetAmmoType() == GetAmmoDef()->Index("357") )
-		return true;
-
-	// Shotgun blasts where at least half the pellets hit me are heavy damage
-	if ( info.GetDamageType() & DMG_BUCKSHOT )
-			return true;
-
-	return BaseClass::IsHeavyDamage( info );
 }

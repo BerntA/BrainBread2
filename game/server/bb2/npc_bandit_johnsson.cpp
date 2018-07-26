@@ -22,10 +22,10 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-class CNPCBanditJohnsson : public CNPC_Combine
+class CNPCBanditJohnsson : public CNPC_BaseSoldier
 {
 	DECLARE_DATADESC();
-	DECLARE_CLASS(CNPCBanditJohnsson, CNPC_Combine);
+	DECLARE_CLASS(CNPCBanditJohnsson, CNPC_BaseSoldier);
 
 public:
 
@@ -35,41 +35,31 @@ public:
 	void		PrescheduleThink(void);
 	void		BuildScheduleTestBits(void);
 	int			SelectSchedule(void);
-	float		GetHitgroupDamageMultiplier(int iHitGroup, const CTakeDamageInfo &info);
 	void		HandleAnimEvent(animevent_t *pEvent);
 	void		OnChangeActivity(Activity eNewActivity);
-	void		Event_Killed(const CTakeDamageInfo &info);
 	void		OnListened();
-	int OnTakeDamage(const CTakeDamageInfo &info);
-
+	int			OnTakeDamage(const CTakeDamageInfo &info);
 	void		ClearAttackConditions(void);
-
-	void NotifyDeadFriend(CBaseEntity* pFriend);
-	void AnnounceEnemyKill(CBaseEntity *pEnemy);
-
-	bool		m_fIsBlocking;
-
+	void		NotifyDeadFriend(CBaseEntity* pFriend);
+	void		AnnounceEnemyKill(CBaseEntity *pEnemy);
 	bool		IsLightDamage(const CTakeDamageInfo &info);
 	bool		IsHeavyDamage(const CTakeDamageInfo &info);
-
-	bool ShouldChargePlayer();
-
-	bool AllowedToIgnite(void) { return false; }
-	bool IsBoss() { return true; }
-	bool CanAlwaysSeePlayers() { return true; }
-	bool GetGender() { return true; } // force male
-	bool UsesNavMesh(void) { return true; }
-	bool ShouldAlwaysThink() { return true; }
-	int AllowEntityToBeGibbed(void) { return GIB_NO_GIBS; }
-
-	Class_T Classify(void);
+	bool		ShouldChargePlayer();
+	bool		AllowedToIgnite(void) { return false; }
+	bool		IsBoss() { return true; }
+	bool		CanAlwaysSeePlayers() { return true; }
+	bool		GetGender() { return true; } // force male
+	bool		UsesNavMesh(void) { return true; }
+	bool		ShouldAlwaysThink() { return true; }
+	int			AllowEntityToBeGibbed(void) { return GIB_NO_GIBS; }
+	Class_T		Classify(void);
 	BB2_SoundTypes GetNPCType() { return TYPE_CUSTOM; }
-
 	const char *GetNPCName() { return "Johnsson"; }
 
 private:
 
 	float m_flHealthFractionToCheck;
+	bool m_fIsBlocking;
 
 	void InputEnteredHideout(inputdata_t &inputdata);
 	void InputLeftHideout(inputdata_t &inputdata);
@@ -95,8 +85,7 @@ END_DATADESC()
 int CNPCBanditJohnsson::OnTakeDamage(const CTakeDamageInfo &info)
 {
 	HL2MPRules()->EmitSoundToClient(this, "Pain", GetNPCType(), GetGender());
-	int tookDamage = BaseClass::OnTakeDamage(info);
-	return tookDamage;
+	return BaseClass::OnTakeDamage(info);
 }
 
 //-----------------------------------------------------------------------------
@@ -241,15 +230,6 @@ int CNPCBanditJohnsson::SelectSchedule(void)
 	return BaseClass::SelectSchedule();
 }
 
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-float CNPCBanditJohnsson::GetHitgroupDamageMultiplier(int iHitGroup, const CTakeDamageInfo &info)
-{
-	return BaseClass::GetHitgroupDamageMultiplier(iHitGroup, info);
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
 void CNPCBanditJohnsson::HandleAnimEvent(animevent_t *pEvent)
 {
 	switch (pEvent->event)
@@ -290,19 +270,9 @@ void CNPCBanditJohnsson::OnListened()
 // Input  : &info - 
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-void CNPCBanditJohnsson::Event_Killed(const CTakeDamageInfo &info)
-{
-	BaseClass::Event_Killed(info);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : &info - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
 bool CNPCBanditJohnsson::IsLightDamage(const CTakeDamageInfo &info)
 {
-	return BaseClass::IsLightDamage(info);
+	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -312,12 +282,12 @@ bool CNPCBanditJohnsson::IsLightDamage(const CTakeDamageInfo &info)
 //-----------------------------------------------------------------------------
 bool CNPCBanditJohnsson::IsHeavyDamage(const CTakeDamageInfo &info)
 {
-	return BaseClass::IsHeavyDamage(info);
+	return false;
 }
 
 bool CNPCBanditJohnsson::ShouldChargePlayer()
 {
-	return GetEnemy() && GetEnemy()->IsPlayer();
+	return (GetEnemy() && GetEnemy()->IsPlayer());
 }
 
 Class_T	CNPCBanditJohnsson::Classify(void)
@@ -347,7 +317,7 @@ void CNPCBanditJohnsson::InputEnteredHideout(inputdata_t &inputdata)
 	{
 		bool bGiveNewWeapon = true;
 		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
-		if (pWeapon && FClassnameIs(pWeapon, "weapon_minigun"))
+		if (pWeapon && (pWeapon->GetUniqueWeaponID() == WEAPON_ID_MINIGUN))
 			bGiveNewWeapon = false;
 
 		if (bGiveNewWeapon)
