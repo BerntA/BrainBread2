@@ -12,7 +12,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar bb2_deathmatch_announcer_maxtime("bb2_deathmatch_announcer_maxtime", "10", FCVAR_REPLICATED, "If you strike another kill and it has gone this many sec it will reset your kill value. 0 = Ignore!", true, 0.0f, true, 20.0f);
+ConVar bb2_deathmatch_announcer_maxtime("bb2_deathmatch_announcer_maxtime", "10", FCVAR_GAMEDLL, "If you strike another kill and it has gone this many sec it will reset your kill value. 0 = Ignore!", true, 0.0f, true, 20.0f);
 
 static CGameAnnouncer g_GameAnnouncer;
 CGameAnnouncer *GameAnnouncer = &g_GameAnnouncer;

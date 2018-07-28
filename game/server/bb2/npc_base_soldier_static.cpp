@@ -71,12 +71,10 @@ enum SquadSlot_T
 	SQUAD_SLOT_GRENADE1 = LAST_SHARED_SQUADSLOT,
 	SQUAD_SLOT_GRENADE2,
 	SQUAD_SLOT_ATTACK_OCCLUDER,
-	SQUAD_SLOT_OVERWATCH,
 };
 
 #define bits_MEMORY_PAIN_LIGHT_SOUND		bits_MEMORY_CUSTOM1
 #define bits_MEMORY_PAIN_HEAVY_SOUND		bits_MEMORY_CUSTOM2
-#define bits_MEMORY_PLAYER_HURT				bits_MEMORY_CUSTOM3
 
 //---------------------------------------------------------
 // NPC Hammer Input Info - Save / Restore
@@ -104,12 +102,6 @@ void CNPCBaseSoldierStatic::Precache()
 	PrecacheScriptSound("Weapon_CombineGuard.Special1");
 
 	BaseClass::Precache();
-}
-
-int CNPCBaseSoldierStatic::OnTakeDamage(const CTakeDamageInfo &info)
-{
-	int tookDamage = BaseClass::OnTakeDamage(info);
-	return tookDamage;
 }
 
 void CNPCBaseSoldierStatic::FireBullets(const FireBulletsInfo_t &info)
@@ -184,8 +176,6 @@ void CNPCBaseSoldierStatic::Spawn(void)
 	CapabilitiesAdd(bits_CAP_NO_HIT_SQUADMATES);
 	CapabilitiesAdd(bits_CAP_ANIMATEDFACE);
 
-	m_bFirstEncounter = true; // this is true when the grunt spawns, because he hasn't encountered an enemy yet.
-
 	m_HackedGunPos = Vector(0, 0, 55);
 
 	m_flNextLostSoundTime = 0;
@@ -202,7 +192,7 @@ void CNPCBaseSoldierStatic::GatherConditions()
 {
 	BaseClass::GatherConditions();
 
-	ClearCondition(COND_SOLDIER_ATTACK_SLOT_AVAILABLE);
+	ClearCondition(COND_SOLDIER_STATIC_ATTACK_SLOT_AVAILABLE);
 
 	if (GetState() == NPC_STATE_COMBAT)
 	{
@@ -213,7 +203,7 @@ void CNPCBaseSoldierStatic::GatherConditions()
 		// slot. If they do not select an attack schedule, then they'll release the slot.
 		if (OccupyStrategySlotRange(SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2))
 		{
-			SetCondition(COND_SOLDIER_ATTACK_SLOT_AVAILABLE);
+			SetCondition(COND_SOLDIER_STATIC_ATTACK_SLOT_AVAILABLE);
 		}
 	}
 }
@@ -263,49 +253,6 @@ void CNPCBaseSoldierStatic::StartTask(const Task_t *pTask)
 {
 	switch (pTask->iTask)
 	{
-	case TASK_SOLDIER_SIGNAL_BEST_SOUND:
-		if (IsInSquad() && GetSquad()->NumMembers() > 1)
-		{
-			CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this);
-			if (pPlayer && OccupyStrategySlot(SQUAD_SLOT_EXCLUSIVE_HANDSIGN) && pPlayer->FInViewCone(this))
-			{
-				CSound *pSound;
-				pSound = GetBestSound();
-
-				Assert(pSound != NULL);
-
-				if (pSound)
-				{
-					Vector right, tosound;
-
-					GetVectors(NULL, &right, NULL);
-
-					tosound = pSound->GetSoundReactOrigin() - GetAbsOrigin();
-					VectorNormalize(tosound);
-
-					tosound.z = 0;
-					right.z = 0;
-
-					if (DotProduct(right, tosound) > 0)
-					{
-						// Right
-						SetIdealActivity(ACT_SIGNAL_RIGHT);
-					}
-					else
-					{
-						// Left
-						SetIdealActivity(ACT_SIGNAL_LEFT);
-					}
-
-					break;
-				}
-			}
-		}
-
-		// Otherwise, just skip it.
-		TaskComplete();
-		break;
-
 	case TASK_ANNOUNCE_ATTACK:
 	{
 		// If Primary Attack
@@ -351,10 +298,10 @@ void CNPCBaseSoldierStatic::StartTask(const Task_t *pTask)
 		break;
 	}
 
-	case TASK_SOLDIER_FACE_TOSS_DIR:
+	case TASK_SOLDIER_STATIC_FACE_TOSS_DIR:
 		break;
 
-	case TASK_SOLDIER_IGNORE_ATTACKS:
+	case TASK_SOLDIER_STATIC_IGNORE_ATTACKS:
 		// must be in a squad
 		if (m_pSquad && m_pSquad->NumMembers() > 2)
 		{
@@ -367,7 +314,7 @@ void CNPCBaseSoldierStatic::StartTask(const Task_t *pTask)
 		TaskComplete();
 		break;
 
-	case TASK_SOLDIER_DEFER_SQUAD_GRENADES:
+	case TASK_SOLDIER_STATIC_DEFER_SQUAD_GRENADES:
 	{
 		if (m_pSquad)
 		{
@@ -422,17 +369,25 @@ void CNPCBaseSoldierStatic::StartTask(const Task_t *pTask)
 	}
 	break;
 
-	case TASK_SOLDIER_DIE_INSTANTLY:
+	case TASK_SOLDIER_STATIC_CLEAR_ENEMY_STATES:
 	{
-		CTakeDamageInfo info;
+		bool fHadEnemy = (HasMemory(bits_MEMORY_HAD_ENEMY | bits_MEMORY_HAD_PLAYER));
+		Forget(bits_MEMORY_HAD_ENEMY | bits_MEMORY_HAD_PLAYER);
 
-		info.SetAttacker(this);
-		info.SetInflictor(this);
-		info.SetDamage(m_iHealth);
-		info.SetDamageType(pTask->flTaskData);
-		info.SetDamageForce(Vector(0.1, 0.1, 0.1));
+		if (fHadEnemy)
+		{
+			VacateStrategySlot();
+			Forget(bits_MEMORY_HAD_LOS);
+		}
 
-		TakeDamage(info);
+		if ((GetEnemies()->NumEnemies() > 0) || (GetEnemy() != NULL))
+		{
+			SetEnemy(NULL);
+			GetEnemies()->ClearEntireMemory();
+			ClearAttackConditions();
+			ClearSenseConditions();
+			ClearCondition(COND_NEW_ENEMY);
+		}
 
 		TaskComplete();
 	}
@@ -448,14 +403,6 @@ void CNPCBaseSoldierStatic::RunTask(const Task_t *pTask)
 {
 	switch (pTask->iTask)
 	{
-	case TASK_SOLDIER_SIGNAL_BEST_SOUND:
-		AutoMovement();
-		if (IsActivityFinished())
-		{
-			TaskComplete();
-		}
-		break;
-
 	case TASK_ANNOUNCE_ATTACK:
 	{
 		// Stop waiting if enemy facing me or lost enemy
@@ -472,7 +419,7 @@ void CNPCBaseSoldierStatic::RunTask(const Task_t *pTask)
 	}
 	break;
 
-	case TASK_SOLDIER_FACE_TOSS_DIR:
+	case TASK_SOLDIER_STATIC_FACE_TOSS_DIR:
 	{
 		// project a point along the toss vector and turn to face that point.
 		GetMotor()->SetIdealYawToTargetAndUpdate(GetLocalOrigin() + m_vecTossVelocity * 64, AI_KEEP_YAW_SPEED);
@@ -617,21 +564,17 @@ bool CNPCBaseSoldierStatic::QueryHearSound(CSound *pSound)
 
 void CNPCBaseSoldierStatic::AnnounceEnemyType(CBaseEntity *pEnemy)
 {
-	const char *pSentenceName = "COMBINE_MONST";
 	switch (pEnemy->Classify())
 	{
 	case CLASS_PLAYER:
-		pSentenceName = "COMBINE_ALERT";
 		break;
 
 	case CLASS_MILITARY:
 	case CLASS_MILITARY_VEHICLE:
-		pSentenceName = "COMBINE_MONST_CITIZENS";
 		break;
 
 	case CLASS_ZOMBIE_BOSS:
 	case CLASS_ZOMBIE:
-		pSentenceName = "COMBINE_MONST_ZOMBIES";
 		break;
 	}
 
@@ -643,14 +586,11 @@ void CNPCBaseSoldierStatic::AnnounceEnemyKill(CBaseEntity *pEnemy)
 	if (!pEnemy)
 		return;
 
-	const char *pSentenceName = "COMBINE_KILL_MONST";
 	switch (pEnemy->Classify())
 	{
 	case CLASS_PLAYER:
-		pSentenceName = "COMBINE_PLAYER_DEAD";
 		break;
 
-		// no sentences for these guys yet
 	case CLASS_MILITARY:
 	case CLASS_MILITARY_VEHICLE:
 		break;
@@ -697,7 +637,7 @@ int CNPCBaseSoldierStatic::SelectCombatSchedule()
 			{
 				// Start suppressing if someone isn't firing already (SLOT_ATTACK1). This means
 				// I'm the guy who spotted the enemy, I should react immediately.
-				return SCHED_SOLDIER_SUPPRESS;
+				return SCHED_SOLDIER_STATIC_SUPPRESS;
 			}
 
 			if (m_pSquad->IsLeader(this) || (m_pSquad->GetLeader() && m_pSquad->GetLeader()->GetEnemy() != pEnemy))
@@ -789,7 +729,7 @@ int CNPCBaseSoldierStatic::SelectSchedule(void)
 		if (m_NPCState != NPC_STATE_DEAD && m_NPCState != NPC_STATE_PRONE)
 		{
 			// Cower when physics objects are thrown at me
-			if (HasCondition(COND_HEAR_PHYSICS_DANGER))
+			if (HasCondition(COND_HEAR_PHYSICS_DANGER) && CanFlinch())
 			{
 				return SCHED_FLINCH_PHYSICS;
 			}
@@ -814,7 +754,7 @@ int CNPCBaseSoldierStatic::SelectSchedule(void)
 						if (!GetEnemy() && pSound->IsSoundType(SOUND_CONTEXT_DANGER_APPROACH) && pSound->m_hOwner && !FInViewCone(pSound->GetSoundReactOrigin()))
 						{
 							GetMotor()->SetIdealYawToTarget(pSound->GetSoundReactOrigin());
-							return SCHED_SOLDIER_FACE_IDEAL_YAW;
+							return SCHED_SOLDIER_STATIC_FACE_IDEAL_YAW;
 						}
 					}
 
@@ -836,32 +776,19 @@ int CNPCBaseSoldierStatic::SelectSchedule(void)
 	switch (m_NPCState)
 	{
 	case NPC_STATE_IDLE:
-	{
-	}
-
 	case NPC_STATE_ALERT:
 	{
-		if (HasCondition(COND_HEAR_COMBAT))
-		{
-			CSound *pSound = GetBestSound();
-
-			if (pSound && pSound->IsSoundType(SOUND_COMBAT))
-			{
-				if (m_pSquad && m_pSquad->GetSquadMemberNearestTo(pSound->GetSoundReactOrigin()) == this && OccupyStrategySlot(SQUAD_SLOT_INVESTIGATE_SOUND))
-				{
-				}
-			}
-		}
+		break;
 	}
-	break;
 
 	case NPC_STATE_COMBAT:
 	{
 		int nSched = SelectCombatSchedule();
 		if (nSched != SCHED_NONE)
 			return nSched;
+
+		break;
 	}
-	break;
 	}
 
 	// no special cases here, call the base class
@@ -875,10 +802,6 @@ int CNPCBaseSoldierStatic::SelectFailSchedule(int failedSchedule, int failedTask
 
 int CNPCBaseSoldierStatic::SelectScheduleAttack()
 {
-	// Drop a grenade?
-	if (HasCondition(COND_SOLDIER_DROP_GRENADE))
-		return SCHED_SOLDIER_DROP_GRENADE;
-
 	// Kick attack?
 	if (HasCondition(COND_CAN_MELEE_ATTACK1))
 	{
@@ -940,6 +863,41 @@ int CNPCBaseSoldierStatic::TranslateSchedule(int scheduleType)
 {
 	switch (scheduleType)
 	{
+		// Don't flee, or run away!
+	case SCHED_TAKE_COVER_FROM_BEST_SOUND:
+	case SCHED_TAKE_COVER_FROM_ENEMY:
+	case SCHED_TAKE_COVER_FROM_ORIGIN:
+	case SCHED_FLEE_FROM_BEST_SOUND:
+	case SCHED_BACK_AWAY_FROM_SAVE_POSITION:
+	case SCHED_MOVE_AWAY_FROM_ENEMY:
+	case SCHED_BACK_AWAY_FROM_ENEMY:
+	case SCHED_RUN_FROM_ENEMY:
+	case SCHED_MOVE_AWAY:
+	case SCHED_COWER:
+	case SCHED_INVESTIGATE_SOUND:
+	{
+		if (GetEnemy() != NULL)
+		{
+			int combatSched = SelectCombatSchedule();
+			if (combatSched != SCHED_NONE)
+				return combatSched;
+		}
+
+		return SCHED_IDLE_STAND;
+	}
+
+	// Don't hide, just reload.
+	case SCHED_HIDE_AND_RELOAD:
+		return SCHED_RELOAD;
+
+	// If we want to chase an enemy, we gotta find a new one, because we can't move, duh!!
+	case SCHED_CHASE_ENEMY:
+	case SCHED_ESTABLISH_LINE_OF_FIRE:
+	case SCHED_ESTABLISH_LINE_OF_FIRE_FALLBACK:
+	case SCHED_TARGET_CHASE:
+	case SCHED_MOVE_TO_WEAPON_RANGE:		
+		return SCHED_SOLDIER_STATIC_RESET;
+
 	case SCHED_RANGE_ATTACK1:
 	{
 		if (HasCondition(COND_NO_PRIMARY_AMMO) || HasCondition(COND_LOW_PRIMARY_AMMO))
@@ -952,7 +910,7 @@ int CNPCBaseSoldierStatic::TranslateSchedule(int scheduleType)
 		// always assume standing
 		Stand();
 
-		return SCHED_SOLDIER_RANGE_ATTACK1;
+		return SCHED_SOLDIER_STATIC_RANGE_ATTACK1;
 	}
 	case SCHED_RANGE_ATTACK2:
 	{
@@ -964,30 +922,18 @@ int CNPCBaseSoldierStatic::TranslateSchedule(int scheduleType)
 		// Otherwise use innate attack
 		else
 		{
-			return SCHED_SOLDIER_RANGE_ATTACK2;
+			return SCHED_SOLDIER_STATIC_RANGE_ATTACK2;
 		}
 	}
-	case SCHED_SOLDIER_SUPPRESS:
+	case SCHED_SOLDIER_STATIC_SUPPRESS:
 	{
-#define MIN_SIGNAL_DIST	256
-		if (GetEnemy() != NULL && GetEnemy()->IsPlayer() && m_bFirstEncounter)
-		{
-			float flDistToEnemy = (GetEnemy()->GetAbsOrigin() - GetAbsOrigin()).Length();
-
-			if (flDistToEnemy >= MIN_SIGNAL_DIST)
-			{
-				m_bFirstEncounter = false;// after first encounter, leader won't issue handsigns anymore when he has a new enemy
-				return SCHED_SOLDIER_SIGNAL_SUPPRESS;
-			}
-		}
-
-		return SCHED_SOLDIER_SUPPRESS;
+		return SCHED_SOLDIER_STATIC_SUPPRESS;
 	}
 	case SCHED_FAIL:
 	{
 		if (GetEnemy() != NULL)
 		{
-			return SCHED_SOLDIER_COMBAT_FAIL;
+			return SCHED_SOLDIER_STATIC_COMBAT_FAIL;
 		}
 		return SCHED_FAIL;
 	}
@@ -1488,7 +1434,7 @@ WeaponProficiency_t CNPCBaseSoldierStatic::CalcWeaponProficiency(CBaseCombatWeap
 
 bool CNPCBaseSoldierStatic::HasShotgun()
 {
-	if (GetActiveWeapon() && (GetActiveWeapon()->GetPrimaryAmmoType() == GetAmmoDef()->Index("Buckshot")))
+	if (GetActiveWeapon() && (GetActiveWeapon()->GetWeaponType() == WEAPON_TYPE_SHOTGUN))
 		return true;
 
 	return false;
@@ -1508,11 +1454,10 @@ bool CNPCBaseSoldierStatic::ActiveWeaponIsFullyLoaded()
 
 AI_BEGIN_CUSTOM_NPC(npc_soldier_base, CNPCBaseSoldierStatic)
 
-DECLARE_TASK(TASK_SOLDIER_FACE_TOSS_DIR)
-DECLARE_TASK(TASK_SOLDIER_IGNORE_ATTACKS)
-DECLARE_TASK(TASK_SOLDIER_SIGNAL_BEST_SOUND)
-DECLARE_TASK(TASK_SOLDIER_DEFER_SQUAD_GRENADES)
-DECLARE_TASK(TASK_SOLDIER_DIE_INSTANTLY)
+DECLARE_TASK(TASK_SOLDIER_STATIC_FACE_TOSS_DIR)
+DECLARE_TASK(TASK_SOLDIER_STATIC_IGNORE_ATTACKS)
+DECLARE_TASK(TASK_SOLDIER_STATIC_DEFER_SQUAD_GRENADES)
+DECLARE_TASK(TASK_SOLDIER_STATIC_CLEAR_ENEMY_STATES)
 
 //Activities
 DECLARE_ACTIVITY(ACT_COMBINE_THROW_GRENADE)
@@ -1520,19 +1465,17 @@ DECLARE_ACTIVITY(ACT_COMBINE_THROW_GRENADE)
 DECLARE_SQUADSLOT(SQUAD_SLOT_GRENADE1)
 DECLARE_SQUADSLOT(SQUAD_SLOT_GRENADE2)
 
-DECLARE_CONDITION(COND_SOLDIER_NO_FIRE)
-DECLARE_CONDITION(COND_SOLDIER_DEAD_FRIEND)
-DECLARE_CONDITION(COND_SOLDIER_DROP_GRENADE)
-DECLARE_CONDITION(COND_SOLDIER_ATTACK_SLOT_AVAILABLE)
+DECLARE_CONDITION(COND_SOLDIER_STATIC_NO_FIRE)
+DECLARE_CONDITION(COND_SOLDIER_STATIC_ATTACK_SLOT_AVAILABLE)
 
 DECLARE_INTERACTION(g_interactionSoldierBash);
 
 //=========================================================
-//	SCHED_SOLDIER_COMBAT_FAIL
+//	SCHED_SOLDIER_STATIC_COMBAT_FAIL
 //=========================================================
 DEFINE_SCHEDULE
 (
-SCHED_SOLDIER_COMBAT_FAIL,
+SCHED_SOLDIER_STATIC_COMBAT_FAIL,
 
 "	Tasks"
 "		TASK_STOP_MOVING			0"
@@ -1548,11 +1491,11 @@ SCHED_SOLDIER_COMBAT_FAIL,
 )
 
 //=========================================================
-// SCHED_SOLDIER_COMBAT_FACE
+// SCHED_SOLDIER_STATIC_COMBAT_FACE
 //=========================================================
 DEFINE_SCHEDULE
 (
-SCHED_SOLDIER_COMBAT_FACE,
+SCHED_SOLDIER_STATIC_COMBAT_FACE,
 
 "	Tasks"
 "		TASK_STOP_MOVING			0"
@@ -1568,38 +1511,11 @@ SCHED_SOLDIER_COMBAT_FACE,
 )
 
 //=========================================================
-// SCHED_SOLDIER_SIGNAL_SUPPRESS
-//	don't stop shooting until the clip is
-//	empty or SOLDIER gets hurt.
+// SCHED_SOLDIER_STATIC_SUPPRESS
 //=========================================================
 DEFINE_SCHEDULE
 (
-SCHED_SOLDIER_SIGNAL_SUPPRESS,
-
-"	Tasks"
-"		TASK_STOP_MOVING				0"
-"		TASK_FACE_IDEAL					0"
-"		TASK_PLAY_SEQUENCE_FACE_ENEMY	ACTIVITY:ACT_SIGNAL_GROUP"
-"		TASK_RANGE_ATTACK1				0"
-""
-"	Interrupts"
-"		COND_ENEMY_DEAD"
-"		COND_LIGHT_DAMAGE"
-"		COND_HEAVY_DAMAGE"
-"		COND_NO_PRIMARY_AMMO"
-"		COND_WEAPON_BLOCKED_BY_FRIEND"
-"		COND_WEAPON_SIGHT_OCCLUDED"
-"		COND_HEAR_DANGER"
-"		COND_HEAR_MOVE_AWAY"
-"		COND_SOLDIER_NO_FIRE"
-)
-
-//=========================================================
-// SCHED_SOLDIER_SUPPRESS
-//=========================================================
-DEFINE_SCHEDULE
-(
-SCHED_SOLDIER_SUPPRESS,
+SCHED_SOLDIER_STATIC_SUPPRESS,
 
 "	Tasks"
 "		TASK_STOP_MOVING			0"
@@ -1611,18 +1527,16 @@ SCHED_SOLDIER_SUPPRESS,
 "		COND_LIGHT_DAMAGE"
 "		COND_HEAVY_DAMAGE"
 "		COND_NO_PRIMARY_AMMO"
-"		COND_HEAR_DANGER"
-"		COND_HEAR_MOVE_AWAY"
-"		COND_SOLDIER_NO_FIRE"
+"		COND_SOLDIER_STATIC_NO_FIRE"
 "		COND_WEAPON_BLOCKED_BY_FRIEND"
 )
 
 //=========================================================
-// SCHED_SOLDIER_RANGE_ATTACK1
+// SCHED_SOLDIER_STATIC_RANGE_ATTACK1
 //=========================================================
 DEFINE_SCHEDULE
 (
-SCHED_SOLDIER_RANGE_ATTACK1,
+SCHED_SOLDIER_STATIC_RANGE_ATTACK1,
 
 "	Tasks"
 "		TASK_STOP_MOVING				0"
@@ -1630,7 +1544,7 @@ SCHED_SOLDIER_RANGE_ATTACK1,
 "		TASK_ANNOUNCE_ATTACK			1"	// 1 = primary attack
 "		TASK_WAIT_RANDOM				0.3"
 "		TASK_RANGE_ATTACK1				0"
-"		TASK_SOLDIER_IGNORE_ATTACKS		0.5"
+"		TASK_SOLDIER_STATIC_IGNORE_ATTACKS		0.5"
 ""
 "	Interrupts"
 "		COND_NEW_ENEMY"
@@ -1641,11 +1555,7 @@ SCHED_SOLDIER_RANGE_ATTACK1,
 "		COND_NO_PRIMARY_AMMO"
 "		COND_WEAPON_BLOCKED_BY_FRIEND"
 "		COND_TOO_CLOSE_TO_ATTACK"
-"		COND_GIVE_WAY"
-"		COND_HEAR_DANGER"
-"		COND_HEAR_MOVE_AWAY"
-"		COND_SOLDIER_NO_FIRE"
-""
+"		COND_SOLDIER_STATIC_NO_FIRE"
 // Enemy_Occluded				Don't interrupt on this.  Means
 //								comibine will fire where player was after
 //								he has moved for a little while.  Good effect!!
@@ -1653,51 +1563,49 @@ SCHED_SOLDIER_RANGE_ATTACK1,
 )
 
 //=========================================================
-// 	SCHED_SOLDIER_RANGE_ATTACK2	
+// 	SCHED_SOLDIER_STATIC_RANGE_ATTACK2	
 //
 //	secondary range attack. Overriden because base class stops attacking when the enemy is occluded.
 //	SOLDIERs's grenade toss requires the enemy be occluded.
 //=========================================================
 DEFINE_SCHEDULE
 (
-SCHED_SOLDIER_RANGE_ATTACK2,
+SCHED_SOLDIER_STATIC_RANGE_ATTACK2,
 
 "	Tasks"
 "		TASK_STOP_MOVING					0"
-"		TASK_SOLDIER_FACE_TOSS_DIR			0"
+"		TASK_SOLDIER_STATIC_FACE_TOSS_DIR			0"
 "		TASK_ANNOUNCE_ATTACK				2"	// 2 = grenade
 "		TASK_PLAY_SEQUENCE					ACTIVITY:ACT_RANGE_ATTACK2"
-"		TASK_SOLDIER_DEFER_SQUAD_GRENADES	0"
-"		TASK_SET_SCHEDULE					SCHEDULE:SCHED_SOLDIER_RANGE_ATTACK1"	// spray while you can!
-""
-"	Interrupts"
-)
-
-//=========================================================
-// SCHED_SOLDIER_DROP_GRENADE
-//
-//	Place a grenade at my feet
-//=========================================================
-DEFINE_SCHEDULE
-(
-SCHED_SOLDIER_DROP_GRENADE,
-
-"	Tasks"
-"		TASK_STOP_MOVING					0"
-"		TASK_PLAY_SEQUENCE					ACTIVITY:ACT_SPECIAL_ATTACK2"
-"		TASK_SET_SCHEDULE					SCHEDULE:SCHED_SOLDIER_RANGE_ATTACK1"	// spray while you can!
+"		TASK_SOLDIER_STATIC_DEFER_SQUAD_GRENADES	0"
+"		TASK_SET_SCHEDULE					SCHEDULE:SCHED_SOLDIER_STATIC_RANGE_ATTACK1"	// spray while you can!
 ""
 "	Interrupts"
 )
 
 DEFINE_SCHEDULE
 (
-SCHED_SOLDIER_FACE_IDEAL_YAW,
+SCHED_SOLDIER_STATIC_FACE_IDEAL_YAW,
 
 "	Tasks"
 "		TASK_FACE_IDEAL				0"
 "	"
 "	Interrupts"
+)
+
+DEFINE_SCHEDULE
+(
+SCHED_SOLDIER_STATIC_RESET,
+
+"	Tasks"
+"		TASK_STOP_MOVING				0"
+"		TASK_SET_ACTIVITY				ACTIVITY:ACT_IDLE"
+"		TASK_SOLDIER_STATIC_CLEAR_ENEMY_STATES		0"
+"		TASK_WAIT						0.5"
+"		TASK_WAIT_PVS					0"
+""
+"	Interrupts"
+"		COND_NEW_ENEMY"
 )
 
 AI_END_CUSTOM_NPC()

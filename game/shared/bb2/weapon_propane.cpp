@@ -27,13 +27,13 @@
 #define PROPANE_THROW_OFFSET_RIGHT 5.0f
 #define RETHROW_DELAY	0.5
 
-ConVar sk_weapon_propane_lockedtime("sk_weapon_propane_lockedtime", "2", FCVAR_REPLICATED);
-
 #ifdef CLIENT_DLL
 #define CWeaponPropane C_WeaponPropane
 #endif
 
 #ifndef CLIENT_DLL
+ConVar sk_weapon_propane_lockedtime("sk_weapon_propane_lockedtime", "2", FCVAR_GAMEDLL);
+
 class CPropaneExplosive : public CBaseGrenade
 {
 	DECLARE_CLASS(CPropaneExplosive, CBaseGrenade);

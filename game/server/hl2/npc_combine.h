@@ -256,6 +256,7 @@ private:
 	int				m_nShots;
 	float			m_flShotDelay;
 	float			m_flStopMoveShootTime;
+	float			m_flLastTimeRanForCover;
 
 protected:
 	CAI_AssaultBehavior			m_AssaultBehavior;

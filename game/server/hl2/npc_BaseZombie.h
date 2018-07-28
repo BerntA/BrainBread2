@@ -12,11 +12,8 @@
 
 #include "ai_basenpc.h"
 #include "ai_blended_movement.h"
-#include "soundenvelope.h"
 #include "ai_behavior_actbusy.h"
 #include "npc_base_properties.h"
-
-#define	ENVELOPE_CONTROLLER		(CSoundEnvelopeController::GetController())
 
 extern int AE_ZOMBIE_ATTACK_RIGHT;
 extern int AE_ZOMBIE_ATTACK_LEFT;
@@ -47,7 +44,6 @@ enum
 	SCHED_ZOMBIE_WANDER_FAIL,
 	SCHED_ZOMBIE_WANDER_STANDOFF,
 	SCHED_ZOMBIE_MELEE_ATTACK1,
-	SCHED_ZOMBIE_POST_MELEE_WAIT,
 	SCHED_ZOMBIE_BASH_DOOR,
 
 	LAST_BASE_ZOMBIE_SCHEDULE,
@@ -58,20 +54,18 @@ enum
 //=========================================================
 enum
 {
-	TASK_ZOMBIE_DIE = LAST_SHARED_TASK,
-	TASK_ZOMBIE_WAIT_POST_MELEE,
-	TASK_ZOMBIE_YAW_TO_DOOR,
+	TASK_ZOMBIE_YAW_TO_DOOR = LAST_SHARED_TASK,
 	TASK_ZOMBIE_ATTACK_DOOR,
 	TASK_ZOMBIE_PATH_TO_OBSTRUCTION,
+	TASK_ZOMBIE_OBSTRUCTION_CLEARED,
 
 	LAST_BASE_ZOMBIE_TASK,
 };
 
-
 //=========================================================
-// Zombie conditions
+// conditions
 //=========================================================
-enum Zombie_Conds
+enum 
 {
 	COND_ZOMBIE_LOCAL_MELEE_OBSTRUCTION = LAST_SHARED_CONDITION,
 	COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT,
@@ -81,29 +75,24 @@ enum Zombie_Conds
 
 typedef CAI_BlendingHost< CAI_BehaviorHost<CAI_BaseNPC> > CAI_BaseZombieBase;
 
-//=========================================================
-//=========================================================
 abstract_class CNPC_BaseZombie : public CAI_BaseZombieBase, public CNPCBaseProperties
 {
 	DECLARE_CLASS(CNPC_BaseZombie, CAI_BaseZombieBase);
 	DECLARE_SERVERCLASS();
+	DECLARE_DATADESC();
+	DEFINE_CUSTOM_AI;
 
 public:
 	CNPC_BaseZombie(void);
-	~CNPC_BaseZombie(void);
+	virtual ~CNPC_BaseZombie(void);
 
 	void Spawn(void);
 	void Precache(void);
-	void StartTouch(CBaseEntity *pOther);
-	bool CreateBehaviors();
 	virtual float MaxYawSpeed(void);
 	bool OverrideMoveFacing(const AILocalMoveGoal_t &move, float flInterval);
 	virtual Class_T Classify(void);
-	Disposition_t IRelationType(CBaseEntity *pTarget);
 	void HandleAnimEvent(animevent_t *pEvent);
-
 	void OnStateChange(NPC_STATE OldState, NPC_STATE NewState);
-
 	void KillMe(void)
 	{
 		m_iHealth = 5;
@@ -115,12 +104,10 @@ public:
 	virtual bool CanFlinch(void) { return false; }
 
 	// No range attacks
-	int RangeAttack1Conditions(float flDot, float flDist) { return(0); }
+	int RangeAttack1Conditions(float flDot, float flDist) { return 0; }
 
-	virtual float GetHitgroupDamageMultiplier(int iHitGroup, const CTakeDamageInfo &info);
-	void TraceAttack(const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator);
-	int OnTakeDamage_Alive(const CTakeDamageInfo &info);
-	virtual float	GetReactionDelay(CBaseEntity *pEnemy) { return 0.0; }
+	virtual int OnTakeDamage_Alive(const CTakeDamageInfo &info);
+	virtual float GetReactionDelay(CBaseEntity *pEnemy) { return 0.0f; }
 
 	virtual int SelectSchedule(void);
 	virtual int	SelectFailSchedule(int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode);
@@ -136,10 +123,7 @@ public:
 	void PrescheduleThink(void);
 
 	virtual void Event_Killed(const CTakeDamageInfo &info);
-	virtual bool BecomeRagdoll(const CTakeDamageInfo &info, const Vector &forceVector);
-	void StopLoopingSounds();
 	virtual void OnScheduleChange(void);
-
 	virtual void PoundSound();
 
 	// Custom damage/death 
@@ -147,10 +131,6 @@ public:
 	bool ShouldIgniteZombieGib(void);
 	virtual void Ignite(float flFlameLifetime, bool bNPCOnly = true, float flSize = 0.0f, bool bCalledByLevelDesigner = false);
 	void CopyRenderColorTo(CBaseEntity *pOther);
-
-	// Slumping/sleeping
-	bool IsSlumped(void);
-	bool IsGettingUp(void);
 
 	// Life Span Accessor:
 	float GetLifeSpan(void) { return m_flSpawnTime; }
@@ -160,8 +140,7 @@ public:
 
 	virtual CBaseEntity *ClawAttack(float flDist, int iDamage, QAngle &qaViewPunch, Vector &vecVelocityPunch, int BloodOrigin);
 
-	// Sounds & sound envelope
-	virtual bool ShouldPlayFootstepMoan(void);
+	// Sounds
 	virtual void PainSound(const CTakeDamageInfo &info) = 0;
 	virtual void AlertSound(void) = 0;
 	virtual void IdleSound(void) = 0;
@@ -171,15 +150,12 @@ public:
 	virtual void FootstepSound(bool fRightFoot) = 0;
 	virtual void FootscuffSound(bool fRightFoot) = 0;
 
-	// make a sound Alyx can hear when in darkness mode
-	void		 MakeAISpookySound(float volume, float duration = 0.5);
+	void		MakeAISpookySound(float volume, float duration = 0.5);
 
 	virtual bool ValidateNavGoal() { return true; }
 	virtual bool CanPlayMoanSound();
-	virtual void MoanSound(envelopePoint_t *pEnvelope, int iEnvelopeSize);
+	virtual void MoanSound(void);
 	bool ShouldPlayIdleSound(void) { return false; }
-
-	virtual const char *GetMoanSound(int nSound) = 0;
 
 	virtual Vector BodyTarget(const Vector &posSrc, bool bNoisy);
 	virtual void TranslateNavGoal(CBaseEntity *pEnemy, Vector &chasePosition);
@@ -190,34 +166,20 @@ public:
 	virtual float		GetIdealSpeed() const;
 	virtual float		GetIdealAccel() const;
 
-public:
-	CAI_ActBusyBehavior		m_ActBusyBehavior;
-
 protected:
-
-	CSoundPatch	*m_pMoanSound;
 
 	float	m_flNextFlinch;
 
-	//
 	// Zombies catch on fire if they take too much burn damage in a given time period.
-	//
 	float	m_flBurnDamage;				// Keeps track of how much burn damage we've incurred in the last few seconds.
 	float	m_flBurnDamageResetTime;	// Time at which we reset the burn damage.
 
 	float m_flNextMoanSound;
-	float m_flMoanPitch;
-
-	static int g_numZombies;	// counts total number of existing zombies.
 
 	virtual BB2_SoundTypes GetNPCType() { return TYPE_ZOMBIE; }
 	virtual Activity SelectDoorBash();
 	virtual bool IsAllowedToBreakDoors(void) { return true; }
 	virtual float GetAmbushDist(void) { return 16000.0f; }
-
-	int m_iMoanSound; // each zombie picks one of the 4 and keeps it.
-
-	static int ACT_ZOM_FALL;
 
 	EHANDLE m_hLastIgnitionSource;
 	EHANDLE m_hBlockingEntity;
@@ -225,15 +187,10 @@ protected:
 	CRandSimTimer 		 m_DurationDoorBash;
 	CSimTimer 	  		 m_NextTimeToStartDoorBash;
 
-	DECLARE_DATADESC();
-
-	DEFINE_CUSTOM_AI;
-
 private:
 
 	float m_flLastObstructionCheck;
 	float m_flSpawnTime;
-	bool m_bIsSlumped;
 	bool m_bLifeTimeOver;
 };
 

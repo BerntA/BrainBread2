@@ -22,6 +22,7 @@
 #include "ai_interactions.h"
 #include "ai_looktarget.h"
 #include "sceneentity.h"
+#include "GameBase_Shared.h"
 #include "tier0/icommandline.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -167,7 +168,7 @@ void CNPC_CustomActor::Spawn()
 	//Assert(!ShouldAutosquad() || !IsInPlayerSquad());
 
 	// Use render bounds instead of human hull for guys sitting in chairs, etc.
-	m_ActBusyBehavior.SetUseRenderBounds(HasSpawnFlags(SF_CITIZEN_USE_RENDER_BOUNDS));
+	m_ActBusyBehavior.SetUseRenderBounds(HasSpawnFlags(SF_CUSTOM_ACTOR_USE_RENDER_BOUNDS));
 
 	// Init default:
 	if (m_iTotalHP > 0)
@@ -191,13 +192,15 @@ void CNPC_CustomActor::Spawn()
 		SetCollisionGroup(COLLISION_GROUP_NPC_MILITARY);
 	else
 		SetCollisionGroup(COLLISION_GROUP_NPC_MERCENARY);
+
+	UpdateScaling();
 }
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CNPC_CustomActor::PostNPCInit()
 {
-	if ((m_spawnflags & SF_CITIZEN_FOLLOW))
+	if ((m_spawnflags & SF_CUSTOM_ACTOR_FOLLOW))
 	{
 		m_FollowBehavior.SetFollowTarget(GetNearestMatchingPlayer(this));
 		m_FollowBehavior.SetParameters(AIF_SIMPLE);
@@ -212,13 +215,6 @@ void CNPC_CustomActor::PostNPCInit()
 void CNPC_CustomActor::Activate()
 {
 	BaseClass::Activate();
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void CNPC_CustomActor::OnRestore()
-{
-	BaseClass::OnRestore();
 }
 
 void CNPC_CustomActor::Event_Killed(const CTakeDamageInfo &info)
@@ -248,7 +244,7 @@ bool CNPC_CustomActor::ShouldAlwaysThink()
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-#define CITIZEN_FOLLOWER_DESERT_FUNCTANK_DIST	45.0f*12.0f
+#define CUSTOM_ACTOR_FOLLOWER_DESERT_FUNCTANK_DIST	45.0f*12.0f
 bool CNPC_CustomActor::ShouldBehaviorSelectSchedule(CAI_BehaviorBase *pBehavior)
 {
 	if (pBehavior == &m_FollowBehavior)
@@ -276,7 +272,7 @@ bool CNPC_CustomActor::ShouldBehaviorSelectSchedule(CAI_BehaviorBase *pBehavior)
 		if (m_FollowBehavior.GetFollowTarget())
 		{
 			Vector vecFollowGoal = m_FollowBehavior.GetFollowTarget()->GetAbsOrigin();
-			if (vecFollowGoal.DistToSqr(GetAbsOrigin()) > Square(CITIZEN_FOLLOWER_DESERT_FUNCTANK_DIST))
+			if (vecFollowGoal.DistToSqr(GetAbsOrigin()) > Square(CUSTOM_ACTOR_FOLLOWER_DESERT_FUNCTANK_DIST))
 			{
 				return false;
 			}
@@ -396,14 +392,6 @@ void CNPC_CustomActor::BuildScheduleTestBits()
 	}
 }
 
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-bool CNPC_CustomActor::FInViewCone(CBaseEntity *pEntity)
-{
-	return BaseClass::FInViewCone(pEntity);
-}
-
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 int CNPC_CustomActor::SelectFailSchedule(int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode)
@@ -412,7 +400,7 @@ int CNPC_CustomActor::SelectFailSchedule(int failedSchedule, int failedTask, AI_
 	{
 	case SCHED_NEW_WEAPON:
 		// If failed trying to pick up a weapon, try again in one second. This is because other AI code
-		// has put this off for 10 seconds under the assumption that the citizen would be able to 
+		// has put this off for 10 seconds under the assumption that the NPC would be able to 
 		// pick up the weapon that they found. 
 		m_flNextWeaponSearchTime = gpGlobals->curtime + 1.0f;
 		break;
@@ -479,7 +467,7 @@ int CNPC_CustomActor::SelectScheduleRetrieveItem()
 int CNPC_CustomActor::SelectScheduleNonCombat()
 {
 	if (m_bShouldPatrol)
-		return SCHED_CITIZEN_PATROL;
+		return SCHED_CUSTOM_ACTOR_PATROL;
 
 	return SCHED_NONE;
 }
@@ -516,7 +504,7 @@ int CNPC_CustomActor::TranslateSchedule(int scheduleType)
 
 			if (flDist < 50 * 12)
 			{
-				return SCHED_CITIZEN_MOURN_PLAYER;
+				return SCHED_CUSTOM_ACTOR_MOURN_PLAYER;
 			}
 		}
 		break;
@@ -549,7 +537,7 @@ void CNPC_CustomActor::StartTask(const Task_t *pTask)
 {
 	switch (pTask->iTask)
 	{
-	case TASK_CIT_SPEAK_MOURNING:
+	case TASK_CUSTOM_ACTOR_SPEAK_MOURNING:
 		if (!IsSpeaking() && CanSpeakAfterMyself())
 		{
 			PlaySound("ManDown");
@@ -606,22 +594,6 @@ void CNPC_CustomActor::TaskFail(AI_TaskFailureCode_t code)
 //-----------------------------------------------------------------------------
 Activity CNPC_CustomActor::NPC_TranslateActivity(Activity activity)
 {
-	if (activity == ACT_MELEE_ATTACK1)
-	{
-		return ACT_MELEE_ATTACK_SWING;
-	}
-
-	// !!!HACK - Citizens don't have the required animations for shotguns, 
-	// so trick them into using the rifle counterparts for now (sjb)
-	if (activity == ACT_RUN_AIM_SHOTGUN)
-		return ACT_RUN_AIM_RIFLE;
-	if (activity == ACT_WALK_AIM_SHOTGUN)
-		return ACT_WALK_AIM_RIFLE;
-	if (activity == ACT_IDLE_ANGRY_SHOTGUN)
-		return ACT_IDLE_ANGRY_SMG1;
-	if (activity == ACT_RANGE_ATTACK_SHOTGUN_LOW)
-		return ACT_RANGE_ATTACK_SMG1_LOW;
-
 	return BaseClass::NPC_TranslateActivity(activity);
 }
 
@@ -686,14 +658,14 @@ const char *CNPC_CustomActor::SelectRandomExpressionForState(NPC_STATE state)
 //-----------------------------------------------------------------------------
 void CNPC_CustomActor::SimpleUse(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
 {
-	// Under these conditions, citizens will refuse to go with the player.
+	// Under these conditions, NPC will refuse to go with the player.
 	// Robin: NPCs should always respond to +USE even if someone else has the semaphore.
 	m_bDontUseSemaphore = true;
 
 	// First, try to speak the +USE concept
 	if (!SelectPlayerUseSpeech())
 	{
-		if (HasSpawnFlags(SF_CITIZEN_NOT_COMMANDABLE) || IRelationType(pActivator) == D_NU)
+		if (HasSpawnFlags(SF_CUSTOM_ACTOR_NOT_COMMANDABLE) || IRelationType(pActivator) == D_NU)
 		{
 			// If I'm denying commander mode because a level designer has made that decision,
 			// then fire this output in case they've hooked it to an event.
@@ -767,7 +739,7 @@ bool CNPC_CustomActor::ShouldLookForBetterWeapon()
 	{
 		if (IsInPlayerSquad() && (GetActiveWeapon() && IsMoving()) && (m_FollowBehavior.GetFollowTarget() && m_FollowBehavior.GetFollowTarget()->IsPlayer()))
 		{
-			// For citizens in the player squad, you must be unarmed, or standing still (if armed) in order to 
+			// For npcs in the player squad, you must be unarmed, or standing still (if armed) in order to 
 			// divert attention to looking for a new weapon.
 			return false;
 		}
@@ -794,7 +766,7 @@ bool CNPC_CustomActor::ShouldLookForBetterWeapon()
 			else if (pWeapon->GetWeaponType() == WEAPON_TYPE_SHOTGUN)
 			{
 				// Shotgunners do not defer their weapon search indefinitely.
-				// If more than one citizen in the squad has a shotgun, we force
+				// If more than one npc in the squad has a shotgun, we force
 				// some of them to trade for another weapon.
 				if ((NumWeaponsInSquad("weapon_remington") > 1) || (NumWeaponsInSquad("weapon_sawedoff") > 1) ||
 					(NumWeaponsInSquad("weapon_benelli_m4") > 1))
@@ -843,17 +815,7 @@ bool CNPC_CustomActor::ShouldLookForBetterWeapon()
 //-----------------------------------------------------------------------------
 int CNPC_CustomActor::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 {
-	if ((info.GetDamageType() & DMG_BURN) && (info.GetDamageType() & DMG_DIRECT))
-	{
-#define CITIZEN_SCORCH_RATE		6
-#define CITIZEN_SCORCH_FLOOR	75
-
-		Scorch(CITIZEN_SCORCH_RATE, CITIZEN_SCORCH_FLOOR);
-	}
-
-	CTakeDamageInfo newInfo = info;
-
-	int ret = BaseClass::OnTakeDamage_Alive(newInfo);
+	int ret = BaseClass::OnTakeDamage_Alive(info);
 	if (ret)
 		PlaySound("Pain");
 
@@ -894,7 +856,7 @@ bool CNPC_CustomActor::CanFollowTarget()
 	if (m_NPCState == NPC_STATE_SCRIPT || m_NPCState == NPC_STATE_PRONE)
 		return false;
 
-	if (HasSpawnFlags(SF_CITIZEN_NOT_COMMANDABLE))
+	if (HasSpawnFlags(SF_CUSTOM_ACTOR_NOT_COMMANDABLE))
 		return false;
 
 	if (IsInAScript())
@@ -995,7 +957,7 @@ void CNPC_CustomActor::OnGivenWeapon(CBaseCombatWeapon *pNewWeapon)
 //------------------------------------------------------------------------------
 void CNPC_CustomActor::InputSetCommandable(inputdata_t &inputdata)
 {
-	RemoveSpawnFlags(SF_CITIZEN_NOT_COMMANDABLE);
+	RemoveSpawnFlags(SF_CUSTOM_ACTOR_NOT_COMMANDABLE);
 }
 
 //-----------------------------------------------------------------------------
@@ -1022,7 +984,7 @@ void CNPC_CustomActor::FearSound(void)
 bool CNPC_CustomActor::UseSemaphore(void)
 {
 	// Ignore semaphore if we're told to work outside it
-	if (HasSpawnFlags(SF_CITIZEN_IGNORE_SEMAPHORE))
+	if (HasSpawnFlags(SF_CUSTOM_ACTOR_IGNORE_SEMAPHORE))
 		return false;
 
 	return BaseClass::UseSemaphore();
@@ -1032,57 +994,43 @@ void CNPC_CustomActor::FireGameEvent(IGameEvent *event)
 {
 	const char *type = event->GetName();
 	if (!strcmp(type, "player_connection"))
+		UpdateScaling();
+}
+
+void CNPC_CustomActor::UpdateScaling(void)
+{
+	if ((!bb2_enable_scaling.GetBool() && (HL2MPRules()->GetCurrentGamemode() != MODE_ARENA)) || (HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION))
 	{
-		if ((!bb2_enable_scaling.GetBool() && (HL2MPRules()->GetCurrentGamemode() != MODE_ARENA)) || (HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION))
-		{
-			m_flDamageScaleValue = 0.0f;
-			m_flHealthScaleValue = 0.0f;
-			return;
-		}
-
-		float flDamageScaleAmount = 0.0f, flHealthScaleAmount = 0.0f;
-		int iNumPlayers = 0;
-		for (int i = 1; i <= gpGlobals->maxClients; i++)
-		{
-			CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-			if (!pClient)
-				continue;
-
-			if (!pClient->IsConnected())
-				continue;
-
-			iNumPlayers++;
-		}
-
-		if (iNumPlayers > 0)
-			iNumPlayers--; // Everyone but the first player will affect scaling.
-
-		flDamageScaleAmount = (bb2_npc_scaling.GetInt() * iNumPlayers * m_flDamageScaleFactor);
-		flHealthScaleAmount = (bb2_npc_scaling.GetInt() * iNumPlayers * m_flHealthScaleFactor);
-
-		float defaultTotalHP = (float)m_iTotalHP;
-		float flTotal = (flHealthScaleAmount * (float)((float)defaultTotalHP / 100)) + defaultTotalHP;
-		m_iTotalHP = (int)flTotal;
-
-		float newHP = 0.0f;
-		float hpPercentLeft = (float)(((float)GetHealth()) / ((float)GetMaxHealth()));
-
-		if (hpPercentLeft >= 1) // No HP lost.
-			newHP = flTotal;
-		else // HP lost
-			newHP = (float)((float)((float)m_iTotalHP / 100) * (hpPercentLeft * 100));
-
-		newHP = round(newHP);
-
-		if (newHP <= 0)
-			newHP = 1;
-
-		SetHealth((int)newHP);
-		SetMaxHealth(m_iTotalHP);
-
-		m_flDamageScaleValue = flDamageScaleAmount;
-		m_flHealthScaleValue = flHealthScaleAmount;
+		m_flDamageScaleValue = 0.0f;
+		m_flHealthScaleValue = 0.0f;
+		return;
 	}
+
+	float flDamageScaleAmount = 0.0f, flHealthScaleAmount = 0.0f;
+	flDamageScaleAmount = (bb2_npc_scaling.GetInt() * ((float)GameBaseShared()->GetNumActivePlayers()) * m_flDamageScaleFactor);
+	flHealthScaleAmount = (bb2_npc_scaling.GetInt() * ((float)GameBaseShared()->GetNumActivePlayers()) * m_flHealthScaleFactor);
+
+	float defaultTotalHP = ((float)m_iTotalHP);
+	float flTotal = (flHealthScaleAmount * (defaultTotalHP / 100.0f)) + defaultTotalHP;
+	m_iTotalHP = ((int)flTotal);
+
+	float newHP = 0.0f;
+	float hpPercentLeft = (float)(((float)GetHealth()) / ((float)GetMaxHealth()));
+
+	if (hpPercentLeft >= 1) // No HP lost.
+		newHP = flTotal;
+	else // HP lost
+		newHP = ((((float)m_iTotalHP) / 100.0f) * (hpPercentLeft * 100.0f));
+
+	newHP = round(newHP);
+	if (newHP <= 0)
+		newHP = 1;
+
+	SetHealth((int)newHP);
+	SetMaxHealth(m_iTotalHP);
+
+	m_flDamageScaleValue = flDamageScaleAmount;
+	m_flHealthScaleValue = flHealthScaleAmount;
 }
 
 //-----------------------------------------------------------------------------
@@ -1093,14 +1041,14 @@ void CNPC_CustomActor::FireGameEvent(IGameEvent *event)
 
 AI_BEGIN_CUSTOM_NPC(npc_custom_actor, CNPC_CustomActor)
 
-DECLARE_TASK(TASK_CIT_SPEAK_MOURNING)
+DECLARE_TASK(TASK_CUSTOM_ACTOR_SPEAK_MOURNING)
 
 //=========================================================
-// > SCHED_CITIZEN_PATROL
+// > SCHED_CUSTOM_ACTOR_PATROL
 //=========================================================
 DEFINE_SCHEDULE
 (
-SCHED_CITIZEN_PATROL,
+SCHED_CUSTOM_ACTOR_PATROL,
 
 "	Tasks"
 "		TASK_STOP_MOVING				0"
@@ -1110,7 +1058,7 @@ SCHED_CITIZEN_PATROL,
 "		TASK_STOP_MOVING				0"
 "		TASK_WAIT						3"
 "		TASK_WAIT_RANDOM				3"
-"		TASK_SET_SCHEDULE				SCHEDULE:SCHED_CITIZEN_PATROL" // keep doing it
+"		TASK_SET_SCHEDULE				SCHEDULE:SCHED_CUSTOM_ACTOR_PATROL" // keep doing it
 ""
 "	Interrupts"
 "		COND_ENEMY_DEAD"
@@ -1122,7 +1070,7 @@ SCHED_CITIZEN_PATROL,
 
 DEFINE_SCHEDULE
 (
-SCHED_CITIZEN_MOURN_PLAYER,
+SCHED_CUSTOM_ACTOR_MOURN_PLAYER,
 
 "	Tasks"
 "		TASK_GET_PATH_TO_PLAYER		0"
@@ -1131,7 +1079,7 @@ SCHED_CITIZEN_MOURN_PLAYER,
 "		TASK_STOP_MOVING			0"
 "		TASK_TARGET_PLAYER			0"
 "		TASK_FACE_TARGET			0"
-"		TASK_CIT_SPEAK_MOURNING		0"
+"		TASK_CUSTOM_ACTOR_SPEAK_MOURNING			0"
 "		TASK_SUGGEST_STATE			STATE:IDLE"
 ""
 "	Interrupts"

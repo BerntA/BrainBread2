@@ -26,7 +26,7 @@ enum ZombieClassTypes
 	ZOMBIE_TYPE_RANDOM,
 };
 
-ConVar bb2_zombie_spawner_distance("bb2_zombie_spawner_distance", "5200", FCVAR_REPLICATED, "If there is no players within this distance from the spawner it will not spawn any zombies.", true, 200.0f, false, 0.0f);
+ConVar bb2_zombie_spawner_distance("bb2_zombie_spawner_distance", "5200", FCVAR_GAMEDLL, "If there is no players within this distance from the spawner it will not spawn any zombies.", true, 200.0f, false, 0.0f);
 
 bool IsAllowedToSpawn(CBaseEntity *pEntity, float distance, float zDiff, bool bCheckVisible)
 {

@@ -15,10 +15,10 @@
 // Spawnflags
 //-------------------------------------
 
-#define SF_CITIZEN_FOLLOW			( 1 << 16 )	//65536 follow the player as soon as I spawn.
-#define SF_CITIZEN_NOT_COMMANDABLE	( 1 << 20 ) // Nope.
-#define SF_CITIZEN_IGNORE_SEMAPHORE ( 1 << 21 ) // Work outside the speech semaphore system
-#define SF_CITIZEN_USE_RENDER_BOUNDS ( 1 << 24 )//16777216
+#define SF_CUSTOM_ACTOR_FOLLOW			( 1 << 16 )	//65536 follow the player as soon as I spawn.
+#define SF_CUSTOM_ACTOR_NOT_COMMANDABLE	( 1 << 20 ) // Nope.
+#define SF_CUSTOM_ACTOR_IGNORE_SEMAPHORE ( 1 << 21 ) // Work outside the speech semaphore system
+#define SF_CUSTOM_ACTOR_USE_RENDER_BOUNDS ( 1 << 24 )//16777216
 
 //-------------------------------------
 
@@ -35,17 +35,13 @@ public:
 	void			PostNPCInit();
 	void			Activate();
 	void	        OnGivenWeapon(CBaseCombatWeapon *pNewWeapon);
-
 	float	        GetJumpGravity() const { return 1.8f; }
-
-	void			OnRestore();
 	void            Event_Killed(const CTakeDamageInfo &info);
-
 	Class_T 		Classify();
-
 	bool 			ShouldAlwaysThink();
 	bool            GetGender() { return m_bGender; }
 	bool            UsesNavMesh(void) { return true; }
+	bool			ValidateNavGoal() { return true; }
 
 	//---------------------------------
 	// Behavior
@@ -55,8 +51,6 @@ public:
 	void			PredictPlayerPush();
 	void 			PrescheduleThink();
 	void			BuildScheduleTestBits();
-
-	bool			FInViewCone(CBaseEntity *pEntity);
 
 	int				SelectFailSchedule(int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode);
 	int				SelectSchedule();
@@ -80,7 +74,7 @@ public:
 
 	bool			IgnorePlayerPushing(void);
 
-	const char *SelectRandomExpressionForState(NPC_STATE state);
+	const char		*SelectRandomExpressionForState(NPC_STATE state);
 
 	//---------------------------------
 	// Combat
@@ -100,7 +94,7 @@ public:
 	// Damage handling
 	//---------------------------------
 	int 			OnTakeDamage_Alive(const CTakeDamageInfo &info);
-	void FireBullets(const FireBulletsInfo_t &info);
+	void			FireBullets(const FireBulletsInfo_t &info);
 
 	//---------------------------------
 	// Following Logic:
@@ -128,9 +122,8 @@ public:
 	void			DeathSound(const CTakeDamageInfo &info);
 	bool			UseSemaphore(void);
 
-	void	OnChangeRunningBehavior(CAI_BehaviorBase *pOldBehavior, CAI_BehaviorBase *pNewBehavior);
-
-	void    PlaySound(const char *sound, float eventtime = -1.0f);
+	void			OnChangeRunningBehavior(CAI_BehaviorBase *pOldBehavior, CAI_BehaviorBase *pNewBehavior);
+	void			PlaySound(const char *sound, float eventtime = -1.0f);
 
 	void AnnounceEnemyKill(CBaseEntity *pEnemy);
 	NPC_STATE SelectIdealState(void);
@@ -139,16 +132,17 @@ public:
 
 protected:
 		void FireGameEvent(IGameEvent *event);
+		void UpdateScaling(void);
 private:
 	//-----------------------------------------------------
 	// Conditions, Schedules, Tasks
 	//-----------------------------------------------------
 	enum
 	{
-		SCHED_CITIZEN_PATROL = BaseClass::NEXT_SCHEDULE,
-		SCHED_CITIZEN_MOURN_PLAYER,
+		SCHED_CUSTOM_ACTOR_PATROL = BaseClass::NEXT_SCHEDULE,
+		SCHED_CUSTOM_ACTOR_MOURN_PLAYER,
 
-		TASK_CIT_SPEAK_MOURNING = BaseClass::NEXT_TASK,
+		TASK_CUSTOM_ACTOR_SPEAK_MOURNING = BaseClass::NEXT_TASK,
 	};
 
 	//-----------------------------------------------------

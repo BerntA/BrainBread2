@@ -15,7 +15,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar ai_show_active_military_activities("ai_show_active_military_activities", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "Print out which activities are being executed by the military npcs.", true, 0.0f, true, 1.0f);
+ConVar ai_show_active_military_activities("ai_show_active_military_activities", "0", FCVAR_GAMEDLL | FCVAR_CHEAT, "Print out which activities are being executed by the military npcs.", true, 0.0f, true, 1.0f);
 
 CNPCBaseProperties::CNPCBaseProperties()
 {

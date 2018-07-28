@@ -12,9 +12,7 @@
 #include "ai_senses.h"
 #include "ai_navigator.h"
 #include "ai_memory.h"
-#include "soundenvelope.h"
 #include "engine/IEngineSound.h"
-#include "ammodef.h"
 #include "GameBase_Server.h"
 #include "hl2mp_gamerules.h"
 #include "world.h"
@@ -22,90 +20,31 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-envelopePoint_t envZombieMoanVolumeFast[] =
-{
-	{	7.0f, 7.0f,
-	0.1f, 0.1f,
-	},
-	{	0.0f, 0.0f,
-	0.2f, 0.3f,
-	},
-};
-
-envelopePoint_t envZombieMoanVolume[] =
-{
-	{	1.0f, 1.0f,
-	0.1f, 0.1f,
-	},
-	{	1.0f, 1.0f,
-	0.2f, 0.2f,
-	},
-	{	0.0f, 0.0f,
-	0.3f, 0.4f,
-	},
-};
-
-envelopePoint_t envZombieMoanVolumeLong[] =
-{
-	{	1.0f, 1.0f,
-	0.3f, 0.5f,
-	},
-	{	1.0f, 1.0f,
-	0.6f, 1.0f,
-	},
-	{	0.0f, 0.0f,
-	0.3f, 0.4f,
-	},
-};
-
-envelopePoint_t envZombieMoanIgnited[] =
-{
-	{	1.0f, 1.0f,
-	0.5f, 1.0f,
-	},
-	{	1.0f, 1.0f,
-	30.0f, 30.0f,
-	},
-	{	0.0f, 0.0f,
-	0.5f, 1.0f,
-	},
-};
-
-//=============================================================================
-//=============================================================================
-
 class CNPCWalker : public CAI_BlendingHost<CNPC_BaseZombie>
 {
 	DECLARE_DATADESC();
 	DECLARE_CLASS( CNPCWalker, CAI_BlendingHost<CNPC_BaseZombie> );
+	DEFINE_CUSTOM_AI;
 
 public:
 	CNPCWalker()
 	{
 		m_bFastSpawn = false;
+		m_bGibbedForCrawl = false;
 	}
 
 	void Spawn( void );
 	void SpawnDirectly(void);
-	void Precache( void );
 	Class_T Classify( void );
-
 	const char *GetNPCName();
-
 	int AllowEntityToBeGibbed(void);
-
-	void MoanSound( envelopePoint_t *pEnvelope, int iEnvelopeSize );
-
+	void MoanSound(void);
 	void GatherConditions( void );
-
 	int SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode );
 	int TranslateSchedule( int scheduleType );
-
 	void CheckFlinches() {} // Zombie has custom flinch code
 
 	Activity NPC_TranslateActivity( Activity newActivity );
-
-	void OnStateChange( NPC_STATE OldState, NPC_STATE NewState );
 
 	void StartTask( const Task_t *pTask );
 	void RunTask( const Task_t *pTask );
@@ -113,8 +52,6 @@ public:
 	void Ignite( float flFlameLifetime, bool bNPCOnly = true, float flSize = 0.0f, bool bCalledByLevelDesigner = false );
 	void Extinguish();
 	int OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo );
-	bool IsHeavyDamage( const CTakeDamageInfo &info );
-	void BuildScheduleTestBits( void );
 
 	void PrescheduleThink( void );
 	int SelectSchedule ( void );
@@ -130,8 +67,6 @@ public:
 	void FootscuffSound( bool fRightFoot );
 
 	void FadeIn();
-
-	const char *GetMoanSound( int nSound );
 
 	bool CanAlwaysSeePlayers();
 	bool UsesNavMesh(void) { return true; }
@@ -153,11 +88,7 @@ public:
 
 	float MaxYawSpeed(void);
 
-public:
-	DEFINE_CUSTOM_AI;
-
 protected:
-	static const char *pMoanSounds[];
 
 	float GetAmbushDist(void) { return 100.0f; }
 	void OnGibbedGroup(int hitgroup, bool bExploded);
@@ -170,6 +101,7 @@ private:
 	bool m_bIsReady;
 	bool m_bCheckCollisionGroupChange;
 	bool m_bFastSpawn;
+	bool m_bGibbedForCrawl;
 	float m_flNextTimeToCheckCollisionChange;
 
 	Vector m_vPositionCharged;
@@ -177,16 +109,6 @@ private:
 
 LINK_ENTITY_TO_CLASS( npc_walker, CNPCWalker );
 LINK_ENTITY_TO_CLASS(npc_runner, CNPCWalker);
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-const char *CNPCWalker::pMoanSounds[] =
-{
-	"Moan1",
-	"Moan2",
-	"Moan3",
-	"Moan4",
-};
 
 //=========================================================
 // Conditions
@@ -242,23 +164,16 @@ BEGIN_DATADESC( CNPCWalker )
 
 	DEFINE_FIELD( m_bIsReady, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_vPositionCharged, FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD(m_bGibbedForCrawl, FIELD_BOOLEAN),
 
 END_DATADESC()
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CNPCWalker::Precache(void)
-{
-	BaseClass::Precache();
-}
-
 Class_T	CNPCWalker::Classify( void )
 {
-	if ( IsSlumped() || ( !m_bIsReady ) )
+	if (m_bIsReady == false)
 		return CLASS_NONE;
 
-	return( CLASS_ZOMBIE ); 
+	return CLASS_ZOMBIE;
 }
 
 const char *CNPCWalker::GetNPCName()
@@ -271,7 +186,7 @@ const char *CNPCWalker::GetNPCName()
 
 int CNPCWalker::AllowEntityToBeGibbed(void)
 {
-	if (IsSlumped() || (!m_bIsReady))
+	if (m_bIsReady == false)
 		return GIB_NO_GIBS;
 
 	return GIB_FULL_GIBS;
@@ -334,8 +249,8 @@ void CNPCWalker::Spawn( void )
 	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
 
 	// Reduce zombies view dist:
-	m_flDistTooFar = 128.0;
-	GetSenses()->SetDistLook(256.0);
+	m_flDistTooFar = 180.0;
+	GetSenses()->SetDistLook(300.0);
 }
 
 void CNPCWalker::SpawnDirectly(void)
@@ -373,13 +288,10 @@ void CNPCWalker::PrescheduleThink( void )
 		{
 			// Classic guy idles instead of moans.
 			IdleSound();
-
 			m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat( 2.0, 5.0 );
 		}
-		else
-		{
-			m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat( 1.0, 2.0 );
-		}
+		else		
+			m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat( 1.0, 2.0 );		
 	}
 
 	BaseClass::PrescheduleThink();
@@ -468,14 +380,6 @@ void CNPCWalker::AlertSound( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Returns a moan sound for this class of zombie.
-//-----------------------------------------------------------------------------
-const char *CNPCWalker::GetMoanSound( int nSound )
-{
-	return pMoanSounds[ nSound % ARRAYSIZE( pMoanSounds ) ];
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Should we be able to see the player no matter what?
 //-----------------------------------------------------------------------------
 bool CNPCWalker::CanAlwaysSeePlayers()
@@ -556,7 +460,7 @@ void CNPCWalker::LeaveCrawlMode(void)
 
 void CNPCWalker::BecomeCrawler(void)
 {
-	if (m_bIsInCrawlMode)
+	if (m_bGibbedForCrawl)
 		return;
 
 	bool bWasMoving = IsMoving();
@@ -579,7 +483,7 @@ void CNPCWalker::BecomeCrawler(void)
 	if (bWasMoving)
 		GetMotor()->MoveStart();
 
-	m_bIsInCrawlMode = true;
+	m_bGibbedForCrawl = true;
 }
 
 float CNPCWalker::MaxYawSpeed(void)
@@ -639,12 +543,6 @@ void CNPCWalker::IdleSound( void )
 		return;
 	}
 
-	if( IsSlumped() )
-	{
-		// Sleeping zombies are quiet.
-		return;
-	}
-
 	HL2MPRules()->EmitSoundToClient(this, "Idle", GetNPCType(), GetGender());
 	MakeAISpookySound( 360.0f );
 }
@@ -660,11 +558,11 @@ void CNPCWalker::AttackSound( void )
 //---------------------------------------------------------
 // Classic zombie only uses moan sound if on fire.
 //---------------------------------------------------------
-void CNPCWalker::MoanSound( envelopePoint_t *pEnvelope, int iEnvelopeSize )
+void CNPCWalker::MoanSound( void )
 {
 	if( IsOnFire() )
 	{
-		BaseClass::MoanSound( pEnvelope, iEnvelopeSize );
+		BaseClass::MoanSound();
 	}
 }
 
@@ -836,16 +734,6 @@ Activity CNPCWalker::GetAttackActivity(void)
 	return ACT_IDLE;
 }
 
-//---------------------------------------------------------
-//---------------------------------------------------------
-void CNPCWalker::OnStateChange( NPC_STATE OldState, NPC_STATE NewState )
-{
-	BaseClass::OnStateChange( OldState, NewState );
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-
 void CNPCWalker::StartTask( const Task_t *pTask )
 {
 	switch( pTask->iTask )
@@ -901,10 +789,7 @@ void CNPCWalker::RunTask( const Task_t *pTask )
 	case TASK_ZOMBIE_SPAWN:
 		break;
 	case TASK_ZOMBIE_CHARGE_ENEMY:
-		{
 			break;
-		}
-
 	case TASK_ZOMBIE_EXPRESS_ANGER:
 		{
 			if ( IsActivityFinished() )
@@ -913,7 +798,6 @@ void CNPCWalker::RunTask( const Task_t *pTask )
 			}
 			break;
 		}
-
 	default:
 		BaseClass::RunTask( pTask );
 		break;
@@ -929,18 +813,10 @@ void CNPCWalker::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, boo
 	if( !IsOnFire() && IsAlive() )
 	{
 		BaseClass::Ignite( flFlameLifetime, bNPCOnly, flSize, bCalledByLevelDesigner );
-
 		if ( !UTIL_IsLowViolence() )
 		{
 			RemoveSpawnFlags( SF_NPC_GAG );
-
-			MoanSound( envZombieMoanIgnited, ARRAYSIZE( envZombieMoanIgnited ) );
-
-			if ( m_pMoanSound )
-			{
-				ENVELOPE_CONTROLLER.SoundChangePitch( m_pMoanSound, 120, 1.0 );
-				ENVELOPE_CONTROLLER.SoundChangeVolume( m_pMoanSound, 1, 1.0 );
-			}
+			MoanSound();
 		}
 	}
 }
@@ -950,13 +826,7 @@ void CNPCWalker::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, boo
 //---------------------------------------------------------
 void CNPCWalker::Extinguish()
 {
-	if( m_pMoanSound )
-	{
-		ENVELOPE_CONTROLLER.SoundChangeVolume( m_pMoanSound, 0, 2.0 );
-		ENVELOPE_CONTROLLER.SoundChangePitch( m_pMoanSound, 100, 2.0 );
-		m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat( 2.0, 4.0 );
-	}
-
+	m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat( 2.0, 4.0 );
 	BaseClass::Extinguish();
 }
 
@@ -967,27 +837,8 @@ int CNPCWalker::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 	if ( !m_bIsReady )
 		return 0;
 
-	int ret = BaseClass::OnTakeDamage_Alive(inputInfo);
-
-	return ret;
+	return BaseClass::OnTakeDamage_Alive(inputInfo);
 }
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-bool CNPCWalker::IsHeavyDamage( const CTakeDamageInfo &info )
-{
-	return BaseClass::IsHeavyDamage(info);
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-void CNPCWalker::BuildScheduleTestBits( void )
-{
-	BaseClass::BuildScheduleTestBits();
-}
-
-
-//=============================================================================
 
 AI_BEGIN_CUSTOM_NPC( npc_walker, CNPCWalker )
 

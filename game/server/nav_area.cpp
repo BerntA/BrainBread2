@@ -5881,6 +5881,11 @@ Vector CNavArea::GetRandomPoint(const Vector &from, float minDist, float maxDist
 	Vector vecDir = (vecCenter - from);
 	VectorNormalize(vecDir);
 
+	float longestDist = (vecCenter - from).Length() + extent.hi.Length();
+	float closestDist = (vecCenter - from).Length() - extent.hi.Length();
+	if ((minDist > longestDist) || (closestDist > maxDist))
+		return vec3_invalid;
+
 	Vector spot;
 	Vector vecMin = vecDir * minDist;
 	Vector vecMax = vecDir * maxDist;
@@ -5898,11 +5903,11 @@ Vector CNavArea::GetRandomPoint(const Vector &from, float minDist, float maxDist
 	spot = from + vecMin + Vector(random->RandomFloat(0.0f, (vecMax.x - vecMin.x)), random->RandomFloat(0.0f, (vecMax.y - vecMin.y)), 0.0f);
 	spot.z = GetZ(spot.x, spot.y);
 
-	trace_t tr;
-	CTraceFilterNoNPCsOrPlayer filter(NULL, COLLISION_GROUP_NPC);
-	UTIL_TraceLine(from, spot, MASK_NPCSOLID_BRUSHONLY, &filter, &tr);
-	if (tr.fraction != 1.0f)
-		return vec3_invalid;
+	//trace_t tr;
+	//CTraceFilterNoNPCsOrPlayer filter(NULL, COLLISION_GROUP_NPC);
+	//UTIL_TraceLine(from, spot, MASK_NPCSOLID_BRUSHONLY, &filter, &tr);
+	//if (tr.fraction != 1.0f)
+	//	return vec3_invalid;
 
 	return spot;
 }

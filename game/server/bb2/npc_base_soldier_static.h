@@ -65,7 +65,6 @@ public:
 	virtual void GatherConditions();
 	virtual void PrescheduleThink();
 
-	virtual int OnTakeDamage(const CTakeDamageInfo &info);
 	virtual void FireBullets(const FireBulletsInfo_t &info);
 	virtual int AllowEntityToBeGibbed(void);
 	virtual bool CanFlinch(void) { return false; }
@@ -111,15 +110,14 @@ private:
 	//=========================================================
 	enum
 	{
-		SCHED_SOLDIER_SUPPRESS = BaseClass::NEXT_SCHEDULE,
-		SCHED_SOLDIER_COMBAT_FAIL,
-		SCHED_SOLDIER_COMBAT_FACE,
-		SCHED_SOLDIER_SIGNAL_SUPPRESS,
-		SCHED_SOLDIER_RANGE_ATTACK1,
-		SCHED_SOLDIER_RANGE_ATTACK2,
-		SCHED_SOLDIER_RANGE_RELOAD,
-		SCHED_SOLDIER_DROP_GRENADE,
-		SCHED_SOLDIER_FACE_IDEAL_YAW,
+		SCHED_SOLDIER_STATIC_SUPPRESS = BaseClass::NEXT_SCHEDULE,
+		SCHED_SOLDIER_STATIC_COMBAT_FAIL,
+		SCHED_SOLDIER_STATIC_COMBAT_FACE,
+		SCHED_SOLDIER_STATIC_RANGE_ATTACK1,
+		SCHED_SOLDIER_STATIC_RANGE_ATTACK2,
+		SCHED_SOLDIER_STATIC_RANGE_RELOAD,
+		SCHED_SOLDIER_STATIC_FACE_IDEAL_YAW,
+		SCHED_SOLDIER_STATIC_RESET,
 		NEXT_SCHEDULE,
 	};
 
@@ -128,23 +126,20 @@ private:
 	//=========================================================
 	enum
 	{
-		TASK_SOLDIER_FACE_TOSS_DIR = BaseClass::NEXT_TASK,
-		TASK_SOLDIER_IGNORE_ATTACKS,
-		TASK_SOLDIER_SIGNAL_BEST_SOUND,
-		TASK_SOLDIER_DEFER_SQUAD_GRENADES,
-		TASK_SOLDIER_DIE_INSTANTLY,
+		TASK_SOLDIER_STATIC_FACE_TOSS_DIR = BaseClass::NEXT_TASK,
+		TASK_SOLDIER_STATIC_IGNORE_ATTACKS,
+		TASK_SOLDIER_STATIC_DEFER_SQUAD_GRENADES,
+		TASK_SOLDIER_STATIC_CLEAR_ENEMY_STATES,
 		NEXT_TASK
 	};
 
 	//=========================================================
 	// Soldier Conditions
 	//=========================================================
-	enum Soldier_Conds
+	enum 
 	{
-		COND_SOLDIER_NO_FIRE = BaseClass::NEXT_CONDITION,
-		COND_SOLDIER_DEAD_FRIEND,
-		COND_SOLDIER_DROP_GRENADE,
-		COND_SOLDIER_ATTACK_SLOT_AVAILABLE,
+		COND_SOLDIER_STATIC_NO_FIRE = BaseClass::NEXT_CONDITION,
+		COND_SOLDIER_STATIC_ATTACK_SLOT_AVAILABLE,
 		NEXT_CONDITION
 	};
 
@@ -153,7 +148,6 @@ private:
 
 	int				m_nKickDamage;
 	Vector			m_vecTossVelocity;
-	bool			m_bFirstEncounter;// only put on the handsign show in the squad's first encounter.
 
 	// Time Variables
 	float			m_flNextPainSoundTime;

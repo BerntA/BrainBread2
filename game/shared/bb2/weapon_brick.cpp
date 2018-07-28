@@ -23,13 +23,13 @@
 #define CWeaponBrick C_WeaponBrick
 #endif
 
-ConVar sk_weapon_brick_throwforce("sk_weapon_brick_throwforce", "6000", FCVAR_REPLICATED);
-ConVar sk_weapon_brick_throwdistance("sk_weapon_brick_throwdistance", "250", FCVAR_REPLICATED);
-
 #define BRICK_OFFSET_FORWARD 6.0f
 #define BRICK_OFFSET_RIGHT 6.0f
 
 #ifndef CLIENT_DLL
+ConVar sk_weapon_brick_throwforce("sk_weapon_brick_throwforce", "6000", FCVAR_GAMEDLL);
+ConVar sk_weapon_brick_throwdistance("sk_weapon_brick_throwdistance", "250", FCVAR_GAMEDLL);
+
 class CPropBrick : public CPhysicsProp
 {
 public:

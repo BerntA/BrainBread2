@@ -292,6 +292,7 @@ public:
 
 	void AddBreakableDoor(CBaseEntity *pEntity);
 	void RemoveBreakableDoor(CBaseEntity *pEntity);
+	bool IsBreakableDoor(CBaseEntity *pEntity);
 	CBaseEntity *GetNearbyBreakableDoorEntity(CBaseEntity *pChecker);
 
 	char szCurrentMap[MAX_MAP_NAME];

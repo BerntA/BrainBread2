@@ -6,8 +6,6 @@
 
 #include "cbase.h"
 #include "npc_BaseZombie.h"
-#include "player.h"
-#include "game.h"
 #include "ai_network.h"
 #include "ai_navigator.h"
 #include "ai_motor.h"
@@ -19,12 +17,10 @@
 #include "ai_senses.h"
 #include "bitstring.h"
 #include "EntityFlame.h"
-#include "hl2_shareddefs.h"
 #include "npcevent.h"
 #include "activitylist.h"
 #include "entitylist.h"
 #include "gib.h"
-#include "soundenvelope.h"
 #include "ndebugoverlay.h"
 #include "rope.h"
 #include "rope_shared.h"
@@ -32,80 +28,28 @@
 #include "vstdlib/random.h"
 #include "engine/IEngineSound.h"
 #include "props.h"
-#include "hl2_shared_misc.h"
-#include "ammodef.h"
 #include "vehicle_base.h"
 #include "hl2mp_gamerules.h"
-#include <KeyValues.h>
-#include "filesystem.h"
 #include "GameBase_Server.h"
+#include "BasePropDoor.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 int g_interactionZombieMeleeWarning;
 
-envelopePoint_t envDefaultZombieMoanVolumeFast[] =
-{
-	{	7.0f, 7.0f,
-	0.1f, 0.1f,
-	},
-	{	0.0f, 0.0f,
-	0.2f, 0.3f,
-	},
-};
-
-envelopePoint_t envDefaultZombieMoanVolume[] =
-{
-	{	1.0f, 1.0f,
-	0.1f, 0.1f,
-	},
-	{	1.0f, 1.0f,
-	0.2f, 0.2f,
-	},
-	{	0.0f, 0.0f,
-	0.3f, 0.4f,
-	},
-};
-
-//
 // After taking damage, ignore further damage for n seconds. This keeps the zombie
 // from being interrupted while.
-//
 #define ZOMBIE_FLINCH_DELAY			3
 #define ZOMBIE_BURN_TIME		10 // If ignited, burn for this many seconds
 #define ZOMBIE_BURN_TIME_NOISE	2  // Give or take this many seconds.
 #define ZOMBIE_LIFETIME (gpGlobals->curtime + ((random->RandomFloat(bb2_zombie_lifespan_min.GetFloat(), bb2_zombie_lifespan_max.GetFloat())) * 60.0f))
 
-//=========================================================
-// private activities
-//=========================================================
-int CNPC_BaseZombie::ACT_ZOM_FALL;
-
-// When a zombie spawns, he will select a 'base' pitch value
-// that's somewhere between basepitchmin & basepitchmax
-ConVar zombie_basemin( "zombie_basemin", "100" );
-ConVar zombie_basemax( "zombie_basemax", "100" );
-
-ConVar zombie_changemin( "zombie_changemin", "0" );
-ConVar zombie_changemax( "zombie_changemax", "0" );
-
-// play a sound once in every zombie_stepfreq steps
-ConVar zombie_stepfreq( "zombie_stepfreq", "4" );
 ConVar zombie_moanfreq( "zombie_moanfreq", "1" );
 
-ConVar zombie_decaymin( "zombie_decaymin", "0.1" );
-ConVar zombie_decaymax( "zombie_decaymax", "0.4" );
-
-//=========================================================
-// For a couple of reasons, we keep a running count of how
-// many zombies in the world are angry at any given time.
-//=========================================================
 static int s_iAngryZombies = 0;
 int g_pZombiesInWorld = 0;
 
-//=========================================================
-//=========================================================
 class CAngryZombieCounter : public CAutoGameSystem
 {
 public:
@@ -121,6 +65,14 @@ public:
 
 CAngryZombieCounter	AngryZombieCounter( "CAngryZombieCounter" );
 
+static const char *pMoanSounds[] =
+{
+	"Moan1",
+	"Moan2",
+	"Moan3",
+	"Moan4",
+};
+
 int AE_ZOMBIE_ATTACK_RIGHT;
 int AE_ZOMBIE_ATTACK_LEFT;
 int AE_ZOMBIE_ATTACK_BOTH;
@@ -133,18 +85,12 @@ int AE_ZOMBIE_GET_UP;
 int AE_ZOMBIE_POUND;
 int AE_ZOMBIE_ALERTSOUND;
 
-//=========================================================
-//=========================================================
 BEGIN_DATADESC( CNPC_BaseZombie )
 
-	DEFINE_SOUNDPATCH( m_pMoanSound ),
 	DEFINE_FIELD( m_flNextFlinch, FIELD_TIME ),
 	DEFINE_FIELD( m_flBurnDamage, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flBurnDamageResetTime, FIELD_TIME ),
 	DEFINE_FIELD( m_flNextMoanSound, FIELD_TIME ),
-	DEFINE_FIELD( m_flMoanPitch, FIELD_FLOAT ),
-	DEFINE_FIELD( m_iMoanSound, FIELD_INTEGER ),
-	DEFINE_FIELD( m_bIsSlumped, FIELD_BOOLEAN ),
 	DEFINE_FIELD(m_hBlockingEntity, FIELD_EHANDLE),
 	DEFINE_EMBEDDED(m_DurationDoorBash),
 	DEFINE_EMBEDDED(m_NextTimeToStartDoorBash),
@@ -163,32 +109,16 @@ SendPropExclude("DT_BaseFlex", "m_vecLean"),
 SendPropExclude("DT_BaseFlex", "m_vecShift"),
 END_SEND_TABLE()
 
-//---------------------------------------------------------
-//---------------------------------------------------------
-int CNPC_BaseZombie::g_numZombies = 0;
-
-//---------------------------------------------------------
-//---------------------------------------------------------
 CNPC_BaseZombie::CNPC_BaseZombie() : 
-m_DurationDoorBash(1, 2),
-m_NextTimeToStartDoorBash(2.0)
+	m_DurationDoorBash(1, 2),
+	m_NextTimeToStartDoorBash(2.0)
 {
-	// Prevent same moan sound on x zombies spawned
-	m_iMoanSound = g_numZombies;
-	// count of zombs in world
-	g_numZombies++;
-
 	m_hLastIgnitionSource = NULL;
-
 	g_pZombiesInWorld++;
 }
 
-
-//---------------------------------------------------------
-//---------------------------------------------------------
 CNPC_BaseZombie::~CNPC_BaseZombie()
 {
-	g_numZombies--;
 	g_pZombiesInWorld--;
 }
 
@@ -197,26 +127,7 @@ CNPC_BaseZombie::~CNPC_BaseZombie()
 //-----------------------------------------------------------------------------
 Class_T	CNPC_BaseZombie::Classify( void )
 {
-	if ( IsSlumped() )
-		return CLASS_NONE;
-
-	return( CLASS_ZOMBIE ); 
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-Disposition_t CNPC_BaseZombie::IRelationType( CBaseEntity *pTarget )
-{
-	// Slumping should not affect Zombie's opinion of others
-	if ( IsSlumped() )
-	{
-		m_bIsSlumped = false;
-		Disposition_t result = BaseClass::IRelationType( pTarget );
-		m_bIsSlumped = true;
-		return result;
-	}
-
-	return BaseClass::IRelationType( pTarget );
+	return CLASS_ZOMBIE;
 }
 
 //-----------------------------------------------------------------------------
@@ -343,31 +254,21 @@ int CNPC_BaseZombie::MeleeAttack1Conditions ( float flDot, float flDist )
 			return COND_CAN_MELEE_ATTACK1;
 	}
 
+	CBasePropDoor *pDoor = dynamic_cast<CBasePropDoor*> (tr.m_pEnt);
+	if (pDoor && HL2MPRules()->IsBreakableDoor(tr.m_pEnt))
+		return COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT;
+
 	if( tr.m_pEnt->IsBSPModel() )
 	{
 		// The trace hit something solid, but it's not the enemy. If this item is closer to the zombie than
 		// the enemy is, treat this as an obstruction.
 		Vector vecToEnemy = GetEnemy()->WorldSpaceCenter() - WorldSpaceCenter();
-
 		if( lenTraceSq < vecToEnemy.Length2DSqr() )
 			return COND_ZOMBIE_LOCAL_MELEE_OBSTRUCTION;
 	}
 
 	// Move around some more
 	return COND_TOO_FAR_TO_ATTACK;
-}
-
-float CNPC_BaseZombie::GetHitgroupDamageMultiplier( int iHitGroup, const CTakeDamageInfo &info )
-{
-	return BaseClass::GetHitgroupDamageMultiplier( iHitGroup, info );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CNPC_BaseZombie::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
-{
-	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 }
 
 //-----------------------------------------------------------------------------
@@ -382,8 +283,6 @@ void CNPC_BaseZombie::TraceAttack( const CTakeDamageInfo &info, const Vector &ve
 #define ZOMBIE_MIN_RENDERCOLOR	50
 int CNPC_BaseZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 {
-	CTakeDamageInfo info = inputInfo;
-
 	// BB2 no dmg for zombie if player zombie attack us
 	CBaseEntity *pAttacker = inputInfo.GetAttacker();
 	if (pAttacker)
@@ -396,7 +295,7 @@ int CNPC_BaseZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 			m_flSpawnTime = ZOMBIE_LIFETIME;
 	}
 
-	if ((inputInfo.GetDamageType() & DMG_BURN) && !(info.GetSkillFlags() & SKILL_FLAG_BLAZINGAMMO))
+	if ((inputInfo.GetDamageType() & DMG_BURN) && !(inputInfo.GetSkillFlags() & SKILL_FLAG_BLAZINGAMMO))
 	{
 		// If a zombie is on fire it only takes damage from the fire that's attached to it. (DMG_DIRECT)
 		// This is to stop zombies from burning to death 10x faster when they're standing around
@@ -407,23 +306,14 @@ int CNPC_BaseZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 		Scorch( ZOMBIE_SCORCH_RATE, ZOMBIE_MIN_RENDERCOLOR );
 	}
 
-	if ( ShouldIgnite( info ) )
+	if (ShouldIgnite(inputInfo))
 		Ignite( 100.0f );
 
-	int tookDamage = BaseClass::OnTakeDamage_Alive( info );
-
-	if( tookDamage > 0 && (info.GetDamageType() & (DMG_BURN|DMG_DIRECT)) && m_ActBusyBehavior.IsActive() ) 
-	{
-		//!!!HACKHACK- Stuff a light_damage condition if an actbusying zombie takes direct burn damage. This will cause an
-		// ignited zombie to 'wake up' and rise out of its actbusy slump. (sjb)
-		SetCondition( COND_LIGHT_DAMAGE );
-	}
-
-	return tookDamage;
+	return BaseClass::OnTakeDamage_Alive(inputInfo);
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: make a sound Alyx can hear when in darkness mode
+// Purpose: Spooky spook
 // Input  : volume (radius) of the sound.
 // Output :
 //-----------------------------------------------------------------------------
@@ -459,42 +349,13 @@ bool CNPC_BaseZombie::CanPlayMoanSound()
 // Purpose: Open a window and let a little bit of the looping moan sound
 //			come through.
 //-----------------------------------------------------------------------------
-void CNPC_BaseZombie::MoanSound( envelopePoint_t *pEnvelope, int iEnvelopeSize )
+void CNPC_BaseZombie::MoanSound(void)
 {
-	if( HasSpawnFlags( SF_NPC_GAG ) )
-		// Not yet!
+	if (HasSpawnFlags(SF_NPC_GAG))
 		return;
 
-	if( !m_pMoanSound )
-	{
-		// Don't set this up until the code calls for it.
-		const char *pszSound = GetMoanSound( m_iMoanSound );
-		m_flMoanPitch = random->RandomInt( zombie_basemin.GetInt(), zombie_basemax.GetInt() );
-
-		HL2MPRules()->EmitSoundToClient(this, pszSound, GetNPCType(), GetGender());
-
-		//m_pMoanSound = ENVELOPE_CONTROLLER.SoundCreate( entindex(), CHAN_STATIC, pszSound, ATTN_NORM );
-		CPASAttenuationFilter filter( this );
-		m_pMoanSound = ENVELOPE_CONTROLLER.SoundCreate( filter, entindex(), CHAN_STATIC, pszSound, ATTN_NORM );
-
-		ENVELOPE_CONTROLLER.Play( m_pMoanSound, 1.0, m_flMoanPitch );
-	}
-
-	//HACKHACK get these from chia chin's console vars.
-	envDefaultZombieMoanVolumeFast[ 1 ].durationMin = zombie_decaymin.GetFloat();
-	envDefaultZombieMoanVolumeFast[ 1 ].durationMax = zombie_decaymax.GetFloat();
-
-	if( random->RandomInt( 1, 2 ) == 1 )
-	{
-		IdleSound();
-	}
-
-	float duration = ENVELOPE_CONTROLLER.SoundPlayEnvelope( m_pMoanSound, SOUNDCTRL_CHANGE_VOLUME, pEnvelope, iEnvelopeSize );
-
-	float flPitch = random->RandomInt( m_flMoanPitch + zombie_changemin.GetInt(), m_flMoanPitch + zombie_changemax.GetInt() );
-	ENVELOPE_CONTROLLER.SoundChangePitch( m_pMoanSound, flPitch, 0.3 );
-
-	m_flNextMoanSound = gpGlobals->curtime + duration + 9999;
+	HL2MPRules()->EmitSoundToClient(this, pMoanSounds[random->RandomInt(0, (_ARRAYSIZE(pMoanSounds) - 1))], GetNPCType(), GetGender());
+	m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat(10.0f, 16.0f);
 }
 
 //-----------------------------------------------------------------------------
@@ -552,29 +413,9 @@ void CNPC_BaseZombie::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize
 		GetEffectEntity()->AddEffects( EF_DIMLIGHT );
 
 	// Set the zombie up to burn to death in about ten seconds.
-	SetHealth( MIN( m_iHealth, FLAME_DIRECT_DAMAGE_PER_SEC * (ZOMBIE_BURN_TIME + random->RandomFloat( -ZOMBIE_BURN_TIME_NOISE, ZOMBIE_BURN_TIME_NOISE)) ) );
-
-	if( !m_ActBusyBehavior.IsActive() )
-	{
-		Activity activity = GetActivity();
-		Activity burningActivity = activity;
-
-		if ( activity == ACT_WALK )
-			burningActivity = ACT_WALK_ON_FIRE;
-		else if ( activity == ACT_RUN )
-			burningActivity = ACT_RUN_ON_FIRE;
-		else if ( activity == ACT_IDLE )
-			burningActivity = ACT_IDLE_ON_FIRE;
-
-		if( HaveSequenceForActivity(burningActivity) )
-			// Make sure we have a sequence for this activity (torsos don't have any, for instance) 
-			// to prevent the baseNPC & baseAnimating code from throwing red level errors.
-			SetActivity( burningActivity );
-	}
+	SetHealth(MIN(m_iHealth, FLAME_DIRECT_DAMAGE_PER_SEC * (ZOMBIE_BURN_TIME + random->RandomFloat(-ZOMBIE_BURN_TIME_NOISE, ZOMBIE_BURN_TIME_NOISE))));
 }
 
-//---------------------------------------------------------
-//---------------------------------------------------------
 void CNPC_BaseZombie::CopyRenderColorTo( CBaseEntity *pOther )
 {
 	color32 color = GetRenderColor();
@@ -716,8 +557,8 @@ void CNPC_BaseZombie::PoundSound()
 	}
 
 	// Otherwise fall through to the default sound.
-	CPASAttenuationFilter filter( this,"NPC_BaseZombie.PoundDoor" );
-	EmitSound( filter, entindex(),"NPC_BaseZombie.PoundDoor" );
+	CPASAttenuationFilter filter(this, "NPC_BaseZombie.PoundDoor");
+	EmitSound(filter, entindex(), "NPC_BaseZombie.PoundDoor");
 }
 
 //-----------------------------------------------------------------------------
@@ -775,7 +616,7 @@ void CNPC_BaseZombie::HandleAnimEvent( animevent_t *pEvent )
 		{
 			// If you let this code run while a zombie is burning, it will stop wailing. 
 			m_flNextMoanSound = gpGlobals->curtime;
-			MoanSound( envDefaultZombieMoanVolumeFast, ARRAYSIZE( envDefaultZombieMoanVolumeFast ) );
+			MoanSound();
 		}
 		return;
 	}
@@ -902,23 +743,17 @@ void CNPC_BaseZombie::Spawn( void )
 	AddSpawnFlags( SF_NPC_FADE_CORPSE );
 #endif // _XBOX
 
-	m_NPCState			= NPC_STATE_NONE;
+	m_NPCState = NPC_STATE_NONE;
 
 	CapabilitiesAdd( bits_CAP_MOVE_GROUND | bits_CAP_INNATE_MELEE_ATTACK1 );
 	CapabilitiesAdd( bits_CAP_SQUAD );
 
-	m_pMoanSound = NULL;
-
-	m_flNextMoanSound = gpGlobals->curtime + 9999;
+	m_flNextMoanSound = gpGlobals->curtime + 30.0f;
 
 	NPCInit();
 
-	m_bIsSlumped = false;
-
 	// Zombies get to cheat for 6 seconds (sjb)
 	GetEnemies()->SetFreeKnowledgeDuration( 6.0 );
-
-	m_ActBusyBehavior.SetUseRenderBounds(true);
 
 	SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE);
 	m_flSpawnTime = ZOMBIE_LIFETIME;
@@ -952,31 +787,6 @@ void CNPC_BaseZombie::Precache( void )
 	PrecacheParticleSystem( "blood_impact_zombie_01" );
 
 	BaseClass::Precache();
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-void CNPC_BaseZombie::StartTouch( CBaseEntity *pOther )
-{
-	BaseClass::StartTouch( pOther );
-
-	if( IsSlumped() )
-	{
-		if( FClassnameIs( pOther, "prop_physics" ) )
-		{
-			// Get up!
-			m_ActBusyBehavior.StopBusying();
-		}
-	}
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-bool CNPC_BaseZombie::CreateBehaviors()
-{
-	AddBehavior( &m_ActBusyBehavior );
-
-	return BaseClass::CreateBehaviors();
 }
 
 //---------------------------------------------------------
@@ -1016,13 +826,11 @@ void CNPC_BaseZombie::BuildScheduleTestBits( void )
 		ClearCustomInterruptCondition( COND_LIGHT_DAMAGE );
 		ClearCustomInterruptCondition( COND_HEAVY_DAMAGE );
 	}
-#ifndef HL2_EPISODIC
 	else if ( m_flNextFlinch >= gpGlobals->curtime )
 	{
 		ClearCustomInterruptCondition( COND_LIGHT_DAMAGE );
 		ClearCustomInterruptCondition( COND_HEAVY_DAMAGE );
 	}
-#endif // !HL2_EPISODIC
 
 	BaseClass::BuildScheduleTestBits();
 }
@@ -1060,15 +868,16 @@ int	CNPC_BaseZombie::SelectFailSchedule( int failedSchedule, int failedTask, AI_
 //---------------------------------------------------------
 int CNPC_BaseZombie::SelectSchedule ( void )
 {
-	if ( BehaviorSelectSchedule() )
-		return BaseClass::SelectSchedule();
-
 	switch ( m_NPCState )
 	{
 	case NPC_STATE_COMBAT:
 		if ( HasCondition( COND_NEW_ENEMY ) && GetEnemy() )
 		{
-			// TODO
+			if (HasCondition(COND_SEE_ENEMY) && HasCondition(COND_CAN_MELEE_ATTACK1))
+				return SCHED_MELEE_ATTACK1;
+
+			if (!HasCondition(COND_ENEMY_UNREACHABLE) && !HasCondition(COND_LOST_ENEMY))
+				return SCHED_ZOMBIE_CHASE_ENEMY;
 		}
 
 		if (HasCondition(COND_LOST_ENEMY) || (HasCondition(COND_ENEMY_UNREACHABLE) && MustCloseToAttack()))
@@ -1078,7 +887,6 @@ int CNPC_BaseZombie::SelectSchedule ( void )
 
 			return SCHED_ZOMBIE_WANDER_MEDIUM;
 		}
-
 		break;
 
 	case NPC_STATE_ALERT:
@@ -1103,53 +911,14 @@ int CNPC_BaseZombie::SelectSchedule ( void )
 	return BaseClass::SelectSchedule();
 }
 
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-bool CNPC_BaseZombie::IsSlumped( void )
-{
-	if( hl2_episodic.GetBool() )
-	{
-		if( m_ActBusyBehavior.IsInsideActBusy() && !m_ActBusyBehavior.IsStopBusying() )
-		{
-			return true;
-		}
-	}
-	else
-	{
-		int sequence = GetSequence();
-		if ( sequence != -1 )
-		{
-			return ( strncmp( GetSequenceName( sequence ), "slump", 5 ) == 0 );
-		}
-	}
-
-	return false;
-}
-
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-bool CNPC_BaseZombie::IsGettingUp( void )
-{
-	if( m_ActBusyBehavior.IsActive() && m_ActBusyBehavior.IsStopBusying() )
-	{
-		return true;
-	}
-	return false;
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
 void CNPC_BaseZombie::GatherConditions( void )
 {
 	BaseClass::GatherConditions();
 
-	if (IsAllowedToBreakDoors() && (gpGlobals->curtime > m_flLastObstructionCheck))
+	if (IsAllowedToBreakDoors() && (gpGlobals->curtime > m_flLastObstructionCheck) && !IsCurSchedule(SCHED_ZOMBIE_BASH_DOOR))
 	{
 		m_flLastObstructionCheck = gpGlobals->curtime + 0.1f;
 
-		ClearCondition(COND_ZOMBIE_LOCAL_MELEE_OBSTRUCTION);
 		ClearCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT);
 		m_hBlockingEntity = NULL;
 
@@ -1159,6 +928,11 @@ void CNPC_BaseZombie::GatherConditions( void )
 			m_hBlockingEntity = pObstruction;
 			SetCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT);
 		}
+	}
+
+	if (IsAllowedToBreakDoors() == false)
+	{
+		ClearCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT);
 	}
 }
 
@@ -1230,30 +1004,12 @@ void CNPC_BaseZombie::StartTask( const Task_t *pTask )
 		break;
 	}
 
-	case TASK_ZOMBIE_DIE:
-		// Go to ragdoll
-		KillMe();
-		TaskComplete();
+	case TASK_ZOMBIE_OBSTRUCTION_CLEARED:
+	{
+		ClearCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT);
+		m_hBlockingEntity = NULL;
 		break;
-
-	case TASK_ZOMBIE_WAIT_POST_MELEE:
-		{
-#ifndef HL2_EPISODIC
-			TaskComplete();
-			return;
-#endif
-
-			// Don't wait when attacking the player
-			if ( GetEnemy() && GetEnemy()->IsPlayer() )
-			{
-				TaskComplete();
-				return;
-			}
-
-			// Wait a single think
-			SetWait( 0.1 );
-		}
-		break;
+	}
 
 	default:
 		BaseClass::StartTask( pTask );
@@ -1282,14 +1038,6 @@ void CNPC_BaseZombie::RunTask( const Task_t *pTask )
 		break;
 	}
 
-	case TASK_ZOMBIE_WAIT_POST_MELEE:
-		{
-			if ( IsWaitFinished() )
-			{
-				TaskComplete();
-			}
-		}
-		break;
 	default:
 		BaseClass::RunTask( pTask );
 		break;
@@ -1329,36 +1077,6 @@ void CNPC_BaseZombie::Event_Killed( const CTakeDamageInfo &info )
 	m_hLastIgnitionSource = NULL;
 }
 
-//---------------------------------------------------------
-//---------------------------------------------------------
-bool CNPC_BaseZombie::BecomeRagdoll( const CTakeDamageInfo &info, const Vector &forceVector )
-{
-	return BaseClass::BecomeRagdoll( info, forceVector );
-
-	if( !(GetFlags()&FL_TRANSRAGDOLL) )
-		RemoveDeferred();
-
-	return true;
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-void CNPC_BaseZombie::StopLoopingSounds()
-{
-	ENVELOPE_CONTROLLER.SoundDestroy( m_pMoanSound );
-	m_pMoanSound = NULL;
-
-	BaseClass::StopLoopingSounds();
-}
-
-bool CNPC_BaseZombie::ShouldPlayFootstepMoan( void )
-{
-	if( random->RandomInt( 1, zombie_stepfreq.GetInt() * s_iAngryZombies ) == 1 )
-		return true;
-
-	return false;
-}
-
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CNPC_BaseZombie::OnStateChange( NPC_STATE OldState, NPC_STATE NewState )
@@ -1391,29 +1109,6 @@ Activity CNPC_BaseZombie::NPC_TranslateActivity( Activity baseAct )
 	if ( baseAct == ACT_WALK && IsCurSchedule( SCHED_COMBAT_PATROL, false) )
 		baseAct = ACT_RUN;
 
-	if ( IsOnFire() )
-	{
-		switch ( baseAct )
-		{
-		case ACT_RUN_ON_FIRE:
-			{
-				return ( Activity )ACT_WALK_ON_FIRE;
-			}
-
-		case ACT_WALK:
-			{
-				// I'm on fire. Put ME out.
-				return ( Activity )ACT_WALK_ON_FIRE;
-			}
-
-		case ACT_IDLE:
-			{
-				// I'm on fire. Put ME out.
-				return ( Activity )ACT_IDLE_ON_FIRE;
-			}
-		}
-	}
-
 	return BaseClass::NPC_TranslateActivity( baseAct );
 }
 
@@ -1421,7 +1116,7 @@ Activity CNPC_BaseZombie::NPC_TranslateActivity( Activity baseAct )
 //-----------------------------------------------------------------------------
 Vector CNPC_BaseZombie::BodyTarget( const Vector &posSrc, bool bNoisy ) 
 { 	
-	if( IsCurSchedule(SCHED_BIG_FLINCH) || m_ActBusyBehavior.IsActive() )
+	if( IsCurSchedule(SCHED_BIG_FLINCH) )
 	{
 		// This zombie is assumed to be standing up. 
 		// Return a position that's centered over the absorigin,
@@ -1487,13 +1182,10 @@ float CNPC_BaseZombie::GetIdealAccel() const
 
 AI_BEGIN_CUSTOM_NPC( base_zombie, CNPC_BaseZombie )
 
-DECLARE_TASK( TASK_ZOMBIE_DIE )
-DECLARE_TASK( TASK_ZOMBIE_WAIT_POST_MELEE )
 DECLARE_TASK(TASK_ZOMBIE_YAW_TO_DOOR)
 DECLARE_TASK(TASK_ZOMBIE_ATTACK_DOOR)
 DECLARE_TASK(TASK_ZOMBIE_PATH_TO_OBSTRUCTION)
-
-DECLARE_ACTIVITY( ACT_ZOM_FALL )
+DECLARE_TASK(TASK_ZOMBIE_OBSTRUCTION_CLEARED)
 
 DECLARE_CONDITION( COND_ZOMBIE_LOCAL_MELEE_OBSTRUCTION )
 DECLARE_CONDITION(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT)
@@ -1528,10 +1220,10 @@ SCHED_ZOMBIE_BASH_DOOR,
 "		TASK_ZOMBIE_YAW_TO_DOOR			0"
 "		TASK_FACE_IDEAL					0"
 "		TASK_ZOMBIE_ATTACK_DOOR			0"
+"		TASK_ZOMBIE_OBSTRUCTION_CLEARED	0"	
 ""
 "	Interrupts"
 "		COND_NEW_ENEMY"
-"		COND_LIGHT_DAMAGE"
 "		COND_HEAVY_DAMAGE"
 )
 
@@ -1679,23 +1371,10 @@ DEFINE_SCHEDULE
 	"		TASK_FACE_ENEMY			0"
 	"		TASK_ANNOUNCE_ATTACK	1"	// 1 = primary attack
 	"		TASK_MELEE_ATTACK1		0"
-	"		TASK_SET_SCHEDULE		SCHEDULE:SCHED_ZOMBIE_POST_MELEE_WAIT"
 	""
 	"	Interrupts"
 	"		COND_LIGHT_DAMAGE"
 	"		COND_HEAVY_DAMAGE"
-	)
-
-	//=========================================================
-	// Make the zombie wait a frame after a melee attack, to
-	// allow itself & it's enemy to test for dynamic scripted sequences.
-	//=========================================================
-	DEFINE_SCHEDULE
-	(
-	SCHED_ZOMBIE_POST_MELEE_WAIT,
-
-	"	Tasks"
-	"		TASK_ZOMBIE_WAIT_POST_MELEE		0"
 	)
 
 	AI_END_CUSTOM_NPC()

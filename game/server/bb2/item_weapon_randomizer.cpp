@@ -15,7 +15,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar bb2_weapon_randomizer_refresh_time("bb2_weapon_randomizer_refresh_time", "120", FCVAR_REPLICATED, "For how long can random weapons spawned by the item_weapon_randomizer stay before being refreshed? (seconds)", true, 30.0f, false, 0.0f);
+ConVar bb2_weapon_randomizer_refresh_time("bb2_weapon_randomizer_refresh_time", "120", FCVAR_GAMEDLL, "For how long can random weapons spawned by the item_weapon_randomizer stay before being refreshed? (seconds)", true, 30.0f, false, 0.0f);
 
 enum SpawnListTypes
 {

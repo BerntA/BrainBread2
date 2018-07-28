@@ -24,10 +24,10 @@
 #define DEFAULT_PITCH_YAW_CONE_FOV 0.707107f
 #define EXTRA_OFFSET Vector(0, 0, 40)
 
-ConVar bb2_m1a1_damage("bb2_m1a1_damage", "200", FCVAR_REPLICATED, "Set the damage of the M1A1 cannon.", true, 100.0f, true, 500.0f);
-ConVar bb2_m1a1_radius("bb2_m1a1_radius", "500", FCVAR_REPLICATED, "Set the radius of the explosion.", true, 200.0f, true, 1200.0f);
-ConVar bb2_m1a1_damage_machinegun("bb2_m1a1_damage_machinegun", "12", FCVAR_REPLICATED, "Set the damage of the M1A1 machinegun.", true, 10.0f, true, 125.0f);
-ConVar bb2_m1a1_machinegun_firerate("bb2_m1a1_machinegun_firerate", "0.08", FCVAR_REPLICATED, "Set the fire rate of the machinegun", true, 0.025f, true, 0.5f);
+ConVar bb2_m1a1_damage("bb2_m1a1_damage", "200", FCVAR_GAMEDLL, "Set the damage of the M1A1 cannon.", true, 100.0f, true, 500.0f);
+ConVar bb2_m1a1_radius("bb2_m1a1_radius", "500", FCVAR_GAMEDLL, "Set the radius of the explosion.", true, 200.0f, true, 1200.0f);
+ConVar bb2_m1a1_damage_machinegun("bb2_m1a1_damage_machinegun", "12", FCVAR_GAMEDLL, "Set the damage of the M1A1 machinegun.", true, 10.0f, true, 125.0f);
+ConVar bb2_m1a1_machinegun_firerate("bb2_m1a1_machinegun_firerate", "0.08", FCVAR_GAMEDLL, "Set the fire rate of the machinegun", true, 0.025f, true, 0.5f);
 
 enum TankStates
 {

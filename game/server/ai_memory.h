@@ -75,6 +75,7 @@ public:
 
 	bool			HasMemory( CBaseEntity *enemy );
 	void			ClearMemory( CBaseEntity *enemy );
+	void			ClearEntireMemory(void);
 
 	const Vector &	LastKnownPosition( CBaseEntity *pEnemy );
 	const Vector &	LastSeenPosition( CBaseEntity *pEnemy );

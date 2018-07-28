@@ -53,6 +53,8 @@
 #define SOLDIER_SHOTGUN_STANDING_POSITION	Vector( 0, 0, 36 )
 #define SOLDIER_SHOTGUN_CROUCHING_POSITION	Vector( 0, 0, 36 )
 
+#define TAKE_COVER_DELAY 15.0f
+
 //-----------------------------------------------------------------------------
 // Interactions
 //-----------------------------------------------------------------------------
@@ -113,6 +115,7 @@ DEFINE_FIELD(m_flAlertPatrolTime, FIELD_TIME),
 DEFINE_FIELD(m_nShots, FIELD_INTEGER),
 DEFINE_FIELD(m_flShotDelay, FIELD_FLOAT),
 DEFINE_FIELD(m_flStopMoveShootTime, FIELD_TIME),
+DEFINE_FIELD(m_flLastTimeRanForCover, FIELD_TIME),
 DEFINE_KEYFIELD(m_iNumGrenades, FIELD_INTEGER, "NumGrenades"),
 
 //							m_AssaultBehavior (auto saved by AI)
@@ -146,6 +149,7 @@ END_DATADESC()
 CNPC_BaseSoldier::CNPC_BaseSoldier()
 {
 	m_vecTossVelocity = vec3_origin;
+	m_flLastTimeRanForCover = 0.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -358,8 +362,8 @@ void CNPC_BaseSoldier::Spawn( void )
 
 	if (!IsBoss())
 	{
-		m_flDistTooFar = 350.0;
-		GetSenses()->SetDistLook(512.0);
+		m_flDistTooFar = 450.0f;
+		GetSenses()->SetDistLook(600.0f);
 	}
 
 	OnSetGibHealth();
@@ -1315,6 +1319,17 @@ int CNPC_BaseSoldier::SelectCombatSchedule()
 					}
 				}
 
+				// We're tried of running, even if our squad says NO, we will still attack!
+				if ((gpGlobals->curtime - m_flLastTimeRanForCover) < TAKE_COVER_DELAY)
+				{
+					if (HasCondition(COND_CAN_RANGE_ATTACK1))
+						return SCHED_SOLDIER_SUPPRESS;
+					else if (HasCondition(COND_CAN_MELEE_ATTACK1))
+						return SCHED_MELEE_ATTACK1;
+					else
+						return SCHED_SOLDIER_PRESS_ATTACK;
+				}
+					
 				return SCHED_TAKE_COVER_FROM_ENEMY;
 			}
 		}
@@ -1331,7 +1346,7 @@ int CNPC_BaseSoldier::SelectCombatSchedule()
 	// ----------------------
 	// LIGHT DAMAGE
 	// ----------------------
-	if ( HasCondition( COND_LIGHT_DAMAGE ) )
+	if ( HasCondition( COND_LIGHT_DAMAGE ) && ((gpGlobals->curtime - m_flLastTimeRanForCover) > TAKE_COVER_DELAY) )
 	{
 		if ( GetEnemy() != NULL )
 		{
@@ -1456,7 +1471,7 @@ int CNPC_BaseSoldier::SelectSchedule( void )
 	if ( m_NPCState != NPC_STATE_SCRIPT)
 	{
 		// We've been told to move away from a target to make room for a grenade to be thrown at it
-		if ( HasCondition( COND_HEAR_MOVE_AWAY ) )
+		if ( HasCondition( COND_HEAR_MOVE_AWAY ) && ((gpGlobals->curtime - m_flLastTimeRanForCover) > TAKE_COVER_DELAY) )
 		{
 			return SCHED_MOVE_AWAY;
 		}
@@ -1471,7 +1486,7 @@ int CNPC_BaseSoldier::SelectSchedule( void )
 			}
 
 			// grunts place HIGH priority on running away from danger sounds.
-			if ( HasCondition(COND_HEAR_DANGER) )
+			if (HasCondition(COND_HEAR_DANGER) && ((gpGlobals->curtime - m_flLastTimeRanForCover) > TAKE_COVER_DELAY))
 			{
 				CSound *pSound;
 				pSound = GetBestSound();
@@ -1573,6 +1588,7 @@ int CNPC_BaseSoldier::SelectFailSchedule( int failedSchedule, int failedTask, AI
 {
 	if( failedSchedule == SCHED_SOLDIER_TAKE_COVER1 )
 	{
+		m_flLastTimeRanForCover = gpGlobals->curtime;
 		if( IsInSquad() && IsStrategySlotRangeOccupied(SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2) && HasCondition(COND_SEE_ENEMY) )
 		{
 			// This eases the effects of an unfortunate bug that usually plagues shotgunners. Since their rate of fire is low,
@@ -1581,6 +1597,13 @@ int CNPC_BaseSoldier::SelectFailSchedule( int failedSchedule, int failedTask, AI
 			// fire. During this time, the shotgunner is prevented from attacking. If he also cannot find cover (the fallback case)
 			// he will stand around like an idiot, right in front of you. Instead of this, we have him run up to you for a melee attack.
 			return SCHED_SOLDIER_MOVE_TO_MELEE;
+		}
+
+		if (GetEnemy() != NULL)
+		{
+			int sched = SelectCombatSchedule();
+			if (sched != SCHED_NONE)
+				return sched;
 		}
 	}
 
@@ -1652,7 +1675,9 @@ int CNPC_BaseSoldier::SelectScheduleAttack()
 			}
 		}
 
-		// DesireCrouch();
+		// I recently hided, just suppress right away:
+		if ((gpGlobals->curtime - m_flLastTimeRanForCover) < TAKE_COVER_DELAY)		
+			return SCHED_RANGE_ATTACK1;		
 
 		return SCHED_TAKE_COVER_FROM_ENEMY;
 	}
@@ -1700,6 +1725,7 @@ int CNPC_BaseSoldier::TranslateSchedule( int scheduleType )
 	{
 	case SCHED_TAKE_COVER_FROM_ENEMY:
 		{
+			m_flLastTimeRanForCover = gpGlobals->curtime;
 			if ( m_pSquad )
 			{
 				// Have to explicitly check innate range attack condition as may have weapon with range attack 2
@@ -1736,6 +1762,7 @@ int CNPC_BaseSoldier::TranslateSchedule( int scheduleType )
 		}
 	case SCHED_TAKE_COVER_FROM_BEST_SOUND:
 		{
+			m_flLastTimeRanForCover = gpGlobals->curtime;
 			return SCHED_SOLDIER_TAKE_COVER_FROM_BEST_SOUND;
 		}
 		break;

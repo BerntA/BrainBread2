@@ -2923,6 +2923,19 @@ void CHL2MPRules::RemoveBreakableDoor(CBaseEntity *pEntity)
 	}
 }
 
+bool CHL2MPRules::IsBreakableDoor(CBaseEntity *pEntity)
+{
+	bool bIsBreakableDoor = (m_hBreakableDoors.Find(pEntity) != -1);
+	if (bIsBreakableDoor)
+	{
+		CBasePropDoor *pDoor = dynamic_cast<CBasePropDoor*> (pEntity);
+		if (pDoor && (pDoor->m_iHealth > 0))
+			return true;
+	}
+
+	return false;
+}
+
 CBaseEntity *CHL2MPRules::GetNearbyBreakableDoorEntity(CBaseEntity *pChecker)
 {
 	if (pChecker && m_hBreakableDoors.Count())

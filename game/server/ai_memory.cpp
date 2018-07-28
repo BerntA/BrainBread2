@@ -436,6 +436,16 @@ void CAI_Enemies::ClearMemory(CBaseEntity *pEnemy)
 	}
 }
 
+void CAI_Enemies::ClearEntireMemory(void)
+{
+	for (CMemMap::IndexType_t i = m_Map.FirstInorder(); i != m_Map.InvalidIndex(); i = m_Map.NextInorder(i))
+		delete m_Map[i];
+
+	m_Map.RemoveAll();
+	m_vecDefaultLKP = m_vecDefaultLSP = vec3_invalid;
+	m_serial = 0;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Notes that the given enemy has eluded me
 //-----------------------------------------------------------------------------
