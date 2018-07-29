@@ -2368,14 +2368,14 @@ void CBaseEntity::ApplyLocalVelocityImpulse( const Vector &inVecImpulse )
 	}
 }
 
-void CBaseEntity::ApplyAbsVelocityImpulse( const Vector &inVecImpulse )
+void CBaseEntity::ApplyAbsVelocityImpulse(const Vector &inVecImpulse, bool bNoLimit)
 {
 	if ( inVecImpulse != vec3_origin )
 	{
 		Vector vecImpulse = inVecImpulse;
 
 		// BB2: Prevents extreme pushback values...
-		if ( IsPlayer() || IsNPC() )
+		if ((IsPlayer() || IsNPC()) && (bNoLimit == false))
 			vecImpulse *= 0.1;
 
 		// Safety check against receive a huge impulse, which can explode physics

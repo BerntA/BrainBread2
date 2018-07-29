@@ -39,8 +39,6 @@ public:
 	const char *GetNPCName();
 	int AllowEntityToBeGibbed(void);
 	void MoanSound(void);
-	void GatherConditions( void );
-	int SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode );
 	int TranslateSchedule( int scheduleType );
 	void CheckFlinches() {} // Zombie has custom flinch code
 
@@ -76,6 +74,7 @@ public:
 	void EnterCrawlMode(void);
 	void LeaveCrawlMode(void);
 	void BecomeCrawler(void);
+
 	bool IsCrawlingWithNoLegs(void)
 	{
 		return (IsGibFlagActive(GIB_NO_LEG_RIGHT) || IsGibFlagActive(GIB_NO_LEG_LEFT));
@@ -90,7 +89,6 @@ public:
 
 protected:
 
-	float GetAmbushDist(void) { return 100.0f; }
 	void OnGibbedGroup(int hitgroup, bool bExploded);
 
 private:
@@ -103,29 +101,17 @@ private:
 	bool m_bFastSpawn;
 	bool m_bGibbedForCrawl;
 	float m_flNextTimeToCheckCollisionChange;
-
-	Vector m_vPositionCharged;
 };
 
-LINK_ENTITY_TO_CLASS( npc_walker, CNPCWalker );
+LINK_ENTITY_TO_CLASS(npc_walker, CNPCWalker);
 LINK_ENTITY_TO_CLASS(npc_runner, CNPCWalker);
-
-//=========================================================
-// Conditions
-//=========================================================
-enum
-{
-	COND_ZOMBIE_CHARGE_TARGET_MOVED = LAST_BASE_ZOMBIE_CONDITION,
-};
 
 //=========================================================
 // Schedules
 //=========================================================
 enum
 {
-	SCHED_ZOMBIE_WANDER_ANGRILY = LAST_BASE_ZOMBIE_SCHEDULE,
-	SCHED_ZOMBIE_CHARGE_ENEMY,
-	SCHED_ZOMBIE_FAIL,
+	SCHED_ZOMBIE_FAIL = LAST_BASE_ZOMBIE_SCHEDULE,
 	SCHED_WALKER_RISE_IDLE,
 	SCHED_WALKER_RISE,
 };
@@ -136,7 +122,6 @@ enum
 enum
 {
 	TASK_ZOMBIE_EXPRESS_ANGER = LAST_BASE_ZOMBIE_TASK,
-	TASK_ZOMBIE_CHARGE_ENEMY,
 	TASK_ZOMBIE_SPAWN,
 };
 
@@ -163,7 +148,6 @@ int ACT_CRAWL_NOLEGS_ATTACK_RIGHT;
 BEGIN_DATADESC( CNPCWalker )
 
 	DEFINE_FIELD( m_bIsReady, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_vPositionCharged, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD(m_bGibbedForCrawl, FIELD_BOOLEAN),
 
 END_DATADESC()
@@ -249,8 +233,8 @@ void CNPCWalker::Spawn( void )
 	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
 
 	// Reduce zombies view dist:
-	m_flDistTooFar = 180.0;
-	GetSenses()->SetDistLook(300.0);
+	m_flDistTooFar = 200.0f;
+	GetSenses()->SetDistLook(400.0f);
 }
 
 void CNPCWalker::SpawnDirectly(void)
@@ -561,53 +545,7 @@ void CNPCWalker::AttackSound( void )
 void CNPCWalker::MoanSound( void )
 {
 	if( IsOnFire() )
-	{
 		BaseClass::MoanSound();
-	}
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-void CNPCWalker::GatherConditions( void )
-{
-	BaseClass::GatherConditions();
-
-	ClearCondition(COND_ZOMBIE_CHARGE_TARGET_MOVED);
-
-	if ( ConditionInterruptsCurSchedule( COND_ZOMBIE_CHARGE_TARGET_MOVED ) )
-	{
-		if ( GetNavigator()->IsGoalActive() )
-		{
-			const float CHARGE_RESET_TOLERANCE = 60.0;
-			if ( !GetEnemy() ||
-				( m_vPositionCharged - GetEnemyLKP()  ).Length() > CHARGE_RESET_TOLERANCE )
-			{
-				SetCondition( COND_ZOMBIE_CHARGE_TARGET_MOVED );
-			}			 
-		}
-	}
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-
-int CNPCWalker::SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode )
-{
-	if ( failedSchedule != SCHED_ZOMBIE_CHARGE_ENEMY && 
-		IsPathTaskFailure( taskFailCode ) &&
-		random->RandomInt( 1, 100 ) < 50 )
-	{
-		return SCHED_ZOMBIE_CHARGE_ENEMY;
-	}
-
-	if ( failedSchedule != SCHED_ZOMBIE_WANDER_ANGRILY &&
-		( failedSchedule == SCHED_TAKE_COVER_FROM_ENEMY || 
-		failedSchedule == SCHED_CHASE_ENEMY_FAILED ) )
-	{
-		return SCHED_ZOMBIE_WANDER_ANGRILY;
-	}
-
-	return BaseClass::SelectFailSchedule( failedSchedule, failedTask, taskFailCode );
 }
 
 //---------------------------------------------------------
@@ -740,31 +678,12 @@ void CNPCWalker::StartTask( const Task_t *pTask )
 	{
 	case TASK_ZOMBIE_EXPRESS_ANGER:
 		{
-			if ( random->RandomInt( 1, 4 ) == 2 )
-			{
-				SetIdealActivity( (Activity)ACT_ZOMBIE_TANTRUM );
-			}
-			else
-			{
-				TaskComplete();
-			}
-
-			break;
+			if (random->RandomInt(1, 4) == 2)
+				SetIdealActivity((Activity)ACT_ZOMBIE_TANTRUM);
+			else			
+				TaskComplete();						
 		}
-
-	case TASK_ZOMBIE_CHARGE_ENEMY:
-		{
-			if ( !GetEnemy() )
-				TaskFail( FAIL_NO_ENEMY );
-			else if ( GetNavigator()->SetVectorGoalFromTarget( GetEnemy()->GetLocalOrigin() ) )
-			{
-				m_vPositionCharged = GetEnemy()->GetLocalOrigin();
-				TaskComplete();
-			}
-			else
-				TaskFail( FAIL_NO_ROUTE );
-			break;
-		}
+		break;
 
 	case TASK_ZOMBIE_SPAWN:
 		{
@@ -788,16 +707,12 @@ void CNPCWalker::RunTask( const Task_t *pTask )
 	{
 	case TASK_ZOMBIE_SPAWN:
 		break;
-	case TASK_ZOMBIE_CHARGE_ENEMY:
-			break;
 	case TASK_ZOMBIE_EXPRESS_ANGER:
 		{
-			if ( IsActivityFinished() )
-			{
-				TaskComplete();
-			}
-			break;
+			if ( IsActivityFinished() )			
+				TaskComplete();						
 		}
+		break;
 	default:
 		BaseClass::RunTask( pTask );
 		break;
@@ -842,10 +757,7 @@ int CNPCWalker::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 
 AI_BEGIN_CUSTOM_NPC( npc_walker, CNPCWalker )
 
-DECLARE_CONDITION( COND_ZOMBIE_CHARGE_TARGET_MOVED )
-
-DECLARE_TASK( TASK_ZOMBIE_EXPRESS_ANGER )
-DECLARE_TASK( TASK_ZOMBIE_CHARGE_ENEMY )
+DECLARE_TASK(TASK_ZOMBIE_EXPRESS_ANGER)
 DECLARE_TASK(TASK_ZOMBIE_SPAWN)
 
 DECLARE_ACTIVITY( ACT_ZOMBIE_TANTRUM );
@@ -891,37 +803,6 @@ DECLARE_ACTIVITY(ACT_CRAWL_NOLEGS_ATTACK_RIGHT);
 
 	DEFINE_SCHEDULE
 	(
-	SCHED_ZOMBIE_WANDER_ANGRILY,
-
-	"	Tasks"
-	"		TASK_WANDER						480240" // 48 units to 240 units.
-	"		TASK_WALK_PATH					0"
-	"		TASK_WAIT_FOR_MOVEMENT			4"
-	""
-	"	Interrupts"
-	"		COND_ENEMY_DEAD"
-	"		COND_NEW_ENEMY"
-	)
-
-	DEFINE_SCHEDULE
-	(
-	SCHED_ZOMBIE_CHARGE_ENEMY,
-
-
-	"	Tasks"
-	"		TASK_ZOMBIE_CHARGE_ENEMY		0"
-	"		TASK_WALK_PATH					0"
-	"		TASK_WAIT_FOR_MOVEMENT			0"
-	"		TASK_PLAY_SEQUENCE				ACTIVITY:ACT_ZOMBIE_TANTRUM" /* placeholder until frustration/rage/fence shake animation available */
-	""
-	"	Interrupts"
-	"		COND_ENEMY_DEAD"
-	"		COND_NEW_ENEMY"
-	"		COND_ZOMBIE_CHARGE_TARGET_MOVED"
-	)
-
-	DEFINE_SCHEDULE
-	(
 	SCHED_ZOMBIE_FAIL,
 
 	"	Tasks"
@@ -936,6 +817,8 @@ DECLARE_ACTIVITY(ACT_CRAWL_NOLEGS_ATTACK_RIGHT);
 	"		COND_CAN_MELEE_ATTACK1 "
 	"		COND_CAN_MELEE_ATTACK2"
 	"		COND_GIVE_WAY"
+	"		COND_LIGHT_DAMAGE"
+	"		COND_HEAVY_DAMAGE"
 	)
 
 	AI_END_CUSTOM_NPC()

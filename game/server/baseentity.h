@@ -1162,7 +1162,7 @@ public:
 	void			SetLocalVelocity( const Vector &vecVelocity );
 	void			ApplyLocalVelocityImpulse( const Vector &vecImpulse );
 	void			SetAbsVelocity( const Vector &vecVelocity );
-	void			ApplyAbsVelocityImpulse( const Vector &vecImpulse );
+	void			ApplyAbsVelocityImpulse(const Vector &vecImpulse, bool bNoLimit = false);
 	void			ApplyLocalAngularVelocityImpulse( const AngularImpulse &angImpulse );
 
 	const Vector&	GetLocalVelocity( ) const;

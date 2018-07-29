@@ -17,7 +17,7 @@
 #include "soundent.h"
 #include "game.h"
 #include "npcevent.h"
-#include "npc_combine.h"
+#include "npc_base_soldier.h"
 #include "activitylist.h"
 #include "player.h"
 #include "basecombatweapon.h"

@@ -31,7 +31,6 @@
 #include "vehicle_base.h"
 #include "hl2mp_gamerules.h"
 #include "GameBase_Server.h"
-#include "BasePropDoor.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -91,9 +90,7 @@ BEGIN_DATADESC( CNPC_BaseZombie )
 	DEFINE_FIELD( m_flBurnDamage, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flBurnDamageResetTime, FIELD_TIME ),
 	DEFINE_FIELD( m_flNextMoanSound, FIELD_TIME ),
-	DEFINE_FIELD(m_hBlockingEntity, FIELD_EHANDLE),
-	DEFINE_EMBEDDED(m_DurationDoorBash),
-	DEFINE_EMBEDDED(m_NextTimeToStartDoorBash),
+	DEFINE_FIELD(m_bUseNormalSpeed, FIELD_BOOLEAN),
 
 END_DATADESC()
 
@@ -109,17 +106,18 @@ SendPropExclude("DT_BaseFlex", "m_vecLean"),
 SendPropExclude("DT_BaseFlex", "m_vecShift"),
 END_SEND_TABLE()
 
-CNPC_BaseZombie::CNPC_BaseZombie() : 
-	m_DurationDoorBash(1, 2),
-	m_NextTimeToStartDoorBash(2.0)
+CNPC_BaseZombie::CNPC_BaseZombie()
 {
 	m_hLastIgnitionSource = NULL;
 	g_pZombiesInWorld++;
+	m_bUseNormalSpeed = false;
 }
 
 CNPC_BaseZombie::~CNPC_BaseZombie()
 {
 	g_pZombiesInWorld--;
+	m_hBlockingEntity = NULL;
+	m_hLastIgnitionSource = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -256,7 +254,10 @@ int CNPC_BaseZombie::MeleeAttack1Conditions ( float flDot, float flDist )
 
 	CBasePropDoor *pDoor = dynamic_cast<CBasePropDoor*> (tr.m_pEnt);
 	if (pDoor && HL2MPRules()->IsBreakableDoor(tr.m_pEnt))
+	{
+		m_hBlockingEntity = pDoor;
 		return COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT;
+	}
 
 	if( tr.m_pEnt->IsBSPModel() )
 	{
@@ -434,48 +435,62 @@ void CNPC_BaseZombie::CopyRenderColorTo( CBaseEntity *pOther )
 //-----------------------------------------------------------------------------
 CBaseEntity *CNPC_BaseZombie::ClawAttack( float flDist, int iDamage, QAngle &qaViewPunch, Vector &vecVelocityPunch, int BloodOrigin  )
 {
-	// Added test because claw attack anim sometimes used when for cases other than melee
-	int iDriverInitialHealth = -1;
-	CBaseEntity *pDriver = NULL;
-	if ( GetEnemy() )
+	CBaseEntity *pHurt = NULL;
+	CBasePropDoor *pDoor = m_hBlockingEntity.Get();
+
+	if (pDoor && IsCurSchedule(SCHED_ZOMBIE_BASH_DOOR)) // Force a hit @doors when we engage.
 	{
-		trace_t	tr;
-		AI_TraceHull( WorldSpaceCenter(), GetEnemy()->WorldSpaceCenter(), -Vector(8,8,8), Vector(8,8,8), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
-
-		if (tr.fraction < 1.0f)
-			return NULL;
-
-		// CheckTraceHullAttack() can damage player in vehicle as side effect of melee attack damaging physics objects, which the car forwards to the player
-		// need to detect this to get correct damage effects
-		CBaseCombatCharacter *pCCEnemy = ( GetEnemy() != NULL ) ? GetEnemy()->MyCombatCharacterPointer() : NULL;
-		CBaseEntity *pVehicleEntity;
-		if ( pCCEnemy != NULL && ( pVehicleEntity = pCCEnemy->GetVehicleEntity() ) != NULL )
+		const Vector &vecAttackerOrigin = WorldSpaceCenter();
+		CTakeDamageInfo	damageInfo(this, this, iDamage, DMG_ZOMBIE);
+		Vector attackDir = (pDoor->WorldSpaceCenter() - vecAttackerOrigin);
+		VectorNormalize(attackDir);
+		CalculateMeleeDamageForce(&damageInfo, attackDir, vecAttackerOrigin);
+		pDoor->TakeDamage(damageInfo);
+		pHurt = pDoor;
+	}
+	else
+	{
+		// Added test because claw attack anim sometimes used when for cases other than melee
+		int iDriverInitialHealth = -1;
+		CBaseEntity *pDriver = NULL;
+		if (GetEnemy())
 		{
-			if ( pVehicleEntity->GetServerVehicle() && dynamic_cast<CPropVehicleDriveable *>(pVehicleEntity) )
+			trace_t	tr;
+			AI_TraceHull(WorldSpaceCenter(), GetEnemy()->WorldSpaceCenter(), -Vector(8, 8, 8), Vector(8, 8, 8), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr);
+
+			if (tr.fraction < 1.0f)
+				return NULL;
+
+			// CheckTraceHullAttack() can damage player in vehicle as side effect of melee attack damaging physics objects, which the car forwards to the player
+			// need to detect this to get correct damage effects
+			CBaseCombatCharacter *pCCEnemy = (GetEnemy() != NULL) ? GetEnemy()->MyCombatCharacterPointer() : NULL;
+			CBaseEntity *pVehicleEntity;
+			if (pCCEnemy != NULL && (pVehicleEntity = pCCEnemy->GetVehicleEntity()) != NULL)
 			{
-				pDriver = static_cast<CPropVehicleDriveable *>(pVehicleEntity)->GetDriver();
-				if ( pDriver && pDriver->IsPlayer() )
-					iDriverInitialHealth = pDriver->GetHealth();
-				else
-					pDriver = NULL;
+				if (pVehicleEntity->GetServerVehicle() && dynamic_cast<CPropVehicleDriveable *>(pVehicleEntity))
+				{
+					pDriver = static_cast<CPropVehicleDriveable *>(pVehicleEntity)->GetDriver();
+					if (pDriver && pDriver->IsPlayer())
+						iDriverInitialHealth = pDriver->GetHealth();
+					else
+						pDriver = NULL;
+				}
 			}
 		}
+
+		//
+		// Trace out a cubic section of our hull and see what we hit.
+		//
+		Vector vecMins = GetHullMins();
+		Vector vecMaxs = GetHullMaxs();
+		vecMins.z = vecMins.x;
+		vecMaxs.z = vecMaxs.x;
+
+		// Try to hit them with a trace
+		pHurt = CheckTraceHullAttack(flDist, vecMins, vecMaxs, iDamage, DMG_ZOMBIE);
+		if (pDriver && iDriverInitialHealth != pDriver->GetHealth())
+			pHurt = pDriver;
 	}
-
-	//
-	// Trace out a cubic section of our hull and see what we hit.
-	//
-	Vector vecMins = GetHullMins();
-	Vector vecMaxs = GetHullMaxs();
-	vecMins.z = vecMins.x;
-	vecMaxs.z = vecMaxs.x;
-
-	CBaseEntity *pHurt = NULL;
-	// Try to hit them with a trace
-	pHurt = CheckTraceHullAttack( flDist, vecMins, vecMaxs, iDamage, DMG_ZOMBIE );
-
-	if ( pDriver && iDriverInitialHealth != pDriver->GetHealth() )
-		pHurt = pDriver;
 
 	if ( pHurt )
 	{
@@ -796,10 +811,18 @@ int CNPC_BaseZombie::TranslateSchedule( int scheduleType )
 	switch( scheduleType )
 	{
 	case SCHED_CHASE_ENEMY:
-		if ( HasCondition( COND_ZOMBIE_LOCAL_MELEE_OBSTRUCTION ) && !HasCondition(COND_TASK_FAILED) && IsCurSchedule( SCHED_ZOMBIE_CHASE_ENEMY, false ) )
-		{
+		if ( HasCondition( COND_ZOMBIE_LOCAL_MELEE_OBSTRUCTION ) && !HasCondition(COND_TASK_FAILED) && IsCurSchedule( SCHED_ZOMBIE_CHASE_ENEMY, false ) )		
 			return SCHED_COMBAT_PATROL;
+
+		// Normal NPCs will just wander around like muricans walking in the mall.
+		if (HasCondition(COND_ENEMY_TOO_FAR) && !CanAlwaysSeePlayers())
+		{
+			if (GetEnemies() && (GetEnemies()->NumEnemies() > 0))
+				GetEnemies()->ClearEntireMemory();		
+
+			return SCHED_ZOMBIE_WANDER_MEDIUM;
 		}
+
 		return SCHED_ZOMBIE_CHASE_ENEMY;
 		break;
 
@@ -833,6 +856,9 @@ void CNPC_BaseZombie::BuildScheduleTestBits( void )
 	}
 
 	BaseClass::BuildScheduleTestBits();
+
+	if (IsCurSchedule(SCHED_ZOMBIE_CHASE_ENEMY) && !CanAlwaysSeePlayers())
+		SetCustomInterruptCondition(COND_ENEMY_TOO_FAR);
 }
 
 
@@ -850,63 +876,73 @@ void CNPC_BaseZombie::OnScheduleChange( void )
 	BaseClass::OnScheduleChange();
 }
 
+// A new sched. is about to start!
+void CNPC_BaseZombie::OnStartSchedule(int scheduleType)
+{
+	m_bUseNormalSpeed = false;
+	switch (scheduleType)
+	{
+	case SCHED_ZOMBIE_WANDER_MEDIUM:
+	case SCHED_ZOMBIE_WANDER_STANDOFF:
+	case SCHED_ZOMBIE_MELEE_ATTACK1:
+	case SCHED_ZOMBIE_BASH_DOOR:
+		m_bUseNormalSpeed = true;
+		break;
+	}
+
+	BaseClass::OnStartSchedule(scheduleType);
+}
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 int	CNPC_BaseZombie::SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode )
 {
-	if( failedSchedule == SCHED_ZOMBIE_WANDER_MEDIUM )
-	{
-		return SCHED_ZOMBIE_WANDER_FAIL;
-	}
+	if( failedSchedule == SCHED_ZOMBIE_WANDER_MEDIUM )	
+		return SCHED_ZOMBIE_WANDER_FAIL;	
+
+	// If pathing failed for chasing, check if we have an obstruction!
+	if ((failedSchedule == SCHED_ZOMBIE_CHASE_ENEMY) && (failedTask == 4))
+		SetCondition(COND_ZOMBIE_CHECK_FOR_OBSTRUCTION);
+
+	if (failedSchedule == SCHED_ZOMBIE_BASH_DOOR)	
+		ClearCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT);
 
 	return BaseClass::SelectFailSchedule( failedSchedule, failedTask, taskFailCode );
 }
-
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 int CNPC_BaseZombie::SelectSchedule ( void )
 {
+	if (HasCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT))
+		return SCHED_ZOMBIE_BASH_DOOR;
+
 	switch ( m_NPCState )
 	{
 	case NPC_STATE_COMBAT:
 		if ( HasCondition( COND_NEW_ENEMY ) && GetEnemy() )
 		{
-			if (HasCondition(COND_SEE_ENEMY) && HasCondition(COND_CAN_MELEE_ATTACK1))
+			if (HasCondition(COND_ZOMBIE_ENEMY_IN_SIGHT) && HasCondition(COND_CAN_MELEE_ATTACK1))
 				return SCHED_MELEE_ATTACK1;
 
-			if (!HasCondition(COND_ENEMY_UNREACHABLE) && !HasCondition(COND_LOST_ENEMY))
-				return SCHED_ZOMBIE_CHASE_ENEMY;
+			if (!HasCondition(COND_ENEMY_UNREACHABLE) && !HasCondition(COND_ENEMY_TOO_FAR))		
+				return SCHED_ZOMBIE_CHASE_ENEMY;			
 		}
 
-		if (HasCondition(COND_LOST_ENEMY) || (HasCondition(COND_ENEMY_UNREACHABLE) && MustCloseToAttack()))
-		{
-			if (HasCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT))
-				return SCHED_ZOMBIE_BASH_DOOR;
-
+		if (HasCondition(COND_LOST_ENEMY) || !HasCondition(COND_ZOMBIE_ENEMY_IN_SIGHT) || (HasCondition(COND_ENEMY_UNREACHABLE) && MustCloseToAttack()))		
 			return SCHED_ZOMBIE_WANDER_MEDIUM;
-		}
+
 		break;
 
 	case NPC_STATE_ALERT:
-		if ( HasCondition( COND_LOST_ENEMY ) || HasCondition( COND_ENEMY_DEAD ) || ( HasCondition( COND_ENEMY_UNREACHABLE ) && MustCloseToAttack() ) )
+		if (HasCondition(COND_LOST_ENEMY) || HasCondition(COND_ENEMY_DEAD) || !HasCondition(COND_ZOMBIE_ENEMY_IN_SIGHT) || (HasCondition(COND_ENEMY_UNREACHABLE) && MustCloseToAttack()))
 		{
 			ClearCondition( COND_LOST_ENEMY );
 			ClearCondition( COND_ENEMY_UNREACHABLE );
-
-			if (HasCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT))
-				return SCHED_ZOMBIE_BASH_DOOR;
-
-			// Just lost track of our enemy. 
-			// Wander around a bit so we don't look like a dingus.
 			return SCHED_ZOMBIE_WANDER_MEDIUM;
 		}
 		break;
 	}
-
-	if (HasCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT) && !GetEnemy())
-		return SCHED_ZOMBIE_BASH_DOOR;
 
 	return BaseClass::SelectSchedule();
 }
@@ -915,25 +951,32 @@ void CNPC_BaseZombie::GatherConditions( void )
 {
 	BaseClass::GatherConditions();
 
-	if (IsAllowedToBreakDoors() && (gpGlobals->curtime > m_flLastObstructionCheck) && !IsCurSchedule(SCHED_ZOMBIE_BASH_DOOR))
+	if (IsAllowedToBreakDoors() && (GetEnemy() != NULL) && (gpGlobals->curtime >= m_flLastObstructionCheck) && !IsCurSchedule(SCHED_ZOMBIE_BASH_DOOR) && !HasCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT))
 	{
 		m_flLastObstructionCheck = gpGlobals->curtime + 0.1f;
 
-		ClearCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT);
-		m_hBlockingEntity = NULL;
-
-		CBaseEntity *pObstruction = GetObstructionBreakableEntity();
-		if (pObstruction)
+		if (HasCondition(COND_ZOMBIE_CHECK_FOR_OBSTRUCTION) || HasCondition(COND_ENEMY_OCCLUDED) || !HasCondition(COND_HAVE_ENEMY_LOS) || (HasCondition(COND_ENEMY_UNREACHABLE) && HasCondition(COND_SEE_ENEMY)))
 		{
-			m_hBlockingEntity = pObstruction;
-			SetCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT);
+			ClearCondition(COND_ZOMBIE_CHECK_FOR_OBSTRUCTION);
+			CBasePropDoor *pObstruction = dynamic_cast<CBasePropDoor*>(GetObstructionBreakableEntity());
+			if (pObstruction)
+			{
+				m_hBlockingEntity = pObstruction;
+				SetCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT);
+			}
 		}
 	}
 
 	if (IsAllowedToBreakDoors() == false)
 	{
 		ClearCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT);
+		ClearCondition(COND_ZOMBIE_CHECK_FOR_OBSTRUCTION);
 	}
+
+	if (HasCondition(COND_SEE_ENEMY) && (!HasCondition(COND_ENEMY_TOO_FAR) || CanAlwaysSeePlayers()))
+		SetCondition(COND_ZOMBIE_ENEMY_IN_SIGHT);
+	else
+		ClearCondition(COND_ZOMBIE_ENEMY_IN_SIGHT);
 }
 
 //---------------------------------------------------------
@@ -969,7 +1012,7 @@ void CNPC_BaseZombie::StartTask( const Task_t *pTask )
 	{
 	case TASK_ZOMBIE_YAW_TO_DOOR:
 	{
-		CBaseEntity *pObstruction = m_hBlockingEntity.Get();
+		CBasePropDoor *pObstruction = m_hBlockingEntity.Get();
 		AssertMsg(pObstruction != NULL, "Expected condition handling to break schedule before landing here");
 		if (pObstruction != NULL)
 		{
@@ -983,13 +1026,13 @@ void CNPC_BaseZombie::StartTask( const Task_t *pTask )
 
 	case TASK_ZOMBIE_PATH_TO_OBSTRUCTION:
 	{
-		CBaseEntity *pObstruction = m_hBlockingEntity.Get();
+		CBasePropDoor *pObstruction = m_hBlockingEntity.Get();
 		if (pObstruction)
 		{
-			AI_NavGoal_t goal(pObstruction->WorldSpaceCenter());
-			goal.pTarget = pObstruction;
-			GetNavigator()->SetGoal(goal);
-			TaskComplete();
+			if (GetNavigator()->SetVectorGoalFromTarget(pObstruction->WorldSpaceCenter()))
+				TaskComplete();
+			else
+				TaskFail("NPC was unable to navigate to door obstruction!\n");
 		}
 		else
 			TaskFail(FAIL_NO_TARGET);
@@ -999,7 +1042,6 @@ void CNPC_BaseZombie::StartTask( const Task_t *pTask )
 
 	case TASK_ZOMBIE_ATTACK_DOOR:
 	{
-		m_DurationDoorBash.Reset();
 		SetIdealActivity(SelectDoorBash());
 		break;
 	}
@@ -1007,12 +1049,15 @@ void CNPC_BaseZombie::StartTask( const Task_t *pTask )
 	case TASK_ZOMBIE_OBSTRUCTION_CLEARED:
 	{
 		ClearCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT);
+		ClearCondition(COND_ZOMBIE_CHECK_FOR_OBSTRUCTION);
 		m_hBlockingEntity = NULL;
+		TaskComplete();
 		break;
 	}
 
 	default:
 		BaseClass::StartTask( pTask );
+		break;
 	}
 }
 
@@ -1027,16 +1072,19 @@ void CNPC_BaseZombie::RunTask( const Task_t *pTask )
 	{
 		if (IsActivityFinished())
 		{
-			if (m_DurationDoorBash.Expired())
-			{
+			CBasePropDoor *pDoor = m_hBlockingEntity.Get();
+			if ((m_hBlockingEntity == NULL) || (pDoor == NULL) || (pDoor->m_iHealth <= 0) || pDoor->IsDoorOpen() || pDoor->IsDoorOpening())
 				TaskComplete();
-				m_NextTimeToStartDoorBash.Reset();
-			}
-			else
-				ResetIdealActivity(SelectDoorBash());
+			else			
+				ResetIdealActivity(SelectDoorBash());		
 		}
 		break;
 	}
+
+	case TASK_ZOMBIE_YAW_TO_DOOR:
+	case TASK_ZOMBIE_PATH_TO_OBSTRUCTION:
+	case TASK_ZOMBIE_OBSTRUCTION_CLEARED:	
+		break;
 
 	default:
 		BaseClass::RunTask( pTask );
@@ -1106,9 +1154,6 @@ void CNPC_BaseZombie::OnStateChange( NPC_STATE OldState, NPC_STATE NewState )
 //-----------------------------------------------------------------------------
 Activity CNPC_BaseZombie::NPC_TranslateActivity( Activity baseAct )
 {
-	if ( baseAct == ACT_WALK && IsCurSchedule( SCHED_COMBAT_PATROL, false) )
-		baseAct = ACT_RUN;
-
 	return BaseClass::NPC_TranslateActivity( baseAct );
 }
 
@@ -1166,11 +1211,17 @@ bool CNPC_BaseZombie::OverrideShouldAddToLookList(CBaseEntity *pEntity)
 
 float CNPC_BaseZombie::GetIdealSpeed() const
 {
+	if (m_bUseNormalSpeed)
+		return BaseClass::GetIdealSpeed();
+
 	return (BaseClass::GetIdealSpeed() * m_flSpeedFactorValue);
 }
 
 float CNPC_BaseZombie::GetIdealAccel() const
 {
+	if (m_bUseNormalSpeed)
+		return BaseClass::GetIdealAccel();
+
 	return (BaseClass::GetIdealAccel() * m_flSpeedFactorValue);
 }
 
@@ -1187,10 +1238,11 @@ DECLARE_TASK(TASK_ZOMBIE_ATTACK_DOOR)
 DECLARE_TASK(TASK_ZOMBIE_PATH_TO_OBSTRUCTION)
 DECLARE_TASK(TASK_ZOMBIE_OBSTRUCTION_CLEARED)
 
-DECLARE_CONDITION( COND_ZOMBIE_LOCAL_MELEE_OBSTRUCTION )
+DECLARE_CONDITION(COND_ZOMBIE_LOCAL_MELEE_OBSTRUCTION)
 DECLARE_CONDITION(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT)
+DECLARE_CONDITION(COND_ZOMBIE_CHECK_FOR_OBSTRUCTION)
+DECLARE_CONDITION(COND_ZOMBIE_ENEMY_IN_SIGHT)
 
-//Adrian: events go here
 DECLARE_ANIMEVENT( AE_ZOMBIE_ATTACK_RIGHT )
 DECLARE_ANIMEVENT( AE_ZOMBIE_ATTACK_LEFT )
 DECLARE_ANIMEVENT( AE_ZOMBIE_ATTACK_BOTH )
@@ -1213,10 +1265,10 @@ DEFINE_SCHEDULE
 SCHED_ZOMBIE_BASH_DOOR,
 
 "	Tasks"
-"		TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHED_ZOMBIE_WANDER_MEDIUM"
 "       TASK_ZOMBIE_PATH_TO_OBSTRUCTION 0"
 "		TASK_WALK_PATH					0"
 "		TASK_WAIT_FOR_MOVEMENT			0"
+"		TASK_STOP_MOVING				0"
 "		TASK_ZOMBIE_YAW_TO_DOOR			0"
 "		TASK_FACE_IDEAL					0"
 "		TASK_ZOMBIE_ATTACK_DOOR			0"
@@ -1225,6 +1277,7 @@ SCHED_ZOMBIE_BASH_DOOR,
 "	Interrupts"
 "		COND_NEW_ENEMY"
 "		COND_HEAVY_DAMAGE"
+"		COND_TASK_FAILED"
 )
 
 //=========================================================
@@ -1251,42 +1304,8 @@ DEFINE_SCHEDULE
 	"		COND_CAN_RANGE_ATTACK2"
 	"		COND_CAN_MELEE_ATTACK2"
 	"		COND_TOO_CLOSE_TO_ATTACK"
+	"		COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT"
 	"		COND_TASK_FAILED"
-	)
-
-	//=========================================================
-	//=========================================================
-	DEFINE_SCHEDULE
-	(
-	SCHED_ZOMBIE_MOVE_TO_AMBUSH,
-
-	"	Tasks"
-	"		TASK_WAIT						1.0" // don't react as soon as you see the player.
-	"		TASK_FIND_COVER_FROM_ENEMY		0"
-	"		TASK_WALK_PATH					0"
-	"		TASK_WAIT_FOR_MOVEMENT			0"
-	"		TASK_STOP_MOVING				0"
-	"		TASK_TURN_LEFT					180"
-	"		TASK_SET_SCHEDULE				SCHEDULE:SCHED_ZOMBIE_WAIT_AMBUSH"
-	"	"
-	"	Interrupts"
-	"		COND_TASK_FAILED"
-	"		COND_NEW_ENEMY"
-	)
-
-
-	//=========================================================
-	//=========================================================
-	DEFINE_SCHEDULE
-	(
-	SCHED_ZOMBIE_WAIT_AMBUSH,
-
-	"	Tasks"
-	"		TASK_WAIT_FACE_ENEMY	99999"
-	"	"
-	"	Interrupts"
-	"		COND_NEW_ENEMY"
-	"		COND_SEE_ENEMY"
 	)
 
 	//=========================================================
@@ -1308,9 +1327,10 @@ DEFINE_SCHEDULE
 	"	"
 	"	Interrupts"
 	"		COND_NEW_ENEMY"
-	"		COND_SEE_ENEMY"
+	"		COND_ZOMBIE_ENEMY_IN_SIGHT"
 	"		COND_LIGHT_DAMAGE"
 	"		COND_HEAVY_DAMAGE"
+	"		COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT"
 	)
 
 	DEFINE_SCHEDULE

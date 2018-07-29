@@ -4448,6 +4448,9 @@ int CAI_BaseNPC::SelectAlertSchedule()
 			  HasCondition ( COND_HEAR_BULLET_IMPACT ) ||
 			  HasCondition ( COND_HEAR_COMBAT ) )
 	{
+		if (IsStaticNPC())
+			return SCHED_ALERT_FACE_BESTSOUND;
+
 		return SCHED_INVESTIGATE_SOUND; // SCHED_ALERT_FACE_BESTSOUND | SCHED_INVESTIGATE_SOUND 
 	}
 

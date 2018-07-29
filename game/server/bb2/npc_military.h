@@ -10,7 +10,7 @@
 #pragma once
 #endif
 
-#include "npc_combine.h"
+#include "npc_base_soldier.h"
 
 int g_pMilitaryQuestion = 0;
 

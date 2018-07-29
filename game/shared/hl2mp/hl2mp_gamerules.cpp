@@ -41,7 +41,7 @@
 #include "team.h"
 #include "voice_gamemgr.h"
 #include "hl2mp_gameinterface.h"
-#include "npc_combine.h"
+#include "npc_base_soldier.h"
 #include "npc_base_soldier_static.h"
 #include "npc_BaseZombie.h"
 #include "objective_icon.h"
@@ -2929,7 +2929,7 @@ bool CHL2MPRules::IsBreakableDoor(CBaseEntity *pEntity)
 	if (bIsBreakableDoor)
 	{
 		CBasePropDoor *pDoor = dynamic_cast<CBasePropDoor*> (pEntity);
-		if (pDoor && (pDoor->m_iHealth > 0))
+		if (pDoor && (pDoor->m_iHealth > 0) && (pDoor->IsDoorClosed() || pDoor->IsDoorLocked()))
 			return true;
 	}
 
@@ -2955,10 +2955,10 @@ CBaseEntity *CHL2MPRules::GetNearbyBreakableDoorEntity(CBaseEntity *pChecker)
 				continue;
 
 			float dist = vecPos.DistTo(pDoor->GetLocalOrigin());
-			if (dist > 140.0f)
+			if (dist > 150.0f)
 				continue;
 
-			if (pDoor->IsDoorClosed() || pDoor->IsDoorLocked())
+			if (pDoor->IsDoorClosed() || pDoor->IsDoorClosing() || pDoor->IsDoorLocked())
 				return pObstruction;
 		}
 	}

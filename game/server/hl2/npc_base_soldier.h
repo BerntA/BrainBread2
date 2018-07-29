@@ -56,7 +56,7 @@ public:
 
 	virtual Vector  GetCrouchEyeOffset( void );
 
-	void Event_Killed( const CTakeDamageInfo &info );
+	virtual void Event_Killed( const CTakeDamageInfo &info );
 
 	void SetActivity( Activity NewActivity );
 	NPC_STATE		SelectIdealState ( void );
@@ -69,10 +69,10 @@ public:
 	void InputAssault( inputdata_t &inputdata );
 	void InputThrowGrenadeAtTarget( inputdata_t &inputdata );
 
-	bool			UpdateEnemyMemory( CBaseEntity *pEnemy, const Vector &position, CBaseEntity *pInformer = NULL );
+	virtual bool	UpdateEnemyMemory( CBaseEntity *pEnemy, const Vector &position, CBaseEntity *pInformer = NULL );
 
-	void			Spawn( void );
-	void			Precache( void );
+	virtual void	Spawn( void );
+	virtual void	Precache( void );
 	void			Activate();
 
 	virtual Class_T Classify( void );
@@ -86,16 +86,16 @@ public:
 	Vector			EyePosition( void );
 	Vector			BodyTarget( const Vector &posSrc, bool bNoisy = true );
 
-	void			StartTask( const Task_t *pTask );
-	void			RunTask( const Task_t *pTask );
+	virtual void	StartTask( const Task_t *pTask );
+	virtual void	RunTask( const Task_t *pTask );
 	void			PostNPCInit();
-	void			GatherConditions();
+	virtual void	GatherConditions();
 	virtual void	PrescheduleThink();
 	virtual void FireBullets(const FireBulletsInfo_t &info);
 	virtual int AllowEntityToBeGibbed(void);
 
 	Activity		NPC_TranslateActivity( Activity eNewActivity );
-	void			BuildScheduleTestBits( void );
+	virtual void	BuildScheduleTestBits( void );
 	virtual int		SelectSchedule( void );
 	virtual int		SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode );
 	int				SelectScheduleAttack();
@@ -141,7 +141,7 @@ public:
 	virtual bool	QueryHearSound( CSound *pSound );
 
 	virtual int		TranslateSchedule( int scheduleType );
-	void			OnStartSchedule( int scheduleType );
+	virtual void	OnStartSchedule( int scheduleType );
 
 	virtual int GetIdleState(void) { return 0; }
 	virtual void SetIdleState(int state) {}

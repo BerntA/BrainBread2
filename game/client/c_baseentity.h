@@ -1071,7 +1071,7 @@ public:
 	const Vector&		GetAbsVelocity() const;
 
 	void				ApplyLocalVelocityImpulse(const Vector &vecImpulse);
-	void				ApplyAbsVelocityImpulse(const Vector &vecImpulse);
+	void				ApplyAbsVelocityImpulse(const Vector &vecImpulse, bool bNoLimit = false);
 	void				ApplyLocalAngularVelocityImpulse(const AngularImpulse &angImpulse);
 
 	// NOTE: Setting the abs velocity in either space will cause a recomputation

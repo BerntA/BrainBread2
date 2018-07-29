@@ -183,6 +183,10 @@ $Project
 			$File "bb2\npc_base_soldier_static.h"
 			$File "bb2\npc_custom_actor.cpp"
 			$File "bb2\npc_custom_actor.h"
+			$File "hl2\npc_base_soldier.cpp"
+			$File "hl2\npc_base_soldier.h"
+			$File "hl2\npc_BaseZombie.cpp"
+			$File "hl2\npc_BaseZombie.h"
 		}
 		
 		$Folder "Triggers"

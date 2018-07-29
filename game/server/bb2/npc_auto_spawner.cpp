@@ -10,7 +10,7 @@
 #include "GameBase_Server.h"
 #include "GameBase_Shared.h"
 #include "basecombatweapon_shared.h"
-#include "npc_combine.h"
+#include "npc_base_soldier.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

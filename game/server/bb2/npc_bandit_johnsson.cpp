@@ -7,7 +7,7 @@
 #include "cbase.h"
 #include "ai_hull.h"
 #include "ai_motor.h"
-#include "npc_combine.h"
+#include "npc_base_soldier.h"
 #include "engine/IEngineSound.h"
 #include "soundent.h"
 #include "ndebugoverlay.h"

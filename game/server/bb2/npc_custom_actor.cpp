@@ -594,6 +594,32 @@ void CNPC_CustomActor::TaskFail(AI_TaskFailureCode_t code)
 //-----------------------------------------------------------------------------
 Activity CNPC_CustomActor::NPC_TranslateActivity(Activity activity)
 {
+	// Fixes faulty / missing ACT's for BB1 survivors.
+
+	if (activity == ACT_MELEE_ATTACK1)
+		return ACT_MELEE_ATTACK_SWING;
+
+	if (activity == ACT_RUN_AIM_SHOTGUN)
+		return ACT_RUN_AIM_RIFLE;
+	if (activity == ACT_WALK_AIM_SHOTGUN)
+		return ACT_WALK_AIM_RIFLE;
+	if (activity == ACT_IDLE_ANGRY_SHOTGUN)
+		return ACT_IDLE_ANGRY_SMG1;
+	if (activity == ACT_RANGE_ATTACK_SHOTGUN_LOW)
+		return ACT_RANGE_ATTACK_SMG1_LOW;
+
+	if (GetActiveWeapon() && (GetActiveWeapon()->GetWeaponType() == WEAPON_TYPE_SHOTGUN))
+	{
+		switch (activity)
+		{
+		case ACT_RELOAD:
+		case ACT_RELOAD_SHOTGUN:
+		case ACT_RELOAD_SHOTGUN_LOW:
+		case ACT_GESTURE_RELOAD_SHOTGUN:
+			return ACT_RELOAD_SMG1;
+		}
+	}
+
 	return BaseClass::NPC_TranslateActivity(activity);
 }
 
@@ -616,6 +642,9 @@ void CNPC_CustomActor::HandleAnimEvent(animevent_t *pEvent)
 		PlaySound("FootstepRight", pEvent->eventtime);
 	}
 	break;
+
+	case AE_NPC_BODYDROP_HEAVY: // Prevent console spamming for BB1 survivors.
+		break;
 
 	default:
 		BaseClass::HandleAnimEvent(pEvent);

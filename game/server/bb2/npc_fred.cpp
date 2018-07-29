@@ -11,6 +11,7 @@
 #include "ai_memory.h"
 #include "engine/IEngineSound.h"
 #include "hl2mp_gamerules.h"
+#include "particle_parse.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -20,6 +21,16 @@ ConVar sk_npc_boss_fred_rage_health("sk_npc_boss_fred_rage_health", "20", FCVAR_
 ConVar sk_npc_boss_fred_rage_duration("sk_npc_boss_fred_rage_duration", "40", FCVAR_GAMEDLL, "For how long should Fred rage?", true, 5.0f, true, 140.0f);
 ConVar sk_npc_boss_fred_max_jump_height("sk_npc_boss_fred_max_jump_height", "240", FCVAR_GAMEDLL, "Set how high Fred can jump!", true, 80.0f, true, 500.0f);
 
+#define CAMPER_CHECK_TIME 2.5f
+#define CAMPER_MAX_LAST_TIME_SEEN 20.0f // SEC
+#define CAMPER_Z_DIFF_MIN 100.0f
+#define CAMPER_MAX_DISTANCE 500.0f
+#define CAMPER_SHOCKWAVE_RADIUS 175.0f
+#define CAMPER_VELOCITY_PUNCH 1500.0f
+#define CAMPER_VELOCITY_PUNCH_Z 550.0f
+
+#define SHOCKWAVE_COOLDOWN random->RandomFloat(22.0f, 33.0f)
+
 class CNPCFred : public CAI_BlendingHost<CNPC_BaseZombie>
 {
 	DECLARE_CLASS( CNPCFred, CAI_BlendingHost<CNPC_BaseZombie> );
@@ -28,6 +39,16 @@ class CNPCFred : public CAI_BlendingHost<CNPC_BaseZombie>
 public:
 	CNPCFred()
 	{
+		m_flLastCamperCheck = m_flRageTime = 0.0f;
+		m_bIsInRageMode = false;
+		m_hTargetPlayer = NULL;
+	}
+
+	void Precache(void)
+	{
+		PrecacheParticleSystem("bb2_healing_effect");
+		PrecacheScriptSound("Fred.Shockwave");
+		BaseClass::Precache();
 	}
 
 	void Spawn(void);
@@ -49,6 +70,10 @@ public:
 
 	void PrescheduleThink( void );
 	int SelectSchedule ( void );
+	void OnStartSchedule(int scheduleType);
+
+	void StartTask(const Task_t *pTask);
+	void RunTask(const Task_t *pTask);
 
 	void PainSound( const CTakeDamageInfo &info );
 	void DeathSound( const CTakeDamageInfo &info );
@@ -65,6 +90,7 @@ public:
 
 protected:
 	float m_flRageTime;
+	float m_flLastCamperCheck;
 	bool m_bIsInRageMode;
 
 	void StartRageMode(void);
@@ -72,7 +98,10 @@ protected:
 	void CheckRageState(void);
 
 	float GetMaxJumpRise() const { return sk_npc_boss_fred_max_jump_height.GetFloat(); }
-	float GetAmbushDist(void) { return 16000.0f; }
+	void FindAndPunishCampers(void);
+
+private:
+	CHandle<CHL2MP_Player> m_hTargetPlayer;
 };
 
 int ACT_RAGE;
@@ -84,6 +113,25 @@ int ACT_MELEE_ATTACK_RUN;
 enum
 {
 	SCHED_FRED_RAGE_START = LAST_BASE_ZOMBIE_SCHEDULE,
+	SCHED_FRED_SHOCKWAVE,
+};
+
+//=========================================================
+// Tasks
+//=========================================================
+enum
+{
+	TASK_FRED_SHOCK_PLAYERS = LAST_BASE_ZOMBIE_TASK,
+	TASK_FRED_FACE_TARGET,
+	TASK_FRED_SHOCKWAVE_FINISH,
+};
+
+//=========================================================
+// Conditions
+//=========================================================
+enum
+{
+	COND_FRED_SHOULD_SHOCKWAVE = LAST_BASE_ZOMBIE_CONDITION,
 };
 
 LINK_ENTITY_TO_CLASS( npc_fred, CNPCFred );
@@ -158,13 +206,14 @@ void CNPCFred::PrescheduleThink( void )
 	}
 
 	CheckRageState();
+	FindAndPunishCampers();
 
 	BaseClass::PrescheduleThink();
 }
 
 void CNPCFred::StartRageMode(void)
 {
-	if (m_bIsInRageMode)
+	if (m_bIsInRageMode || IsCurSchedule(SCHED_FRED_SHOCKWAVE))
 		return;
 
 	m_bIsInRageMode = true;
@@ -193,14 +242,165 @@ void CNPCFred::CheckRageState(void)
 	}
 }
 
+void CNPCFred::FindAndPunishCampers(void)
+{
+	if (HL2MPRules() && (HL2MPRules()->GetCurrentGamemode() != MODE_OBJECTIVE))
+		return;
+
+	if (gpGlobals->curtime >= m_flLastCamperCheck)
+	{
+		m_flLastCamperCheck = gpGlobals->curtime + CAMPER_CHECK_TIME;
+
+		if (GetEnemy() && GetEnemies() && (GetEnemies()->NumEnemies() > 0) && 
+			!IsCurSchedule(SCHED_FRED_RAGE_START) && !IsCurSchedule(SCHED_FRED_SHOCKWAVE) &&
+			!HasCondition(COND_FRED_SHOULD_SHOCKWAVE))
+		{
+			const Vector &vecMyPos = GetAbsOrigin();
+			CUtlVector<CHL2MP_Player*> pListOfCampingAssholes;
+			AIEnemiesIter_t iter;
+			trace_t tr;
+			CTraceFilterNoNPCsOrPlayer filter(this, GetCollisionGroup());
+			for (AI_EnemyInfo_t *pEMemory = GetEnemies()->GetFirst(&iter); pEMemory != NULL; pEMemory = GetEnemies()->GetNext(&iter))
+			{
+				if (pEMemory->bDangerMemory || pEMemory->hEnemy.Get() == NULL || ((gpGlobals->curtime - pEMemory->timeLastSeen) > CAMPER_MAX_LAST_TIME_SEEN))
+					continue;
+
+				CHL2MP_Player *pPlayer = ToHL2MPPlayer(pEMemory->hEnemy.Get());
+				if (pPlayer == NULL || 
+					!pPlayer->IsAlive() || 
+					(pPlayer->GetTeamNumber() != TEAM_HUMANS) || 
+					pPlayer->IsPlayerInfected() || 
+					pPlayer->IsObserver() ||
+					pPlayer->IsBot() ||
+					(pPlayer->GetFlags() & (FL_NOTARGET | FL_FROZEN)))
+					continue;
+
+				const Vector &vecPos = pPlayer->GetLocalOrigin();
+
+				if (vecPos.AsVector2D().DistTo(vecMyPos.AsVector2D()) > CAMPER_MAX_DISTANCE)
+					continue;
+
+				if (abs(vecPos.z - vecMyPos.z) < CAMPER_Z_DIFF_MIN)
+					continue;
+
+				// Check validity:
+				AI_TraceLine(WorldSpaceCenter(), pPlayer->WorldSpaceCenter(), MASK_SHOT, &filter, &tr);
+				if (tr.startsolid || (tr.fraction != 1.0f))
+					continue;
+
+				pListOfCampingAssholes.AddToTail(pPlayer);
+			}
+
+			int items = pListOfCampingAssholes.Count();
+			if (items)
+			{
+				m_hTargetPlayer = pListOfCampingAssholes[random->RandomInt(0, (items - 1))];
+				SetCondition(COND_FRED_SHOULD_SHOCKWAVE);
+				pListOfCampingAssholes.RemoveAll();
+			}
+		}
+	}
+}
+
 int CNPCFred::SelectSchedule ( void )
 {
-	if( HasCondition( COND_PHYSICS_DAMAGE ) && CanFlinch() )
-	{
-		return SCHED_FLINCH_PHYSICS;
-	}
+	if (HasCondition(COND_FRED_SHOULD_SHOCKWAVE))
+		return SCHED_FRED_SHOCKWAVE;
+
+	if( HasCondition( COND_PHYSICS_DAMAGE ) && CanFlinch() )	
+		return SCHED_FLINCH_PHYSICS;	
 
 	return BaseClass::SelectSchedule();
+}
+
+void CNPCFred::OnStartSchedule(int scheduleType)
+{
+	BaseClass::OnStartSchedule(scheduleType);
+}
+
+void CNPCFred::StartTask(const Task_t *pTask)
+{
+	switch (pTask->iTask)
+	{
+
+	case TASK_FRED_SHOCK_PLAYERS:
+	{
+		CHL2MP_Player *pTarget = m_hTargetPlayer.Get();
+		if (pTarget)
+		{
+			IPredictionSystem::SuppressHostEvents(NULL);
+
+			DispatchParticleEffect("bb2_healing_effect", GetLocalOrigin(), vec3_angle, this);
+			HL2MPRules()->EmitSoundToClient(this, "Laugh", GetNPCType(), GetGender());
+			EmitSound("Fred.Shockwave");
+
+			for (int i = 1; i <= gpGlobals->maxClients; i++)
+			{
+				CHL2MP_Player *pOther = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+				if (!pOther || !pOther->IsAlive() || pOther->IsObserver() || pOther->IsBot() || (pOther->GetTeamNumber() != TEAM_HUMANS))
+					continue;
+
+				if (pOther->GetLocalOrigin().DistTo(pTarget->GetLocalOrigin()) > CAMPER_SHOCKWAVE_RADIUS)
+					continue;
+
+				Vector vecForward = (WorldSpaceCenter() - pOther->WorldSpaceCenter());
+				VectorNormalize(vecForward);
+
+				vecForward.x *= CAMPER_VELOCITY_PUNCH;
+				vecForward.y *= CAMPER_VELOCITY_PUNCH;
+				vecForward.z *= CAMPER_VELOCITY_PUNCH_Z;
+
+				pOther->ExitLadder();
+				pOther->SetGroundEntity(NULL);				
+				pOther->ApplyAbsVelocityImpulse(vecForward, true);
+
+				DispatchParticleEffect("bb2_item_spawn", PATTACH_ROOTBONE_FOLLOW, pOther);
+			}
+		}
+
+		m_hTargetPlayer = NULL;
+		ClearCondition(COND_FRED_SHOULD_SHOCKWAVE);
+		TaskComplete();
+		break;
+	}
+
+	case TASK_FRED_FACE_TARGET:
+	{
+		CHL2MP_Player *pTarget = m_hTargetPlayer.Get();
+		if (pTarget)
+		{
+			float idealYaw = UTIL_VecToYaw(pTarget->WorldSpaceCenter() - WorldSpaceCenter());
+			GetMotor()->SetIdealYaw(idealYaw);
+		}
+		TaskComplete();
+		break;
+	}
+
+	case TASK_FRED_SHOCKWAVE_FINISH:
+		m_flLastCamperCheck = gpGlobals->curtime + SHOCKWAVE_COOLDOWN;
+		TaskComplete();
+		break;
+
+	default:
+		BaseClass::StartTask(pTask);
+		break;
+
+	}
+}
+
+void CNPCFred::RunTask(const Task_t *pTask)
+{
+	switch (pTask->iTask)
+	{
+	case TASK_FRED_SHOCK_PLAYERS:
+	case TASK_FRED_FACE_TARGET:
+	case TASK_FRED_SHOCKWAVE_FINISH:
+		break;
+
+	default:
+		BaseClass::RunTask(pTask);
+		break;
+	}
 }
 
 void CNPCFred::FootstepSound( bool fRightFoot )
@@ -233,7 +433,7 @@ void CNPCFred::AttackMissSound( void )
 void CNPCFred::PainSound( const CTakeDamageInfo &info )
 {
 	// We're constantly taking damage when we are on fire. Don't make all those noises!
-	if ( IsOnFire() )
+	if (IsOnFire() || IsCurSchedule(SCHED_FRED_SHOCKWAVE))
 		return;
 
 	HL2MPRules()->EmitSoundToClient(this, "Pain", GetNPCType(), GetGender());
@@ -241,11 +441,17 @@ void CNPCFred::PainSound( const CTakeDamageInfo &info )
 
 void CNPCFred::DeathSound( const CTakeDamageInfo &info ) 
 {
+	if (IsCurSchedule(SCHED_FRED_SHOCKWAVE))
+		return;
+
 	HL2MPRules()->EmitSoundToClient(this, "Die", GetNPCType(), GetGender());
 }
 
 void CNPCFred::AlertSound( void )
 {
+	if (IsCurSchedule(SCHED_FRED_SHOCKWAVE))
+		return;
+
 	HL2MPRules()->EmitSoundToClient(this, "Alert", GetNPCType(), GetGender());
 
 	// Don't let a moan sound cut off the alert sound.
@@ -254,6 +460,9 @@ void CNPCFred::AlertSound( void )
 
 void CNPCFred::IdleSound( void )
 {
+	if (IsCurSchedule(SCHED_FRED_SHOCKWAVE))
+		return;
+
 	if( GetState() == NPC_STATE_IDLE && random->RandomFloat( 0, 1 ) == 0 )
 	{
 		// Moan infrequently in IDLE state.
@@ -266,11 +475,20 @@ void CNPCFred::IdleSound( void )
 
 void CNPCFred::AttackSound( void )
 {
+	if (IsCurSchedule(SCHED_FRED_SHOCKWAVE))
+		return;
+
 	HL2MPRules()->EmitSoundToClient(this, "Attack", GetNPCType(), GetGender());
 }
 
 int CNPCFred::SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode )
 {
+	if (failedSchedule == SCHED_FRED_SHOCKWAVE)
+	{
+		ClearCondition(COND_FRED_SHOULD_SHOCKWAVE);
+		m_flLastCamperCheck = gpGlobals->curtime + (SHOCKWAVE_COOLDOWN / 2.0f);
+	}
+
 	return BaseClass::SelectFailSchedule( failedSchedule, failedTask, taskFailCode );
 }
 
@@ -298,10 +516,14 @@ void CNPCFred::BuildScheduleTestBits( void )
 {
 	BaseClass::BuildScheduleTestBits();
 
-	if( !IsCurSchedule( SCHED_FLINCH_PHYSICS ) )
-	{
-		SetCustomInterruptCondition( COND_PHYSICS_DAMAGE );
-	}
+	if (!IsCurSchedule(SCHED_FLINCH_PHYSICS))
+		SetCustomInterruptCondition(COND_PHYSICS_DAMAGE);
+
+	if (IsCurSchedule(SCHED_ZOMBIE_CHASE_ENEMY) ||
+		IsCurSchedule(SCHED_ZOMBIE_BASH_DOOR) ||
+		IsCurSchedule(SCHED_ZOMBIE_WANDER_MEDIUM) ||
+		IsCurSchedule(SCHED_ZOMBIE_MELEE_ATTACK1))
+		SetCustomInterruptCondition(COND_FRED_SHOULD_SHOCKWAVE);
 }
 
 AI_BEGIN_CUSTOM_NPC( npc_fred, CNPCFred )
@@ -309,12 +531,34 @@ AI_BEGIN_CUSTOM_NPC( npc_fred, CNPCFred )
 DECLARE_ACTIVITY(ACT_RAGE);
 DECLARE_ACTIVITY(ACT_MELEE_ATTACK_RUN);
 
+DECLARE_TASK(TASK_FRED_SHOCK_PLAYERS);
+DECLARE_TASK(TASK_FRED_FACE_TARGET);
+DECLARE_TASK(TASK_FRED_SHOCKWAVE_FINISH);
+
+DECLARE_CONDITION(COND_FRED_SHOULD_SHOCKWAVE);
+
 DEFINE_SCHEDULE
 (
 SCHED_FRED_RAGE_START,
 
 "	Tasks"
 "		TASK_PLAY_SEQUENCE				ACTIVITY:ACT_RAGE"
+""
+"	Interrupts"
+"		COND_TASK_FAILED"
+)
+
+DEFINE_SCHEDULE
+(
+SCHED_FRED_SHOCKWAVE,
+
+"	Tasks"
+"		TASK_STOP_MOVING		0"
+"		TASK_FRED_FACE_TARGET	0"
+"		TASK_FACE_IDEAL			0"
+"		TASK_FRED_SHOCK_PLAYERS	0"
+"		TASK_PLAY_SEQUENCE		ACTIVITY:ACT_RAGE"
+"		TASK_FRED_SHOCKWAVE_FINISH	0"
 ""
 "	Interrupts"
 "		COND_TASK_FAILED"

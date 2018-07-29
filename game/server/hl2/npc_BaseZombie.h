@@ -14,6 +14,7 @@
 #include "ai_blended_movement.h"
 #include "ai_behavior_actbusy.h"
 #include "npc_base_properties.h"
+#include "BasePropDoor.h"
 
 extern int AE_ZOMBIE_ATTACK_RIGHT;
 extern int AE_ZOMBIE_ATTACK_LEFT;
@@ -38,8 +39,6 @@ extern int AE_ZOMBIE_POUND;
 enum
 {
 	SCHED_ZOMBIE_CHASE_ENEMY = LAST_SHARED_SCHEDULE,
-	SCHED_ZOMBIE_MOVE_TO_AMBUSH,
-	SCHED_ZOMBIE_WAIT_AMBUSH,
 	SCHED_ZOMBIE_WANDER_MEDIUM,	// medium range wandering behavior.
 	SCHED_ZOMBIE_WANDER_FAIL,
 	SCHED_ZOMBIE_WANDER_STANDOFF,
@@ -69,6 +68,8 @@ enum
 {
 	COND_ZOMBIE_LOCAL_MELEE_OBSTRUCTION = LAST_SHARED_CONDITION,
 	COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT,
+	COND_ZOMBIE_CHECK_FOR_OBSTRUCTION,
+	COND_ZOMBIE_ENEMY_IN_SIGHT,
 
 	LAST_BASE_ZOMBIE_CONDITION,
 };
@@ -86,13 +87,14 @@ public:
 	CNPC_BaseZombie(void);
 	virtual ~CNPC_BaseZombie(void);
 
-	void Spawn(void);
-	void Precache(void);
+	virtual void Spawn(void);
+	virtual void Precache(void);
 	virtual float MaxYawSpeed(void);
-	bool OverrideMoveFacing(const AILocalMoveGoal_t &move, float flInterval);
+	virtual bool OverrideMoveFacing(const AILocalMoveGoal_t &move, float flInterval);
 	virtual Class_T Classify(void);
-	void HandleAnimEvent(animevent_t *pEvent);
-	void OnStateChange(NPC_STATE OldState, NPC_STATE NewState);
+	virtual void HandleAnimEvent(animevent_t *pEvent);
+	virtual void OnStateChange(NPC_STATE OldState, NPC_STATE NewState);
+
 	void KillMe(void)
 	{
 		m_iHealth = 5;
@@ -104,7 +106,7 @@ public:
 	virtual bool CanFlinch(void) { return false; }
 
 	// No range attacks
-	int RangeAttack1Conditions(float flDot, float flDist) { return 0; }
+	virtual int RangeAttack1Conditions(float flDot, float flDist) { return 0; }
 
 	virtual int OnTakeDamage_Alive(const CTakeDamageInfo &info);
 	virtual float GetReactionDelay(CBaseEntity *pEnemy) { return 0.0f; }
@@ -116,14 +118,15 @@ public:
 	virtual int TranslateSchedule(int scheduleType);
 	virtual Activity NPC_TranslateActivity(Activity baseAct);
 
-	void StartTask(const Task_t *pTask);
-	void RunTask(const Task_t *pTask);
+	virtual void StartTask(const Task_t *pTask);
+	virtual void RunTask(const Task_t *pTask);
 
-	void GatherConditions(void);
-	void PrescheduleThink(void);
+	virtual void GatherConditions(void);
+	virtual void PrescheduleThink(void);
 
 	virtual void Event_Killed(const CTakeDamageInfo &info);
 	virtual void OnScheduleChange(void);
+	virtual void OnStartSchedule(int scheduleType);
 	virtual void PoundSound();
 
 	// Custom damage/death 
@@ -133,7 +136,7 @@ public:
 	void CopyRenderColorTo(CBaseEntity *pOther);
 
 	// Life Span Accessor:
-	float GetLifeSpan(void) { return m_flSpawnTime; }
+	virtual float GetLifeSpan(void) { return m_flSpawnTime; }
 
 	// Returns whether we must be very near our enemy to attack them.
 	virtual bool MustCloseToAttack(void) { return true; }
@@ -150,12 +153,12 @@ public:
 	virtual void FootstepSound(bool fRightFoot) = 0;
 	virtual void FootscuffSound(bool fRightFoot) = 0;
 
-	void		MakeAISpookySound(float volume, float duration = 0.5);
+	void MakeAISpookySound(float volume, float duration = 0.5);
 
 	virtual bool ValidateNavGoal() { return true; }
 	virtual bool CanPlayMoanSound();
 	virtual void MoanSound(void);
-	bool ShouldPlayIdleSound(void) { return false; }
+	virtual bool ShouldPlayIdleSound(void) { return false; }
 
 	virtual Vector BodyTarget(const Vector &posSrc, bool bNoisy);
 	virtual void TranslateNavGoal(CBaseEntity *pEnemy, Vector &chasePosition);
@@ -173,19 +176,16 @@ protected:
 	// Zombies catch on fire if they take too much burn damage in a given time period.
 	float	m_flBurnDamage;				// Keeps track of how much burn damage we've incurred in the last few seconds.
 	float	m_flBurnDamageResetTime;	// Time at which we reset the burn damage.
+	bool	m_bUseNormalSpeed;
 
 	float m_flNextMoanSound;
 
 	virtual BB2_SoundTypes GetNPCType() { return TYPE_ZOMBIE; }
 	virtual Activity SelectDoorBash();
 	virtual bool IsAllowedToBreakDoors(void) { return true; }
-	virtual float GetAmbushDist(void) { return 16000.0f; }
 
 	EHANDLE m_hLastIgnitionSource;
-	EHANDLE m_hBlockingEntity;
-
-	CRandSimTimer 		 m_DurationDoorBash;
-	CSimTimer 	  		 m_NextTimeToStartDoorBash;
+	CHandle<CBasePropDoor> m_hBlockingEntity;
 
 private:
 
