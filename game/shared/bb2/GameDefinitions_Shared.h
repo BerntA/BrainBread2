@@ -292,6 +292,7 @@ struct DataInventoryItem_Base_t
 
 #ifdef CLIENT_DLL
 	int iHUDTextureID;
+	bool bShouldRenderIcon;
 #else
 	int iLevelReq;
 

@@ -50,7 +50,8 @@ public:
 	virtual float GetJumpGravity() const	{ return 1.8f; }
 	virtual bool CanFlinch(void) { return false; }
 	virtual float CoverRadius(void) { return 700.0f; } // Default cover radius
-	virtual Activity GetCoverActivity(CAI_Hint* pHint) { return ACT_IDLE; }
+	virtual Activity GetCoverActivity(CAI_Hint* pHint) { return ACT_INVALID; }
+	virtual bool IsCrouchedActivity(Activity activity) { return false; }
 	virtual bool ValidateNavGoal() { return true; }
 	virtual float MinFleeDistance(void) { return 20.0f; }
 

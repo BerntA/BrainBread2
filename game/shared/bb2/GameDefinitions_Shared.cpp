@@ -1320,14 +1320,21 @@ void CGameDefinitionsShared::ParseInventoryData(KeyValues *pkvData, bool bIsMapI
 			}
 
 #ifdef CLIENT_DLL
+			item.bShouldRenderIcon = false;
 			const char *hudIconPath = sub->GetString("HUDIconTexture");
 			int hudTextureID = -1;
 			if (strlen(hudIconPath) > 0)
 			{
-				hudTextureID = vgui::surface()->CreateNewTextureID();
-				vgui::surface()->DrawSetTextureFile(hudTextureID, hudIconPath, true, false);
+				item.bShouldRenderIcon = true;
+				char pchFilePath[MAX_WEAPON_STRING];
+				Q_snprintf(pchFilePath, MAX_WEAPON_STRING, "materials/%s.vmt", hudIconPath);
+				if (filesystem->FileExists(pchFilePath, "MOD"))
+				{
+					hudTextureID = vgui::surface()->CreateNewTextureID();
+					vgui::surface()->DrawSetTextureFile(hudTextureID, hudIconPath, true, false);
+				}
 			}
-			item.iHUDTextureID = hudTextureID;
+			item.iHUDTextureID = hudTextureID;		
 #else
 			item.iLevelReq = sub->GetInt("LevelReq");
 

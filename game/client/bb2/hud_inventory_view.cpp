@@ -45,6 +45,8 @@ private:
 
 	CPanelAnimationVarAliasType(float, width_spacing, "width_spacing", "0", "proportional_float");
 	CPanelAnimationVarAliasType(float, height_spacing, "height_spacing", "0", "proportional_float");
+
+	int m_nTextureDefaultIcon;
 };
 
 DECLARE_HUDELEMENT(CHudInventoryView);
@@ -54,6 +56,9 @@ CHudInventoryView::CHudInventoryView(const char * pElementName) : CHudElement(pE
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent(pParent);
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_INVEHICLE | HIDEHUD_ZOMBIEMODE | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
+
+	m_nTextureDefaultIcon = surface()->CreateNewTextureID();
+	surface()->DrawSetTextureFile(m_nTextureDefaultIcon, "vgui/hud/inventory/unknown", true, false);
 }
 
 //------------------------------------------------------------------------
@@ -94,7 +99,7 @@ void CHudInventoryView::Paint()
 		if (!data)
 			continue;
 
-		if (data->iHUDTextureID == -1)
+		if (data->bShouldRenderIcon == false)
 			continue;
 
 		if (itemsDrawn == 6)
@@ -104,7 +109,7 @@ void CHudInventoryView::Paint()
 		}
 
 		surface()->DrawSetColor(GetFgColor());
-		surface()->DrawSetTexture(data->iHUDTextureID);
+		surface()->DrawSetTexture((data->iHUDTextureID == -1) ? m_nTextureDefaultIcon : data->iHUDTextureID);
 		surface()->DrawTexturedRect(xpos, ypos, item_width + xpos, item_height + ypos);
 		itemsDrawn++;
 		ypos += item_height + height_spacing;

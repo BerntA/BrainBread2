@@ -233,8 +233,8 @@ void CNPCWalker::Spawn( void )
 	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
 
 	// Reduce zombies view dist:
-	m_flDistTooFar = 200.0f;
-	GetSenses()->SetDistLook(400.0f);
+	m_flDistTooFar = 500.0f;
+	GetSenses()->SetDistLook(750.0f);
 }
 
 void CNPCWalker::SpawnDirectly(void)

@@ -121,11 +121,11 @@ int C_Playermodel::DrawModel(int flags)
 		!((bb2_render_client_in_mirrors.GetBool() && pOwner->IsLocalPlayer() && g_bShouldRenderLocalPlayerExternally) || pOwner->ShouldDrawThisPlayer()))
 		return 0;
 
-	QAngle saveAngles = pOwner->GetLocalAngles(); // Remove pitch+ROLL, use poseparam instead.. HACK
-	QAngle useAngles = saveAngles;
-	useAngles[PITCH] = 0.0f;
-	useAngles[ROLL] = 0.0f;
-	pOwner->SetLocalAngles(useAngles);
+	//QAngle saveAngles = pOwner->EyeAngles(); // Remove pitch+ROLL, use poseparam instead.. HACK
+	//QAngle useAngles = saveAngles;
+	//useAngles[PITCH] = 0.0f;
+	//useAngles[ROLL] = 0.0f;
+	//pOwner->SetLocalAngles(useAngles);
 
 	bool bShouldDrawOverrides = (!(flags & STUDIO_SKIP_MATERIAL_OVERRIDES));
 
@@ -172,7 +172,7 @@ int C_Playermodel::DrawModel(int flags)
 		}
 	}
 
-	pOwner->SetLocalAngles(saveAngles);
+	//pOwner->SetLocalAngles(saveAngles);
 	return retVal;
 }
 
@@ -227,7 +227,7 @@ void C_Playermodel::OnUpdate(void)
 	if (pOwner == NULL)
 		return;
 
-	QAngle angles = pOwner->GetLocalAngles();
+	QAngle angles = pOwner->EyeAngles();
 	angles[PITCH] = 0;
 	angles[ROLL] = 0;
 

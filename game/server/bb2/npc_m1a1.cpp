@@ -176,10 +176,12 @@ void CNPCM1A1::Spawn(void)
 	Precache();
 	SetModel(TANK_MODEL);
 
-	SetSolid(SOLID_VPHYSICS);
 	SetMoveType(MOVETYPE_NONE);
-	VPhysicsInitShadow(false, false);
-	//VPhysicsInitStatic(); <- will prevent pose params and such...
+	if (GetSolid() == SOLID_VPHYSICS)
+	{
+		VPhysicsInitShadow(false, false);
+		//VPhysicsInitStatic(); <- will prevent pose params and such...
+	}
 
 	BaseClass::Spawn();
 

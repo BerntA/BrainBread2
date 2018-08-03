@@ -362,8 +362,8 @@ void CNPC_BaseSoldier::Spawn( void )
 
 	if (!IsBoss())
 	{
-		m_flDistTooFar = 450.0f;
-		GetSenses()->SetDistLook(600.0f);
+		m_flDistTooFar = 500.0f;
+		GetSenses()->SetDistLook(650.0f);
 	}
 
 	OnSetGibHealth();
@@ -705,28 +705,18 @@ void CNPC_BaseSoldier::StartTask( const Task_t *pTask )
 				CBaseCombatCharacter *pBCC = GetEnemyCombatCharacterPointer();
 
 				if	(pBCC && pBCC->IsPlayer() && (!pBCC->FInViewCone ( this )) &&
-					(gpGlobals->curtime - m_flLastAttackTime > 3.0) )
+					((gpGlobals->curtime - m_flLastAttackTime) > 3.0f) )
 				{
 					m_flLastAttackTime = gpGlobals->curtime;
 
-					int iRand = random->RandomInt( 1, 2 );
-
-					if ( iRand == 1 )
+					if (random->RandomInt(1, 2) == 1)
 						HL2MPRules()->EmitSoundToClient(this, "Incoming", GetNPCType(), GetGender());
 					else
 						HL2MPRules()->EmitSoundToClient(this, "Contact", GetNPCType(), GetGender());
 
 					// Wait two seconds
 					SetWait( 2.0 );
-
-					if ( !IsCrouching() )
-					{
-						SetActivity(ACT_IDLE);
-					}
-					else
-					{
-						SetActivity(ACT_COWER); // This is really crouch idle
-					}
+					SetActivity(ACT_IDLE);
 				}
 				// -------------------------------------------------------------
 				//  Otherwise move on
@@ -740,7 +730,6 @@ void CNPC_BaseSoldier::StartTask( const Task_t *pTask )
 			{
 				HL2MPRules()->EmitSoundToClient(this, "Grenade", GetNPCType(), GetGender()); // throw frag
 				SetActivity(ACT_IDLE);
-
 				// Wait two seconds
 				SetWait( 2.0 );
 			}
@@ -1134,16 +1123,15 @@ Activity CNPC_BaseSoldier::NPC_TranslateActivity( Activity eNewActivity )
 	if (ai_show_active_military_activities.GetBool())
 		Msg("Running Activity %i Act Name: %s\n", eNewActivity, GetActivityName(eNewActivity));
 
-	if (eNewActivity == ACT_RANGE_ATTACK2)
-	{
-		return (Activity)ACT_COMBINE_THROW_GRENADE;
-	}
+	if (eNewActivity == ACT_RAPPEL_LOOP)
+		return ACT_IDLE;
+
+	if (eNewActivity == ACT_RANGE_ATTACK2)	
+		return (Activity)ACT_COMBINE_THROW_GRENADE;	
 	else if (eNewActivity == ACT_IDLE)
 	{
-		if ( !IsCrouching() && ( m_NPCState == NPC_STATE_COMBAT || m_NPCState == NPC_STATE_ALERT ) )
-		{
-			eNewActivity = ACT_IDLE_ANGRY;
-		}
+		if ( !IsCrouching() && ( m_NPCState == NPC_STATE_COMBAT || m_NPCState == NPC_STATE_ALERT ) )		
+			eNewActivity = ACT_IDLE_ANGRY;		
 	}
 
 	if ( m_AssaultBehavior.IsRunning() )
