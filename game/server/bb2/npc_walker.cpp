@@ -112,8 +112,7 @@ LINK_ENTITY_TO_CLASS(npc_runner, CNPCWalker);
 enum
 {
 	SCHED_ZOMBIE_FAIL = LAST_BASE_ZOMBIE_SCHEDULE,
-	SCHED_WALKER_RISE_IDLE,
-	SCHED_WALKER_RISE,
+	SCHED_ZOMBIE_SPAWN,
 };
 
 //=========================================================
@@ -122,7 +121,9 @@ enum
 enum
 {
 	TASK_ZOMBIE_EXPRESS_ANGER = LAST_BASE_ZOMBIE_TASK,
-	TASK_ZOMBIE_SPAWN,
+	TASK_ZOMBIE_SPAWN_IDLE,
+	TASK_ZOMBIE_SPAWN_RISE,
+	TASK_ZOMBIE_SPAWNED,
 };
 
 //-----------------------------------------------------------------------------
@@ -190,7 +191,6 @@ void CNPCWalker::FadeIn()
 		SetRenderMode(kRenderNormal);
 		SetRenderColorA(255);
 		m_bIsReady = true;
-		SetSchedule(SCHED_WALKER_RISE);
 	}
 }
 
@@ -221,13 +221,8 @@ void CNPCWalker::Spawn( void )
 	else
 	{
 		m_bIsReady = m_bCheckCollisionGroupChange = false;
-
 		SetRenderMode(kRenderTransAlpha);
 		SetRenderColorA(0);
-
-		SetState(NPC_STATE_IDLE);
-		SetActivity((Activity)ACT_RISE_IDLE);
-		SetSchedule(SCHED_WALKER_RISE_IDLE);
 	}
 
 	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
@@ -285,8 +280,8 @@ void CNPCWalker::PrescheduleThink( void )
 //-----------------------------------------------------------------------------
 int CNPCWalker::SelectSchedule ( void )
 {
-	if (!m_bIsReady)
-		return SCHED_WALKER_RISE_IDLE;
+	if (m_bIsReady == false)
+		return SCHED_ZOMBIE_SPAWN;
 
 	return BaseClass::SelectSchedule();
 }
@@ -566,6 +561,9 @@ int CNPCWalker::TranslateSchedule( int scheduleType )
 
 Activity CNPCWalker::NPC_TranslateActivity( Activity newActivity )
 {
+	if (IsCurSchedule(SCHED_ZOMBIE_SPAWN))
+		return newActivity;
+
 	bool bIsIdle = ((newActivity == ACT_IDLE) || (newActivity == (Activity)ACT_ZOMBIE_TANTRUM));
 
 	newActivity = BaseClass::NPC_TranslateActivity( newActivity );
@@ -685,7 +683,15 @@ void CNPCWalker::StartTask( const Task_t *pTask )
 		}
 		break;
 
-	case TASK_ZOMBIE_SPAWN:
+	case TASK_ZOMBIE_SPAWN_IDLE:
+		SetIdealActivity(ACT_RISE_IDLE);
+		break;
+
+	case TASK_ZOMBIE_SPAWN_RISE:
+		SetIdealActivity(ACT_RISE);
+		break;
+
+	case TASK_ZOMBIE_SPAWNED:
 		{
 			m_bCheckCollisionGroupChange = true;
 			TaskComplete();
@@ -705,14 +711,32 @@ void CNPCWalker::RunTask( const Task_t *pTask )
 {
 	switch( pTask->iTask )
 	{
-	case TASK_ZOMBIE_SPAWN:
+	case TASK_ZOMBIE_SPAWN_IDLE:
+	{
+		if (m_bIsReady)
+			TaskComplete();
+		else if (IsActivityFinished())
+			SetIdealActivity(ACT_RISE_IDLE);
+	}
+	break;
+
+	case TASK_ZOMBIE_SPAWN_RISE:
+	{
+		if (IsActivityFinished())
+			TaskComplete();
+	}
+	break;
+
+	case TASK_ZOMBIE_SPAWNED:
 		break;
+
 	case TASK_ZOMBIE_EXPRESS_ANGER:
 		{
 			if ( IsActivityFinished() )			
 				TaskComplete();						
 		}
 		break;
+
 	default:
 		BaseClass::RunTask( pTask );
 		break;
@@ -758,7 +782,9 @@ int CNPCWalker::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 AI_BEGIN_CUSTOM_NPC( npc_walker, CNPCWalker )
 
 DECLARE_TASK(TASK_ZOMBIE_EXPRESS_ANGER)
-DECLARE_TASK(TASK_ZOMBIE_SPAWN)
+DECLARE_TASK(TASK_ZOMBIE_SPAWN_IDLE)
+DECLARE_TASK(TASK_ZOMBIE_SPAWN_RISE)
+DECLARE_TASK(TASK_ZOMBIE_SPAWNED)
 
 DECLARE_ACTIVITY( ACT_ZOMBIE_TANTRUM );
 
@@ -780,22 +806,12 @@ DECLARE_ACTIVITY(ACT_CRAWL_NOLEGS_ATTACK_RIGHT);
 
 	DEFINE_SCHEDULE
 	(
-	SCHED_WALKER_RISE_IDLE,
+	SCHED_ZOMBIE_SPAWN,
 
 	"	Tasks"
-	"		TASK_PLAY_SEQUENCE				ACTIVITY:ACT_RISE_IDLE"
-	""
-	"	Interrupts"
-	"		COND_TASK_FAILED"
-	)
-
-	DEFINE_SCHEDULE
-	(
-	SCHED_WALKER_RISE,
-
-	"	Tasks"
-	"		TASK_PLAY_SEQUENCE				ACTIVITY:ACT_RISE"
-	"		TASK_ZOMBIE_SPAWN		0"
+	"		TASK_ZOMBIE_SPAWN_IDLE	0"
+	"		TASK_ZOMBIE_SPAWN_RISE	0"
+	"		TASK_ZOMBIE_SPAWNED		0"
 	""
 	"	Interrupts"
 	"		COND_TASK_FAILED"

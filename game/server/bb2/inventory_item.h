@@ -31,6 +31,8 @@ public:
 	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 	void DelayedUse(CBaseEntity *pActivator);
 	void OnRotationEffect(void);
+	void Teleport(const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity);
+	void UpdateObjectiveIconPosition(const Vector &pos);
 
 	CHL2MP_Player *GetHumanInteractor(CBaseEntity *pActivator);
 	bool SetItem(const DataInventoryItem_Base_t &data, bool bMapItem);

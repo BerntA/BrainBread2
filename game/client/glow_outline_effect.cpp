@@ -178,7 +178,7 @@ void CGlowObjectManager::RenderGlowModels(const CViewSetup *pSetup, CMatRenderCo
 		render->SetBlend(alpha);
 		Vector vGlowColor = m_pGlowEntities[i]->GetGlowColor() * alpha;
 		render->SetColorModulation(&vGlowColor[0]); // This only sets rgb, not alpha
-		m_pGlowEntities[i]->DrawModel(DEFAULT_RENDER_FLAGS_FOR_GLOW_ENTS);
+		m_pGlowEntities[i]->GetOverridenParentEntity(m_pGlowEntities[i])->DrawModel(DEFAULT_RENDER_FLAGS_FOR_GLOW_ENTS);
 	}
 
 	if (g_bDumpRenderTargets)
@@ -233,7 +233,7 @@ void CGlowObjectManager::ApplyEntityGlowEffects(const CViewSetup *pSetup, CMatRe
 
 				stencilState.SetStencilState(pRenderContext);
 
-				m_pGlowEntities[i]->DrawModel(DEFAULT_RENDER_FLAGS_FOR_GLOW_ENTS);
+				m_pGlowEntities[i]->GetOverridenParentEntity(m_pGlowEntities[i])->DrawModel(DEFAULT_RENDER_FLAGS_FOR_GLOW_ENTS);
 			}
 			else if (m_pGlowEntities[i]->ShouldGlowWhenOccluded())
 			{
@@ -247,7 +247,7 @@ void CGlowObjectManager::ApplyEntityGlowEffects(const CViewSetup *pSetup, CMatRe
 
 				stencilState.SetStencilState(pRenderContext);
 
-				m_pGlowEntities[i]->DrawModel(DEFAULT_RENDER_FLAGS_FOR_GLOW_ENTS);
+				m_pGlowEntities[i]->GetOverridenParentEntity(m_pGlowEntities[i])->DrawModel(DEFAULT_RENDER_FLAGS_FOR_GLOW_ENTS);
 			}
 			else if (m_pGlowEntities[i]->ShouldGlowWhenUnoccluded())
 			{
@@ -263,7 +263,7 @@ void CGlowObjectManager::ApplyEntityGlowEffects(const CViewSetup *pSetup, CMatRe
 
 				stencilState.SetStencilState(pRenderContext);
 
-				m_pGlowEntities[i]->DrawModel(DEFAULT_RENDER_FLAGS_FOR_GLOW_ENTS);
+				m_pGlowEntities[i]->GetOverridenParentEntity(m_pGlowEntities[i])->DrawModel(DEFAULT_RENDER_FLAGS_FOR_GLOW_ENTS);
 			}
 		}
 	}
@@ -285,7 +285,7 @@ void CGlowObjectManager::ApplyEntityGlowEffects(const CViewSetup *pSetup, CMatRe
 			stencilState.m_ZFailOp = STENCILOPERATION_KEEP;
 			stencilState.SetStencilState(pRenderContext);
 
-			m_pGlowEntities[i]->DrawModel(DEFAULT_RENDER_FLAGS_FOR_GLOW_ENTS);
+			m_pGlowEntities[i]->GetOverridenParentEntity(m_pGlowEntities[i])->DrawModel(DEFAULT_RENDER_FLAGS_FOR_GLOW_ENTS);
 		}
 	}
 

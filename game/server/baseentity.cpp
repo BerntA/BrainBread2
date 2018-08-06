@@ -6266,18 +6266,14 @@ void CBaseEntity::RemoveAllDecals( void )
 //-----------------------------------------------------------------------------
 void CBaseEntity::InputGlow(inputdata_t &inputdata)
 {
-	if (m_iGlowMethod != GLOW_MODE_RADIUS)
-	{
-		int value = inputdata.value.Int();
-		SetGlowMode(((value >= 1) ? GLOW_MODE_GLOBAL : GLOW_MODE_NONE));
-		m_iGlowTeamLink.Set(value);
-	}
+	int value = inputdata.value.Int();
+	SetGlowMode(((value >= 1) ? GLOW_MODE_GLOBAL : GLOW_MODE_NONE));
+	m_iGlowTeamLink.Set(value);
 }
 
 void CBaseEntity::InputSetGlowColor(inputdata_t &inputdata)
 {
-	if (m_iGlowMethod != GLOW_MODE_RADIUS)
-		m_GlowColor = inputdata.value.Color32();
+	m_GlowColor = inputdata.value.Color32();
 }
 
 void CBaseEntity::RemoveGlowEffect()

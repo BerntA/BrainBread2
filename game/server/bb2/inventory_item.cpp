@@ -225,15 +225,26 @@ void CInventoryItem::OnRotationEffect(void)
 	if ((EnablePhysics() == false) && m_bHasDoneLateUpdate)
 		return;
 
+	UpdateObjectiveIconPosition(GetAbsOrigin());
+	m_bHasDoneLateUpdate = true;
+}
+
+void CInventoryItem::Teleport(const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity)
+{
+	BaseClass::Teleport(newPosition, newAngles, newVelocity);
+
+	UpdateObjectiveIconPosition(GetAbsOrigin());
+}
+
+void CInventoryItem::UpdateObjectiveIconPosition(const Vector &pos)
+{
 	CBaseEntity *pEnt = m_pObjIcon.Get();
 	if (pEnt)
 	{
-		Vector vecOrigin = this->GetAbsOrigin();
+		Vector vecOrigin = pos;
 		vecOrigin.z += OBJECTIVE_ICON_EXTRA_HEIGHT;
 		pEnt->SetAbsOrigin(vecOrigin);
 	}
-
-	m_bHasDoneLateUpdate = true;
 }
 
 void CInventoryItem::FireGameEvent(IGameEvent *event)
