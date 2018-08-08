@@ -145,7 +145,7 @@ ConVar  ai_debug_enemies( "ai_debug_enemies", "0" );
 
 ConVar	ai_rebalance_thinks( "ai_rebalance_thinks", "1" );
 ConVar	ai_use_efficiency( "ai_use_efficiency", "1" );
-ConVar	ai_use_frame_think_limits( "ai_use_frame_think_limits", "1" );
+ConVar	ai_use_frame_think_limits( "ai_use_frame_think_limits", "0" );
 ConVar	ai_default_efficient( "ai_default_efficient", "0" );
 ConVar	ai_efficiency_override( "ai_efficiency_override", "0" );
 ConVar	ai_debug_efficiency( "ai_debug_efficiency", "0" );
@@ -3091,48 +3091,26 @@ void CAI_BaseNPC::UpdateEfficiency( bool bInPVS )
 		return;
 	}
 
-	//---------------------------------
-	#ifdef BB2_AI
-	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin(), true);
-	#else
-	CBasePlayer *pPlayer = AI_GetSinglePlayer(); 
-	#endif //BB2_AI
+	Vector vPlayerEyePosition = vec3_origin, vPlayerForward = vec3_origin;
+	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetLocalOrigin(), true);
+	if (pPlayer)
+		pPlayer->EyePositionAndVectors(&vPlayerEyePosition, &vPlayerForward, NULL, NULL);
 
-	static Vector vPlayerEyePosition;
-	static Vector vPlayerForward;
-	static int iPrevFrame = -1;
-	if ( gpGlobals->framecount != iPrevFrame )
-	{
-		iPrevFrame = gpGlobals->framecount;
-		if ( pPlayer )
-		{
-			pPlayer->EyePositionAndVectors( &vPlayerEyePosition, &vPlayerForward, NULL, NULL );
-		}
-	}
-
-	Vector	vToNPC		= GetAbsOrigin() - vPlayerEyePosition;
-	float	playerDist	= VectorNormalize( vToNPC );
+	Vector	vToNPC = GetLocalOrigin() - vPlayerEyePosition;
+	float	playerDist = VectorNormalize(vToNPC);
 	bool	bPlayerFacing;
-
 	bool	bClientPVSExpanded = UTIL_ClientPVSIsExpanded();
 
-	if ( pPlayer )
-	{
-		bPlayerFacing = ( bClientPVSExpanded || ( bInPVS && vPlayerForward.Dot( vToNPC ) > 0 ) );
-	}
+	if ( pPlayer )	
+		bPlayerFacing = (bClientPVSExpanded || (bInPVS && vPlayerForward.Dot(vToNPC) > 0));	
 	else
 	{
 		playerDist = 0;
 		bPlayerFacing = true;
 	}
 
-	//---------------------------------
-
-	bool bInVisibilityPVS = ( bClientPVSExpanded && UTIL_FindClientInVisibilityPVS( edict() ) != NULL );
-
-	//---------------------------------
-
-	if ( ( bInPVS && ( bPlayerFacing || playerDist < 25*12 ) ) || bClientPVSExpanded )
+	bool bInVisibilityPVS = (bClientPVSExpanded && UTIL_FindClientInVisibilityPVS(edict()) != NULL);
+	if ((bInPVS && (bPlayerFacing || playerDist < GetSenses()->GetDistLook())) || bClientPVSExpanded)
 	{
 		SetMoveEfficiency( AIME_NORMAL );
 	}
@@ -3236,21 +3214,15 @@ void CAI_BaseNPC::UpdateEfficiency( bool bInPVS )
 	};
 
 	int	range;
-	if ( bInPVS )
+	if (bInPVS || (playerDist < m_flDistTooFar))
 	{
-		if ( playerDist < 15*12 )
-		{
-			SetEfficiency( minEfficiency );
-			return;
-		}
-
-		range = ( playerDist < 50*12 ) ? DIST_NEAR : 
-				( playerDist < 200*12 ) ? DIST_MID : DIST_FAR;
+		SetEfficiency(minEfficiency);
+		return;
 	}
 	else
 	{
-		range = ( playerDist < 25*12 ) ? DIST_NEAR : 
-				( playerDist < 100*12 ) ? DIST_MID : DIST_FAR;
+		range = (playerDist < GetSenses()->GetDistLook()) ? DIST_NEAR :
+			(playerDist < (GetSenses()->GetDistLook() * 1.5f)) ? DIST_MID : DIST_FAR;
 	}
 
 	// Efficiency mappings
@@ -3264,44 +3236,44 @@ void CAI_BaseNPC::UpdateEfficiency( bool bInPVS )
 			// In PVS
 				// Facing
 					AIE_NORMAL,
-					AIE_EFFICIENT,
+					AIE_NORMAL,
 					AIE_EFFICIENT,
 				// Not facing
+					AIE_NORMAL,
 					AIE_EFFICIENT,
 					AIE_EFFICIENT,
-					AIE_VERY_EFFICIENT,
 			// Not in PVS
+					AIE_NORMAL,
 					AIE_VERY_EFFICIENT,
-					AIE_SUPER_EFFICIENT,
 					AIE_SUPER_EFFICIENT,
 		// Alert
 			// In PVS
 				// Facing
 					AIE_NORMAL,
-					AIE_EFFICIENT,
-					AIE_EFFICIENT,
+					AIE_NORMAL,
+					AIE_NORMAL,
 				// Not facing
 					AIE_NORMAL,
-					AIE_EFFICIENT,
+					AIE_NORMAL,
 					AIE_EFFICIENT,
 			// Not in PVS
+					AIE_NORMAL,
 					AIE_EFFICIENT,
 					AIE_VERY_EFFICIENT,
-					AIE_SUPER_EFFICIENT,
 		// Combat
 			// In PVS
 				// Facing
 					AIE_NORMAL,
 					AIE_NORMAL,
-					AIE_EFFICIENT,
+					AIE_NORMAL,
 				// Not facing
 					AIE_NORMAL,
-					AIE_EFFICIENT,
-					AIE_EFFICIENT,
+					AIE_NORMAL,
+					AIE_NORMAL,
 			// Not in PVS
 					AIE_NORMAL,
+					AIE_NORMAL,
 					AIE_EFFICIENT,
-					AIE_VERY_EFFICIENT,	
 	};
 
 	static const int stateBase[] = { 0, 9, 18 };
@@ -3442,6 +3414,7 @@ struct AIRebalanceInfo_t
 	bool			bInPVS;
 	float			dotPlayer;
 	float			distPlayer;
+	float			distLook;
 };
 
 int __cdecl ThinkRebalanceCompare( const AIRebalanceInfo_t *pLeft, const AIRebalanceInfo_t *pRight )
@@ -3468,7 +3441,7 @@ int __cdecl ThinkRebalanceCompare( const AIRebalanceInfo_t *pLeft, const AIRebal
 	if ( pRight->dotPlayer < 0 )
 		return -1;
 
-	const float NEAR_PLAYER = 50*12;
+	const float NEAR_PLAYER = ((pLeft->distLook + pRight->distLook) / 2.0f);
 
 	if ( pLeft->distPlayer < NEAR_PLAYER && pRight->distPlayer >= NEAR_PLAYER )
 		return -1;
@@ -3541,28 +3514,9 @@ void CAI_BaseNPC::RebalanceThinks()
 		AI_PROFILE_SCOPE(AI_Think_Rebalance );
 
 		static CUtlVector<AIRebalanceInfo_t> rebalanceCandidates( 16, 64 );
-		gm_iNextThinkRebalanceTick = gpGlobals->tickcount + TIME_TO_TICKS( random->RandomFloat( 3, 5) );
+		gm_iNextThinkRebalanceTick = gpGlobals->tickcount + TIME_TO_TICKS(random->RandomFloat(3, 5));
 
 		int i;
-
-		#ifdef BB2_AI
-			CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin(), true); 
-		#else
-			CBasePlayer *pPlayer = AI_GetSinglePlayer();
-		#endif //BB2_AI
-
-
-		Vector vPlayerForward;
-		Vector vPlayerEyePosition;
-
-		vPlayerForward.Init();
-		vPlayerEyePosition.Init();
-
-		if ( pPlayer )
-		{
-			pPlayer->EyePositionAndVectors( &vPlayerEyePosition, &vPlayerForward, NULL, NULL );
-		}
-
 		int iTicksPer10Hz = TIME_TO_TICKS( .1 );
 		int iMinTickRebalance = gpGlobals->tickcount - 1; // -1 needed for alternate ticks
 		int iMaxTickRebalance = gpGlobals->tickcount + iTicksPer10Hz;
@@ -3573,6 +3527,11 @@ void CAI_BaseNPC::RebalanceThinks()
 			if (!pCandidate)
 				continue;
 
+			Vector vPlayerForward = vec3_origin, vPlayerEyePosition = vec3_origin;
+			CBasePlayer *pPlayer = UTIL_GetNearestPlayer(pCandidate->GetLocalOrigin(), true);
+			if (pPlayer)
+				pPlayer->EyePositionAndVectors(&vPlayerEyePosition, &vPlayerForward, NULL, NULL);
+
 			if ( pCandidate->CanThinkRebalance() &&
 				( pCandidate->GetNextThinkTick() >= iMinTickRebalance && 
 				pCandidate->GetNextThinkTick() < iMaxTickRebalance ) )
@@ -3581,6 +3540,7 @@ void CAI_BaseNPC::RebalanceThinks()
 
 				rebalanceCandidates[iInfo].pNPC = pCandidate;
 				rebalanceCandidates[iInfo].iNextThinkTick = pCandidate->GetNextThinkTick();
+				rebalanceCandidates[iInfo].distLook = pCandidate->GetSenses()->GetDistLook();
 
 				if ( pCandidate->IsFlaggedEfficient() )
 				{

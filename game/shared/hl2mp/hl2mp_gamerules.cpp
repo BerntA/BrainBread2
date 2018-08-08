@@ -2442,6 +2442,8 @@ ConCommand cc_BotH("bot_add_human", Bot_h, "Add a human bot.", FCVAR_CHEAT);
 
 void CHL2MPRules::RestartGame()
 {
+	g_bFirstTimeSpawnedNPC = false;
+
 	CleanUpMap();
 
 	// now respawn all players
@@ -2494,8 +2496,6 @@ void CHL2MPRules::RestartGame()
 	}
 
 	GameBaseShared()->RemoveInventoryItems();
-
-	g_bFirstTimeSpawnedNPC = false;
 }
 
 void CHL2MPRules::CleanUpMap()

@@ -398,10 +398,13 @@ void CLogicObjective::FireGameEvent(IGameEvent *event)
 	}
 	else if (!strcmp(type, "entity_killed"))
 	{
+		if (!IsActive() || !m_bShouldEntityCount)
+			return;
+
 		CBaseEntity *pVictim = UTIL_EntityByIndex(event->GetInt("entindex_killed", 0));
 		CBaseEntity *pAttacker = UTIL_EntityByIndex(event->GetInt("entindex_attacker", 0));
 
-		if (!pAttacker || !pVictim || !IsActive() || !m_bShouldEntityCount)
+		if (!pAttacker || !pVictim)
 			return;
 
 		bool bVictimIsABoss = (pVictim->IsNPC() && pVictim->MyNPCPointer() && (pVictim->MyNPCPointer()->IsBoss() || pVictim->IsHumanBoss() || pVictim->IsZombieBoss()));
@@ -415,7 +418,7 @@ void CLogicObjective::FireGameEvent(IGameEvent *event)
 			return;
 
 		const char *goalEnt = STRING(szGoalEntity);
-		if (FClassnameIs(pVictim, goalEnt) || (!strcmp(goalEnt, "zombies") && (pVictim->Classify() == CLASS_ZOMBIE)))
+		if (FClassnameIs(pVictim, goalEnt) || ((pVictim->Classify() == CLASS_ZOMBIE) && !strcmp(goalEnt, "zombies")))
 		{
 			m_iKillsLeft--;
 			if (m_iKillsLeft < 0)

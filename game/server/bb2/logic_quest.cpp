@@ -410,10 +410,7 @@ void CLogicQuest::FireGameEvent(IGameEvent *event)
 			if (!pAttacker || !pVictim)
 				return;
 
-			if ((m_iQuestStatusOverall == STATUS_FAILED) || (m_iQuestStatusOverall == STATUS_SUCCESS))
-				return;
-
-			if (!ShouldShowEntityCounting())
+			if ((m_iQuestStatusOverall == STATUS_FAILED) || (m_iQuestStatusOverall == STATUS_SUCCESS) || !ShouldShowEntityCounting())
 				return;
 
 			bool bVictimIsABoss = (pVictim->IsNPC() && pVictim->MyNPCPointer() && (pVictim->MyNPCPointer()->IsBoss() || pVictim->IsHumanBoss() || pVictim->IsZombieBoss()));
