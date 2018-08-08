@@ -1123,7 +1123,7 @@ Activity CNPC_BaseSoldier::NPC_TranslateActivity( Activity eNewActivity )
 	if (ai_show_active_military_activities.GetBool())
 		Msg("Running Activity %i Act Name: %s\n", eNewActivity, GetActivityName(eNewActivity));
 
-	if (eNewActivity == ACT_RAPPEL_LOOP)
+	if (eNewActivity == ACT_RAPPEL_LOOP || eNewActivity == ACT_COWER)
 		return ACT_IDLE;
 
 	if (eNewActivity == ACT_RANGE_ATTACK2)	

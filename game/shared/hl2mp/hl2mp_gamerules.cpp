@@ -2940,7 +2940,7 @@ CBaseEntity *CHL2MPRules::GetNearbyBreakableDoorEntity(CBaseEntity *pChecker)
 {
 	if (pChecker && m_hBreakableDoors.Count())
 	{
-		Vector vecPos = pChecker->GetAbsOrigin();
+		const Vector &vecPos = pChecker->GetAbsOrigin();
 		for (int i = 0; i < m_hBreakableDoors.Count(); i++)
 		{
 			CBaseEntity *pObstruction = m_hBreakableDoors[i].Get();
@@ -2951,15 +2951,19 @@ CBaseEntity *CHL2MPRules::GetNearbyBreakableDoorEntity(CBaseEntity *pChecker)
 			if (!pDoor)
 				continue;
 
-			if (pDoor->m_iHealth <= 0)
+			if (pDoor->m_iHealth <= 0 ||
+				!(pDoor->IsDoorClosed() || pDoor->IsDoorClosing() || pDoor->IsDoorLocked()))
 				continue;
 
-			float dist = vecPos.DistTo(pDoor->GetLocalOrigin());
-			if (dist > 150.0f)
+			const Vector &vecDoor = pDoor->GetLocalOrigin();
+			float dist = vecPos.AsVector2D().DistTo(vecDoor.AsVector2D());
+			float zDist = (vecDoor.z - vecPos.z);
+			float collisionHeightDoor = abs(pDoor->WorldAlignMaxs().z) + abs(pDoor->WorldAlignMins().z);
+
+			if ((dist > 120.0f) || (zDist <= -10.0f) || (zDist >= ((collisionHeightDoor / 2.0f) + 10.0f)))
 				continue;
 
-			if (pDoor->IsDoorClosed() || pDoor->IsDoorClosing() || pDoor->IsDoorLocked())
-				return pObstruction;
+			return pObstruction;
 		}
 	}
 

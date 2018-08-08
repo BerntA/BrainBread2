@@ -951,7 +951,7 @@ void CNPC_BaseZombie::GatherConditions( void )
 {
 	BaseClass::GatherConditions();
 
-	if (IsAllowedToBreakDoors() && (GetEnemy() != NULL) && (gpGlobals->curtime >= m_flLastObstructionCheck) && !IsCurSchedule(SCHED_ZOMBIE_BASH_DOOR) && !HasCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT))
+	if (IsAllowedToBreakDoors() && (GetEnemy() != NULL) && GetEnemy()->IsPlayer() && (gpGlobals->curtime >= m_flLastObstructionCheck) && !IsCurSchedule(SCHED_ZOMBIE_BASH_DOOR) && !HasCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT))
 	{
 		m_flLastObstructionCheck = gpGlobals->curtime + 0.1f;
 

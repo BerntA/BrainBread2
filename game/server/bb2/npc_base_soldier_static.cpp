@@ -30,7 +30,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-int g_fSoldierQuestion;
+static int g_fSoldierQuestion = 0;
 
 #define SOLDIER_GRENADE_THROW_SPEED 650
 #define SOLDIER_GRENADE_TIMER		3.5
@@ -45,7 +45,7 @@ int g_fSoldierQuestion;
 //-----------------------------------------------------------------------------
 // Interactions
 //-----------------------------------------------------------------------------
-int	g_interactionSoldierBash = 0; // melee bash attack
+int	g_interactionSoldierStaticBash = 0; // melee bash attack
 
 //=========================================================
 // Soldiers's Anim Events Go Here
@@ -1050,7 +1050,7 @@ void CNPCBaseSoldierStatic::HandleAnimEvent(animevent_t *pEvent)
 				Vector forward, up;
 				AngleVectors(GetLocalAngles(), &forward, NULL, &up);
 
-				if (!pBCC->DispatchInteraction(g_interactionSoldierBash, NULL, this))
+				if (!pBCC->DispatchInteraction(g_interactionSoldierStaticBash, NULL, this))
 				{
 					if (pBCC->IsPlayer())
 					{
@@ -1468,7 +1468,7 @@ DECLARE_SQUADSLOT(SQUAD_SLOT_GRENADE2)
 DECLARE_CONDITION(COND_SOLDIER_STATIC_NO_FIRE)
 DECLARE_CONDITION(COND_SOLDIER_STATIC_ATTACK_SLOT_AVAILABLE)
 
-DECLARE_INTERACTION(g_interactionSoldierBash);
+DECLARE_INTERACTION(g_interactionSoldierStaticBash);
 
 //=========================================================
 //	SCHED_SOLDIER_STATIC_COMBAT_FAIL

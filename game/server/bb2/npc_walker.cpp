@@ -20,6 +20,16 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#define ZOMBIE_FADE_IN_TIME 1.5f
+
+enum ZombieSpawningFlags
+{
+	ZOMBIE_SPAWN_FLAG_READY = 0x01,
+	ZOMBIE_SPAWN_FLAG_CHECKCOLLISION = 0x02,
+	ZOMBIE_SPAWN_FLAG_SPAWNED = 0x04,
+	ZOMBIE_SPAWN_FLAG_RAPID_SPAWN = 0x08,
+};
+
 class CNPCWalker : public CAI_BlendingHost<CNPC_BaseZombie>
 {
 	DECLARE_DATADESC();
@@ -29,7 +39,7 @@ class CNPCWalker : public CAI_BlendingHost<CNPC_BaseZombie>
 public:
 	CNPCWalker()
 	{
-		m_bFastSpawn = false;
+		m_nZombieSpawnFlags = 0;
 		m_bGibbedForCrawl = false;
 	}
 
@@ -53,6 +63,7 @@ public:
 
 	void PrescheduleThink( void );
 	int SelectSchedule ( void );
+	int	SelectFailSchedule(int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode);
 
 	void PainSound( const CTakeDamageInfo &info );
 	void DeathSound( const CTakeDamageInfo &info );
@@ -89,6 +100,11 @@ public:
 
 protected:
 
+	bool IsZombieSpawnFlagActive(int flag)
+	{
+		return ((m_nZombieSpawnFlags & flag) != 0);
+	}
+
 	void OnGibbedGroup(int hitgroup, bool bExploded);
 
 private:
@@ -96,10 +112,8 @@ private:
 	Activity GetAttackActivity(void);
 
 	bool m_bIsRunner;
-	bool m_bIsReady;
-	bool m_bCheckCollisionGroupChange;
-	bool m_bFastSpawn;
 	bool m_bGibbedForCrawl;
+	int m_nZombieSpawnFlags;
 	float m_flNextTimeToCheckCollisionChange;
 };
 
@@ -147,15 +161,15 @@ int ACT_CRAWL_NOLEGS_ATTACK_LEFT;
 int ACT_CRAWL_NOLEGS_ATTACK_RIGHT;
 
 BEGIN_DATADESC( CNPCWalker )
-
-	DEFINE_FIELD( m_bIsReady, FIELD_BOOLEAN ),
 	DEFINE_FIELD(m_bGibbedForCrawl, FIELD_BOOLEAN),
-
+	DEFINE_FIELD(m_bIsRunner, FIELD_BOOLEAN),
+	DEFINE_FIELD(m_nZombieSpawnFlags, FIELD_INTEGER),
+	DEFINE_FIELD(m_flNextTimeToCheckCollisionChange, FIELD_TIME),
 END_DATADESC()
 
 Class_T	CNPCWalker::Classify( void )
 {
-	if (m_bIsReady == false)
+	if (IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_READY) == false)
 		return CLASS_NONE;
 
 	return CLASS_ZOMBIE;
@@ -171,17 +185,18 @@ const char *CNPCWalker::GetNPCName()
 
 int CNPCWalker::AllowEntityToBeGibbed(void)
 {
-	if (m_bIsReady == false)
+	if (IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_READY) == false)
 		return GIB_NO_GIBS;
 
 	return GIB_FULL_GIBS;
 }
 
 // Handles fading.
+#define ALPHA_FREQUENCY (255.0f / 1.0f)
 void CNPCWalker::FadeIn()
 {
 	int iAlpha = GetRenderColor().a;
-	iAlpha = MIN(iAlpha + (400 * gpGlobals->frametime), 255);
+	iAlpha = MIN(iAlpha + (ALPHA_FREQUENCY * gpGlobals->frametime), 255);
 
 	SetRenderMode(kRenderTransAlpha);
 	SetRenderColorA(iAlpha);
@@ -190,7 +205,7 @@ void CNPCWalker::FadeIn()
 	{
 		SetRenderMode(kRenderNormal);
 		SetRenderColorA(255);
-		m_bIsReady = true;
+		m_nZombieSpawnFlags |= ZOMBIE_SPAWN_FLAG_READY;
 	}
 }
 
@@ -214,13 +229,11 @@ void CNPCWalker::Spawn( void )
 	m_flNextTimeToCheckCollisionChange = 0.0f;
 	SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE_SPAWNING);
 
-	if (m_bFastSpawn)
-	{
-		m_bIsReady = m_bCheckCollisionGroupChange = true;
-	}
+	if (IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_RAPID_SPAWN))	
+		m_nZombieSpawnFlags |= (ZOMBIE_SPAWN_FLAG_READY | ZOMBIE_SPAWN_FLAG_CHECKCOLLISION | ZOMBIE_SPAWN_FLAG_SPAWNED);
 	else
 	{
-		m_bIsReady = m_bCheckCollisionGroupChange = false;
+		m_nZombieSpawnFlags &= ~(ZOMBIE_SPAWN_FLAG_READY | ZOMBIE_SPAWN_FLAG_CHECKCOLLISION | ZOMBIE_SPAWN_FLAG_SPAWNED);
 		SetRenderMode(kRenderTransAlpha);
 		SetRenderColorA(0);
 	}
@@ -234,16 +247,16 @@ void CNPCWalker::Spawn( void )
 
 void CNPCWalker::SpawnDirectly(void)
 {
-	m_bFastSpawn = true;
+	m_nZombieSpawnFlags |= ZOMBIE_SPAWN_FLAG_RAPID_SPAWN;
 }
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CNPCWalker::PrescheduleThink( void )
 {
-	if ( !m_bIsReady )
+	if (!IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_READY))
 		FadeIn();
-	else if ((GetCollisionGroup() == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) && m_bCheckCollisionGroupChange)
+	else if ((GetCollisionGroup() == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) && IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_CHECKCOLLISION))
 	{
 		if (gpGlobals->curtime > m_flNextTimeToCheckCollisionChange)
 		{
@@ -256,7 +269,7 @@ void CNPCWalker::PrescheduleThink( void )
 			{
 				SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE);
 				m_flNextTimeToCheckCollisionChange = 0.0f;
-				m_bCheckCollisionGroupChange = false;
+				m_nZombieSpawnFlags &= ~(ZOMBIE_SPAWN_FLAG_CHECKCOLLISION);
 			}
 		}
 	}
@@ -280,10 +293,18 @@ void CNPCWalker::PrescheduleThink( void )
 //-----------------------------------------------------------------------------
 int CNPCWalker::SelectSchedule ( void )
 {
-	if (m_bIsReady == false)
+	if (IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_SPAWNED) == false)
 		return SCHED_ZOMBIE_SPAWN;
 
 	return BaseClass::SelectSchedule();
+}
+
+int	CNPCWalker::SelectFailSchedule(int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode)
+{
+	if (failedSchedule == SCHED_ZOMBIE_SPAWN)
+		m_nZombieSpawnFlags |= (ZOMBIE_SPAWN_FLAG_CHECKCOLLISION | ZOMBIE_SPAWN_FLAG_SPAWNED);
+
+	return BaseClass::SelectFailSchedule(failedSchedule, failedTask, taskFailCode);
 }
 
 //-----------------------------------------------------------------------------
@@ -548,6 +569,9 @@ void CNPCWalker::MoanSound( void )
 
 int CNPCWalker::TranslateSchedule( int scheduleType )
 {
+	if (IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_SPAWNED) == false)
+		return SCHED_ZOMBIE_SPAWN;
+
 	if ( scheduleType == SCHED_COMBAT_FACE && IsUnreachable( GetEnemy() ) )
 		return SCHED_TAKE_COVER_FROM_ENEMY;
 
@@ -561,7 +585,7 @@ int CNPCWalker::TranslateSchedule( int scheduleType )
 
 Activity CNPCWalker::NPC_TranslateActivity( Activity newActivity )
 {
-	if (IsCurSchedule(SCHED_ZOMBIE_SPAWN))
+	if (IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_SPAWNED) == false) // Don't translate any activities while spawning in!
 		return newActivity;
 
 	bool bIsIdle = ((newActivity == ACT_IDLE) || (newActivity == (Activity)ACT_ZOMBIE_TANTRUM));
@@ -693,7 +717,7 @@ void CNPCWalker::StartTask( const Task_t *pTask )
 
 	case TASK_ZOMBIE_SPAWNED:
 		{
-			m_bCheckCollisionGroupChange = true;
+			m_nZombieSpawnFlags |= (ZOMBIE_SPAWN_FLAG_CHECKCOLLISION | ZOMBIE_SPAWN_FLAG_SPAWNED);
 			TaskComplete();
 			break;
 		}
@@ -713,7 +737,7 @@ void CNPCWalker::RunTask( const Task_t *pTask )
 	{
 	case TASK_ZOMBIE_SPAWN_IDLE:
 	{
-		if (m_bIsReady)
+		if (IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_READY))
 			TaskComplete();
 		else if (IsActivityFinished())
 			SetIdealActivity(ACT_RISE_IDLE);
@@ -773,7 +797,7 @@ void CNPCWalker::Extinguish()
 //---------------------------------------------------------
 int CNPCWalker::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 {
-	if ( !m_bIsReady )
+	if (!IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_READY))
 		return 0;
 
 	return BaseClass::OnTakeDamage_Alive(inputInfo);
