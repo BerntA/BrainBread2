@@ -81,6 +81,7 @@ public:
 	bool UsesNavMesh(void) { return true; }
 
 	bool IsAllowedToBreakDoors(void);
+	bool ShouldUseNormalSpeedForSchedule(int scheduleType);
 
 	void EnterCrawlMode(void);
 	void LeaveCrawlMode(void);
@@ -399,6 +400,14 @@ bool CNPCWalker::IsAllowedToBreakDoors(void)
 		return false;
 
 	return true;
+}
+
+bool CNPCWalker::ShouldUseNormalSpeedForSchedule(int scheduleType)
+{
+	if (scheduleType == SCHED_ZOMBIE_SPAWN)
+		return true;
+
+	return BaseClass::ShouldUseNormalSpeedForSchedule(scheduleType);
 }
 
 void CNPCWalker::EnterCrawlMode(void)

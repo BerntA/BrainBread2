@@ -661,13 +661,6 @@ int CBasePlayer::ShouldTransmit( const CCheckTransmitInfo *pInfo )
 	return BaseClass::ShouldTransmit( pInfo );
 }
 
-static vec_t GetAngleForDotProduct(const Vector &a, const Vector &b)
-{
-	vec_t dot = a.Dot(b);
-	dot /= (a.Length() * b.Length()); // cosine of the angle.
-	return (acos(dot) * (180.0f / M_PI_F));
-}
-
 bool CBasePlayer::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const CUserCmd *pCmd) const
 {
 	if (HL2MPRules()->IsTeamplay() && (friendlyfire.GetInt() <= 0))
@@ -690,20 +683,21 @@ bool CBasePlayer::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const
 	else
 		maxspeed = 250.0f;
 
-	float maxDistance = 1.5 * maxspeed * sv_maxunlag.GetFloat();
+	float maxDistance = 1.5f * maxspeed * sv_maxunlag.GetFloat();
 
 	// If the ent is within this distance, lag compensate them in case they're running past us.
 	if (vHisOrigin.DistTo(vMyOrigin) < maxDistance)
 		return true;
 
-	// If their origin is not within a 75 degree cone in front of us, no need to lag compensate.
+	// If their origin is not within a 45 degree cone in front of us, no need to lag compensate.
 	Vector vForward;
 	AngleVectors(pCmd->viewangles, &vForward);
 
 	Vector vDiff = vHisOrigin - vMyOrigin;
 	VectorNormalize(vDiff);
 
-	if (GetAngleForDotProduct(vForward, vDiff) > 30.0f)
+	float flCosAngle = 0.707107f;	// 45 degree angle
+	if (vForward.Dot(vDiff) < flCosAngle)
 		return false;
 
 	return true;

@@ -222,8 +222,6 @@ static const char *s_PreserveEnts[] =
 	"info_player_deathmatch",
 	"info_player_start",
 	"info_start_camera",
-	"info_player_zombie",
-	"info_player_human",
 	"info_map_parameters",
 	"keyframe_rope",
 	"move_rope",

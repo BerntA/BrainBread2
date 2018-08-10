@@ -165,6 +165,7 @@ public:
 
 	virtual	bool		AllowedToIgnite(void) { return true; }
 	virtual bool		OverrideShouldAddToLookList(CBaseEntity *pEntity);
+	virtual bool		IsBreakingDownObstacle(void);
 
 	virtual float		GetIdealSpeed() const;
 	virtual float		GetIdealAccel() const;
@@ -183,6 +184,7 @@ protected:
 	virtual BB2_SoundTypes GetNPCType() { return TYPE_ZOMBIE; }
 	virtual Activity SelectDoorBash();
 	virtual bool IsAllowedToBreakDoors(void) { return true; }
+	virtual bool ShouldUseNormalSpeedForSchedule(int scheduleType);
 
 	EHANDLE m_hLastIgnitionSource;
 	CHandle<CBasePropDoor> m_hBlockingEntity;

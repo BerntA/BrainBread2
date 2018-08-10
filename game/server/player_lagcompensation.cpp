@@ -135,32 +135,18 @@ public:
 		CBaseCombatCharacter *pTracer,
 		const Vector& vecAbsStart,
 		const Vector& vecAbsEnd,
-		const Vector &hullMin,
-		const Vector &hullMax,
-		ITraceFilter *pFilter,
+		const Vector& hullMin,
+		const Vector& hullMax,
 		trace_t *ptr,
 		float maxrange = MAX_TRACE_LENGTH,
 		bool bRevertToHullTrace = false,
 		bool bOnlyDoBoxCheck = false,
-		bool bFirearm = false
-		);
-
-	void TraceRealtime(
-		CBaseCombatCharacter *pTracer,
-		const Vector& vecAbsStart,
-		const Vector& vecAbsEnd,
-		const Vector &hullMin,
-		const Vector &hullMax,
-		const IHandleEntity *ignore,
-		int collisionGroup,
-		trace_t *ptr,
-		float maxrange = MAX_TRACE_LENGTH,
-		bool bRevertToHullTrace = false,
-		bool bOnlyDoBoxCheck = false,
-		bool bFirearm = false
+		bool bFirearm = false,
+		bool bOverrideAllowBoxCheck = false
 		);
 
 	void TraceRealtime(CBaseCombatCharacter *pTracer);
+	void TraceRealtime(CBaseCombatCharacter *pTracer, const Vector &vecStart, const Vector &vecDir);
 
 #ifdef BB2_AI	
 	void RemoveNpcData(int index) // clear specific NPC's history 
@@ -179,14 +165,14 @@ private:
 		CUtlVector<LagCompEntry> &list,
 		const Vector& vecAbsStart,
 		const Vector& vecAbsEnd,
-		const Vector &hullMin,
-		const Vector &hullMax,
-		ITraceFilter *pFilter,
+		const Vector& hullMin,
+		const Vector& hullMax,
 		trace_t *ptr,
 		float maxrange = MAX_TRACE_LENGTH,
 		bool bRevertToHullTrace = false,
 		bool bOnlyDoBoxCheck = false,
-		bool bFirearm = false
+		bool bFirearm = false,
+		bool bOverrideAllowBoxCheck = false
 		);
 
 	Vector GetNearestHitboxPos(CBaseCombatCharacter *pEntity, const Vector &from, Vector &chestHBOXPos, int &hitgroup);
@@ -356,15 +342,16 @@ void CLagCompensationManager::TraceRealtime(
 	CBaseCombatCharacter *pTracer,
 	const Vector& vecAbsStart,
 	const Vector& vecAbsEnd,
-	const Vector &hullMin,
-	const Vector &hullMax,
-	ITraceFilter *pFilter,
+	const Vector& hullMin,
+	const Vector& hullMax,
 	trace_t *ptr,
 	float maxrange,
 	bool bRevertToHullTrace,
 	bool bOnlyDoBoxCheck,
-	bool bFirearm)
+	bool bFirearm,
+	bool bOverrideAllowBoxCheck)
 {
+	CTraceFilterSimple filter(pTracer, COLLISION_GROUP_NONE);
 	CHL2MP_Player *player = ToHL2MPPlayer(pTracer);
 	if (player)
 		player->SetLagCompVecPos(vec3_invalid);
@@ -379,11 +366,11 @@ void CLagCompensationManager::TraceRealtime(
 		player->IsBot() ||
 		(player->GetCurrentCommand() == NULL))
 	{
-		if (ptr && pFilter)
-		{
-			AI_TraceLine(vecAbsStart, vecAbsEnd, MASK_SHOT, pFilter, ptr);
+		if (ptr)
+		{	
+			AI_TraceLine(vecAbsStart, vecAbsEnd, MASK_SHOT, &filter, ptr);
 			if (bRevertToHullTrace && (ptr->fraction == 1.0f))
-				AI_TraceHull(vecAbsStart, vecAbsEnd, hullMin, hullMax, MASK_SHOT_HULL, pFilter, ptr);
+				AI_TraceHull(vecAbsStart, vecAbsEnd, hullMin, hullMax, MASK_SHOT_HULL, &filter, ptr);
 		}
 
 		return;
@@ -399,6 +386,8 @@ void CLagCompensationManager::TraceRealtime(
 
 	trace_t trVerify;
 	CTraceFilterNoNPCsOrPlayer trFilter(player, player->GetCollisionGroup());
+	Vector vecAimDir = (vecAbsEnd - vecAbsStart);
+	VectorNormalize(vecAimDir);
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -414,7 +403,11 @@ void CLagCompensationManager::TraceRealtime(
 		DoFastBacktrack(pPlayer, tick, item);
 
 		// Do a simple double check if this ent can be reached:
-		AI_TraceLine(vecAbsStart, item.lagCompedPos, MASK_SHOT, &trFilter, &trVerify);
+		float distToTarget = vecAbsStart.DistTo(item.lagCompedPos);
+		Vector vecPosToTarget = item.lagCompedPos;
+		vecPosToTarget.z = (vecAbsStart + vecAimDir * distToTarget).z;
+
+		AI_TraceLine(vecAbsStart, vecPosToTarget, MASK_SHOT, &trFilter, &trVerify);
 		if (trVerify.DidHit())
 		{
 			if ((bFirearm == false) || (TryPenetrateSurface(&trVerify, &trFilter) == vec3_invalid))
@@ -455,7 +448,11 @@ void CLagCompensationManager::TraceRealtime(
 		DoFastBacktrack(pNPC, tick, item);
 
 		// Do a simple double check if this ent can be reached:
-		AI_TraceLine(vecAbsStart, item.lagCompedPos, MASK_SHOT, &trFilter, &trVerify);
+		float distToTarget = vecAbsStart.DistTo(item.lagCompedPos);
+		Vector vecPosToTarget = item.lagCompedPos;
+		vecPosToTarget.z = (vecAbsStart + vecAimDir * distToTarget).z;
+
+		AI_TraceLine(vecAbsStart, vecPosToTarget, MASK_SHOT, &trFilter, &trVerify);
 		if (trVerify.DidHit())
 		{
 			if ((bFirearm == false) || (TryPenetrateSurface(&trVerify, &trFilter) == vec3_invalid))
@@ -466,38 +463,17 @@ void CLagCompensationManager::TraceRealtime(
 	}
 #endif //BB2_AI
 
-	AnalyzeFastBacktracks(player, potentialEntries, vecAbsStart, vecAbsEnd, hullMin, hullMax, pFilter, ptr, maxrange, bRevertToHullTrace, bOnlyDoBoxCheck, bFirearm);
+	AnalyzeFastBacktracks(player, potentialEntries, vecAbsStart, vecAbsEnd, hullMin, hullMax, ptr, maxrange, bRevertToHullTrace, bOnlyDoBoxCheck, bFirearm, bOverrideAllowBoxCheck);
 
 	potentialEntries.Purge();
 
 	// We were unable to hit anything, revert to default:
-	if (ptr && pFilter && ptr->m_pEnt == NULL)
+	if (ptr && (ptr->m_pEnt == NULL))
 	{
-		AI_TraceLine(vecAbsStart, vecAbsEnd, MASK_SHOT, pFilter, ptr);
+		AI_TraceLine(vecAbsStart, vecAbsEnd, MASK_SHOT, &filter, ptr);
 		if (bRevertToHullTrace && (ptr->fraction == 1.0f))
-			AI_TraceHull(vecAbsStart, vecAbsEnd, hullMin, hullMax, MASK_SHOT_HULL, pFilter, ptr);
+			AI_TraceHull(vecAbsStart, vecAbsEnd, hullMin, hullMax, MASK_SHOT_HULL, &filter, ptr);
 	}
-}
-
-void CLagCompensationManager::TraceRealtime(
-	CBaseCombatCharacter *pTracer,
-	const Vector& vecAbsStart,
-	const Vector& vecAbsEnd,
-	const Vector &hullMin,
-	const Vector &hullMax,
-	const IHandleEntity *ignore,
-	int collisionGroup,
-	trace_t *ptr,
-	float maxrange,
-	bool bRevertToHullTrace,
-	bool bOnlyDoBoxCheck,
-	bool bFirearm)
-{
-	CTraceFilterSimple filter(ignore, collisionGroup);
-	TraceRealtime(pTracer,
-		vecAbsStart, vecAbsEnd,
-		hullMin, hullMax,
-		&filter, ptr, maxrange, bRevertToHullTrace, bOnlyDoBoxCheck, bFirearm);
 }
 
 void CLagCompensationManager::TraceRealtime(CBaseCombatCharacter *pTracer)
@@ -515,6 +491,20 @@ void CLagCompensationManager::TraceRealtime(CBaseCombatCharacter *pTracer)
 		-Vector(3, 3, 3),
 		Vector(3, 3, 3),
 		NULL,
+		MAX_TRACE_LENGTH,
+		false,
+		false,
+		true);
+}
+
+void CLagCompensationManager::TraceRealtime(CBaseCombatCharacter *pTracer, const Vector &vecStart, const Vector &vecDir)
+{
+	TraceRealtime(
+		pTracer,
+		vecStart,
+		(vecStart + vecDir * MAX_TRACE_LENGTH),
+		-Vector(3, 3, 3),
+		Vector(3, 3, 3),
 		NULL,
 		MAX_TRACE_LENGTH,
 		false,
@@ -717,14 +707,14 @@ void CLagCompensationManager::AnalyzeFastBacktracks(
 	CUtlVector<LagCompEntry> &list,
 	const Vector& vecAbsStart,
 	const Vector& vecAbsEnd,
-	const Vector &hullMin,
-	const Vector &hullMax,
-	ITraceFilter *pFilter,
+	const Vector& hullMin,
+	const Vector& hullMax,
 	trace_t *ptr,
 	float maxrange,
 	bool bRevertToHullTrace,
 	bool bOnlyDoBoxCheck,
-	bool bFirearm)
+	bool bFirearm,
+	bool bOverrideAllowBoxCheck)
 {
 	VPROF_BUDGET("AnalyzeFastBacktracks", "CLagCompensationManager");
 
@@ -755,6 +745,9 @@ void CLagCompensationManager::AnalyzeFastBacktracks(
 	CBaseCombatWeapon *pActiveWeapon = player->GetActiveWeapon();
 	bool bCanUseBiggerHull = pActiveWeapon ?
 		(pActiveWeapon->m_iMeleeAttackType.Get() == MELEE_TYPE_SLASH || pActiveWeapon->m_iMeleeAttackType.Get() == MELEE_TYPE_BASH_SLASH) : false;
+	
+	if (bOverrideAllowBoxCheck)
+		bCanUseBiggerHull = true;
 
 	int numEnts = list.Count();
 	for (int i = (numEnts - 1); i >= 0; i--) // Keep valid items, remove the rest.

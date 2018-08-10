@@ -1343,6 +1343,7 @@ public:
 											AIMoveResult_t *pResult );
 
 	virtual CBaseEntity *GetObstructionBreakableEntity(void);
+	virtual bool IsBreakingDownObstacle(void) { return false; }
 
 	void	OpenPropDoorBegin( CBasePropDoor *pDoor );
 	void	OpenPropDoorNow( CBasePropDoor *pDoor );

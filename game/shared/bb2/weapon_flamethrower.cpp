@@ -356,13 +356,16 @@ void CWeaponFlamethrower::PrimaryAttack(CBasePlayer *pOwner, CBaseViewModel *pVM
 		VectorNormalize(vecForward);
 
 		trace_t traceHit;
-		lagcompensation->TraceRealtime(pOwner,
+		lagcompensation->TraceRealtime(
+			pOwner,
 			vecStart,
 			(vecStart + vecForward * (GetRange() * fraction)),
 			-vecHull,
 			vecHull,
-			NULL, &traceHit, (GetRange() * fraction), false, true
-			);
+			&traceHit,
+			(GetRange() * fraction),
+			false,
+			true);
 		CBaseEntity *pHitEnt = traceHit.m_pEnt;
 		if (pHitEnt)
 		{

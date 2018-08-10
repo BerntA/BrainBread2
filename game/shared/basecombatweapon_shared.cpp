@@ -2447,33 +2447,30 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 	Vector swingEnd = swingStart + (forward * range);
 
 	IPredictionSystem::SuppressHostEvents(NULL);
-	CTraceFilterRealtime traceFilter(pOwner, COLLISION_GROUP_NONE, this);
-
 	Activity activity = pvm->GetSequenceActivity(pvm->GetSequence());
 
-	lagcompensation->TraceRealtime(pOwner, swingStart, swingEnd, -Vector(5, 5, 5), Vector(5, 5, 5), &traceFilter, &traceHit, range, true);
+	lagcompensation->TraceRealtime(pOwner, swingStart, swingEnd, -Vector(5, 5, 5), Vector(5, 5, 5), &traceHit, range, true);
 	forward = (traceHit.endpos - traceHit.startpos);
 	VectorNormalize(forward);
 
 	if (traceHit.fraction == 1.0f)
-		ImpactWater(swingStart, swingEnd);
+	{
+		if (CanHitThisTarget(-1) && ImpactWater(swingStart, swingEnd))
+			StruckTarget(-1);
+	}
 	else
 	{
-		bool bHitWorld = traceHit.DidHitWorld();
-		if (bHitWorld && !CanHitThisTarget(0))
-			return;
-
 		CBaseEntity *pHitEnt = traceHit.m_pEnt;
 		if (pHitEnt != NULL)
 		{
+			if (!CanHitThisTarget(pHitEnt->entindex()))
+				return;
+
 			if (m_pEnemiesStruck.Count() <= 1)
 				AddViewKick();
 
-			if (bHitWorld)
-				StruckTarget(0);
-			else
-				StruckTarget(pHitEnt->entindex());
-
+			StruckTarget(pHitEnt->entindex());
+		
 			CTakeDamageInfo info(GetOwner(), GetOwner(), GetDamageForActivity(activity), GetMeleeDamageType());
 			CalculateMeleeDamageForce(&info, forward, traceHit.endpos);
 			info.SetSkillFlags(GetMeleeSkillFlags());
@@ -2488,7 +2485,7 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 			CAI_BaseNPC *m_pNPC = pHitEnt->MyNPCPointer();
 			if ((m_iMeleeAttackType > MELEE_TYPE_SLASH) && pHitEnt->IsNPC() && m_pNPC && (pHitEnt->IsMercenary() || pHitEnt->IsZombie(true)))
 			{
-				if (m_pNPC->GetNavType() != NAV_CLIMB)
+				if ((m_pNPC->GetNavType() != NAV_CLIMB) && !m_pNPC->IsBreakingDownObstacle())
 				{
 					Vector vecExtraVelocity = (forward * GetWpnData().m_flBashForce);
 					vecExtraVelocity.z = 0; // Don't send them flying upwards...

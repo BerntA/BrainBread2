@@ -879,17 +879,7 @@ void CNPC_BaseZombie::OnScheduleChange( void )
 // A new sched. is about to start!
 void CNPC_BaseZombie::OnStartSchedule(int scheduleType)
 {
-	m_bUseNormalSpeed = false;
-	switch (scheduleType)
-	{
-	case SCHED_ZOMBIE_WANDER_MEDIUM:
-	case SCHED_ZOMBIE_WANDER_STANDOFF:
-	case SCHED_ZOMBIE_MELEE_ATTACK1:
-	case SCHED_ZOMBIE_BASH_DOOR:
-		m_bUseNormalSpeed = true;
-		break;
-	}
-
+	m_bUseNormalSpeed = ShouldUseNormalSpeedForSchedule(scheduleType);
 	BaseClass::OnStartSchedule(scheduleType);
 }
 
@@ -1101,6 +1091,22 @@ Activity CNPC_BaseZombie::SelectDoorBash()
 
 //---------------------------------------------------------
 //---------------------------------------------------------
+bool CNPC_BaseZombie::ShouldUseNormalSpeedForSchedule(int scheduleType)
+{
+	switch (scheduleType)
+	{
+	case SCHED_ZOMBIE_WANDER_MEDIUM:
+	case SCHED_ZOMBIE_WANDER_STANDOFF:
+	case SCHED_ZOMBIE_MELEE_ATTACK1:
+	case SCHED_ZOMBIE_BASH_DOOR:
+		return true;
+	}
+
+	return false;
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
 void CNPC_BaseZombie::Event_Killed( const CTakeDamageInfo &info )
 {
 	if ( info.GetDamageType() & DMG_VEHICLE )
@@ -1207,6 +1213,11 @@ bool CNPC_BaseZombie::OverrideShouldAddToLookList(CBaseEntity *pEntity)
 		return false;
 
 	return true;
+}
+
+bool CNPC_BaseZombie::IsBreakingDownObstacle(void)
+{
+	return IsCurSchedule(SCHED_ZOMBIE_BASH_DOOR);
 }
 
 float CNPC_BaseZombie::GetIdealSpeed() const

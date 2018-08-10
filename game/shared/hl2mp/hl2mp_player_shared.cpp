@@ -213,7 +213,7 @@ void CHL2MP_Player::DoPlayerKick(void)
 #ifndef CLIENT_DLL
 	HL2MPRules()->EmitSoundToClient(this, "KickAttack", GetSoundType(), GetSoundsetGender());
 
-	lagcompensation->TraceRealtime(this, swingStart, swingEnd, -Vector(3, 3, 3), Vector(3, 3, 3), this, COLLISION_GROUP_NONE, &traceHit, range, true);
+	lagcompensation->TraceRealtime(this, swingStart, swingEnd, -Vector(3, 3, 3), Vector(3, 3, 3), &traceHit, range, true, false, false, true);
 	forward = traceHit.endpos - traceHit.startpos;
 	VectorNormalize(forward);
 #else
@@ -241,7 +241,7 @@ void CHL2MP_Player::DoPlayerKick(void)
 			CAI_BaseNPC *m_pNPC = pHitEnt->MyNPCPointer();
 			if (m_pNPC && pHitEnt->IsNPC() && (pHitEnt->IsMercenary() || pHitEnt->IsZombie(true)))
 			{
-				if (m_pNPC->GetNavType() != NAV_CLIMB)
+				if ((m_pNPC->GetNavType() != NAV_CLIMB) && !m_pNPC->IsBreakingDownObstacle())
 				{
 					Vector vecExtraVelocity = (forward * knockbackForce);
 					vecExtraVelocity.z = 0; // Don't send them flying upwards...

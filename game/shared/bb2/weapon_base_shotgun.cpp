@@ -119,7 +119,7 @@ void CHL2MPBaseShotgun::ItemPostFrame(void)
 void CHL2MPBaseShotgun::WeaponIdle(void)
 {
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
-	if (pOwner)
+	if (pOwner == NULL)
 		return;
 
 	if (!m_bInReload && IsViewModelSequenceFinished() && (m_flNextBashAttack <= gpGlobals->curtime) && !(pOwner->m_nButtons & (IN_BASH | IN_ATTACK | IN_ATTACK2 | IN_RELOAD)) && (m_flNextPrimaryAttack <= gpGlobals->curtime))

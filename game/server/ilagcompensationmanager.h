@@ -24,32 +24,18 @@ public:
 		CBaseCombatCharacter *pTracer,
 		const Vector& vecAbsStart,
 		const Vector& vecAbsEnd,
-		const Vector &hullMin,
-		const Vector &hullMax,
-		ITraceFilter *pFilter,
+		const Vector& hullMin,
+		const Vector& hullMax,
 		trace_t *ptr,
 		float maxrange = MAX_TRACE_LENGTH,
 		bool bRevertToHullTrace = false,
 		bool bOnlyDoBoxCheck = false,
-		bool bFirearm = false
-		) = 0;
-
-	virtual void TraceRealtime(
-		CBaseCombatCharacter *pTracer,
-		const Vector& vecAbsStart,
-		const Vector& vecAbsEnd,
-		const Vector &hullMin,
-		const Vector &hullMax,
-		const IHandleEntity *ignore,
-		int collisionGroup,
-		trace_t *ptr,
-		float maxrange = MAX_TRACE_LENGTH,
-		bool bRevertToHullTrace = false,
-		bool bOnlyDoBoxCheck = false,
-		bool bFirearm = false
+		bool bFirearm = false,
+		bool bOverrideAllowBoxCheck = false
 		) = 0;
 
 	virtual void TraceRealtime(CBaseCombatCharacter *pTracer) = 0;
+	virtual void TraceRealtime(CBaseCombatCharacter *pTracer, const Vector &vecStart, const Vector &vecDir) = 0;
 
 #ifdef BB2_AI
 	virtual void RemoveNpcData(int index) = 0;

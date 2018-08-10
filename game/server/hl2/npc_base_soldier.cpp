@@ -118,13 +118,6 @@ DEFINE_FIELD(m_flStopMoveShootTime, FIELD_TIME),
 DEFINE_FIELD(m_flLastTimeRanForCover, FIELD_TIME),
 DEFINE_KEYFIELD(m_iNumGrenades, FIELD_INTEGER, "NumGrenades"),
 
-//							m_AssaultBehavior (auto saved by AI)
-//							m_StandoffBehavior (auto saved by AI)
-//							m_FollowBehavior (auto saved by AI)
-//							m_FuncTankBehavior (auto saved by AI)
-//							m_RappelBehavior (auto saved by AI)
-//							m_ActBusyBehavior (auto saved by AI)
-
 DEFINE_INPUTFUNC(FIELD_VOID, "LookOff", InputLookOff),
 DEFINE_INPUTFUNC(FIELD_VOID, "LookOn", InputLookOn),
 
@@ -151,18 +144,6 @@ CNPC_BaseSoldier::CNPC_BaseSoldier()
 	m_vecTossVelocity = vec3_origin;
 	m_flLastTimeRanForCover = 0.0f;
 }
-
-//-----------------------------------------------------------------------------
-// Create components
-//-----------------------------------------------------------------------------
-bool CNPC_BaseSoldier::CreateComponents()
-{
-	if ( !BaseClass::CreateComponents() )
-		return false;
-
-	return true;
-}
-
 
 //------------------------------------------------------------------------------
 // Purpose: Don't look, only get info from squad.
@@ -201,7 +182,6 @@ void CNPC_BaseSoldier::InputStopPatrolling( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CNPC_BaseSoldier::InputAssault( inputdata_t &inputdata )
 {
-	m_AssaultBehavior.SetParameters( AllocPooledString(inputdata.value.String()), CUE_DONT_WAIT, RALLY_POINT_SELECT_DEFAULT );
 }
 
 //-----------------------------------------------------------------------------
@@ -376,10 +356,6 @@ void CNPC_BaseSoldier::Spawn( void )
 bool CNPC_BaseSoldier::CreateBehaviors()
 {
 	AddBehavior( &m_RappelBehavior );
-	AddBehavior( &m_ActBusyBehavior );
-	AddBehavior( &m_AssaultBehavior );
-	AddBehavior( &m_StandoffBehavior );
-	AddBehavior( &m_FollowBehavior );
 	AddBehavior( &m_FuncTankBehavior );
 
 	return BaseClass::CreateBehaviors();
@@ -1118,41 +1094,42 @@ void CNPC_BaseSoldier::BuildScheduleTestBits( void )
 //-----------------------------------------------------------------------------
 // Purpose: Translate base class activities into combot activites
 //-----------------------------------------------------------------------------
-Activity CNPC_BaseSoldier::NPC_TranslateActivity( Activity eNewActivity )
+Activity CNPC_BaseSoldier::NPC_TranslateActivity(Activity eNewActivity)
 {
 	if (ai_show_active_military_activities.GetBool())
 		Msg("Running Activity %i Act Name: %s\n", eNewActivity, GetActivityName(eNewActivity));
 
-	if (eNewActivity == ACT_RAPPEL_LOOP || eNewActivity == ACT_COWER)
+	if (eNewActivity == ACT_RAPPEL_LOOP || eNewActivity == ACT_COWER || eNewActivity == ACT_COVER)
 		return ACT_IDLE;
 
-	if (eNewActivity == ACT_RANGE_ATTACK2)	
-		return (Activity)ACT_COMBINE_THROW_GRENADE;	
-	else if (eNewActivity == ACT_IDLE)
+	switch (eNewActivity)
 	{
-		if ( !IsCrouching() && ( m_NPCState == NPC_STATE_COMBAT || m_NPCState == NPC_STATE_ALERT ) )		
-			eNewActivity = ACT_IDLE_ANGRY;		
+	case ACT_WALK_CROUCH_RIFLE:
+		return ACT_WALK_RIFLE;
+
+	case ACT_WALK_CROUCH_AIM_RIFLE:
+		return ACT_WALK_AIM_RIFLE;
+
+	case ACT_RUN_CROUCH_RIFLE:
+		return ACT_RUN_RIFLE;
+
+	case ACT_RUN_CROUCH_AIM_RIFLE:
+		return ACT_RUN_AIM_RIFLE;
+
+	case ACT_IDLE_ANGRY_PISTOL:
+		return ACT_IDLE_PISTOL;
+
+	case ACT_RANGE_ATTACK2:
+		return (Activity)ACT_COMBINE_THROW_GRENADE;
 	}
 
-	if ( m_AssaultBehavior.IsRunning() )
+	if (eNewActivity == ACT_IDLE)
 	{
-		switch ( eNewActivity )
-		{
-		case ACT_IDLE:
+		if (m_NPCState == NPC_STATE_COMBAT || m_NPCState == NPC_STATE_ALERT)
 			eNewActivity = ACT_IDLE_ANGRY;
-			break;
-
-		case ACT_WALK:
-			eNewActivity = ACT_WALK_AIM;
-			break;
-
-		case ACT_RUN:
-			eNewActivity = ACT_RUN_AIM;
-			break;
-		}
 	}
 
-	return BaseClass::NPC_TranslateActivity( eNewActivity );
+	return BaseClass::NPC_TranslateActivity(eNewActivity);
 }
 
 
@@ -1548,12 +1525,8 @@ int CNPC_BaseSoldier::SelectSchedule( void )
 				}
 			}
 
-			// Don't patrol if I'm in the middle of an assault, because I'll never return to the assault. 
-			if ( !m_AssaultBehavior.HasAssaultCue() )
-			{
-				if( m_bShouldPatrol || HasCondition( COND_SOLDIER_SHOULD_PATROL ) )
-					return SCHED_SOLDIER_PATROL;
-			}
+			if (m_bShouldPatrol || HasCondition(COND_SOLDIER_SHOULD_PATROL))
+				return SCHED_SOLDIER_PATROL;
 		}
 		break;
 
@@ -1772,16 +1745,14 @@ int CNPC_BaseSoldier::TranslateSchedule( int scheduleType )
 			{
 				return TranslateSchedule( SCHED_TAKE_COVER_FROM_ENEMY );
 			}
-			else if ( !m_AssaultBehavior.HasAssaultCue() )
+			else 
 			{
 				// Don't patrol if I'm in the middle of an assault, because 
 				// I'll never return to the assault. 
-				if ( GetEnemy() )
-				{
-					RememberUnreachable( GetEnemy() );
-				}
+				if (GetEnemy())
+					RememberUnreachable(GetEnemy());
 
-				return TranslateSchedule( SCHED_SOLDIER_PATROL );
+				return TranslateSchedule(SCHED_SOLDIER_PATROL);
 			}
 		}
 		break;

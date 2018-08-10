@@ -35,9 +35,6 @@ class CNPC_BaseSoldier : public CAI_BaseActor, public CNPCBaseProperties
 public:
 	CNPC_BaseSoldier();
 
-	// Create components
-	virtual bool	CreateComponents();
-
 	bool			CanThrowGrenade( const Vector &vecTarget );
 	bool			CheckCanThrowGrenade( const Vector &vecTarget );
 	virtual	bool	CanGrenadeEnemy( bool bUseFreeKnowledge = true );
@@ -223,19 +220,6 @@ private:
 	void StartTaskChaseEnemyContinuously( const Task_t *pTask );
 	void RunTaskChaseEnemyContinuously( const Task_t *pTask );
 
-	class CSoldierStandoffBehavior : public CAI_ComponentWithOuter<CNPC_BaseSoldier, CAI_StandoffBehavior>
-	{
-		typedef CAI_ComponentWithOuter<CNPC_BaseSoldier, CAI_StandoffBehavior> BaseClass;
-
-		virtual int SelectScheduleAttack()
-		{
-			int result = GetOuter()->SelectScheduleAttack();
-			if ( result == SCHED_NONE )
-				result = BaseClass::SelectScheduleAttack();
-			return result;
-		}
-	};
-
 	// Rappel
 	virtual bool IsWaitingToRappel( void ) { return m_RappelBehavior.IsWaitingToRappel(); }
 	void BeginRappel() { m_RappelBehavior.BeginRappel(); }
@@ -260,12 +244,8 @@ private:
 	float			m_flLastTimeRanForCover;
 
 protected:
-	CAI_AssaultBehavior			m_AssaultBehavior;
-	CSoldierStandoffBehavior	m_StandoffBehavior;
-	CAI_FollowBehavior			m_FollowBehavior;
 	CAI_FuncTankBehavior		m_FuncTankBehavior;
 	CAI_RappelBehavior			m_RappelBehavior;
-	CAI_ActBusyBehavior			m_ActBusyBehavior;
 
 public:
 	int				m_iLastAnimEventHandled;

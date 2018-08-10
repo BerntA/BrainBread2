@@ -268,7 +268,7 @@ void CWeaponSawedOff::ItemPostFrame(void)
 
 	WeaponIdle();
 
-	if (m_flNextPrimaryAttack <= gpGlobals->curtime)
+	if (m_flNextPrimaryAttack < gpGlobals->curtime)
 	{
 		if (pOwner->m_nButtons & (IN_ATTACK | IN_ATTACK2))
 		{
@@ -311,6 +311,9 @@ void CWeaponSawedOff::ItemPostFrame(void)
 
 		if (oldFlags != m_iFiringFlags)
 		{
+			if (pOwner->m_afButtonPressed & (IN_ATTACK | IN_ATTACK2))
+				m_flNextPrimaryAttack = gpGlobals->curtime;
+
 			PerformAttack();
 			return;
 		}

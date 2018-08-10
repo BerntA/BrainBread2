@@ -45,11 +45,17 @@ bool IsAllowedToSpawn(CBaseEntity *pEntity, float distance, float zDiff, bool bC
 		if (pEntity->GetLocalOrigin().DistTo(pClient->GetLocalOrigin()) > distance)
 			continue;
 
-		if (pEntity->CollisionProp() && IsBoxIntersectingBox(
+		if (pEntity->CollisionProp() && (
+			IsBoxIntersectingBox(
 			(pEntity->GetLocalOrigin() + pEntity->CollisionProp()->OBBMins()),
 			(pEntity->GetLocalOrigin() + pEntity->CollisionProp()->OBBMaxs()),
 			(pClient->GetLocalOrigin() + pClient->WorldAlignMins()),
-			(pClient->GetLocalOrigin() + pClient->WorldAlignMaxs())))
+			(pClient->GetLocalOrigin() + pClient->WorldAlignMaxs())) || 
+			IsPointInBox(
+			pClient->GetLocalOrigin(), 
+			(pEntity->GetLocalOrigin() + pEntity->CollisionProp()->OBBMins()),
+			(pEntity->GetLocalOrigin() + pEntity->CollisionProp()->OBBMaxs()))
+			))
 		{
 			return true;
 		}
@@ -58,7 +64,7 @@ bool IsAllowedToSpawn(CBaseEntity *pEntity, float distance, float zDiff, bool bC
 		if ((zDiff > 0.0f) && (diff > zDiff))		
 			continue;		
 
-		if (bCheckVisible && !pEntity->FVisible(pClient, MASK_VISIBLE))
+		if (bCheckVisible && !pEntity->FVisible(pClient, MASK_BLOCKLOS))
 			continue;
 
 		return true;
@@ -192,14 +198,14 @@ float CZombieVolume::GetSpawnFrequency(void)
 
 void CZombieVolume::TraceZombieBBox(const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm, CBaseEntity *pEntity)
 {
-	Vector ZombieMins = Vector(-50, -50, 0);
-	Vector ZombieMax = Vector(50, 50, 75);
+	Vector ZombieMins = Vector(-25, -25, 0);
+	Vector ZombieMax = Vector(25, 25, 74);
 
 	// Here the zombies will spawn standing up, not lying down, use a smaller hull!
 	if (HasSpawnFlags(SF_FASTSPAWN))
 	{
 		ZombieMins = Vector(-18, -18, 0);
-		ZombieMax = Vector(18, 18, 75);
+		ZombieMax = Vector(18, 18, 74);
 	}
 
 	Ray_t ray;
@@ -212,21 +218,27 @@ void CZombieVolume::SpawnWave()
 	Vector vecBoundsMaxs = CollisionProp()->OBBMaxs(),
 		vecBoundsMins = CollisionProp()->OBBMins();
 
-	Vector newPos = GetLocalOrigin() +
-		Vector(random->RandomFloat(vecBoundsMins.x, vecBoundsMaxs.x), random->RandomFloat(vecBoundsMins.y, vecBoundsMaxs.y), 0);
-
 	Vector vecDown;
 	AngleVectors(GetLocalAngles(), NULL, NULL, &vecDown);
 	VectorNormalize(vecDown);
 	vecDown *= -1;
 
+	Vector newPos = GetLocalOrigin() +
+		Vector(random->RandomFloat(vecBoundsMins.x, vecBoundsMaxs.x), random->RandomFloat(vecBoundsMins.y, vecBoundsMaxs.y), 0);
+
 	trace_t tr;
-	TraceZombieBBox(newPos, newPos + vecDown * MAX_TRACE_LENGTH, MASK_NPCSOLID, COLLISION_GROUP_NPC, tr, this);
+	UTIL_TraceLine(newPos, newPos + vecDown * MAX_TRACE_LENGTH, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NPC_ZOMBIE, &tr);
+	newPos.z = ceil(tr.endpos.z + 2.0f);
+
+	TraceZombieBBox(newPos, newPos, MASK_NPCSOLID, COLLISION_GROUP_NPC_ZOMBIE, tr, this);
 
 	// We hit an entity which means there is already something in this part of the volume! Ignore and continue to next part of the volume!
 	if (tr.startsolid || tr.allsolid || tr.DidHitNonWorldEntity())
 	{
-		DevMsg(2, "A zombie couldn't spawn at %f %f %f!\n", tr.endpos.x, tr.endpos.y, tr.endpos.z);
+		DevMsg(2, "A zombie couldn't spawn at %f %f %f! (StartSolid %i, AllSolid %i, HitNonWorld %i - %s)\n",
+			tr.endpos.x, tr.endpos.y, tr.endpos.z,
+			tr.startsolid, tr.allsolid, tr.DidHitNonWorldEntity(), tr.m_pEnt ? tr.m_pEnt->GetClassname() : "N/A"
+			);
 		return;
 	}
 
