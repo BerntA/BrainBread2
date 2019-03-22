@@ -54,6 +54,22 @@ ipch
 /stdshaders/game/bb2/*
 /stdshaders/game/bb2/shaders/*
 /stdshaders/game/bb2/shaders/fxc/*
+Debug_mod_brainbread2
+Release_mod_brainbread2
+Debug
+Release
 
 # shader files
 *.tmp
+
+# VS Community
+.vs/*
+.vs/
+
+# VS Code
+.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
