@@ -338,11 +338,11 @@ void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted
 				STEAM_API_INTERFACE->SteamUGC()->GetQueryUGCKeyValueTag(pCallback->m_handle, i, items, mapNameKey, 32, mapNameValue, 32);
 				STEAM_API_INTERFACE->SteamUGC()->GetQueryUGCKeyValueTag(pCallback->m_handle, i, (items + 1), mapSizeKey, 32, mapSizeValue, 128);
 
-				if (strlen(mapNameValue) <= 0)
+				if (!(mapNameValue && mapNameValue[0]))
 					continue;
 
 #ifndef CLIENT_DLL
-				if (strlen(mapSizeValue) <= 0)
+				if (!(mapSizeValue && mapSizeValue[0]))
 					continue;
 
 				unsigned long long mapFileSize = (unsigned long long)atoll(mapSizeValue);
@@ -374,7 +374,7 @@ void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted
 				else
 				{
 					gameMapItem_t mapItem;
-					Q_strncpy(mapItem.pszMapTitle, ((strlen(WorkshopItem.m_rgchTitle) <= 0) ? mapNameValue : WorkshopItem.m_rgchTitle), 32);
+					Q_strncpy(mapItem.pszMapTitle, ((!(WorkshopItem.m_rgchTitle && WorkshopItem.m_rgchTitle[0])) ? mapNameValue : WorkshopItem.m_rgchTitle), 32);
 					Q_strncpy(mapItem.pszMapDescription, WorkshopItem.m_rgchDescription, 256);
 					Q_strncpy(mapItem.pszMapExtraInfo, "", 256);
 					mapItem.iMapVerification = iVerification;

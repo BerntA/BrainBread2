@@ -52,7 +52,7 @@ void C_ObjectiveIcon::PostDataUpdate(DataUpdateType_t updateType)
 {
 	BaseClass::PostDataUpdate(updateType);
 
-	if ((pMaterialLink == NULL) && (strlen(m_szTextureFile) > 0))
+	if ((pMaterialLink == NULL) && m_szTextureFile && m_szTextureFile[0])
 	{
 		pMaterialLink = materials->FindMaterial(m_szTextureFile, TEXTURE_GROUP_OTHER);
 		pMaterialLink->IncrementReferenceCount();

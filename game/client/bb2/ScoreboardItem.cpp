@@ -82,7 +82,7 @@ ScoreboardItem::ScoreboardItem(vgui::Panel *parent, char const *panelName, KeyVa
 	const char *szNameTAG = pkvPlayerData->GetString("namePrefix");
 
 	char pchNameTag[64];
-	if (bIsAdmin && (strlen(szNameTAG) > 0))
+	if (bIsAdmin && szNameTAG && szNameTAG[0])
 		Q_snprintf(pchNameTag, 64, "%s|ADMIN", szNameTAG);
 	else if (bIsAdmin)
 		Q_snprintf(pchNameTag, 64, "ADMIN");
@@ -91,9 +91,9 @@ ScoreboardItem::ScoreboardItem(vgui::Panel *parent, char const *panelName, KeyVa
 
 	const char *szNameStrings[] =
 	{
-		(strlen(pchNameTag) > 0) ? "[" : "",
+		(pchNameTag && pchNameTag[0]) ? "[" : "",
 		pchNameTag,
-		(strlen(pchNameTag) > 0) ? "]" : "",
+		(pchNameTag && pchNameTag[0]) ? "]" : "",
 		pkvPlayerData->GetString("name"),
 	};
 

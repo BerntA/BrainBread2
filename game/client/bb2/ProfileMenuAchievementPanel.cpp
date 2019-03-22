@@ -104,7 +104,7 @@ void AchievementItem::OnUpdate(void)
 
 			if (m_iAchievementIndex >= 0 && m_iAchievementIndex < CURRENT_ACHIEVEMENT_NUMBER)
 			{
-				bool bBoolean = (strlen(GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].szStat) <= 0);
+				bool bBoolean = (!(GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].szStat && GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].szStat[0]));
 				float flProgress = 0.0f;
 				if (!bBoolean)
 				{
@@ -278,7 +278,7 @@ void ProfileMenuAchievementPanel::CreateAchievementList(void)
 	{
 		if (GAME_STAT_AND_ACHIEVEMENT_DATA[i].hidden)
 		{
-			if (strlen(GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement) <= 0)
+			if (!(GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement && GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement[0]))
 				continue;
 
 			if (!steamapicontext)

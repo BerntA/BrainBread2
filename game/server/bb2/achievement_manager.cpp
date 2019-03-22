@@ -157,7 +157,7 @@ bool CAchievementManager::WriteToStat(CHL2MP_Player *pPlayer, const char *szStat
 	// Give us achievements if the stats related to certain achievs have been surpassed.
 	for (int i = 0; i < CURRENT_ACHIEVEMENT_NUMBER; i++)
 	{
-		if ((GAME_STAT_AND_ACHIEVEMENT_DATA[i].maxValue <= iCurrentValue) && !strcmp(szStat, GAME_STAT_AND_ACHIEVEMENT_DATA[i].szStat) && (strlen(GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement) > 0))
+		if ((GAME_STAT_AND_ACHIEVEMENT_DATA[i].maxValue <= iCurrentValue) && GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement && GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement[0] && !strcmp(szStat, GAME_STAT_AND_ACHIEVEMENT_DATA[i].szStat))
 			WriteToAchievement(pPlayer, GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement);
 	}
 
@@ -227,7 +227,7 @@ bool CAchievementManager::CanWrite(CHL2MP_Player *pClient, const char *param, bo
 	if (!steamgameserverapicontext->SteamGameServerStats())
 		return false;
 
-	if (param && (strlen(param) > 0))
+	if (param && param[0])
 	{
 		for (int i = 0; i < CURRENT_ACHIEVEMENT_NUMBER; i++)
 		{
@@ -322,7 +322,7 @@ CON_COMMAND(dev_reset_stats, "Reset Stats")
 
 	for (int i = 0; i < CURRENT_ACHIEVEMENT_NUMBER; i++)
 	{
-		if (strlen(GAME_STAT_AND_ACHIEVEMENT_DATA[i].szStat) > 0)
+		if (GAME_STAT_AND_ACHIEVEMENT_DATA[i].szStat && GAME_STAT_AND_ACHIEVEMENT_DATA[i].szStat[0])
 			steamgameserverapicontext->SteamGameServerStats()->SetUserStat(pSteamClient, GAME_STAT_AND_ACHIEVEMENT_DATA[i].szStat, 0);
 	}
 

@@ -274,14 +274,14 @@ void CAddonInstallerPanel::OnReceiveUGCQueryResults(SteamUGCQueryCompleted_t *pC
 					steamapicontext->SteamUGC()->GetQueryUGCKeyValueTag(pCallback->m_handle, i, items, mapNameKey, 32, mapNameValue, 32);
 					steamapicontext->SteamUGC()->GetQueryUGCKeyValueTag(pCallback->m_handle, i, (items + 1), mapSizeKey, 32, mapSizeValue, 128);
 
-					if (strlen(mapNameValue) <= 0)
+					if (!(mapNameValue && mapNameValue[0]))
 						continue;
 
 					int iExistingMapIndex = GameBaseShared()->GetSharedMapData()->GetMapIndex(mapNameValue);
 					if (iExistingMapIndex == -1)
 					{
 						gameMapItem_t itemMapDataItem;
-						Q_strncpy(itemMapDataItem.pszMapTitle, ((strlen(WorkshopItem.m_rgchTitle) <= 0) ? mapNameValue : WorkshopItem.m_rgchTitle), 32);
+						Q_strncpy(itemMapDataItem.pszMapTitle, ((!(WorkshopItem.m_rgchTitle && WorkshopItem.m_rgchTitle[0])) ? mapNameValue : WorkshopItem.m_rgchTitle), 32);
 						Q_strncpy(itemMapDataItem.pszMapDescription, WorkshopItem.m_rgchDescription, 256);
 						Q_strncpy(itemMapDataItem.pszMapExtraInfo, "", 256);
 						itemMapDataItem.iMapVerification = iVerification;

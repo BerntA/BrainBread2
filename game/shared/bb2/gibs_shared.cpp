@@ -117,7 +117,7 @@ void DispatchClientSideGib(CBaseCombatCharacter *pVictim, const char *gib, int g
 #ifdef CLIENT_DLL
 const char *GetGibModel(C_ClientRagdollGib *pVictim, const char *gib)
 {
-	if (pVictim && strlen(pVictim->pchNPCName) > 0)
+	if (pVictim && pVictim->pchNPCName && pVictim->pchNPCName[0])
 		return GameBaseShared()->GetNPCData()->GetModelForGib(pVictim->pchNPCName, gib, STRING(pVictim->GetModelName()));
 	else if (pVictim && (pVictim->GetPlayerLinkTeam() > 0))
 		return GameBaseShared()->GetSharedGameDetails()->GetPlayerGibForModel(pVictim->GetPlayerLinkSurvivor(), !(pVictim->GetPlayerLinkTeam() == TEAM_DECEASED), gib);
@@ -134,7 +134,7 @@ bool C_ClientRagdollGib::CanGibEntity(const Vector &velocity, int hitgroup, int 
 	if (hitgroup < 0 || hitgroup >= _ARRAYSIZE(GIB_SHARED_DATA))
 		return false;
 
-	bool bIsNPC = (strlen(pchNPCName) > 0);
+	bool bIsNPC = (pchNPCName && pchNPCName[0]);
 	bool bIsPlayer = (GetPlayerLinkTeam() > 0);
 	if (!bIsNPC && !bIsPlayer)
 		return false;
@@ -165,7 +165,7 @@ bool C_ClientRagdollGib::CanGibEntity(const Vector &velocity, int hitgroup, int 
 				continue;
 
 			const char *pszGib = GetGibModel(this, GIB_BODYGROUPS[i].bodygroup);
-			if (strlen(pszGib) <= 0)
+			if (!(pszGib && pszGib[0]))
 				continue;
 
 			int gib_bodygroup = FindBodygroupByName(GIB_BODYGROUPS[i].bodygroup);
@@ -178,7 +178,7 @@ bool C_ClientRagdollGib::CanGibEntity(const Vector &velocity, int hitgroup, int 
 			if (bCanDispatch)
 				DispatchClientSideGib(this, velocity, pszGib, iGibFlag);
 
-			if (strlen(pszAttachmentPoint) > 0)
+			if (pszAttachmentPoint && pszAttachmentPoint[0])
 			{
 				int iAttachment = LookupAttachment(GIB_BODYGROUPS[i].attachmentName);
 				if (iAttachment != -1)
@@ -186,18 +186,18 @@ bool C_ClientRagdollGib::CanGibEntity(const Vector &velocity, int hitgroup, int 
 			}
 		}
 
-		if (strlen(pszSoundScript) > 0)
+		if (pszSoundScript && pszSoundScript[0])
 			EmitSound(pszSoundScript);
 
 		OnGibbedGroup(0, true);
 		return true;
 	}
 
-	if ((nGibFlag <= 0) || IsGibFlagActive(nGibFlag) || (strlen(pszHitGroup) <= 0))
+	if ((nGibFlag <= 0) || IsGibFlagActive(nGibFlag) || !(pszHitGroup && pszHitGroup[0]))
 		return false;
 
 	const char *pszGib = GetGibModel(this, pszHitGroup);
-	if (strlen(pszGib) <= 0)
+	if (!(pszGib && pszGib[0]))
 		return false;
 
 	int gib_bodygroup = FindBodygroupByName(pszHitGroup);
@@ -214,14 +214,14 @@ bool C_ClientRagdollGib::CanGibEntity(const Vector &velocity, int hitgroup, int 
 	if (bCanDispatch)
 		DispatchClientSideGib(this, velocity, pszGib, nGibFlag);
 
-	if (strlen(pszAttachmentPoint) > 0)
+	if (pszAttachmentPoint && pszAttachmentPoint[0])
 	{
 		int iAttachment = LookupAttachment(pszAttachmentPoint);
 		if (iAttachment != -1)
 			UTIL_GibImpact(this, iAttachment, BLOOD_COLOR_RED, hitgroup);
 	}
 
-	if (strlen(pszSoundScript) > 0)
+	if (pszSoundScript && pszSoundScript[0])
 		EmitSound(pszSoundScript);
 
 	OnGibbedGroup(hitgroup, false);
@@ -352,7 +352,7 @@ bool CBaseCombatCharacter::CanGibEntity(const CTakeDamageInfo &info)
 			if (bIsPlayer == false)
 			{
 				pszGib = GetGibModel(this, GIB_BODYGROUPS[i].bodygroup);
-				if (strlen(pszGib) <= 0)
+				if (!(pszGib && pszGib[0]))
 					continue;
 
 				int gib_bodygroup = FindBodygroupByName(GIB_BODYGROUPS[i].bodygroup);
@@ -367,14 +367,14 @@ bool CBaseCombatCharacter::CanGibEntity(const CTakeDamageInfo &info)
 				DispatchClientSideGib(this, pszGib, iGibFlag);
 		}
 
-		if (strlen(pszSoundScript) > 0)
+		if (pszSoundScript && pszSoundScript[0])
 			EmitSound(pszSoundScript);
 
 		OnGibbedGroup(0, true);
 		return true;
 	}
 
-	if ((nGibFlag <= 0) || IsGibFlagActive(nGibFlag) || bCanExplode || (AllowEntityToBeGibbed() != GIB_FULL_GIBS) || (flGibHealth > 0.0f) || (strlen(pszHitGroup) <= 0))
+	if ((nGibFlag <= 0) || IsGibFlagActive(nGibFlag) || bCanExplode || (AllowEntityToBeGibbed() != GIB_FULL_GIBS) || (flGibHealth > 0.0f) || !(pszHitGroup && pszHitGroup[0]))
 		return false;
 
 	if ((nGibFlag == GIB_NO_HEAD) && (m_iHealth > 0))
@@ -384,7 +384,7 @@ bool CBaseCombatCharacter::CanGibEntity(const CTakeDamageInfo &info)
 	if (bIsPlayer == false)
 	{
 		pszGib = GetGibModel(this, pszHitGroup);
-		if (strlen(pszGib) <= 0)
+		if (!(pszGib && pszGib[0]))
 			return false;
 
 		int gib_bodygroup = FindBodygroupByName(pszHitGroup);
@@ -403,14 +403,14 @@ bool CBaseCombatCharacter::CanGibEntity(const CTakeDamageInfo &info)
 	if (bCanDispatch)
 		DispatchClientSideGib(this, pszGib, nGibFlag);
 
-	if ((iHitGroup != HITGROUP_HEAD) && (strlen(pszAttachmentPoint) > 0))
+	if ((iHitGroup != HITGROUP_HEAD) && pszAttachmentPoint && pszAttachmentPoint[0])
 	{
 		int iAttachment = LookupAttachment(pszAttachmentPoint);
 		if (iAttachment != -1)
 			UTIL_GibImpact(this, iAttachment, BLOOD_COLOR_RED, iHitGroup);
 	}
 
-	if (strlen(pszSoundScript) > 0)
+	if (pszSoundScript && pszSoundScript[0])
 		EmitSound(pszSoundScript);
 
 	OnGibbedGroup(iHitGroup, false);

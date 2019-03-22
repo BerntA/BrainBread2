@@ -363,8 +363,7 @@ void OptionMenuKeyboard::UpdateKeyboardListData(ButtonCode_t code)
 		}
 		kvGetData->deleteThis();
 
-		byte szNewKey_len = strlen(szNewKey);
-		if (szNewKey_len > 0)
+		if (szNewKey && szNewKey[0])
 		{
 			const char *szBinding = VarArgs("bind %s \"%s\"", szCodeToBind, szNewKey);
 			engine->ClientCmd_Unrestricted(szBinding);

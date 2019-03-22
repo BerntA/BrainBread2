@@ -351,7 +351,7 @@ void CGameBaseServer::IterateAddonsPath(const char *path)
 // Sends a tip to the desired client.
 void CGameBaseServer::SendToolTip(const char *message, int type, int index, const char *arg1, const char *arg2, const char *arg3, const char *arg4)
 {
-	if (strlen(message) <= 0)
+	if (!(message && message[0]))
 	{
 		Warning("Invalid tooltip sent, ignoring!\n");
 		return;
@@ -607,7 +607,7 @@ CON_COMMAND_F(player_vote_map, "Vote for a map.", FCVAR_HIDDEN)
 		return;
 
 	const char *map = args[1];
-	if (strlen(map) <= 0)
+	if (!(map && map[0]))
 		return;
 
 	HL2MPRules()->CreateMapVote(pClient, map);
@@ -743,7 +743,7 @@ CON_COMMAND(admin_changelevel, "Admin Changelevel Command")
 		return;
 	}
 
-	if (strlen(mapName) > 0)
+	if (mapName && mapName[0])
 		GameBaseServer()->DoMapChange(mapName);
 }
 

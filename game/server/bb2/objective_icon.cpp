@@ -51,7 +51,7 @@ void CObjectiveIcon::Spawn()
 
 void CObjectiveIcon::SetObjectiveIconTexture(const char *szTexture, bool bVisible)
 {
-	if (!szTexture || (szTexture && strlen(szTexture) <= 0))
+	if (!szTexture || !szTexture[0])
 	{
 		Warning("Invalid texture passed in to objective icon '%s'!\nRemoving!\n", STRING(GetEntityName()));
 		UTIL_Remove(this);

@@ -58,7 +58,7 @@ public:
 	bool IsBoss() { return true; }
 	bool CanAlwaysSeePlayers() { return true; }
     bool AllowedToIgnite( void ) { return false; }
-	bool UsesNavMesh(void) { return true; }
+	bool UsesNavMesh(void) { return false; }
 	bool ShouldAlwaysThink() { return true; }
 	Class_T Classify(void) { return CLASS_ZOMBIE_BOSS; }
 

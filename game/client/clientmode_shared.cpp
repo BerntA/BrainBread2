@@ -1170,7 +1170,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 				if (bIsDeathmatchAnnouncer)
 				{
 					Q_snprintf(szSoundToEmit, 256, "%s_%s.%s", entName, GameBaseShared()->GetSharedGameDetails()->GetSoundPrefix(iType, soundSetIndex), szOriginal);
-					if (szSoundToEmit[0] && (strlen(szSoundToEmit) > 0))
+					if (szSoundToEmit && szSoundToEmit[0])
 					{
 						// If this sound doesn't exist / not parsed then fallback to anything available:
 						CSoundParameters params;
@@ -1194,7 +1194,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			if (bEmitSound)
 			{
 				C_BaseEntity *pEntity = ClientEntityList().GetEnt(iEntIndex);
-				if (szSoundToEmit[0] && pEntity && (strlen(szSoundToEmit) > 0))
+				if (pEntity && szSoundToEmit && szSoundToEmit[0])
 				{
 					// If this sound doesn't exist / not parsed then fallback to anything available:
 					CSoundParameters params;
@@ -1426,7 +1426,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 	{
 		const char *cvar = event->GetString("cvarname");
 		bool bIsTags = false;
-		if (cvar && (strlen(cvar) > 0))
+		if (cvar && cvar[0])
 			bIsTags = !strcmp(cvar, "sv_tags");
 
 		if (!IsInCommentaryMode() && !bIsTags)

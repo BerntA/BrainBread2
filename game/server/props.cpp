@@ -6140,7 +6140,7 @@ public:
 		m_pGibs.Purge();
 		iHealth = health;
 
-		if (!model || (strlen(model) <= 0))
+		if (!model || !model[0])
 		{
 			Q_strncpy(pszDoorModel, "", MAX_WEAPON_STRING);
 			Warning("Door Breakable Data with NULL model!\n");
@@ -6158,7 +6158,7 @@ public:
 
 	void AddGib(const char *model)
 	{
-		if (!model || (strlen(model) <= 0))
+		if (!model || !model[0])
 		{
 			Warning("Door Breakable Gib Data with NULL model!\n");
 			return;

@@ -40,7 +40,7 @@ CMusicSystem::~CMusicSystem()
 
 void CMusicSystem::InitializeSystem(const char *activeEventName)
 {
-	if (strlen(activeEventName) > 0)
+	if (activeEventName && activeEventName[0])
 		GetMusicSystem->RunSoundEvent(activeEventName);
 	else
 		GetMusicSystem->RunAmbientSoundTrack(true);

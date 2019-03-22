@@ -125,7 +125,7 @@ int C_AI_BaseNPC::DrawModel(int flags)
 
 void C_AI_BaseNPC::RegisterHUDHealthBar()
 {
-	if (strlen(GetNPCName()) <= 0)
+	if (!(m_szNPCName && m_szNPCName[0]))
 		return;
 
 	GetHealthBarHUD()->AddHealthBarItem(this, entindex(), IsBoss());

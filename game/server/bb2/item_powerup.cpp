@@ -125,7 +125,7 @@ CON_COMMAND_F(bb2_create_powerup_item, "Create some powerup item.", FCVAR_CHEAT)
 	}
 
 	const char *powerupName = args[1];
-	if (!powerupName || (strlen(powerupName) <= 0))
+	if (!powerupName || !powerupName[0])
 		return;
 
 	int indexPowerup = GameBaseShared()->GetSharedGameDetails()->GetIndexForPowerup(powerupName);

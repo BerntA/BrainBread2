@@ -49,7 +49,7 @@ CItemAmmoRandomizer::CItemAmmoRandomizer()
 CBaseEntity *CItemAmmoRandomizer::SpawnNewEntity(void)
 {
 	const char *pszClassname = pszAmmoClassnames[random->RandomInt(0, (_ARRAYSIZE(pszAmmoClassnames) - 1))];
-	if (strlen(pszClassname) <= 0)
+	if (!pszClassname || !pszClassname[0])
 		return NULL;
 
 	CItem *pAmmoEntity = (CItem*)CreateEntityByName(pszClassname);

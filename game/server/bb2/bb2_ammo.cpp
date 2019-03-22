@@ -381,7 +381,7 @@ CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
 		return;
 
 	const char *classNew = pWeapon->GetAmmoEntityLink();
-	if (strlen(classNew) <= 0)
+	if (!classNew || !classNew[0])
 		return;
 
 	int ammoForItem = pWeapon->GetMaxClip1();

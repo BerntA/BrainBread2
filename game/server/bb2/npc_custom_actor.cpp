@@ -149,7 +149,7 @@ void CNPC_CustomActor::Spawn()
 {
 	// NO model? force default.
 	const char *model = STRING(GetModelName());
-	if (!model || (model && (strlen(STRING(GetModelName())) <= 0)))
+	if (!model || !model[0])
 		SetModelName(AllocPooledString("models/characters/marine/marine_soldier01.mdl"));
 
 	BaseClass::Spawn();

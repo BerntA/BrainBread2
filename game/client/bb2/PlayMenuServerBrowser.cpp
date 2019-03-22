@@ -699,7 +699,7 @@ void PlayMenuServerBrowser::AddServerToList(gameserveritem_t *pGameServerItem)
 	char szMapTextFilter[256];
 	m_pFilterMap->GetText(szMapTextFilter, 256);
 
-	if ((strlen(szMapTextFilter) > 0) && (!Q_stristr(pGameServerItem->m_szMap, szMapTextFilter)))
+	if (szMapTextFilter && szMapTextFilter[0] && (!Q_stristr(pGameServerItem->m_szMap, szMapTextFilter)))
 		return;
 
 	if (m_bFilterNoEmpty && (pGameServerItem->m_nPlayers <= 0))

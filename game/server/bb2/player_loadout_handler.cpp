@@ -111,7 +111,7 @@ bool CPlayerLoadoutHandler::LoadDataForPlayer(CHL2MP_Player *pPlayer)
 
 				for (int wep = 0; wep < PLAYER_MAX_CARRY_WEPS; wep++)
 				{
-					if (strlen(m_pLoadoutList[i].pchWeapon[wep]) > 0)
+					if (m_pLoadoutList[i].pchWeapon[wep] && m_pLoadoutList[i].pchWeapon[wep][0])
 					{
 						if (pPlayer->GiveItem(m_pLoadoutList[i].pchWeapon[wep], true))
 						{

@@ -701,7 +701,7 @@ void CHL2MP_Player::SetPlayerModel(int overrideTeam)
 		teamNum = overrideTeam;
 
 	const char *survivorChoice = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "bb2_survivor_choice");
-	if (survivorChoice != NULL && (strlen(survivorChoice) > 0))
+	if (survivorChoice && survivorChoice[0])
 		Q_strncpy(m_szModelChoice.GetForModify(), survivorChoice, MAX_MAP_NAME);
 	else
 		Q_strncpy(m_szModelChoice.GetForModify(), "survivor1", MAX_MAP_NAME);
@@ -711,11 +711,11 @@ void CHL2MP_Player::SetPlayerModel(int overrideTeam)
 
 	// Soundset Logic:
 	const char *survivorLink = survivorChoice;
-	if ((survivorLink == NULL) || (strlen(survivorLink) <= 0))
+	if ((survivorLink == NULL) || !survivorLink[0])
 		survivorLink = "survivor1";
 
 	const char *soundsetPrefix = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), ((GetTeamNumber() == TEAM_HUMANS) ? "bb2_sound_player_human" : "bb2_sound_player_deceased"));
-	if ((soundsetPrefix == NULL) || (strlen(soundsetPrefix) <= 0))
+	if ((soundsetPrefix == NULL) || !soundsetPrefix[0])
 		soundsetPrefix = ((GetTeamNumber() == TEAM_HUMANS) ? "Pantsman" : "Default");
 
 	Q_strncpy(pchSoundsetSurvivorLink, survivorLink, 64);

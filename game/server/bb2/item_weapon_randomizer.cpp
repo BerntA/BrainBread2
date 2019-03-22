@@ -184,7 +184,7 @@ bool CItemWeaponRandomizer::ShouldRespawnEntity(CBaseEntity *pActiveEntity)
 CBaseEntity *CItemWeaponRandomizer::SpawnNewEntity(void)
 {
 	const char *pszClassname = GetRandomWeapon(m_iItemType, m_iSpawnListType, STRING(szSpawnList));
-	if (strlen(pszClassname) <= 0)
+	if (!pszClassname || !pszClassname[0])
 		return NULL;
 
 	CBaseCombatWeapon *pWeapon = (CBaseCombatWeapon*)CreateEntityByName(pszClassname);
@@ -255,7 +255,7 @@ bool CItemExplosiveRandomizer::ShouldRespawnEntity(CBaseEntity *pActiveEntity)
 CBaseEntity *CItemExplosiveRandomizer::SpawnNewEntity(void)
 {
 	const char *pszClassname = pszExplosiveClassnames[random->RandomInt(0, (_ARRAYSIZE(pszExplosiveClassnames) - 1))];
-	if (strlen(pszClassname) <= 0)
+	if (!pszClassname || !pszClassname[0])
 		return NULL;
 
 	CBaseCombatWeapon *pWeapon = (CBaseCombatWeapon*)CreateEntityByName(pszClassname);

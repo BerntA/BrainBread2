@@ -1573,7 +1573,7 @@ void CHL2MPRules::StartEndMapVote(bool bRefresh)
 	int iMapChoices = 0;
 	for (int i = 0; i < 4; i++)
 	{
-		if (strlen(pchMapOptions[i]) > 0)
+		if (pchMapOptions[i] && pchMapOptions[i][0])
 			iMapChoices++;
 	}
 
@@ -1703,7 +1703,7 @@ const char *CHL2MPRules::GetRandomMapForVoteSys(int mode, bool bRandom)
 			bAdd = true;
 			for (int x = 0; x < 4; x++)
 			{
-				if ((strlen(pchMapOptions[x]) > 0) && !strcmp(pchMapOptions[x], m_MapList[i]))
+				if (pchMapOptions[x] && pchMapOptions[x][0] && !strcmp(pchMapOptions[x], m_MapList[i]))
 					bAdd = false;
 			}
 

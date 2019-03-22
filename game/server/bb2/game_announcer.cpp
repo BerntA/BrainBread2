@@ -28,7 +28,7 @@ static CUtlVector<announcerItem_t> m_pAnnouncerList;
 
 int GetIndexForPlayerWithWeapon(const char *weapon, int playerIndex)
 {
-	if (!weapon || (weapon && (strlen(weapon) <= 0)))
+	if (!weapon || !weapon[0])
 		return -1;
 
 	for (int i = (m_pAnnouncerList.Count() - 1); i >= 0; i--)

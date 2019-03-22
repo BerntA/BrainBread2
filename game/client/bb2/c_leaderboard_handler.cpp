@@ -124,7 +124,7 @@ void CLeaderboardHandler::OnLeaderboardDownloadedEntries(LeaderboardScoresDownlo
 			char pszPlayerName[32];
 			char pszSteamID[80];
 			const char *playerName = steamapicontext->SteamFriends()->GetFriendPersonaName(pSteamID);
-			if (!playerName || (strlen(playerName) <= 0))
+			if (!(playerName && playerName[0]))
 				playerName = "Unnamed";
 
 			Q_strncpy(pszPlayerName, playerName, 32);

@@ -234,10 +234,10 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	const char *npcKillerName = event->GetString("npcKiller");
 	const char *weaponName = event->GetString("weapon");
 
-	if (strlen(npcVictimName) > 0)
+	if (npcVictimName && npcVictimName[0])
 		victimName = npcVictimName;
 
-	if (strlen(npcKillerName) > 0)
+	if (npcKillerName && npcKillerName[0])
 		killerName = npcKillerName;
 
 	// Hacky name fixes:
@@ -277,7 +277,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 
 	// Try and find the death identifier in the icon list
 	CHudTexture *m_pHeadShotTexture = NULL;
-	if ((hitgroup == HITGROUP_HEAD) && (victimID != killerID) && (strlen(killerName) > 0) && (strlen(victimName) > 0))
+	if ((hitgroup == HITGROUP_HEAD) && (victimID != killerID) && killerName && killerName[0] && victimName && victimName[0])
 	{
 		int playerTeam = g_PR->GetTeam(victimID);
 		if (playerTeam)

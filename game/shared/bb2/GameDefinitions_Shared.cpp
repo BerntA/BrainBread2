@@ -818,10 +818,10 @@ bool CGameDefinitionsShared::Precache(void)
 
 	for (int i = 0; i < pszPlayerPowerupData.Count(); i++)
 	{
-		if (strlen(pszPlayerPowerupData[i].pchModelPath) > 0)
+		if (pszPlayerPowerupData[i].pchModelPath && pszPlayerPowerupData[i].pchModelPath[0])
 			CBaseAnimating::PrecacheModel(pszPlayerPowerupData[i].pchModelPath);
 
-		if (strlen(pszPlayerPowerupData[i].pchActivationSoundScript) > 0)
+		if (pszPlayerPowerupData[i].pchActivationSoundScript && pszPlayerPowerupData[i].pchActivationSoundScript[0])
 			CBaseAnimating::PrecacheScriptSound(pszPlayerPowerupData[i].pchActivationSoundScript);
 	}
 
@@ -898,7 +898,7 @@ void CGameDefinitionsShared::LoadClientModels(void)
 		for (int i = 0; i < PLAYER_GIB_GROUPS_MAX; i++)
 		{
 			item.m_pClientModelPtrGibsHuman[i] = NULL;
-			if (strlen(humanGibs[i]) <= 0)
+			if (!(humanGibs[i] && humanGibs[i][0]))
 				continue;
 
 			item.m_pClientModelPtrGibsHuman[i] = LoadClientModel(humanGibs[i]);
@@ -907,7 +907,7 @@ void CGameDefinitionsShared::LoadClientModels(void)
 		for (int i = 0; i < PLAYER_GIB_GROUPS_MAX; i++)
 		{
 			item.m_pClientModelPtrGibsZombie[i] = NULL;
-			if (strlen(zombieGibs[i]) <= 0)
+			if (!(zombieGibs[i] && zombieGibs[i][0]))
 				continue;
 
 			item.m_pClientModelPtrGibsZombie[i] = LoadClientModel(zombieGibs[i]);
@@ -1323,7 +1323,7 @@ void CGameDefinitionsShared::ParseInventoryData(KeyValues *pkvData, bool bIsMapI
 			item.bShouldRenderIcon = false;
 			const char *hudIconPath = sub->GetString("HUDIconTexture");
 			int hudTextureID = -1;
-			if (strlen(hudIconPath) > 0)
+			if (hudIconPath && hudIconPath[0])
 			{
 				item.bShouldRenderIcon = true;
 				char pchFilePath[MAX_WEAPON_STRING];
@@ -1344,7 +1344,7 @@ void CGameDefinitionsShared::ParseInventoryData(KeyValues *pkvData, bool bIsMapI
 			const char *pszObjIconTexture = sub->GetString("ObjectiveIconTexture");
 
 			item.bGlobalGlow = false;
-			item.bEnableObjectiveIcon = (strlen(pszObjIconTexture) > 0);
+			item.bEnableObjectiveIcon = (pszObjIconTexture && pszObjIconTexture[0]);
 			item.bAutoConsume = sub->GetBool("AutoConsume");
 			Q_strncpy(item.szObjectiveIconTexture, pszObjIconTexture, MAX_WEAPON_STRING);
 			item.clGlowColor = Color(255, 255, 255, 255);
@@ -1363,7 +1363,7 @@ void CGameDefinitionsShared::ParseInventoryData(KeyValues *pkvData, bool bIsMapI
 
 			const char *pszEntityLink = sub->GetString("EntityLink");
 
-			item.bHasEntityLink = (strlen(pszEntityLink) > 0);
+			item.bHasEntityLink = (pszEntityLink && pszEntityLink[0]);
 			Q_strncpy(item.szEntityLink, pszEntityLink, 64);
 #endif
 
@@ -1460,7 +1460,7 @@ const char *CGameDefinitionsShared::GetSoundPrefix(int iType, int index, const c
 			continue;
 
 		// Save the default soundset script in case we can't find the desired one. Fallback to this one if necessary.
-		if (strlen(szDefault) <= 0)
+		if (!(szDefault && szDefault[0]))
 			szDefault = pszSoundPrefixesData[i].szScriptName;
 
 		if (pszSoundPrefixesData[i].iID == index)
@@ -1537,7 +1537,7 @@ int CGameDefinitionsShared::GetNextIndexForSoundSet(int iType, const char *survi
 	int index = 0;
 	for (int i = 0; i < pszSoundPrefixesData.Count(); i++)
 	{
-		if (survivorLink && (strlen(survivorLink) > 0))
+		if (survivorLink && survivorLink[0])
 		{
 			if (strcmp(survivorLink, pszSoundPrefixesData[i].szSurvivorLink))
 				continue;
@@ -1614,14 +1614,14 @@ const char *CGameDefinitionsShared::GetPlayerSoundsetPrefix(int iType, const cha
 		if ((pszSoundPrefixesData[i].iType != iType) || (strcmp(survivorLink, pszSoundPrefixesData[i].szSurvivorLink)))
 			continue;
 
-		if (strlen(characterDefaultSet) <= 0)
+		if (!(characterDefaultSet && characterDefaultSet[0]))
 			characterDefaultSet = pszSoundPrefixesData[i].szScriptName;
 
 		if (!strcmp(script, pszSoundPrefixesData[i].szScriptName))
 			return pszSoundPrefixesData[i].szScriptName;
 	}
 
-	if (strlen(characterDefaultSet) > 0)
+	if (characterDefaultSet && characterDefaultSet[0])
 		return characterDefaultSet;
 
 	if (iType == BB2_SoundTypes::TYPE_PLAYER)

@@ -138,7 +138,7 @@ void CFMODManager::FadeThink(void)
 				Q_strncpy(szActiveSound, "", MAX_WEAPON_STRING); // clear active sound.
 
 				// find the next sound, if we have a transit sound, prio that one.
-				if (strlen(szTransitSound) > 0)
+				if (szTransitSound && szTransitSound[0])
 					PlayAmbientSound(szTransitSound, m_bShouldLoop);
 				else if (bShouldPlayInSequence) // If there's no transit sound and we're in game (no bg map) then continue playing the soundtrack!				
 					GetMusicSystem->RunAmbientSoundTrack();
@@ -232,7 +232,7 @@ bool CFMODManager::PlayAmbientSound(const char *szSoundPath, bool bLoop)
 void CFMODManager::StopAmbientSound(bool force)
 {
 	// If the active sound is NULL then don't care.
-	if (!force && (!szActiveSound || (strlen(szActiveSound) <= 0)))
+	if (!force && (!szActiveSound || !szActiveSound[0]))
 		return;
 
 	m_bIsPlayingSound = false;
@@ -248,7 +248,7 @@ bool CFMODManager::TransitionAmbientSound(const char *szSoundPath, bool bLoop)
 	m_bShouldLoop = bLoop;
 
 	// If the active sound is NULL, allow us to play right away.
-	if (!szActiveSound || (strlen(szActiveSound) <= 0))
+	if (!szActiveSound || !szActiveSound[0])
 	{
 		PlayAmbientSound(szSoundPath, bLoop);
 		return true;

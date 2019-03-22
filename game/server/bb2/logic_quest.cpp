@@ -99,7 +99,7 @@ void CLogicQuest::Spawn()
 	for (int i = 0; i < questItemData->m_iObjectivesCount; i++)
 	{
 		const char *szLocation = questItemData->pObjectives[i].szLocationTarget;
-		if (szLocation && (strlen(szLocation) > 0))
+		if (szLocation && szLocation[0])
 		{
 			CBaseEntity *pEntity = gEntList.FindEntityByName(NULL, szLocation);
 			if (!pEntity)
@@ -128,7 +128,7 @@ void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, 
 			for (int i = 0; i < GetLinkedQuestData()->m_iObjectivesCount; i++)
 			{
 				const char *szLocation = GetLinkedQuestData()->pObjectives[i].szLocationTarget;
-				if (szLocation && (strlen(szLocation) > 0))
+				if (szLocation && szLocation[0])
 				{
 					CBaseEntity *pEntity = gEntList.FindEntityByName(NULL, szLocation);
 					if (pEntity)
@@ -220,7 +220,7 @@ void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, 
 
 		m_OnQuestProgressObjective[iObjectiveToProgress].FireOutput(this, this);
 
-		if (!GetLinkedQuestData()->bShowInOrder && (strlen(GetLinkedQuestData()->pObjectives[iObjectiveToProgress].szLocationTarget) > 0))
+		if (!GetLinkedQuestData()->bShowInOrder && GetLinkedQuestData()->pObjectives[iObjectiveToProgress].szLocationTarget && GetLinkedQuestData()->pObjectives[iObjectiveToProgress].szLocationTarget[0])
 		{
 			for (int i = 0; i < pszObjectiveIcons.Count(); i++)
 			{
@@ -262,7 +262,7 @@ void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, 
 		GetLinkedQuestData()->pObjectives[iObjectiveToProgress].m_bObjectiveCompleted = true;
 		m_iProgressValue++;
 
-		if (GetLinkedQuestData()->bShowInOrder && (strlen(GetLinkedQuestData()->pObjectives[iObjectiveToProgress].szLocationTarget) > 0))
+		if (GetLinkedQuestData()->bShowInOrder && GetLinkedQuestData()->pObjectives[iObjectiveToProgress].szLocationTarget && GetLinkedQuestData()->pObjectives[iObjectiveToProgress].szLocationTarget[0])
 		{
 			for (int i = 0; i < pszObjectiveIcons.Count(); i++)
 			{
@@ -320,7 +320,7 @@ bool CLogicQuest::ShouldShowEntityCounting(void)
 	for (int i = 0; i < GetLinkedQuestData()->m_iObjectivesCount; i++)
 	{
 		const char *szSubString = GetLinkedQuestData()->pObjectives[i].szTargetEntityToKill;
-		if (szSubString && (strlen(szSubString) > 0))
+		if (szSubString && szSubString[0])
 		{
 			if (GetLinkedQuestData()->bShowInOrder)
 			{
@@ -423,7 +423,7 @@ void CLogicQuest::FireGameEvent(IGameEvent *event)
 			for (int i = 0; i < GetLinkedQuestData()->m_iObjectivesCount; i++)
 			{
 				const char *szSubString = GetLinkedQuestData()->pObjectives[i].szTargetEntityToKill;
-				if (szSubString && (strlen(szSubString) > 0))
+				if (szSubString && szSubString[0])
 				{
 					if (FClassnameIs(pVictim, szSubString))
 					{

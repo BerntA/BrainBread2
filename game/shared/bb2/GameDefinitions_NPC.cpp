@@ -178,19 +178,19 @@ bool CGameDefinitionsNPC::Precache(void)
 			CBaseAnimating::PrecacheModel(pszNPCItems[i]->pszModelList[modelItems].szModelPath);
 
 			// Check if there's any gibs:
-			if (strlen(pszNPCItems[i]->pszModelList[modelItems].szGibHead) > 0)
+			if (pszNPCItems[i]->pszModelList[modelItems].szGibHead && pszNPCItems[i]->pszModelList[modelItems].szGibHead[0])
 				CBaseAnimating::PrecacheModel(pszNPCItems[i]->pszModelList[modelItems].szGibHead);
 
-			if (strlen(pszNPCItems[i]->pszModelList[modelItems].szGibArmLeft) > 0)
+			if (pszNPCItems[i]->pszModelList[modelItems].szGibArmLeft && pszNPCItems[i]->pszModelList[modelItems].szGibArmLeft[0])
 				CBaseAnimating::PrecacheModel(pszNPCItems[i]->pszModelList[modelItems].szGibArmLeft);
 
-			if (strlen(pszNPCItems[i]->pszModelList[modelItems].szGibArmRight) > 0)
+			if (pszNPCItems[i]->pszModelList[modelItems].szGibArmRight && pszNPCItems[i]->pszModelList[modelItems].szGibArmRight[0])
 				CBaseAnimating::PrecacheModel(pszNPCItems[i]->pszModelList[modelItems].szGibArmRight);
 
-			if (strlen(pszNPCItems[i]->pszModelList[modelItems].szGibLegLeft) > 0)
+			if (pszNPCItems[i]->pszModelList[modelItems].szGibLegLeft && pszNPCItems[i]->pszModelList[modelItems].szGibLegLeft[0])
 				CBaseAnimating::PrecacheModel(pszNPCItems[i]->pszModelList[modelItems].szGibLegLeft);
 
-			if (strlen(pszNPCItems[i]->pszModelList[modelItems].szGibLegRight) > 0)
+			if (pszNPCItems[i]->pszModelList[modelItems].szGibLegRight && pszNPCItems[i]->pszModelList[modelItems].szGibLegRight[0])
 				CBaseAnimating::PrecacheModel(pszNPCItems[i]->pszModelList[modelItems].szGibLegRight);
 		}
 	}
@@ -202,19 +202,19 @@ bool CGameDefinitionsNPC::Precache(void)
 			CBaseAnimating::PrecacheModel(m_pModelOverrideItems[i]->pszModelList[modelItems].szModelPath);
 
 			// Check if there's any gibs:
-			if (strlen(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibHead) > 0)
+			if (m_pModelOverrideItems[i]->pszModelList[modelItems].szGibHead && m_pModelOverrideItems[i]->pszModelList[modelItems].szGibHead[0])
 				CBaseAnimating::PrecacheModel(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibHead);
 
-			if (strlen(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibArmLeft) > 0)
+			if (m_pModelOverrideItems[i]->pszModelList[modelItems].szGibArmLeft && m_pModelOverrideItems[i]->pszModelList[modelItems].szGibArmLeft[0])
 				CBaseAnimating::PrecacheModel(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibArmLeft);
 
-			if (strlen(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibArmRight) > 0)
+			if (m_pModelOverrideItems[i]->pszModelList[modelItems].szGibArmRight && m_pModelOverrideItems[i]->pszModelList[modelItems].szGibArmRight[0])
 				CBaseAnimating::PrecacheModel(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibArmRight);
 
-			if (strlen(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibLegLeft) > 0)
+			if (m_pModelOverrideItems[i]->pszModelList[modelItems].szGibLegLeft && m_pModelOverrideItems[i]->pszModelList[modelItems].szGibLegLeft[0])
 				CBaseAnimating::PrecacheModel(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibLegLeft);
 
-			if (strlen(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibLegRight) > 0)
+			if (m_pModelOverrideItems[i]->pszModelList[modelItems].szGibLegRight && m_pModelOverrideItems[i]->pszModelList[modelItems].szGibLegRight[0])
 				CBaseAnimating::PrecacheModel(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibLegRight);
 		}
 	}
@@ -419,19 +419,19 @@ bool CGameDefinitionsNPC::DoesNPCHaveGibForLimb(const char *name, const char *mo
 
 	if (item != NULL)
 	{
-		if ((gibID == GIB_NO_HEAD) && (strlen(item->szGibHead) > 0))
+		if ((gibID == GIB_NO_HEAD) && item->szGibHead && item->szGibHead[0])
 			return true;
 
-		if ((gibID == GIB_NO_ARM_LEFT) && (strlen(item->szGibArmLeft) > 0))
+		if ((gibID == GIB_NO_ARM_LEFT) && item->szGibArmLeft && item->szGibArmLeft[0])
 			return true;
 
-		if ((gibID == GIB_NO_ARM_RIGHT) && (strlen(item->szGibArmRight) > 0))
+		if ((gibID == GIB_NO_ARM_RIGHT) && item->szGibArmRight && item->szGibArmRight[0])
 			return true;
 
-		if ((gibID == GIB_NO_LEG_LEFT) && (strlen(item->szGibLegLeft) > 0))
+		if ((gibID == GIB_NO_LEG_LEFT) && item->szGibLegLeft && item->szGibLegLeft[0])
 			return true;
 
-		if ((gibID == GIB_NO_LEG_RIGHT) && (strlen(item->szGibLegRight) > 0))
+		if ((gibID == GIB_NO_LEG_RIGHT) && item->szGibLegRight && item->szGibLegRight[0])
 			return true;
 	}
 
