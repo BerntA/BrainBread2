@@ -44,8 +44,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-extern int giPrecacheGrunt;
-
 // For not just using one big ai net
 extern CBaseEntity*	FindPickerEntity( CBasePlayer* pPlayer );
 
@@ -56,7 +54,8 @@ ConVar  *sv_cheats = NULL;
 void ClientKill( edict_t *pEdict, const Vector &vecForce, bool bExplode = false )
 {
 	CBasePlayer *pPlayer = static_cast<CBasePlayer*>( GetContainingEntity( pEdict ) );
-	pPlayer->CommitSuicide( vecForce, bExplode );
+	if (pPlayer)
+		pPlayer->CommitSuicide(vecForce, bExplode);
 }
 
 char * CheckChatText( CBasePlayer *pPlayer, char *text )
@@ -1423,35 +1422,6 @@ void ClientCommand(CBasePlayer *pPlayer, const CCommand &args)
 		else if (FStrEq(pCmd, "demorestart"))
 		{
 			pPlayer->ForceClientDllUpdate();
-			bIssuedCommand = true;
-		}
-		else if (FStrEq(pCmd, "fade"))
-		{
-			color32 black = { 32, 63, 100, 200 };
-			UTIL_ScreenFade(pPlayer, black, 3, 3, FFADE_OUT);
-			bIssuedCommand = true;
-		}
-		else if (FStrEq(pCmd, "te"))
-		{
-			if (UTIL_IsCommandIssuedByServerAdmin())
-			{
-				if (FStrEq(args[1], "stop"))
-				{
-					// Destroy it
-					//
-					CBaseEntity *ent = gEntList.FindEntityByClassname(NULL, "te_tester");
-					while (ent)
-					{
-						CBaseEntity *next = gEntList.FindEntityByClassname(ent, "te_tester");
-						UTIL_Remove(ent);
-						ent = next;
-					}
-				}
-				else
-				{
-					CTempEntTester::Create(pPlayer->WorldSpaceCenter(), pPlayer->EyeAngles(), args[1], args[2]);
-				}
-			}
 			bIssuedCommand = true;
 		}
 	}

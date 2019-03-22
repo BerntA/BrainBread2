@@ -57,7 +57,6 @@ $Project "Client (HL2MP)"
 			$File	"hl2\hl_in_main.cpp"
 			$File	"hl2\hl_prediction.cpp"
 			$File	"hl2\hud_credits.cpp"
-			$File	"hl2\hud_weaponselection.cpp"
 			$File	"hl2\shieldproxy.cpp"
 			$File	"hl2\vgui_rootpanel_hl2.cpp"
 			$File	"$SRCDIR\game\shared\hl2\hl2_shared_misc.cpp"
@@ -104,7 +103,6 @@ $Project "Client (HL2MP)"
 				$File	"hl2mp\hl2mp_hud_chat.h"
 				$File	"hl2mp\ui\hl2mptextwindow.cpp"
 				$File	"hl2mp\ui\hl2mptextwindow.h"
-				$File	"hl2mp\hud_deathnotice.cpp"
 			}
 		}
 	}

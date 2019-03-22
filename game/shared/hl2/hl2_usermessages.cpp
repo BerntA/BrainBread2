@@ -35,8 +35,6 @@ void RegisterUserMessages( void )
 	usermessages->Register( "VoiceMask", VOICE_MAX_PLAYERS_DW*4 * 2 + 1 );
 	usermessages->Register( "RequestState", 0 );
 	usermessages->Register( "CloseCaption", -1 ); // Show a caption (by string id number)(duration in 10th of a second)
-	usermessages->Register( "HintText", -1 );	// Displays hint text display
-	usermessages->Register( "KeyHintText", -1 );	// Displays hint text display
 	usermessages->Register( "AmmoDenied", 2 );
 	usermessages->Register( "CreditsMsg", 1 );
 	usermessages->Register( "LogoTimeMsg", 4 );

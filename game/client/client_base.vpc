@@ -15,7 +15,6 @@ $MacroRequired "GAMENAME"
 
 $Include "$SRCDIR\vpc_scripts\source_dll_base.vpc"
 $include "$SRCDIR\vpc_scripts\protobuf_builder.vpc"
-$Include "$SRCDIR\vpc_scripts\source_replay.vpc"	[$TF]
 $Include "$SRCDIR\game\protobuf_include.vpc"
 
 $Configuration	"Debug"
@@ -55,7 +54,6 @@ $Configuration
 		$PreprocessorDefinitions		"$BASE;NO_STRING_T;CLIENT_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead" 
 		$PreprocessorDefinitions		"$BASE;fopen=dont_use_fopen" [$WIN32]
 		$PreprocessorDefinitions		"$BASE;USE_WEBM_FOR_REPLAY;" [$LINUXALL]
-		$PreprocessorDefinitions		"$BASE;CURL_STATICLIB" [$WIN32 && $BUILD_REPLAY]
 		$Create/UsePrecompiledHeader	"Use Precompiled Header (/Yu)"
 		$Create/UsePCHThroughFile		"cbase.h"
 		$PrecompiledHeaderFile			"$(IntDir)/client.pch"
@@ -68,7 +66,6 @@ $Configuration
 		$SystemLibraries				"rt" [$LINUXALL]
 		$IgnoreImportLibrary			"TRUE"
 		$AdditionalDependencies			"$BASE winmm.lib"	[$WIN32]
-		$AdditionalDependencies			"$BASE wsock32.lib Ws2_32.lib" [$BUILD_REPLAY]
 	}
 }
 
@@ -225,7 +222,9 @@ $Project
 			$File "bb2/hud_scope_view.cpp"
 			$File "bb2/hud_timeview.cpp"
 			$File "bb2/hud_weapon_charger.cpp"
-			$File "bb2/hud_zombie_rage.cpp"
+			$File "bb2/hud_zombie_rage.cpp"			
+			$File "bb2/hud_deathnotice.cpp"
+			$File "bb2/hud_weaponselection.cpp"
 		}
 		
 		$Folder "Shaders"
@@ -341,7 +340,9 @@ $Project
 			$File "bb2/EndMapVoteMenu.cpp"
 			$File "bb2/EndMapVoteMenu.h"
 			$File "bb2/vote_menu.cpp"
-			$File "bb2/vote_menu.h"
+			$File "bb2/vote_menu.h"			
+			$File "bb2/SpectatorGUI.cpp"
+			$File "bb2/spectatorgui.h"
 		}
 		
 		$Folder "VGUI_Screens"
@@ -397,102 +398,6 @@ $Project
 			$File "$SRCDIR\game\shared\bb2\weapon_base_shotgun.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_base_shotgun.h"
 			$File "$SRCDIR\game\shared\bb2\weapon_benelli_m4.cpp"			
-		}
-	}
-	
-	$Folder "Replay"
-	{
-		$File	"replay/replaycamera.cpp"
-		$File	"replay/replaycamera.h"
-		$File	"replay/cdll_replay.cpp"
-		$File	"replay/cdll_replay.h"
-		
-		$File	"replay/gamedefs.h"	[$BUILD_REPLAY]
-		$File	"replay/gamedefs.cpp"	[$BUILD_REPLAY]
-		$File	"replay/replay_ragdoll.cpp"	[$BUILD_REPLAY]
-		$File	"replay/replay_ragdoll.h"	[$BUILD_REPLAY]
-		$File	"replay/replay_screenshot.cpp"	[$BUILD_REPLAY]
-		$File	"replay/replay_screenshot.h"	[$BUILD_REPLAY]
-		$File	"replay/replayperformanceplaybackhandler.h"	[$BUILD_REPLAY]
-		$File	"replay/replayperformanceplaybackhandler.cpp"	[$BUILD_REPLAY]
-		$File	"replay/replayrenderer.cpp"	[$BUILD_REPLAY]
-		$File	"replay/replayrenderer.h"	[$BUILD_REPLAY]
-		$File	"replay/replayvideo.cpp"	[$BUILD_REPLAY]
-		$File	"replay/replayvideo.h"	[$BUILD_REPLAY]
-		
-		$File	"replay/genericclassbased_replay.cpp"	[$BUILD_REPLAY]
-		$File	"replay/genericclassbased_replay.h"	[$BUILD_REPLAY]
-		
-		$File	"$SRCDIR\game\shared\replay_gamestats_shared.cpp"	[$BUILD_REPLAY]
-		$File	"$SRCDIR\game\shared\replay_gamestats_shared.h"	[$BUILD_REPLAY]
-		
-		$File	"$SRCDIR\game\client\youtubeapi.h"	[$BUILD_REPLAY]
-		$File	"$SRCDIR\game\client\youtubeapi.cpp"	[$BUILD_REPLAY]
-		{
-			$Configuration
-			{
-				$Compiler
-				{
-					$Create/UsePrecompiledHeader	"Not Using Precompiled Headers"
-				}
-			}
-		}
-		
-		$Folder "UI"	[$BUILD_REPLAY]
-		{
-			$File	"replay\vgui\replaybrowserbasepage.cpp"
-			$File	"replay\vgui\replaybrowserbasepage.h"
-			$File	"replay\vgui\replaybrowserbasepanel.cpp"
-			$File	"replay\vgui\replaybrowserbasepanel.h"
-			$File	"replay\vgui\replayconfirmquitdlg.cpp"
-			$File	"replay\vgui\replayconfirmquitdlg.h"
-			$File	"replay\vgui\replaybrowserdetailspanel.cpp"
-			$File	"replay\vgui\replaybrowserdetailspanel.h"
-			$File	"replay\vgui\replaybrowseritemmanager.cpp"
-			$File	"replay\vgui\replaybrowseritemmanager.h"
-			$File	"replay\vgui\replaybrowserlistitempanel.cpp"
-			$File	"replay\vgui\replaybrowserlistitempanel.h"
-			$File	"replay\vgui\replaybrowserlistpanel.cpp"
-			$File	"replay\vgui\replaybrowserlistpanel.h"
-			$File	"replay\vgui\replaybrowsermainpanel.cpp"
-			$File	"replay\vgui\replaybrowsermainpanel.h"
-			$File	"replay\vgui\replaybrowsermovieplayerpanel.cpp"
-			$File	"replay\vgui\replaybrowsermovieplayerpanel.h"
-			$File	"replay\vgui\replaybrowserpreviewpanel.cpp"
-			$File	"replay\vgui\replaybrowserpreviewpanel.h"
-			$File	"replay\vgui\replaybrowserrenderdialog.cpp"
-			$File	"replay\vgui\replaybrowserrenderdialog.h"
-			$File	"replay\vgui\replayinputpanel.cpp"
-			$File	"replay\vgui\replayinputpanel.h"
-			$File	"replay\vgui\replaymessagepanel.cpp"
-			$File	"replay\vgui\replaymessagepanel.h"
-			$File	"replay\vgui\replayperformanceeditor.cpp"
-			$File	"replay\vgui\replayperformanceeditor.h"
-			$File	"replay\vgui\replayperformancesavedlg.cpp"
-			$File	"replay\vgui\replayperformancesavedlg.h"
-			$File	"replay\vgui\replayrenderoverlay.cpp"
-			$File	"replay\vgui\replayrenderoverlay.h"
-			$File	"replay\vgui\replayreminderpanel.cpp"
-			$File	"replay\vgui\replayreminderpanel.h"
-			$File	"replay\replayyoutubeapi.cpp"
-			$File	"replay\replayyoutubeapi.h"
-			$File	"replay\replayyoutubeapi_key.cpp" [!$SOURCESDK]
-			$File	"replay\replayyoutubeapi_key_sdk.cpp" [$SOURCESDK]
-			
-			$File	"game_controls\slideshowpanel.cpp"
-			$File	"game_controls\slideshowpanel.h"
-			
-			$File	"$SRCDIR\common\movieobjects\timeutils.cpp"
-			{
-				$Configuration
-				{
-					$Compiler
-					{
-						$Create/UsePrecompiledHeader	"Not Using Precompiled Headers"
-					}
-				}
-			}
-			$File	"$SRCDIR\public\movieobjects\timeutils.h"
 		}
 	}
 	
@@ -671,8 +576,6 @@ $Project
 		$File	"$SRCDIR\game\shared\gamevars_shared.cpp"
 		$File	"glow_outline_effect.cpp"
 		$File	"glow_overlay.cpp"
-		$File	"$SRCDIR\game\shared\hintmessage.cpp"
-		$File	"$SRCDIR\game\shared\hintsystem.cpp"
 		$File	"hltvcamera.cpp"
 		$File	"hud.cpp"
 		$File	"hud_animationinfo.cpp"
@@ -684,7 +587,6 @@ $Project
 		$File	"hud_element_helper.cpp"
 		$File	"hl2\hud_filmdemo.cpp"
 		$File	"hl2\hud_hdrdemo.cpp"
-		$File	"hud_hintdisplay.cpp"
 		$File	"hud_msg.cpp"
 		$File	"hud_numericdisplay.cpp"
 		$File	"hud_pdump.cpp"
@@ -964,7 +866,6 @@ $Project
 			$File	"game_controls\commandmenu.cpp"
 			$File	"game_controls\intromenu.cpp"
 			$File	"game_controls\NavProgress.cpp"
-			$File	"game_controls\SpectatorGUI.cpp"
 			$File	"game_controls\vguitextwindow.cpp"
 			$File	"game_controls\IconPanel.cpp"
 		}
@@ -1070,8 +971,6 @@ $Project
 		$File	"$SRCDIR\game\shared\GameEventListener.h"
 		$File	"glow_outline_effect.h"
 		$File	"glow_overlay.h"
-		$File	"$SRCDIR\game\shared\hintmessage.h"
-		$File	"$SRCDIR\game\shared\hintsystem.h"
 		$File	"history_resource.h"
 		$File	"hltvcamera.h"
 		$File	"hud.h"
@@ -1098,7 +997,6 @@ $Project
 		$File	"iconsole.h"
 		$File	"idebugoverlaypanel.h"
 		$File	"ifpspanel.h"
-		$File	"$SRCDIR\game\shared\econ\ihasowner.h"
 		$File	"ihudlcd.h"
 		$File	"ipresence.h"
 		$File	"iinput.h"
@@ -1155,7 +1053,6 @@ $Project
 		$File	"smoke_fog_overlay.h"
 		$File	"splinepatch.h"
 		$File	"$SRCDIR\public\steam\steam_api.h"
-		$File	"TeamBitmapImage.h"
 		$File	"tempent.h"
 		$File	"text_message.h"
 		$File	"timedevent.h"
@@ -1521,7 +1418,6 @@ $Project
 		$File	"$SRCDIR\game\shared\vphysics_sound.h"
 		$File	"$SRCDIR\game\shared\weapon_parse.h"
 		$File	"$SRCDIR\game\shared\weapon_proficiency.h"
-		$File	"$SRCDIR\game\shared\weapon_ifmsteadycam.h"
 		$File	"$SRCDIR\game\shared\mp_shareddefs.h"
 	}
 
@@ -1533,7 +1429,6 @@ $Project
 		$File	"game_controls\intromenu.h"
 		$File	"game_controls\mouseoverhtmlbutton.h"
 		$File	"game_controls\mouseoverpanelbutton.h"
-		$File	"game_controls\spectatorgui.h"
 		$File	"game_controls\vguitextwindow.h"
 		$File	"game_controls\IconPanel.h"
 	}

@@ -485,9 +485,6 @@ void UTIL_SetModel( CBaseEntity *pEntity, const char *pModelName );
 void			UTIL_HudMessageAll( const hudtextparms_t &textparms, const char *pMessage );
 void			UTIL_HudMessage( CBasePlayer *pToPlayer, const hudtextparms_t &textparms, const char *pMessage );
 
-// brings up hud keyboard hints display
-void			UTIL_HudHintText( CBaseEntity *pEntity, const char *pMessage );
-
 // Writes message to console with timestamp and FragLog header.
 void			UTIL_LogPrintf( PRINTF_FORMAT_STRING const char *fmt, ... ) FMTFUNCTION( 1, 2 );
 

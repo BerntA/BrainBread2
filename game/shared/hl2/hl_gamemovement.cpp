@@ -929,13 +929,6 @@ bool CHL2GameMovement::LadderMove( void )
 		Findladder( 64.0f, &bestLadder, bestOrigin, NULL );
 	}
 
-#if !defined (CLIENT_DLL)
-	if( !ladder && bestLadder && sv_ladder_useonly.GetBool() )
-	{
-		GetHL2Player()->DisplayLadderHudHint();
-	}
-#endif
-
 	int buttonsChanged	= ( mv->m_nOldButtons ^ mv->m_nButtons );	// These buttons have changed this frame
 	int buttonsPressed = buttonsChanged & mv->m_nButtons;
 	bool pressed_use = ( buttonsPressed & IN_USE ) ? true : false;

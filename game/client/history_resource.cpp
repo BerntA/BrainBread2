@@ -173,12 +173,6 @@ void CHudHistoryResource::AddIconToHistory( int iType, int iId, C_BaseCombatWeap
 		m_iCurrentHistorySlot = 0;
 	}
 
-	// If the history resource is appearing, slide the hint message element down
-	if ( m_iCurrentHistorySlot == 0 )
-	{
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "HintMessageLower" ); 
-	}
-
 	// ensure the size 
 	m_PickupHistory.EnsureCount(m_iCurrentHistorySlot + 1);
 
@@ -273,9 +267,6 @@ void CHudHistoryResource::CheckClearHistory( void )
 	}
 
 	m_iCurrentHistorySlot = 0;
-
-	// Slide the hint message element back up
-	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "HintMessageRaise" ); 
 }
 
 //-----------------------------------------------------------------------------

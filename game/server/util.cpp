@@ -1232,19 +1232,6 @@ void UTIL_HudMessageAll( const hudtextparms_t &textparms, const char *pMessage )
 	UTIL_HudMessage( NULL, textparms, pMessage );
 }
 
-void UTIL_HudHintText( CBaseEntity *pEntity, const char *pMessage )
-{
-	if ( !pEntity )
-		return;
-
-	CSingleUserRecipientFilter user( (CBasePlayer *)pEntity );
-	user.MakeReliable();
-	UserMessageBegin( user, "KeyHintText" );
-		WRITE_BYTE( 1 );	// one string
-		WRITE_STRING( pMessage );
-	MessageEnd();
-}
-
 void UTIL_ClientPrintFilter( IRecipientFilter& filter, int msg_dest, const char *msg_name, const char *param1, const char *param2, const char *param3, const char *param4 )
 {
 	UserMessageBegin( filter, "TextMsg" );

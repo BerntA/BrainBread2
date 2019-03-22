@@ -114,7 +114,6 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_SOUNDPATCH( m_sndWaterSplashes ),
 
 	DEFINE_FIELD( m_flTimeUseSuspended, FIELD_TIME ),
-	DEFINE_FIELD( m_flTimeNextLadderHint, FIELD_TIME ),
 
 END_DATADESC()
 
@@ -1622,23 +1621,6 @@ void CHL2_Player::StopWaterDeathSounds( void )
 		(CSoundEnvelopeController::GetController()).SoundFadeOut( m_sndWaterSplashes, 0.5f, true );
 		m_sndWaterSplashes = NULL;
 	}
-}
-
-//-----------------------------------------------------------------------------
-//
-//-----------------------------------------------------------------------------
-void CHL2_Player::DisplayLadderHudHint()
-{
-#if !defined( CLIENT_DLL )
-	if( gpGlobals->curtime > m_flTimeNextLadderHint )
-	{
-		m_flTimeNextLadderHint = gpGlobals->curtime + 60.0f;
-
-		CFmtStr hint;
-		hint.sprintf( "#Valve_Hint_Ladder" );
-		UTIL_HudHintText( this, hint.Access() );
-	}
-#endif//CLIENT_DLL
 }
 
 //-----------------------------------------------------------------------------

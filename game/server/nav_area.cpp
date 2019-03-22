@@ -38,8 +38,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-extern void HintMessageToAllPlayers( const char *message );
-
 unsigned int CNavArea::m_nextID = 1;
 NavAreaVector TheNavAreas;
 

@@ -61,7 +61,6 @@
 #include "gamestats.h"
 #include "npcevent.h"
 #include "datacache/imdlcache.h"
-#include "hintsystem.h"
 #include "env_debughistory.h"
 #include "fogcontroller.h"
 #include "gameinterface.h"
@@ -373,13 +372,10 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "SetHUDVisibility", InputSetHUDVisibility ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "SetFogController", InputSetFogController ),
 
-	DEFINE_FIELD( m_nNumCrouches, FIELD_INTEGER ),
 	DEFINE_FIELD( m_bDuckToggled, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_flForwardMove, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flSideMove, FIELD_FLOAT ),
 	DEFINE_FIELD( m_vecPreviouslyPredictedOrigin, FIELD_POSITION_VECTOR ), 
-
-	DEFINE_FIELD( m_nNumCrateHudHints, FIELD_INTEGER ),
 
 	// DEFINE_FIELD( m_nBodyPitchPoseParam, FIELD_INTEGER ),
 	// DEFINE_ARRAY( m_StepSoundCache, StepSoundCache_t,  2  ),
@@ -551,7 +547,6 @@ CBasePlayer::CBasePlayer( )
 
 	m_autoKickDisabled = false;
 
-	m_nNumCrouches = 0;
 	m_bDuckToggled = false;
 	m_bPhysicsWasFrozen = false;
 
@@ -1524,11 +1519,6 @@ int CBasePlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 {
 	CSound *pSound;
-
-	if ( Hints() )
-	{
-		Hints()->ResetHintTimers();
-	}
 
 	g_pGameRules->PlayerKilled( this, info );
 
@@ -3479,11 +3469,6 @@ void CBasePlayer::PreThink(void)
 	if ( g_fGameOver || m_iPlayerLocked )
 		return;         // intermission or finale
 
-	if ( Hints() )
-	{
-		Hints()->Update();
-	}
-
 	ItemPreFrame( );
 	WaterMove();
 
@@ -4169,12 +4154,6 @@ void CBasePlayer::InitialSpawn( void )
 //-----------------------------------------------------------------------------
 void CBasePlayer::Spawn( void )
 {
-	// Needs to be done before weapons are given
-	if ( Hints() )
-	{
-		Hints()->ResetHints();
-	}
-
 	SetClassname( "player" );
 
 	// Shared spawning code..
@@ -5344,34 +5323,7 @@ bool CBasePlayer::ClientCommand( const CCommand &args )
 {
 	const char *cmd = args[0];
 
-	if ( stricmp( cmd, "spectate" ) == 0 ) // join spectator team & start observer mode
-	{
-		if ((GetTeamNumber() == TEAM_SPECTATOR) || !sv_cheats->GetBool())
-			return true;
-
-		ConVarRef mp_allowspectators( "mp_allowspectators" );
-		if ( mp_allowspectators.IsValid() )
-		{
-			if ( ( mp_allowspectators.GetBool() == false ) && !IsHLTV() && !IsReplay() )
-			{
-				ClientPrint( this, HUD_PRINTCENTER, "#Cannot_Be_Spectator" );
-				return true;
-			}
-		}
-
-		if ( !IsDead() )
-		{
-			CommitSuicide();	// kill player
-		}
-
-		RemoveAllItems();
-
-		ChangeTeam( TEAM_SPECTATOR );
-
-		StartObserverMode( OBS_MODE_ROAMING );
-		return true;
-	}
-	else if ( stricmp( cmd, "spec_mode" ) == 0 ) // new observer mode
+	if ( stricmp( cmd, "spec_mode" ) == 0 ) // new observer mode
 	{
 		int mode;
 

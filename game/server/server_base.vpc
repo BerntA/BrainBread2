@@ -15,7 +15,6 @@ $MacroRequired "GAMENAME"
 
 $include "$SRCDIR\vpc_scripts\source_dll_base.vpc"
 $include "$SRCDIR\vpc_scripts\protobuf_builder.vpc"
-$Include "$SRCDIR\vpc_scripts\source_replay.vpc"	[$TF]
 $Include "$SRCDIR\game\protobuf_include.vpc"
 
 $Configuration	"Debug"
@@ -252,15 +251,6 @@ $Project
 			$File "$SRCDIR\game\shared\bb2\weapon_base_shotgun.h"
 			$File "$SRCDIR\game\shared\bb2\weapon_benelli_m4.cpp"			
 		}
-	}
-
-	$Folder "Replay"
-	{
-		$File	"gamedll_replay.cpp"
-		$File	"$SRCDIR\common\replay\ireplaysessionrecorder.h"
-		
-		$File	"$SRCDIR\game\shared\replay_gamestats_shared.cpp"	[$BUILD_REPLAY]
-		$File	"$SRCDIR\game\shared\replay_gamestats_shared.h"	[$BUILD_REPLAY]
 	}
 	
 	$Folder	"Source Files"
@@ -516,7 +506,6 @@ $Project
 		$File	"env_zoom.h"
 		$File	"EnvBeam.cpp"
 		$File	"EnvFade.cpp"
-		$File	"EnvHudHint.cpp"
 		$File	"EnvLaser.cpp"
 		$File	"EnvLaser.h"
 		$File	"EnvMessage.cpp"
@@ -596,10 +585,6 @@ $Project
 		$file	"$SRCDIR\common\hl2orange.spa.h"
 		$File	"hltvdirector.cpp"
 		$File	"hltvdirector.h"
-		$File	"$SRCDIR\game\shared\hintmessage.cpp"
-		$File	"$SRCDIR\game\shared\hintmessage.h"
-		$File	"$SRCDIR\game\shared\hintsystem.cpp"
-		$File	"$SRCDIR\game\shared\hintsystem.h"
 		$File	"$SRCDIR\game\shared\ichoreoeventcallback.h"
 		$File	"$SRCDIR\game\shared\igamesystem.cpp"
 		$File	"$SRCDIR\game\shared\igamesystem.h"
@@ -1168,7 +1153,6 @@ $Project
 		$File	"$SRCDIR\public\worldsize.h"
 		$File	"$SRCDIR\public\zip_uncompressed.h"
 		$File	"$SRCDIR\game\shared\mp_shareddefs.h"
-		$File	"$SRCDIR\game\shared\econ\ihasowner.h"
 		//Haptics
 		$File	"$SRCDIR\public\haptics\haptic_utils.h"	[$WIN32]
 	}

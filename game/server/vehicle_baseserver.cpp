@@ -1078,9 +1078,6 @@ bool CBaseServerVehicle::HandlePassengerExit( CBaseCombatCharacter *pPassenger )
 	CBasePlayer *pPlayer = ToBasePlayer( pPassenger );
 	if ( pPlayer != NULL )
 	{
-		// Clear hud hints
-		UTIL_HudHintText( pPlayer, "" );
-
 		vbs_sound_update_t params;
 		InitSoundParams(params);
 		params.bExitVehicle = true;
