@@ -53,6 +53,7 @@ public:
 	bool FindItemInSharedList(const char *str, int type);
 	void LoadServerTags(void);
 	void CheckMapData(void);
+	void SetCurrentMapAddon(const char *map);
 	void GameAnnouncement(const char *format, const char *arg1, const char *arg2);
 	void NewPlayerConnection(CHL2MP_Player *pClient);
 	void SendToolTip(const char *message, int type = 0, int index = -1, const char *arg1 = "", const char *arg2 = "", const char *arg3 = "", const char *arg4 = "");

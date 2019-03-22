@@ -510,7 +510,7 @@ void CLoadingPanel::SetLoadingAttributes(void)
 
 	if (m_bDisconnected || bIsDownloadingMap)
 	{
-		unsigned long long workshopID = ((unsigned long long)atoll(bb2_active_workshop_item.GetString()));
+		unsigned long long workshopID = ((unsigned long long)Q_atoui64(bb2_active_workshop_item.GetString()));
 		if (workshopID > 0)
 		{
 			bb2_active_workshop_item.SetValue(0);

@@ -179,7 +179,7 @@ bool CGameDefinitionsMapData::FetchMapData(void)
 		{
 			for (KeyValues *sub = pkvInstalledItems->GetFirstSubKey(); sub; sub = sub->GetNextKey())
 			{
-				PublishedFileId_t itemID = ((PublishedFileId_t)atoll(sub->GetName()));
+				PublishedFileId_t itemID = ((PublishedFileId_t)Q_atoui64(sub->GetName()));
 				if (itemID)
 					pszWorkshopItemList.AddToTail(itemID);
 			}

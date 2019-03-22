@@ -35,7 +35,7 @@ LeaderboardItem::LeaderboardItem(vgui::Panel *parent, char const *panelName, con
 
 	Q_strncpy(szSteamID, pszSteamID, 80);
 
-	unsigned long long llSteamID = (unsigned long long)atoll(szSteamID);
+	unsigned long long llSteamID = (unsigned long long)Q_atoui64(szSteamID);
 	CSteamID steamIDForPlayer(llSteamID);
 	m_pAvatarIMG = new CAvatarImage();
 	m_pAvatarIMG->SetAvatarSteamID(steamIDForPlayer);

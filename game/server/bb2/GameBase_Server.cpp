@@ -111,19 +111,44 @@ void CGameBaseServer::LoadServerTags(void)
 
 void CGameBaseServer::CheckMapData(void)
 {
-	bb2_active_workshop_item.SetValue(0);
 	if (GameBaseShared()->GetSharedMapData())
 	{
 		gameMapItem_t *currentMapData = GameBaseShared()->GetSharedMapData()->GetMapData(HL2MPRules()->szCurrentMap);
 		if (currentMapData)
-		{
 			bAllowStatsForMap = ((HL2MPRules()->m_ulMapSize > 0) && (HL2MPRules()->m_ulMapSize == currentMapData->ulFileSize) && (currentMapData->iMapVerification >= MAP_VERIFIED_WHITELISTED));
+	}
+}
 
-			char pchWorkshopID[80];
-			Q_snprintf(pchWorkshopID, 80, "%llu", currentMapData->workshopID);
-			bb2_active_workshop_item.SetValue(pchWorkshopID);
+// Set current workshop ID regardless of SteamUGC state!
+// Use workshop file to find the right ID.
+void CGameBaseServer::SetCurrentMapAddon(const char *map)
+{
+	if (engine->IsDedicatedServer() == false)
+		return;
+
+	char pchWorkshopID[80], pchTargetFile[256];
+	Q_strncpy(pchWorkshopID, "0", 80);
+
+	KeyValues *pkvWorkshopData = new KeyValues("WorkshopItemList");
+	if (pkvWorkshopData->LoadFromFile(filesystem, "workshop/appworkshop_346330.acf", "MOD"))
+	{
+		KeyValues *pkvInstalledItems = pkvWorkshopData->FindKey("WorkshopItemsInstalled");
+		if (pkvInstalledItems)
+		{
+			for (KeyValues *sub = pkvInstalledItems->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+			{
+				Q_snprintf(pchTargetFile, 256, "workshop/content/346330/%s/maps/%s.bsp", sub->GetName(), map);
+				if (filesystem->FileExists(pchTargetFile, "MOD"))
+				{
+					Q_strncpy(pchWorkshopID, sub->GetName(), 80);
+					break;
+				}
+			}
 		}
 	}
+	pkvWorkshopData->deleteThis();
+
+	bb2_active_workshop_item.SetValue(pchWorkshopID);
 }
 
 // Send a message to all the clients in-game.

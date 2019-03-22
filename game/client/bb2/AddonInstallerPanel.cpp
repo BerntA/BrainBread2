@@ -312,7 +312,7 @@ CON_COMMAND_F(workshop_client_install, "Install the desired workshop item for th
 	if (args.ArgC() != 2 || engine->IsInGame() || (m_pWorkshopInstaller == NULL) || !steamapicontext || !steamapicontext->SteamUGC())
 		return;
 
-	unsigned long long workshopID = ((unsigned long long)atoll(args[1]));
+	unsigned long long workshopID = ((unsigned long long)Q_atoui64(args[1]));
 	if (workshopID <= 0)
 		return;
 

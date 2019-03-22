@@ -373,6 +373,9 @@ CHL2MPRules::CHL2MPRules()
 	if (CanUseSkills() && bb2_hard_scaling.GetBool())
 		m_iGamemodeFlags |= GM_FLAG_EXTREME_SCALING;
 
+	// Check if map is workshop related, if so set download ID!
+	GameBaseServer()->SetCurrentMapAddon(szCurrentMap);
+
 #endif
 }
 

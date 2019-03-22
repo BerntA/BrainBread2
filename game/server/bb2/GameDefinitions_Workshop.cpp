@@ -18,7 +18,7 @@ static PublishedFileId_t m_currentFileID = 0;
 
 PublishedFileId_t GetPublishedFileIDFromCommandLine(const char *param)
 {
-	return ((PublishedFileId_t)atoll(CommandLine()->ParmValue(param, "0")));
+	return ((PublishedFileId_t)Q_atoui64(CommandLine()->ParmValue(param, "0")));
 }
 
 CGameDefinitionsWorkshop::CGameDefinitionsWorkshop() : m_CallbackItemDownloaded(this, &CGameDefinitionsWorkshop::DownloadedItem)
@@ -96,6 +96,8 @@ void CGameDefinitionsWorkshop::Initialize()
 		steamgameserverapicontext->SteamUGC()->DownloadItem(itemID, true);
 		m_currentFileID = itemID;
 	}
+
+	engine->ServerCommand("exec game_workshop.cfg\n");
 }
 
 void CGameDefinitionsWorkshop::DownloadThink()
@@ -134,7 +136,7 @@ void CGameDefinitionsWorkshop::UpdateDownloadedItems()
 		{
 			for (KeyValues *sub = pkvInstalledItems->GetFirstSubKey(); sub; sub = sub->GetNextKey())
 			{
-				uint64 itemID = atoll(sub->GetName());
+				uint64 itemID = Q_atoui64(sub->GetName());
 				if (itemID)
 					AddItemToList(((PublishedFileId_t)itemID));
 			}
@@ -284,7 +286,7 @@ CON_COMMAND(workshop_download_item, "Download some item on the workshop.")
 	if (args.ArgC() != 2)
 		return;
 
-	PublishedFileId_t itemID = ((PublishedFileId_t)atoll(args[1]));
+	PublishedFileId_t itemID = ((PublishedFileId_t)Q_atoui64(args[1]));
 	if (!itemID)
 		return;
 
@@ -307,7 +309,7 @@ CON_COMMAND(workshop_download_collection, "Downloads a collection of workshop it
 	if (args.ArgC() != 2)
 		return;
 
-	PublishedFileId_t itemID = ((PublishedFileId_t)atoll(args[1]));
+	PublishedFileId_t itemID = ((PublishedFileId_t)Q_atoui64(args[1]));
 	if (!itemID)
 		return;
 
