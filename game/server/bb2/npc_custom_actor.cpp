@@ -1030,33 +1030,24 @@ void CNPC_CustomActor::UpdateScaling(void)
 {
 	if ((!bb2_enable_scaling.GetBool() && (HL2MPRules()->GetCurrentGamemode() != MODE_ARENA)) || (HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION))
 	{
-		m_flDamageScaleValue = 0.0f;
-		m_flHealthScaleValue = 0.0f;
+		m_flDamageScaleValue = m_flHealthScaleValue = 0.0f;
 		return;
 	}
 
 	float flDamageScaleAmount = 0.0f, flHealthScaleAmount = 0.0f;
+
 	flDamageScaleAmount = (bb2_npc_scaling.GetInt() * ((float)GameBaseShared()->GetNumActivePlayers()) * m_flDamageScaleFactor);
 	flHealthScaleAmount = (bb2_npc_scaling.GetInt() * ((float)GameBaseShared()->GetNumActivePlayers()) * m_flHealthScaleFactor);
 
 	float defaultTotalHP = ((float)m_iTotalHP);
 	float flTotal = (flHealthScaleAmount * (defaultTotalHP / 100.0f)) + defaultTotalHP;
-	m_iTotalHP = ((int)flTotal);
 
-	float newHP = 0.0f;
 	float hpPercentLeft = (float)(((float)GetHealth()) / ((float)GetMaxHealth()));
-
-	if (hpPercentLeft >= 1) // No HP lost.
-		newHP = flTotal;
-	else // HP lost
-		newHP = ((((float)m_iTotalHP) / 100.0f) * (hpPercentLeft * 100.0f));
-
-	newHP = round(newHP);
-	if (newHP <= 0)
-		newHP = 1;
+	hpPercentLeft = clamp(hpPercentLeft, 0.0f, 1.0f);
+	float newHP = clamp(round(flTotal * hpPercentLeft), 1.0f, flTotal);
 
 	SetHealth((int)newHP);
-	SetMaxHealth(m_iTotalHP);
+	SetMaxHealth((int)flTotal);
 
 	m_flDamageScaleValue = flDamageScaleAmount;
 	m_flHealthScaleValue = flHealthScaleAmount;

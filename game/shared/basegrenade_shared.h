@@ -111,6 +111,7 @@ public:
 	void				Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 
 	int m_iExplosiveType;
+	int m_classType;
 #endif
 
 public:

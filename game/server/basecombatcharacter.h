@@ -317,8 +317,8 @@ public:
 
 	virtual void			UpdateOnRemove( void );
 
-	virtual Disposition_t	IRelationType( CBaseEntity *pTarget );
-	virtual int				IRelationPriority( CBaseEntity *pTarget );
+	virtual Disposition_t	IRelationType(CBaseEntity *pTarget, int relation = CLASS_NONE);
+	virtual int				IRelationPriority(CBaseEntity *pTarget, int relation = CLASS_NONE);
 
 	virtual void			SetLightingOriginRelative( CBaseEntity *pLightingOrigin );
 
@@ -344,7 +344,7 @@ public:
 	virtual float GetIdealAccel() const;
 
 protected:
-	Relationship_t			*FindEntityRelationship( CBaseEntity *pTarget );
+	Relationship_t *FindEntityRelationship(CBaseEntity *pTarget = NULL, int relation = CLASS_NONE);
 
 	// Skill Affection Logic:
 	virtual void OnAffectedBySkill(const CTakeDamageInfo &info);

@@ -32,7 +32,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTEPlayerGib, DT_TEPlayerGib)
 SendPropInt(SENDINFO(m_iIndex), 4, SPROP_UNSIGNED), // Should correspond to a value within 1-MAX_PLAYERS!
 SendPropInt(SENDINFO(m_iFlags), MAX_GIB_BITS, SPROP_UNSIGNED),
 SendPropInt(SENDINFO(m_iType), 3, SPROP_UNSIGNED),
-SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_COORD),
+SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_NOSCALE),
 SendPropAngle(SENDINFO_VECTORELEM(m_angRotation, 0), 13),
 SendPropAngle(SENDINFO_VECTORELEM(m_angRotation, 1), 13),
 SendPropAngle(SENDINFO_VECTORELEM(m_angRotation, 2), 13),

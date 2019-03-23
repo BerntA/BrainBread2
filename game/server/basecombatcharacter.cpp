@@ -2635,44 +2635,44 @@ Disposition_t CBaseCombatCharacter::GetDefaultRelationshipDisposition( Class_T n
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-Relationship_t *CBaseCombatCharacter::FindEntityRelationship( CBaseEntity *pTarget )
+Relationship_t *CBaseCombatCharacter::FindEntityRelationship(CBaseEntity *pTarget, int relation)
 {
-	if ( !pTarget )
+	if ((pTarget == NULL) && (relation == CLASS_NONE))
 	{
-		static Relationship_t dummy; 
+		static Relationship_t dummy;
 		return &dummy;
 	}
 
+	if (pTarget)
+		relation = pTarget->Classify();
+
 	// First check for specific relationship with this edict
 	int i;
-	for (i=0;i<m_Relationship.Count();i++) 
+	for (i = 0; i < m_Relationship.Count(); i++)
 	{
-		if (pTarget == (CBaseEntity *)m_Relationship[i].entity) 
-		{
+		if (((relation == m_Relationship[i].classType) && (relation != CLASS_NONE)) || (pTarget == (CBaseEntity *)m_Relationship[i].entity))
 			return &m_Relationship[i];
-		}
 	}
 
-	if (pTarget->Classify() != CLASS_NONE)
+	if (relation != CLASS_NONE)
 	{
 		// Then check for relationship with this edict's class
-		for (i=0;i<m_Relationship.Count();i++) 
+		for (i = 0; i < m_Relationship.Count(); i++)
 		{
-			if (pTarget->Classify() == m_Relationship[i].classType) 
-			{
+			if (relation == m_Relationship[i].classType)
 				return &m_Relationship[i];
-			}
 		}
 	}
+
 	AllocateDefaultRelationships();
 	// If none found return the default
-	return &m_DefaultRelationship[ Classify() ][ pTarget->Classify() ];
+	return &m_DefaultRelationship[Classify()][relation];
 }
 
-Disposition_t CBaseCombatCharacter::IRelationType ( CBaseEntity *pTarget )
+Disposition_t CBaseCombatCharacter::IRelationType(CBaseEntity *pTarget, int relation)
 {
-	if ( pTarget )
-		return FindEntityRelationship( pTarget )->disposition;
+	if (pTarget || (relation != CLASS_NONE))
+		return FindEntityRelationship(pTarget, relation)->disposition;
 	return D_NU;
 }
 
@@ -2681,10 +2681,10 @@ Disposition_t CBaseCombatCharacter::IRelationType ( CBaseEntity *pTarget )
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-int CBaseCombatCharacter::IRelationPriority( CBaseEntity *pTarget )
+int CBaseCombatCharacter::IRelationPriority(CBaseEntity *pTarget, int relation)
 {
-	if ( pTarget )
-		return FindEntityRelationship( pTarget )->priority;
+	if (pTarget || (relation != CLASS_NONE))
+		return FindEntityRelationship(pTarget, relation)->priority;
 	return 0;
 }
 

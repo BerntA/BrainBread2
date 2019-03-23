@@ -20,8 +20,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define ZOMBIE_FADE_IN_TIME 1.5f
-
 enum ZombieSpawningFlags
 {
 	ZOMBIE_SPAWN_FLAG_READY = 0x01,
@@ -75,7 +73,11 @@ public:
 	void FootstepSound( bool fRightFoot );
 	void FootscuffSound( bool fRightFoot );
 
-	void FadeIn();
+	void OnFullyFadedIn(void)
+	{
+		BaseClass::OnFullyFadedIn();
+		m_nZombieSpawnFlags |= ZOMBIE_SPAWN_FLAG_READY;
+	}
 
 	bool CanAlwaysSeePlayers();
 	bool UsesNavMesh(void) { return true; }
@@ -192,24 +194,6 @@ int CNPCWalker::AllowEntityToBeGibbed(void)
 	return GIB_FULL_GIBS;
 }
 
-// Handles fading.
-#define ALPHA_FREQUENCY (255.0f / 1.0f)
-void CNPCWalker::FadeIn()
-{
-	int iAlpha = GetRenderColor().a;
-	iAlpha = MIN(iAlpha + (ALPHA_FREQUENCY * gpGlobals->frametime), 255);
-
-	SetRenderMode(kRenderTransAlpha);
-	SetRenderColorA(iAlpha);
-
-	if (iAlpha >= 255)
-	{
-		SetRenderMode(kRenderNormal);
-		SetRenderColorA(255);
-		m_nZombieSpawnFlags |= ZOMBIE_SPAWN_FLAG_READY;
-	}
-}
-
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CNPCWalker::Spawn( void )
@@ -230,14 +214,10 @@ void CNPCWalker::Spawn( void )
 	m_flNextTimeToCheckCollisionChange = 0.0f;
 	SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE_SPAWNING);
 
-	if (IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_RAPID_SPAWN))	
+	if (IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_RAPID_SPAWN))
 		m_nZombieSpawnFlags |= (ZOMBIE_SPAWN_FLAG_READY | ZOMBIE_SPAWN_FLAG_CHECKCOLLISION | ZOMBIE_SPAWN_FLAG_SPAWNED);
 	else
-	{
 		m_nZombieSpawnFlags &= ~(ZOMBIE_SPAWN_FLAG_READY | ZOMBIE_SPAWN_FLAG_CHECKCOLLISION | ZOMBIE_SPAWN_FLAG_SPAWNED);
-		SetRenderMode(kRenderTransAlpha);
-		SetRenderColorA(0);
-	}
 
 	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
 
@@ -255,9 +235,7 @@ void CNPCWalker::SpawnDirectly(void)
 //-----------------------------------------------------------------------------
 void CNPCWalker::PrescheduleThink( void )
 {
-	if (!IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_READY))
-		FadeIn();
-	else if ((GetCollisionGroup() == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) && IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_CHECKCOLLISION))
+	if (IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_READY) && (GetCollisionGroup() == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) && IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_CHECKCOLLISION))
 	{
 		if (gpGlobals->curtime > m_flNextTimeToCheckCollisionChange)
 		{
@@ -275,16 +253,16 @@ void CNPCWalker::PrescheduleThink( void )
 		}
 	}
 
-	if( gpGlobals->curtime > m_flNextMoanSound )
+	if (gpGlobals->curtime > m_flNextMoanSound)
 	{
-		if( CanPlayMoanSound() )
+		if (CanPlayMoanSound())
 		{
 			// Classic guy idles instead of moans.
 			IdleSound();
-			m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat( 2.0, 5.0 );
+			m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat(2.0, 5.0);
 		}
-		else		
-			m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat( 1.0, 2.0 );		
+		else
+			m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat(1.0, 2.0);
 	}
 
 	BaseClass::PrescheduleThink();
@@ -426,9 +404,7 @@ void CNPCWalker::EnterCrawlMode(void)
 	SetDefaultEyeOffset();
 
 	if (VPhysicsGetObject())
-	{
 		SetupVPhysicsHull();
-	}
 
 	ResetIdealActivity((Activity)ACT_CRAWL_IDLE);
 
@@ -456,10 +432,8 @@ void CNPCWalker::LeaveCrawlMode(void)
 	SetHullSizeNormal(true);
 	SetDefaultEyeOffset();
 
-	if (VPhysicsGetObject())
-	{
-		SetupVPhysicsHull();
-	}
+	if (VPhysicsGetObject())	
+		SetupVPhysicsHull();	
 
 	ResetIdealActivity(ACT_IDLE);
 
@@ -482,10 +456,8 @@ void CNPCWalker::BecomeCrawler(void)
 	SetHullSizeNormal(true);
 	SetDefaultEyeOffset();
 
-	if (VPhysicsGetObject())
-	{
-		SetupVPhysicsHull();
-	}
+	if (VPhysicsGetObject())	
+		SetupVPhysicsHull();	
 
 	ResetIdealActivity((Activity)ACT_CRAWL_NOLEGS_IDLE);
 

@@ -893,6 +893,9 @@ enum
 #define BB2_USE_NAVMESH
 #define BB2_LAGCOMP_HIT_MAX 4 // When figuring out which entities to hit, this is the max amount for now! During 1 comp. tick.
 
+#define BB2_NPC_FADE_TIME 1.25f
+#define BB2_NPC_FADE_FREQ ((1.0f / BB2_NPC_FADE_TIME) * 255.0f)
+
 enum
 {
 	GLOW_MODE_NONE = 0,

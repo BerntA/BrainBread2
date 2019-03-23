@@ -2127,11 +2127,6 @@ public:
 
 	IMPLEMENT_NETWORK_VAR_FOR_DERIVED(m_iHealth);
 	IMPLEMENT_NETWORK_VAR_FOR_DERIVED(m_iMaxHealth);
-	CNetworkString(m_szNPCName, MAX_MAP_NAME_SAVE);
-	CNetworkVar(bool, m_bIsBoss);
-
-	CNetworkVar( bool,  m_bPerformAvoidance );
-	CNetworkVar( bool,	m_bIsMoving );
 
 	virtual bool		ShouldProbeCollideAgainstEntity( CBaseEntity *pEntity );
 	virtual bool		IsStaticNPC(void) { return false; } // NPC never actually moves, jumps, etc...
@@ -2143,8 +2138,18 @@ public:
 	// used by lag compensation to be able to refer to & track specific NPCs, and detect changes in the AI list 
 	void				SetAIIndex(int i) { m_iAIIndex = i; } 
 	int					GetAIIndex() { return m_iAIIndex; } 
-	
-	private: 
+
+protected:
+	CNetworkVar(bool, m_bPerformAvoidance);
+	CNetworkVar(bool, m_bIsMoving);
+	CNetworkString(m_szNPCName, MAX_MAP_NAME_SAVE);
+	CNetworkVar(bool, m_bIsBoss);
+	CNetworkVar(bool, m_bHasFadedIn); // Used for client-side fade, don't fade in an npc which entered your pvs, which initially faded in already!
+
+	float m_flTimeToFadeIn;
+	virtual void OnFullyFadedIn(void) { } // Override if you need to do smth when fade is done!
+
+private: 
 	int					m_iAIIndex; 
 	#endif //BB2_AI
  };

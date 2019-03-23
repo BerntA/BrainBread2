@@ -31,6 +31,7 @@ BEGIN_SIMPLE_DATADESC( CTakeDamageInfo )
 	DEFINE_FIELD( m_iDamagedOtherPlayers, FIELD_INTEGER),
 	DEFINE_FIELD(m_nSkillFlags, FIELD_INTEGER),
 	DEFINE_FIELD(m_iWeaponIDForced, FIELD_INTEGER),
+	DEFINE_FIELD(m_cRelationshipLink, FIELD_INTEGER),
 END_DATADESC()
 
 void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBaseEntity *pWeapon, const Vector &damageForce, const Vector &damagePosition, const Vector &reportedPosition, float flDamage, int bitsDamageType, int iCustomDamage )
@@ -66,6 +67,7 @@ void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBa
 	m_bForceFriendlyFire = false;
 	m_nSkillFlags = 0;
 	m_iWeaponIDForced = WEAPON_ID_NONE;
+	m_cRelationshipLink = 0;
 }
 
 CTakeDamageInfo::CTakeDamageInfo()
@@ -251,6 +253,7 @@ void AddMultiDamage( const CTakeDamageInfo &info, CBaseEntity *pEntity )
 	g_MultiDamage.SetAmmoType( info.GetAmmoType() );
 	g_MultiDamage.SetSkillFlags(info.GetSkillFlags());
 	g_MultiDamage.SetForcedWeaponID(info.GetForcedWeaponID());
+	g_MultiDamage.SetRelationshipLink(info.GetRelationshipLink());
 
 	if ( g_MultiDamage.GetPlayerPenetrationCount() == 0 )
 	{

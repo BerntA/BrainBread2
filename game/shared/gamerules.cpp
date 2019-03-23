@@ -331,17 +331,13 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 		// This value is used to scale damage when the explosion is blocked by some other object.
 		float flBlockedDamagePercent = 0.0f;
 
-		if ( pEntity == pEntityIgnore )
+		// Simple ent rel. ignore checks:
+		if ((pEntity == pEntityIgnore) || (pEntity->m_takedamage == DAMAGE_NO) || ((iClassIgnore != CLASS_NONE) && (pEntity->Classify() == iClassIgnore)))
 			continue;
 
-		if ( pEntity->m_takedamage == DAMAGE_NO )
+		// Entity relationship extended check:
+		if ((info.GetRelationshipLink() != CLASS_NONE) && pEntity->MyCombatCharacterPointer() && (pEntity->MyCombatCharacterPointer()->IRelationType(NULL, info.GetRelationshipLink()) == D_LI))
 			continue;
-
-		// UNDONE: this should check a damage mask, not an ignore
-		if ( iClassIgnore != CLASS_NONE && pEntity->Classify() == iClassIgnore )
-		{// houndeyes don't hurt other houndeyes with their attack
-			continue;
-		}
 
 		// blast's don't tavel into or out of water
 		if (bInWater && pEntity->GetWaterLevel() == 0)

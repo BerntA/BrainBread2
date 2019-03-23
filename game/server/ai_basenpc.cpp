@@ -4736,6 +4736,13 @@ void CAI_BaseNPC::PrescheduleThink( void )
 			m_iDesiredWeaponState = DESIREDWEAPONSTATE_IGNORE;
 		}
 	}
+
+	// Fading is done on the client, but we give the clients X sec to register and do the fade!
+	if ((m_flTimeToFadeIn > 0.0f) && (gpGlobals->curtime > m_flTimeToFadeIn))
+	{
+		m_flTimeToFadeIn = 0.0f;
+		OnFullyFadedIn();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -6882,6 +6889,8 @@ void CAI_BaseNPC::NPCInit ( void )
 	m_flIgnoreDangerSoundsUntil = 0;
 
 	m_EnemiesSerialNumber = -1;
+
+	m_flTimeToFadeIn = gpGlobals->curtime + (BB2_NPC_FADE_TIME * 1.25f);
 }
 
 //-----------------------------------------------------------------------------
@@ -10658,6 +10667,8 @@ BEGIN_DATADESC( CAI_BaseNPC )
 	DEFINE_FIELD( m_bPlayerAvoidState,			FIELD_BOOLEAN ),
 	DEFINE_ARRAY(m_szNPCName, FIELD_CHARACTER, MAX_MAP_NAME_SAVE),
 	DEFINE_FIELD(m_bIsBoss, FIELD_BOOLEAN),
+	DEFINE_FIELD(m_bHasFadedIn, FIELD_BOOLEAN),
+	DEFINE_FIELD(m_flTimeToFadeIn, FIELD_TIME),
 
 	// Satisfy classcheck
 	// DEFINE_FIELD( m_ScheduleHistory, CUtlVector < AIScheduleChoice_t > ),
@@ -10752,6 +10763,7 @@ IMPLEMENT_SERVERCLASS_ST( CAI_BaseNPC, DT_AI_BaseNPC )
 	SendPropInt(SENDINFO(m_iMaxHealth), 20, SPROP_CHANGES_OFTEN),
 	SendPropString(SENDINFO(m_szNPCName)),
 	SendPropBool(SENDINFO(m_bIsBoss)),
+	SendPropBool(SENDINFO(m_bHasFadedIn)),
 
 	// Removes all glow logic for ALL npcs though... TODO , allow for custom actor only?
 	SendPropExclude("DT_BaseEntity", "m_iGlowMethod"),
@@ -11372,6 +11384,9 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 
 	m_iFrameBlocked = -1;
 	m_bInChoreo = true; // assume so until call to UpdateEfficiency()
+
+	m_bHasFadedIn = false;
+	m_flTimeToFadeIn = 0.0f;
 	
 	SetCollisionGroup( COLLISION_GROUP_NPC );
 }

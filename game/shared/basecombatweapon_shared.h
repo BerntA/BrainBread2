@@ -476,6 +476,8 @@ public:
 	virtual void			OnDataChanged( DataUpdateType_t updateType );
 	virtual void			OnRestore();
 
+	virtual unsigned char	GetClientSideFade(void);
+
 	virtual void			RestartParticleEffect( void ) {}
 
 	virtual void			ViewModelDrawn( CBaseViewModel *pViewModel );

@@ -211,7 +211,7 @@ void CItem_AmmoCrate::HandleAnimEvent(animevent_t *pEvent)
 			for (int i = 0; i < MAX_WEAPONS; i++)
 			{
 				CBaseCombatWeapon *pWeapon = pActivator->GetWeapon(i);
-				if (pWeapon == NULL)
+				if ((pWeapon == NULL) || (pWeapon->GetWeaponType() == WEAPON_TYPE_SPECIAL))
 					continue;
 
 				if (pWeapon->UsesClipsForAmmo1())

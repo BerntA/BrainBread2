@@ -20,6 +20,7 @@
 #include "c_hl2mp_player.h"
 #include "model_types.h"
 #include "GlobalRenderEffects.h"
+#include "c_ai_basenpc.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -517,4 +518,14 @@ bool C_BaseCombatWeapon::EnsureCorrectRenderingModel()
 	}
 
 	return true;
+}
+
+unsigned char C_BaseCombatWeapon::GetClientSideFade(void)
+{
+	// Weapon should dupe fade value of npc!
+	C_BaseCombatCharacter *pOwner = GetOwner();
+	if (pOwner && pOwner->IsNPC() && pOwner->MyNPCPointer())
+		return pOwner->MyNPCPointer()->GetClientSideFade();
+
+	return BaseClass::GetClientSideFade();
 }

@@ -141,6 +141,7 @@ void CEndMapVoteMenu::ShowPanel(bool bShow)
 	if (IsVisible() && bShow)
 		return;
 
+	GameBaseClient->CloseGamePanels(true);
 	GameBaseClient->CloseConsole();
 
 	PerformLayout();

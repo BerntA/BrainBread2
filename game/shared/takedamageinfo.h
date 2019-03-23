@@ -91,6 +91,9 @@ public:
 	int				GetForcedWeaponID() const;
 	void			SetForcedWeaponID(int id);
 
+	int				GetRelationshipLink() const;
+	void			SetRelationshipLink(int link);
+
 	int				GetPlayerPenetrationCount() const { return m_iPlayerPenetrationCount; }
 	void			SetPlayerPenetrationCount( int iPlayerPenetrationCount ) { m_iPlayerPenetrationCount = iPlayerPenetrationCount; }
 	
@@ -137,6 +140,7 @@ protected:
 
 	int				m_nSkillFlags;
 	int				m_iWeaponIDForced;
+	int				m_cRelationshipLink; // Useful in case the attacker goes NULL.
 
 	DECLARE_SIMPLE_DATADESC();
 };
@@ -388,6 +392,16 @@ inline int CTakeDamageInfo::GetForcedWeaponID() const
 inline void CTakeDamageInfo::SetForcedWeaponID(int id)
 {
 	m_iWeaponIDForced = id;
+}
+
+inline int CTakeDamageInfo::GetRelationshipLink() const
+{
+	return m_cRelationshipLink;
+}
+
+inline void CTakeDamageInfo::SetRelationshipLink(int link)
+{
+	m_cRelationshipLink = link;
 }
 
 // -------------------------------------------------------------------------------------------------- //

@@ -124,7 +124,10 @@ void CGameBaseServer::CheckMapData(void)
 void CGameBaseServer::SetCurrentMapAddon(const char *map)
 {
 	if (engine->IsDedicatedServer() == false)
+	{
+		bb2_active_workshop_item.SetValue(0);
 		return;
+	}
 
 	char pchWorkshopID[80], pchTargetFile[256];
 	Q_strncpy(pchWorkshopID, "0", 80);

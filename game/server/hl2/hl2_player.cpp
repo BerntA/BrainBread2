@@ -370,7 +370,7 @@ void CHL2_Player::PostThink( void )
 						for (int i = 0; i < MAX_WEAPONS; i++)
 						{
 							CBaseCombatWeapon *pWeapon = GetWeapon(i);
-							if (pWeapon != NULL)
+							if ((pWeapon != NULL) && (pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL))
 							{
 								bool bCanCheckSecondary = (pWeapon->GetPrimaryAmmoType() != pWeapon->GetSecondaryAmmoType());
 

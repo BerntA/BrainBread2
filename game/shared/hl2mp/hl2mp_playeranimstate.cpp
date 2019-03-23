@@ -114,18 +114,47 @@ void CHL2MPPlayerAnimState::ClearAnimationState( void )
 // Input  : actDesired - 
 // Output : Activity
 //-----------------------------------------------------------------------------
-Activity CHL2MPPlayerAnimState::TranslateActivity( Activity actDesired )
+Activity CHL2MPPlayerAnimState::TranslateActivity(Activity actDesired)
 {
-	// Hook into baseclass when / if hl2mp player models get swim animations.
-	Activity translateActivity = actDesired; //BaseClass::TranslateActivity( actDesired );
+	Activity translateActivity = actDesired;
 
-	if ( GetHL2MPPlayer()->GetActiveWeapon() )
+	if (GetHL2MPPlayer()->GetActiveWeapon())
+		translateActivity = GetHL2MPPlayer()->GetActiveWeapon()->ActivityOverride(translateActivity, NULL);
+
+	// No act change? Must be bugged! Prevent t-posing... Can happen during wep selection when the client thinks no wep is available during the switching!!
+	if ((GetHL2MPPlayer()->GetActiveWeapon() == NULL) || (translateActivity == actDesired))
 	{
-		translateActivity = GetHL2MPPlayer()->GetActiveWeapon()->ActivityOverride( translateActivity, NULL );
+		switch (actDesired)
+		{
+		case ACT_MP_SLIDE:
+			return ACT_HL2MP_SLIDE;
+
+		case ACT_MP_SLIDE_IDLE:
+			return ACT_HL2MP_SLIDE_IDLE;
+
+		case ACT_MP_WALK:
+			return ((GetHL2MPPlayer()->GetTeamNumber() == TEAM_DECEASED) ? ACT_HL2MP_WALK : ACT_HL2MP_WALK_MELEE);
+
+		case ACT_MP_CROUCHWALK:
+			return ((GetHL2MPPlayer()->GetTeamNumber() == TEAM_DECEASED) ? ACT_HL2MP_WALK_CROUCH : ACT_HL2MP_WALK_CROUCH_MELEE);
+
+		case ACT_MP_RUN:
+			return ((GetHL2MPPlayer()->GetTeamNumber() == TEAM_DECEASED) ? ACT_HL2MP_RUN : ACT_HL2MP_RUN_MELEE);
+
+		case ACT_MP_JUMP:
+			return ((GetHL2MPPlayer()->GetTeamNumber() == TEAM_DECEASED) ? ACT_HL2MP_JUMP : ACT_HL2MP_JUMP_MELEE);
+		}
+
+		// Last Resort:
+		if (GetHL2MPPlayer()->GetTeamNumber() == TEAM_DECEASED)
+			return ((GetHL2MPPlayer()->GetFlags() & FL_DUCKING) ? ACT_HL2MP_IDLE_CROUCH : ACT_HL2MP_IDLE);
+		else
+			return ((GetHL2MPPlayer()->GetFlags() & FL_DUCKING) ? ACT_HL2MP_IDLE_CROUCH_MELEE : ACT_HL2MP_IDLE_MELEE);
 	}
 
 	return translateActivity;
 }
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

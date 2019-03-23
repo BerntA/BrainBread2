@@ -30,7 +30,7 @@ public:
 };
 
 IMPLEMENT_SERVERCLASS_ST(CTEClientSideGib, DT_TEClientSideGib)
-SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_COORD),
+SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_NOSCALE),
 SendPropAngle(SENDINFO_VECTORELEM(m_angRotation, 0), 13),
 SendPropAngle(SENDINFO_VECTORELEM(m_angRotation, 1), 13),
 SendPropAngle(SENDINFO_VECTORELEM(m_angRotation, 2), 13),

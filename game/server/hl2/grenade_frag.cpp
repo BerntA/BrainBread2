@@ -311,11 +311,12 @@ CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, 
 	// Don't set the owner here, or the player can't interact with grenades he's thrown
 	CGrenadeFrag *pGrenade = (CGrenadeFrag *)CBaseEntity::Create( "npc_grenade_frag", position, angles, pOwner );
 	
+	pGrenade->m_classType = (pOwner ? pOwner->Classify() : CLASS_NONE);
 	pGrenade->SetTimer( timer, timer - FRAG_GRENADE_WARN_TIME );
 	pGrenade->SetVelocity( velocity, angVelocity );
 	pGrenade->SetThrower( ToBaseCombatCharacter( pOwner ) );
 	pGrenade->m_takedamage = DAMAGE_EVENTS_ONLY;
-	pGrenade->SetCombineSpawned( combineSpawned );
+	pGrenade->SetCombineSpawned( combineSpawned );	
 
 	return pGrenade;
 }

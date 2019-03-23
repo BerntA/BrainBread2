@@ -94,8 +94,7 @@ void CNPCBaseProperties::UpdateNPCScaling()
 {
 	if ((!bb2_enable_scaling.GetBool() && (HL2MPRules()->GetCurrentGamemode() != MODE_ARENA)) || (HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION) || (m_pNPCData == NULL))
 	{
-		m_flDamageScaleValue = 0.0f;
-		m_flHealthScaleValue = 0.0f;
+		m_flDamageScaleValue = m_flHealthScaleValue = 0.0f;
 		return;
 	}
 
@@ -123,15 +122,9 @@ void CNPCBaseProperties::UpdateNPCScaling()
 	CBaseEntity *pEntity = UTIL_EntityByIndex(GetEntIndex());
 	if (pEntity)
 	{
-		float newHP = 0.0f;
 		float hpPercentLeft = (((float)pEntity->GetHealth()) / ((float)pEntity->GetMaxHealth()));
-
-		if (hpPercentLeft >= 1.0f) // No HP lost.
-			newHP = flTotal;
-		else // HP lost
-			newHP = ((float)m_iTotalHP) * hpPercentLeft;
-
-		newHP = MAX(round(newHP), 1.0f);
+		hpPercentLeft = clamp(hpPercentLeft, 0.0f, 1.0f);
+		float newHP = clamp(round(flTotal * hpPercentLeft), 1.0f, flTotal);
 
 		pEntity->SetHealth((int)newHP);
 		pEntity->SetMaxHealth(m_iTotalHP);

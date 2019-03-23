@@ -182,7 +182,7 @@ void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
 	Vector vecReported = m_hThrower ? m_hThrower->GetAbsOrigin() : vec3_origin;
 	
 	CTakeDamageInfo info( this, m_hThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
-
+	info.SetRelationshipLink(m_classType);
 	RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
 
 	UTIL_DecalTrace( pTrace, "Scorch" );
@@ -555,6 +555,7 @@ CBaseGrenade::CBaseGrenade(void)
 
 #if !defined( CLIENT_DLL )
 	m_iExplosiveType = 0;
+	m_classType = CLASS_NONE;
 #endif
 
 	SetSimulatedEveryTick( true );

@@ -16,19 +16,22 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-IMPLEMENT_CLIENTCLASS_DT( C_AI_BaseNPC, DT_AI_BaseNPC, CAI_BaseNPC )
-	RecvPropInt(RECVINFO(m_lifeState)),
-	RecvPropBool(RECVINFO(m_bPerformAvoidance)),
-	RecvPropBool(RECVINFO(m_bIsMoving)),
-	RecvPropInt(RECVINFO(m_iHealth)),
-	RecvPropInt(RECVINFO(m_iMaxHealth)),
-	RecvPropString(RECVINFO(m_szNPCName)),
-	RecvPropBool(RECVINFO(m_bIsBoss)),
+IMPLEMENT_CLIENTCLASS_DT(C_AI_BaseNPC, DT_AI_BaseNPC, CAI_BaseNPC)
+RecvPropInt(RECVINFO(m_lifeState)),
+RecvPropBool(RECVINFO(m_bPerformAvoidance)),
+RecvPropBool(RECVINFO(m_bIsMoving)),
+RecvPropInt(RECVINFO(m_iHealth)),
+RecvPropInt(RECVINFO(m_iMaxHealth)),
+RecvPropString(RECVINFO(m_szNPCName)),
+RecvPropBool(RECVINFO(m_bIsBoss)),
+RecvPropBool(RECVINFO(m_bHasFadedIn)),
 END_RECV_TABLE()
 
 C_AI_BaseNPC::C_AI_BaseNPC()
 {
-	m_bCreatedHealthBar = false;
+	m_bCreatedHealthBar = m_bIsFading = false;
+	m_cAlphaOverride = 0;
+	m_flFadeStart = 0.0f;
 }
 
 C_AI_BaseNPC::~C_AI_BaseNPC()
@@ -40,40 +43,59 @@ C_AI_BaseNPC::~C_AI_BaseNPC()
 //-----------------------------------------------------------------------------
 // Makes ragdolls ignore npcclip brushes
 //-----------------------------------------------------------------------------
-unsigned int C_AI_BaseNPC::PhysicsSolidMaskForEntity( void ) const 
+unsigned int C_AI_BaseNPC::PhysicsSolidMaskForEntity(void) const
 {
 	// This allows ragdolls to move through npcclip brushes
-	if ( !IsRagdoll() )	
-		return MASK_NPCSOLID; 
+	if (!IsRagdoll())
+		return MASK_NPCSOLID;
 
 	return MASK_SOLID;
 }
 
-void C_AI_BaseNPC::ClientThink( void )
+void C_AI_BaseNPC::ClientThink(void)
 {
 	BaseClass::ClientThink();
+
+	if (m_bIsFading) // Currently we only care about fading in...
+	{
+		float alpha = clamp(((engine->Time() - m_flFadeStart) / BB2_NPC_FADE_TIME), 0.0f, 1.0f) * 255.0f;
+		m_cAlphaOverride = ((unsigned char)alpha);
+		if (m_cAlphaOverride >= 255)
+			m_bIsFading = false;
+
+		return;
+	}
+
+	SetNextClientThink(CLIENT_THINK_NEVER);
 }
 
-void C_AI_BaseNPC::OnDataChanged( DataUpdateType_t type )
+void C_AI_BaseNPC::OnDataChanged(DataUpdateType_t type)
 {
-	BaseClass::OnDataChanged( type );
+	BaseClass::OnDataChanged(type);
 
 	if ((m_bCreatedHealthBar == false) && GetHealthBarHUD() && (type == DATA_UPDATE_CREATED))
 	{
 		m_bCreatedHealthBar = true;
 		RegisterHUDHealthBar();
+
+		if (m_bHasFadedIn == false)
+		{
+			m_bIsFading = true;
+			m_flFadeStart = engine->Time();
+			SetNextClientThink(CLIENT_THINK_ALWAYS);
+		}
 	}
 }
 
-bool C_AI_BaseNPC::GetRagdollInitBoneArrays( matrix3x4_t *pDeltaBones0, matrix3x4_t *pDeltaBones1, matrix3x4_t *pCurrentBones, float boneDt )
+bool C_AI_BaseNPC::GetRagdollInitBoneArrays(matrix3x4_t *pDeltaBones0, matrix3x4_t *pDeltaBones1, matrix3x4_t *pCurrentBones, float boneDt)
 {
 	bool bRet = true;
-	if ( !ForceSetupBonesAtTime( pDeltaBones0, gpGlobals->curtime - boneDt ) )
+	if (!ForceSetupBonesAtTime(pDeltaBones0, gpGlobals->curtime - boneDt))
 		bRet = false;
 
 	GetRagdollCurSequenceWithDeathPose(this, pDeltaBones1, gpGlobals->curtime, ACT_INVALID, DEATH_FRAME_STOMACH); // HL1 death anims are old!!
 	float ragdollCreateTime = PhysGetSyncCreateTime();
-	if ( ragdollCreateTime != gpGlobals->curtime )
+	if (ragdollCreateTime != gpGlobals->curtime)
 	{
 		// The next simulation frame begins before the end of this frame
 		// so initialize the ragdoll at that time so that it will reach the current
@@ -84,7 +106,7 @@ bool C_AI_BaseNPC::GetRagdollInitBoneArrays( matrix3x4_t *pDeltaBones0, matrix3x
 	}
 	else
 	{
-		if ( !SetupBones( pCurrentBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, gpGlobals->curtime ) )
+		if (!SetupBones(pCurrentBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, gpGlobals->curtime))
 			bRet = false;
 	}
 
@@ -106,7 +128,7 @@ int C_AI_BaseNPC::DrawModel(int flags)
 			overlay = GlobalRenderEffects->GetBleedOverlay();
 
 		if (IsMaterialOverlayFlagActive(MAT_OVERLAY_CRIPPLED))
-		{			
+		{
 			Vector maxs = WorldAlignMaxs();
 			Vector vOrigin = GetLocalOrigin() + Vector(0, 0, maxs.z + 16.0f);
 			DrawDizzyIcon(vOrigin);
