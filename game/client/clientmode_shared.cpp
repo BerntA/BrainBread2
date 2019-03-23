@@ -1213,7 +1213,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 						pClient->PrecacheScriptSound(szSoundToEmit);
 
 					CLocalPlayerFilter filter;
-					C_BaseEntity::EmitSound(filter, SOUND_FROM_WORLD, szSoundToEmit, &pEntity->GetAbsOrigin());
+					pEntity->EmitSound(filter, pEntity->entindex(), szSoundToEmit, &pEntity->GetAbsOrigin());
 				}
 			}
 		}

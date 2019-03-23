@@ -410,7 +410,13 @@ void C_WeaponFlamethrower::ClientThink(void)
 	}
 
 	C_BaseCombatCharacter *pOwner = GetOwner();
-	if (IsEffectActive(EF_NODRAW) || IsDormant() || (pOwner == NULL) || (ShouldDraw() == false) || (m_nEffectState <= 0))
+	if (
+		IsEffectActive(EF_NODRAW) ||
+		IsDormant() ||
+		(pOwner == NULL) ||
+		(m_nEffectState <= 0) ||
+		((pOwner != (C_BaseCombatCharacter*)BB2PlayerGlobals->GetCurrentViewModelOwner()) && (ShouldDraw() == false))
+		)
 	{
 		CleanupEffects();
 		return;

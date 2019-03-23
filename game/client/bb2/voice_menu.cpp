@@ -83,8 +83,8 @@ CVoiceMenu::CVoiceMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_VOICEWHEEL)
 		m_pButton[i]->SetPaintBorderEnabled(false);
 		m_pButton[i]->SetPaintEnabled(false);
 		m_pButton[i]->SetZPos(30);
-		m_pButton[i]->SetArmedSound("ui/button_over.wav");
-		m_pButton[i]->SetReleasedSound("ui/buttonclick.wav");
+		//m_pButton[i]->SetArmedSound("ui/button_over.wav");
+		//m_pButton[i]->SetReleasedSound("ui/buttonclick.wav");
 		m_pButton[i]->SetCommand(VarArgs("%i", (i + 1)));
 
 		m_pButton[i]->SetKeyBoardInputEnabled(true);

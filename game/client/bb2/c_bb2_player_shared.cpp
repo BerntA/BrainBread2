@@ -223,11 +223,9 @@ void CBB2PlayerShared::BodyUpdate(C_HL2MP_Player *pOwner)
 	if (!IsBodyOwner(pOwner))
 		return;
 
-	QAngle angle = pOwner->GetRenderAngles();
-	angle = pOwner->GetLocalAngles();
+	QAngle angle = pOwner->GetLocalAngles(); // pOwner->GetRenderAngles() <- Slow update!
 
 	const float flViewPitch = angle.x;
-
 	angle.x = 0;
 	angle.z = 0;
 
