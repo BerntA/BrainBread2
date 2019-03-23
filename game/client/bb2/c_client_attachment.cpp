@@ -64,9 +64,6 @@ C_ClientAttachment *CreateClientAttachment(C_HL2MP_Player *pParent, int type, in
 		return NULL;
 
 	C_ClientAttachment *pAttachment = new C_ClientAttachment();
-	if (!pAttachment)
-		return NULL;
-
 	if (!pAttachment->Initialize(type, param))
 	{
 		pAttachment->Release();
@@ -87,15 +84,13 @@ C_ClientAttachment *CreateClientAttachment(C_HL2MP_Player *pParent, int type, in
 
 C_ClientAttachment::C_ClientAttachment(void)
 {
-	m_iAttachmentType = 0;
-	m_iParameter = 0;
+	m_iAttachmentType = m_iParameter = 0;
 	m_flUpdateTime = 0.0f;
 	m_pPlayer = NULL;
 	m_pOther = NULL;
-	m_bShouldDelete = false;
-	m_bNoModelParticles = false;
-	m_bShouldHide = false;
+	m_bShouldDelete = m_bNoModelParticles = m_bShouldHide = false;
 	m_bNeedsUpdate = true;
+	m_takedamage = DAMAGE_EVENTS_ONLY;
 
 	s_ClientAttachmentList.AddToTail(this);
 }
@@ -107,15 +102,11 @@ C_ClientAttachment::~C_ClientAttachment()
 
 bool C_ClientAttachment::Initialize(int type, int param)
 {
-	if (InitializeAsClientEntity(STRING(GetModelName()), RENDER_GROUP_OPAQUE_ENTITY) == false)
-		return false;
-
-	if (engine->IsInEditMode())
+	if (engine->IsInEditMode() || (InitializeAsClientEntity(STRING(GetModelName()), RENDER_GROUP_OPAQUE_ENTITY) == false))
 		return false;
 
 	m_iAttachmentType = type;
 	m_iParameter = param;
-	Spawn();
 
 	SetSolid(SOLID_NONE);
 	SetMoveType(MOVETYPE_NONE);
@@ -137,22 +128,7 @@ void C_ClientAttachment::Release(void)
 	if (GetMoveParent())
 		FollowEntity(NULL);
 
-	if (GetThinkHandle() != INVALID_THINK_HANDLE)
-	{
-		ClientThinkList()->RemoveThinkable(GetClientHandle());
-	}
-	ClientEntityList().RemoveEntity(GetClientHandle());
-
-	partition->Remove(PARTITION_CLIENT_SOLID_EDICTS | PARTITION_CLIENT_RESPONSIVE_EDICTS | PARTITION_CLIENT_NON_STATIC_EDICTS, CollisionProp()->GetPartitionHandle());
-	RemoveFromLeafSystem();
-
 	BaseClass::Release();
-}
-
-void C_ClientAttachment::Spawn()
-{
-	BaseClass::Spawn();
-	m_takedamage = DAMAGE_EVENTS_ONLY;
 }
 
 void C_ClientAttachment::ClientThink(void)
@@ -183,7 +159,7 @@ void C_ClientAttachment::ClientThink(void)
 				int index = GetOtherLinkEntindex();
 				C_BaseCombatWeapon *pWeapon = pPlayer->Weapon_GetBySlot(m_iParameter);
 				m_bShouldHide = (pWeapon == NULL || (pWeapon == pPlayer->GetActiveWeapon()) || !bAlive || (teamNum != TEAM_HUMANS));
-				if (pWeapon && (!pWeapon->VisibleInWeaponSelection()))
+				if (pWeapon && !pWeapon->VisibleInWeaponSelection())
 					m_bShouldHide = true;
 
 				if (pWeapon && ((pWeapon->entindex() != index) || m_bNeedsUpdate))

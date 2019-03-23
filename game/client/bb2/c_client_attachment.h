@@ -22,7 +22,6 @@ public:
 	virtual ~C_ClientAttachment();
 
 	virtual bool Initialize(int type, int param);
-	virtual void Spawn();
 	virtual void ReleaseSafely(void) { m_bShouldDelete = true; }
 	virtual void Release(void);
 	virtual void ClientThink(void);

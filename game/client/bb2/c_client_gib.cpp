@@ -84,17 +84,12 @@ bool RemoveAllClientGibs()
 
 C_ClientSideGibBase::C_ClientSideGibBase(void)
 {
-	m_iPlayerTeam = 0;
-	m_iPlayerIndex = 0;
+	m_iPlayerTeam = m_iPlayerIndex = m_iGibType = 0;
 	m_szSurvivor[0] = 0;
-	m_flTouchDelta = 0;
-	m_iGibType = 0;
-	m_bReleaseGib = false;
-	m_bFadingOut = false;
-	m_bNoModelParticles = false;
-	m_bForceFade = false;
+	m_flTouchDelta = 0.0f;
+	m_bReleaseGib = m_bFadingOut = m_bNoModelParticles = m_bForceFade = false;
 	m_flFadeOutDelay = gpGlobals->curtime + PROP_FADE_TIME;
-
+	m_takedamage = DAMAGE_EVENTS_ONLY;
 	s_ClientGibList.AddToTail(this);
 }
 
@@ -102,26 +97,24 @@ C_ClientSideGibBase::~C_ClientSideGibBase()
 {
 	PhysCleanupFrictionSounds(this);
 	VPhysicsDestroyObject();
-
 	s_ClientGibList.FindAndRemove(this);
 }
 
 bool C_ClientSideGibBase::Initialize(int type)
 {
-	if ((InitializeAsClientEntity(STRING(GetModelName()), RENDER_GROUP_OPAQUE_ENTITY) == false) || engine->IsInEditMode())
+	if (engine->IsInEditMode() || (InitializeAsClientEntity(STRING(GetModelName()), RENDER_GROUP_OPAQUE_ENTITY) == false))
 		return false;
 
 	AddEFlags(EFL_USE_PARTITION_WHEN_NOT_SOLID);
 	m_EntClientFlags |= ENTCLIENTFLAG_DONTUSEIK;
 
 	m_iGibType = type;
-	m_takedamage = DAMAGE_EVENTS_ONLY;
 	return true;
 }
 
 bool C_ClientSideGibBase::Initialize(int type, const model_t *model)
 {
-	if ((InitializeAsClientEntity(NULL, RENDER_GROUP_OPAQUE_ENTITY) == false) || engine->IsInEditMode())
+	if (engine->IsInEditMode() || (InitializeAsClientEntity(NULL, RENDER_GROUP_OPAQUE_ENTITY) == false))
 		return false;
 
 	SetModelName(modelinfo->GetModelName(model));
@@ -131,7 +124,6 @@ bool C_ClientSideGibBase::Initialize(int type, const model_t *model)
 	m_EntClientFlags |= ENTCLIENTFLAG_DONTUSEIK;
 
 	m_iGibType = type;
-	m_takedamage = DAMAGE_EVENTS_ONLY;
 	return true;
 }
 
@@ -202,18 +194,7 @@ void C_ClientSideGibBase::Release(void)
 {
 	C_BaseEntity *pChild = GetEffectEntity();
 	if (pChild && pChild->IsMarkedForDeletion() == false)
-	{
 		pChild->Release();
-	}
-
-	if (GetThinkHandle() != INVALID_THINK_HANDLE)
-	{
-		ClientThinkList()->RemoveThinkable(GetClientHandle());
-	}
-	ClientEntityList().RemoveEntity(GetClientHandle());
-
-	partition->Remove(PARTITION_CLIENT_SOLID_EDICTS | PARTITION_CLIENT_RESPONSIVE_EDICTS | PARTITION_CLIENT_NON_STATIC_EDICTS, CollisionProp()->GetPartitionHandle());
-	RemoveFromLeafSystem();
 
 	BaseClass::Release();
 }
@@ -231,7 +212,7 @@ void C_ClientSideGibBase::FadeOut(void)
 	SetRenderMode(kRenderTransAlpha);
 	SetRenderColorA(iAlpha);
 
-	if (iAlpha == 0)
+	if (iAlpha <= 0)
 		m_bReleaseGib = true;
 }
 
@@ -286,9 +267,7 @@ void C_ClientSideGibBase::HitSurface(C_BaseEntity *pOther)
 		trace_t	tr;
 		tr = BaseClass::GetTouchTrace();
 		if (tr.m_pEnt)
-		{
 			UTIL_DecalTrace(&tr, GameBaseClient->IsExtremeGore() ? "ExtremeBlood" : "Blood");
-		}
 	}
 }
 
@@ -321,39 +300,22 @@ void C_ClientSideGibBase::ImpactTrace(trace_t *pTrace, int iDamageType, const ch
 		return;
 
 	Vector dir = pTrace->endpos - pTrace->startpos;
-	int iDamage = 0;
 
 	if (iDamageType == DMG_BLAST)
 	{
-		iDamage = VectorLength(dir);
 		dir *= 500;  // adjust impact strenght
-
-		// apply force at object mass center
-		pPhysicsObject->ApplyForceCenter(dir);
+		pPhysicsObject->ApplyForceCenter(dir); // apply force
 	}
 	else
 	{
 		Vector hitpos;
-
 		VectorMA(pTrace->startpos, pTrace->fraction, dir, hitpos);
 		VectorNormalize(dir);
-
-		// guess avg damage
-		if (iDamageType == DMG_BULLET)
-		{
-			iDamage = 30;
-		}
-		else
-		{
-			iDamage = 50;
-		}
-
 		dir *= 4000;  // adjust impact strenght
 
 		// apply force where we hit it
 		pPhysicsObject->ApplyForceOffset(dir, hitpos);
 
-		// Build the impact data
 		CEffectData data;
 		data.m_vOrigin = pTrace->endpos;
 		data.m_vStart = pTrace->startpos;
@@ -362,15 +324,7 @@ void C_ClientSideGibBase::ImpactTrace(trace_t *pTrace, int iDamageType, const ch
 		data.m_nHitBox = pTrace->hitbox;
 		data.m_hEntity = GetRefEHandle();
 
-		// Send it on its way
-		if (!pCustomImpactName)
-		{
-			DispatchEffect("Impact", data);
-		}
-		else
-		{
-			DispatchEffect(pCustomImpactName, data);
-		}
+		DispatchEffect(((pCustomImpactName == NULL) ? "Impact" : pCustomImpactName), data);
 	}
 
 	DoBloodSpray(pTrace);
@@ -434,20 +388,14 @@ void C_ClientRagdollGib::ImpactTrace(trace_t *pTrace, int iDamageType, const cha
 	if (iDamageType == DMG_BLAST)
 	{
 		dir *= 500;  // adjust impact strenght
-
-		// apply force at object mass center
 		pPhysicsObject->ApplyForceCenter(dir);
 	}
 	else
 	{
 		Vector hitpos;
-
 		VectorMA(pTrace->startpos, pTrace->fraction, dir, hitpos);
 		VectorNormalize(dir);
-
 		dir *= 4000;  // adjust impact strenght
-
-		// apply force where we hit it
 		pPhysicsObject->ApplyForceOffset(dir, hitpos);
 	}
 

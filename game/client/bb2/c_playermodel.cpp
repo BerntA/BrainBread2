@@ -61,6 +61,7 @@ C_Playermodel::C_Playermodel(void)
 	m_pPlayer = NULL;
 	m_bNoModelParticles = false;
 	m_bPreferModelPointerOverIndex = true;
+	m_takedamage = DAMAGE_EVENTS_ONLY;
 	ForceClientSideAnimationOn();
 	s_ClientPlayermodelList.AddToTail(this);
 }
@@ -73,13 +74,9 @@ C_Playermodel::~C_Playermodel()
 
 bool C_Playermodel::Initialize(void)
 {
-	if (InitializeAsClientEntity(NULL, RENDER_GROUP_OPAQUE_ENTITY) == false)
+	if (engine->IsInEditMode() || (InitializeAsClientEntity(NULL, RENDER_GROUP_OPAQUE_ENTITY) == false))
 		return false;
 
-	if (engine->IsInEditMode())
-		return false;
-
-	m_takedamage = DAMAGE_EVENTS_ONLY;
 	SetSolid(SOLID_NONE);
 	SetMoveType(MOVETYPE_NONE);
 
@@ -94,14 +91,6 @@ bool C_Playermodel::Initialize(void)
 
 void C_Playermodel::Release(void)
 {
-	if (GetThinkHandle() != INVALID_THINK_HANDLE)
-		ClientThinkList()->RemoveThinkable(GetClientHandle());
-
-	ClientEntityList().RemoveEntity(GetClientHandle());
-
-	partition->Remove(PARTITION_CLIENT_SOLID_EDICTS | PARTITION_CLIENT_RESPONSIVE_EDICTS | PARTITION_CLIENT_NON_STATIC_EDICTS, CollisionProp()->GetPartitionHandle());
-	RemoveFromLeafSystem();
-
 	BaseClass::Release();
 }
 

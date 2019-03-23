@@ -45,7 +45,7 @@ public:
 	// Misc
 	bool IsSniperScopeActive(void) { return m_bIsDrawingSniperScope; }
 	void SetSniperScopeActive(bool value) { m_bIsDrawingSniperScope = value; }
-	
+
 	bool IsVotePanelActive(void) { return m_bShouldDrawVotePanel; }
 	void SetVotePanelActive(bool value) { m_bShouldDrawVotePanel = value; }
 

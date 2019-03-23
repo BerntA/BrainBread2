@@ -33,8 +33,6 @@ public:
 	C_HL2MP_Player();
 	~C_HL2MP_Player( void );
 
-	void ClientThink( void );
-
 	static C_HL2MP_Player* GetLocalHL2MPPlayer();
 	static void ResetAllClientEntities(void);
 

@@ -3446,7 +3446,7 @@ void CHL2MP_Player::DoAnimationEvent(PlayerAnimEvent_t event, int nData, bool bS
 		event == PLAYERANIMEVENT_SLIDE
 		);
 
-	if (bShouldDisable && ((HL2MPRules()->GetCurrentGamemode() == MODE_DEATHMATCH) || (HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION)))
+	if (bShouldDisable && HL2MPRules() && (HL2MPRules()->GetCurrentGamemode() != MODE_ARENA))
 		RemoveSpawnProtection();
 
 	if (nData > 0)

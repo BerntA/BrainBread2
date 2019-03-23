@@ -21,9 +21,8 @@ public:
 
 	C_ViewModelAttachment();
 
-	void Spawn();
 	int DrawModel(int flags);
-	bool ShouldDraw();
+	bool ShouldDraw() { return true; }
 	bool IsPlayerHands(void) { return true; }
 	bool IsClientCreated(void) const { return true; }
 };

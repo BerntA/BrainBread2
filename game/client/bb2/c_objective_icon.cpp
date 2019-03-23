@@ -38,16 +38,6 @@ C_ObjectiveIcon::~C_ObjectiveIcon()
 	m_pObjectiveIcons.FindAndRemove(this);
 }
 
-void C_ObjectiveIcon::Spawn(void)
-{
-	BaseClass::Spawn();
-}
-
-bool C_ObjectiveIcon::ShouldDraw()
-{
-	return true;
-}
-
 void C_ObjectiveIcon::PostDataUpdate(DataUpdateType_t updateType)
 {
 	BaseClass::PostDataUpdate(updateType);
@@ -62,10 +52,7 @@ void C_ObjectiveIcon::PostDataUpdate(DataUpdateType_t updateType)
 void RenderObjectiveIcons(void)
 {
 	C_HL2MP_Player *pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
-	if (!pPlayer)
-		return;
-
-	if (pPlayer->IsInVGuiInputMode())
+	if (!pPlayer || pPlayer->IsInVGuiInputMode())
 		return;
 
 	CMatRenderContextPtr pRenderContext(materials);

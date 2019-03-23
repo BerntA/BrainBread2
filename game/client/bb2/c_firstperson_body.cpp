@@ -24,26 +24,6 @@ C_FirstpersonBody::C_FirstpersonBody()
 	m_bPreferModelPointerOverIndex = true;
 }
 
-void C_FirstpersonBody::Spawn()
-{
-	BaseClass::Spawn();
-}
-
-ShadowType_t C_FirstpersonBody::ShadowCastType()
-{
-	return SHADOWS_NONE;
-}
-
-bool C_FirstpersonBody::ShouldReceiveProjectedTextures(int flags)
-{
-	return true;
-}
-
-bool C_FirstpersonBody::ShouldDraw()
-{
-	return true;
-}
-
 int C_FirstpersonBody::DrawModel(int flags)
 {
 	if (!bb2_render_body.GetBool())

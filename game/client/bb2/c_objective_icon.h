@@ -17,24 +17,22 @@ class C_ObjectiveIcon : public C_BaseEntity
 {
 public:
 	DECLARE_CLASS(C_ObjectiveIcon, C_BaseEntity);
-	DECLARE_CLIENTCLASS(); 
+	DECLARE_CLIENTCLASS();
 
 	C_ObjectiveIcon();
-	~C_ObjectiveIcon();
+	virtual ~C_ObjectiveIcon();
 
-	void Spawn(void);
-	bool ShouldDraw();
+	virtual bool ShouldDraw() { return true; }
 
-	const char *GetTexture(void) { return m_szTextureFile; }
-	int GetTeamLink(void) { return m_iTeamNumber; }
-	bool IsHidden(void) { return m_bShouldBeHidden; }
+	virtual const char *GetTexture(void) { return m_szTextureFile; }
+	virtual int GetTeamLink(void) { return m_iTeamNumber; }
+	virtual bool IsHidden(void) { return m_bShouldBeHidden; }
 
-	IMaterial *GetIconMaterial(void) { return pMaterialLink; }
+	virtual IMaterial *GetIconMaterial(void) { return pMaterialLink; }
 
-	void PostDataUpdate(DataUpdateType_t updateType);
+	virtual void PostDataUpdate(DataUpdateType_t updateType);
 
 private:
-
 	bool m_bShouldBeHidden;
 	int m_iTeamNumber;
 	char m_szTextureFile[MAX_WEAPON_STRING];

@@ -15,6 +15,7 @@
 #include "c_ai_basenpc.h"
 #include "c_basecombatcharacter.h"
 #include "c_client_gib.h"
+#include "engine/IEngineSound.h"
 #else
 #include "ai_basenpc.h"
 #include "basecombatcharacter.h"
@@ -187,7 +188,10 @@ bool C_ClientRagdollGib::CanGibEntity(const Vector &velocity, int hitgroup, int 
 		}
 
 		if (pszSoundScript && pszSoundScript[0])
-			EmitSound(pszSoundScript);
+		{
+			CLocalPlayerFilter filter;
+			C_BaseEntity::EmitSound(filter, SOUND_FROM_WORLD, pszSoundScript, &GetAbsOrigin());
+		}
 
 		OnGibbedGroup(0, true);
 		return true;
@@ -222,7 +226,10 @@ bool C_ClientRagdollGib::CanGibEntity(const Vector &velocity, int hitgroup, int 
 	}
 
 	if (pszSoundScript && pszSoundScript[0])
-		EmitSound(pszSoundScript);
+	{
+		CLocalPlayerFilter filter;
+		C_BaseEntity::EmitSound(filter, SOUND_FROM_WORLD, pszSoundScript, &GetAbsOrigin());
+	}
 
 	OnGibbedGroup(hitgroup, false);
 	return true;

@@ -70,12 +70,6 @@ C_BaseHLPlayer::C_BaseHLPlayer()
 //-----------------------------------------------------------------------------
 void C_BaseHLPlayer::OnDataChanged( DataUpdateType_t updateType )
 {
-	// Make sure we're thinking
-	if ( updateType == DATA_UPDATE_CREATED )
-	{
-		SetNextClientThink( CLIENT_THINK_ALWAYS );
-	}
-
 	BaseClass::OnDataChanged( updateType );
 }
 

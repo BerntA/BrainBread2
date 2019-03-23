@@ -21,16 +21,11 @@ class C_FirstpersonBody : public C_BaseAnimatingOverlay
 public:
 
 	C_FirstpersonBody();
-	virtual int ObjectCaps()
-	{
-		return FCAP_DONT_SAVE;
-	}
-
-	virtual void Spawn();
-	virtual ShadowType_t ShadowCastType();
+	virtual int ObjectCaps() { return FCAP_DONT_SAVE; }
+	virtual ShadowType_t ShadowCastType() { return SHADOWS_NONE; }
 	virtual int DrawModel(int flags);
-	virtual bool ShouldDraw();
-	virtual bool ShouldReceiveProjectedTextures(int flags);
+	virtual bool ShouldDraw() { return true; }
+	virtual bool ShouldReceiveProjectedTextures(int flags) { return true; }
 	virtual RenderGroup_t GetRenderGroup() { return RENDER_GROUP_OPAQUE_ENTITY; }
 	virtual void GetRenderBounds(Vector &mins, Vector &maxs);
 	virtual void StudioFrameAdvance();

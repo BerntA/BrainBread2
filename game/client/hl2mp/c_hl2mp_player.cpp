@@ -219,10 +219,6 @@ CStudioHdr *C_HL2MP_Player::OnNewModel(void)
 	return hdr;
 }
 
-void C_HL2MP_Player::ClientThink( void )
-{
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -412,14 +408,7 @@ ShadowType_t C_HL2MP_Player::ShadowCastType( void )
 
 const QAngle& C_HL2MP_Player::GetRenderAngles()
 {
-	if ( IsRagdoll() )
-	{
-		return vec3_angle;
-	}
-	else
-	{
-		return m_PlayerAnimState->GetRenderAngles();
-	}
+	return (IsRagdoll() ? vec3_angle : m_PlayerAnimState->GetRenderAngles());
 }
 
 bool C_HL2MP_Player::ShouldDraw( void )
@@ -444,10 +433,8 @@ void C_HL2MP_Player::NotifyShouldTransmit( ShouldTransmitState_t state )
 {
 	if ( state == SHOULDTRANSMIT_END )
 	{
-		if( m_pFlashlightBeam != NULL )
-		{
+		if (m_pFlashlightBeam != NULL)
 			ReleaseFlashlight();
-		}
 	}
 
 	BaseClass::NotifyShouldTransmit( state );
@@ -456,12 +443,6 @@ void C_HL2MP_Player::NotifyShouldTransmit( ShouldTransmitState_t state )
 void C_HL2MP_Player::OnDataChanged( DataUpdateType_t type )
 {
 	BaseClass::OnDataChanged( type );
-
-	if ( type == DATA_UPDATE_CREATED )
-	{
-		SetNextClientThink( CLIENT_THINK_ALWAYS );
-	}
-
 	UpdateVisibility();
 }
 

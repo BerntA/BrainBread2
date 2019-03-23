@@ -1120,7 +1120,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 		if (pClient && (pClient->GetTeamNumber() >= TEAM_HUMANS))
 			GameBaseClient->CloseGamePanels(true);
 	}
-	else if ( Q_strcmp( "client_sound_transmit", eventname ) == 0 )
+	else if (Q_strcmp("client_sound_transmit", eventname) == 0)
 	{
 		int iEntIndex = event->GetInt("entity");
 		int iType = event->GetInt("type");
@@ -1194,7 +1194,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			if (bEmitSound)
 			{
 				C_BaseEntity *pEntity = ClientEntityList().GetEnt(iEntIndex);
-				if (pEntity && szSoundToEmit && szSoundToEmit[0])
+				if (pEntity && !pEntity->IsDormant() && szSoundToEmit && szSoundToEmit[0])
 				{
 					// If this sound doesn't exist / not parsed then fallback to anything available:
 					CSoundParameters params;
@@ -1213,7 +1213,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 						pClient->PrecacheScriptSound(szSoundToEmit);
 
 					CLocalPlayerFilter filter;
-					pEntity->EmitSound(filter, pEntity->entindex(), szSoundToEmit, &pEntity->GetLocalOrigin());
+					C_BaseEntity::EmitSound(filter, SOUND_FROM_WORLD, szSoundToEmit, &pEntity->GetAbsOrigin());
 				}
 			}
 		}

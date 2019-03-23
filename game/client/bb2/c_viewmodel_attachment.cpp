@@ -13,16 +13,6 @@ C_ViewModelAttachment::C_ViewModelAttachment()
 	m_bPreferModelPointerOverIndex = true;
 }
 
-void C_ViewModelAttachment::Spawn()
-{
-	BaseClass::Spawn();
-}
-
-bool C_ViewModelAttachment::ShouldDraw()
-{
-	return true;
-}
-
 int C_ViewModelAttachment::DrawModel(int flags)
 {
 	if (g_bShouldRenderLocalPlayerExternally)

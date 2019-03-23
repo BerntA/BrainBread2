@@ -224,6 +224,7 @@ void CBB2PlayerShared::BodyUpdate(C_HL2MP_Player *pOwner)
 		return;
 
 	QAngle angle = pOwner->GetRenderAngles();
+	angle = pOwner->GetLocalAngles();
 
 	const float flViewPitch = angle.x;
 
@@ -233,7 +234,7 @@ void CBB2PlayerShared::BodyUpdate(C_HL2MP_Player *pOwner)
 	Vector fwd, right, up;
 	AngleVectors(angle, &fwd, &right, &up);
 
-	const bool bDuck = (pOwner->m_Local.m_bDucked || pOwner->m_Local.m_bDucking || pOwner->IsSliding());
+	const bool bDuck = (pOwner->m_Local.m_bDucked || pOwner->m_Local.m_bDucking || pOwner->IsSliding() || (pOwner->GetFlags() & FL_DUCKING));
 	const bool bInAir = ((pOwner->GetFlags() & FL_ONGROUND) == 0);
 
 	if (bDuck)
