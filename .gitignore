@@ -61,6 +61,7 @@ Release
 
 # shader files
 *.tmp
+*.TEMP
 
 # VS Community
 .vs/*
