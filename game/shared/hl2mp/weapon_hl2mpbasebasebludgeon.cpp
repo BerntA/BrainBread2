@@ -10,6 +10,7 @@
 #include "in_buttons.h"
 #include "GameBase_Shared.h"
 #include "npcevent.h"
+#include "random_extended.h"
 
 #if defined( CLIENT_DLL )
 #include "c_hl2mp_player.h"
@@ -344,21 +345,20 @@ int CBaseHL2MPBludgeonWeapon::GetMeleeSkillFlags(void)
 		return 0;
 
 	int iSkillFlags = 0;
+	double perc = 0.0;
 
 	if (pOwner->GetSkillValue(PLAYER_SKILL_HUMAN_BLEED) > 0)
 	{
-		int iPercChance = (int)pOwner->GetSkillValue(PLAYER_SKILL_HUMAN_BLEED, TEAM_HUMANS);
-		if (random->RandomInt(0, 100) <= iPercChance)
+		perc = (pOwner->GetSkillValue(PLAYER_SKILL_HUMAN_BLEED, TEAM_HUMANS) / PERCENT_BASE);
+		if (TryTheLuck(perc))
 			iSkillFlags |= SKILL_FLAG_BLEED;
 	}
 
 	if (pOwner->GetSkillValue(PLAYER_SKILL_HUMAN_CRIPPLING_BLOW) > 0)
 	{
-		int iPercChance = (int)pOwner->GetSkillValue(PLAYER_SKILL_HUMAN_CRIPPLING_BLOW, TEAM_HUMANS);
-		if (random->RandomInt(0, 100) <= iPercChance)
-		{
+		perc = (pOwner->GetSkillValue(PLAYER_SKILL_HUMAN_CRIPPLING_BLOW, TEAM_HUMANS) / PERCENT_BASE);
+		if (TryTheLuck(perc))
 			iSkillFlags |= SKILL_FLAG_CRIPPLING_BLOW;
-		}
 	}
 
 	return iSkillFlags;

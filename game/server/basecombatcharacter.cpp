@@ -43,6 +43,7 @@
 #include "GameBase_Shared.h"
 #include "GameBase_Server.h"
 #include "physics_prop_ragdoll.h"
+#include "random_extended.h"
 
 #ifdef NEXT_BOT
 #include "NextBot/NextBotManager.h"
@@ -2249,17 +2250,14 @@ int CBaseCombatCharacter::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 		pClient->DispatchDamageText(this, -info.GetDamage());
 
-		if (pClient->IsZombie())
+		if (pClient->IsZombie() && (pClient->GetSkillValue(PLAYER_SKILL_ZOMBIE_LIFE_LEECH) > 0))
 		{
-			if (pClient->GetSkillValue(PLAYER_SKILL_ZOMBIE_LIFE_LEECH) > 0)
+			double perc = (pClient->GetSkillValue(PLAYER_SKILL_ZOMBIE_LIFE_LEECH, TEAM_DECEASED) / PERCENT_BASE);
+			if (TryTheLuck(perc))
 			{
-				int iPercentChance = (int)pClient->GetSkillValue(PLAYER_SKILL_ZOMBIE_LIFE_LEECH, TEAM_DECEASED);
 				float healAmount = info.GetDamage() * 0.5f;
-				if (random->RandomInt(0, 100) <= iPercentChance)
-				{
-					pClient->TakeHealth(healAmount, DMG_GENERIC);
-					pClient->DispatchDamageText(this, (int)healAmount);
-				}
+				pClient->TakeHealth(((int)healAmount), DMG_GENERIC);
+				pClient->DispatchDamageText(this, (int)healAmount);
 			}
 		}
 	}

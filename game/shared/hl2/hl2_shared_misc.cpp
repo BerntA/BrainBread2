@@ -19,6 +19,7 @@
 #include "te_effect_dispatch.h"
 #endif
 
+#include "random_extended.h"
 #include "gamerules.h"
 #include "in_buttons.h"
 #include "vphysics/friction.h"
@@ -1250,7 +1251,7 @@ void CMissile::ShotDown(void)
 //-----------------------------------------------------------------------------
 void CMissile::DoExplosion(void)
 {
-	int iDamageType = (random->RandomInt(0, 100) <= 5) ? DMG_BURN : -1;
+	int iDamageType = (TryTheLuck(0.15) ? DMG_BURN : -1); // 15 % chance to spawn fire on gibs etc...
 	ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), GetRadius(), 
 		SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE,
 		0.0f, this, iDamageType, NULL, m_bShouldBeFriendly ? CLASS_PLAYER : CLASS_NONE);

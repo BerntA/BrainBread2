@@ -8,6 +8,7 @@
 #include "GameBase_Shared.h"
 #include "hl2mp_gamerules.h"
 #include "particle_parse.h"
+#include "random_extended.h"
 
 #ifndef CLIENT_DLL
 #include "items.h"
@@ -616,7 +617,7 @@ void CGameBaseShared::AddInventoryItem(int iPlayerIndex, const DataInventoryItem
 			GetAchievementManager()->WriteToAchievement(pClient, "ACH_SURVIVOR_CAPTURE_BRIEFCASE");
 
 			// Announce Pickup... 'hihi'
-			if ((random->RandomInt(0, 2) == 1) || pClient->GetNearbyTeammates())
+			if (TryTheLuck(0.45) || pClient->GetNearbyTeammates())
 				HL2MPRules()->EmitSoundToClient(pClient, "PickupBriefcase", BB2_SoundTypes::TYPE_PLAYER, pClient->GetSoundsetGender());
 		}
 	}
@@ -703,7 +704,7 @@ bool CGameBaseShared::UseInventoryItem(int iPlayerIndex, uint iItemID, bool bIsM
 
 			pClient->TakeHealth(flHealthToAdd, DMG_GENERIC);
 
-			if (random->RandomInt(0, 2) == 1)
+			if (TryTheLuck(0.45))
 				HL2MPRules()->EmitSoundToClient(pClient, "PickupHealth", BB2_SoundTypes::TYPE_PLAYER, pClient->GetSoundsetGender());
 		}
 		else if ((iSubType == TYPE_ARMOR_LARGE) || (iSubType == TYPE_ARMOR_MEDIUM) || (iSubType == TYPE_ARMOR_SMALL))
@@ -988,14 +989,15 @@ void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pV
 		switch (uniqueWepID)
 		{
 		case WEAPON_ID_BERETTA:
+		case WEAPON_ID_BERETTA_AKIMBO:
 			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_BERETTA");
 			break;
 		case WEAPON_ID_GLOCK17:
+		case WEAPON_ID_GLOCK17_AKIMBO:
 			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_GLOCK17");
 			break;
 
 		case WEAPON_ID_REXMP412:
-			break;
 		case WEAPON_ID_REXMP412_AKIMBO:
 			break;
 
@@ -1023,6 +1025,7 @@ void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pV
 			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_BENELLIM4");
 			break;
 		case WEAPON_ID_SAWEDOFF:
+		case WEAPON_ID_SAWEDOFF_AKIMBO:
 			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_SAWOFF");
 			break;
 
@@ -1038,6 +1041,9 @@ void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pV
 			break;
 		case WEAPON_ID_MP7:
 			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_HKMP7");
+			break;
+		case WEAPON_ID_MP5:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_HKMP5");
 			break;
 		case WEAPON_ID_MICROUZI:
 			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_UZI");
@@ -1128,6 +1134,8 @@ void CGameBaseShared::OnGameOver(float timeLeft, int iWinner)
 			pAchievement = "ACH_MAP_CARNAGE";
 		else if (!strcmp(currMap, "bba_coltec"))
 			pAchievement = "ACH_MAP_COLTEC_A";
+		else if (!strcmp(currMap, "bba_island"))
+			pAchievement = "ACH_MAP_ISLAND_A";
 	}
 
 	if (GetAchievementManager() && !bTimeOut)

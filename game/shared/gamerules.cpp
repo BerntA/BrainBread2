@@ -336,7 +336,7 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 			continue;
 
 		// Entity relationship extended check:
-		if ((info.GetRelationshipLink() != CLASS_NONE) && pEntity->MyCombatCharacterPointer() && (pEntity->MyCombatCharacterPointer()->IRelationType(NULL, info.GetRelationshipLink()) == D_LI))
+		if ((info.GetRelationshipLink() != CLASS_NONE) && (info.GetAttacker() == NULL) && pEntity->MyCombatCharacterPointer() && (pEntity->MyCombatCharacterPointer()->IRelationType(NULL, info.GetRelationshipLink()) == D_LI))
 			continue;
 
 		// blast's don't tavel into or out of water

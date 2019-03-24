@@ -34,13 +34,17 @@ struct weaponInfoItem
 weaponInfoItem pszWeapons[] =
 {
 	{ "weapon_glock17", 70, false },
+	{ "weapon_akimbo_glock17", 20, false },
+
 	{ "weapon_beretta", 100, false },
+	{ "weapon_akimbo_beretta", 25, false },
 
 	{ "weapon_rex", 30, false },
 	{ "weapon_akimbo_rex", 15, false },
 
 	{ "weapon_mac11", 55, false },
 	{ "weapon_mp7", 40, false },
+	{ "weapon_mp5", 60, false },
 	{ "weapon_microuzi", 45, false },
 
 	{ "weapon_ak47", 100, false },
@@ -52,6 +56,7 @@ weaponInfoItem pszWeapons[] =
 	{ "weapon_minigun", 5, false },
 	{ "weapon_flamethrower", 3, false },
 	{ "weapon_sawedoff", 20, false },
+	{ "weapon_akimbo_sawedoff", 8, false },
 	{ "weapon_remington", 30, false },
 	{ "weapon_benelli_m4", 25, false },
 

@@ -71,6 +71,7 @@
 #include "hl2mp_player.h"
 #include "GameBase_Shared.h"
 #include "GameBase_Server.h"
+#include "random_extended.h"
 
 #if defined USES_ECON_ITEMS
 #include "econ_wearable.h"
@@ -1122,24 +1123,23 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 			info.SetDamage(flNewDamage);
 
+			double perc = 0.0;
+
 			// Will this attack kill me? If so I have a random chance to negate the damage if I have any point in PLAYER_SKILL_ZOMBIE_DEATH!
-			if (flNewDamage > GetHealth())
+			if ((flNewDamage > GetHealth()) && (pClient->GetTeamNumber() == TEAM_DECEASED) && (pClient->GetSkillValue(PLAYER_SKILL_ZOMBIE_DEATH) > 0))
 			{
-				if (pClient->GetTeamNumber() == TEAM_DECEASED)
+				perc = (pClient->GetSkillValue(PLAYER_SKILL_ZOMBIE_DEATH, TEAM_DECEASED) / PERCENT_BASE);
+				if (TryTheLuck(perc))
 				{
-					int iRandomChance = (int)pClient->GetSkillValue(PLAYER_SKILL_ZOMBIE_DEATH, TEAM_DECEASED);
-					if ((random->RandomInt(0, 100) <= iRandomChance) && (pClient->GetSkillValue(PLAYER_SKILL_ZOMBIE_DEATH) > 0))
-					{
-						TakeHealth(flNewDamage, DMG_GENERIC);
-						info.SetDamage(0);
-					}
+					TakeHealth(flNewDamage, DMG_GENERIC);
+					info.SetDamage(0);
 				}
 			}
 
-			if (pClient->IsHuman())
+			if (pClient->IsHuman() && (pClient->GetSkillValue(PLAYER_SKILL_HUMAN_ENHANCED_REFLEXES) > 0))
 			{
-				int iRandomChance = (int)pClient->GetSkillValue(PLAYER_SKILL_HUMAN_ENHANCED_REFLEXES, TEAM_HUMANS);
-				if ((random->RandomInt(0, 100) <= iRandomChance) && (pClient->GetSkillValue(PLAYER_SKILL_HUMAN_ENHANCED_REFLEXES) > 0))
+				perc = (pClient->GetSkillValue(PLAYER_SKILL_HUMAN_ENHANCED_REFLEXES, TEAM_HUMANS) / PERCENT_BASE);
+				if (TryTheLuck(perc))
 					info.SetDamage(0);
 			}
 		}

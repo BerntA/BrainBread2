@@ -91,6 +91,18 @@ $Project
 			$File "$SRCDIR\game\shared\bb2\skills_shareddefs.h"
 			$File "$SRCDIR\game\shared\bb2\gibs_shared.cpp"
 			$File "$SRCDIR\game\shared\bb2\gibs_shared.h"
+			
+			$File "$SRCDIR\game\shared\bb2\random_extended.h"
+			$File "$SRCDIR\game\shared\bb2\random_extended.cpp"
+			{
+				$Configuration
+				{
+					$Compiler
+					{
+						$Create/UsePrecompiledHeader	"Not Using Precompiled Headers"
+					}
+				}
+			}
 		}
 		
 		$Folder "Database"
@@ -249,7 +261,11 @@ $Project
 			$File "$SRCDIR\game\shared\bb2\weapon_melee_chargeable.h"	
 			$File "$SRCDIR\game\shared\bb2\weapon_base_shotgun.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_base_shotgun.h"
-			$File "$SRCDIR\game\shared\bb2\weapon_benelli_m4.cpp"			
+			$File "$SRCDIR\game\shared\bb2\weapon_benelli_m4.cpp"
+			$File "$SRCDIR\game\shared\bb2\weapon_glock17_akimbo.cpp"
+			$File "$SRCDIR\game\shared\bb2\weapon_beretta_akimbo.cpp"
+			$File "$SRCDIR\game\shared\bb2\weapon_rex_akimbo.cpp"
+			$File "$SRCDIR\game\shared\bb2\weapon_mp5.cpp"
 		}
 	}
 	

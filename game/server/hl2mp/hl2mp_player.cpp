@@ -38,6 +38,7 @@
 #include "BaseKeyPadEntity.h"
 #include "items.h"
 #include "te_player_gib.h"
+#include "random_extended.h"
 
 #include "tier0/memdbgon.h"
 
@@ -1131,27 +1132,26 @@ void CHL2MP_Player::FireBullets(const FireBulletsInfo_t &info)
 	}
 
 	int iSkillFlags = 0;
+	double perc = 0.0;
 
 	if (GetSkillValue(PLAYER_SKILL_HUMAN_BLAZING_AMMO) > 0)
 	{
-		int iPercChance = (int)GetSkillValue(PLAYER_SKILL_HUMAN_BLAZING_AMMO, TEAM_HUMANS);
-		if (random->RandomInt(0, 100) <= iPercChance)
-		{
+		perc = (GetSkillValue(PLAYER_SKILL_HUMAN_BLAZING_AMMO, TEAM_HUMANS) / PERCENT_BASE);
+		if (TryTheLuck(perc))
 			iSkillFlags |= SKILL_FLAG_BLAZINGAMMO;
-		}
 	}
 
 	if (GetSkillValue(PLAYER_SKILL_HUMAN_COLDSNAP) > 0)
 	{
-		int iPercChance = (int)GetSkillValue(PLAYER_SKILL_HUMAN_COLDSNAP, TEAM_HUMANS);
-		if (random->RandomInt(0, 100) <= iPercChance)
+		perc = (GetSkillValue(PLAYER_SKILL_HUMAN_COLDSNAP, TEAM_HUMANS) / PERCENT_BASE);
+		if (TryTheLuck(perc))
 			iSkillFlags |= SKILL_FLAG_COLDSNAP;
 	}
 
 	if (GetSkillValue(PLAYER_SKILL_HUMAN_EMPOWERED_BULLETS) > 0)
 	{
-		int iPercChance = (int)GetSkillValue(PLAYER_SKILL_HUMAN_EMPOWERED_BULLETS, TEAM_HUMANS);
-		if (random->RandomInt(0, 100) <= iPercChance)
+		perc = (GetSkillValue(PLAYER_SKILL_HUMAN_EMPOWERED_BULLETS, TEAM_HUMANS) / PERCENT_BASE);
+		if (TryTheLuck(perc))
 			iSkillFlags |= SKILL_FLAG_EMPOWERED_BULLETS;
 	}
 
@@ -1442,6 +1442,8 @@ bool CHL2MP_Player::PerformLevelUp(int iXP)
 	return false;
 }
 
+#define PERCENT_TO_TAUNT 0.24 // X%
+
 bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 {
 	// Don't give XP to people who've not spawned!
@@ -1452,7 +1454,7 @@ bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 	{
 		if ((pVictim != NULL) && IsAlive() && (iXP > 1))
 		{
-			if (random->RandomInt(0, 8) == 4)
+			if (TryTheLuck(PERCENT_TO_TAUNT))
 				HL2MPRules()->EmitSoundToClient(this, "Taunt", BB2_SoundTypes::TYPE_PLAYER, GetSoundsetGender());
 		}
 
@@ -1478,14 +1480,15 @@ bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 	// Enable Perks: (% chance stuff)
 	if ((pVictim != NULL) && IsAlive() && (iXP > 1))
 	{
-		if (random->RandomInt(0, 8) == 4)
+		if (TryTheLuck(PERCENT_TO_TAUNT))
 			HL2MPRules()->EmitSoundToClient(this, "Taunt", BB2_SoundTypes::TYPE_PLAYER, GetSoundsetGender());
 
-		int iPercentChance = 0;
+		double perc = 0.0;
+
 		if (GetSkillValue(PLAYER_SKILL_HUMAN_LIFE_LEECH) > 0)
 		{
-			iPercentChance = (int)GetSkillValue(PLAYER_SKILL_HUMAN_LIFE_LEECH, TEAM_HUMANS);
-			if (random->RandomInt(0, 100) <= iPercentChance)
+			perc = (GetSkillValue(PLAYER_SKILL_HUMAN_LIFE_LEECH, TEAM_HUMANS) / PERCENT_BASE);
+			if (TryTheLuck(perc))
 			{
 				float m_flEnemyHealth = pVictim->GetMaxHealth();
 				float m_flHealthToTake = ((m_flEnemyHealth / 100.0f) * (GetSkillValue(PLAYER_SKILL_HUMAN_LIFE_LEECH, TEAM_HUMANS)));
@@ -1496,8 +1499,8 @@ bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 
 		if (GetSkillValue(PLAYER_SKILL_HUMAN_MAGAZINE_REFILL) > 0)
 		{
-			iPercentChance = (int)GetSkillValue(PLAYER_SKILL_HUMAN_MAGAZINE_REFILL, TEAM_HUMANS);
-			if (random->RandomInt(0, 100) <= iPercentChance)
+			perc = (GetSkillValue(PLAYER_SKILL_HUMAN_MAGAZINE_REFILL, TEAM_HUMANS) / PERCENT_BASE);
+			if (TryTheLuck(perc))
 			{
 				CBaseCombatWeapon *pMyWeapon = GetActiveWeapon();
 				if (pMyWeapon)

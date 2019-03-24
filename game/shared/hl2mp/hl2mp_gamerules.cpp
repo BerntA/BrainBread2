@@ -12,6 +12,7 @@
 #include <KeyValues.h>
 #include "ammodef.h"
 #include "GameBase_Shared.h"
+#include "random_extended.h"
 
 #ifdef BB2_AI
 #include "hl2_shareddefs.h"
@@ -850,7 +851,7 @@ void CHL2MPRules::EmitSoundToClient(CBaseEntity *pAnnouncer, const char *szOrigi
 				return;
 
 			// Prevent spamming.
-			if ((random->RandomInt(0, 4) == 2) && (!strcmp(szOriginalSound, "Pain") || !strcmp(szOriginalSound, "Taunt")))
+			if (TryTheLuck(0.35) && (!strcmp(szOriginalSound, "Pain") || !strcmp(szOriginalSound, "Taunt")))
 				return;
 
 			pAnnouncer->MyNPCPointer()->SetSoundPenaltyTime(4.0f);

@@ -15,6 +15,7 @@
 #include "hl2mp_player.h"
 #include "GameBase_Server.h"
 #include "collisionutils.h"
+#include "random_extended.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -50,9 +51,9 @@ bool IsAllowedToSpawn(CBaseEntity *pEntity, float distance, float zDiff, bool bC
 			(pEntity->GetLocalOrigin() + pEntity->CollisionProp()->OBBMins()),
 			(pEntity->GetLocalOrigin() + pEntity->CollisionProp()->OBBMaxs()),
 			(pClient->GetLocalOrigin() + pClient->WorldAlignMins()),
-			(pClient->GetLocalOrigin() + pClient->WorldAlignMaxs())) || 
+			(pClient->GetLocalOrigin() + pClient->WorldAlignMaxs())) ||
 			IsPointInBox(
-			pClient->GetLocalOrigin(), 
+			pClient->GetLocalOrigin(),
 			(pEntity->GetLocalOrigin() + pEntity->CollisionProp()->OBBMins()),
 			(pEntity->GetLocalOrigin() + pEntity->CollisionProp()->OBBMaxs()))
 			))
@@ -61,8 +62,8 @@ bool IsAllowedToSpawn(CBaseEntity *pEntity, float distance, float zDiff, bool bC
 		}
 
 		float diff = abs((pEntity->GetLocalOrigin() - pClient->GetLocalOrigin()).z);
-		if ((zDiff > 0.0f) && (diff > zDiff))		
-			continue;		
+		if ((zDiff > 0.0f) && (diff > zDiff))
+			continue;
 
 		if (bCheckVisible && !pEntity->FVisible(pClient, MASK_BLOCKLOS))
 			continue;
@@ -283,8 +284,8 @@ const char *CZombieVolume::GetZombieClassnameToSpawn()
 		return "npc_runner";
 	case ZOMBIE_TYPE_RANDOM:
 	{
-		float percent = random->RandomFloat(0, 100);
-		if (m_flRandomSpawnPercent >= percent && !GameBaseServer()->IsClassicMode())
+		double percent = (m_flRandomSpawnPercent / PERCENT_BASE);
+		if (TryTheLuck(percent) && !GameBaseServer()->IsClassicMode())
 			return (pszTypes[random->RandomInt(0, (_ARRAYSIZE(pszTypes) - 1))]);
 
 		return "npc_walker";
