@@ -1442,7 +1442,7 @@ bool CHL2MP_Player::PerformLevelUp(int iXP)
 	return false;
 }
 
-#define PERCENT_TO_TAUNT 0.24 // X%
+#define PERCENT_TO_TAUNT 0.35 // X%
 
 bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 {
