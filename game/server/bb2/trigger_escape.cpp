@@ -66,7 +66,7 @@ void CTriggerEscape::Touch( CBaseEntity *pOther )
 	GameBaseShared()->RemoveInventoryItem(pClient->entindex(), pClient->GetAbsOrigin());
 	pClient->ChangeTeam(TEAM_SPECTATOR); // Drop us into the spec team = escape team.
 	m_OnAddedPlayer.FireOutput(this, this);
-	GameBaseServer()->SendToolTip("#TOOLTIP_ESCAPE_SUCCESS", 0, pClient->entindex());
+	GameBaseServer()->SendToolTip("#TOOLTIP_ESCAPE_SUCCESS", GAME_TIP_DEFAULT, pClient->entindex());
 
 	BaseClass::Touch(pOther);
 }

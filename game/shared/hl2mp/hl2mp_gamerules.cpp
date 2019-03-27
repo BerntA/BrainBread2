@@ -295,6 +295,8 @@ char *sTeamNames[] =
 CHL2MPRules::CHL2MPRules()
 {
 #ifndef CLIENT_DLL
+	m_uDisconnectedClients.Purge();
+
 	// Create the team managers
 	for ( int i = 0; i < ARRAYSIZE( sTeamNames ); i++ )
 	{
@@ -616,7 +618,7 @@ int CHL2MPRules::GetRewardFromRoundWin(CHL2MP_Player *pPlayer, int winnerTeam, b
 		{
 			char pchArg1[16];
 			Q_snprintf(pchArg1, 16, "%i", iXPToGive);
-			GameBaseServer()->SendToolTip("#TOOLTIP_XP_REWARD", 0, pPlayer->entindex(), pchArg1);
+			GameBaseServer()->SendToolTip("#TOOLTIP_XP_REWARD", GAME_TIP_DEFAULT, pPlayer->entindex(), pchArg1);
 		}
 	}
 
@@ -676,16 +678,13 @@ void CHL2MPRules::NewRoundInit(int iPlayersInGame)
 	if (GameBaseServer()->IsTutorialModeEnabled() || GameBaseServer()->IsStoryMode())
 		flCountdownTime = 1.0f;
 
-	bool bCountdownStarted = (m_flRoundStartTime > 0);
+	bool bCountdownStarted = (m_flRoundStartTime > 0.0f);
 
-	if (!m_bRoundStarted)
+	if (!m_bRoundStarted && !bCountdownStarted)
 	{
-		if (!bCountdownStarted)
-		{
-			m_flRoundStartTime = gpGlobals->curtime + flCountdownTime;
-			RestartGame();
-			return;
-		}
+		m_flRoundStartTime = gpGlobals->curtime + flCountdownTime;
+		RestartGame();
+		return;
 	}
 
 	// Countdown started:
@@ -699,14 +698,14 @@ void CHL2MPRules::NewRoundInit(int iPlayersInGame)
 			if (m_bRoundStarted)
 				return;
 
-			m_flRoundStartTime = 0;
+			m_flRoundStartTime = 0.0f;
 			m_bRoundStarted = true;
 			m_flTimeRoundStarted = gpGlobals->curtime;
 
 			if (GetCurrentGamemode() == MODE_ARENA)
 			{
 				m_iNumReinforcements = IsGamemodeFlagActive(GM_FLAG_ARENA_HARDMODE) ? 0 : bb2_arena_reinforcement_count.GetInt();
-				m_flRespawnTime = IsGamemodeFlagActive(GM_FLAG_ARENA_HARDMODE) ? 0.0f : (gpGlobals->curtime + bb2_arena_respawn_time.GetFloat());
+				m_flRespawnTime = (gpGlobals->curtime + bb2_arena_respawn_time.GetFloat());
 			}
 
 			// Fire out an event!
@@ -745,23 +744,11 @@ void CHL2MPRules::NewRoundInit(int iPlayersInGame)
 		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
 			CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-			if (!pPlayer)
+			if (!pPlayer || pPlayer->IsObserver() || !pPlayer->IsAlive() || (pPlayer->GetTeamNumber() < TEAM_HUMANS))
 				continue;
 
-			if (pPlayer->IsObserver() || !pPlayer->IsAlive() || (pPlayer->GetTeamNumber() < TEAM_HUMANS))
-				continue;
-
-			if (!m_bRoundStarted)
-			{
-				if (pPlayer->GetGroundEntity())
-				{
-					if (ShouldHideHUDDuringRoundWait())
-					{
-						if (!(pPlayer->GetFlags() & FL_FROZEN) || !(pPlayer->GetFlags() & FL_GODMODE))
-							pPlayer->AddFlag(FL_FROZEN | FL_GODMODE);
-					}
-				}
-			}
+			if (!m_bRoundStarted && pPlayer->GetGroundEntity() && ShouldHideHUDDuringRoundWait() && (!(pPlayer->GetFlags() & FL_FROZEN) || !(pPlayer->GetFlags() & FL_GODMODE)))
+				pPlayer->AddFlag(FL_FROZEN | FL_GODMODE);
 		}
 	}
 }
@@ -964,7 +951,7 @@ void CHL2MPRules::GameModeSharedThink(void)
 		// In Arena there has to be one who's alive.
 		if ((GetCurrentGamemode() == MODE_OBJECTIVE) && (humansInGame <= 0) && (escapedPlayers > 0))
 			GoToIntermission();
-		else if (((GetCurrentGamemode() == MODE_ELIMINATION) || !IsTeamplay()) && clientsInGame > 0)
+		else if (((GetCurrentGamemode() == MODE_ELIMINATION) || !IsTeamplay()) && (clientsInGame > 0))
 		{
 			if (IsTeamplay())
 			{
@@ -1045,10 +1032,7 @@ void CHL2MPRules::GameModeSharedThink(void)
 			for (int i = 1; i <= gpGlobals->maxClients; i++)
 			{
 				CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-				if (!pPlayer)
-					continue;
-
-				if (pPlayer->IsBot() || !pPlayer->HasLoadedStats())
+				if (!pPlayer || pPlayer->IsBot() || !pPlayer->HasLoadedStats())
 					continue;
 
 				if ((pPlayer->GetRespawnTime() < gpGlobals->curtime) && (pPlayer->GetRespawnTime() > 0.0f))
@@ -1096,31 +1080,23 @@ void CHL2MPRules::GameModeSharedThink(void)
 		// Respawn waiting reinforcements.
 		if (GetCurrentGamemode() == MODE_ARENA)
 		{
-			if (GetReinforcementRespawnTime() <= 0)
+			if ((GetReinforcementRespawnTime() <= 0.0f) && (m_iNumReinforcements > 0))
 			{
-				if (m_iNumReinforcements > 0)
+				for (int i = 1; i <= gpGlobals->maxClients; i++)
 				{
-					for (int i = 1; i <= gpGlobals->maxClients; i++)
+					if (m_iNumReinforcements <= 0)
+						break;
+
+					CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+					if (!pPlayer || !pPlayer->HasLoadedStats())
+						continue;
+
+					// Everyone will become a human on game restart.
+					if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR)
 					{
-						if (m_iNumReinforcements <= 0)
-							break;
-
-						CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-						if (!pPlayer)
-							continue;
-
-						if (!pPlayer->HasLoadedStats())
-							continue;
-
-						// Everyone will become a human on game restart.
-						if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR)
-						{
-							pPlayer->HandleCommand_JoinTeam(TEAM_HUMANS, true);
-							pPlayer->ForceRespawn();
-
-							if (m_iNumReinforcements > 0)
-								m_iNumReinforcements--;
-						}
+						pPlayer->HandleCommand_JoinTeam(TEAM_HUMANS, true);
+						pPlayer->ForceRespawn();
+						m_iNumReinforcements--;
 					}
 				}
 			}
@@ -1241,9 +1217,9 @@ void CHL2MPRules::VoteSystemThink(void)
 			}
 
 			if (bVoteStatus)
-				GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_SUCCESS", 1);
+				GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_SUCCESS", GAME_TIP_WARNING);
 			else
-				GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_FAILURE", 1);
+				GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_FAILURE", GAME_TIP_WARNING);
 		
 			DispatchVoteEvent(0, 0, true);
 			ResetVote();
@@ -1272,7 +1248,7 @@ bool CHL2MPRules::CanCreateVote(CBasePlayer *pVoter)
 
 	if (m_iCurrentVoteType)
 	{
-		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_DENY_ACTIVE", 1, pVoter->entindex());
+		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_DENY_ACTIVE", GAME_TIP_WARNING, pVoter->entindex());
 		return false;
 	}
 
@@ -1284,7 +1260,7 @@ bool CHL2MPRules::CanCreateVote(CBasePlayer *pVoter)
 	{
 		char pchTime[32];
 		Q_snprintf(pchTime, 32, "%i", (int)timePassed);
-		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_DENY_WAIT", 1, pVoter->entindex(), pchTime);
+		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_DENY_WAIT", GAME_TIP_WARNING, pVoter->entindex(), pchTime);
 		return false;
 	}
 
@@ -1295,7 +1271,7 @@ bool CHL2MPRules::CanCreateVote(CBasePlayer *pVoter)
 		{
 			char pchLevel[32];
 			Q_snprintf(pchLevel, 32, "%i", bb2_vote_required_level.GetInt());
-			GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_DENY_LEVEL", 1, pVoter->entindex(), pchLevel);
+			GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_DENY_LEVEL", GAME_TIP_WARNING, pVoter->entindex(), pchLevel);
 			return false;
 		}
 	}
@@ -1318,26 +1294,26 @@ void CHL2MPRules::CreateBanKickVote(CBasePlayer *pVoter, CBasePlayer *pTarget, b
 
 	if (bb2_vote_disable_ban.GetBool() && bBan)
 	{
-		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_BAN_DISABLED", 1, pVoter->entindex());
+		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_BAN_DISABLED", GAME_TIP_WARNING, pVoter->entindex());
 		return;
 	}
 
 	if (bb2_vote_disable_kick.GetBool() && !bBan)
 	{
-		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_KICK_DISABLED", 1, pVoter->entindex());
+		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_KICK_DISABLED", GAME_TIP_WARNING, pVoter->entindex());
 		return;
 	}
 
 	if (!m_bRoundStarted)
 	{
-		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_WAIT_GAME", 1, pVoter->entindex());
+		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_WAIT_GAME", GAME_TIP_WARNING, pVoter->entindex());
 		return;
 	}
 
 	CHL2MP_Player *pTargetClient = ToHL2MPPlayer(pTarget);
 	if (pTargetClient && pTargetClient->IsAdminOnServer())
 	{
-		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_KICKBAN_ADMIN", 1, pVoter->entindex());
+		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_KICKBAN_ADMIN", GAME_TIP_WARNING, pVoter->entindex());
 		return;
 	}
 
@@ -1365,13 +1341,13 @@ void CHL2MPRules::CreateMapVote(CBasePlayer *pVoter, const char *map)
 
 	if (bb2_vote_disable_map.GetBool())
 	{
-		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_MAP_DISABLED", 1, pVoter->entindex());
+		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_MAP_DISABLED", GAME_TIP_WARNING, pVoter->entindex());
 		return;
 	}
 
 	if (!m_bRoundStarted)
 	{
-		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_WAIT_GAME", 1, pVoter->entindex());
+		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_WAIT_GAME", GAME_TIP_WARNING, pVoter->entindex());
 		return;
 	}
 
@@ -1379,14 +1355,14 @@ void CHL2MPRules::CreateMapVote(CBasePlayer *pVoter, const char *map)
 	Q_snprintf(pszMapPath, 80, "maps/%s.bsp", map);
 	if (!filesystem->FileExists(pszMapPath, "MOD"))
 	{
-		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_MAP_ERROR", 1, pVoter->entindex());
+		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_MAP_ERROR", GAME_TIP_WARNING, pVoter->entindex());
 		return;
 	}
 
 	bool bFound = IsMapInMapCycle(map);
 	if (!bFound)
 	{
-		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_MAP_ERROR_CYCLE", 1, pVoter->entindex());
+		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_MAP_ERROR_CYCLE", GAME_TIP_WARNING, pVoter->entindex());
 		return;
 	}
 
@@ -1986,34 +1962,34 @@ bool CHL2MPRules::ShouldDrawHeadLabels()
 //-----------------------------------------------------------------------------
 // Purpose: Player has just left the game
 //-----------------------------------------------------------------------------
-void CHL2MPRules::ClientDisconnected( edict_t *pClient )
+void CHL2MPRules::ClientDisconnected(edict_t *pClient)
 {
 #ifndef CLIENT_DLL
 
-	CBasePlayer *pPlayer = (CBasePlayer *)CBaseEntity::Instance( pClient );
-	if ( pPlayer )
+	CHL2MP_Player *pPlayer = (CHL2MP_Player *)CBaseEntity::Instance(pClient);
+	if (pPlayer)
 	{
-		CHL2MP_Player *pBaseHL2MP = (CHL2MP_Player *)CBaseEntity::Instance( pClient );
-		if (pBaseHL2MP)
-		{
-			GameAnnouncer->RemoveItemsForPlayer(pBaseHL2MP->entindex());
+		if (pPlayer->m_ullCachedSteamID)
+			m_uDisconnectedClients.AddToTail(pPlayer->m_ullCachedSteamID);
 
-			if (pBaseHL2MP->GetTeamNumber() == TEAM_HUMANS)
-				pBaseHL2MP->DropAllWeapons();
+		GameAnnouncer->RemoveItemsForPlayer(pPlayer->entindex());
 
-			pBaseHL2MP->RemovePowerups();
-			if (engine->IsDedicatedServer())
-				pBaseHL2MP->HandleLocalProfile(true);
-			GameBaseShared()->GetAchievementManager()->SaveGlobalStats(pBaseHL2MP);
-			GameBaseShared()->RemoveInventoryItem(pBaseHL2MP->entindex(), pBaseHL2MP->GetAbsOrigin());
-		}
+		if (pPlayer->GetTeamNumber() == TEAM_HUMANS)
+			pPlayer->DropAllWeapons();
+
+		pPlayer->RemovePowerups();
+		if (engine->IsDedicatedServer())
+			pPlayer->HandleLocalProfile(true);
+
+		GameBaseShared()->GetAchievementManager()->SaveGlobalStats(pPlayer);
+		GameBaseShared()->RemoveInventoryItem(pPlayer->entindex(), pPlayer->GetAbsOrigin());
 
 		// Remove the player from his team
-		if ( pPlayer->GetTeam() )
-			pPlayer->GetTeam()->RemovePlayer( pPlayer );
+		if (pPlayer->GetTeam())
+			pPlayer->GetTeam()->RemovePlayer(pPlayer);
 	}
 
-	BaseClass::ClientDisconnected( pClient );
+	BaseClass::ClientDisconnected(pClient);
 
 #endif
 }
@@ -2445,6 +2421,7 @@ ConCommand cc_BotH("bot_add_human", Bot_h, "Add a human bot.", FCVAR_CHEAT);
 void CHL2MPRules::RestartGame()
 {
 	g_bFirstTimeSpawnedNPC = false;
+	m_uDisconnectedClients.Purge();
 
 	CleanUpMap();
 
@@ -2452,10 +2429,7 @@ void CHL2MPRules::RestartGame()
 	for (int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CHL2MP_Player *pPlayer = ToHL2MPPlayer( UTIL_PlayerByIndex( i ) );
-		if ( !pPlayer )
-			continue;
-
-		if (!pPlayer->HasLoadedStats())
+		if (!pPlayer || !pPlayer->HasLoadedStats())
 			continue;
 
 		pPlayer->RemoveAllItems();
@@ -2471,7 +2445,7 @@ void CHL2MPRules::RestartGame()
 			pPlayer->HandleCommand_JoinTeam(iTeam, true);
 
 			if (iWantedTeam != iTeam)
-				GameBaseServer()->SendToolTip("#TOOLTIP_TEAM_SWAPPED", 0, pPlayer->entindex());
+				GameBaseServer()->SendToolTip("#TOOLTIP_TEAM_SWAPPED", GAME_TIP_DEFAULT, pPlayer->entindex());
 		}
 
 		pPlayer->Reset();

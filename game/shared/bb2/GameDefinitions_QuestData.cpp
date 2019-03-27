@@ -130,7 +130,7 @@ bool CGameDefinitionsQuestData::IsAnyQuestActive(void)
 
 CQuestItem *CGameDefinitionsQuestData::GetQuestDataForIndex(const char *ID)
 {
-	if (ID)
+	if (ID && ID[0])
 	{
 		for (int i = 0; i < m_pQuestData.Count(); i++)
 		{
@@ -172,7 +172,7 @@ void CGameDefinitionsQuestData::FireGameEvent(IGameEvent *event)
 	else if (!strcmp(type, "quest_progress"))
 	{
 		const char *questName = event->GetString("name");
-		int id = event->GetInt("id");
+		int id = clamp(event->GetInt("id"), 0, (MAX_QUEST_OBJECTIVES - 1));
 		int iKillsCurrent = event->GetInt("kills_current");
 		bool bUpdateCounter = event->GetBool("entity_count");
 
@@ -189,7 +189,6 @@ void CGameDefinitionsQuestData::FireGameEvent(IGameEvent *event)
 			else
 			{
 				questData->pObjectives[id].m_bObjectiveCompleted = true;
-
 				// Refresh GUI here... ?
 			}
 		}

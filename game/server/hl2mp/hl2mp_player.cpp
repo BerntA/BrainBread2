@@ -359,6 +359,8 @@ void CHL2MP_Player::HandleFirstTimeConnection(bool bForceDefault)
 
 void CHL2MP_Player::OnLateStatsLoadEnterGame(void)
 {
+	m_ullCachedSteamID = (m_ullCachedSteamID > 0) ? m_ullCachedSteamID : ((unsigned long long)GetSteamIDAsUInt64());
+
 	if (!GameBaseServer()->IsTutorialModeEnabled())
 	{
 		if (HL2MPRules()->GetCurrentGamemode() == MODE_ARENA)
@@ -368,7 +370,8 @@ void CHL2MP_Player::OnLateStatsLoadEnterGame(void)
 		}
 		else if (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE)
 		{
-			if (bb2_allow_latejoin.GetBool() || GameBaseServer()->IsStoryMode() || !HL2MPRules()->m_bRoundStarted)
+			bool bAllowedToJoinLate = (bb2_allow_latejoin.GetBool() && !HL2MPRules()->DidClientDisconnectRecently(m_ullCachedSteamID));
+			if (bAllowedToJoinLate || GameBaseServer()->IsStoryMode() || !HL2MPRules()->m_bRoundStarted)
 			{
 				m_bWantsToDeployAsHuman = true;
 				HandleCommand_JoinTeam(TEAM_HUMANS);
@@ -1264,7 +1267,7 @@ bool CHL2MP_Player::BumpWeapon(CBaseCombatWeapon *pWeapon)
 	{
 		char pchArg1[16];
 		Q_snprintf(pchArg1, 16, "%i", pWeapon->GetWpnData().m_iLevelReq);
-		GameBaseServer()->SendToolTip("#TOOLTIP_WEAPON_DENY_LEVEL", 0, entindex(), pchArg1);
+		GameBaseServer()->SendToolTip("#TOOLTIP_WEAPON_DENY_LEVEL", GAME_TIP_DEFAULT, entindex(), pchArg1);
 		return false;
 	}
 
@@ -1296,7 +1299,7 @@ bool CHL2MP_Player::BumpWeapon(CBaseCombatWeapon *pWeapon)
 
 			char pchArg1[16];
 			Q_snprintf(pchArg1, 16, "%d:%02d", (timeLeft / 60), (timeLeft % 60));
-			GameBaseServer()->SendToolTip("#TOOLTIP_WEAPON_DENY_WAIT", 0, entindex(), pchArg1);
+			GameBaseServer()->SendToolTip("#TOOLTIP_WEAPON_DENY_WAIT", GAME_TIP_DEFAULT, entindex(), pchArg1);
 			return false;
 		}
 	}
@@ -1352,7 +1355,7 @@ bool CHL2MP_Player::GiveItem(const char *szItemName, bool bDoLevelCheck)
 			{
 				char pchArg1[16];
 				Q_snprintf(pchArg1, 16, "%i", levelRequired);
-				GameBaseServer()->SendToolTip("#TOOLTIP_WEAPON_DENY_LEVEL", 0, entindex(), pchArg1);
+				GameBaseServer()->SendToolTip("#TOOLTIP_WEAPON_DENY_LEVEL", GAME_TIP_DEFAULT, entindex(), pchArg1);
 				return false;
 			}
 		}
@@ -1414,7 +1417,7 @@ bool CHL2MP_Player::PerformLevelUp(int iXP)
 			// Congrats!
 			char pchArg1[16];
 			Q_snprintf(pchArg1, 16, "%i", m_BB2Local.m_iSkill_Talents);
-			GameBaseServer()->SendToolTip("#TOOLTIP_LEVELUP2", 0, this->entindex(), pchArg1);
+			GameBaseServer()->SendToolTip("#TOOLTIP_LEVELUP2", GAME_TIP_DEFAULT, this->entindex(), pchArg1);
 		}
 
 		// Add Level.
@@ -1427,7 +1430,7 @@ bool CHL2MP_Player::PerformLevelUp(int iXP)
 			// Friendly messages:
 			char pchArg1[16];
 			Q_snprintf(pchArg1, 16, "%i", m_iSkill_Level);
-			GameBaseServer()->SendToolTip("#TOOLTIP_LEVELUP1", 0, this->entindex(), pchArg1);
+			GameBaseServer()->SendToolTip("#TOOLTIP_LEVELUP1", GAME_TIP_DEFAULT, this->entindex(), pchArg1);
 			IPredictionSystem::SuppressHostEvents(NULL);
 			DispatchParticleEffect("bb2_levelup_effect", PATTACH_ROOTBONE_FOLLOW, this, -1, true);
 		}
@@ -1993,7 +1996,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 		int iTeam = (atoi(args[1]) == 1) ? TEAM_DECEASED : TEAM_HUMANS;
 		if (iTeam == m_iSelectedTeam) // You're already on this team...
 		{
-			GameBaseServer()->SendToolTip("#TOOLTIP_TEAM_CHANGE_FAIL1", 0, entindex());
+			GameBaseServer()->SendToolTip("#TOOLTIP_TEAM_CHANGE_FAIL1", GAME_TIP_DEFAULT, entindex());
 			ShowViewPortPanel("team", false);
 			return true;
 		}
@@ -2004,7 +2007,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 
 			char pszTimer[16];
 			Q_snprintf(pszTimer, 16, "%i", (int)flTimeToWait);
-			GameBaseServer()->SendToolTip("#TOOLTIP_TEAM_CHANGE_FAIL2", 0, entindex(), pszTimer);
+			GameBaseServer()->SendToolTip("#TOOLTIP_TEAM_CHANGE_FAIL2", GAME_TIP_DEFAULT, entindex(), pszTimer);
 			ShowViewPortPanel("team", false);
 			return true;
 		}
@@ -2012,7 +2015,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 		int teamOverride = HL2MPRules()->GetNewTeam(iTeam);
 		if (teamOverride != iTeam)
 		{
-			GameBaseServer()->SendToolTip("#TOOLTIP_TEAM_CHANGE_FAIL3", 0, entindex());
+			GameBaseServer()->SendToolTip("#TOOLTIP_TEAM_CHANGE_FAIL3", GAME_TIP_DEFAULT, entindex());
 			if (m_iSelectedTeam != TEAM_UNASSIGNED)
 				ShowViewPortPanel("team", false);
 
@@ -2476,7 +2479,7 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 
 					char pchArg1[16];
 					Q_snprintf(pchArg1, 16, "%i", ((int)flCreditsToLose));
-					GameBaseServer()->SendToolTip("#TOOLTIP_ZOMBIE_DEATH", 0, this->entindex(), pchArg1);
+					GameBaseServer()->SendToolTip("#TOOLTIP_ZOMBIE_DEATH", GAME_TIP_DEFAULT, this->entindex(), pchArg1);
 				}
 
 				if (pAttacker != this)
@@ -3250,7 +3253,7 @@ void CHL2MP_Player::SetZombie()
 		RefreshSpeed();
 
 		if ((m_BB2Local.m_iZombieCredits >= 5) && !GameBaseServer()->IsTutorialModeEnabled() && HL2MPRules()->CanUseSkills())
-			GameBaseServer()->SendToolTip("#TOOLTIP_SPEND_TALENTS_HINT", 0, this->entindex());
+			GameBaseServer()->SendToolTip("#TOOLTIP_SPEND_TALENTS_HINT", GAME_TIP_DEFAULT, this->entindex());
 	}
 }
 
@@ -3294,7 +3297,7 @@ void CHL2MP_Player::SetHuman()
 			m_pPlayerEquipper->EquipPlayer(this);
 
 		if ((m_BB2Local.m_iSkill_Talents >= 5) && !GameBaseServer()->IsTutorialModeEnabled() && HL2MPRules()->CanUseSkills())
-			GameBaseServer()->SendToolTip("#TOOLTIP_SPEND_TALENTS_HINT", 0, this->entindex());
+			GameBaseServer()->SendToolTip("#TOOLTIP_SPEND_TALENTS_HINT", GAME_TIP_DEFAULT, this->entindex());
 
 		// Give a random low-end weapon in this mode:
 		if (HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION)
@@ -3552,7 +3555,7 @@ CON_COMMAND(classic_rejoin_zombie, "Re-join the game as a zombie!")
 		"#TOOLTIP_ESCAPE_JOIN_ZOMBIE3",
 	};
 
-	GameBaseServer()->SendToolTip(randomFun[random->RandomInt(0, (_ARRAYSIZE(randomFun) - 1))], 0, pClient->entindex());
+	GameBaseServer()->SendToolTip(randomFun[random->RandomInt(0, (_ARRAYSIZE(randomFun) - 1))], GAME_TIP_DEFAULT, pClient->entindex());
 }
 
 CON_COMMAND(classic_respawn_ashuman, "Respawn as a human if possible!")
@@ -3585,7 +3588,7 @@ CON_COMMAND(classic_respawn_ashuman, "Respawn as a human if possible!")
 		"#TOOLTIP_RESPAWN_HUMAN3",
 	};
 
-	GameBaseServer()->SendToolTip(randomFun[random->RandomInt(0, (_ARRAYSIZE(randomFun) - 1))], 0, pClient->entindex());
+	GameBaseServer()->SendToolTip(randomFun[random->RandomInt(0, (_ARRAYSIZE(randomFun) - 1))], GAME_TIP_DEFAULT, pClient->entindex());
 }
 
 CON_COMMAND(skill_tree, "Player Skill Tree")

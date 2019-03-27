@@ -94,18 +94,11 @@ END_DATADESC()
 CTriggerCapturePoint::CTriggerCapturePoint()
 {
 	m_iTeamLink = TEAM_HUMANS;
-
-	m_bIsCaptured = false;
-	m_bIsBeingCaptured = false;
-	m_bShouldHaltProgress = false;
-	m_bShouldHaltWhenEnemiesTouchUs = false;
+	m_bIsCaptured = m_bIsBeingCaptured = m_bShouldHaltProgress = m_bShouldHaltWhenEnemiesTouchUs = false;
 
 	m_flPercentRequired = 30.0f;
 	m_flTimeToCapture = 10.0f;
-	m_flCaptureTimeStart = 0.0f;
-	m_flCaptureTimeEnd = 0.0f;
-	m_flElapsedTime = 0.0f;
-	m_flTimeLeft = 0.0f;
+	m_flCaptureTimeStart = m_flCaptureTimeEnd = m_flElapsedTime = m_flTimeLeft = 0.0f;
 
 	cszMessageCapturing = cszMessageTooFewPlayers = cszMessageFailed = cszMessageProgressHalted = NULL_STRING;
 }
@@ -123,14 +116,8 @@ void CTriggerCapturePoint::Spawn()
 
 void CTriggerCapturePoint::Reset()
 {
-	m_bIsCaptured = false;
-	m_bIsBeingCaptured = false;
-	m_bShouldHaltProgress = false;
-
-	m_flCaptureTimeStart = 0.0f;
-	m_flCaptureTimeEnd = 0.0f;
-	m_flElapsedTime = 0.0f;
-	m_flTimeLeft = 0.0f;
+	m_bIsCaptured = m_bIsBeingCaptured = m_bShouldHaltProgress = false;
+	m_flCaptureTimeStart = m_flCaptureTimeEnd = m_flElapsedTime = m_flTimeLeft = 0.0f;
 }
 
 void CTriggerCapturePoint::CapturePointThink(void)
@@ -155,6 +142,9 @@ void CTriggerCapturePoint::CapturePointThink(void)
 		{
 			Reset();
 			NotifyCaptureFailed();
+
+			for (int i = 0; i < m_hTouchingEntities.Count(); i++)
+				TransmitCaptureStatus(ToBasePlayer(m_hTouchingEntities[i].Get()), false);
 		}
 
 		if (bCanProceed && m_bShouldHaltProgress && m_bIsBeingCaptured)
@@ -174,13 +164,7 @@ void CTriggerCapturePoint::CapturePointThink(void)
 			}
 
 			for (int i = 0; i < m_hTouchingEntities.Count(); i++)
-			{
-				CBasePlayer *pPlayer = ToBasePlayer(m_hTouchingEntities[i].Get());
-				if (!pPlayer)
-					continue;
-
-				TransmitCaptureStatus(pPlayer, !m_bIsCaptured);
-			}
+				TransmitCaptureStatus(ToBasePlayer(m_hTouchingEntities[i].Get()), !m_bIsCaptured);
 		}
 	}
 
@@ -192,10 +176,7 @@ bool CTriggerCapturePoint::HasToHaltProgress(CBaseEntity *pOther)
 	if (!m_bShouldHaltWhenEnemiesTouchUs)
 		return false;
 
-	if (!pOther)
-		return false;
-
-	if (!pOther->IsAlive())
+	if (!pOther || !pOther->IsAlive())
 		return false;
 
 	if ((m_iTeamLink == TEAM_HUMANS) && (pOther->IsZombie(true) || pOther->IsMercenary()))
@@ -246,7 +227,7 @@ bool CTriggerCapturePoint::IsEnoughPlayersInVolume(void)
 	if (pTeam)
 		teamSize = (float)pTeam->GetNumPlayers();
 
-	float flPercentInVolume = ((teamSizeInVolume / teamSize) * 100.0f);
+	float flPercentInVolume = floor((teamSizeInVolume / teamSize) * 100.0f);
 
 	return (flPercentInVolume >= m_flPercentRequired);
 }
@@ -268,17 +249,13 @@ void CTriggerCapturePoint::StartTouch(CBaseEntity *pOther)
 		float flRequiredPlayers = 0;
 		CTeam *pTeam = GetGlobalTeam(m_iTeamLink);
 		if (pTeam)
-			flRequiredPlayers = (((float)pTeam->GetNumPlayers()) * (m_flPercentRequired / 100.0f));
+			flRequiredPlayers = floor(((float)pTeam->GetNumPlayers()) * (m_flPercentRequired / 100.0f));
 
 		if (flRequiredPlayers > 0)
 		{
-			const char *subMsg = "player";
-			if (flRequiredPlayers > 1)
-				subMsg = "players";
-
 			char pchArg1[16];
 			Q_snprintf(pchArg1, 16, "%i", (int)flRequiredPlayers);
-			GameBaseServer()->SendToolTip(STRING(cszMessageTooFewPlayers), "", 2.0f, 3, pPlayer->entindex(), pchArg1, subMsg);
+			GameBaseServer()->SendToolTip(STRING(cszMessageTooFewPlayers), "", 2.0f, GAME_TIP_WARNING, pPlayer->entindex(), pchArg1, ((flRequiredPlayers > 1) ? "players" : "player"));
 		}
 	}
 }
@@ -290,9 +267,7 @@ void CTriggerCapturePoint::EndTouch(CBaseEntity *pOther)
 
 	BaseClass::EndTouch(pOther);
 
-	CBasePlayer *pPlayer = ToBasePlayer(pOther);
-	if (pPlayer)
-		TransmitCaptureStatus(pPlayer, false);
+	TransmitCaptureStatus(ToBasePlayer(pOther), false);
 }
 
 void CTriggerCapturePoint::HaltProgress(void)
@@ -304,10 +279,7 @@ void CTriggerCapturePoint::HaltProgress(void)
 
 void CTriggerCapturePoint::TransmitCaptureStatus(CBasePlayer *pPlayer, bool value)
 {
-	if (!pPlayer)
-		return;
-
-	if (pPlayer->GetTeamNumber() != m_iTeamLink)
+	if (!pPlayer || (pPlayer->GetTeamNumber() != m_iTeamLink))
 		return;
 
 	CSingleUserRecipientFilter filter(pPlayer);
@@ -345,12 +317,9 @@ void CTriggerCapturePoint::NotifyCaptureFailed(bool bEnemyEntered)
 	for (int i = 0; i < m_hTouchingEntities.Count(); i++)
 	{
 		CBasePlayer *pToucher = ToBasePlayer(m_hTouchingEntities[i].Get());
-		if (!pToucher)
+		if (!pToucher || (pToucher->GetTeamNumber() != m_iTeamLink))
 			continue;
 
-		if (pToucher->GetTeamNumber() != m_iTeamLink)
-			continue;
-
-		GameBaseServer()->SendToolTip(message, "", 2.0f, 3, pToucher->entindex());
+		GameBaseServer()->SendToolTip(message, "", 2.0f, GAME_TIP_WARNING, pToucher->entindex());
 	}
 }

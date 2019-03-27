@@ -13,6 +13,12 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+enum QuestInputProgressType
+{
+	QUEST_INPUT_PROGRESS_NORMAL = 0,
+	QUEST_INPUT_PROGRESS_COUNTING,
+};
+
 BEGIN_DATADESC(CLogicQuest)
 
 DEFINE_KEYFIELD(szQuestID, FIELD_STRING, "QuestName"),
@@ -34,7 +40,7 @@ DEFINE_OUTPUT(m_OnQuestProgressObjective[8], "OnProgressObjective9"),
 DEFINE_OUTPUT(m_OnQuestProgressObjective[9], "OnProgressObjective10"),
 
 DEFINE_INPUTFUNC(FIELD_VOID, "Start", InputStartQuest),
-DEFINE_INPUTFUNC(FIELD_INTEGER, "Progress", InputProgressQuest),
+DEFINE_INPUTFUNC(FIELD_COLOR32, "Progress", InputProgressQuest),
 DEFINE_INPUTFUNC(FIELD_VOID, "Fail", InputFailQuest),
 
 DEFINE_FIELD(m_iQuestStatusOverall, FIELD_INTEGER),
@@ -46,6 +52,7 @@ LINK_ENTITY_TO_CLASS(logic_quest, CLogicQuest);
 
 CLogicQuest::CLogicQuest()
 {
+	m_pQuestData = NULL;
 	szQuestID = NULL_STRING;
 
 	m_iProgressValue = 0;
@@ -58,6 +65,8 @@ CLogicQuest::CLogicQuest()
 
 CLogicQuest::~CLogicQuest()
 {
+	m_pQuestData = NULL;
+
 	// Remove our obj. icons!
 	for (int i = (pszObjectiveIcons.Count() - 1); i >= 0; i--)
 	{
@@ -87,18 +96,18 @@ void CLogicQuest::Spawn()
 		return;
 	}
 
-	CQuestItem *questItemData = GameBaseShared()->GetSharedQuestData()->GetQuestDataForIndex(STRING(szQuestID));
-	if (!questItemData)
+	m_pQuestData = GameBaseShared()->GetSharedQuestData()->GetQuestDataForIndex(STRING(szQuestID));
+	if (!m_pQuestData)
 	{
-		Warning("logic_quest '%s' Cannot find the desired quest name link!\nRemoving!\n", STRING(GetEntityName()));
+		Warning("logic_quest '%s' cannot find the desired quest name link!\nRemoving!\n", STRING(GetEntityName()));
 		UTIL_Remove(this);
 		return;
 	}
 
 	// If pin to map is on we verify that the map has the target entities. (example: info_target entities)
-	for (int i = 0; i < questItemData->m_iObjectivesCount; i++)
+	for (int i = 0; i < m_pQuestData->m_iObjectivesCount; i++)
 	{
-		const char *szLocation = questItemData->pObjectives[i].szLocationTarget;
+		const char *szLocation = m_pQuestData->pObjectives[i].szLocationTarget;
 		if (szLocation && szLocation[0])
 		{
 			CBaseEntity *pEntity = gEntList.FindEntityByName(NULL, szLocation);
@@ -114,7 +123,7 @@ void CLogicQuest::Spawn()
 
 void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, bool bFail, bool bEntityCountUpdate)
 {
-	if ((m_iQuestStatusOverall == STATUS_FAILED) || (m_iQuestStatusOverall == STATUS_SUCCESS))
+	if (m_iQuestStatusOverall >= STATUS_SUCCESS)
 		return;
 
 	if (!bProgress && !bFail && !bEntityCountUpdate && (iObjectiveToProgress < 0))
@@ -184,25 +193,17 @@ void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, 
 		return;
 	}
 
-	if (iObjectiveToProgress >= GetLinkedQuestData()->m_iObjectivesCount)
-		return;
-
-	if (iObjectiveToProgress < 0)
-		return;
-
-	if (GetLinkedQuestData()->pObjectives[iObjectiveToProgress].m_bObjectiveCompleted)
+	if ((iObjectiveToProgress >= GetLinkedQuestData()->m_iObjectivesCount) || (iObjectiveToProgress < 0) ||
+		GetLinkedQuestData()->pObjectives[iObjectiveToProgress].m_bObjectiveCompleted)
 		return;
 
 	if (!bFail && bProgress)
 	{
 		// Make sure we don't go out of 'bounds' when progressing an objective with the quest in order enabled:
-		if (GetLinkedQuestData()->bShowInOrder)
+		if (GetLinkedQuestData()->bShowInOrder && (iObjectiveToProgress > m_iProgressValue))
 		{
-			if (iObjectiveToProgress > m_iProgressValue)
-			{
-				Warning("logic_quest '%s' can't progress to objective %i because the progress is at %i!\nWhen you're using a 'specified/DoInOrder' quest you can only progress the objective from 0 to 1 then 1 to 2, etc...\n", STRING(GetEntityName()), iObjectiveToProgress, m_iProgressValue);
-				return;
-			}
+			Warning("logic_quest '%s' can't progress to objective %i because the progress is at %i!\nWhen you're using a 'specified/DoInOrder' quest you can only progress the objective from 0 to 1 then 1 to 2, etc...\n", STRING(GetEntityName()), iObjectiveToProgress, m_iProgressValue);
+			return;
 		}
 
 		IGameEvent *event = gameeventmanager->CreateEvent("quest_progress");
@@ -224,18 +225,11 @@ void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, 
 		{
 			for (int i = 0; i < pszObjectiveIcons.Count(); i++)
 			{
-				CBaseEntity *pObjIcon = pszObjectiveIcons[i].Get();
-				if (pObjIcon)
+				CObjectiveIcon *pObjIcon = dynamic_cast<CObjectiveIcon*> (pszObjectiveIcons[i].Get());
+				if (pObjIcon && (pObjIcon->GetRelatedQuestObjectiveID() == iObjectiveToProgress))
 				{
-					CObjectiveIcon *pObjCast = dynamic_cast<CObjectiveIcon*> (pObjIcon);
-					if (pObjCast)
-					{
-						if (pObjCast->GetRelatedQuestObjectiveID() == iObjectiveToProgress)
-						{
-							pObjCast->HideIcon(true);
-							break;
-						}
-					}
+					pObjIcon->HideIcon(true);
+					break;
 				}
 			}
 		}
@@ -244,13 +238,7 @@ void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, 
 		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
 			CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-			if (!pClient)
-				continue;
-
-			if (pClient->IsBot())
-				continue;
-
-			if (pClient->GetTeamNumber() != TEAM_HUMANS)
+			if (!pClient || pClient->IsBot() || (pClient->GetTeamNumber() != TEAM_HUMANS))
 				continue;
 
 			float xpToGet = ((float)pClient->m_BB2Local.m_iSkill_XPLeft) * MAX_QUEST_EXPERIENCE; // Give X % of XP needed as a reward.
@@ -266,18 +254,9 @@ void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, 
 		{
 			for (int i = 0; i < pszObjectiveIcons.Count(); i++)
 			{
-				CBaseEntity *pObjIcon = pszObjectiveIcons[i].Get();
+				CObjectiveIcon *pObjIcon = dynamic_cast<CObjectiveIcon*> (pszObjectiveIcons[i].Get());
 				if (pObjIcon)
-				{
-					CObjectiveIcon *pObjCast = dynamic_cast<CObjectiveIcon*> (pObjIcon);
-					if (pObjCast)
-					{
-						if (pObjCast->GetRelatedQuestObjectiveID() == m_iProgressValue)
-							pObjCast->HideIcon(false);
-						else
-							pObjCast->HideIcon(true);
-					}
-				}
+					pObjIcon->HideIcon(!(pObjIcon->GetRelatedQuestObjectiveID() == m_iProgressValue));
 			}
 		}
 
@@ -304,7 +283,19 @@ void CLogicQuest::InputStartQuest(inputdata_t &data)
 
 void CLogicQuest::InputProgressQuest(inputdata_t &data)
 {
-	SendQuestParameters(data.value.Int(), true);
+	// Index:
+	// r - Objective ID
+	// g - Type
+	// b - N/A
+	// a - N/A
+
+	color32 prog = data.value.Color32();
+	prog.r = clamp(prog.r, 0, (MAX_QUEST_OBJECTIVES - 1));
+
+	if (prog.g <= QUEST_INPUT_PROGRESS_NORMAL)
+		SendQuestParameters(prog.r, true);
+	else if (CheckCanProgressCountingObjective(prog.r))
+		ProgressCountingForObjective(prog.r);
 }
 
 void CLogicQuest::InputFailQuest(inputdata_t &data)
@@ -319,26 +310,44 @@ bool CLogicQuest::ShouldShowEntityCounting(void)
 
 	for (int i = 0; i < GetLinkedQuestData()->m_iObjectivesCount; i++)
 	{
-		const char *szSubString = GetLinkedQuestData()->pObjectives[i].szTargetEntityToKill;
-		if (szSubString && szSubString[0])
-		{
-			if (GetLinkedQuestData()->bShowInOrder)
-			{
-				if (m_iProgressValue != i)
-					return false;
-			}
-
-			if (!GetLinkedQuestData()->pObjectives[i].m_bObjectiveCompleted)
-				return true;
-		}
+		if (CheckCanProgressCountingObjective(i))
+			return true;
 	}
 
 	return false;
 }
 
+bool CLogicQuest::CheckCanProgressCountingObjective(int id)
+{
+	const char *szSubString = GetLinkedQuestData()->pObjectives[id].szTargetEntityToKill;
+	if (szSubString && szSubString[0])
+	{
+		if (GetLinkedQuestData()->bShowInOrder)
+		{
+			if (m_iProgressValue != id)
+				return false;
+		}
+
+		if (!GetLinkedQuestData()->pObjectives[id].m_bObjectiveCompleted)
+			return true;
+	}
+
+	return false;
+}
+
+void CLogicQuest::ProgressCountingForObjective(int id)
+{
+	GetLinkedQuestData()->pObjectives[id].m_iCurrentKills++;
+	SendQuestParameters(id, true, false, true);
+
+	if (GetLinkedQuestData()->pObjectives[id].m_iCurrentKills >= GetLinkedQuestData()->pObjectives[id].m_iKillsNeeded)
+		SendQuestParameters(id, true);
+}
+
 CQuestItem *CLogicQuest::GetLinkedQuestData(void)
 {
-	return GameBaseShared()->GetSharedQuestData()->GetQuestDataForIndex(STRING(szQuestID));
+	Assert(m_pQuestData != NULL);
+	return m_pQuestData;
 }
 
 void CLogicQuest::FireGameEvent(IGameEvent *event)
@@ -407,33 +416,21 @@ void CLogicQuest::FireGameEvent(IGameEvent *event)
 			CBaseEntity *pVictim = UTIL_EntityByIndex(event->GetInt("entindex_killed", 0));
 			CBaseEntity *pAttacker = UTIL_EntityByIndex(event->GetInt("entindex_attacker", 0));
 
-			if (!pAttacker || !pVictim)
-				return;
-
-			if ((m_iQuestStatusOverall == STATUS_FAILED) || (m_iQuestStatusOverall == STATUS_SUCCESS) || !ShouldShowEntityCounting())
+			if (!pAttacker || !pVictim || !pAttacker->IsHuman(true))
 				return;
 
 			bool bVictimIsABoss = (pVictim->IsNPC() && pVictim->MyNPCPointer() && (pVictim->MyNPCPointer()->IsBoss() || pVictim->IsHumanBoss() || pVictim->IsZombieBoss()));
 			if (!bVictimIsABoss && pAttacker->IsNPC() && !bb2_allow_npc_to_score.GetBool())
 				return;
 
-			if (!pAttacker->IsHuman(true))
+			if ((m_iQuestStatusOverall >= STATUS_SUCCESS) || !ShouldShowEntityCounting())
 				return;
 
 			for (int i = 0; i < GetLinkedQuestData()->m_iObjectivesCount; i++)
 			{
 				const char *szSubString = GetLinkedQuestData()->pObjectives[i].szTargetEntityToKill;
-				if (szSubString && szSubString[0])
-				{
-					if (FClassnameIs(pVictim, szSubString))
-					{
-						GetLinkedQuestData()->pObjectives[i].m_iCurrentKills++;
-						SendQuestParameters(i, true, false, true);
-
-						if (GetLinkedQuestData()->pObjectives[i].m_iCurrentKills >= GetLinkedQuestData()->pObjectives[i].m_iKillsNeeded)
-							SendQuestParameters(i, true);
-					}
-				}
+				if (szSubString && szSubString[0] && !GetLinkedQuestData()->pObjectives[i].m_bObjectiveCompleted && FClassnameIs(pVictim, szSubString))
+					ProgressCountingForObjective(i);
 			}
 		}
 	}

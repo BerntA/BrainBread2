@@ -37,6 +37,7 @@ public:
 
 protected:
 	CQuestItem *GetLinkedQuestData(void);
+	CQuestItem *m_pQuestData;
 
 private:
 
@@ -56,6 +57,8 @@ private:
 
 	int m_iProgressValue;
 	bool ShouldShowEntityCounting(void);
+	bool CheckCanProgressCountingObjective(int id);
+	void ProgressCountingForObjective(int id);
 
 	int m_iQuestStatusOverall;
 

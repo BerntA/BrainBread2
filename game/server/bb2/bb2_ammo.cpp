@@ -10,6 +10,7 @@
 #include "hl2mp_gamerules.h"
 #include "ammodef.h"
 #include "GameBase_Server.h"
+#include "GameBase_Shared.h"
 
 int GetAmmoCountMultiplier(int wepType)
 {
@@ -393,7 +394,7 @@ CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
 	{
 		char pchTime[16];
 		Q_snprintf(pchTime, 16, "%.1f", fabs((AMMO_DROP_WAIT_TIME - timeSinceLastDrop)));
-		GameBaseServer()->SendToolTip("#TOOLTIP_AMMO_DROP_DENY", 1, pPlayer->entindex(), pchTime);
+		GameBaseServer()->SendToolTip("#TOOLTIP_AMMO_DROP_DENY", GAME_TIP_WARNING, pPlayer->entindex(), pchTime);
 		return;
 	}
 

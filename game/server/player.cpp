@@ -1158,7 +1158,7 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 				SetAnimation(PLAYER_IDLE);
 				SetHealth(1);
 				HL2MPRules()->EmitSoundToClient(this, "Infected", BB2_SoundTypes::TYPE_PLAYER, GetSoundsetGender());
-				GameBaseServer()->SendToolTip("#TOOLTIP_INFECTION_START", "", 2.5f, 3, entindex());
+				GameBaseServer()->SendToolTip("#TOOLTIP_INFECTION_START", "", 2.5f, GAME_TIP_WARNING, entindex());
 				CheckIsPlayerStuck();
 				GameBaseShared()->RemoveInventoryItem(entindex(), GetAbsOrigin());
 				return 0;

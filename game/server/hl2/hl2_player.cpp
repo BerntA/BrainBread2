@@ -360,7 +360,7 @@ void CHL2_Player::PostThink( void )
 						{
 							char pchArg1[16];
 							Q_snprintf(pchArg1, 16, "%d:%02d", (timeLeft / 60), (timeLeft % 60));
-							GameBaseServer()->SendToolTip("#TOOLTIP_AMMOBOX_WAIT", "", 2.0f, 3, entindex(), pchArg1);
+							GameBaseServer()->SendToolTip("#TOOLTIP_AMMOBOX_WAIT", "", 2.0f, GAME_TIP_WARNING, entindex(), pchArg1);
 							return;
 						}
 

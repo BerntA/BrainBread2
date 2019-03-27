@@ -269,6 +269,8 @@ public:
 	void CleanUpMap();
 	void RestartGame();
 
+	virtual bool DidClientDisconnectRecently(uint64 id) { return (m_uDisconnectedClients.Find(id) != -1); }
+
 	virtual Vector VecItemRespawnSpot( CItem *pItem );
 	virtual QAngle VecItemRespawnAngles( CItem *pItem );
 	virtual float	FlItemRespawnTime( CItem *pItem );
@@ -305,7 +307,7 @@ public:
 
 	virtual void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );	
 	virtual bool IsTeamplay(void);
-	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );
+	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );	
 	
 private:
 
@@ -321,6 +323,7 @@ private:
 	CNetworkVar(int, m_iNumReinforcements);
 
 #ifndef CLIENT_DLL
+	CUtlVector<uint64> m_uDisconnectedClients;
 	CUtlVector<EHANDLE> m_hBreakableDoors;
 	float m_flRoundStartTime;
 	float m_flScoreBoardTime;

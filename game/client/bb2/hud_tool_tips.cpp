@@ -9,6 +9,7 @@
 #include "hudelement.h"
 #include "hud_macros.h" 
 #include "c_hl2mp_player.h"
+#include "GameBase_Shared.h"
 #include "iclientmode.h" 
 #include <vgui/ISurface.h>
 #include <vgui_controls/Panel.h>
@@ -200,7 +201,7 @@ void CHudToolTips::MsgFunc_ToolTip(bf_read &msg)
 
 	int type = msg.ReadShort();
 	const char *szIcon = "tip_default"; // Info Icon
-	if (type == 1)
+	if (type == GAME_TIP_WARNING)
 		szIcon = "tip_warning";
 
 	char message[128];

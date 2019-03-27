@@ -161,7 +161,7 @@ void CTriggerChangelevel::StartTouch(CBaseEntity *pOther)
 
 			char pchArg1[16];
 			Q_snprintf(pchArg1, 16, "%i", (int)flRequiredPlayers);
-			GameBaseServer()->SendToolTip("#TOOLTIP_CHANGELEVEL_FAIL", "", 3.0f, 3, pPlayer->entindex(), pchArg1, subMsg);
+			GameBaseServer()->SendToolTip("#TOOLTIP_CHANGELEVEL_FAIL", "", 3.0f, GAME_TIP_WARNING, pPlayer->entindex(), pchArg1, subMsg);
 		}
 	}
 }

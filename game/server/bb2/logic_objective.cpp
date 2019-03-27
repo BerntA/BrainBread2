@@ -40,6 +40,7 @@ DEFINE_KEYFIELD(m_flMinTime, FIELD_FLOAT, "MinTime"),
 DEFINE_INPUTFUNC(FIELD_VOID, "Start", InputStart),
 DEFINE_INPUTFUNC(FIELD_VOID, "End", InputEnd),
 DEFINE_INPUTFUNC(FIELD_VOID, "Fail", InputFail),
+DEFINE_INPUTFUNC(FIELD_VOID, "Progress", InputProgress),
 // Outputs
 DEFINE_OUTPUT(m_OnStart, "OnStart"),
 DEFINE_OUTPUT(m_OnEnd, "OnEnd"),
@@ -226,7 +227,7 @@ void CLogicObjective::SendObjectiveParameters(int iStatus, bool bEntCountUpdate,
 		{
 			CBaseEntity *pObjIcon = pszObjectiveIcon.Get();
 			if (pObjIcon)
-				UTIL_Remove(pObjIcon);				
+				UTIL_Remove(pObjIcon);
 
 			pszObjectiveIcon = NULL;
 
@@ -236,13 +237,7 @@ void CLogicObjective::SendObjectiveParameters(int iStatus, bool bEntCountUpdate,
 				for (int i = 1; i <= gpGlobals->maxClients; i++)
 				{
 					CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-					if (!pClient)
-						continue;
-
-					if (pClient->IsBot())
-						continue;
-
-					if (pClient->GetTeamNumber() != GetTeamLink())
+					if (!pClient || pClient->IsBot() || (pClient->GetTeamNumber() != GetTeamLink()))
 						continue;
 
 					float xpToGet = ((float)pClient->m_BB2Local.m_iSkill_XPLeft) * MAX_OBJECTIVE_EXPERIENCE; // Give X % of XP needed as a reward.
@@ -288,6 +283,14 @@ void CLogicObjective::InputFail(inputdata_t &data)
 	SendObjectiveParameters(STATUS_SUCCESS, false, true);
 }
 
+void CLogicObjective::InputProgress(inputdata_t &data)
+{
+	if (!IsActive() || !m_bShouldEntityCount)
+		return;
+
+	ProgressEntityCounting();
+}
+
 bool CLogicObjective::DoObjectiveScaling(void)
 {
 	if (m_iScaleType <= OBJ_SCALING_NONE || (m_iStatusOverall == STATUS_SUCCESS))
@@ -298,10 +301,7 @@ bool CLogicObjective::DoObjectiveScaling(void)
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-		if (!pClient)
-			continue;
-
-		if (!pClient->IsConnected())
+		if (!pClient || !pClient->IsConnected())
 			continue;
 
 		iNumPlayers++;
@@ -401,6 +401,10 @@ void CLogicObjective::FireGameEvent(IGameEvent *event)
 		if (!IsActive() || !m_bShouldEntityCount)
 			return;
 
+		const char *goalEnt = STRING(szGoalEntity);
+		if (!strcmp(goalEnt, "custom")) // Must be progressed manually @ map.
+			return;
+
 		CBaseEntity *pVictim = UTIL_EntityByIndex(event->GetInt("entindex_killed", 0));
 		CBaseEntity *pAttacker = UTIL_EntityByIndex(event->GetInt("entindex_attacker", 0));
 
@@ -417,17 +421,18 @@ void CLogicObjective::FireGameEvent(IGameEvent *event)
 		if (!pAttacker->IsZombie(true) && (GetTeamLink() == TEAM_DECEASED))
 			return;
 
-		const char *goalEnt = STRING(szGoalEntity);
 		if (FClassnameIs(pVictim, goalEnt) || ((pVictim->Classify() == CLASS_ZOMBIE) && !strcmp(goalEnt, "zombies")))
-		{
-			m_iKillsLeft--;
-			if (m_iKillsLeft < 0)
-				m_iKillsLeft = 0;
-
-			SendObjectiveParameters(m_iStatusOverall, true);
-
-			if (m_iKillsLeft <= 0)
-				SendObjectiveParameters(STATUS_SUCCESS);
-		}
+			ProgressEntityCounting();
 	}
+}
+
+void CLogicObjective::ProgressEntityCounting(void)
+{
+	m_iKillsLeft--;
+	if (m_iKillsLeft < 0)
+		m_iKillsLeft = 0;
+
+	SendObjectiveParameters(m_iStatusOverall, true);
+	if (m_iKillsLeft <= 0)
+		SendObjectiveParameters(STATUS_SUCCESS);
 }

@@ -189,6 +189,16 @@ enum
 	MAX_MAT_OVERLAYS_BITS = 6
 };
 
+enum
+{
+	GAME_TIP_KEYBIND = 0,
+	GAME_TIP_DEFAULT = 0,
+	GAME_TIP_INFO,
+	GAME_TIP_TIP,
+	GAME_TIP_WARNING,
+	GAME_TIP_DEFEND,
+};
+
 struct InventoryItem_t
 {
 #ifndef CLIENT_DLL

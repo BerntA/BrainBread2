@@ -106,7 +106,7 @@ void CInventoryItem::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 	bool bAutoConsume = m_pData->bAutoConsume;
 	if (!bAutoConsume && !m_bExcludeFromInventory && (GameBaseShared()->GetInventoryItemCountForPlayer(pActivator->entindex()) >= MAX_INVENTORY_ITEM_COUNT))
 	{
-		GameBaseServer()->SendToolTip("#TOOLTIP_INVENTORY_FULL", 0, pActivator->entindex());
+		GameBaseServer()->SendToolTip("#TOOLTIP_INVENTORY_FULL", GAME_TIP_DEFAULT, pActivator->entindex());
 		EmitSound(filter, pPlayer->entindex(), m_pData->szSoundScriptFailure);
 		return;
 	}
@@ -170,7 +170,7 @@ CHL2MP_Player *CInventoryItem::GetHumanInteractor(CBaseEntity *pActivator)
 
 	if (pPlayer->IsPlayerInfected())
 	{
-		GameBaseServer()->SendToolTip("#TOOLTIP_ITEM_DENY_INFECTION", 0, pActivator->entindex());
+		GameBaseServer()->SendToolTip("#TOOLTIP_ITEM_DENY_INFECTION", GAME_TIP_DEFAULT, pActivator->entindex());
 		return NULL;
 	}
 
@@ -179,7 +179,7 @@ CHL2MP_Player *CInventoryItem::GetHumanInteractor(CBaseEntity *pActivator)
 	{
 		char pchArg1[16];
 		Q_snprintf(pchArg1, 16, "%i", iRequiredLevel);
-		GameBaseServer()->SendToolTip("#TOOLTIP_ITEM_DENY_LEVEL", 0, pActivator->entindex(), pchArg1);
+		GameBaseServer()->SendToolTip("#TOOLTIP_ITEM_DENY_LEVEL", GAME_TIP_DEFAULT, pActivator->entindex(), pchArg1);
 		CSingleUserRecipientFilter filter(pPlayer);
 		EmitSound(filter, pPlayer->entindex(), m_pData->szSoundScriptFailure);
 		return NULL;

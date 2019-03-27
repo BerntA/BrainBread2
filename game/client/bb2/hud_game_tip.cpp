@@ -9,6 +9,7 @@
 #include "hudelement.h"
 #include "hud_macros.h"
 #include "c_hl2mp_player.h"
+#include "GameBase_Shared.h"
 #include "iclientmode.h"
 #include "hl2mp_gamerules.h"
 #include <vgui_controls/Panel.h>
@@ -187,7 +188,7 @@ void CHudGameTip::MsgFunc_GameTip(bf_read &msg)
 
 	// Decide the texture to use:
 	int textureIndex = 0;
-	if (type == 0)
+	if (type == GAME_TIP_KEYBIND)
 	{
 		if (!strcmp(pszOutputBinding, "SPACE"))
 			textureIndex = 1;
@@ -246,12 +247,12 @@ void CHudGameTip::Paint()
 		int index = (m_pTipItems.Count() - 1);
 
 		int iTexture = 0;
-		if (m_pTipItems[index].type == 0)
+		if (m_pTipItems[index].type == GAME_TIP_KEYBIND)
 			iTexture = m_nKeyboardTexture[m_pTipItems[index].iTextureIndex];
 		else
 			iTexture = m_nHintTextures[m_pTipItems[index].iTextureIndex];
 
-		bool bIsSpaceBarBinding = ((m_pTipItems[index].type == 0) && (m_pTipItems[index].iTextureIndex == 1));
+		bool bIsSpaceBarBinding = ((m_pTipItems[index].type == GAME_TIP_KEYBIND) && (m_pTipItems[index].iTextureIndex == 1));
 
 		float posX, posY, wide, tall;
 		posX = bIsSpaceBarBinding ? spacebar_x : key_x;
@@ -286,7 +287,7 @@ void CHudGameTip::Paint()
 		surface()->DrawTexturedRect(posX, posY, posX + wide, posY + tall);
 
 		int strLen = 0;
-		if (m_pTipItems[index].type == 0 && m_pTipItems[index].iTextureIndex <= 1)
+		if ((m_pTipItems[index].type == GAME_TIP_KEYBIND) && (m_pTipItems[index].iTextureIndex <= 1))
 		{
 			surface()->DrawSetColor(bindColor);
 			surface()->DrawSetTextColor(bindColor);

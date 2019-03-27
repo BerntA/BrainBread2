@@ -158,7 +158,7 @@ void CItem_AmmoCrate::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 	{
 		char pchArg1[16];
 		Q_snprintf(pchArg1, 16, "%i", timeLeft);
-		GameBaseServer()->SendToolTip("#TOOLTIP_AMMOSUPPLY_WAIT", "", 1.4f, 3, pPlayer->entindex(), pchArg1);
+		GameBaseServer()->SendToolTip("#TOOLTIP_AMMOSUPPLY_WAIT", "", 1.4f, GAME_TIP_WARNING, pPlayer->entindex(), pchArg1);
 		return;
 	}
 

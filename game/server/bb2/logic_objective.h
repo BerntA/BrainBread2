@@ -43,6 +43,7 @@ private:
 	bool DoObjectiveScaling(void);
 	void ObjectiveEndTimeDelay(void);
 	void FireGameEvent(IGameEvent *event);
+	void ProgressEntityCounting(void);
 
 	// Shared - Globals
 	int m_iIndex;
@@ -69,7 +70,7 @@ private:
 	int m_iKillsNeeded;
 
 	// Scaling
-	float m_flKillScaleFactor; 
+	float m_flKillScaleFactor;
 	float m_flMaxKillsNeeded;
 	float m_flMinKillsNeeded;
 
@@ -84,6 +85,7 @@ private:
 	void InputStart(inputdata_t &data);
 	void InputEnd(inputdata_t &data);
 	void InputFail(inputdata_t &data);
+	void InputProgress(inputdata_t &data);
 
 	// Outpus
 	COutputEvent m_OnStart;
