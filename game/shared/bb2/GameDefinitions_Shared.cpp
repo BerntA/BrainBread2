@@ -455,6 +455,10 @@ bool CGameDefinitionsShared::LoadData(void)
 		pszGamemodeData.flMaxAmmoReplensihInterval = pkvParseData->GetFloat("ammo_replenish_interval", 60.0f);
 		pszGamemodeData.flAmmoReplenishPenalty = pkvParseData->GetFloat("ammo_replenish_penalty", 120.0f);
 
+		pszGamemodeData.iPointsForLvlHundred = pkvParseData->GetInt("points_lvl_100", 2);
+		pszGamemodeData.iPointsForEveryHundredLvl = pkvParseData->GetInt("points_every_100", 5);
+		pszGamemodeData.iPointsForLvlFiveHundred = pkvParseData->GetInt("points_lvl_500", 10);
+
 		pkvParseData->deleteThis();
 	}
 	else
@@ -858,6 +862,26 @@ bool CGameDefinitionsShared::Precache(void)
 	return true;
 }
 
+int CGameDefinitionsShared::CalculatePointsForLevel(int lvl)
+{
+	if (lvl <= 1)
+		return 0;
+
+	float flLvL = ((float)lvl);
+	float points = MIN((lvl - 1), 98);
+
+	flLvL -= 100.0f;
+	points += MAX(floor(flLvL / 100) - 1, 0.0f) * pszGamemodeData.iPointsForEveryHundredLvl;
+
+	if (lvl >= 100)
+		points += pszGamemodeData.iPointsForLvlHundred;
+
+	if (lvl >= MAX_PLAYER_LEVEL)
+		points += pszGamemodeData.iPointsForLvlFiveHundred;
+
+	return ((int)points);
+}
+
 #ifdef CLIENT_DLL
 void CGameDefinitionsShared::LoadClientModels(void)
 {
@@ -1206,7 +1230,7 @@ const model_t *CGameDefinitionsShared::GetPlayerGibModelPtrForGibID(const DataPl
 
 const char *CGameDefinitionsShared::GetPlayerGibForModel(const char *survivor, bool bHuman, const char *gib)
 {
-	const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(survivor);
+	const DataPlayerItem_Survivor_Shared_t *data = GetSurvivorDataForIndex(survivor);
 	if (data == NULL)
 		return "";
 
@@ -1226,7 +1250,7 @@ const char *CGameDefinitionsShared::GetPlayerGibForModel(const char *survivor, b
 
 bool CGameDefinitionsShared::DoesPlayerHaveGibForLimb(const char *survivor, bool bHuman, int gibID)
 {
-	const DataPlayerItem_Survivor_Shared_t *data = GameBaseShared()->GetSharedGameDetails()->GetSurvivorDataForIndex(survivor);
+	const DataPlayerItem_Survivor_Shared_t *data = GetSurvivorDataForIndex(survivor);
 	if (data == NULL)
 		return false;
 

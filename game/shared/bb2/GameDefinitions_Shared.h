@@ -71,6 +71,10 @@ struct DataGamemodeItem_Shared_t
 	int iMaxAmmoReplenishWithinInterval;
 	float flMaxAmmoReplensihInterval;
 	float flAmmoReplenishPenalty;
+
+	int iPointsForLvlHundred;
+	int iPointsForEveryHundredLvl;
+	int iPointsForLvlFiveHundred;
 };
 
 struct DataPlayerItem_Shared_t
@@ -390,6 +394,7 @@ public:
 
 	// Gamemode Data:
 	const DataGamemodeItem_Shared_t *GetGamemodeData(void) { return &pszGamemodeData; }
+	int CalculatePointsForLevel(int lvl);
 
 	// Player Data:
 	const DataPlayerItem_Shared_t *GetPlayerSharedData(void);

@@ -12,7 +12,6 @@
 
 #define MAX_SKILL_ARRAY 40
 #define MAX_PLAYER_LEVEL 500
-#define MAX_LEVEL_FOR_TALENTS 100 // A level under 100 or equal to 100 allows you to get talents when leveling up.
 
 enum playerSkills_t
 {

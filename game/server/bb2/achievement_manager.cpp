@@ -307,12 +307,9 @@ CON_COMMAND(dev_reset_stats, "Reset Stats")
 	}
 
 	// BB2 SKILL TREE - Base
-	int iLevel = GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iLevel;
-	if (iLevel < 1)
-		iLevel = 1;
-
+	int iLevel = clamp(GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iLevel, 1, MAX_PLAYER_LEVEL);
 	pPlayer->SetPlayerLevel(iLevel);
-	pPlayer->m_BB2Local.m_iSkill_Talents = ((iLevel > 100) ? 100 : (iLevel - 1));
+	pPlayer->m_BB2Local.m_iSkill_Talents = GameBaseShared()->GetSharedGameDetails()->CalculatePointsForLevel(iLevel);
 	pPlayer->m_BB2Local.m_iSkill_XPLeft = (GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iXPIncreasePerLevel * iLevel);
 	pPlayer->m_BB2Local.m_iSkill_XPCurrent = 0;
 	pPlayer->m_BB2Local.m_iZombieCredits = 0;
@@ -337,49 +334,23 @@ CON_COMMAND(dev_reset_stats, "Reset Stats")
 	ClientPrint(pPlayer, HUD_PRINTCONSOLE, "You've reset all your stats!\n");
 };
 
-CON_COMMAND(bb2_perform_prestige, "If your level is high enough you can reset all your skills to receive special rewards.")
+CON_COMMAND(bb2_reset_skills, "Allows a player to reset his/her skills back to default, will not reset the level or XP, points will be restored!")
 {
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pPlayer)
+	if (!pPlayer || ((pPlayer->LastTimePlayerTalked() + 1.0f) >= gpGlobals->curtime))
 		return;
 
-	if (GameBaseServer()->CanStoreSkills() != PROFILE_GLOBAL)
+	pPlayer->NotePlayerTalked();
+
+	if (GameBaseServer()->CanStoreSkills() <= PROFILE_NONE)
 	{
-		ClientPrint(pPlayer, HUD_PRINTCONSOLE, "This function can only be used on servers which allow global saving!\n");
+		ClientPrint(pPlayer, HUD_PRINTCONSOLE, "This function can only be used on servers which allow stat saving!\n");
 		return;
 	}
 
-	CSteamID pSteamClient;
-	if (!pPlayer->GetSteamID(&pSteamClient))
-	{
-		Warning("Unable to get SteamID for user %i\n", pPlayer->GetUserID());
-		return;
-	}
-
-	// BB2 SKILL TREE - Base
-	int iLevel = GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iLevel;
-	if (iLevel < 1)
-		iLevel = 1;
-
-	pPlayer->SetPlayerLevel(iLevel);
-	pPlayer->m_BB2Local.m_iSkill_Talents = ((iLevel > 100) ? 100 : (iLevel - 1));
-	pPlayer->m_BB2Local.m_iSkill_XPLeft = (GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iXPIncreasePerLevel * iLevel);
-	pPlayer->m_BB2Local.m_iSkill_XPCurrent = 0;
-	pPlayer->m_BB2Local.m_iZombieCredits = 0;
-
-	for (int i = 0; i < MAX_SKILL_ARRAY; i++)
+	pPlayer->m_BB2Local.m_iSkill_Talents = GameBaseShared()->GetSharedGameDetails()->CalculatePointsForLevel(pPlayer->GetPlayerLevel());
+	for (int i = 0; i < PLAYER_SKILL_ZOMBIE_HEALTH; i++)
 		pPlayer->m_BB2Local.m_iPlayerSkills.Set(i, 0);
 
-	for (int i = 0; i < _ARRAYSIZE(szGameStats); i++)
-		steamgameserverapicontext->SteamGameServerStats()->SetUserStat(pSteamClient, szGameStats[i].szStat, szGameStats[i].defaultValue);
-
-	for (int i = 0; i < _ARRAYSIZE(pszGameSkills); i++)
-		steamgameserverapicontext->SteamGameServerStats()->SetUserStat(pSteamClient, pszGameSkills[i], 0);
-
-	steamgameserverapicontext->SteamGameServerStats()->StoreUserStats(pSteamClient);
-
 	ClientPrint(pPlayer, HUD_PRINTCONSOLE, "You've reset all your skills!\n");
-
-	// Give a random high-end achievement which could be a special attachment for a gun or some mastery. Basically here you're guaranteed to get something new!
-	// TODO:
 };

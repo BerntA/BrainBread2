@@ -341,15 +341,13 @@ void CHL2MP_Player::HandleFirstTimeConnection(bool bForceDefault)
 	// We only init this if we don't init the skills / global stats.
 	if (bShouldLoadDefaultStats)
 	{
-		int iLevel = GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iLevel;
-		if (iLevel < 1)
-			iLevel = 1;
+		int iLevel = clamp(GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iLevel, 1, MAX_PLAYER_LEVEL);
 
 		if (GameBaseServer()->IsTutorialModeEnabled())
-			iLevel = 100;
+			iLevel = MAX_PLAYER_LEVEL;
 
 		m_iSkill_Level = iLevel;
-		m_BB2Local.m_iSkill_Talents = ((iLevel > 100) ? 100 : (iLevel - 1));
+		m_BB2Local.m_iSkill_Talents = GameBaseShared()->GetSharedGameDetails()->CalculatePointsForLevel(iLevel);
 		m_BB2Local.m_iSkill_XPLeft = (GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iXPIncreasePerLevel * iLevel);
 
 		OnLateStatsLoadEnterGame();
@@ -1408,22 +1406,35 @@ bool CHL2MP_Player::PerformLevelUp(int iXP)
 		// We increase xp needed for next level for the client.
 		m_BB2Local.m_iSkill_XPLeft += GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iXPIncreasePerLevel;
 
-		// You only receive talent points until level 100.
-		if (MAX_LEVEL_FOR_TALENTS > m_iSkill_Level)
-		{
-			// Add a talent point.
-			m_BB2Local.m_iSkill_Talents++;
-
-			// Congrats!
-			char pchArg1[16];
-			Q_snprintf(pchArg1, 16, "%i", m_BB2Local.m_iSkill_Talents);
-			GameBaseServer()->SendToolTip("#TOOLTIP_LEVELUP2", GAME_TIP_DEFAULT, this->entindex(), pchArg1);
-		}
-
 		// Add Level.
 		m_iSkill_Level++;
 		// Reset kill counter so we start over again. IEX: Now you need 10 kills, if we no reset you just need 5! Which is no change at all.
 		m_BB2Local.m_iSkill_XPCurrent = 0;
+
+		// Add talent point(s).
+		int pointsToGive = 1; // Get 1 pnt from lvl 1-99, 2 pnt for lvl 100, 5 pnt for every 100 lvl, 10 pnt for lvl 500!
+
+		switch (m_iSkill_Level)
+		{
+		case 100:
+			pointsToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iPointsForLvlHundred;
+			break;
+		case MAX_PLAYER_LEVEL:
+			pointsToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iPointsForLvlFiveHundred;
+			break;
+		default: // For every 100 lvl after lvl 100, give X pnts!
+			int lvl = (m_iSkill_Level - 100);
+			if ((lvl % 100) == 0)
+				pointsToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iPointsForEveryHundredLvl;
+			break;
+		}
+
+		m_BB2Local.m_iSkill_Talents += pointsToGive;
+
+		// Congrats!
+		char pchArg1[16];
+		Q_snprintf(pchArg1, 16, "%i", pointsToGive);
+		GameBaseServer()->SendToolTip("#TOOLTIP_LEVELUP2", GAME_TIP_DEFAULT, this->entindex(), pchArg1);
 
 		if (!IsBot())
 		{
@@ -1436,7 +1447,7 @@ bool CHL2MP_Player::PerformLevelUp(int iXP)
 		}
 
 		if (iXPToGive > 0)
-			PerformLevelUp(iXPToGive);			
+			PerformLevelUp(iXPToGive);
 
 		return true;
 	}
@@ -3701,11 +3712,13 @@ CON_COMMAND(holster_weapon, "Holster your weapon.")
 	pClient->Weapon_Switch(pWantedWeapon);
 }
 
-CON_COMMAND(bb2_reset_local_stats, "Reset local stats on any server which allows this.")
+CON_COMMAND(bb2_reset_local_stats, "Reset local stats on any server which allows this, reverts you back to lvl 1, normally.")
 {
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pPlayer)
+	if (!pPlayer || ((pPlayer->LastTimePlayerTalked() + 1.0f) >= gpGlobals->curtime))
 		return;
+
+	pPlayer->NotePlayerTalked();
 
 	if (GameBaseServer()->CanStoreSkills() != PROFILE_LOCAL)
 	{
@@ -3714,10 +3727,11 @@ CON_COMMAND(bb2_reset_local_stats, "Reset local stats on any server which allows
 	}
 
 	// BB2 SKILL TREE - Base
-	int iLevel = MAX(GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iLevel, 1);
+
+	int iLevel = clamp(GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iLevel, 1, MAX_PLAYER_LEVEL);
 
 	pPlayer->SetPlayerLevel(iLevel);
-	pPlayer->m_BB2Local.m_iSkill_Talents = ((iLevel > 100) ? 100 : (iLevel - 1));
+	pPlayer->m_BB2Local.m_iSkill_Talents = GameBaseShared()->GetSharedGameDetails()->CalculatePointsForLevel(iLevel);
 	pPlayer->m_BB2Local.m_iSkill_XPLeft = (GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iXPIncreasePerLevel * iLevel);
 	pPlayer->m_BB2Local.m_iSkill_XPCurrent = 0;
 	pPlayer->m_BB2Local.m_iZombieCredits = 0;
