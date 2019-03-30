@@ -302,7 +302,6 @@ CHL2MPRules::CHL2MPRules()
 	{
 		CTeam *pTeam = static_cast<CTeam*>(CreateEntityByName( "team_manager" ));
 		pTeam->Init( sTeamNames[i], i );
-
 		g_Teams.AddToTail( pTeam );
 	}	
 
@@ -324,7 +323,6 @@ CHL2MPRules::CHL2MPRules()
 	m_flIntermissionEndTime = 0.0f;
 	m_flScoreBoardTime = 0;
 	m_bShouldShowScores = false;
-	m_iGamemodeFlags = 0;
 
 	m_hBreakableDoors.RemoveAll();
 	m_bChangelevelDone = false;
@@ -370,11 +368,15 @@ CHL2MPRules::CHL2MPRules()
 	// Execute linked .cfg for this map, if any:
 	engine->ServerCommand(UTIL_VarArgs("exec maps/%s.cfg\n", szCurrentMap));
 
+	int gamemodeFlags = 0;
+
 	if ((GetCurrentGamemode() == MODE_ARENA) && bb2_arena_hard_mode.GetBool())
-		m_iGamemodeFlags |= GM_FLAG_ARENA_HARDMODE;
+		gamemodeFlags |= GM_FLAG_ARENA_HARDMODE;
 
 	if (CanUseSkills() && bb2_hard_scaling.GetBool())
-		m_iGamemodeFlags |= GM_FLAG_EXTREME_SCALING;
+		gamemodeFlags |= GM_FLAG_EXTREME_SCALING;
+	
+	m_iGamemodeFlags.Set(gamemodeFlags);
 
 	// Check if map is workshop related, if so set download ID!
 	GameBaseServer()->SetCurrentMapAddon(szCurrentMap);

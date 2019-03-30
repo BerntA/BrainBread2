@@ -4433,10 +4433,6 @@ int CAI_BaseNPC::SelectAlertSchedule()
 	if ( nSched != SCHED_NONE )
 		return nSched;
 
-	// Scan around for new enemies
-	if ( HasCondition( COND_ENEMY_DEAD ) && SelectWeightedSequence( ACT_VICTORY_DANCE ) != ACTIVITY_NOT_AVAILABLE )
-		return SCHED_ALERT_SCAN;
-
 	if( IsPlayerAlly() && HasCondition(COND_HEAR_COMBAT) )
 	{
 		return SCHED_ALERT_REACT_TO_COMBAT_SOUND;

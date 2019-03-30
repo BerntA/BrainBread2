@@ -225,47 +225,21 @@ int CNPC_BaseZombie::MeleeAttack1Conditions ( float flDot, float flDist )
 	GetVectors( &forward, NULL, NULL );
 
 	trace_t	tr;
-	CTraceFilterNav traceFilter( this, false, this, GetCollisionGroup() );
+	CTraceFilterNav traceFilter(this, false, this, GetCollisionGroup());
 	AI_TraceHull( WorldSpaceCenter(), WorldSpaceCenter() + forward * GetClawAttackRange(), vecMins, vecMaxs, MASK_NPCSOLID, &traceFilter, &tr );
 
 	if( tr.fraction == 1.0 || !tr.m_pEnt )
 		// This attack would miss completely. Trick the zombie into moving around some more.
 		return COND_TOO_FAR_TO_ATTACK;
 
-	if( tr.m_pEnt == GetEnemy() || 
-		tr.m_pEnt->IsNPC() || 
-		( tr.m_pEnt->m_takedamage == DAMAGE_YES && (dynamic_cast<CBreakableProp*>(tr.m_pEnt) ) ) )
-	{
-		// -Let the zombie swipe at his enemy if he's going to hit them.
-		// -Also let him swipe at NPC's that happen to be between the zombie and the enemy. 
-		//  This makes mobs of zombies seem more rowdy since it doesn't leave guys in the back row standing around.
-		// -Also let him swipe at things that takedamage, under the assumptions that they can be broken.
+	if (tr.m_pEnt == GetEnemy())
 		return COND_CAN_MELEE_ATTACK1;
-	}
-
-	Vector vecTrace = tr.endpos - tr.startpos;
-	float lenTraceSq = vecTrace.Length2DSqr();
-
-	if ( GetEnemy() && GetEnemy()->MyCombatCharacterPointer() && tr.m_pEnt == static_cast<CBaseCombatCharacter *>(GetEnemy())->GetVehicleEntity() )
-	{
-		if ( lenTraceSq < Square( GetClawAttackRange() * 0.75f ) )
-			return COND_CAN_MELEE_ATTACK1;
-	}
 
 	CBasePropDoor *pDoor = dynamic_cast<CBasePropDoor*> (tr.m_pEnt);
 	if (pDoor && HL2MPRules()->IsBreakableDoor(tr.m_pEnt))
 	{
 		m_hBlockingEntity = pDoor;
 		return COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT;
-	}
-
-	if( tr.m_pEnt->IsBSPModel() )
-	{
-		// The trace hit something solid, but it's not the enemy. If this item is closer to the zombie than
-		// the enemy is, treat this as an obstruction.
-		Vector vecToEnemy = GetEnemy()->WorldSpaceCenter() - WorldSpaceCenter();
-		if( lenTraceSq < vecToEnemy.Length2DSqr() )
-			return COND_ZOMBIE_LOCAL_MELEE_OBSTRUCTION;
 	}
 
 	// Move around some more
@@ -433,7 +407,7 @@ void CNPC_BaseZombie::CopyRenderColorTo( CBaseEntity *pOther )
 //
 // Output : The entity hit by claws. NULL if nothing.
 //-----------------------------------------------------------------------------
-CBaseEntity *CNPC_BaseZombie::ClawAttack( float flDist, int iDamage, QAngle &qaViewPunch, Vector &vecVelocityPunch, int BloodOrigin  )
+CBaseEntity *CNPC_BaseZombie::ClawAttack(float flDist, int iDamage, QAngle &qaViewPunch, Vector &vecVelocityPunch, int BloodOrigin)
 {
 	CBaseEntity *pHurt = NULL;
 	CBasePropDoor *pDoor = m_hBlockingEntity.Get();
@@ -450,32 +424,12 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack( float flDist, int iDamage, QAngle &qaV
 	}
 	else
 	{
-		// Added test because claw attack anim sometimes used when for cases other than melee
-		int iDriverInitialHealth = -1;
-		CBaseEntity *pDriver = NULL;
-		if (GetEnemy())
+		if (GetEnemy()) // If enemy is behind a wall, don't do attack dmg!
 		{
 			trace_t	tr;
 			AI_TraceHull(WorldSpaceCenter(), GetEnemy()->WorldSpaceCenter(), -Vector(8, 8, 8), Vector(8, 8, 8), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr);
-
 			if (tr.fraction < 1.0f)
 				return NULL;
-
-			// CheckTraceHullAttack() can damage player in vehicle as side effect of melee attack damaging physics objects, which the car forwards to the player
-			// need to detect this to get correct damage effects
-			CBaseCombatCharacter *pCCEnemy = (GetEnemy() != NULL) ? GetEnemy()->MyCombatCharacterPointer() : NULL;
-			CBaseEntity *pVehicleEntity;
-			if (pCCEnemy != NULL && (pVehicleEntity = pCCEnemy->GetVehicleEntity()) != NULL)
-			{
-				if (pVehicleEntity->GetServerVehicle() && dynamic_cast<CPropVehicleDriveable *>(pVehicleEntity))
-				{
-					pDriver = static_cast<CPropVehicleDriveable *>(pVehicleEntity)->GetDriver();
-					if (pDriver && pDriver->IsPlayer())
-						iDriverInitialHealth = pDriver->GetHealth();
-					else
-						pDriver = NULL;
-				}
-			}
 		}
 
 		//
@@ -488,14 +442,13 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack( float flDist, int iDamage, QAngle &qaV
 
 		// Try to hit them with a trace
 		pHurt = CheckTraceHullAttack(flDist, vecMins, vecMaxs, iDamage, DMG_ZOMBIE);
-		if (pDriver && iDriverInitialHealth != pDriver->GetHealth())
-			pHurt = pDriver;
 	}
 
-	if ( pHurt )
+	if (pHurt)
 	{
 		AttackHitSound();
 
+		// Apply attack view kick for plr.
 		CBasePlayer *pPlayer = ToBasePlayer(pHurt);
 		if (pPlayer != NULL && !(pPlayer->GetFlags() & FL_GODMODE))
 		{
@@ -534,10 +487,8 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack( float flDist, int iDamage, QAngle &qaV
 			break;
 		}
 	}
-	else 
-	{
+	else
 		AttackMissSound();
-	}
 
 	return pHurt;
 }
@@ -811,9 +762,6 @@ int CNPC_BaseZombie::TranslateSchedule( int scheduleType )
 	switch( scheduleType )
 	{
 	case SCHED_CHASE_ENEMY:
-		if ( HasCondition( COND_ZOMBIE_LOCAL_MELEE_OBSTRUCTION ) && !HasCondition(COND_TASK_FAILED) && IsCurSchedule( SCHED_ZOMBIE_CHASE_ENEMY, false ) )		
-			return SCHED_COMBAT_PATROL;
-
 		// Normal NPCs will just wander around like muricans walking in the mall.
 		if (HasCondition(COND_ENEMY_TOO_FAR) && !CanAlwaysSeePlayers())
 		{
@@ -822,15 +770,24 @@ int CNPC_BaseZombie::TranslateSchedule( int scheduleType )
 
 			return SCHED_ZOMBIE_WANDER_MEDIUM;
 		}
-
 		return SCHED_ZOMBIE_CHASE_ENEMY;
-		break;
 
 	case SCHED_STANDOFF:
 		return SCHED_ZOMBIE_WANDER_STANDOFF;
 
 	case SCHED_MELEE_ATTACK1:
 		return SCHED_ZOMBIE_MELEE_ATTACK1;
+
+		// Don't waste time!
+	case SCHED_IDLE_WALK:
+	case SCHED_IDLE_STAND:
+	case SCHED_ALERT_STAND:
+	case SCHED_TAKE_COVER_FROM_ENEMY:
+		return SCHED_ZOMBIE_WANDER_MEDIUM;
+
+		// Always investigate sounds, even when idle. Zombies are curious beasts!
+	case SCHED_ALERT_FACE_BESTSOUND:
+		return SCHED_INVESTIGATE_SOUND;
 	}
 
 	return BaseClass::TranslateSchedule( scheduleType );
@@ -1249,7 +1206,6 @@ DECLARE_TASK(TASK_ZOMBIE_ATTACK_DOOR)
 DECLARE_TASK(TASK_ZOMBIE_PATH_TO_OBSTRUCTION)
 DECLARE_TASK(TASK_ZOMBIE_OBSTRUCTION_CLEARED)
 
-DECLARE_CONDITION(COND_ZOMBIE_LOCAL_MELEE_OBSTRUCTION)
 DECLARE_CONDITION(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT)
 DECLARE_CONDITION(COND_ZOMBIE_CHECK_FOR_OBSTRUCTION)
 DECLARE_CONDITION(COND_ZOMBIE_ENEMY_IN_SIGHT)

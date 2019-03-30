@@ -70,7 +70,6 @@ void CAI_BaseNPC::InitDefaultScheduleSR(void)
 	ADD_DEF_SCHEDULE( "SCHED_ALERT_FACE",					SCHED_ALERT_FACE);
 	ADD_DEF_SCHEDULE( "SCHED_ALERT_FACE_BESTSOUND",			SCHED_ALERT_FACE_BESTSOUND);
 	ADD_DEF_SCHEDULE( "SCHED_ALERT_REACT_TO_COMBAT_SOUND",	SCHED_ALERT_REACT_TO_COMBAT_SOUND);
-	ADD_DEF_SCHEDULE( "SCHED_ALERT_SCAN",					SCHED_ALERT_SCAN);
 	ADD_DEF_SCHEDULE( "SCHED_ALERT_STAND",					SCHED_ALERT_STAND);
 	ADD_DEF_SCHEDULE( "SCHED_ALERT_WALK",					SCHED_ALERT_WALK);
 	ADD_DEF_SCHEDULE( "SCHED_INVESTIGATE_SOUND",			SCHED_INVESTIGATE_SOUND);
@@ -135,9 +134,6 @@ void CAI_BaseNPC::InitDefaultScheduleSR(void)
 	ADD_DEF_SCHEDULE( "SCHED_WAIT_FOR_SPEAK_FINISH",		SCHED_WAIT_FOR_SPEAK_FINISH);
 	ADD_DEF_SCHEDULE( "SCHED_FORCED_GO",					SCHED_FORCED_GO);
 	ADD_DEF_SCHEDULE( "SCHED_FORCED_GO_RUN",				SCHED_FORCED_GO_RUN);
-	ADD_DEF_SCHEDULE( "SCHED_PATROL_WALK",					SCHED_PATROL_WALK);
-	ADD_DEF_SCHEDULE( "SCHED_COMBAT_PATROL",				SCHED_COMBAT_PATROL);
-	ADD_DEF_SCHEDULE( "SCHED_PATROL_RUN",					SCHED_PATROL_RUN);
 	ADD_DEF_SCHEDULE( "SCHED_RUN_RANDOM",					SCHED_RUN_RANDOM);
 	ADD_DEF_SCHEDULE( "SCHED_FAIL",							SCHED_FAIL);
 	ADD_DEF_SCHEDULE( "SCHED_FAIL_NOSTOP",					SCHED_FAIL_NOSTOP);
@@ -167,7 +163,6 @@ bool CAI_BaseNPC::LoadDefaultSchedules(void)
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_ALERT_FACE);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_ALERT_FACE_BESTSOUND);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_ALERT_REACT_TO_COMBAT_SOUND);
-	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_ALERT_SCAN);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_ALERT_STAND);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_ALERT_WALK);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_INVESTIGATE_SOUND);
@@ -231,9 +226,6 @@ bool CAI_BaseNPC::LoadDefaultSchedules(void)
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_WAIT_FOR_SPEAK_FINISH);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_FORCED_GO);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_FORCED_GO_RUN);
-	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_PATROL_WALK);
-	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_COMBAT_PATROL);
-	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_PATROL_RUN);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_RUN_RANDOM);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_FAIL);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_FAIL_NOSTOP);
@@ -341,7 +333,6 @@ int CAI_BaseNPC::TranslateSchedule( int scheduleType )
 			// Assert( m_NPCState == NPC_STATE_ALERT );
 		}
 		break;
-	case SCHED_ALERT_SCAN:
 	case SCHED_ALERT_STAND:
 		{
 			// FIXME: rollermines use this when they're being held
@@ -850,25 +841,6 @@ AI_DEFINE_SCHEDULE
  ""
  "	Interrupts"
  );
-
-
-//=========================================================
-//  > Alert_Scan
-//=========================================================
-AI_DEFINE_SCHEDULE
-(
-	SCHED_ALERT_SCAN,
-
-	"	Tasks"
-	"		TASK_STOP_MOVING		0"
-	"		TASK_WAIT				0.5"
-	"		TASK_TURN_LEFT			180"
-	"		TASK_WAIT				0.5"
-	"		TASK_TURN_LEFT			180"
-	""
-	"	Interrupts"
-	"		COND_NEW_ENEMY"
-);
 
 //=========================================================
 //  > AlertStand
@@ -2031,41 +2003,6 @@ AI_DEFINE_SCHEDULE
 );
 
 //=========================================================
-// > PATROL_RUN
-//
-// Run around randomly until we detect an enemy
-//=========================================================
-AI_DEFINE_SCHEDULE
-(
-	SCHED_PATROL_RUN,
-
-	"	Tasks"
-	"		TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHED_COMBAT_FACE"
-//	"		TASK_SET_TOLERANCE_DISTANCE		48"
-	"		TASK_SET_ROUTE_SEARCH_TIME		5"	// Spend 5 seconds trying to build a path if stuck
-	"		TASK_GET_PATH_TO_RANDOM_NODE	200"
-	"		TASK_RUN_PATH					0"
-	"		TASK_WAIT_FOR_MOVEMENT			0"
-	""
-	"	Interrupts"
-	"		COND_CAN_RANGE_ATTACK1 "
-	"		COND_CAN_RANGE_ATTACK2 "
-	"		COND_CAN_MELEE_ATTACK1 "
-	"		COND_CAN_MELEE_ATTACK2"
-	"		COND_GIVE_WAY"
-	"		COND_NEW_ENEMY"
-	"		COND_SEE_ENEMY"
-	"		COND_SEE_FEAR"
-	"		COND_HEAR_COMBAT"
-	"		COND_HEAR_DANGER"
-	"		COND_HEAR_PLAYER"
-	"		COND_LIGHT_DAMAGE"
-	"		COND_HEAVY_DAMAGE"
-	"		COND_SMELL"
-	"		COND_PROVOKED"
-);
-
-//=========================================================
 // > IDLE_WANDER
 //
 // Walk around randomly
@@ -2092,63 +2029,6 @@ AI_DEFINE_SCHEDULE
 	"		COND_LIGHT_DAMAGE"
 	"		COND_HEAVY_DAMAGE"
 	"		COND_IDLE_INTERRUPT"
-);
-
-//=========================================================
-// > PATROL_WALK
-//
-// Walk around randomly until we detect an enemy
-//=========================================================
-AI_DEFINE_SCHEDULE
-(
-	SCHED_PATROL_WALK,
-
-	"	Tasks"
-//	"		TASK_SET_TOLERANCE_DISTANCE		48"
-	"		TASK_SET_ROUTE_SEARCH_TIME		5"	// Spend 5 seconds trying to build a path if stuck
-	"		TASK_GET_PATH_TO_RANDOM_NODE	200"
-	"		TASK_WALK_PATH					0"
-	"		TASK_WAIT_FOR_MOVEMENT			0"
-	""
-	"	Interrupts"
-	"		COND_CAN_RANGE_ATTACK1 "
-	"		COND_CAN_RANGE_ATTACK2 "
-	"		COND_CAN_MELEE_ATTACK1 "
-	"		COND_CAN_MELEE_ATTACK2"
-	"		COND_GIVE_WAY"
-	"		COND_HEAR_COMBAT"
-	"		COND_HEAR_DANGER"
-	"		COND_HEAR_PLAYER"
-	"		COND_NEW_ENEMY"
-	"		COND_SEE_ENEMY"
-	"		COND_SEE_FEAR"
-	"		COND_LIGHT_DAMAGE"
-	"		COND_HEAVY_DAMAGE"
-	"		COND_SMELL"
-	"		COND_PROVOKED"
-);
-
-//=========================================================
-// > COMBAT_PATROL
-//=========================================================
-AI_DEFINE_SCHEDULE
-(
-	SCHED_COMBAT_PATROL,
-
-	"	Tasks"
-	"		TASK_SET_ROUTE_SEARCH_TIME		5"	// Spend 5 seconds trying to build a path if stuck
-	"		TASK_GET_PATH_TO_RANDOM_NODE	200"
-	"		TASK_WALK_PATH					0"
-	"		TASK_WAIT_FOR_MOVEMENT			0"
-	""
-	"	Interrupts"
-	"		COND_CAN_RANGE_ATTACK1 "
-	"		COND_CAN_RANGE_ATTACK2 "
-	"		COND_CAN_MELEE_ATTACK1 "
-	"		COND_CAN_MELEE_ATTACK2"
-	"		COND_GIVE_WAY"
-	"		COND_HEAR_DANGER"
-	"		COND_NEW_ENEMY"
 );
 
 //=========================================================
