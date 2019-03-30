@@ -193,21 +193,21 @@ void CGameBaseServer::NewPlayerConnection(CHL2MP_Player *pClient)
 
 	GameBaseShared()->NewPlayerConnection(false);
 
-	char steamID[80];
-	Q_snprintf(steamID, 80, "%llu", pClient->GetSteamIDAsUInt64());
-
-	const char *ipAddress = "";
-	if (FindItemInSharedList(steamID, DATA_SECTION_DEVELOPER))
-		pClient->AddGroupIDFlag(GROUPID_IS_DEVELOPER);
-
-	if (FindItemInSharedList(steamID, DATA_SECTION_DONATOR))
-		pClient->AddGroupIDFlag(GROUPID_IS_DONATOR);
-
-	if (FindItemInSharedList(steamID, DATA_SECTION_TESTER))
-		pClient->AddGroupIDFlag(GROUPID_IS_TESTER);
-
 	if (engine->IsDedicatedServer())
 	{
+		char steamID[80];
+		Q_snprintf(steamID, 80, "%llu", pClient->GetSteamIDAsUInt64());
+
+		const char *ipAddress = "";
+		if (FindItemInSharedList(steamID, DATA_SECTION_DEVELOPER))
+			pClient->AddGroupIDFlag(GROUPID_IS_DEVELOPER);
+
+		if (FindItemInSharedList(steamID, DATA_SECTION_DONATOR))
+			pClient->AddGroupIDFlag(GROUPID_IS_DONATOR);
+
+		if (FindItemInSharedList(steamID, DATA_SECTION_TESTER))
+			pClient->AddGroupIDFlag(GROUPID_IS_TESTER);
+
 		if (FindItemInSharedList(steamID, DATA_SECTION_SERVER_ADMIN))
 			pClient->SetAdminStatus(true);
 

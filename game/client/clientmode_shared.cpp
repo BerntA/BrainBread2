@@ -290,17 +290,6 @@ static void __MsgFunc_VGUIMenu( bf_read &msg )
 	gViewPortInterface->ShowPanel( viewport, bShow );
 }
 
-// Play a Sound depending on failure or success.
-static void __MsgFunc_RunBuyCommand( bf_read &msg )
-{
-	int iValue = msg.ReadByte();
-
-	if ( iValue >= 1 )
-		vgui::surface()->PlaySound( "common/wpn_hudoff.wav" );
-	else
-		vgui::surface()->PlaySound( "common/wpn_moveselect.wav" );
-}
-
 // Read note stuff, send to bb2 menu.
 static void __MsgFunc_ShowNote( bf_read &msg )
 {
@@ -425,7 +414,6 @@ void ClientModeShared::Init()
 
 	HOOK_MESSAGE(VGUIMenu);
 	HOOK_MESSAGE(Rumble);
-	HOOK_MESSAGE(RunBuyCommand);
 	HOOK_MESSAGE(ShowNote);
 	HOOK_MESSAGE(ClientEffect);
 }

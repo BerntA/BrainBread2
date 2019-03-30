@@ -169,10 +169,7 @@ bool CAchievementManager::WriteToStat(CHL2MP_Player *pPlayer, const char *szStat
 // Save Global Stats for the desired user.
 bool CAchievementManager::SaveGlobalStats(CHL2MP_Player *pPlayer)
 {
-	if (!pPlayer)
-		return false;
-
-	if (!CanSetupProfile())
+	if (!pPlayer || !CanSetupProfile())
 		return false;
 
 	return pPlayer->SaveGlobalStatsForPlayer();
@@ -181,10 +178,7 @@ bool CAchievementManager::SaveGlobalStats(CHL2MP_Player *pPlayer)
 // Load Global Stats for the desired user.
 bool CAchievementManager::LoadGlobalStats(CHL2MP_Player *pPlayer)
 {
-	if (!pPlayer)
-		return false;
-
-	if (!CanSetupProfile())
+	if (!pPlayer || !CanSetupProfile())
 		return false;
 
 	return pPlayer->LoadGlobalStats();
@@ -198,10 +192,7 @@ bool CAchievementManager::CanSetupProfile(void)
 		return false;
 
 	// Make sure that our interfaces have been locked and loaded.
-	if (!steamgameserverapicontext)
-		return false;
-
-	if (!steamgameserverapicontext->SteamGameServerStats())
+	if (!steamgameserverapicontext || !steamgameserverapicontext->SteamGameServerStats())
 		return false;
 
 	return true;
@@ -210,10 +201,7 @@ bool CAchievementManager::CanSetupProfile(void)
 // Are we allowed to do stuff at this time?
 bool CAchievementManager::CanWrite(CHL2MP_Player *pClient, const char *param, bool bIsStat)
 {
-	if (!pClient)
-		return false;
-
-	if (!pClient->m_bHasReadProfileData)
+	if (!pClient || !pClient->m_bHasReadProfileData)
 		return false;
 
 	// Are we using stats, and has cheats NOT been on?
@@ -221,10 +209,7 @@ bool CAchievementManager::CanWrite(CHL2MP_Player *pClient, const char *param, bo
 		return false;
 
 	// Make sure that our interfaces have been locked and loaded.
-	if (!steamgameserverapicontext)
-		return false;
-
-	if (!steamgameserverapicontext->SteamGameServerStats())
+	if (!steamgameserverapicontext || !steamgameserverapicontext->SteamGameServerStats())
 		return false;
 
 	if (param && param[0])
@@ -334,7 +319,7 @@ CON_COMMAND(dev_reset_stats, "Reset Stats")
 	ClientPrint(pPlayer, HUD_PRINTCONSOLE, "You've reset all your stats!\n");
 };
 
-CON_COMMAND(bb2_reset_skills, "Allows a player to reset his/her skills back to default, will not reset the level or XP, points will be restored!")
+CON_COMMAND(bb2_reset_skills, "Allows a player to reset his/her human skills back to default, will not reset the level or XP, points will be restored!")
 {
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_GetCommandClient());
 	if (!pPlayer || ((pPlayer->LastTimePlayerTalked() + 1.0f) >= gpGlobals->curtime))

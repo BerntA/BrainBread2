@@ -106,10 +106,11 @@ void SkillTreeIcon::OnMousePressed(vgui::MouseCode code)
 		return;
 	}
 
-	if (code == MOUSE_LEFT)
-		engine->ClientCmd_Unrestricted(VarArgs("%s 1\n", szCommand));
-	else if (code == MOUSE_RIGHT)
-		engine->ClientCmd_Unrestricted(VarArgs("%s 0\n", szCommand));
+	if ((code == MOUSE_LEFT) || (code == MOUSE_RIGHT))
+	{
+		surface()->PlaySound((code == MOUSE_LEFT) ? "common/wpn_hudoff.wav" : "common/wpn_moveselect.wav");
+		engine->ClientCmd_Unrestricted(VarArgs("%s %i\n", szCommand, ((code == MOUSE_LEFT) ? 1 : 0)));
+	}
 	else
 		BaseClass::OnMousePressed(code);
 }

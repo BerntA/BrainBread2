@@ -1088,16 +1088,12 @@ void CHL2MPRules::GameModeSharedThink(void)
 						break;
 
 					CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-					if (!pPlayer || !pPlayer->HasLoadedStats())
+					if (!pPlayer || !pPlayer->HasLoadedStats() || (pPlayer->GetTeamNumber() != TEAM_SPECTATOR))
 						continue;
 
-					// Everyone will become a human on game restart.
-					if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR)
-					{
-						pPlayer->HandleCommand_JoinTeam(TEAM_HUMANS, true);
-						pPlayer->ForceRespawn();
-						m_iNumReinforcements--;
-					}
+					pPlayer->HandleCommand_JoinTeam(TEAM_HUMANS, true);
+					pPlayer->ForceRespawn();
+					m_iNumReinforcements--;
 				}
 			}
 		}

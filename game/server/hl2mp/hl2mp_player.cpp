@@ -400,7 +400,7 @@ void CHL2MP_Player::PickDefaultSpawnTeam(int iForceTeam)
 		return;
 	}
 
-	if (GetTeamNumber() == 0)
+	if (GetTeamNumber() <= TEAM_UNASSIGNED)
 	{
 		if (GameBaseServer()->IsTutorialModeEnabled())
 		{
@@ -1998,10 +1998,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 
 	else if (FStrEq(args[0], "jointeam"))
 	{
-		if (args.ArgC() != 2)
-			return true;
-
-		if ((HL2MPRules()->GetCurrentGamemode() != MODE_ELIMINATION) || !ShouldRunRateLimitedCommand(args))
+		if ((args.ArgC() != 2) || (HL2MPRules()->GetCurrentGamemode() != MODE_ELIMINATION) || !ShouldRunRateLimitedCommand(args))
 			return true;
 
 		int iTeam = (atoi(args[1]) == 1) ? TEAM_DECEASED : TEAM_HUMANS;
@@ -2050,10 +2047,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 
 	else if (FStrEq(args[0], "bb_voice_command"))
 	{
-		if (args.ArgC() != 2)
-			return true;
-
-		if (!IsHuman() || !IsAlive() || !HL2MPRules()->IsTeamplay() || !ShouldRunRateLimitedCommand(args))
+		if ((args.ArgC() != 2) || !IsHuman() || !IsAlive() || !HL2MPRules()->IsTeamplay() || !ShouldRunRateLimitedCommand(args))
 			return true;
 
 		if ((LastTimePlayerTalked() + VOICE_COMMAND_EMIT_DELAY) < gpGlobals->curtime)
@@ -2185,12 +2179,6 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 			}
 		}
 
-		CSingleUserRecipientFilter filter(this);
-		filter.MakeReliable();
-		UserMessageBegin(filter, "RunBuyCommand");
-		WRITE_BYTE(1);
-		MessageEnd();
-
 		m_flLastTimeRanCommand = gpGlobals->curtime;
 		return true;
 	}
@@ -2271,12 +2259,6 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 			}
 			}
 		}
-
-		CSingleUserRecipientFilter filter(this);
-		filter.MakeReliable();
-		UserMessageBegin(filter, "RunBuyCommand");
-		WRITE_BYTE(1);
-		MessageEnd();
 
 		m_flLastTimeRanCommand = gpGlobals->curtime;
 		return true;
@@ -3134,49 +3116,49 @@ bool CHL2MP_Player::HandleLocalProfile(bool bSave)
 				m_BB2Local.m_iSkill_Talents,
 				m_BB2Local.m_iZombieCredits,
 
-				GetSkillValue(0),
-				GetSkillValue(1),
-				GetSkillValue(2),
-				GetSkillValue(3),
-				GetSkillValue(4),
-				GetSkillValue(5),
-				GetSkillValue(6),
-				GetSkillValue(7),
-				GetSkillValue(8),
-				GetSkillValue(9),
+				GetSkillValue(PLAYER_SKILL_HUMAN_SPEED),
+				GetSkillValue(PLAYER_SKILL_HUMAN_ACROBATICS),
+				GetSkillValue(PLAYER_SKILL_HUMAN_SLIDE),
+				GetSkillValue(PLAYER_SKILL_HUMAN_SNIPER_MASTER),
+				GetSkillValue(PLAYER_SKILL_HUMAN_ENHANCED_REFLEXES),
+				GetSkillValue(PLAYER_SKILL_HUMAN_MELEE_SPEED),
+				GetSkillValue(PLAYER_SKILL_HUMAN_LIGHTWEIGHT),
+				GetSkillValue(PLAYER_SKILL_HUMAN_WEIGHTLESS),
+				GetSkillValue(PLAYER_SKILL_HUMAN_HEALTHREGEN),
+				GetSkillValue(PLAYER_SKILL_HUMAN_REALITY_PHASE),
 
-				GetSkillValue(10),
-				GetSkillValue(11),
-				GetSkillValue(12),
-				GetSkillValue(13),
-				GetSkillValue(14),
-				GetSkillValue(15),
-				GetSkillValue(16),
-				GetSkillValue(17),
-				GetSkillValue(18),
-				GetSkillValue(19),
+				GetSkillValue(PLAYER_SKILL_HUMAN_HEALTH),
+				GetSkillValue(PLAYER_SKILL_HUMAN_IMPENETRABLE),
+				GetSkillValue(PLAYER_SKILL_HUMAN_PAINKILLER),
+				GetSkillValue(PLAYER_SKILL_HUMAN_LIFE_LEECH),
+				GetSkillValue(PLAYER_SKILL_HUMAN_POWER_KICK),
+				GetSkillValue(PLAYER_SKILL_HUMAN_BLEED),
+				GetSkillValue(PLAYER_SKILL_HUMAN_CRIPPLING_BLOW),
+				GetSkillValue(PLAYER_SKILL_HUMAN_ARMOR_MASTER),
+				GetSkillValue(PLAYER_SKILL_HUMAN_MELEE_MASTER),
+				GetSkillValue(PLAYER_SKILL_HUMAN_BLOOD_RAGE),
 
-				GetSkillValue(20),
-				GetSkillValue(21),
-				GetSkillValue(22),
-				GetSkillValue(23),
-				GetSkillValue(24),
-				GetSkillValue(25),
-				GetSkillValue(26),
-				GetSkillValue(27),
-				GetSkillValue(28),
-				GetSkillValue(29),
+				GetSkillValue(PLAYER_SKILL_HUMAN_RIFLE_MASTER),
+				GetSkillValue(PLAYER_SKILL_HUMAN_SHOTGUN_MASTER),
+				GetSkillValue(PLAYER_SKILL_HUMAN_PISTOL_MASTER),
+				GetSkillValue(PLAYER_SKILL_HUMAN_RESOURCEFUL),
+				GetSkillValue(PLAYER_SKILL_HUMAN_BLAZING_AMMO),
+				GetSkillValue(PLAYER_SKILL_HUMAN_COLDSNAP),
+				GetSkillValue(PLAYER_SKILL_HUMAN_SHOUT_AND_SPRAY),
+				GetSkillValue(PLAYER_SKILL_HUMAN_EMPOWERED_BULLETS),
+				GetSkillValue(PLAYER_SKILL_HUMAN_MAGAZINE_REFILL),
+				GetSkillValue(PLAYER_SKILL_HUMAN_GUNSLINGER),
 
-				GetSkillValue(30),
-				GetSkillValue(31),
-				GetSkillValue(32),
-				GetSkillValue(33),
-				GetSkillValue(34),
-				GetSkillValue(35),
-				GetSkillValue(36),
-				GetSkillValue(37),
-				GetSkillValue(38),
-				GetSkillValue(39)
+				GetSkillValue(PLAYER_SKILL_ZOMBIE_HEALTH),
+				GetSkillValue(PLAYER_SKILL_ZOMBIE_DAMAGE),
+				GetSkillValue(PLAYER_SKILL_ZOMBIE_DAMAGE_REDUCTION),
+				GetSkillValue(PLAYER_SKILL_ZOMBIE_SPEED),
+				GetSkillValue(PLAYER_SKILL_ZOMBIE_JUMP),
+				GetSkillValue(PLAYER_SKILL_ZOMBIE_LEAP),
+				GetSkillValue(PLAYER_SKILL_ZOMBIE_DEATH),
+				GetSkillValue(PLAYER_SKILL_ZOMBIE_LIFE_LEECH),
+				GetSkillValue(PLAYER_SKILL_ZOMBIE_HEALTH_REGEN),
+				GetSkillValue(PLAYER_SKILL_ZOMBIE_MASS_INVASION)
 				);
 
 			g_pFullFileSystem->Write(&pszFileContent, strlen(pszFileContent), localProfile);
@@ -3209,7 +3191,7 @@ bool CHL2MP_Player::HandleLocalProfile(bool bSave)
 		m_BB2Local.m_iSkill_Talents = pkvProfile->GetInt("Talents");
 		m_BB2Local.m_iZombieCredits = pkvProfile->GetInt("ZombiePoints");
 
-		int indexIter = 0;
+		int indexIter = 0; // Skip the 5 first kvs!
 		int skillIndex = 0;
 		for (KeyValues *sub = pkvProfile->GetFirstSubKey(); sub; sub = sub->GetNextKey())
 		{
@@ -3342,7 +3324,7 @@ void CHL2MP_Player::SetHuman()
 void CHL2MP_Player::SetPlayerClass(int iTeam)
 {
 	// Reset weight value:
-	m_BB2Local.m_flCarryWeight = 0;
+	m_BB2Local.m_flCarryWeight = 0.0f;
 	m_flHealthRegenWaitTime = 4.0f;
 
 	// Decide if we should set our client to be a zombie or not.
@@ -3605,10 +3587,7 @@ CON_COMMAND(classic_respawn_ashuman, "Respawn as a human if possible!")
 CON_COMMAND(skill_tree, "Player Skill Tree")
 {
 	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pClient)
-		return;
-
-	if (!HL2MPRules()->CanUseSkills())
+	if (!pClient || !HL2MPRules()->CanUseSkills())
 		return;
 
 	pClient->ShowViewPortPanel("skills", true);
@@ -3617,13 +3596,7 @@ CON_COMMAND(skill_tree, "Player Skill Tree")
 CON_COMMAND(zombie_tree, "Zombie Skill Tree")
 {
 	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pClient)
-		return;
-
-	if (!HL2MPRules()->CanUseSkills())
-		return;
-
-	if ((HL2MPRules()->GetCurrentGamemode() == MODE_ARENA) || GameBaseServer()->IsStoryMode())
+	if (!pClient || !HL2MPRules()->CanUseSkills() || (HL2MPRules()->GetCurrentGamemode() == MODE_ARENA) || GameBaseServer()->IsStoryMode())
 		return;
 
 	pClient->ShowViewPortPanel("zombie", true);
@@ -3632,10 +3605,7 @@ CON_COMMAND(zombie_tree, "Zombie Skill Tree")
 CON_COMMAND(team_menu, "Team Selection Menu")
 {
 	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pClient)
-		return;
-
-	if (HL2MPRules()->GetCurrentGamemode() != MODE_ELIMINATION)
+	if (!pClient || (HL2MPRules()->GetCurrentGamemode() != MODE_ELIMINATION))
 		return;
 
 	pClient->ShowViewPortPanel("team", true);
@@ -3644,10 +3614,7 @@ CON_COMMAND(team_menu, "Team Selection Menu")
 CON_COMMAND(voice_menu, "Voice Command Menu")
 {
 	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pClient)
-		return;
-
-	if (!pClient->IsHuman() || !pClient->IsAlive() || !HL2MPRules()->IsTeamplay())
+	if (!pClient || !pClient->IsHuman() || !pClient->IsAlive() || !HL2MPRules()->IsTeamplay())
 		return;
 
 	pClient->ShowViewPortPanel("voicewheel", true);
@@ -3692,10 +3659,7 @@ CON_COMMAND(activate_zombie_rage, "Activate Zombie Rage Perk")
 CON_COMMAND(holster_weapon, "Holster your weapon.")
 {
 	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pClient)
-		return;
-
-	if (!pClient->IsHuman())
+	if (!pClient || !pClient->IsHuman())
 		return;
 
 	CBaseCombatWeapon *pWantedWeapon = pClient->Weapon_OwnsThisType("weapon_hands");
@@ -3783,24 +3747,4 @@ CON_COMMAND_F(bb2_set_fps, "Set fps of all animations. (weapons)", FCVAR_CHEAT)
 		pWeapon->m_flNextPrimaryAttack = gpGlobals->curtime;
 		pWeapon->m_flNextSecondaryAttack = gpGlobals->curtime;
 	}
-}
-
-CON_COMMAND_F(bb2_get_brush_bounds, "Get brush bounds of any brush in front of you.", FCVAR_CHEAT)
-{
-	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pClient)
-		return;
-
-	Vector forward;
-	trace_t tr;
-
-	pClient->EyeVectors(&forward);
-	Vector start = pClient->EyePosition();
-	UTIL_TraceLine(start, start + forward * MAX_COORD_RANGE, MASK_SOLID, pClient, COLLISION_GROUP_NONE, &tr);
-
-	CBaseEntity *pEnt = tr.m_pEnt;
-	if (!pEnt)
-		return;
-
-	Msg("Entity: %s\nBounds: %f %f %f\n", pEnt->GetClassname(), pEnt->CollisionProp()->OBBSize().x, pEnt->CollisionProp()->OBBSize().y, pEnt->CollisionProp()->OBBSize().z);
 }
