@@ -5493,7 +5493,7 @@ bool CBasePlayer::RemovePlayerItem( CBaseCombatWeapon *pItem )
 	if (GetActiveWeapon() == pItem)
 	{
 		pItem->FullHolster();
-		pItem->SetNextThink( TICK_NEVER_THINK );; // crowbar may be trying to swing again, etc
+		pItem->SetNextThink( TICK_NEVER_THINK );
 		pItem->SetThink( NULL );
 	}
 
