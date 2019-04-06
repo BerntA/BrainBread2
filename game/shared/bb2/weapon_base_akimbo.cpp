@@ -1,0 +1,70 @@
+//=========       Copyright © Reperio Studios 2019 @ Bernt Andreas Eide!       ============//
+//
+// Purpose: Akimbo Weapon Skeleton.
+//
+//========================================================================================//
+
+#include "cbase.h"
+#include "weapon_base_akimbo.h"
+#include "in_buttons.h"
+
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
+acttable_t CHL2MPBaseAkimbo::m_acttable[] =
+{
+	{ ACT_MP_STAND_IDLE, ACT_HL2MP_IDLE_AKIMBO, false },
+	{ ACT_MP_CROUCH_IDLE, ACT_HL2MP_IDLE_CROUCH_AKIMBO, false },
+
+	{ ACT_MP_INFECTED, ACT_HL2MP_GESTURE_INFECTED, false },
+	{ ACT_MP_KICK, ACT_HL2MP_GESTURE_KICK, false },
+	{ ACT_MP_BASH, ACT_HL2MP_GESTURE_BASH_REVOLVER, false },
+	{ ACT_MP_SLIDE, ACT_HL2MP_SLIDE_AKIMBO, false },
+	{ ACT_MP_WALK, ACT_HL2MP_WALK_AKIMBO, false },
+
+	{ ACT_MP_RUN, ACT_HL2MP_RUN_AKIMBO, false },
+	{ ACT_MP_CROUCHWALK, ACT_HL2MP_WALK_CROUCH_AKIMBO, false },
+
+	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE, ACT_HL2MP_GESTURE_RANGE_ATTACK_AKIMBO, false },
+	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE, ACT_HL2MP_GESTURE_RANGE_ATTACK_AKIMBO, false },
+
+	{ ACT_MP_ATTACK_STAND_SECONDARYFIRE, ACT_HL2MP_GESTURE_RANGE_ATTACK_AKIMBO, false },
+	{ ACT_MP_ATTACK_CROUCH_SECONDARYFIRE, ACT_HL2MP_GESTURE_RANGE_ATTACK_AKIMBO, false },
+
+	{ ACT_MP_RELOAD_STAND, ACT_HL2MP_GESTURE_RELOAD_AKIMBO, false },
+	{ ACT_MP_RELOAD_CROUCH, ACT_HL2MP_GESTURE_RELOAD_AKIMBO, false },
+
+	{ ACT_MP_JUMP, ACT_HL2MP_JUMP_AKIMBO, false },
+};
+
+IMPLEMENT_ACTTABLE(CHL2MPBaseAkimbo);
+
+CHL2MPBaseAkimbo::CHL2MPBaseAkimbo(void)
+{
+	m_bReloadsSingly = m_bFiresUnderwater = false;
+}
+
+void CHL2MPBaseAkimbo::ItemPostFrame(void)
+{
+	BaseClass::ItemPostFrame();
+}
+
+void CHL2MPBaseAkimbo::StartHolsterSequence()
+{
+	BaseClass::StartHolsterSequence();
+}
+
+bool CHL2MPBaseAkimbo::Holster(CBaseCombatWeapon *pSwitchingTo)
+{
+	return BaseClass::Holster(pSwitchingTo);
+}
+
+void CHL2MPBaseAkimbo::Drop(const Vector &vecVelocity)
+{
+	BaseClass::Drop(vecVelocity);
+}
+
+bool CHL2MPBaseAkimbo::Deploy(void)
+{
+	return BaseClass::Deploy();
+}

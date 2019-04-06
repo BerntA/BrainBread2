@@ -97,7 +97,7 @@ void CGameDefinitionsWorkshop::Initialize()
 		m_currentFileID = itemID;
 	}
 
-	engine->ServerCommand("exec game_workshop.cfg\n");
+	engine->ServerCommand("exec server_workshop.cfg\n");
 }
 
 void CGameDefinitionsWorkshop::DownloadThink()

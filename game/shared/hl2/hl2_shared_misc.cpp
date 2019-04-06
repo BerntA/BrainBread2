@@ -1035,10 +1035,6 @@ CMissile::~CMissile()
 void CMissile::Precache(void)
 {
 	PrecacheModel("models/weapons/w_panzerschreck_rocket.mdl");
-	PrecacheModel("models/weapons/w_missile.mdl");
-	PrecacheModel("models/weapons/w_missile_launch.mdl");
-	PrecacheModel("models/weapons/w_missile_closed.mdl");
-
 	PrecacheScriptSound("Missile.Ignite");
 	PrecacheScriptSound("Missile.Accelerate");
 
@@ -1858,7 +1854,7 @@ CAPCMissile::~CAPCMissile()
 void CAPCMissile::Init()
 {
 	SetMoveType(MOVETYPE_FLY);
-	SetModel("models/weapons/w_missile.mdl");
+	SetModel("models/weapons/w_panzerschreck_rocket.mdl");
 	UTIL_SetSize(this, vec3_origin, vec3_origin);
 	CreateSmokeTrail();
 	SetTouch(&CAPCMissile::APCMissileTouch);

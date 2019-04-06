@@ -203,27 +203,20 @@ void CHL2MPMachineGun::ItemPostFrame(void)
 
 bool CHL2MPMachineGun::Reload(void)
 {
-	bool fRet;
-
 	CHL2MP_Player *pClient = ToHL2MPPlayer(GetOwner());
 	if (pClient)
 	{
 		int reloadAct = GetReloadActivity();
-		fRet = DefaultReload(GetMaxClip1(), GetMaxClip2(), reloadAct);
-		if (fRet)
+		if (DefaultReload(GetMaxClip1(), GetMaxClip2(), reloadAct))
+		{
 			pClient->DoAnimationEvent(PLAYERANIMEVENT_RELOAD, reloadAct);
+			m_bIsFiringBurst = false;
+			m_flSoonestSecondaryAttack = 0.0f;
+			WeaponSound(RELOAD);
+			return true;
+		}
 	}
-	else
-		fRet = DefaultReload(GetMaxClip1(), GetMaxClip2(), ACT_VM_RELOAD);
-
-	if (fRet)
-	{
-		m_bIsFiringBurst = false;
-		m_flSoonestSecondaryAttack = 0.0f;
-		WeaponSound(RELOAD);
-	}
-
-	return fRet;
+	return false;
 }
 
 bool CHL2MPMachineGun::Holster(CBaseCombatWeapon *pSwitchingTo)

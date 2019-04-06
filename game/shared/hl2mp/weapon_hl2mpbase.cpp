@@ -303,15 +303,18 @@ void CWeaponHL2MPBase::FallInit( void )
 
 bool CWeaponHL2MPBase::Reload(void)
 {
-	bool fRet = DefaultReload(GetMaxClip1(), GetMaxClip2(), ACT_VM_RELOAD);
-	if (fRet)
+	CHL2MP_Player *pClient = ToHL2MPPlayer(GetOwner());
+	if (pClient)
 	{
-		CHL2MP_Player *pOwner = ToHL2MPPlayer(GetOwner());
-		if (pOwner)
-			pOwner->DoAnimationEvent(PLAYERANIMEVENT_RELOAD, ACT_VM_RELOAD);
+		int reloadAct = GetReloadActivity(UsesEmptyAnimation());
+		if (DefaultReload(GetMaxClip1(), GetMaxClip2(), reloadAct))
+		{
+			pClient->DoAnimationEvent(PLAYERANIMEVENT_RELOAD, reloadAct);
+			WeaponSound(RELOAD);
+			return true;
+		}
 	}
-
-	return fRet;
+	return false;
 }
 
 const CHL2MPSWeaponInfo &CWeaponHL2MPBase::GetHL2MPWpnData() const

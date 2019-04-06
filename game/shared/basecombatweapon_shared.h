@@ -234,7 +234,7 @@ public:
 																	// either reloads, switches weapons, or plays an empty sound.
 
 	virtual int	GetTracerAttachment(void);
-	virtual int GetReloadActivity(void);
+	virtual int GetReloadActivity(bool bCanDoEmpty = true);
 
 	virtual const char *GetMuzzleflashAttachment(bool bPrimaryAttack) { return "muzzle"; }
 

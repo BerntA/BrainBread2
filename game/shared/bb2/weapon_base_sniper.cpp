@@ -176,31 +176,26 @@ int CHL2MPSniperRifle::GetFOVForZoom(int level)
 
 bool CHL2MPSniperRifle::Reload(void)
 {
-	bool fRet = false;
-
 	if (m_flNextPrimaryAttack > gpGlobals->curtime)
 		return false;
 
+	bool ret = BaseClass::Reload();
+	if (ret)
+		SetZoomLevel(0);
 	CHL2MP_Player *pClient = ToHL2MPPlayer(GetOwner());
 	if (pClient)
 	{
-		int reloadAct = ACT_VM_RELOAD0 + pClient->GetSkillValue(PLAYER_SKILL_HUMAN_SNIPER_MASTER);
-		if (HL2MPRules() && HL2MPRules()->IsFastPacedGameplay())
-			reloadAct = ACT_VM_RELOAD10;
-
-		fRet = DefaultReload(GetMaxClip1(), GetMaxClip2(), reloadAct);
-		if (fRet)
+		int reloadAct = GetReloadActivity(false);
+		if (DefaultReload(GetMaxClip1(), GetMaxClip2(), reloadAct))
+		{
 			pClient->DoAnimationEvent(PLAYERANIMEVENT_RELOAD, reloadAct);
-
-		SetZoomLevel(0);
+			SetZoomLevel(0);
+			WeaponSound(RELOAD);
+			return true;
+		}
 	}
-	else
-		fRet = DefaultReload(GetMaxClip1(), GetMaxClip2(), ACT_VM_RELOAD);
 
-	if (fRet)
-		WeaponSound(RELOAD);
-
-	return fRet;
+	return false;
 }
 
 bool CHL2MPSniperRifle::CanPerformMeleeAttacks()

@@ -120,7 +120,6 @@ void ClientGamePrecache( void )
 {
 	CBaseEntity::PrecacheModel("models/player.mdl");
 	CBaseEntity::PrecacheModel( "models/gibs/agibs.mdl" );
-	CBaseEntity::PrecacheModel ("models/weapons/v_hands.mdl");
 
 	CBaseEntity::PrecacheScriptSound( "HUDQuickInfo.LowAmmo" );
 	CBaseEntity::PrecacheScriptSound( "HUDQuickInfo.LowHealth" );
@@ -132,12 +131,10 @@ void ClientGamePrecache( void )
 	CBaseEntity::PrecacheScriptSound( "Bullets.StriderNearmiss" );
 }
 
-
 // called by ClientKill and DeadThink
 void respawn( CBaseEntity *pEdict, bool fCopyCorpse )
 {
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer( pEdict );
-
 	if ( pPlayer )
 	{
 		if ( gpGlobals->curtime > pPlayer->GetDeathTime() + DEATH_ANIMATION_TIME )

@@ -32,7 +32,7 @@ void CBaseGrenadeContact::Spawn( void )
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
 	SetSolid( SOLID_BBOX );
 	SetCollisionGroup( COLLISION_GROUP_PROJECTILE );
-	SetModel( "models/weapons/w_grenade.mdl" );	// BUG: wrong model
+	SetModel( "models/weapons/explosives/frag/w_frag_thrown.mdl" );	// BUG: wrong model
 
 	UTIL_SetSize(this, vec3_origin, vec3_origin);
 
@@ -66,6 +66,5 @@ void CBaseGrenadeContact::Spawn( void )
 void CBaseGrenadeContact::Precache( void )
 {
 	BaseClass::Precache( );
-
-	PrecacheModel("models/weapons/w_grenade.mdl");
+	PrecacheModel("models/weapons/explosives/frag/w_frag_thrown.mdl");
 }

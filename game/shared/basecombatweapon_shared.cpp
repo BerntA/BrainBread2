@@ -1764,14 +1764,13 @@ int CBaseCombatWeapon::GetTracerAttachment(void)
 	return iAttachment;
 }
 
-int CBaseCombatWeapon::GetReloadActivity(void)
+int CBaseCombatWeapon::GetReloadActivity(bool bCanDoEmpty)
 {
 	CHL2MP_Player *pOwner = ToHL2MPPlayer(GetOwner());
 	if (!pOwner)
 		return ACT_VM_RELOAD;
 
 	int activity = ACT_VM_RELOAD0;
-
 	int skillType = PLAYER_SKILL_HUMAN_RIFLE_MASTER;
 	switch (GetWeaponType())
 	{
@@ -1790,18 +1789,10 @@ int CBaseCombatWeapon::GetReloadActivity(void)
 		break;
 	}
 
-	if (m_iClip1 > 0)
-		activity = (ACT_VM_RELOAD0 + pOwner->GetSkillValue(skillType));
-	else
-		activity = (ACT_VM_RELOAD_EMPTY0 + pOwner->GetSkillValue(skillType));
-
+	bool bDontDoEmpty = (m_iClip1 > 0) || !bCanDoEmpty;
+	activity = (bDontDoEmpty ? ACT_VM_RELOAD0 : ACT_VM_RELOAD_EMPTY0) + pOwner->GetSkillValue(skillType);
 	if (HL2MPRules() && HL2MPRules()->IsFastPacedGameplay())
-	{
-		if (m_iClip1 > 0)
-			activity = ACT_VM_RELOAD10;
-		else
-			activity = ACT_VM_RELOAD_EMPTY10;
-	}
+		activity = bDontDoEmpty ? ACT_VM_RELOAD10 : ACT_VM_RELOAD_EMPTY10;
 
 	return activity;
 }

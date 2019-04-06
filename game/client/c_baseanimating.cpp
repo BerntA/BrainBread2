@@ -3894,16 +3894,13 @@ void C_BaseAnimating::FireEvent( const Vector& origin, const QAngle& angles, int
 
 	// Eject brass
 	case CL_EVENT_EJECTBRASS1:
-		if ( m_Attachments.Count() > 0 )
+	case CL_EVENT_EJECTBRASS2:
+		if ((m_Attachments.Count() > 0) && (MainViewOrigin().DistToSqr(GetAbsOrigin()) < (256 * 256)))
 		{
-			if ( MainViewOrigin().DistToSqr( GetAbsOrigin() ) < (256 * 256) )
-			{
-				Vector attachOrigin;
-				QAngle attachAngles; 
-				
-				if( GetAttachment( 2, attachOrigin, attachAngles ) )
-					tempents->EjectBrass(attachOrigin, attachAngles, GetAbsAngles(), atoi(options));
-			}
+			Vector attachOrigin;
+			QAngle attachAngles;
+			if (GetAttachment(((event == CL_EVENT_EJECTBRASS1) ? 2 : 3), attachOrigin, attachAngles))
+				tempents->EjectBrass(attachOrigin, attachAngles, GetAbsAngles(), atoi(options));
 		}
 		break;
 

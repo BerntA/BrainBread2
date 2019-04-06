@@ -5,7 +5,6 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "npcevent.h"
 #include "in_buttons.h"
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
 

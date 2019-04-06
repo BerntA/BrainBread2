@@ -27,7 +27,7 @@ void CBaseGrenadeTimed::Spawn( void )
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
 	SetSolid( SOLID_BBOX );
 	SetCollisionGroup( COLLISION_GROUP_PROJECTILE );
-	SetModel( "models/Weapons/w_grenade.mdl" ); 
+	SetModel("models/weapons/explosives/frag/w_frag_thrown.mdl");
 
 	UTIL_SetSize(this, Vector( -4, -4, -4), Vector(4, 4, 4));
 
@@ -63,11 +63,8 @@ void CBaseGrenadeTimed::Spawn( void )
 	m_takedamage = DAMAGE_NO;
 }
 
-
-
 void CBaseGrenadeTimed::Precache( void )
 {
 	BaseClass::Precache( );
-
-	PrecacheModel("models/weapons/w_grenade.mdl");
+	PrecacheModel("models/weapons/explosives/frag/w_frag_thrown.mdl");
 }
