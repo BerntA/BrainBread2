@@ -267,6 +267,7 @@ $Project
 			$File "$SRCDIR\game\shared\bb2\weapon_glock17_akimbo.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_beretta_akimbo.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_rex_akimbo.cpp"
+			$File "$SRCDIR\game\shared\bb2\weapon_sawedoff_akimbo.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_mp5.cpp"
 		}
 	}
