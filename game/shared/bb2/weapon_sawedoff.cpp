@@ -158,7 +158,8 @@ IMPLEMENT_ACTTABLE(CWeaponSawedOff);
 
 CWeaponSawedOff::CWeaponSawedOff(void)
 {
-	m_iFiringFlags = m_iFiringState = 0;
+	m_iFiringFlags = 0;
+	m_iFiringState = 0;
 }
 
 void CWeaponSawedOff::AffectedByPlayerSkill(int skill)
@@ -180,7 +181,7 @@ const char *CWeaponSawedOff::GetMuzzleflashAttachment(bool bPrimaryAttack)
 {
 	if (bPrimaryAttack)
 	{
-		if (m_iFiringState == SAWEDOFF_FIRED_LEFT)
+		if (m_iFiringState.Get() == SAWEDOFF_FIRED_LEFT)
 			return "left_muzzle";
 		else
 			return "right_muzzle";
@@ -233,7 +234,7 @@ bool CWeaponSawedOff::Reload(void)
 
 void CWeaponSawedOff::PerformAttack(bool bDouble)
 {
-	Activity shootActivity = (m_iFiringState == SAWEDOFF_FIRED_LEFT) ? ACT_VM_SHOOT_LEFT : ACT_VM_SHOOT_RIGHT;
+	Activity shootActivity = (m_iFiringState.Get() == SAWEDOFF_FIRED_LEFT) ? ACT_VM_SHOOT_LEFT : ACT_VM_SHOOT_RIGHT;
 	if (bDouble)
 		shootActivity = ACT_VM_SHOOT_BOTH;
 
@@ -262,13 +263,14 @@ void CWeaponSawedOff::ItemPostFrame(void)
 				FillClip(1);
 
 			m_bInReload = false;
-			m_iFiringFlags = m_iFiringState = 0;
+			m_iFiringFlags = 0;
+			m_iFiringState = 0;
 		}
 	}
 
 	WeaponIdle();
 
-	if (m_flNextPrimaryAttack < gpGlobals->curtime)
+	if ((m_flNextPrimaryAttack < gpGlobals->curtime) && !m_bInReload)
 	{
 		if (pOwner->m_nButtons & (IN_ATTACK | IN_ATTACK2))
 		{
@@ -285,6 +287,8 @@ void CWeaponSawedOff::ItemPostFrame(void)
 			}
 		}
 
+		int attackChoice = 0;
+
 		if (pOwner->m_nButtons & IN_ATTACK)
 		{
 			if (m_iFiringFlags & SAWEDOFF_FIRED_LEFT)
@@ -293,7 +297,7 @@ void CWeaponSawedOff::ItemPostFrame(void)
 				return;
 			}
 			else
-				m_iFiringState = SAWEDOFF_FIRED_LEFT;
+				attackChoice = SAWEDOFF_FIRED_LEFT;
 		}
 		else if (pOwner->m_nButtons & IN_ATTACK2)
 		{
@@ -303,14 +307,17 @@ void CWeaponSawedOff::ItemPostFrame(void)
 				return;
 			}
 			else
-				m_iFiringState = SAWEDOFF_FIRED_RIGHT;
+				attackChoice = SAWEDOFF_FIRED_RIGHT;
 		}
 
-		int oldFlags = m_iFiringFlags;
-		m_iFiringFlags |= m_iFiringState;
+		int oldFlags = m_iFiringFlags.Get();
+		int newFlags = (oldFlags | attackChoice);
 
-		if (oldFlags != m_iFiringFlags)
+		if (oldFlags != newFlags)
 		{
+			m_iFiringState.Set(attackChoice);
+			m_iFiringFlags.Set(newFlags);
+
 			if (pOwner->m_afButtonPressed & (IN_ATTACK | IN_ATTACK2))
 				m_flNextPrimaryAttack = gpGlobals->curtime;
 

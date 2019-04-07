@@ -121,7 +121,7 @@ void CHL2MPBaseAkimbo::PerformAttack(bool bPrimary)
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
 	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);
 
-	FireBulletsInfo_t info(1, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
+	FireBulletsInfo_t info(GetWpnData().m_iPellets, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
 	info.m_pAttacker = pPlayer;
 	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
 	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;

@@ -100,14 +100,10 @@ CWeaponREX::CWeaponREX(void)
 void CWeaponREX::PrimaryAttack(void)
 {
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
-	if (!pPlayer)
-		return;
-
-	if (!(pPlayer->m_afButtonPressed & IN_ATTACK))
+	if (!pPlayer || !(pPlayer->m_afButtonPressed & IN_ATTACK))
 		return;
 
 	WeaponSound(SINGLE);
-
 	SendWeaponAnim(ACT_VM_PRIMARYATTACK);
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();

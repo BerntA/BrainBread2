@@ -1221,21 +1221,16 @@ bool CBaseCombatWeapon::IsWeaponVisible( void )
 //-----------------------------------------------------------------------------
 bool CBaseCombatWeapon::DefaultDeploy( char *szViewModel, char *szWeaponModel, int iActivity )
 {
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-	if ( pOwner )
+	CBasePlayer* pOwner = ToBasePlayer(GetOwner());
+	if (pOwner)
 	{
 		// Dead men deploy no weapons
-		if ( pOwner->IsAlive() == false )
+		if (pOwner->IsAlive() == false)
 			return false;
 
 		SetViewModel();
-
-		if (UsesEmptyAnimation() && m_iClip1 <= 0)
-			PlayAnimation(ACT_VM_DRAW_EMPTY);
-		else
-			PlayAnimation(iActivity);
-
-		pOwner->SetNextAttack( gpGlobals->curtime + SequenceDuration() );
+		PlayAnimation(iActivity);
+		pOwner->SetNextAttack(gpGlobals->curtime + SequenceDuration());
 	}
 
 	// Can't shoot again until we've finished deploying
@@ -1267,12 +1262,9 @@ bool CBaseCombatWeapon::DefaultDeploy( char *szViewModel, char *szWeaponModel, i
 //-----------------------------------------------------------------------------
 bool CBaseCombatWeapon::CanHolster( void )
 {
-	CHL2MP_Player *pClient = ToHL2MPPlayer( GetOwner() );
-	if ( pClient ) 
-	{
-		if ( !pClient->IsAlive() )
-			return false;
-	}
+	CHL2MP_Player* pClient = ToHL2MPPlayer(GetOwner());
+	if (pClient && !pClient->IsAlive())
+		return false;
 
 	return true;
 }
@@ -1298,9 +1290,36 @@ bool CBaseCombatWeapon::Deploy( )
 	return DefaultDeploy( (char*)GetViewModel(), (char*)GetWorldModel(), GetDrawActivity() );
 }
 
-Activity CBaseCombatWeapon::GetDrawActivity( void )
+Activity CBaseCombatWeapon::GetDrawActivity(void)
 {
+	if (UsesEmptyAnimation())
+	{
+		if (IsAkimboWeapon())
+		{
+			if ((m_iClip1 <= 0) && (m_iClip2 <= 0))
+				return ACT_VM_DRAW_EMPTY;
+		}
+		else if (m_iClip1 <= 0)
+			return ACT_VM_DRAW_EMPTY;
+	}
+
 	return ACT_VM_DRAW;
+}
+
+Activity CBaseCombatWeapon::GetHolsterActivity(void)
+{
+	if (UsesEmptyAnimation())
+	{
+		if (IsAkimboWeapon())
+		{
+			if ((m_iClip1 <= 0) && (m_iClip2 <= 0))
+				return ACT_VM_HOLSTER_EMPTY;
+		}
+		else if (m_iClip1 <= 0)
+			return ACT_VM_HOLSTER_EMPTY;
+	}
+
+	return ACT_VM_HOLSTER;
 }
 
 //-----------------------------------------------------------------------------
@@ -1421,13 +1440,10 @@ void CBaseCombatWeapon::HandleWeaponSelectionTime(void)
 	if (!pOwner)
 		return;
 
-	if (m_bWantsHolster)
+	if (m_bWantsHolster && (m_flHolsteredTime <= gpGlobals->curtime))
 	{
-		if (m_flHolsteredTime <= gpGlobals->curtime)
-		{
-			m_bWantsHolster = false;
-			Holster();
-		}
+		m_bWantsHolster = false;
+		Holster();
 	}
 }
 
@@ -1544,13 +1560,12 @@ void CBaseCombatWeapon::StartHolsterSequence()
 	m_flViewKickTime = 0.0f;
 
 	// Send holster animation
-	if (m_iClip1 <= 0 && UsesEmptyAnimation())
-		SendWeaponAnim(ACT_VM_HOLSTER_EMPTY);
-	else
-		SendWeaponAnim(ACT_VM_HOLSTER);
+	Activity act = GetHolsterActivity();
+	if (act != ACT_INVALID)
+		SendWeaponAnim(act);
 
 	float flHolsterTime = gpGlobals->curtime + GetViewModelSequenceDuration();
-	if (HL2MPRules() && HL2MPRules()->IsFastPacedGameplay())
+	if ((HL2MPRules() && HL2MPRules()->IsFastPacedGameplay()) || (act == ACT_INVALID))
 		flHolsterTime = gpGlobals->curtime + 0.1f;
 
 	m_flHolsteredTime = flHolsterTime;
@@ -1644,7 +1659,6 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 		}
 		else if (pOwner->GetWaterLevel() == 3 && m_bAltFiresUnderwater == false)
 		{
-			// This weapon doesn't fire underwater
 			WeaponSound(EMPTY);
 			m_flNextSecondaryAttack = gpGlobals->curtime + 0.2;
 			return;
@@ -1652,10 +1666,8 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 		else
 		{
 			bFired = true;
-			if ((pOwner->m_afButtonPressed & IN_ATTACK) || (pOwner->m_afButtonReleased & IN_ATTACK2))
-			{
-				m_flNextSecondaryAttack = gpGlobals->curtime;
-			}
+			if ((pOwner->m_afButtonPressed & IN_ATTACK) || (pOwner->m_afButtonReleased & IN_ATTACK2))		
+				m_flNextSecondaryAttack = gpGlobals->curtime;			
 
 			m_bLastFiredPrimary = false;
 			SecondaryAttack();
@@ -1667,7 +1679,6 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 
 	if (!bFired && (pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 	{
-		// Clip empty? Or out of ammo on a no-clip weapon?
 		if ( !IsMeleeWeapon() &&  
 			(( UsesClipsForAmmo1() && m_iClip1 <= 0) || ( !UsesClipsForAmmo1() && pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )) )
 		{
@@ -1675,24 +1686,14 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 		}
 		else if (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
 		{
-			// This weapon doesn't fire underwater
 			WeaponSound(EMPTY);
 			m_flNextPrimaryAttack = gpGlobals->curtime + 0.2;
 			return;
 		}
 		else
 		{
-			//NOTENOTE: There is a bug with this code with regards to the way machine guns catch the leading edge trigger
-			//			on the player hitting the attack key.  It relies on the gun catching that case in the same frame.
-			//			However, because the player can also be doing a secondary attack, the edge trigger may be missed.
-			//			We really need to hold onto the edge trigger and only clear the condition when the gun has fired its
-			//			first shot.  Right now that's too much of an architecture change -- jdw
-
-			// If the firing button was just pressed, or the alt-fire just released, reset the firing time
-			if ( ( pOwner->m_afButtonPressed & IN_ATTACK ) || ( pOwner->m_afButtonReleased & IN_ATTACK2 ) )
-			{
+			if ((pOwner->m_afButtonPressed & IN_ATTACK) || (pOwner->m_afButtonReleased & IN_ATTACK2))
 				m_flNextPrimaryAttack = gpGlobals->curtime;
-			}
 
 			m_bLastFiredPrimary = true;
 			PrimaryAttack();
@@ -2110,12 +2111,21 @@ bool CBaseCombatWeapon::Reload( void )
 //=========================================================
 void CBaseCombatWeapon::WeaponIdle( void )
 {
-	if ( HasWeaponIdleTimeElapsed() )
+	if (HasWeaponIdleTimeElapsed())
 	{
-		if (UsesEmptyAnimation() && (m_iClip1 <= 0))
-			SendWeaponAnim(ACT_VM_IDLE_EMPTY);
-		else
-			SendWeaponAnim(ACT_VM_IDLE);
+		Activity idle = ACT_VM_IDLE;
+		if (UsesEmptyAnimation())
+		{
+			if (IsAkimboWeapon())
+			{
+				if ((m_iClip1 <= 0) && (m_iClip2 <= 0))
+					idle = ACT_VM_IDLE_EMPTY;
+			}
+			else if (m_iClip1 <= 0)
+				idle = ACT_VM_IDLE_EMPTY;
+		}
+
+		SendWeaponAnim(idle);
 	}
 }
 
@@ -2601,7 +2611,7 @@ bool CBaseCombatWeapon::SetIdealActivity( Activity ideal )
 	int nextSequence = FindTransitionSequence( GetSequence(), m_nIdealSequence, NULL );
 
 	// Don't use transitions when we're deploying
-	if ( ideal != ACT_VM_DRAW && IsWeaponVisible() && nextSequence != m_nIdealSequence )
+	if ( (ideal != ACT_VM_DRAW) && (ideal != ACT_VM_DRAW_EMPTY) && IsWeaponVisible() && (nextSequence != m_nIdealSequence) )
 	{
 		//Set our activity to the next transitional animation
 		SetActivity( ACT_TRANSITION );

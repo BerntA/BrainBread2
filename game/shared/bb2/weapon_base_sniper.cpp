@@ -78,17 +78,6 @@ void CHL2MPSniperRifle::SetZoomLevel(int level)
 	}
 }
 
-void CHL2MPSniperRifle::WeaponIdle(void)
-{
-	if (HasWeaponIdleTimeElapsed())
-	{
-		if ((m_iClip1 <= 0) && UsesEmptyAnimation())
-			SendWeaponAnim(ACT_VM_IDLE_EMPTY);
-		else
-			SendWeaponAnim(ACT_VM_IDLE);
-	}
-}
-
 void CHL2MPSniperRifle::ItemPostFrame(void)
 {
 	BaseClass::ItemPostFrame();

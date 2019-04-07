@@ -1025,7 +1025,8 @@ bool CHL2_Player::ClientCommand( const CCommand &args )
 			if (!pActiveWeapon->CanHolster() || pActiveWeapon->m_bWantsHolster)
 				return true;
 
-			if (FClassnameIs(pActiveWeapon, "weapon_zombhands") || FClassnameIs(pActiveWeapon, "weapon_hands"))
+			int wepID = pActiveWeapon->GetUniqueWeaponID();
+			if (wepID == WEAPON_ID_HANDS || wepID == WEAPON_ID_ZOMBHANDS)
 				return true;
 
 			Weapon_DropSlot(pActiveWeapon->GetSlot());

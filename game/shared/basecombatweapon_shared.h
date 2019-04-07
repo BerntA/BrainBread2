@@ -303,10 +303,11 @@ public:
 	void    PlayAnimation( int iActivity );
 
 	// Firing animations
-	virtual Activity		GetPrimaryAttackActivity( void );
-	virtual Activity		GetSecondaryAttackActivity( void );
-	virtual Activity		GetDrawActivity( void );
-	virtual float			GetDefaultAnimSpeed( void ) { return 1.0; }
+	virtual Activity		GetPrimaryAttackActivity(void);
+	virtual Activity		GetSecondaryAttackActivity(void);
+	virtual Activity		GetDrawActivity(void);
+	virtual Activity		GetHolsterActivity(void);
+	virtual float			GetDefaultAnimSpeed(void) { return 1.0; }
 
 	// Bullet launch information
 	virtual int				GetBulletType( void );

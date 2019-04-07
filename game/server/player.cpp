@@ -3897,11 +3897,11 @@ void CBasePlayer::PostThink()
 			if ( m_hUseEntity != NULL )
 			{ 
 				// if they've moved too far from the gun, or deployed another weapon, unuse the gun
-				if ( m_hUseEntity->OnControls( this ) && 
-					( !GetActiveWeapon() || GetActiveWeapon()->IsEffectActive( EF_NODRAW ) ||
-					( GetActiveWeapon()->GetActivity() == ACT_VM_HOLSTER ) ) )
-				{  
-					m_hUseEntity->Use( this, this, USE_SET, 2 );	// try fire the gun
+				if (m_hUseEntity->OnControls(this) &&
+					(!GetActiveWeapon() || GetActiveWeapon()->IsEffectActive(EF_NODRAW) ||
+					(GetActiveWeapon()->GetActivity() == ACT_VM_HOLSTER) || (GetActiveWeapon()->GetActivity() == ACT_VM_HOLSTER_EMPTY)))
+				{
+					m_hUseEntity->Use(this, this, USE_SET, 2);	// try fire the gun
 				}
 				else
 				{
