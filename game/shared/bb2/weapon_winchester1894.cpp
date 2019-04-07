@@ -243,18 +243,12 @@ bool CWeaponWinchester1894::Reload(void)
 	// Play reload on different channel as otherwise steals channel away from fire sound
 	WeaponSound(RELOAD);
 
-	CHL2MP_Player *pClient = ToHL2MPPlayer(GetOwner());
-	if (pClient)
-	{
-		int reloadAct = ACT_VM_RELOAD0 + pClient->GetSkillValue(PLAYER_SKILL_HUMAN_RIFLE_MASTER);
-		if (HL2MPRules() && HL2MPRules()->IsFastPacedGameplay())
-			reloadAct = ACT_VM_RELOAD10;
+	int reloadAct = GetReloadActivity(false);
+	SendWeaponAnim(reloadAct);
 
-		SendWeaponAnim(reloadAct);
+	CHL2MP_Player* pClient = ToHL2MPPlayer(GetOwner());
+	if (pClient)
 		pClient->DoAnimationEvent(PLAYERANIMEVENT_RELOAD, reloadAct);
-	}
-	else
-		SendWeaponAnim(ACT_VM_RELOAD0);
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
 

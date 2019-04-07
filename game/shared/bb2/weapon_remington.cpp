@@ -210,7 +210,7 @@ bool CWeaponRemington::Reload(void)
 	int reloadAct = GetReloadActivity(false);
 	SendWeaponAnim(reloadAct);
 
-	CHL2MP_Player *pClient = ToHL2MPPlayer(GetOwner());
+	CHL2MP_Player* pClient = ToHL2MPPlayer(GetOwner());
 	if (pClient)
 		pClient->DoAnimationEvent(PLAYERANIMEVENT_RELOAD, reloadAct);
 

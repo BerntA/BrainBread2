@@ -182,20 +182,8 @@ bool CHL2MPSniperRifle::Reload(void)
 	bool ret = BaseClass::Reload();
 	if (ret)
 		SetZoomLevel(0);
-	CHL2MP_Player *pClient = ToHL2MPPlayer(GetOwner());
-	if (pClient)
-	{
-		int reloadAct = GetReloadActivity(false);
-		if (DefaultReload(GetMaxClip1(), GetMaxClip2(), reloadAct))
-		{
-			pClient->DoAnimationEvent(PLAYERANIMEVENT_RELOAD, reloadAct);
-			SetZoomLevel(0);
-			WeaponSound(RELOAD);
-			return true;
-		}
-	}
 
-	return false;
+	return ret;
 }
 
 bool CHL2MPSniperRifle::CanPerformMeleeAttacks()

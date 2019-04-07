@@ -5,8 +5,7 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "in_buttons.h"
-#include "weapon_hl2mpbasehlmpcombatweapon.h"
+#include "weapon_base_akimbo.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -15,27 +14,21 @@
 #define CWeaponREXAkimbo C_WeaponREXAkimbo
 #endif
 
-class CWeaponREXAkimbo : public CBaseHL2MPCombatWeapon
+class CWeaponREXAkimbo : public CHL2MPBaseAkimbo
 {
 public:
-	DECLARE_CLASS(CWeaponREXAkimbo, CBaseHL2MPCombatWeapon);
+	DECLARE_CLASS(CWeaponREXAkimbo, CHL2MPBaseAkimbo);
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
-	DECLARE_ACTTABLE();
 
 	CWeaponREXAkimbo(void);
-
-	void PerformAttack(bool bPrimary);
-	void PrimaryAttack(void) { PerformAttack(true); }
-	void SecondaryAttack(void){ PerformAttack(false); }
-	bool Reload(void);
-
+	
+	void AddViewKick(void);
+	bool UsesEmptyAnimation() { return false; }
 	int GetOverloadCapacity() { return 3; }
 	int GetUniqueWeaponID() { return WEAPON_ID_REXMP412_AKIMBO; }
 	int GetWeaponType(void) { return WEAPON_TYPE_REVOLVER; }
 	const char *GetAmmoEntityLink(void) { return "ammo_revolver"; }
-	bool IsAkimboWeapon(void) { return true; }
-
 	const char *GetMuzzleflashAttachment(bool bPrimaryAttack)
 	{
 		if (bPrimaryAttack)
@@ -59,114 +52,32 @@ END_PREDICTION_DATA()
 LINK_ENTITY_TO_CLASS(weapon_akimbo_rex, CWeaponREXAkimbo);
 PRECACHE_WEAPON_REGISTER(weapon_akimbo_rex);
 
-acttable_t CWeaponREXAkimbo::m_acttable[] =
-{
-	{ ACT_MP_STAND_IDLE, ACT_HL2MP_IDLE_AKIMBO, false },
-	{ ACT_MP_CROUCH_IDLE, ACT_HL2MP_IDLE_CROUCH_AKIMBO, false },
-
-	{ ACT_MP_INFECTED, ACT_HL2MP_GESTURE_INFECTED, false },
-	{ ACT_MP_KICK, ACT_HL2MP_GESTURE_KICK, false },
-	{ ACT_MP_BASH, ACT_HL2MP_GESTURE_BASH_REVOLVER, false },
-	{ ACT_MP_SLIDE, ACT_HL2MP_SLIDE_AKIMBO, false },
-	{ ACT_MP_WALK, ACT_HL2MP_WALK_AKIMBO, false },
-
-	{ ACT_MP_RUN, ACT_HL2MP_RUN_AKIMBO, false },
-	{ ACT_MP_CROUCHWALK, ACT_HL2MP_WALK_CROUCH_AKIMBO, false },
-
-	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE, ACT_HL2MP_GESTURE_RANGE_ATTACK_AKIMBO, false },
-	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE, ACT_HL2MP_GESTURE_RANGE_ATTACK_AKIMBO, false },
-
-	{ ACT_MP_ATTACK_STAND_SECONDARYFIRE, ACT_HL2MP_GESTURE_RANGE_ATTACK_AKIMBO, false },
-	{ ACT_MP_ATTACK_CROUCH_SECONDARYFIRE, ACT_HL2MP_GESTURE_RANGE_ATTACK_AKIMBO, false },
-
-	{ ACT_MP_RELOAD_STAND, ACT_HL2MP_GESTURE_RELOAD_AKIMBO, false },
-	{ ACT_MP_RELOAD_CROUCH, ACT_HL2MP_GESTURE_RELOAD_AKIMBO, false },
-
-	{ ACT_MP_JUMP, ACT_HL2MP_JUMP_AKIMBO, false },
-};
-
-IMPLEMENT_ACTTABLE(CWeaponREXAkimbo);
-
 CWeaponREXAkimbo::CWeaponREXAkimbo(void)
 {
-	m_bReloadsSingly = m_bFiresUnderwater = false;
 }
 
-void CWeaponREXAkimbo::PerformAttack(bool bPrimary)
+void CWeaponREXAkimbo::AddViewKick(void)
 {
-	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
-	if (!pPlayer)
-		return;
-
-	if ((bPrimary && !(pPlayer->m_afButtonPressed & IN_ATTACK)) || (!bPrimary && !(pPlayer->m_afButtonPressed & IN_ATTACK2)))
-		return;
-
-	WeaponSound(SINGLE);
-
-	int shootAct = (bPrimary ? ACT_VM_SHOOT_LEFT : ACT_VM_SHOOT_RIGHT);
-	SendWeaponAnim(shootAct);
-
-	if (bPrimary)
+	if (m_iMeleeAttackType.Get() > 0)
 	{
-		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
-		m_iClip1--;
-	}
-	else
-	{
-		m_flNextSecondaryAttack = gpGlobals->curtime + GetFireRate();
-		m_iClip2--;
+		CBaseHL2MPCombatWeapon::AddViewKick();
+		return;
 	}
 
-	Vector vecSrc = pPlayer->Weapon_ShootPosition();
-	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);
+	// Normal gunfire viewkick...
+	CHL2MP_Player* pPlayer = ToHL2MPPlayer(GetOwner());
+	if (pPlayer)
+	{
+		QAngle angles = pPlayer->GetLocalAngles();
 
-	FireBulletsInfo_t info(1, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
-	info.m_pAttacker = pPlayer;
-	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
-	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
-	info.m_vecSpread = pPlayer->GetAttackSpread(this);
-	info.m_bPrimaryAttack = bPrimary;
-
-	// Fire the bullets, and force the first shot to be perfectly accuracy
-	pPlayer->FireBullets(info);
-
-	//Disorient the player
-	QAngle angles = pPlayer->GetLocalAngles();
-
-	angles.x += random->RandomInt(-1, 1);
-	angles.y += random->RandomInt(-1, 1);
-	angles.z = 0;
-
+		angles.x += random->RandomInt(-1, 1);
+		angles.y += random->RandomInt(-1, 1);
+		angles.z = 0;
 #ifndef CLIENT_DLL
-	pPlayer->SnapEyeAngles(angles);
+		pPlayer->SnapEyeAngles(angles);
 #endif
 
-	m_iShotsFired++;
-	pPlayer->ViewPunch(QAngle(-5, random->RandomFloat(-1, 1), 0));
-
-	pPlayer->DoAnimationEvent((bPrimary ? PLAYERANIMEVENT_ATTACK_PRIMARY : PLAYERANIMEVENT_ATTACK_SECONDARY), shootAct);
-}
-
-bool CWeaponREXAkimbo::Reload(void)
-{
-	bool fRet;
-
-	CHL2MP_Player *pClient = ToHL2MPPlayer(GetOwner());
-	if (pClient)
-	{
-		int reloadAct = ACT_VM_RELOAD0 + pClient->GetSkillValue(PLAYER_SKILL_HUMAN_PISTOL_MASTER);
-		if (HL2MPRules() && HL2MPRules()->IsFastPacedGameplay())
-			reloadAct = ACT_VM_RELOAD10;
-
-		fRet = DefaultReload(GetMaxClip1(), GetMaxClip2(), reloadAct);
-		if (fRet)
-			pClient->DoAnimationEvent(PLAYERANIMEVENT_RELOAD, reloadAct);
+		m_iShotsFired++;
+		pPlayer->ViewPunch(QAngle(-5, random->RandomFloat(-1, 1), 0));
 	}
-	else
-		fRet = DefaultReload(GetMaxClip1(), GetMaxClip2(), ACT_VM_RELOAD);
-
-	if (fRet)
-		WeaponSound(RELOAD);
-
-	return fRet;
 }

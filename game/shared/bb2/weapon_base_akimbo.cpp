@@ -44,6 +44,20 @@ CHL2MPBaseAkimbo::CHL2MPBaseAkimbo(void)
 	m_bReloadsSingly = m_bFiresUnderwater = false;
 }
 
+void CHL2MPBaseAkimbo::AddViewKick(void)
+{
+	if (m_iMeleeAttackType.Get() > 0)
+	{
+		BaseClass::AddViewKick();
+		return;
+	}
+
+	// Normal gunfire viewkick...
+	CHL2MP_Player* pPlayer = ToHL2MPPlayer(GetOwner());
+	if (pPlayer)
+		pPlayer->ViewPunch(GetViewKickAngle());
+}
+
 void CHL2MPBaseAkimbo::ItemPostFrame(void)
 {
 	BaseClass::ItemPostFrame();
@@ -54,12 +68,12 @@ void CHL2MPBaseAkimbo::StartHolsterSequence()
 	BaseClass::StartHolsterSequence();
 }
 
-bool CHL2MPBaseAkimbo::Holster(CBaseCombatWeapon *pSwitchingTo)
+bool CHL2MPBaseAkimbo::Holster(CBaseCombatWeapon* pSwitchingTo)
 {
 	return BaseClass::Holster(pSwitchingTo);
 }
 
-void CHL2MPBaseAkimbo::Drop(const Vector &vecVelocity)
+void CHL2MPBaseAkimbo::Drop(const Vector& vecVelocity)
 {
 	BaseClass::Drop(vecVelocity);
 }
@@ -67,4 +81,48 @@ void CHL2MPBaseAkimbo::Drop(const Vector &vecVelocity)
 bool CHL2MPBaseAkimbo::Deploy(void)
 {
 	return BaseClass::Deploy();
+}
+
+void CHL2MPBaseAkimbo::PerformAttack(bool bPrimary)
+{
+	CHL2MP_Player* pPlayer = ToHL2MPPlayer(GetOwner());
+	if (!pPlayer || (bPrimary && !(pPlayer->m_afButtonPressed & IN_ATTACK)) || (!bPrimary && !(pPlayer->m_afButtonPressed & IN_ATTACK2)))
+		return;
+
+	WeaponSound(SINGLE);
+
+	int shootAct = (bPrimary ? ACT_VM_SHOOT_LEFT : ACT_VM_SHOOT_RIGHT);
+	if (UsesEmptyAnimation())
+	{
+		if (bPrimary && (m_iClip1 <= 0))
+			shootAct = ACT_VM_SHOOT_LEFT_LAST;
+		else if (!bPrimary && (m_iClip2 <= 0))
+			shootAct = ACT_VM_SHOOT_RIGHT_LAST;
+	}
+
+	SendWeaponAnim(shootAct);
+
+	if (bPrimary)
+	{
+		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
+		m_iClip1--;
+	}
+	else
+	{
+		m_flNextSecondaryAttack = gpGlobals->curtime + GetFireRate();
+		m_iClip2--;
+	}
+
+	Vector vecSrc = pPlayer->Weapon_ShootPosition();
+	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);
+
+	FireBulletsInfo_t info(1, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
+	info.m_pAttacker = pPlayer;
+	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
+	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
+	info.m_vecSpread = pPlayer->GetAttackSpread(this);
+	info.m_bPrimaryAttack = bPrimary;
+	pPlayer->FireBullets(info);
+	pPlayer->DoAnimationEvent((bPrimary ? PLAYERANIMEVENT_ATTACK_PRIMARY : PLAYERANIMEVENT_ATTACK_SECONDARY), shootAct);
+	AddViewKick();
 }

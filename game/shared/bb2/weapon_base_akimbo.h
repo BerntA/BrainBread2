@@ -24,23 +24,24 @@ public:
 
 	CHL2MPBaseAkimbo();
 
+	virtual void AddViewKick(void);
 	virtual void ItemPostFrame(void);
 	virtual void PerformAttack(bool bPrimary);
 	virtual void PrimaryAttack(void) { PerformAttack(true); }
-	virtual void SecondaryAttack(void){ PerformAttack(false); }
+	virtual void SecondaryAttack(void) { PerformAttack(false); }
 
 	virtual void StartHolsterSequence();
-	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
-	virtual void Drop(const Vector &vecVelocity);
+	virtual bool Holster(CBaseCombatWeapon* pSwitchingTo = NULL);
+	virtual void Drop(const Vector& vecVelocity);
 	virtual bool Deploy(void);
 
 	virtual int GetOverloadCapacity() { return 5; }
 	virtual bool UsesEmptyAnimation() { return true; }
 	virtual int GetWeaponType(void) { return WEAPON_TYPE_PISTOL; }
-	virtual const char *GetAmmoEntityLink(void) { return "ammo_pistol"; }
+	virtual const char* GetAmmoEntityLink(void) { return "ammo_pistol"; }
 
 	virtual bool IsAkimboWeapon(void) { return true; }
-	virtual const char *GetMuzzleflashAttachment(bool bPrimaryAttack)
+	virtual const char* GetMuzzleflashAttachment(bool bPrimaryAttack)
 	{
 		if (bPrimaryAttack)
 			return "muzzle_left";
@@ -49,7 +50,7 @@ public:
 	}
 
 private:
-	CHL2MPBaseAkimbo(const CHL2MPBaseAkimbo &);
+	CHL2MPBaseAkimbo(const CHL2MPBaseAkimbo&);
 };
 
 #endif // WEAPON_BASE_AKIMBO_H

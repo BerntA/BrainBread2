@@ -27,8 +27,6 @@ public:
 	CWeaponREX(void);
 
 	void PrimaryAttack(void);
-	bool Reload(void);
-
 	int GetOverloadCapacity() { return 2; }
 	int GetUniqueWeaponID() { return WEAPON_ID_REXMP412; }
 	int GetWeaponType(void) { return WEAPON_TYPE_REVOLVER; }
@@ -144,28 +142,4 @@ void CWeaponREX::PrimaryAttack(void)
 	m_iShotsFired++;
 
 	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, ACT_VM_PRIMARYATTACK);
-}
-
-bool CWeaponREX::Reload(void)
-{
-	bool fRet;
-
-	CHL2MP_Player *pClient = ToHL2MPPlayer(GetOwner());
-	if (pClient)
-	{
-		int reloadAct = ACT_VM_RELOAD0 + pClient->GetSkillValue(PLAYER_SKILL_HUMAN_PISTOL_MASTER);
-		if (HL2MPRules() && HL2MPRules()->IsFastPacedGameplay())
-			reloadAct = ACT_VM_RELOAD10;
-
-		fRet = DefaultReload(GetMaxClip1(), GetMaxClip2(), reloadAct);
-		if (fRet)
-			pClient->DoAnimationEvent(PLAYERANIMEVENT_RELOAD, reloadAct);
-	}
-	else
-		fRet = DefaultReload(GetMaxClip1(), GetMaxClip2(), ACT_VM_RELOAD);
-
-	if (fRet)
-		WeaponSound(RELOAD);
-
-	return fRet;
 }
