@@ -60,8 +60,7 @@ void CHL2MPBaseAkimbo::AddViewKick(void)
 
 int CHL2MPBaseAkimbo::GetTracerAttachment(void)
 {
-	// TODO ? This attachment is @ the world model!!!
-	return BaseClass::GetTracerAttachment();
+	return (m_bLastFiredPrimary ? 1 : 2);
 }
 
 void CHL2MPBaseAkimbo::ItemPostFrame(void)
