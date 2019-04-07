@@ -25,6 +25,7 @@ public:
 	CHL2MPBaseAkimbo();
 
 	virtual void AddViewKick(void);
+	virtual int	GetTracerAttachment(void);
 	virtual void ItemPostFrame(void);
 	virtual void PerformAttack(bool bPrimary);
 	virtual void PrimaryAttack(void) { PerformAttack(true); }

@@ -783,11 +783,7 @@ void CBaseCombatWeapon::MakeTracer( const Vector &vecTracerSrc, const trace_t &t
 	const char *pszTracerName = GetTracerType();
 
 	Vector vNewSrc = vecTracerSrc;
-	int iEntIndex = pOwner->entindex();
-
-	if ( g_pGameRules->IsMultiplayer() )
-		iEntIndex = entindex();
-
+	int iEntIndex = entindex();
 	int iAttachment = GetTracerAttachment();
 
 	// Players fire off particle based tracers...
@@ -1488,7 +1484,7 @@ void CBaseCombatWeapon::DoWeaponFX( void )
 		if (pPlayer)
 		{
 			if (IsAkimboWeapon())
-				DispatchParticleEffect(GetParticleEffect(PARTICLE_TYPE_SMOKE), PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), (m_bLastFiredPrimary ? "left_muzzle" : "right_muzzle"));
+				DispatchParticleEffect(GetParticleEffect(PARTICLE_TYPE_SMOKE), PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), GetMuzzleflashAttachment(m_bLastFiredPrimary));
 			else
 				DispatchParticleEffect(GetParticleEffect(PARTICLE_TYPE_SMOKE), PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), "muzzle");
 		}
@@ -1751,17 +1747,7 @@ void CBaseCombatWeapon::HandleFireOnEmpty(bool bPrimary)
 
 int CBaseCombatWeapon::GetTracerAttachment(void)
 {
-	int iAttachment = 1;
-
-	if (IsAkimboWeapon())
-	{
-		if (m_bLastFiredPrimary)
-			iAttachment = 1;
-		else
-			iAttachment = 2;
-	}
-
-	return iAttachment;
+	return 1;
 }
 
 int CBaseCombatWeapon::GetReloadActivity(bool bCanDoEmpty)

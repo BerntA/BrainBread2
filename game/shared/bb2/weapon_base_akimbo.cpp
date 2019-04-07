@@ -58,6 +58,12 @@ void CHL2MPBaseAkimbo::AddViewKick(void)
 		pPlayer->ViewPunch(GetViewKickAngle());
 }
 
+int CHL2MPBaseAkimbo::GetTracerAttachment(void)
+{
+	// TODO ? This attachment is @ the world model!!!
+	return BaseClass::GetTracerAttachment();
+}
+
 void CHL2MPBaseAkimbo::ItemPostFrame(void)
 {
 	BaseClass::ItemPostFrame();
