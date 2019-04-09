@@ -16,14 +16,13 @@ using namespace FMOD;
 
 #define FMOD_FADE_TIME 1.5f
 
-System			*pSystem;
-Sound			*pSound;
-SoundGroup		*pSoundGroup;
-Channel			*pChannel;
-ChannelGroup	*pChannelGroup;
-FMOD_RESULT		result;
+static System			*pSystem;
+static Sound			*pSound;
+static Channel			*pChannel;
+static FMOD_RESULT		result;
+static char lastPlayedSound[512];
 
-CFMODManager gFMODMng;
+static CFMODManager gFMODMng;
 CFMODManager* FMODManager()
 {
 	return &gFMODMng;
@@ -38,6 +37,7 @@ CFMODManager::CFMODManager()
 	m_bIsPlayingSound = false;
 	m_bShouldLoop = false;
 	m_flTime = m_flFadeOutTime = 0.0f;
+	lastPlayedSound[0] = 0;
 }
 
 CFMODManager::~CFMODManager()
@@ -70,6 +70,38 @@ void CFMODManager::ExitFMOD(void)
 		Warning("FMOD ERROR: System did not terminate properly!\n");
 	else
 		DevMsg("FMOD system terminated successfully.\n");
+
+	pSystem = NULL;
+	pSound = NULL;
+	pChannel = NULL;
+}
+
+void CFMODManager::RestartFMOD()
+{
+	// Attempt to play any prev. sound...
+	float volume = 0.0f;
+	bool muted = false;
+	bool hadSound = false;
+	Sound *currSound = NULL;
+
+	if (pChannel)
+	{
+		pChannel->getVolume(&volume);
+		pChannel->getMute(&muted);
+		pChannel->getCurrentSound(&currSound);
+	}
+
+	ExitFMOD();
+	InitFMOD();
+
+	// Restart snd!
+	if (currSound && lastPlayedSound && lastPlayedSound[0])
+	{
+		pSystem->createStream(lastPlayedSound, FMOD_DEFAULT, 0, &pSound);
+		pSystem->playSound(FMOD_CHANNEL_REUSE, pSound, false, &pChannel);
+		pChannel->setVolume(volume);
+		pChannel->setMute(muted);
+	}
 }
 
 // Returns the full path of a specified sound file in the /sounds folder
@@ -86,9 +118,9 @@ const char *CFMODManager::GetFullPathToSound(const char *pathToFileFromModFolder
 		if (fullPath[i] == '\\')
 			fullPath[i] = '/';
 	}
-
-	const char *results = fullPath;
-	return results;
+	
+	Q_strncpy(lastPlayedSound, fullPath, sizeof(lastPlayedSound));
+	return lastPlayedSound;
 }
 
 // Returns the current sound playing.
@@ -144,14 +176,15 @@ void CFMODManager::FadeThink(void)
 					GetMusicSystem->RunAmbientSoundTrack();
 			}
 		}
-		else
+		else if (pChannel)
 			pChannel->setVolume((m_bFadeIn ? timeFraction : (1.0f - timeFraction)) * m_flVolume);
 	}
 
 	// Update our volume and count down to the point where we need to fade out.
 	if (m_bIsPlayingSound)
 	{
-		pChannel->setVolume(m_flVolume);
+		if (pChannel)
+			pChannel->setVolume(m_flVolume);
 		if (engine->Time() >= m_flFadeOutTime)
 			StopAmbientSound(true);
 	}

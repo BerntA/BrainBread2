@@ -172,6 +172,7 @@ void CWeaponSawedOff::AffectedByPlayerSkill(int skill)
 	case PLAYER_SKILL_HUMAN_MAGAZINE_REFILL:
 	{
 		m_iFiringFlags = 0;
+		m_iFiringState = 0;
 		break;
 	}
 	}
@@ -252,20 +253,17 @@ void CWeaponSawedOff::ItemPostFrame(void)
 	if (!pOwner)
 		return;
 
-	if (m_bInReload)
+	if (m_bInReload && IsViewModelSequenceFinished() && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 	{
-		if (IsViewModelSequenceFinished() && (m_flNextPrimaryAttack <= gpGlobals->curtime))
-		{
-			int iAmmo = pOwner->GetAmmoCount(m_iPrimaryAmmoType);
-			if (m_iClip1 <= 0 && iAmmo > 1)
-				FillClip(2);
-			else
-				FillClip(1);
+		int iAmmo = pOwner->GetAmmoCount(m_iPrimaryAmmoType);
+		if (m_iClip1 <= 0 && iAmmo > 1)
+			FillClip(2);
+		else
+			FillClip(1);
 
-			m_bInReload = false;
-			m_iFiringFlags = 0;
-			m_iFiringState = 0;
-		}
+		m_bInReload = false;
+		m_iFiringFlags = 0;
+		m_iFiringState = 0;
 	}
 
 	WeaponIdle();

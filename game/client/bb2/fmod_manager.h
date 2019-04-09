@@ -22,6 +22,7 @@ public:
 
 	void InitFMOD();
 	void ExitFMOD();
+	void RestartFMOD();
 	void FadeThink();
 
 	bool PlayAmbientSound(const char *szSoundPath, bool bLoop = false);

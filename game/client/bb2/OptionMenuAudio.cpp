@@ -9,6 +9,7 @@
 #include <vgui_controls/Button.h>
 #include <vgui_controls/ImagePanel.h>
 #include "GameBase_Client.h"
+#include "fmod_manager.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -156,6 +157,8 @@ void OptionMenuAudio::ApplyChanges(void)
 			else
 				dsp_enhance_stereo->SetValue(0);
 		}
+
+		FMODManager()->RestartFMOD();
 	}
 
 	subtitles.SetValue(0);

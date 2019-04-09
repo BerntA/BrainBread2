@@ -8,6 +8,7 @@
 #include "NotePanel.h"
 #include <vgui_controls/Button.h>
 #include <vgui_controls/ImagePanel.h>
+#include <steam/steam_api.h>
 
 using namespace vgui;
 
@@ -85,8 +86,17 @@ void CNotePanel::SetupNote(const char *szHeader, const char *szFile)
 	m_pNoteHeader->SetText(szHeader);
 	m_pNoteText->SetScrollbarAlpha(0);
 
+	char translatedFile[256];
+	Q_snprintf(translatedFile, 256, "data/notes/%s_%s.txt", szFile, (steamapicontext && steamapicontext->SteamApps()) ? steamapicontext->SteamApps()->GetCurrentGameLanguage() : "english");
+
 	bool bCouldRead = false;
-	FileHandle_t f = filesystem->Open(VarArgs("data/notes/%s.txt", szFile), "rb", "MOD");
+	FileHandle_t f = NULL;
+
+	// Try to read the translated note first:
+	f = filesystem->Open(translatedFile, "rb", "MOD");
+	if (f == NULL)
+		f = filesystem->Open(VarArgs("data/notes/%s.txt", szFile), "rb", "MOD");
+
 	if (f)
 	{
 		int fileSize = filesystem->Size(f);
