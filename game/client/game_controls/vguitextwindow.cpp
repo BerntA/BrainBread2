@@ -468,10 +468,10 @@ void CTextWindow::ShowPanel( bool bShow )
 	}
 }
 
-bool CTextWindow::CMOTDHTML::OnStartRequest( const char *url, const char *target, const char *pchPostData, bool bIsRedirect )
+bool CMOTDHTML::OnStartRequest(const char *url, const char *target, const char *pchPostData, bool bIsRedirect)
 {
-	if ( Q_strstr( url, "steam://" ) )
+	if (Q_strstr(url, "steam://"))
 		return false;
 
-	return BaseClass::OnStartRequest( url, target, pchPostData, bIsRedirect );
+	return BaseClass::OnStartRequest(url, target, pchPostData, bIsRedirect);
 }

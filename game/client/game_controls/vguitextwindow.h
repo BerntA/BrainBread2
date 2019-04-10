@@ -27,6 +27,16 @@ namespace vgui
 // Purpose: displays the MOTD
 //-----------------------------------------------------------------------------
 
+class CMOTDHTML : public vgui::HTML
+{
+private:
+	DECLARE_CLASS_SIMPLE(CMOTDHTML, vgui::HTML);
+
+public:
+	CMOTDHTML(Panel *parent, const char *pchName) : vgui::HTML(parent, pchName) {}
+	virtual bool OnStartRequest(const char *url, const char *target, const char *pchPostData, bool bIsRedirect) OVERRIDE;
+};
+
 class CTextWindow : public vgui::Frame, public IViewPortPanel
 {
 private:
@@ -84,16 +94,6 @@ protected:
 	bool		m_bUnloadOnDismissal;
 
 	vgui::TextEntry	*m_pTextMessage;
-	
-	class CMOTDHTML : public vgui::HTML
-	{
-	private:
-		DECLARE_CLASS_SIMPLE( CMOTDHTML, vgui::HTML );
-	
-	public:
-		CMOTDHTML( Panel *parent, const char *pchName ) : vgui::HTML( parent, pchName ) {}
-		virtual bool OnStartRequest( const char *url, const char *target, const char *pchPostData, bool bIsRedirect ) OVERRIDE;
-	};
 	CMOTDHTML		*m_pHTMLMessage;
 	
 	vgui::Button	*m_pOK;

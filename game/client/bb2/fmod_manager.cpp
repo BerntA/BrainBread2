@@ -81,7 +81,6 @@ void CFMODManager::RestartFMOD()
 	// Attempt to play any prev. sound...
 	float volume = 0.0f;
 	bool muted = false;
-	bool hadSound = false;
 	Sound *currSound = NULL;
 
 	if (pChannel)
