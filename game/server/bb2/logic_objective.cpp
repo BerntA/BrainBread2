@@ -297,21 +297,10 @@ bool CLogicObjective::DoObjectiveScaling(void)
 		return false;
 
 	float flKillScaleAmount = 0.0f, flTimeScaleAmount = 0.0f;
-	int iNumPlayers = 0;
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-		if (!pClient || !pClient->IsConnected())
-			continue;
+	float flNumPlayers = (float)GameBaseShared()->GetNumActivePlayers();
 
-		iNumPlayers++;
-	}
-
-	if (iNumPlayers > 0)
-		iNumPlayers--; // Everyone but the first player will affect scaling.
-
-	flKillScaleAmount = (iNumPlayers * m_flKillScaleFactor);
-	flTimeScaleAmount = (iNumPlayers * m_flTimeScaleFactor);
+	flKillScaleAmount = (flNumPlayers * m_flKillScaleFactor);
+	flTimeScaleAmount = (flNumPlayers * m_flTimeScaleFactor);
 
 	// Do we want kill scaling?
 	if (m_iOriginalKillCount > 0 && (m_iScaleType <= OBJ_SCALING_FIXED))

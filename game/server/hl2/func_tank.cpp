@@ -3075,7 +3075,6 @@ protected:
 	void InputDeathVolley( inputdata_t &inputdata );
 	void FireDying( const Vector &barrelEnd );
 
-	EHANDLE	m_hLaserDot;
 	float	m_flRocketSpeed;
 	int 	m_nSide;
 	int		m_nBurstCount;
@@ -3088,7 +3087,6 @@ protected:
 BEGIN_DATADESC( CFuncTankAPCRocket )
 
 	DEFINE_KEYFIELD( m_flRocketSpeed, FIELD_FLOAT, "rocketspeed" ),
-	DEFINE_FIELD( m_hLaserDot, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_nSide, FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_nBurstCount, FIELD_INTEGER, "burstcount" ),
 	DEFINE_FIELD( m_bDying, FIELD_BOOLEAN ),
@@ -3114,7 +3112,6 @@ void CFuncTankAPCRocket::Spawn( void )
 	AddEffects( EF_NODRAW );
 	m_nSide = 0;
 	m_bDying = false;
-	m_hLaserDot = CreateLaserDot( GetAbsOrigin(), this, false );
 	m_nBulletCount = m_nBurstCount;
 	SetSolid( SOLID_NONE );
 	SetLocalVelocity( vec3_origin );
@@ -3122,11 +3119,6 @@ void CFuncTankAPCRocket::Spawn( void )
 
 void CFuncTankAPCRocket::UpdateOnRemove( void )
 {
-	if ( m_hLaserDot )
-	{
-		UTIL_Remove( m_hLaserDot );
-		m_hLaserDot = NULL;
-	}
 	BaseClass::UpdateOnRemove();
 }
 
@@ -3148,15 +3140,7 @@ void CFuncTankAPCRocket::FireDying( const Vector &barrelEnd )
 	VectorAngles( vecDir, angles );
 
 	CAPCMissile *pRocket = (CAPCMissile *) CAPCMissile::Create( barrelEnd, angles, vecVelocity, this );
-	float flDeathTime = random->RandomFloat( 0.3f, 0.5f );
-	if ( random->RandomFloat( 0.0f, 1.0f ) < 0.3f )
-	{
-		pRocket->ExplodeDelay( flDeathTime );
-	}
-	else
-	{
-		pRocket->AugerDelay( flDeathTime );
-	}
+	pRocket->ExplodeDelay(random->RandomFloat(0.3f, 0.5f));
 
 	// Make erratic firing
 	m_fireRate = random->RandomFloat( DEATH_VOLLEY_MIN_FIRE_RATE, DEATH_VOLLEY_MAX_FIRE_RATE ); 
@@ -3213,9 +3197,6 @@ void CFuncTankAPCRocket::Think()
 	}
 
 	BaseClass::Think();
-	m_hLaserDot->SetAbsOrigin( m_sightOrigin );
-	SetLaserDotTarget( m_hLaserDot, m_hFuncTankTarget );
-	EnableLaserDot( m_hLaserDot, m_hFuncTankTarget != NULL );
 
 	if ( m_bDying )
 	{

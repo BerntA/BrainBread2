@@ -235,7 +235,7 @@ void CGrenadeAR2::Detonate(void)
 
 void CGrenadeAR2::Precache( void )
 {
-	PrecacheModel("models/Weapons/ar2_grenade.mdl"); 
+	PrecacheModel("models/weapons/ar2_grenade.mdl"); 
 }
 
 

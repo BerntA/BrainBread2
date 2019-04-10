@@ -548,7 +548,7 @@ void CNPCM1A1::TankLogicThinkFrame(void)
 		{
 			DispatchParticleEffect("muzzleflash_smg", PATTACH_POINT_FOLLOW, this, iAttachment); // Muzzle + Smoke
 			CMissile *pMissile = CMissile::Create(vecPos, angPos, edict(), (m_iClassification == CLASS_MILITARY_VEHICLE));
-			pMissile->SetGracePeriod(0.5);
+			pMissile->SetGracePeriod(0.25);
 			pMissile->SetDamage(bb2_m1a1_damage.GetFloat());
 			pMissile->SetRadius(bb2_m1a1_radius.GetFloat());
 

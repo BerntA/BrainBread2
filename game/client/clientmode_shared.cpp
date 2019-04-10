@@ -1044,17 +1044,12 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 		GameBaseClient->Changelevel(szMap);
 	}
 	else if ((Q_strcmp("player_connection", eventname) == 0))
-	{
+	{		
+		if (!g_PR || HL2MPRules() && ((HL2MPRules()->GetCurrentGamemode() != MODE_OBJECTIVE) && (HL2MPRules()->GetCurrentGamemode() != MODE_ARENA)))
+			return;
+
+		char szLocalized[128];
 		bool bState = event->GetBool("state");
-
-		if (!g_PR)
-			return;
-
-		if (HL2MPRules() && ((HL2MPRules()->GetCurrentGamemode() != MODE_OBJECTIVE) && (HL2MPRules()->GetCurrentGamemode() != MODE_ARENA)))
-			return;
-
-		char szLocalized[100];
-	
 		if (bState)
 		{
 			g_pVGuiLocalize->ConvertUnicodeToANSI(g_pVGuiLocalize->Find("#NOTIFICATION_LEAVE"), szLocalized, sizeof(szLocalized));
@@ -1080,14 +1075,14 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			wchar_t wszAchievementName[128];
 			g_pVGuiLocalize->ConvertANSIToUnicode(steamapicontext->SteamUserStats()->GetAchievementDisplayAttribute(szAchievement, "name"), wszAchievementName, sizeof(wszAchievementName));
 
-			wchar_t wszLocalized[256];
+			wchar_t wszLocalized[512];
 
 			if (m_iType != ACHIEVEMENT_TYPE_REWARD)
 				g_pVGuiLocalize->ConstructString(wszLocalized, sizeof(wszLocalized), g_pVGuiLocalize->Find("#NOTIFICATION_ACHIEVEMENT"), 2, wszPlayerName, wszAchievementName);
 			else
 				g_pVGuiLocalize->ConstructString(wszLocalized, sizeof(wszLocalized), g_pVGuiLocalize->Find("#NOTIFICATION_MASTERY"), 2, wszPlayerName, wszAchievementName);
 
-			char szLocalized[256];
+			char szLocalized[512];
 			g_pVGuiLocalize->ConvertUnicodeToANSI(wszLocalized, szLocalized, sizeof(szLocalized));
 
 			m_pChatElement->Printf(CHAT_FILTER_ACHIEVEMENT, "%c%s", COLOR_ACHIEVEMENT, szLocalized);

@@ -753,7 +753,6 @@ void CPlayerPickupController::Init(CBasePlayer *pPlayer, CBaseEntity *pObject)
 #endif
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : bool - 
@@ -795,9 +794,7 @@ void CPlayerPickupController::Shutdown(bool bThrown)
 	Remove();
 
 #endif
-
 }
-
 
 void CPlayerPickupController::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
 {
@@ -906,92 +903,20 @@ void PlayerPickupObject(CBasePlayer *pPlayer, CBaseEntity *pObject)
 }
 
 #define	RPG_SPEED	1500
-#define	RPG_LASER_SPRITE	"sprites/redglow1.vmt"
 
 #ifndef CLIENT_DLL
-const char *g_pLaserDotThink = "LaserThinkContext";
 
 static ConVar sk_apc_missile_damage("sk_apc_missile_damage", "15");
 #define APC_MISSILE_DAMAGE	sk_apc_missile_damage.GetFloat()
 
 #endif
 
-#ifdef CLIENT_DLL
-#define CLaserDot C_LaserDot
-#endif
-
-//-----------------------------------------------------------------------------
-// Laser Dot
-//-----------------------------------------------------------------------------
-class CLaserDot : public CBaseEntity
-{
-	DECLARE_CLASS(CLaserDot, CBaseEntity);
-public:
-
-	CLaserDot(void);
-	~CLaserDot(void);
-
-	static CLaserDot *Create(const Vector &origin, CBaseEntity *pOwner = NULL, bool bVisibleDot = true);
-
-	void	SetTargetEntity(CBaseEntity *pTarget) { m_hTargetEnt = pTarget; }
-	CBaseEntity *GetTargetEntity(void) { return m_hTargetEnt; }
-
-	void	SetLaserPosition(const Vector &origin, const Vector &normal);
-	Vector	GetChasePosition();
-	void	TurnOn(void);
-	void	TurnOff(void);
-	bool	IsOn() const { return m_bIsOn; }
-
-	void	Toggle(void);
-
-	int		ObjectCaps() { return (BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_DONT_SAVE; }
-
-	void	MakeInvisible(void);
-
-#ifdef CLIENT_DLL
-
-	virtual bool			IsTransparent(void) { return true; }
-	virtual RenderGroup_t	GetRenderGroup(void) { return RENDER_GROUP_TRANSLUCENT_ENTITY; }
-	virtual int				DrawModel(int flags);
-	virtual void			OnDataChanged(DataUpdateType_t updateType);
-	virtual bool			ShouldDraw(void) { return (IsEffectActive(EF_NODRAW) == false); }
-
-	CMaterialReference	m_hSpriteMaterial;
-#endif
-
-protected:
-	Vector				m_vecSurfaceNormal;
-	EHANDLE				m_hTargetEnt;
-	bool				m_bVisibleLaserDot;
-	bool				m_bIsOn;
-
-	DECLARE_NETWORKCLASS();
-	DECLARE_DATADESC();
-public:
-	CLaserDot			*m_pNext;
-};
-
-IMPLEMENT_NETWORKCLASS_ALIASED(LaserDot, DT_LaserDot)
-
-BEGIN_NETWORK_TABLE(CLaserDot, DT_LaserDot)
-END_NETWORK_TABLE()
-
 #ifndef CLIENT_DLL
-
-// a list of laser dots to search quickly
-CEntityClassList<CLaserDot> g_LaserDotList;
-template <> CLaserDot *CEntityClassList<CLaserDot>::m_pClassList = NULL;
-CLaserDot *GetLaserDotList()
-{
-	return g_LaserDotList.m_pClassList;
-}
 
 BEGIN_DATADESC(CMissile)
 
 DEFINE_FIELD(m_hOwner, FIELD_EHANDLE),
 DEFINE_FIELD(m_hRocketTrail, FIELD_EHANDLE),
-DEFINE_FIELD(m_flAugerTime, FIELD_TIME),
-DEFINE_FIELD(m_flMarkDeadTime, FIELD_TIME),
 DEFINE_FIELD(m_flGracePeriodEndsAt, FIELD_TIME),
 DEFINE_FIELD(m_flDamage, FIELD_FLOAT),
 DEFINE_FIELD(m_flRadius, FIELD_FLOAT),
@@ -1002,8 +927,6 @@ DEFINE_FIELD(m_bCreateDangerSounds, FIELD_BOOLEAN),
 
 // Function Pointers
 DEFINE_FUNCTION(MissileTouch),
-DEFINE_FUNCTION(AccelerateThink),
-DEFINE_FUNCTION(AugerThink),
 DEFINE_FUNCTION(IgniteThink),
 DEFINE_FUNCTION(SeekThink),
 
@@ -1019,7 +942,7 @@ CMissile::CMissile()
 	m_hRocketTrail = NULL;
 
 #ifdef BB2_AI
-	m_bCreateDangerSounds = false; //
+	m_bCreateDangerSounds = false;
 #endif //BB2_AI
 }
 
@@ -1035,12 +958,9 @@ CMissile::~CMissile()
 void CMissile::Precache(void)
 {
 	PrecacheModel("models/weapons/w_panzerschreck_rocket.mdl");
+
 	PrecacheScriptSound("Missile.Ignite");
 	PrecacheScriptSound("Missile.Accelerate");
-
-	// Laser dot...
-	PrecacheModel("sprites/redglow1.vmt");
-	PrecacheModel(RPG_LASER_SPRITE);
 
 #ifndef CLIENT_DLL
 	UTIL_PrecacheOther("rpg_missile");
@@ -1080,58 +1000,29 @@ void CMissile::Spawn(void)
 	SetRadius(EXPLOSION_RADIUS);
 #endif //BB2_AI
 
-	m_takedamage = DAMAGE_YES;
-	m_iHealth = m_iMaxHealth = 100;
+	m_takedamage = DAMAGE_EVENTS_ONLY;
+	m_iHealth = m_iMaxHealth = 40;
 	m_bloodColor = DONT_BLEED;
 	m_flGracePeriodEndsAt = 0;
 
 	AddFlag(FL_OBJECT);
 }
 
-//---------------------------------------------------------
-//---------------------------------------------------------
-void CMissile::Event_Killed(const CTakeDamageInfo &info)
-{
-	m_takedamage = DAMAGE_NO;
-
-	ShotDown();
-}
-
 unsigned int CMissile::PhysicsSolidMaskForEntity(void) const
 {
-	return BaseClass::PhysicsSolidMaskForEntity() | CONTENTS_HITBOX;
+	return (BaseClass::PhysicsSolidMaskForEntity() | CONTENTS_HITBOX);
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 int CMissile::OnTakeDamage_Alive(const CTakeDamageInfo &info)
-{
-	if ((info.GetDamageType() & (DMG_MISSILEDEFENSE | DMG_AIRBOAT)) == false)
+{	
+	// The missile can be detonated early if damaged by:
+	if ((info.GetDamageType() & (DMG_BULLET | DMG_BUCKSHOT | DMG_ZOMBIE | DMG_SLASH | DMG_CLUB | DMG_VEHICLE)) == false)
 		return 0;
-
-	bool bIsDamaged;
-	if (m_iHealth <= AugerHealth())
-	{
-		// This missile is already damaged (i.e., already running AugerThink)
-		bIsDamaged = true;
-	}
-	else
-	{
-		// This missile isn't damaged enough to wobble in flight yet
-		bIsDamaged = false;
-	}
-
-	int nRetVal = BaseClass::OnTakeDamage_Alive(info);
-
-	if (!bIsDamaged)
-	{
-		if (m_iHealth <= AugerHealth())
-		{
-			ShotDown();
-		}
-	}
-
-	return nRetVal;
+	
+	Explode();
+	return 1;
 }
 
 //-----------------------------------------------------------------------------
@@ -1162,92 +1053,12 @@ void CMissile::SetGracePeriod(float flGracePeriod)
 	AddSolidFlags(FSOLID_NOT_SOLID);
 }
 
-//---------------------------------------------------------
-//---------------------------------------------------------
-void CMissile::AccelerateThink(void)
-{
-	Vector vecForward;
-
-	// !!!UNDONE - make this work exactly the same as HL1 RPG, lest we have looping sound bugs again!
-	EmitSound("Missile.Accelerate");
-
-	// SetEffects( EF_LIGHT );
-
-	AngleVectors(GetLocalAngles(), &vecForward);
-	SetAbsVelocity(vecForward * RPG_SPEED);
-
-	SetThink(&CMissile::SeekThink);
-	SetNextThink(gpGlobals->curtime + 0.1f);
-}
-
-#define AUGER_YDEVIANCE 20.0f
-#define AUGER_XDEVIANCEUP 8.0f
-#define AUGER_XDEVIANCEDOWN 1.0f
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-void CMissile::AugerThink(void)
-{
-	// If we've augered long enough, then just explode
-	if (m_flAugerTime < gpGlobals->curtime)
-	{
-		Explode();
-		return;
-	}
-
-	if (m_flMarkDeadTime < gpGlobals->curtime)
-	{
-		m_lifeState = LIFE_DYING;
-	}
-
-	QAngle angles = GetLocalAngles();
-
-	angles.y += random->RandomFloat(-AUGER_YDEVIANCE, AUGER_YDEVIANCE);
-	angles.x += random->RandomFloat(-AUGER_XDEVIANCEDOWN, AUGER_XDEVIANCEUP);
-
-	SetLocalAngles(angles);
-
-	Vector vecForward;
-
-	AngleVectors(GetLocalAngles(), &vecForward);
-
-	SetAbsVelocity(vecForward * 1000.0f);
-
-	SetNextThink(gpGlobals->curtime + 0.05f);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Causes the missile to spiral to the ground and explode, due to damage
-//-----------------------------------------------------------------------------
-void CMissile::ShotDown(void)
-{
-	CEffectData	data;
-	data.m_vOrigin = GetAbsOrigin();
-
-	DispatchEffect("RPGShotDown", data);
-
-	if (m_hRocketTrail != NULL)
-	{
-		m_hRocketTrail->m_bDamaged = true;
-	}
-
-	SetThink(&CMissile::AugerThink);
-	SetNextThink(gpGlobals->curtime);
-	m_flAugerTime = gpGlobals->curtime + 1.5f;
-	m_flMarkDeadTime = gpGlobals->curtime + 0.75;
-
-	if (m_hOwner != NULL)
-	{
-		m_hOwner = NULL;
-	}
-}
-
 //-----------------------------------------------------------------------------
 // The actual explosion 
 //-----------------------------------------------------------------------------
 void CMissile::DoExplosion(void)
 {
-	int iDamageType = (TryTheLuck(0.15) ? DMG_BURN : -1); // 15 % chance to spawn fire on gibs etc...
+	int iDamageType = (TryTheLuck(0.10) ? DMG_BURN : -1); // 10 % chance to spawn fire on gibs etc...
 	ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), GetRadius(), 
 		SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE,
 		0.0f, this, iDamageType, NULL, m_bShouldBeFriendly ? CLASS_PLAYER : CLASS_NONE);
@@ -1259,10 +1070,11 @@ void CMissile::DoExplosion(void)
 //-----------------------------------------------------------------------------
 void CMissile::Explode(void)
 {
+	m_takedamage = DAMAGE_NO;
+
 	// Don't explode against the skybox. Just pretend that 
 	// the missile flies off into the distance.
 	Vector forward;
-
 	GetVectors(&forward, NULL, NULL);
 
 	trace_t tr;
@@ -1270,10 +1082,8 @@ void CMissile::Explode(void)
 
 	m_takedamage = DAMAGE_NO;
 	SetSolid(SOLID_NONE);
-	if (tr.fraction == 1.0 || !(tr.surface.flags & SURF_SKY))
-	{
-		DoExplosion();
-	}
+	if (tr.fraction == 1.0 || !(tr.surface.flags & SURF_SKY))	
+		DoExplosion();	
 
 	if (m_hRocketTrail)
 	{
@@ -1282,9 +1092,7 @@ void CMissile::Explode(void)
 	}
 
 	if (m_hOwner != NULL)
-	{
 		m_hOwner = NULL;
-	}
 
 	StopSound("Missile.Ignite");
 	UTIL_Remove(this);
@@ -1296,19 +1104,15 @@ void CMissile::Explode(void)
 //-----------------------------------------------------------------------------
 void CMissile::MissileTouch(CBaseEntity *pOther)
 {
-	Assert(pOther);
+	if ((pOther == NULL) || (m_takedamage == DAMAGE_NO))
+		return;
 
-	// Don't touch triggers (but DO hit weapons)
-	if (pOther->IsSolidFlagSet(FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS) && pOther->GetCollisionGroup() != COLLISION_GROUP_WEAPON)
-#ifdef BB2_AI
+	// Don't touch triggers or weps, debre etc...
+	if (pOther->IsSolidFlagSet(FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS))
 	{
-		// Some NPCs are triggers that can take damage (like antlion grubs). We should hit them.
 		if ((pOther->m_takedamage == DAMAGE_NO) || (pOther->m_takedamage == DAMAGE_EVENTS_ONLY))
 			return;
 	}
-#else
-		return;
-#endif //BB2_AI
 
 	Explode();
 }
@@ -1349,96 +1153,16 @@ void CMissile::IgniteThink(void)
 	SetModel("models/weapons/w_panzerschreck_rocket.mdl");
 	UTIL_SetSize(this, vec3_origin, vec3_origin);
 	RemoveSolidFlags(FSOLID_NOT_SOLID);
-
-	//TODO: Play opening sound
-
-	Vector vecForward;
-
 	EmitSound("Missile.Ignite");
 
+	Vector vecForward;
 	AngleVectors(GetLocalAngles(), &vecForward);
 	SetAbsVelocity(vecForward * RPG_SPEED);
 
 	SetThink(&CMissile::SeekThink);
 	SetNextThink(gpGlobals->curtime);
 
-	if (m_hOwner && m_hOwner->GetOwnerEntity())
-	{
-		CBasePlayer *pPlayer = ToBasePlayer(m_hOwner->GetOwnerEntity());
-#ifdef BB2_AI
-		if (pPlayer)
-		{
-			color32 white = { 255, 225, 205, 64 };
-			UTIL_ScreenFade(pPlayer, white, 0.1f, 0.0f, FFADE_IN);
-		}
-#else
-		color32 white = { 255, 225, 205, 64 };
-		UTIL_ScreenFade(pPlayer, white, 0.1f, 0.0f, FFADE_IN);
-#endif //BB2_AI
-	}
-
 	CreateSmokeTrail();
-}
-
-//-----------------------------------------------------------------------------
-// Gets the shooting position 
-//-----------------------------------------------------------------------------
-void CMissile::GetShootPosition(CLaserDot *pLaserDot, Vector *pShootPosition)
-{
-	if (pLaserDot->GetOwnerEntity() != NULL)
-	{
-		//FIXME: Do we care this isn't exactly the muzzle position?
-		*pShootPosition = pLaserDot->GetOwnerEntity()->WorldSpaceCenter();
-	}
-	else
-	{
-		*pShootPosition = pLaserDot->GetChasePosition();
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-#define	RPG_HOMING_SPEED	0.125f
-
-void CMissile::ComputeActualDotPosition(CLaserDot *pLaserDot, Vector *pActualDotPosition, float *pHomingSpeed)
-{
-	*pHomingSpeed = RPG_HOMING_SPEED;
-	if (pLaserDot->GetTargetEntity())
-	{
-		*pActualDotPosition = pLaserDot->GetChasePosition();
-		return;
-	}
-
-	Vector vLaserStart;
-	GetShootPosition(pLaserDot, &vLaserStart);
-
-	//Get the laser's vector
-	Vector vLaserDir;
-	VectorSubtract(pLaserDot->GetChasePosition(), vLaserStart, vLaserDir);
-
-	//Find the length of the current laser
-	float flLaserLength = VectorNormalize(vLaserDir);
-
-	//Find the length from the missile to the laser's owner
-	float flMissileLength = GetAbsOrigin().DistTo(vLaserStart);
-
-	//Find the length from the missile to the laser's position
-	Vector vecTargetToMissile;
-	VectorSubtract(GetAbsOrigin(), pLaserDot->GetChasePosition(), vecTargetToMissile);
-	float flTargetLength = VectorNormalize(vecTargetToMissile);
-
-	// See if we should chase the line segment nearest us
-	if ((flMissileLength < flLaserLength) || (flTargetLength <= 512.0f))
-	{
-		*pActualDotPosition = UTIL_PointOnLineNearestPoint(vLaserStart, pLaserDot->GetChasePosition(), GetAbsOrigin());
-		*pActualDotPosition += (vLaserDir * 256.0f);
-	}
-	else
-	{
-		// Otherwise chase the dot
-		*pActualDotPosition = pLaserDot->GetChasePosition();
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1446,124 +1170,29 @@ void CMissile::ComputeActualDotPosition(CLaserDot *pLaserDot, Vector *pActualDot
 //-----------------------------------------------------------------------------
 void CMissile::SeekThink(void)
 {
-	CBaseEntity	*pBestDot = NULL;
-	float		flBestDist = MAX_TRACE_LENGTH;
-	float		dotDist;
-
 	// If we have a grace period, go solid when it ends
-	if (m_flGracePeriodEndsAt)
+	if (m_flGracePeriodEndsAt && (m_flGracePeriodEndsAt < gpGlobals->curtime))
 	{
-		if (m_flGracePeriodEndsAt < gpGlobals->curtime)
-		{
-			RemoveSolidFlags(FSOLID_NOT_SOLID);
-			m_flGracePeriodEndsAt = 0;
-		}
+		RemoveSolidFlags(FSOLID_NOT_SOLID);
+		m_flGracePeriodEndsAt = 0;
 	}
-
-	//Search for all dots relevant to us
-	for (CLaserDot *pEnt = GetLaserDotList(); pEnt != NULL; pEnt = pEnt->m_pNext)
-	{
-		if (!pEnt->IsOn())
-			continue;
-
-		if (pEnt->GetOwnerEntity() != GetOwnerEntity())
-			continue;
-
-		dotDist = (GetAbsOrigin() - pEnt->GetAbsOrigin()).Length();
-
-		//Find closest
-		if (dotDist < flBestDist)
-		{
-			pBestDot = pEnt;
-			flBestDist = dotDist;
-		}
-	}
-#ifdef BB2_AI
-	if (flBestDist <= (GetAbsVelocity().Length() * 2.5f) && FVisible(pBestDot->GetAbsOrigin()))
-	{
-		// Scare targets
-		CSoundEnt::InsertSound(SOUND_DANGER, pBestDot->GetAbsOrigin(), GetRadius(), 0.2f, pBestDot, SOUNDENT_CHANNEL_REPEATED_DANGER, NULL); //
-	}
-#endif //BB2_AI
-
-	//If we have a dot target
-	if (pBestDot == NULL)
-	{
-		//Think as soon as possible
-		SetNextThink(gpGlobals->curtime);
-		return;
-	}
-
-	CLaserDot *pLaserDot = (CLaserDot *)pBestDot;
-	Vector	targetPos;
-
-	float flHomingSpeed;
-	Vector vecLaserDotPosition;
-	ComputeActualDotPosition(pLaserDot, &targetPos, &flHomingSpeed);
-
-	if (IsSimulatingOnAlternateTicks())
-		flHomingSpeed *= 2;
-
-	Vector	vTargetDir;
-	VectorSubtract(targetPos, GetAbsOrigin(), vTargetDir);
-	float flDist = VectorNormalize(vTargetDir);
-
-#ifdef BB2_AI
-	if (pLaserDot->GetTargetEntity() != NULL && flDist <= 240.0f) //
-	{
-		// Prevent the missile circling the Strider like a Halo in ep1_c17_06. If the missile gets within 20
-		// feet of a Strider, tighten up the turn speed of the missile so it can break the halo and strike. (sjb 4/27/2006)
-		if (pLaserDot->GetTargetEntity()->ClassMatches("npc_strider")) //
-		{
-			flHomingSpeed *= 1.75f;
-		}
-	}
-#endif //BB2_AI
-
-	Vector	vDir = GetAbsVelocity();
-	float	flSpeed = VectorNormalize(vDir);
-	Vector	vNewVelocity = vDir;
-	if (gpGlobals->frametime > 0.0f)
-	{
-		if (flSpeed != 0)
-		{
-			vNewVelocity = (flHomingSpeed * vTargetDir) + ((1 - flHomingSpeed) * vDir);
-
-			// This computation may happen to cancel itself out exactly. If so, slam to targetdir.
-			if (VectorNormalize(vNewVelocity) < 1e-3)
-			{
-				vNewVelocity = (flDist != 0) ? vTargetDir : vDir;
-			}
-		}
-		else
-		{
-			vNewVelocity = vTargetDir;
-		}
-	}
-
-	QAngle	finalAngles;
-	VectorAngles(vNewVelocity, finalAngles);
-	SetAbsAngles(finalAngles);
-
-	vNewVelocity *= flSpeed;
-	SetAbsVelocity(vNewVelocity);
 
 	if (GetAbsVelocity() == vec3_origin)
 	{
 		// Strange circumstances have brought this missile to halt. Just blow it up.
-		Explode();
+		if (m_takedamage)
+			Explode();
 		return;
 	}
 
 	// Think as soon as possible
-	SetNextThink(gpGlobals->curtime);
+	SetNextThink(gpGlobals->curtime + 0.125f);
 
 #ifdef BB2_AI
-	if (m_bCreateDangerSounds == true)
+	if (m_bCreateDangerSounds)
 	{
 		trace_t tr;
 		UTIL_TraceLine(GetAbsOrigin(), GetAbsOrigin() + GetAbsVelocity() * 0.5, MASK_SOLID, this, COLLISION_GROUP_NONE, &tr);
-
 		CSoundEnt::InsertSound(SOUND_DANGER, tr.endpos, 100, 0.2, this, SOUNDENT_CHANNEL_REPEATED_DANGER);
 	}
 #endif //BB2_AI
@@ -1580,7 +1209,6 @@ void CMissile::SeekThink(void)
 //-----------------------------------------------------------------------------
 CMissile *CMissile::Create(const Vector &vecOrigin, const QAngle &vecAngles, edict_t *pentOwner = NULL, bool bFriendly)
 {
-	//CMissile *pMissile = (CMissile *)CreateEntityByName("rpg_missile" );
 	CMissile *pMissile = (CMissile *)CBaseEntity::Create("rpg_missile", vecOrigin, vecAngles, CBaseEntity::Instance(pentOwner));
 	pMissile->SetFriendly(bFriendly);
 	pMissile->SetOwnerEntity(Instance(pentOwner));
@@ -1589,40 +1217,10 @@ CMissile *CMissile::Create(const Vector &vecOrigin, const QAngle &vecAngles, edi
 
 	Vector vecForward;
 	AngleVectors(vecAngles, &vecForward);
-
 	pMissile->SetAbsVelocity(vecForward * 300 + Vector(0, 0, 128));
 
 	return pMissile;
 }
-
-#ifdef BB2_AI
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CUtlVector<CMissile::CustomDetonator_t> CMissile::gm_CustomDetonators;
-
-void CMissile::AddCustomDetonator(CBaseEntity *pEntity, float radius, float height)
-{
-	int i = gm_CustomDetonators.AddToTail();
-	gm_CustomDetonators[i].hEntity = pEntity;
-	gm_CustomDetonators[i].radiusSq = Square(radius);
-	gm_CustomDetonators[i].halfHeight = height * 0.5f;
-}
-
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void CMissile::RemoveCustomDetonator(CBaseEntity *pEntity)
-{
-	for (int i = 0; i < gm_CustomDetonators.Count(); i++)
-	{
-		if (gm_CustomDetonators[i].hEntity == pEntity)
-		{
-			gm_CustomDetonators.FastRemove(i);
-			break;
-		}
-	}
-}
-#endif //BB2_AI
 
 //-----------------------------------------------------------------------------
 // This entity is used to create little force boxes that the helicopter
@@ -1662,7 +1260,6 @@ BEGIN_DATADESC(CInfoAPCMissileHint)
 DEFINE_FIELD(m_hTarget, FIELD_EHANDLE),
 END_DATADESC()
 
-
 //-----------------------------------------------------------------------------
 // Spawn, remove
 //-----------------------------------------------------------------------------
@@ -1700,8 +1297,7 @@ void CInfoAPCMissileHint::UpdateOnRemove()
 //-----------------------------------------------------------------------------
 #define HINT_PREDICTION_TIME 3.0f
 
-CBaseEntity *CInfoAPCMissileHint::FindAimTarget(CBaseEntity *pMissile, const char *pTargetName,
-	const Vector &vecCurrentEnemyPos, const Vector &vecCurrentEnemyVel)
+CBaseEntity *CInfoAPCMissileHint::FindAimTarget(CBaseEntity *pMissile, const char *pTargetName, const Vector &vecCurrentEnemyPos, const Vector &vecCurrentEnemyVel)
 {
 	if (!pTargetName)
 		return NULL;
@@ -1790,35 +1386,11 @@ CAPCMissile *FindAPCMissileInCone(const Vector &vecOrigin, const Vector &vecDire
 // Specialized version of the missile
 //
 //-----------------------------------------------------------------------------
-#define MAX_HOMING_DISTANCE 2250.0f
-#define MIN_HOMING_DISTANCE 1250.0f
-#define MAX_NEAR_HOMING_DISTANCE 1750.0f
-#define MIN_NEAR_HOMING_DISTANCE 1000.0f
-#define DOWNWARD_BLEND_TIME_START 0.2f
-#define MIN_HEIGHT_DIFFERENCE	250.0f
-#define MAX_HEIGHT_DIFFERENCE	550.0f
-#define CORRECTION_TIME		0.2f
-#define	APC_LAUNCH_HOMING_SPEED	0.1f
-#define	APC_HOMING_SPEED	0.025f
-#define HOMING_SPEED_ACCEL	0.01f
 
 BEGIN_DATADESC(CAPCMissile)
 
-DEFINE_FIELD(m_flReachedTargetTime, FIELD_TIME),
-DEFINE_FIELD(m_flIgnitionTime, FIELD_TIME),
-DEFINE_FIELD(m_bGuidingDisabled, FIELD_BOOLEAN),
-DEFINE_FIELD(m_hSpecificTarget, FIELD_EHANDLE),
-DEFINE_FIELD(m_strHint, FIELD_STRING),
-DEFINE_FIELD(m_flLastHomingSpeed, FIELD_FLOAT),
-
 DEFINE_THINKFUNC(BeginSeekThink),
-DEFINE_THINKFUNC(AugerStartThink),
 DEFINE_THINKFUNC(ExplodeThink),
-#ifdef BB2_AI
-DEFINE_THINKFUNC(APCSeekThink),
-#endif //BB2_AI
-
-DEFINE_FUNCTION(APCMissileTouch),
 
 END_DATADESC()
 
@@ -1835,9 +1407,6 @@ CAPCMissile *CAPCMissile::Create(const Vector &vecOrigin, const QAngle &vecAngle
 	return pMissile;
 }
 
-//-----------------------------------------------------------------------------
-// Constructor, destructor
-//-----------------------------------------------------------------------------
 CAPCMissile::CAPCMissile()
 {
 	g_APCMissileList.Insert(this);
@@ -1857,8 +1426,7 @@ void CAPCMissile::Init()
 	SetModel("models/weapons/w_panzerschreck_rocket.mdl");
 	UTIL_SetSize(this, vec3_origin, vec3_origin);
 	CreateSmokeTrail();
-	SetTouch(&CAPCMissile::APCMissileTouch);
-	m_flLastHomingSpeed = APC_HOMING_SPEED;
+	SetTouch(&CMissile::MissileTouch);
 
 #ifdef BB2_AI
 	CreateDangerSounds(true);
@@ -1866,139 +1434,33 @@ void CAPCMissile::Init()
 }
 
 //-----------------------------------------------------------------------------
-// For hitting a specific target
-//-----------------------------------------------------------------------------
-void CAPCMissile::AimAtSpecificTarget(CBaseEntity *pTarget)
-{
-	m_hSpecificTarget = pTarget;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pOther - 
-//-----------------------------------------------------------------------------
-void CAPCMissile::APCMissileTouch(CBaseEntity *pOther)
-{
-	Assert(pOther);
-	if (!pOther->IsSolid() && !pOther->IsSolidFlagSet(FSOLID_VOLUME_CONTENTS))
-		return;
-
-	Explode();
-}
-
-//-----------------------------------------------------------------------------
 // Specialized version of the missile
 //-----------------------------------------------------------------------------
 void CAPCMissile::IgniteDelay(void)
 {
-	m_flIgnitionTime = gpGlobals->curtime + 0.3f;
-
-	SetThink(&CAPCMissile::BeginSeekThink);
-	SetNextThink(m_flIgnitionTime);
 	Init();
 	AddSolidFlags(FSOLID_NOT_SOLID);
-}
-
-void CAPCMissile::AugerDelay(float flDelay)
-{
-	m_flIgnitionTime = gpGlobals->curtime;
-	SetThink(&CAPCMissile::AugerStartThink);
-	SetNextThink(gpGlobals->curtime + flDelay);
-	Init();
-	DisableGuiding();
-}
-
-void CAPCMissile::AugerStartThink()
-{
-	if (m_hRocketTrail != NULL)
-	{
-		m_hRocketTrail->m_bDamaged = true;
-	}
-	m_flAugerTime = gpGlobals->curtime + random->RandomFloat(1.0f, 2.0f);
-	SetThink(&CAPCMissile::AugerThink);
-	SetNextThink(gpGlobals->curtime);
+	SetThink(&CAPCMissile::BeginSeekThink);
+	SetNextThink(gpGlobals->curtime + 0.3f);		
 }
 
 void CAPCMissile::ExplodeDelay(float flDelay)
 {
-	m_flIgnitionTime = gpGlobals->curtime;
+	Init();
 	SetThink(&CAPCMissile::ExplodeThink);
 	SetNextThink(gpGlobals->curtime + flDelay);
-	Init();
-	DisableGuiding();
 }
 
 void CAPCMissile::BeginSeekThink(void)
 {
 	RemoveSolidFlags(FSOLID_NOT_SOLID);
-
-#ifdef BB2_AI
-	SetThink(&CAPCMissile::APCSeekThink);
-#else
 	SetThink(&CAPCMissile::SeekThink);
-#endif //BB2_AI	
-
 	SetNextThink(gpGlobals->curtime);
 }
-
-#ifdef BB2_AI
-void CAPCMissile::APCSeekThink(void)
-{
-	BaseClass::SeekThink();
-
-	bool bFoundDot = false;
-
-	//If we can't find a dot to follow around then just send me wherever I'm facing so I can blow up in peace.
-	for (CLaserDot *pEnt = GetLaserDotList(); pEnt != NULL; pEnt = pEnt->m_pNext)
-	{
-		if (!pEnt->IsOn())
-			continue;
-
-		if (pEnt->GetOwnerEntity() != GetOwnerEntity())
-			continue;
-
-		bFoundDot = true;
-	}
-
-	if (bFoundDot == false)
-	{
-		Vector	vDir = GetAbsVelocity();
-		VectorNormalize(vDir);
-
-		SetAbsVelocity(vDir * 800);
-
-		SetThink(NULL);
-	}
-}
-#endif //BB2_AI
 
 void CAPCMissile::ExplodeThink()
 {
 	DoExplosion();
-}
-
-//-----------------------------------------------------------------------------
-// Health lost at which augering starts
-//-----------------------------------------------------------------------------
-int CAPCMissile::AugerHealth()
-{
-	return m_iMaxHealth - 25;
-}
-
-//-----------------------------------------------------------------------------
-// Health lost at which augering starts
-//-----------------------------------------------------------------------------
-void CAPCMissile::DisableGuiding()
-{
-	m_bGuidingDisabled = true;
-}
-
-//-----------------------------------------------------------------------------
-// Guidance hints
-//-----------------------------------------------------------------------------
-void CAPCMissile::SetGuidanceHint(const char *pHintName)
-{
-	m_strHint = MAKE_STRING(pHintName);
 }
 
 //-----------------------------------------------------------------------------
@@ -2022,404 +1484,4 @@ void CAPCMissile::DoExplosion(void)
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAPCMissile::ComputeLeadingPosition(const Vector &vecShootPosition, CBaseEntity *pTarget, Vector *pLeadPosition)
-{
-	Vector vecTarget = pTarget->BodyTarget(vecShootPosition, false);
-	float flShotSpeed = GetAbsVelocity().Length();
-	if (flShotSpeed == 0)
-	{
-		*pLeadPosition = vecTarget;
-		return;
-	}
-
-	Vector vecVelocity = pTarget->GetSmoothedVelocity();
-	vecVelocity.z = 0.0f;
-	float flTargetSpeed = VectorNormalize(vecVelocity);
-	Vector vecDelta;
-	VectorSubtract(vecShootPosition, vecTarget, vecDelta);
-	float flTargetToShooter = VectorNormalize(vecDelta);
-	float flCosTheta = DotProduct(vecDelta, vecVelocity);
-
-	// Law of cosines... z^2 = x^2 + y^2 - 2xy cos Theta
-	// where z = flShooterToPredictedTargetPosition = flShotSpeed * predicted time
-	// x = flTargetSpeed * predicted time
-	// y = flTargetToShooter
-	// solve for predicted time using at^2 + bt + c = 0, t = (-b +/- sqrt( b^2 - 4ac )) / 2a
-	float a = flTargetSpeed * flTargetSpeed - flShotSpeed * flShotSpeed;
-	float b = -2.0f * flTargetToShooter * flCosTheta * flTargetSpeed;
-	float c = flTargetToShooter * flTargetToShooter;
-
-	float flDiscrim = b*b - 4 * a*c;
-	if (flDiscrim < 0)
-	{
-		*pLeadPosition = vecTarget;
-		return;
-	}
-
-	flDiscrim = sqrt(flDiscrim);
-	float t = (-b + flDiscrim) / (2.0f * a);
-	float t2 = (-b - flDiscrim) / (2.0f * a);
-	if (t < t2)
-	{
-		t = t2;
-	}
-
-	if (t <= 0.0f)
-	{
-		*pLeadPosition = vecTarget;
-		return;
-	}
-
-	VectorMA(vecTarget, flTargetSpeed * t, vecVelocity, *pLeadPosition);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAPCMissile::ComputeActualDotPosition(CLaserDot *pLaserDot, Vector *pActualDotPosition, float *pHomingSpeed)
-{
-	if (m_bGuidingDisabled)
-	{
-		*pActualDotPosition = GetAbsOrigin();
-		*pHomingSpeed = 0.0f;
-		m_flLastHomingSpeed = *pHomingSpeed;
-		return;
-	}
-
-	if ((m_strHint != NULL_STRING) && (!m_hSpecificTarget))
-	{
-		Vector vecOrigin, vecVelocity;
-		CBaseEntity *pTarget = pLaserDot->GetTargetEntity();
-		if (pTarget)
-		{
-			vecOrigin = pTarget->BodyTarget(GetAbsOrigin(), false);
-			vecVelocity = pTarget->GetSmoothedVelocity();
-		}
-		else
-		{
-			vecOrigin = pLaserDot->GetChasePosition();
-			vecVelocity = vec3_origin;
-		}
-
-		m_hSpecificTarget = CInfoAPCMissileHint::FindAimTarget(this, STRING(m_strHint), vecOrigin, vecVelocity);
-	}
-
-	CBaseEntity *pLaserTarget = m_hSpecificTarget ? m_hSpecificTarget.Get() : pLaserDot->GetTargetEntity();
-	if (!pLaserTarget)
-	{
-		BaseClass::ComputeActualDotPosition(pLaserDot, pActualDotPosition, pHomingSpeed);
-		m_flLastHomingSpeed = *pHomingSpeed;
-		return;
-	}
-
-	if (pLaserTarget->ClassMatches("npc_bullseye"))
-	{
-		if (m_flLastHomingSpeed != RPG_HOMING_SPEED)
-		{
-			if (m_flLastHomingSpeed > RPG_HOMING_SPEED)
-			{
-				m_flLastHomingSpeed -= HOMING_SPEED_ACCEL * UTIL_GetSimulationInterval();
-				if (m_flLastHomingSpeed < RPG_HOMING_SPEED)
-				{
-					m_flLastHomingSpeed = RPG_HOMING_SPEED;
-				}
-			}
-			else
-			{
-				m_flLastHomingSpeed += HOMING_SPEED_ACCEL * UTIL_GetSimulationInterval();
-				if (m_flLastHomingSpeed > RPG_HOMING_SPEED)
-				{
-					m_flLastHomingSpeed = RPG_HOMING_SPEED;
-				}
-			}
-		}
-		*pHomingSpeed = m_flLastHomingSpeed;
-		*pActualDotPosition = pLaserTarget->WorldSpaceCenter();
-		return;
-	}
-
-	Vector vLaserStart;
-	GetShootPosition(pLaserDot, &vLaserStart);
-	*pHomingSpeed = APC_LAUNCH_HOMING_SPEED;
-
-	//Get the laser's vector
-	Vector vecTargetPosition = pLaserTarget->BodyTarget(GetAbsOrigin(), false);
-
-	// Compute leading position
-	Vector vecLeadPosition;
-	ComputeLeadingPosition(GetAbsOrigin(), pLaserTarget, &vecLeadPosition);
-
-	Vector vecTargetToMissile, vecTargetToShooter;
-	VectorSubtract(GetAbsOrigin(), vecTargetPosition, vecTargetToMissile);
-	VectorSubtract(vLaserStart, vecTargetPosition, vecTargetToShooter);
-
-	*pActualDotPosition = vecLeadPosition;
-
-	float flMinHomingDistance = MIN_HOMING_DISTANCE;
-	float flMaxHomingDistance = MAX_HOMING_DISTANCE;
-	float flBlendTime = gpGlobals->curtime - m_flIgnitionTime;
-	if (flBlendTime > DOWNWARD_BLEND_TIME_START)
-	{
-		if (m_flReachedTargetTime != 0.0f)
-		{
-			*pHomingSpeed = APC_HOMING_SPEED;
-			float flDeltaTime = clamp(gpGlobals->curtime - m_flReachedTargetTime, 0.0f, CORRECTION_TIME);
-			*pHomingSpeed = SimpleSplineRemapVal(flDeltaTime, 0.0f, CORRECTION_TIME, 0.2f, *pHomingSpeed);
-			flMinHomingDistance = SimpleSplineRemapVal(flDeltaTime, 0.0f, CORRECTION_TIME, MIN_NEAR_HOMING_DISTANCE, flMinHomingDistance);
-			flMaxHomingDistance = SimpleSplineRemapVal(flDeltaTime, 0.0f, CORRECTION_TIME, MAX_NEAR_HOMING_DISTANCE, flMaxHomingDistance);
-		}
-		else
-		{
-			flMinHomingDistance = MIN_NEAR_HOMING_DISTANCE;
-			flMaxHomingDistance = MAX_NEAR_HOMING_DISTANCE;
-			Vector vecDelta;
-			VectorSubtract(GetAbsOrigin(), *pActualDotPosition, vecDelta);
-			if (vecDelta.z > MIN_HEIGHT_DIFFERENCE)
-			{
-				float flClampedHeight = clamp(vecDelta.z, MIN_HEIGHT_DIFFERENCE, MAX_HEIGHT_DIFFERENCE);
-				float flHeightAdjustFactor = SimpleSplineRemapVal(flClampedHeight, MIN_HEIGHT_DIFFERENCE, MAX_HEIGHT_DIFFERENCE, 0.0f, 1.0f);
-
-				vecDelta.z = 0.0f;
-				float flDist = VectorNormalize(vecDelta);
-
-				float flForwardOffset = 2000.0f;
-				if (flDist > flForwardOffset)
-				{
-					Vector vecNewPosition;
-					VectorMA(GetAbsOrigin(), -flForwardOffset, vecDelta, vecNewPosition);
-					vecNewPosition.z = pActualDotPosition->z;
-
-					VectorLerp(*pActualDotPosition, vecNewPosition, flHeightAdjustFactor, *pActualDotPosition);
-				}
-			}
-			else
-			{
-				m_flReachedTargetTime = gpGlobals->curtime;
-			}
-		}
-
-		// Allows for players right at the edge of rocket range to be threatened
-		if (flBlendTime > 0.6f)
-		{
-			float flTargetLength = GetAbsOrigin().DistTo(pLaserTarget->WorldSpaceCenter());
-			flTargetLength = clamp(flTargetLength, flMinHomingDistance, flMaxHomingDistance);
-			*pHomingSpeed = SimpleSplineRemapVal(flTargetLength, flMaxHomingDistance, flMinHomingDistance, *pHomingSpeed, 0.01f);
-		}
-	}
-
-	float flDot = DotProduct2D(vecTargetToShooter.AsVector2D(), vecTargetToMissile.AsVector2D());
-	if ((flDot < 0) || m_bGuidingDisabled)
-	{
-		*pHomingSpeed = 0.0f;
-	}
-
-	m_flLastHomingSpeed = *pHomingSpeed;
-}
-
 #endif
-
-//=============================================================================
-// Laser Dot
-//=============================================================================
-
-LINK_ENTITY_TO_CLASS(env_laserdot, CLaserDot);
-
-BEGIN_DATADESC(CLaserDot)
-DEFINE_FIELD(m_vecSurfaceNormal, FIELD_VECTOR),
-DEFINE_FIELD(m_hTargetEnt, FIELD_EHANDLE),
-DEFINE_FIELD(m_bVisibleLaserDot, FIELD_BOOLEAN),
-DEFINE_FIELD(m_bIsOn, FIELD_BOOLEAN),
-
-//DEFINE_FIELD( m_pNext, FIELD_CLASSPTR ),	// don't save - regenerated by constructor
-END_DATADESC()
-
-//-----------------------------------------------------------------------------
-// Finds missiles in cone
-//-----------------------------------------------------------------------------
-CBaseEntity *CreateLaserDot(const Vector &origin, CBaseEntity *pOwner, bool bVisibleDot)
-{
-	return CLaserDot::Create(origin, pOwner, bVisibleDot);
-}
-
-void SetLaserDotTarget(CBaseEntity *pLaserDot, CBaseEntity *pTarget)
-{
-	CLaserDot *pDot = assert_cast<CLaserDot*>(pLaserDot);
-	pDot->SetTargetEntity(pTarget);
-}
-
-void EnableLaserDot(CBaseEntity *pLaserDot, bool bEnable)
-{
-	CLaserDot *pDot = assert_cast<CLaserDot*>(pLaserDot);
-	if (bEnable)
-	{
-		pDot->TurnOn();
-	}
-	else
-	{
-		pDot->TurnOff();
-	}
-}
-
-CLaserDot::CLaserDot(void)
-{
-	m_hTargetEnt = NULL;
-	m_bIsOn = true;
-#ifndef CLIENT_DLL
-	g_LaserDotList.Insert(this);
-#endif
-}
-
-CLaserDot::~CLaserDot(void)
-{
-#ifndef CLIENT_DLL
-	g_LaserDotList.Remove(this);
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : &origin - 
-// Output : CLaserDot
-//-----------------------------------------------------------------------------
-CLaserDot *CLaserDot::Create(const Vector &origin, CBaseEntity *pOwner, bool bVisibleDot)
-{
-#ifndef CLIENT_DLL
-	CLaserDot *pLaserDot = (CLaserDot *)CBaseEntity::Create("env_laserdot", origin, QAngle(0, 0, 0));
-
-	if (pLaserDot == NULL)
-		return NULL;
-
-	pLaserDot->m_bVisibleLaserDot = bVisibleDot;
-	pLaserDot->SetMoveType(MOVETYPE_NONE);
-	pLaserDot->AddSolidFlags(FSOLID_NOT_SOLID);
-	pLaserDot->AddEffects(EF_NOSHADOW);
-	UTIL_SetSize(pLaserDot, -Vector(4, 4, 4), Vector(4, 4, 4));
-
-	pLaserDot->SetOwnerEntity(pOwner);
-
-	pLaserDot->AddEFlags(EFL_FORCE_CHECK_TRANSMIT);
-
-	if (!bVisibleDot)
-	{
-		pLaserDot->MakeInvisible();
-	}
-
-	return pLaserDot;
-#else
-	return NULL;
-#endif
-}
-
-void CLaserDot::SetLaserPosition(const Vector &origin, const Vector &normal)
-{
-	SetAbsOrigin(origin);
-	m_vecSurfaceNormal = normal;
-}
-
-Vector CLaserDot::GetChasePosition()
-{
-	return GetAbsOrigin() - m_vecSurfaceNormal * 10;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CLaserDot::TurnOn(void)
-{
-	m_bIsOn = true;
-	if (m_bVisibleLaserDot)
-	{
-		//BaseClass::TurnOn();
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CLaserDot::TurnOff(void)
-{
-	m_bIsOn = false;
-	if (m_bVisibleLaserDot)
-	{
-		//BaseClass::TurnOff();
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CLaserDot::MakeInvisible(void)
-{
-}
-
-#ifdef CLIENT_DLL
-
-//-----------------------------------------------------------------------------
-// Purpose: Draw our sprite
-//-----------------------------------------------------------------------------
-int CLaserDot::DrawModel(int flags)
-{
-	color32 color = { 255, 255, 255, 255 };
-	Vector	vecAttachment, vecDir;
-	QAngle	angles;
-
-	float	scale;
-	Vector	endPos;
-
-	C_HL2MP_Player *pOwner = ToHL2MPPlayer(GetOwnerEntity());
-
-	if (pOwner != NULL && pOwner->IsDormant() == false)
-	{
-		// Always draw the dot in front of our faces when in first-person
-		if (pOwner->IsLocalPlayer())
-		{
-			// Take our view position and orientation
-			vecAttachment = CurrentViewOrigin();
-			vecDir = CurrentViewForward();
-		}
-		else
-		{
-			// Take the eye position and direction
-			vecAttachment = pOwner->EyePosition();
-			QAngle angles = pOwner->EyeAngles();
-			AngleVectors(angles, &vecDir);
-		}
-
-		trace_t tr;
-		UTIL_TraceLine(vecAttachment, vecAttachment + (vecDir * MAX_TRACE_LENGTH), MASK_SHOT, pOwner, COLLISION_GROUP_NONE, &tr);
-
-		// Backup off the hit plane
-		endPos = tr.endpos + (tr.plane.normal * 4.0f);
-	}
-	else
-	{
-		// Just use our position if we can't predict it otherwise
-		endPos = GetAbsOrigin();
-	}
-
-	// Randomly flutter
-	scale = 16.0f + random->RandomFloat(-4.0f, 4.0f);
-
-	// Draw our laser dot in space
-	CMatRenderContextPtr pRenderContext(materials);
-	pRenderContext->Bind(m_hSpriteMaterial, this);
-	DrawSprite(endPos, scale, scale, color);
-
-	return 1;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Setup our sprite reference
-//-----------------------------------------------------------------------------
-void CLaserDot::OnDataChanged(DataUpdateType_t updateType)
-{
-	if (updateType == DATA_UPDATE_CREATED)
-	{
-		m_hSpriteMaterial.Init(RPG_LASER_SPRITE, TEXTURE_GROUP_CLIENT_EFFECTS);
-	}
-}
-
-#endif	//CLIENT_DLL
