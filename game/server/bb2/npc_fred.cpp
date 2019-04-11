@@ -20,6 +20,7 @@ ConVar sk_npc_boss_fred_rage_damage("sk_npc_boss_fred_rage_damage", "80", FCVAR_
 ConVar sk_npc_boss_fred_rage_health("sk_npc_boss_fred_rage_health", "20", FCVAR_GAMEDLL, "When Fred has this much % left of his max health he will go into a rage mode.", true, 0.0f, true, 100.0f);
 ConVar sk_npc_boss_fred_rage_duration("sk_npc_boss_fred_rage_duration", "40", FCVAR_GAMEDLL, "For how long should Fred rage?", true, 5.0f, true, 140.0f);
 ConVar sk_npc_boss_fred_max_jump_height("sk_npc_boss_fred_max_jump_height", "240", FCVAR_GAMEDLL, "Set how high Fred can jump!", true, 80.0f, true, 500.0f);
+ConVar sk_npc_boss_fred_rage_blastdmg("sk_npc_boss_fred_rage_blastdmg", "35", FCVAR_GAMEDLL, "When Fred enters rage mode how much radius damage should he do?", true, 10.0f, true, 100.0f);
 
 #define CAMPER_CHECK_TIME 2.5f
 #define CAMPER_MAX_LAST_TIME_SEEN 20.0f // SEC
@@ -87,6 +88,7 @@ public:
 
 	bool GetGender() { return true; } // force male
 	Activity NPC_TranslateActivity( Activity newActivity );
+	void		OnChangeActivity(Activity eNewActivity);
 
 protected:
 	float m_flRageTime;
@@ -188,6 +190,41 @@ Activity CNPCFred::NPC_TranslateActivity( Activity newActivity )
 	}
 
 	return wantedActivity;
+}
+
+void CNPCFred::OnChangeActivity(Activity eNewActivity)
+{
+	BaseClass::OnChangeActivity(eNewActivity);
+
+	// Playing rage anim now, do the attack!
+	if (eNewActivity == ACT_RAGE)
+	{
+		const float RAGE_RADIUS = 500.0f;
+		const Vector &vecStart = WorldSpaceCenter();
+		Vector vecEnd, vecDown, vecForce = Vector(4000, 0, 0);
+		AngleVectors(GetAbsAngles(), NULL, NULL, &vecDown);
+		VectorNormalize(vecDown);
+		vecDown *= -1.0f;
+		vecEnd = vecStart + vecDown * MAX_TRACE_LENGTH;
+
+		trace_t tr;
+		CTraceFilterNoNPCsOrPlayer filter(this, this->GetCollisionGroup());
+		UTIL_TraceLine(vecStart, vecEnd, MASK_SOLID_BRUSHONLY, &filter, &tr);
+
+		UTIL_DecalTrace(&tr, "Scorch");
+		UTIL_ScreenShake(vecStart, 20.0, 100.0, 1.0, RAGE_RADIUS, SHAKE_START);
+
+		CTakeDamageInfo info(this, this, sk_npc_boss_fred_rage_blastdmg.GetFloat(), DMG_BULLET);
+		info.SetDamageForce(vecForce);
+		info.SetDamagePosition(vecStart);
+		info.SetForceRelationship(true);
+		info.SetNoForceLimit(true);
+		info.SetRelationshipLink(Classify());
+		RadiusDamage(info, vecStart, RAGE_RADIUS, CLASS_NONE, NULL);
+
+		IPredictionSystem::SuppressHostEvents(NULL);
+		DispatchParticleEffect("bb2_item_spawn", vecStart, vec3_angle, this);
+	}
 }
 
 void CNPCFred::PrescheduleThink( void )

@@ -902,7 +902,7 @@ void PlayerPickupObject(CBasePlayer *pPlayer, CBaseEntity *pObject)
 #endif
 }
 
-#define	RPG_SPEED	1500
+#define	RPG_SPEED	2500
 
 #ifndef CLIENT_DLL
 
@@ -991,14 +991,16 @@ void CMissile::Spawn(void)
 	SetTouch(&CMissile::MissileTouch);
 
 	SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE);
+	
 	SetThink(&CMissile::IgniteThink);
-
 	SetNextThink(gpGlobals->curtime + 0.3f);
 
 #ifdef BB2_AI
 	SetDamage(EXPLOSION_DAMAGE);
 	SetRadius(EXPLOSION_RADIUS);
 #endif //BB2_AI
+
+	SetGravity(0.415f);
 
 	m_takedamage = DAMAGE_EVENTS_ONLY;
 	m_iHealth = m_iMaxHealth = 40;
@@ -1030,7 +1032,7 @@ int CMissile::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 //-----------------------------------------------------------------------------
 void CMissile::DumbFire(void)
 {
-	SetThink(NULL);
+	SetGracePeriod(0.0f);	
 	SetMoveType(MOVETYPE_FLY);
 
 	SetModel("models/weapons/w_panzerschreck_rocket.mdl");
@@ -1040,6 +1042,8 @@ void CMissile::DumbFire(void)
 
 	// Smoke trail.
 	CreateSmokeTrail();
+
+	SetThink(&CMissile::SeekThink);
 }
 
 //-----------------------------------------------------------------------------
@@ -1070,8 +1074,6 @@ void CMissile::DoExplosion(void)
 //-----------------------------------------------------------------------------
 void CMissile::Explode(void)
 {
-	m_takedamage = DAMAGE_NO;
-
 	// Don't explode against the skybox. Just pretend that 
 	// the missile flies off into the distance.
 	Vector forward;
@@ -1185,8 +1187,10 @@ void CMissile::SeekThink(void)
 		return;
 	}
 
-	// Think as soon as possible
-	SetNextThink(gpGlobals->curtime + 0.125f);
+	// Update facing ang.
+	QAngle angNewAngles;
+	VectorAngles(GetAbsVelocity(), angNewAngles);
+	SetAbsAngles(angNewAngles);
 
 #ifdef BB2_AI
 	if (m_bCreateDangerSounds)
@@ -1196,6 +1200,8 @@ void CMissile::SeekThink(void)
 		CSoundEnt::InsertSound(SOUND_DANGER, tr.endpos, 100, 0.2, this, SOUNDENT_CHANNEL_REPEATED_DANGER);
 	}
 #endif //BB2_AI
+
+	SetNextThink(gpGlobals->curtime + 0.125f);
 }
 
 //-----------------------------------------------------------------------------

@@ -1481,7 +1481,7 @@ int CBasePlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		{
 			force.z = 250.0f;
 		}
-		ApplyAbsVelocityImpulse( force );
+		ApplyAbsVelocityImpulse(force, info.GetNoForceLimit());
 	}
 
 	// fire global game event

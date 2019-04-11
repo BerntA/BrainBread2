@@ -54,9 +54,6 @@ public:
 	void			ScaleDamage( float flScaleAmount );
 	void			AddDamage( float flAddAmount );
 	void			SubtractDamage( float flSubtractAmount );
-	float			GetDamageBonus() const;
-	CBaseEntity		*GetDamageBonusProvider() const;
-	void			SetDamageBonus( float flBonus, CBaseEntity *pProvider = NULL );
 
 	float			GetBaseDamage() const;
 	bool			BaseDamageIsValid() const;
@@ -76,8 +73,6 @@ public:
 	void			AddDamageType( int bitsDamageType );
 	int				GetDamageCustom( void ) const;
 	void			SetDamageCustom( int iDamageCustom );
-	int				GetDamageStats( void ) const;
-	void			SetDamageStats( int iDamageStats );
 	void			SetForceFriendlyFire( bool bValue ) { m_bForceFriendlyFire = bValue; }
 	bool			IsForceFriendlyFire( void ) const { return m_bForceFriendlyFire; }	
 
@@ -94,11 +89,11 @@ public:
 	int				GetRelationshipLink() const;
 	void			SetRelationshipLink(int link);
 
-	int				GetPlayerPenetrationCount() const { return m_iPlayerPenetrationCount; }
-	void			SetPlayerPenetrationCount( int iPlayerPenetrationCount ) { m_iPlayerPenetrationCount = iPlayerPenetrationCount; }
-	
-	int				GetDamagedOtherPlayers() const     { return m_iDamagedOtherPlayers; }
-	void			SetDamagedOtherPlayers( int iVal ) { m_iDamagedOtherPlayers = iVal; }
+	bool			IsForceRelationshipOn() const;
+	void			SetForceRelationship(bool value);
+
+	bool			GetNoForceLimit() const;
+	void			SetNoForceLimit(bool value);
 
 	void			Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, float flDamage, int bitsDamageType, int iKillType = 0 );
 	void			Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBaseEntity *pWeapon, float flDamage, int bitsDamageType, int iKillType = 0 );
@@ -130,17 +125,14 @@ protected:
 	float			m_flBaseDamage;			// The damage amount before skill leve adjustments are made. Used to get uniform damage forces.
 	int				m_bitsDamageType;
 	int				m_iDamageCustom;
-	int				m_iDamageStats;
 	int				m_iAmmoType;			// AmmoType of the weapon used to cause this damage, if any
-	int				m_iDamagedOtherPlayers;
-	int				m_iPlayerPenetrationCount;
-	float			m_flDamageBonus;		// Anything that increases damage (crit) - store the delta
-	EHANDLE			m_hDamageBonusProvider;	// Who gave us the ability to do extra damage?
 	bool			m_bForceFriendlyFire;	// Ideally this would be a dmg type, but we can't add more
 
 	int				m_nSkillFlags;
 	int				m_iWeaponIDForced;
 	int				m_cRelationshipLink; // Useful in case the attacker goes NULL.
+	bool			m_bForceRelationshipLink; // Force relationship based checking.
+	bool			m_bNoForceLimit; // Allows greater pushback force.
 
 	DECLARE_SIMPLE_DATADESC();
 };
@@ -257,22 +249,6 @@ inline void CTakeDamageInfo::SubtractDamage( float flSubtractAmount )
 	m_flDamage -= flSubtractAmount;
 }
 
-inline float CTakeDamageInfo::GetDamageBonus() const
-{
-	return m_flDamageBonus;
-}
-
-inline CBaseEntity *CTakeDamageInfo::GetDamageBonusProvider() const
-{
-	return m_hDamageBonusProvider;
-}
-
-inline void CTakeDamageInfo::SetDamageBonus( float flBonus, CBaseEntity *pProvider /*= NULL*/ )
-{
-	m_flDamageBonus = flBonus;
-	m_hDamageBonusProvider = pProvider;
-}
-
 inline float CTakeDamageInfo::GetBaseDamage() const
 {
 	if( BaseDamageIsValid() )
@@ -349,16 +325,6 @@ inline void CTakeDamageInfo::SetDamageCustom( int iDamageCustom )
 	m_iDamageCustom = iDamageCustom;
 }
 
-inline int CTakeDamageInfo::GetDamageStats() const
-{
-	return m_iDamageStats;
-}
-
-inline void CTakeDamageInfo::SetDamageStats(int iDamageStats)
-{
-	m_iDamageStats = iDamageStats;
-}
-
 inline int CTakeDamageInfo::GetAmmoType() const
 {
 	return m_iAmmoType;
@@ -402,6 +368,26 @@ inline int CTakeDamageInfo::GetRelationshipLink() const
 inline void CTakeDamageInfo::SetRelationshipLink(int link)
 {
 	m_cRelationshipLink = link;
+}
+
+inline bool CTakeDamageInfo::IsForceRelationshipOn() const
+{
+	return m_bForceRelationshipLink;
+}
+
+inline void CTakeDamageInfo::SetForceRelationship(bool value)
+{
+	m_bForceRelationshipLink = value;
+}
+
+inline bool CTakeDamageInfo::GetNoForceLimit() const
+{
+	return m_bNoForceLimit;
+}
+
+inline void CTakeDamageInfo::SetNoForceLimit(bool value)
+{
+	m_bNoForceLimit = value;
 }
 
 // -------------------------------------------------------------------------------------------------- //

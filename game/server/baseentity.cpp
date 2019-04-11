@@ -1358,7 +1358,7 @@ int CBaseEntity::OnTakeDamage( const CTakeDamageInfo &info )
 				
 				if (flForce > 1000.0) 
 					flForce = 1000.0;
-				ApplyAbsVelocityImpulse( vecDir * flForce );
+				ApplyAbsVelocityImpulse(vecDir * flForce, info.GetNoForceLimit());
 			}
 		}
 	}
