@@ -1074,6 +1074,9 @@ public:
 	void				ApplyAbsVelocityImpulse(const Vector &vecImpulse, bool bNoLimit = false);
 	void				ApplyLocalAngularVelocityImpulse(const AngularImpulse &angImpulse);
 
+	virtual void		PreAbsVelocityImpulse(bool bNoLimit) { }
+	virtual void		PostAbsVelocityImpulse(bool bNoLimit) { }
+
 	// NOTE: Setting the abs velocity in either space will cause a recomputation
 	// in the other space, so setting the abs velocity will also set the local vel
 	void				SetLocalAngularVelocity(const QAngle &vecAngVelocity);

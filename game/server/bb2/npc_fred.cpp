@@ -201,7 +201,7 @@ void CNPCFred::OnChangeActivity(Activity eNewActivity)
 	{
 		const float RAGE_RADIUS = 500.0f;
 		const Vector &vecStart = WorldSpaceCenter();
-		Vector vecEnd, vecDown, vecForce = Vector(4000, 0, 0);
+		Vector vecEnd, vecDown, vecForce = Vector(1000, 1000, 1000);
 		AngleVectors(GetAbsAngles(), NULL, NULL, &vecDown);
 		VectorNormalize(vecDown);
 		vecDown *= -1.0f;
@@ -386,9 +386,7 @@ void CNPCFred::StartTask(const Task_t *pTask)
 				vecForward.x *= CAMPER_VELOCITY_PUNCH;
 				vecForward.y *= CAMPER_VELOCITY_PUNCH;
 				vecForward.z *= CAMPER_VELOCITY_PUNCH_Z;
-
-				pOther->ExitLadder();
-				pOther->SetGroundEntity(NULL);				
+			
 				pOther->ApplyAbsVelocityImpulse(vecForward, true);
 
 				DispatchParticleEffect("bb2_item_spawn", PATTACH_ROOTBONE_FOLLOW, pOther);

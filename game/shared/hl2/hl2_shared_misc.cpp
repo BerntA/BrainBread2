@@ -902,7 +902,7 @@ void PlayerPickupObject(CBasePlayer *pPlayer, CBaseEntity *pObject)
 #endif
 }
 
-#define	RPG_SPEED	2500
+#define	RPG_SPEED	1500
 
 #ifndef CLIENT_DLL
 
@@ -1000,7 +1000,7 @@ void CMissile::Spawn(void)
 	SetRadius(EXPLOSION_RADIUS);
 #endif //BB2_AI
 
-	SetGravity(0.415f);
+	SetGravity(0.40f);
 
 	m_takedamage = DAMAGE_EVENTS_ONLY;
 	m_iHealth = m_iMaxHealth = 40;
@@ -1109,8 +1109,7 @@ void CMissile::MissileTouch(CBaseEntity *pOther)
 	if ((pOther == NULL) || (m_takedamage == DAMAGE_NO))
 		return;
 
-	// Don't touch triggers or weps, debre etc...
-	if (pOther->IsSolidFlagSet(FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS))
+	if (pOther->IsSolidFlagSet(FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS) && (pOther->GetCollisionGroup() != COLLISION_GROUP_WEAPON))
 	{
 		if ((pOther->m_takedamage == DAMAGE_NO) || (pOther->m_takedamage == DAMAGE_EVENTS_ONLY))
 			return;
@@ -1181,9 +1180,12 @@ void CMissile::SeekThink(void)
 
 	if (GetAbsVelocity() == vec3_origin)
 	{
+		SetThink(NULL);
+
 		// Strange circumstances have brought this missile to halt. Just blow it up.
 		if (m_takedamage)
 			Explode();
+		
 		return;
 	}
 

@@ -2370,40 +2370,44 @@ void CBaseEntity::ApplyLocalVelocityImpulse( const Vector &inVecImpulse )
 
 void CBaseEntity::ApplyAbsVelocityImpulse(const Vector &inVecImpulse, bool bNoLimit)
 {
-	if ( inVecImpulse != vec3_origin )
+	if (inVecImpulse != vec3_origin)
 	{
 		Vector vecImpulse = inVecImpulse;
+
+		// Safety check against receive a huge impulse, which can explode physics
+		switch (CheckEntityVelocity(vecImpulse))
+		{
+		case -1:
+			Warning("Discarding ApplyAbsVelocityImpulse(%f,%f,%f) on %s\n", vecImpulse.x, vecImpulse.y, vecImpulse.z, GetDebugName());
+			Assert(false);
+			return;
+		case 0:
+			if (CheckEmitReasonablePhysicsSpew())
+			{
+				Warning("Clamping ApplyAbsVelocityImpulse(%f,%f,%f) on %s\n", inVecImpulse.x, inVecImpulse.y, inVecImpulse.z, GetDebugName());
+			}
+			break;
+		}
 
 		// BB2: Prevents extreme pushback values...
 		if ((IsPlayer() || IsNPC()) && (bNoLimit == false))
 			vecImpulse *= 0.1;
 
-		// Safety check against receive a huge impulse, which can explode physics
-		switch ( CheckEntityVelocity( vecImpulse ) )
-		{
-			case -1:
-				Warning( "Discarding ApplyAbsVelocityImpulse(%f,%f,%f) on %s\n", vecImpulse.x, vecImpulse.y, vecImpulse.z, GetDebugName() );
-				Assert( false );
-				return;
-			case 0:
-				if ( CheckEmitReasonablePhysicsSpew() )
-				{
-					Warning( "Clamping ApplyAbsVelocityImpulse(%f,%f,%f) on %s\n", inVecImpulse.x, inVecImpulse.y, inVecImpulse.z, GetDebugName() );
-				}
-				break;
-		}
+		PreAbsVelocityImpulse(bNoLimit);
 
-		if ( GetMoveType() == MOVETYPE_VPHYSICS )
+		if (GetMoveType() == MOVETYPE_VPHYSICS)
 		{
-			VPhysicsGetObject()->AddVelocity( &vecImpulse, NULL );
+			VPhysicsGetObject()->AddVelocity(&vecImpulse, NULL);
 		}
 		else
 		{
 			// NOTE: Have to use GetAbsVelocity here to ensure it's the correct value
 			Vector vecResult;
-			VectorAdd( GetAbsVelocity(), vecImpulse, vecResult );
-			SetAbsVelocity( vecResult );
+			VectorAdd(GetAbsVelocity(), vecImpulse, vecResult);
+			SetAbsVelocity(vecResult);
 		}
+
+		PostAbsVelocityImpulse(bNoLimit);
 	}
 }
 

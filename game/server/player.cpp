@@ -1473,14 +1473,12 @@ int CBasePlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		VectorNormalize( vecDir );
 	}
 
-	if ( info.GetInflictor() && (GetMoveType() == MOVETYPE_WALK) && 
-		( !attacker->IsSolidFlagSet(FSOLID_TRIGGER)) )
+	if (info.GetInflictor() && ((GetMoveType() == MOVETYPE_WALK) || (GetMoveType() == MOVETYPE_STEP)) &&
+		(!attacker->IsSolidFlagSet(FSOLID_TRIGGER) || info.GetNoForceLimit()))
 	{
-		Vector force = vecDir * -DamageForce( WorldAlignSize(), info.GetBaseDamage() );
-		if ( force.z > 250.0f )
-		{
+		Vector force = vecDir * -DamageForce(WorldAlignSize(), info.GetBaseDamage());
+		if (force.z > 250.0f)
 			force.z = 250.0f;
-		}
 		ApplyAbsVelocityImpulse(force, info.GetNoForceLimit());
 	}
 
@@ -1609,6 +1607,21 @@ void CBasePlayer::Event_Dying( const CTakeDamageInfo& info )
 	SetThink(&CBasePlayer::PlayerDeathThink);
 	SetNextThink( gpGlobals->curtime + 0.1f );
 	BaseClass::Event_Dying( info );
+}
+
+void CBasePlayer::PreAbsVelocityImpulse(bool bNoLimit)
+{
+	BaseClass::PreAbsVelocityImpulse(bNoLimit);
+	if (bNoLimit) // Make sure we'll fly far!
+	{
+		ExitLadder();
+		SetGroundEntity(NULL);
+	}
+}
+
+void CBasePlayer::PostAbsVelocityImpulse(bool bNoLimit)
+{
+	BaseClass::PostAbsVelocityImpulse(bNoLimit);
 }
 
 // Set the activity based on an event or current state

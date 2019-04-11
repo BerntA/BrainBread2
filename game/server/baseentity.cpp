@@ -1346,7 +1346,7 @@ int CBaseEntity::OnTakeDamage( const CTakeDamageInfo &info )
 		else
 		{
 			if ( info.GetInflictor() && (GetMoveType() == MOVETYPE_WALK || GetMoveType() == MOVETYPE_STEP) && 
-				!info.GetAttacker()->IsSolidFlagSet(FSOLID_TRIGGER) )
+				(!info.GetAttacker()->IsSolidFlagSet(FSOLID_TRIGGER) || info.GetNoForceLimit()))
 			{
 				Vector vecDir, vecInflictorCentroid;
 				vecDir = WorldSpaceCenter( );
@@ -1512,17 +1512,17 @@ int CBaseEntity::VPhysicsTakeDamage( const CTakeDamageInfo &info )
 			CBasePlayer *pPlayer = NULL;
 
 			#ifdef BB2_AI	
-						// See which MP player is holding the physics object and then use that player to get the real mass of the object.
-						// This is ugly but better than having linkage between an object and its "holding" player.
-						for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-						{
-							CBasePlayer *tempPlayer = UTIL_PlayerByIndex( i );
-							if ( tempPlayer && (tempPlayer->GetHeldObject() == this ) )
-							{
-							pPlayer = tempPlayer;
-								break;
-							}
-						}
+			// See which MP player is holding the physics object and then use that player to get the real mass of the object.
+			// This is ugly but better than having linkage between an object and its "holding" player.
+			for (int i = 1; i <= gpGlobals->maxClients; i++)
+			{
+				CBasePlayer *tempPlayer = UTIL_PlayerByIndex(i);
+				if (tempPlayer && (tempPlayer->GetHeldObject() == this))
+				{
+					pPlayer = tempPlayer;
+					break;
+				}
+			}
 			#else
 						if ( AI_IsSinglePlayer() )
 						{

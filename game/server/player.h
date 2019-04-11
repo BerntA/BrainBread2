@@ -344,6 +344,9 @@ public:
 
 	virtual void			Event_Dying( const CTakeDamageInfo &info );
 
+	virtual void			PreAbsVelocityImpulse(bool bNoLimit);
+	virtual void			PostAbsVelocityImpulse(bool bNoLimit);
+
 	bool					IsHLTV( void ) const { return pl.hltv; }
 	bool					IsReplay( void ) const { return pl.replay; }
 	virtual	bool			IsPlayer( void ) const { return true; }			// Spectators return TRUE for this, use IsObserver to separate cases

@@ -1165,6 +1165,9 @@ public:
 	void			ApplyAbsVelocityImpulse(const Vector &vecImpulse, bool bNoLimit = false);
 	void			ApplyLocalAngularVelocityImpulse( const AngularImpulse &angImpulse );
 
+	virtual void	PreAbsVelocityImpulse(bool bNoLimit) { }
+	virtual void	PostAbsVelocityImpulse(bool bNoLimit) { }
+
 	const Vector&	GetLocalVelocity( ) const;
 	const Vector&	GetAbsVelocity( ) const;
 
