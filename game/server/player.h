@@ -550,6 +550,7 @@ public:
 	void					ResetAutoaim( void );
 	
 	virtual Vector			GetAutoaimVector( float flScale );
+	virtual void			GetAimVectors(Vector& forward, Vector& right, Vector& up);
 	void					SetTargetInfo( Vector &vecSrc, float flDist );
 
 	void					SetViewEntity( CBaseEntity *pEntity );

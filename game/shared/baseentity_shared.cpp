@@ -34,7 +34,7 @@
     #include "hl2mp_player.h"
     #include "te_bullet_shot.h"
 	#include "gamestats.h"
-
+	#include "ilagcompensationmanager.h"
 #endif
 
 #ifdef HL2_EPISODIC
@@ -1603,31 +1603,24 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	trace_t		tr;
 	CAmmoDef*	pAmmoDef	= GetAmmoDef();
 	int			nDamageType	= pAmmoDef->DamageType(info.m_iAmmoType);
-	int			nAmmoFlags	= pAmmoDef->Flags(info.m_iAmmoType);
+	int			nAmmoFlags	= pAmmoDef->Flags(info.m_iAmmoType);	
 
 #if defined( GAME_DLL )
-	if (IsPlayer() && !info.m_bIgnoreSkills)
+	CBasePlayer* pPlayerFirer = ToBasePlayer(this);
+	if (pPlayerFirer && !info.m_bIgnoreSkills)
 	{
-		CBasePlayer *pPlayer = dynamic_cast<CBasePlayer*>(this);
-		if (pPlayer)
+		CBaseCombatWeapon* pPlayerWeapon = pPlayerFirer->GetActiveWeapon();
+		if (pPlayerWeapon)
 		{
-			CBaseCombatWeapon *pPlayerWeapon = pPlayer->GetActiveWeapon();
-			if (pPlayerWeapon)
+			int rumbleEffect = pPlayerWeapon->GetRumbleEffect();
+			if (rumbleEffect != RUMBLE_INVALID)
 			{
-				int rumbleEffect = pPlayerWeapon->GetRumbleEffect();
-				if (rumbleEffect != RUMBLE_INVALID)
+				if (rumbleEffect == RUMBLE_SHOTGUN_SINGLE)
 				{
-					if (rumbleEffect == RUMBLE_SHOTGUN_SINGLE)
-					{
-						if (info.m_iShots >= 6)
-						{
-							// Upgrade to double barrel rumble effect
-							rumbleEffect = RUMBLE_SHOTGUN_DOUBLE;
-						}
-					}
-
-					pPlayer->RumbleEffect(rumbleEffect, 0, RUMBLE_FLAG_RESTART);
+					if (info.m_iShots >= 6) // Upgrade to double barrel rumble effect										
+						rumbleEffect = RUMBLE_SHOTGUN_DOUBLE;					
 				}
+				pPlayerFirer->RumbleEffect(rumbleEffect, 0, RUMBLE_FLAG_RESTART);
 			}
 		}
 	}
@@ -1636,10 +1629,8 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	int iPlayerDamage = info.m_iPlayerDamage;
 	if ( iPlayerDamage == 0 )
 	{
-		if ( nAmmoFlags & AMMO_INTERPRET_PLRDAMAGE_AS_DAMAGE_TO_PLAYER )
-		{
-			iPlayerDamage = pAmmoDef->PlrDamage( info.m_iAmmoType );
-		}
+		if (nAmmoFlags & AMMO_INTERPRET_PLRDAMAGE_AS_DAMAGE_TO_PLAYER)
+			iPlayerDamage = pAmmoDef->PlrDamage(info.m_iAmmoType);
 	}
 
 	// the default attacker is ourselves
@@ -1653,15 +1644,12 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 #endif
 
 	// Make sure we don't have a dangling damage target from a recursive call
-	if ( g_MultiDamage.GetTarget() != NULL )
-	{
+	if (g_MultiDamage.GetTarget() != NULL)
 		ApplyMultiDamage();
-	}
 	  
 	ClearMultiDamage();
 	g_MultiDamage.SetDamageType( nDamageType | DMG_NEVERGIB );
 
-	Vector vecDirOrig = info.m_vecDirShooting;
 	Vector vecDir;
 	Vector vecEnd;
 	
@@ -1672,35 +1660,18 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 
 	bool bUnderwaterBullets = ShouldDrawUnderwaterBulletBubbles();
 	bool bStartedInWater = false;
-	if ( bUnderwaterBullets )
-	{
-		bStartedInWater = ( enginetrace->GetPointContents( info.m_vecSrc ) & (CONTENTS_WATER|CONTENTS_SLIME) ) != 0;
-	}
+	if (bUnderwaterBullets)
+		bStartedInWater = (enginetrace->GetPointContents(info.m_vecSrc) & (CONTENTS_WATER | CONTENTS_SLIME)) != 0;
 
 	// Prediction is only usable on players
 	int iSeed = 0;
-	if ( IsPlayer() )
-	{
-		iSeed = CBaseEntity::GetPredictionRandomSeed( info.m_bUseServerRandomSeed ) & 255;
-
-#ifndef CLIENT_DLL
-		CBasePlayer *pPlayerFirer = ToBasePlayer(this);
-		if (pPlayerFirer && !pPlayerFirer->IsBot())
-		{
-			Vector vecNewEnd = pPlayerFirer->GetLagCompPos();
-			if (vecNewEnd != vec3_invalid)
-			{
-				vecDirOrig = vecNewEnd;
-				VectorNormalize(vecDirOrig);
-			}
-		}
-#endif
-	}
+	if (IsPlayer())
+		iSeed = CBaseEntity::GetPredictionRandomSeed(info.m_bUseServerRandomSeed) & 255;
 
 	//-----------------------------------------------------
 	// Set up our shot manipulator.
 	//-----------------------------------------------------
-	CShotManipulator Manipulator(vecDirOrig);
+	CShotManipulator Manipulator(info.m_vecDirShooting);
 
 	bool bDoImpacts = false;
 	bool bDoTracers = false;
@@ -1715,23 +1686,30 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 		bool bUseHullTrace = false;
 
 		// Prediction is only usable on players
-		if ( IsPlayer() )
-		{
-			RandomSeed( iSeed );	// init random system with this seed
-		}
+		if (IsPlayer())		
+			RandomSeed(iSeed);	// init random system with this seed		
 
 		// If we're firing multiple shots, and the first shot has to be bang on target, ignore spread
-		if ( iShot == 0 && info.m_iShots > 1 && (info.m_nFlags & FIRE_BULLETS_FIRST_SHOT_ACCURATE) )
-		{
+		if (iShot == 0 && info.m_iShots > 1 && (info.m_nFlags & FIRE_BULLETS_FIRST_SHOT_ACCURATE))
 			vecDir = Manipulator.GetShotDirection();
-		}
-		else
-		{
-			// Don't run the biasing code for the player at the moment.
-			vecDir = Manipulator.ApplySpread( info.m_vecSpread );
-		}
+		else // Don't run the biasing code for the player at the moment.			
+			vecDir = Manipulator.ApplySpread(info.m_vecSpread);
 
 		vecEnd = info.m_vecSrc + vecDir * info.m_flDistance;
+
+#ifndef CLIENT_DLL
+		if (pPlayerFirer && !pPlayerFirer->IsBot())
+		{
+			lagcompensation->TraceRealtime(pPlayerFirer, info.m_vecSrc, vecEnd, -Vector(3, 3, 3), Vector(3, 3, 3), NULL);
+			Vector vecNewDir = pPlayerFirer->GetLagCompPos();
+			if (vecNewDir != vec3_invalid)
+			{
+				VectorNormalize(vecNewDir);
+				vecEnd = info.m_vecSrc + vecNewDir * info.m_flDistance;
+				vecDir = vecNewDir;
+			}
+		}
+#endif
 
 		if( IsPlayer() && info.m_iShots > 1 && iShot % 2 )
 		{
@@ -1923,18 +1901,12 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 
 #ifdef GAME_DLL
 	ApplyMultiDamage();
-
-	if (IsPlayer() && flCumulativeDamage > 0.0f)
+	if (pPlayerFirer && (flCumulativeDamage > 0.0f))
 	{
-		CBasePlayer *pPlayer = static_cast<CBasePlayer *> (this);
 		CTakeDamageInfo dmgInfo(this, pAttacker, flCumulativeDamage, nDamageType);
-
-		if (pPlayer)
-		{
-			CBaseCombatWeapon *pActiveWeapon = pPlayer->GetActiveWeapon();
-			if (pActiveWeapon)
-				gamestats->Event_WeaponHit(pPlayer, info.m_bPrimaryAttack, pActiveWeapon->GetClassname(), dmgInfo);
-		}
+		CBaseCombatWeapon* pActiveWeapon = pPlayerFirer->GetActiveWeapon();
+		if (pActiveWeapon)
+			gamestats->Event_WeaponHit(pPlayerFirer, info.m_bPrimaryAttack, pActiveWeapon->GetClassname(), dmgInfo);
 	}
 #endif
 }

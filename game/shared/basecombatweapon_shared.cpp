@@ -2436,7 +2436,7 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 	IPredictionSystem::SuppressHostEvents(NULL);
 	Activity activity = pvm->GetSequenceActivity(pvm->GetSequence());
 
-	lagcompensation->TraceRealtime(pOwner, swingStart, swingEnd, -Vector(5, 5, 5), Vector(5, 5, 5), &traceHit, range, true);
+	lagcompensation->TraceRealtime(pOwner, swingStart, swingEnd, -Vector(5, 5, 5), Vector(5, 5, 5), &traceHit, LAGCOMP_TRACE_REVERT_HULL, range);
 	forward = (traceHit.endpos - traceHit.startpos);
 	VectorNormalize(forward);
 

@@ -5607,6 +5607,11 @@ Vector CBasePlayer::GetAutoaimVector( float flScale )
 	return forward;
 }
 
+void CBasePlayer::GetAimVectors(Vector& forward, Vector& right, Vector& up)
+{
+	AngleVectors((EyeAngles() + m_Local.m_vecPunchAngle), &forward, &right, &up);
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

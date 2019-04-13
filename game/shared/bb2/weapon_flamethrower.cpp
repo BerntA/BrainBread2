@@ -363,9 +363,9 @@ void CWeaponFlamethrower::PrimaryAttack(CBasePlayer *pOwner, CBaseViewModel *pVM
 			-vecHull,
 			vecHull,
 			&traceHit,
-			(GetRange() * fraction),
-			false,
-			true);
+			LAGCOMP_TRACE_BOX_ONLY,
+			(GetRange() * fraction)
+		);
 		CBaseEntity *pHitEnt = traceHit.m_pEnt;
 		if (pHitEnt)
 		{

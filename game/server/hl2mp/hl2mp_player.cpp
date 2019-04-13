@@ -1101,7 +1101,7 @@ void CHL2MP_Player::FireBullets(const FireBulletsInfo_t &info)
 		return;
 	}
 
-	lagcompensation->TraceRealtime(this);
+	lagcompensation->BuildLagCompList(this, LAGCOMP_BULLET);
 
 	FireBulletsInfo_t modinfo = info;
 
@@ -1163,6 +1163,8 @@ void CHL2MP_Player::FireBullets(const FireBulletsInfo_t &info)
 	BaseClass::FireBullets(modinfo);
 
 	m_bPlayerUsedFirearm = true;
+
+	lagcompensation->ClearLagCompList();
 }
 
 void CHL2MP_Player::NoteWeaponFired(void)

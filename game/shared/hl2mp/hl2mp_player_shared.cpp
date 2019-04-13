@@ -213,7 +213,7 @@ void CHL2MP_Player::DoPlayerKick(void)
 #ifndef CLIENT_DLL
 	HL2MPRules()->EmitSoundToClient(this, "KickAttack", GetSoundType(), GetSoundsetGender());
 
-	lagcompensation->TraceRealtime(this, swingStart, swingEnd, -Vector(3, 3, 3), Vector(3, 3, 3), &traceHit, range, true, false, false, true);
+	lagcompensation->TraceRealtime(this, swingStart, swingEnd, -Vector(3, 3, 3), Vector(3, 3, 3), &traceHit, (LAGCOMP_TRACE_REVERT_HULL | LAGCOMP_TRACE_BOX), range);
 	forward = traceHit.endpos - traceHit.startpos;
 	VectorNormalize(forward);
 #else
