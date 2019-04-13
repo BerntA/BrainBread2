@@ -877,7 +877,7 @@ void CLagCompensationManager::AnalyzeFastBacktracks(
 	numEnts = itemsToHit.Count();
 	for (int i = 0; i < numEnts; i++)
 	{
-		if ((i + 1) >= BB2_LAGCOMP_HIT_MAX)
+		if (i >= BB2_LAGCOMP_HIT_MAX)
 			break;
 
 		int ID = itemsToHit[i];
@@ -899,7 +899,6 @@ void CLagCompensationManager::AnalyzeFastBacktracks(
 		if (IsLagCompFlagActive(LAGCOMP_BULLET))
 		{
 			player->SetLagCompVecPos((vecEndPos - vecAbsStart));
-			list.Remove(ID);
 			break;
 		}
 
@@ -927,7 +926,6 @@ void CLagCompensationManager::AnalyzeFastBacktracks(
 		}
 
 		player->SetLagCompVecPos((vecEndPos - vecAbsStart));
-		list.Remove(ID);
 		break;
 	}
 

@@ -268,7 +268,6 @@ public:
 	virtual	bool				Weapon_Switch( C_BaseCombatWeapon *pWeapon, bool bWantDraw = false, int viewmodelindex = 0 );		// Switch to given weapon if has ammo (false if failed)
 	virtual C_BaseCombatWeapon *GetLastWeapon( void ) { return m_hLastWeapon.Get(); }
 	virtual C_BaseCombatWeapon *GetNextWeapon( void ) { return m_hNextWeapon.Get(); }
-	void						ResetAutoaim( void );
 	virtual void 				SelectItem( const char *pstr, int iSubType = 0 );
 
 	virtual void				UpdateClientData( void );
@@ -381,13 +380,7 @@ public:
 	void					FogControllerChanged( bool bSnap );
 	void					UpdateFogController( void );
 	void					UpdateFogBlend( void );
-
 	float					GetFOVTime( void ){ return m_flFOVTime; }
-
-	virtual void			OnAchievementAchieved( int iAchievement ) {}
-	
-	bool					ShouldAnnounceAchievement( void ){ return m_flNextAchievementAnnounceTime < gpGlobals->curtime; }
-	void					SetNextAchievementAnnounceTime( float flTime ){ m_flNextAchievementAnnounceTime = flTime; }
 
 #if defined USES_ECON_ITEMS
 	// Wearables
@@ -596,8 +589,6 @@ protected:
 	bool			m_bSentFreezeFrame;
 	float			m_flFreezeZOffset;
 
-	float			m_flNextAchievementAnnounceTime;
-
 	int				m_nForceVisionFilterFlags; // Force our vision filter to a specific setting
 	int				m_nLocalPlayerVisionFlags;
 
@@ -621,9 +612,7 @@ public:
 
 	const char *GetLastKnownPlaceName( void ) const	{ return m_szLastPlaceName; }	// return the last nav place name the player occupied
 
-	float GetLaggedMovementValue( void ){ return m_flLaggedMovementValue;	}
-	bool  ShouldGoSouth( Vector vNPCForward, Vector vNPCRight ); //Such a bad name.
-
+	float GetLaggedMovementValue(void) { return m_flLaggedMovementValue; }
 	void SetOldPlayerZ( float flOld ) { m_flOldPlayerZ = flOld;	}
 };
 

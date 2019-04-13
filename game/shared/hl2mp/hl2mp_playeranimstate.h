@@ -5,7 +5,6 @@
 #pragma once
 #endif
 
-
 #include "convar.h"
 #include "multiplayer_animstate.h"
 

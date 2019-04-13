@@ -1198,8 +1198,6 @@ public:
 	virtual bool		CanRespondToEvent( const char *ResponseConcept ) { return false; }
 	virtual bool 		RespondedTo( const char *ResponseConcept, bool bForce, bool bCancelScene ) { return false; }
 
-	virtual void		PlayerHasIlluminatedNPC( CBasePlayer *pPlayer, float flDot );
-
 	virtual void		ModifyOrAppendCriteria( AI_CriteriaSet& set );
 
 protected:

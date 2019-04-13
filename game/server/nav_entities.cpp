@@ -19,11 +19,6 @@
 #include "props_shared.h"
 #include "func_breakablesurf.h"
 
-#ifdef TERROR
-#include "func_elevator.h"
-#include "AmbientLight.h"
-#endif
-
 #include "Color.h"
 #include "collisionutils.h"
 #include "functorutils.h"

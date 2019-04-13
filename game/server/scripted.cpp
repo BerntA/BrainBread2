@@ -149,13 +149,6 @@ void CAI_ScriptedSequence::ScriptEntityCancel( CBaseEntity *pentCine, bool bPret
 				// We have to save off the flags here, because the NPC's m_hCine is cleared in CineCleanup()
 				int iSavedFlags = (pTarget->m_hCine ? pTarget->m_hCine->m_savedFlags : 0);
 
-#ifdef HL1_DLL
-				//if we didn't have FL_FLY before the script, remove it
-				// for some reason hl2 doesn't have to do this *before* 
-				// restoring the position ( which checks FL_FLY ) in CineCleanup
-				// Let's not risk breaking anything at this stage and just remove it.
-				pCineTarget->FixFlyFlag( pTarget, iSavedFlags );
-#endif
 				// do it now				
 				pTarget->CineCleanup( );
 				pCineTarget->FixScriptNPCSchedule( pTarget, iSavedFlags );

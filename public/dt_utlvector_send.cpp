@@ -186,9 +186,8 @@ SendProp SendPropUtlVector(
 	pProps[0] = SendPropDataTable( "lengthproxy", 0, pLengthTable, SendProxy_LengthTable );
 	pProps[0].SetExtraData( pExtraData );
 
-	// TERROR:
 	char *pParentArrayPropName = AllocateStringHelper( "%s", pVarName );
-	Assert( pParentArrayPropName && *pParentArrayPropName ); // TERROR
+	Assert( pParentArrayPropName && *pParentArrayPropName ); 
 
 	// The first element is a sub-datatable.
 	for ( int i = 1; i < nMaxElements+1; i++ )
@@ -196,7 +195,7 @@ SendProp SendPropUtlVector(
 		pProps[i] = pArrayProp;	// copy array element property setting
 		pProps[i].SetOffset( 0 ); // leave offset at 0 so pStructBase is always a pointer to the CUtlVector
 		pProps[i].m_pVarName = s_ElementNames[i-1];	// give unique name
-		pProps[i].m_pParentArrayPropName = pParentArrayPropName; // TERROR: For debugging...
+		pProps[i].m_pParentArrayPropName = pParentArrayPropName; 
 		pProps[i].SetExtraData( pExtraData );
 		pProps[i].m_ElementStride = i-1;	// Kind of lame overloading element stride to hold the element index,
 											// but we can easily move it into its SetExtraData stuff if we need to.

@@ -102,7 +102,6 @@ void CHL2MPBaseShotgun::PrimaryAttack(Activity fireActivity, WeaponSound_t sound
 
 #ifdef BB2_AI
 #ifndef CLIENT_DLL
-	pPlayer->SetMuzzleFlashTime(gpGlobals->curtime + 1.0);
 	CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2);
 #endif
 #endif //BB2_AI

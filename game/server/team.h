@@ -65,8 +65,6 @@ public:
 	virtual void SetRoundsWon( int iRounds ) { m_iRoundsWon = iRounds; }
 	virtual void IncrementRoundsWon( void ) { m_iRoundsWon++; }
 
-	void AwardAchievement( int iAchievement );
-
 	virtual int GetAliveMembers( void );
 
 	virtual bool CanActivateTeamPerk(void);

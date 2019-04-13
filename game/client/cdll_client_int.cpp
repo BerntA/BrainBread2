@@ -143,22 +143,6 @@
 
 extern vgui::IInputInternal *g_InputInternal;
 
-//=============================================================================
-// HPE_BEGIN
-// [dwenger] Necessary for stats display
-//=============================================================================
-
-#include "achievements_and_stats_interface.h"
-
-//=============================================================================
-// HPE_END
-//=============================================================================
-
-
-#ifdef PORTAL
-#include "PortalRender.h"
-#endif
-
 #ifdef SIXENSE
 #include "sixense/in_sixense.h"
 #endif
@@ -372,35 +356,18 @@ public:
 
     void CreateAchievementsPanel( vgui::Panel* pParent )
     {
-        if (g_pAchievementsAndStatsInterface)
-        {
-            g_pAchievementsAndStatsInterface->CreatePanel( pParent );
-        }
     }
 
     void DisplayAchievementPanel()
     {
-        if (g_pAchievementsAndStatsInterface)
-        {
-            g_pAchievementsAndStatsInterface->DisplayPanel();
-        }
     }
 
     void ShutdownAchievementPanel()
     {
-        if (g_pAchievementsAndStatsInterface)
-        {
-            g_pAchievementsAndStatsInterface->ReleasePanel();
-        }
     }
 
 	int GetAchievementsPanelMinWidth( void ) const
 	{
-        if ( g_pAchievementsAndStatsInterface )
-        {
-            return g_pAchievementsAndStatsInterface->GetAchievementsPanelMinWidth();
-        }
-
 		return 0;
 	}
 
@@ -1122,11 +1089,6 @@ void CHLClient::PostInit()
 //-----------------------------------------------------------------------------
 void CHLClient::Shutdown( void )
 {
-    if (g_pAchievementsAndStatsInterface)
-    {
-        g_pAchievementsAndStatsInterface->ReleasePanel();
-    }
-
 #ifdef SIXENSE
 	g_pSixenseInput->Shutdown();
 	delete g_pSixenseInput;
@@ -2051,10 +2013,6 @@ void OnRenderStart()
 	VPROF( "OnRenderStart" );
 	MDLCACHE_CRITICAL_SECTION();
 	MDLCACHE_COARSE_LOCK();
-
-#ifdef PORTAL
-	g_pPortalRender->UpdatePortalPixelVisibility(); //updating this one or two lines before querying again just isn't cutting it. Update as soon as it's cheap to do so.
-#endif
 
 	partition->SuppressLists( PARTITION_ALL_CLIENT_EDICTS, true );
 	C_BaseEntity::SetAbsQueriesValid( false );

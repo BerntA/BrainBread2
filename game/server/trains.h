@@ -140,11 +140,6 @@ public:
 	// UNDONE: Add accessors?
 	CPathTrack	*m_ppath;
 	float		m_length;
-	
-#ifdef HL1_DLL	
-	bool		m_bOnTrackChange;		// we don't want to find a new node if we restore while 
-										// riding on a func_trackchange
-#endif
 
 private:
 

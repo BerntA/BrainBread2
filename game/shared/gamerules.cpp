@@ -9,7 +9,6 @@
 #include "ammodef.h"
 #include "tier0/vprof.h"
 #include "KeyValues.h"
-#include "iachievementmgr.h"
 
 #ifdef CLIENT_DLL
 	#include "usermessages.h"
@@ -584,21 +583,6 @@ void CGameRules::CreateStandardEntities()
 {
 	g_pPlayerResource = (CPlayerResource*)CBaseEntity::Create( "player_manager", vec3_origin, vec3_angle );
 	g_pPlayerResource->AddEFlags( EFL_KEEP_ON_RECREATE_ENTITIES );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Inform client(s) they can mark the indicated achievement as completed (SERVER VERSION)
-// Input  : filter - which client(s) to send this to
-//			iAchievementID - The enumeration value of the achievement to mark (see TODO:Kerry, what file will have the mod's achievement enum?) 
-//-----------------------------------------------------------------------------
-void CGameRules::MarkAchievement( IRecipientFilter& filter, char const *pchAchievementName )
-{
-	gamestats->Event_IncrementCountedStatistic( vec3_origin, pchAchievementName, 1.0f );
-
-	IAchievementMgr *pAchievementMgr = engine->GetAchievementMgr();
-	if ( !pAchievementMgr )
-		return;
-	pAchievementMgr->OnMapEvent( pchAchievementName );
 }
 
 #endif //} !CLIENT_DLL

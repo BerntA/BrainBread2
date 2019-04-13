@@ -331,8 +331,4 @@ protected:
 	LegAnimType_t m_LegAnimType;
 };
 
-// If this is set, then the game code needs to make sure to send player animation events
-// to the local player if he's the one being watched.
-extern ConVar cl_showanimstate;
-
 #endif // DOD_PLAYERANIMSTATE_H

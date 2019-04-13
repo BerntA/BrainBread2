@@ -758,23 +758,18 @@ void CFuncRotating::Precache( void )
 void CFuncRotating::HurtTouch ( CBaseEntity *pOther )
 {
 	// we can't hurt this thing, so we're not concerned with it
-	if ( !pOther->m_takedamage )
+	if (!pOther || !pOther->m_takedamage)
 		return;
 
 	// calculate damage based on rotation speed
 	m_flBlockDamage = GetLocalAngularVelocity().Length() / 10;
 
-#ifdef HL1_DLL
-	if( m_flBlockDamage > 0 )
-#endif
-	{
-		pOther->TakeDamage( CTakeDamageInfo( this, this, m_flBlockDamage, DMG_CRUSH ) );
-	
-		Vector vecNewVelocity = pOther->GetAbsOrigin() - WorldSpaceCenter();
-		VectorNormalize(vecNewVelocity);
-		vecNewVelocity *= m_flBlockDamage;
-		pOther->SetAbsVelocity( vecNewVelocity );
-	}
+	pOther->TakeDamage(CTakeDamageInfo(this, this, m_flBlockDamage, DMG_CRUSH));
+
+	Vector vecNewVelocity = pOther->GetAbsOrigin() - WorldSpaceCenter();
+	VectorNormalize(vecNewVelocity);
+	vecNewVelocity *= m_flBlockDamage;
+	pOther->SetAbsVelocity(vecNewVelocity);
 }
 
 
@@ -1290,10 +1285,8 @@ void CFuncRotating::InputToggle( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CFuncRotating::Blocked( CBaseEntity *pOther )
 {
-#ifdef HL1_DLL
-	if( m_flBlockDamage > 0 )
-#endif
-		pOther->TakeDamage( CTakeDamageInfo( this, this, m_flBlockDamage, DMG_CRUSH ) );
+	if (pOther)
+		pOther->TakeDamage(CTakeDamageInfo(this, this, m_flBlockDamage, DMG_CRUSH));
 }
 
 

@@ -39,10 +39,6 @@
 	
 #endif
 
-#if defined( CSTRIKE_DLL )
-#include "weapon_c4.h"
-#endif // CSTRIKE_DLL
-
 #include "in_buttons.h"
 #include "engine/IEngineSound.h"
 #include "tier0/vprof.h"
@@ -78,31 +74,13 @@
 			if ( !pEntity->VPhysicsGetObject() )
 				return false;
 
-#if defined( CSTRIKE_DLL )
-			// don't push the bomb!
-			if ( dynamic_cast<CC4*>( pEntity ) )
-				return false;
-#endif // CSTRIKE_DLL
-
 			return g_pGameRules->CanEntityBeUsePushed( pEntity );
 		}
 	};
 #endif
 
-#ifdef CLIENT_DLL
-ConVar mp_usehwmmodels( "mp_usehwmmodels", "0", NULL, "Enable the use of the hw morph models. (-1 = never, 1 = always, 0 = based upon GPU)" ); // -1 = never, 0 = if hasfastvertextextures, 1 = always
-#endif
-
 bool UseHWMorphModels()
 {
-// #ifdef CLIENT_DLL 
-// 	if ( mp_usehwmmodels.GetInt() == 0 )
-// 		return g_pMaterialSystemHardwareConfig->HasFastVertexTextures();
-// 
-// 	return mp_usehwmmodels.GetInt() > 0;
-// #else
-// 	return false;
-// #endif
 	return false;
 }
 
@@ -269,10 +247,8 @@ void CBasePlayer::ItemPostFrame()
 
     if ( gpGlobals->curtime < m_flNextAttack )
 	{
-		if ( GetActiveWeapon() )
-		{
+		if (GetActiveWeapon())
 			GetActiveWeapon()->ItemBusyFrame();
-		}
 	}
 	else
 	{
@@ -282,7 +258,6 @@ void CBasePlayer::ItemPostFrame()
 			// Not predicting this weapon
 			if ( GetActiveWeapon()->IsPredicted() )
 #endif
-
 			{
 				GetActiveWeapon()->ItemPostFrame( );
 			}
@@ -567,13 +542,6 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 	bool movingalongground = ( groundspeed > 0.0001f );
 	bool moving_fast_enough =  ( speed >= velwalk );
 
-#ifdef PORTAL
-	// In Portal we MUST play footstep sounds even when the player is moving very slowly
-	// This is used to count the number of footsteps they take in the challenge mode
-	// -Jeep
-	moving_fast_enough = true;
-#endif
-
 	// To hear step sounds you must be either on a ladder or moving along the ground AND
 	// You must be moving fast enough
 
@@ -599,11 +567,7 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 
 		SetStepSoundTime( STEPSOUNDTIME_ON_LADDER, bWalking );
 	}
-#ifdef CSTRIKE_DLL
-	else if ( enginetrace->GetPointContents( knee ) & MASK_WATER )  // we want to use the knee for Cstrike, not the waist
-#else
-	else if ( GetWaterLevel() == WL_Waist )
-#endif // CSTRIKE_DLL
+	else if (GetWaterLevel() == WL_Waist)
 	{
 		static int iSkipStep = 0;
 
@@ -892,8 +856,6 @@ bool CBasePlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, bool bWantDraw, int
 		if ( pViewModel )
 			pViewModel->RemoveEffects( EF_NODRAW );
 
-		ResetAutoaim();
-
 		return true;
 	}
 
@@ -913,7 +875,6 @@ void CBasePlayer::SelectLastItem(void)
 
 	SelectItem( m_hLastWeapon.Get()->GetClassname(), m_hLastWeapon.Get()->GetSubType() );
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Abort any reloads we're in
@@ -952,7 +913,6 @@ void CBasePlayer::RemoveFromPlayerSimulationList( CBaseEntity *other )
 
 	Assert( other->IsPlayerSimulated() );
 	Assert( other->GetSimulatingPlayer() == this );
-
 
 	CHandle< CBaseEntity > h;
 	h = other;
@@ -1079,8 +1039,6 @@ void CBasePlayer::SelectItem( const char *pstr, int iSubType )
 	{
 		if ( !GetActiveWeapon()->CanHolster() )
 			return;
-
-		ResetAutoaim( );
 	}
 
 	Weapon_Switch( pItem );
@@ -1179,10 +1137,6 @@ CBaseEntity *CBasePlayer::FindUseEntity()
 	// NOTE: Some debris objects are useable too, so hit those as well
 	// A button, etc. can be made out of clip brushes, make sure it's +useable via a traceline, too.
 	int useableContents = MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_PLAYERCLIP;
-
-#ifdef CSTRIKE_DLL
-	useableContents = MASK_NPCSOLID_BRUSHONLY | MASK_OPAQUE_AND_NPCS;
-#endif
 
 #ifndef CLIENT_DLL
 	CBaseEntity *pFoundByTrace = NULL;
@@ -1621,7 +1575,6 @@ static bool IsWaterContents( int contents )
 
 void CBasePlayer::ResetObserverMode()
 {
-
 	m_hObserverTarget.Set( 0 );
 	m_iObserverMode = (int)OBS_MODE_NONE;
 
@@ -1792,7 +1745,6 @@ void CBasePlayer::CalcVehicleView(
 		vieweffects->ApplyShake( eyeOrigin, eyeAngles, 1.0 );
 	}
 #endif
-
 }
 
 
@@ -1947,7 +1899,7 @@ void CBasePlayer::SharedSpawn()
 
 	pl.deadflag	= false;
 	m_lifeState	= LIFE_ALIVE;
-	//m_iHealth = 100;
+	// m_iHealth = 100;
 	m_takedamage		= DAMAGE_YES;
 
 	m_Local.m_bDrawViewmodel = true;
@@ -2171,7 +2123,6 @@ void CBasePlayer::SetPlayerUnderwater( bool state )
 	}
 }
 
-
 void CBasePlayer::SetPreviouslyPredictedOrigin( const Vector &vecAbsOrigin )
 {
 	m_vecPreviouslyPredictedOrigin = vecAbsOrigin;
@@ -2182,7 +2133,7 @@ const Vector &CBasePlayer::GetPreviouslyPredictedOrigin() const
 	return m_vecPreviouslyPredictedOrigin;
 }
 
-bool fogparams_t::operator !=( const fogparams_t& other ) const
+bool fogparams_t::operator != ( const fogparams_t& other ) const
 {
 	if ( this->enable != other.enable ||
 		this->blend != other.blend ||

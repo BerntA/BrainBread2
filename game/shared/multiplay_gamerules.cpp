@@ -41,10 +41,6 @@
 	#include "tier0/icommandline.h"
     #include "GameBase_Server.h"
 
-#ifdef NEXT_BOT
-	#include "NextBotManager.h"
-#endif
-
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -558,20 +554,6 @@ bool CMultiplayRules::Init()
 		CBaseEntity	*pWeaponEntity = NULL;
 		while ((pWeaponEntity = gEntList.FindEntityByClassname(pWeaponEntity, "game_player_equip")) != NULL)
 			pWeaponEntity->Touch(pPlayer);
-	}
-
-	//=========================================================
-	//=========================================================
-	bool CMultiplayRules::FPlayerCanRespawn( CBasePlayer *pPlayer )
-	{
-		return true;
-	}
-
-	//=========================================================
-	//=========================================================
-	float CMultiplayRules::FlPlayerSpawnTime( CBasePlayer *pPlayer )
-	{
-		return gpGlobals->curtime; //now!
 	}
 
 	//=========================================================
@@ -1107,31 +1089,14 @@ bool CMultiplayRules::Init()
 
 	void CMultiplayRules::ClientCommandKeyValues( edict_t *pEntity, KeyValues *pKeyValues )
 	{
-		CBaseMultiplayerPlayer *pPlayer = dynamic_cast< CBaseMultiplayerPlayer * >( CBaseEntity::Instance( pEntity ) );
-		if ( !pPlayer )
-			return;
+		//CBaseMultiplayerPlayer *pPlayer = dynamic_cast< CBaseMultiplayerPlayer * >( CBaseEntity::Instance( pEntity ) );
+		//if ( !pPlayer )
+		//	return;
 
-		char const *pszCommand = pKeyValues->GetName();
-		if ( pszCommand && pszCommand[0] )
-		{
-			if ( FStrEq( pszCommand, "AchievementEarned" ) )
-			{
-				if ( pPlayer->ShouldAnnounceAchievement() )
-				{
-					int nAchievementID = pKeyValues->GetInt( "achievementID" );
-
-					IGameEvent * event = gameeventmanager->CreateEvent( "achievement_earned" );
-					if ( event )
-					{
-						event->SetInt( "player", pPlayer->entindex() );
-						event->SetInt( "achievement", nAchievementID );
-						gameeventmanager->FireEvent( event );
-					}
-
-					pPlayer->OnAchievementEarned( nAchievementID );
-				}
-			}
-		}
+		//char const *pszCommand = pKeyValues->GetName();
+		//if ( pszCommand && pszCommand[0] )
+		//{
+		//}
 	}
 
 	void CMultiplayRules::ClientSettingsChanged( CBasePlayer *pPlayer )

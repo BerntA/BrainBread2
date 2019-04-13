@@ -86,14 +86,6 @@ void CEnvSpark::Spawn(void)
 	{
 		m_flDelay = 0;
 	}
-
-#ifdef HL1_DLL
-	// Don't allow 0 delays in HL1 Port. Enforce a default
-	if( m_flDelay == 0 )
-	{
-		m_flDelay = 1.0f;
-	}
-#endif//HL1_DLL
 	
 	Precache( );
 }

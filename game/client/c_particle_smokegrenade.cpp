@@ -16,10 +16,6 @@
 #include "toolframework_client.h"
 #include "engine/ivdebugoverlay.h"
 
-#if CSTRIKE_DLL
-#include "c_cs_player.h"
-#endif
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -378,17 +374,7 @@ void C_ParticleSmokeGrenade::Start(CParticleMgr *pParticleMgr, IPrototypeArgAcce
 	}
 
 	m_bStarted = true;
-	SetNextClientThink( CLIENT_THINK_ALWAYS );
-
-#if CSTRIKE_DLL
-	C_CSPlayer *pPlayer = C_CSPlayer::GetLocalCSPlayer();
-
-	if ( pPlayer )
-	{
-		 pPlayer->m_SmokeGrenades.AddToTail( this );
-	}
-#endif
-		 
+	SetNextClientThink( CLIENT_THINK_ALWAYS ); 
 }
 
 void C_ParticleSmokeGrenade::ClientThink()
@@ -773,16 +759,6 @@ void C_ParticleSmokeGrenade::SimulateParticles( CParticleSimulateIterator *pIter
 void C_ParticleSmokeGrenade::NotifyRemove()
 {
 	m_xCount = m_yCount = m_zCount = 0;
-
-#if CSTRIKE_DLL
-	C_CSPlayer *pPlayer = C_CSPlayer::GetLocalCSPlayer();
-
-	if ( pPlayer )
-	{
-		 pPlayer->m_SmokeGrenades.FindAndRemove( this );
-	}
-#endif
-
 }
 
 

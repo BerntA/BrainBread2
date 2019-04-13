@@ -8,7 +8,6 @@
 #define HL2MP_PLAYER_SHARED_H
 #pragma once
 
-#define HL2MP_PUSHAWAY_THINK_INTERVAL		(1.0f / 20.0f)
 #include "studio.h"
 
 enum HL2MPPlayerState

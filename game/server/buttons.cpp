@@ -879,13 +879,9 @@ void CRotButton::Spawn( void )
 		m_vecMoveAng = m_vecMoveAng * -1;
 	}
 
-	SetMoveType( MOVETYPE_PUSH );
-	
-#ifdef HL1_DLL
-	SetSolid( SOLID_BSP );
-#else
-	SetSolid( SOLID_VPHYSICS );
-#endif
+	SetMoveType( MOVETYPE_PUSH );	
+	SetSolid(SOLID_VPHYSICS);
+
 	if ( HasSpawnFlags( SF_ROTBUTTON_NOTSOLID ) )
 	{
 		AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
@@ -1058,11 +1054,7 @@ void CMomentaryRotButton::Spawn( void )
 		UpdateTarget(0,this);
 	}
 
-#ifdef HL1_DLL
-	SetSolid( SOLID_BSP );
-#else
-	SetSolid( SOLID_VPHYSICS );
-#endif
+	SetSolid(SOLID_VPHYSICS);
 	if (HasSpawnFlags(SF_ROTBUTTON_NOTSOLID))
 	{
 		AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );

@@ -20,9 +20,6 @@
 #include "world.h"
 #include "functorutils.h"
 #include "team.h"
-#ifdef TERROR
-#include "TerrorShared.h"
-#endif
 
 #ifdef DOTA_SERVER_DLL
 #include "dota_npc_base.h"
@@ -980,14 +977,7 @@ void CNavMesh::DrawEditMode( void )
 					if ( attributes & NAV_MESH_OBSTACLE_TOP ) Q_strncat( attrib, "OBSTACLE ", sizeof( attrib ), -1 );
 					if ( attributes & NAV_MESH_CLIFF )		Q_strncat( attrib, "CLIFF ", sizeof( attrib ), -1 );
 					if ( attributes & NAV_MESH_LADDER_POINT ) Q_strncat( attrib, "LADDER ", sizeof( attrib ), -1 );
-#ifdef TERROR
-					if ( attributes & TerrorNavArea::NAV_PLAYERCLIP )		Q_strncat( attrib, "PLAYERCLIP ", sizeof( attrib ), -1 );
-					if ( attributes & TerrorNavArea::NAV_BREAKABLEWALL )	Q_strncat( attrib, "BREAKABLEWALL ", sizeof( attrib ), -1 );
-					if ( m_selectedArea->IsBlocked( TEAM_SURVIVOR ) ) Q_strncat( attrib, "BLOCKED_SURVIVOR ", sizeof( attrib ), -1 );
-					if ( m_selectedArea->IsBlocked( TEAM_ZOMBIE ) ) Q_strncat( attrib, "BLOCKED_ZOMBIE ", sizeof( attrib ), -1 );
-#else
-					if ( m_selectedArea->IsBlocked( TEAM_ANY ) ) Q_strncat( attrib, "BLOCKED ", sizeof( attrib ), -1 );
-#endif
+					if (m_selectedArea->IsBlocked(TEAM_ANY)) Q_strncat(attrib, "BLOCKED ", sizeof(attrib), -1);
 					if ( m_selectedArea->HasAvoidanceObstacle() )	Q_strncat( attrib, "OBSTRUCTED ", sizeof( attrib ), -1 );
 					if ( m_selectedArea->IsDamaging() )		Q_strncat( attrib, "DAMAGING ", sizeof( attrib ), -1 );
 					if ( m_selectedArea->IsUnderwater() )	Q_strncat( attrib, "UNDERWATER ", sizeof( attrib ), -1 );

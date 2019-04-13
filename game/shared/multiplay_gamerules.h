@@ -159,8 +159,6 @@ public:
 // Client spawn/respawn control
 	virtual void PlayerSpawn( CBasePlayer *pPlayer );
 	virtual void PlayerThink( CBasePlayer *pPlayer );
-	virtual bool FPlayerCanRespawn( CBasePlayer *pPlayer );
-	virtual float FlPlayerSpawnTime( CBasePlayer *pPlayer );
 	virtual CBaseEntity *GetPlayerSpawnSpot( CBasePlayer *pPlayer );
 
 // Client kills/scoring

@@ -21,15 +21,11 @@
 #define BASEPLAYERCLASS CBasePlayer
 #endif
 
-class CAI_Squad;
-
 extern int TrainSpeed(int iSpeed, int iMax);
 
+class CAI_Squad;
 class IPhysicsPlayerController;
 class CLogicPlayerProxy;
-
-// Time between checks to determine whether NPCs are illuminated by the flashlight
-#define FLASHLIGHT_NPC_CHECK_INTERVAL	0.5f
 
 //=============================================================================
 // >> HL2_PLAYER
@@ -53,18 +49,14 @@ public:
 
 	virtual void		Precache( void );
 	virtual void		Spawn(void);
-	virtual void		Activate( void );
-	virtual void		CheatImpulseCommands( int iImpulse );
 	virtual void		PlayerRunCommand( CUserCmd *ucmd, IMoveHelper *moveHelper);
 	virtual void		PlayerUse ( void );
 	virtual void		SuspendUse( float flDuration ) { m_flTimeUseSuspended = gpGlobals->curtime + flDuration; }
 	virtual void		UpdateClientData( void );
-	virtual void		OnRestore();
 	virtual void		StopLoopingSounds( void );
 	virtual void		Splash( void );
-	virtual void 		ModifyOrAppendPlayerCriteria( AI_CriteriaSet& set );
 
-	void				DrawDebugGeometryOverlays(void);
+	virtual void		DrawDebugGeometryOverlays(void);
 
 	virtual Vector		EyeDirection2D( void );
 	virtual Vector		EyeDirection3D( void );
@@ -90,7 +82,7 @@ public:
 
 	// Aiming heuristics accessors
 	virtual float		GetLastDamageTime( void ) const { return m_flLastDamageTime; }
-	virtual bool		IsDucking( void ) const { return !!( GetFlags() & FL_DUCKING ); }
+	virtual bool		IsDucking(void) const { return ((GetFlags() & FL_DUCKING) != 0); }
 
 	virtual bool		PassesDamageFilter( const CTakeDamageInfo &info );
 	void				InputIgnoreFallDamage( inputdata_t &inputdata );
@@ -111,11 +103,9 @@ public:
 	virtual bool		Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon );
 
 	// Flashlight Device
-	void				CheckFlashlight( void );
 	int					FlashlightIsOn( void );
 	void				FlashlightTurnOn( void );
 	void				FlashlightTurnOff( void );
-	bool				IsIlluminatedByFlashlight( CBaseEntity *pEntity, float *flReturnDot );
 
 	// Underwater breather device
 	virtual void		SetPlayerUnderwater( bool state );
@@ -165,7 +155,7 @@ private:
 
 	CNetworkVarForDerived( bool, m_fIsWalking );
 
-	float m_flNextEntityTraceCheck;
+	float				m_flNextEntityTraceCheck;
 
 protected:	// Jeep: Portal_Player needs access to this variable to overload PlayerUse for picking up objects through portals
 	bool				m_bPlayUseDenySound;		// Signaled by PlayerUse, but can be unset by HL2 ladder code...
@@ -174,8 +164,6 @@ private:
 
 	float				m_flTimeIgnoreFallDamage;
 	bool				m_bIgnoreFallDamageResetAfterImpact;
-
-	float				m_flNextFlashlightCheckTime;
 
 	// Aiming heuristics code
 	float				m_flLastDamageTime;	//Last time we took damage

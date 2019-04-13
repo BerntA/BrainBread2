@@ -602,11 +602,6 @@ void CGib::Spawn( const char *szGibModel )
 
 	SetModel( szGibModel );
 
-#ifdef HL1_DLL
-	SetElasticity( 1.0 );
-	UTIL_SetSize( this, vec3_origin, vec3_origin );
-#endif//HL1_DLL
-
 	SetNextThink( gpGlobals->curtime + 4 );
 	m_lifeTime = 25;
 	SetTouch ( &CGib::BounceGibTouch );

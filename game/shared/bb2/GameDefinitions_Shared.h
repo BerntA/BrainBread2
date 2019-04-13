@@ -513,4 +513,6 @@ extern const achievementStatItem_t GAME_STAT_AND_ACHIEVEMENT_DATA[CURRENT_ACHIEV
 extern const DataPenetrationItem_t *GetPenetrationDataForMaterial(unsigned short material);
 extern Vector TryPenetrateSurface(trace_t *tr, ITraceFilter *filter);
 
+const char* COM_GetModDirectory();
+
 #endif // GAME_DEFINITIONS_SHARED_H

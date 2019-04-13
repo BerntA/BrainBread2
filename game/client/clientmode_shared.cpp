@@ -30,7 +30,6 @@
 #include "c_team.h"
 #include "c_rumble.h"
 #include "fmtstr.h"
-#include "achievementmgr.h"
 #include "c_playerresource.h"
 #include "cam_thirdperson.h"
 #include <vgui/ILocalize.h>
@@ -388,7 +387,6 @@ void ClientModeShared::Init()
 	ListenForGameEvent("server_cvar");
 	ListenForGameEvent("player_changename");
 	ListenForGameEvent("teamplay_broadcast_audio");
-	ListenForGameEvent("achievement_earned");
 	ListenForGameEvent("client_sound_transmit");
 	ListenForGameEvent("round_start");
 	ListenForGameEvent("changelevel");
@@ -1427,58 +1425,6 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );
 
 			m_pChatElement->Printf(CHAT_FILTER_SERVERMSG, "%s", szLocalized);
-		}
-	}
-	else if ( Q_strcmp( "achievement_earned", eventname ) == 0 )
-	{
-		int iPlayerIndex = event->GetInt( "player" );
-		C_BasePlayer *pPlayer = UTIL_PlayerByIndex( iPlayerIndex );
-		int iAchievement = event->GetInt( "achievement" );
-
-		if (!m_pChatElement || !pPlayer)
-			return;
-
-		if ( !IsInCommentaryMode() )
-		{
-			CAchievementMgr *pAchievementMgr = dynamic_cast<CAchievementMgr *>( engine->GetAchievementMgr() );
-			if ( !pAchievementMgr )
-				return;
-
-			IAchievement *pAchievement = pAchievementMgr->GetAchievementByID( iAchievement );
-			if ( pAchievement )
-			{
-				if ( !pPlayer->IsDormant() && pPlayer->ShouldAnnounceAchievement() )
-				{
-					pPlayer->SetNextAchievementAnnounceTime( gpGlobals->curtime + ACHIEVEMENT_ANNOUNCEMENT_MIN_TIME );
-
-					// no particle effect if the local player is the one with the achievement or the player is dead
-					if ( !pPlayer->IsLocalPlayer() && pPlayer->IsAlive() ) 
-					{
-						//tagES using the "head" attachment won't work for CS and DoD
-						pPlayer->ParticleProp()->Create( "achieved", PATTACH_POINT_FOLLOW, "head" );
-					}
-
-					pPlayer->OnAchievementAchieved( iAchievement );
-				}
-
-				if ( g_PR )
-				{
-					wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
-					g_pVGuiLocalize->ConvertANSIToUnicode( g_PR->GetPlayerName( iPlayerIndex ), wszPlayerName, sizeof( wszPlayerName ) );
-
-					const wchar_t *pchLocalizedAchievement = ACHIEVEMENT_LOCALIZED_NAME_FROM_STR( pAchievement->GetName() );
-					if ( pchLocalizedAchievement )
-					{
-						wchar_t wszLocalizedString[128];
-						g_pVGuiLocalize->ConstructString( wszLocalizedString, sizeof( wszLocalizedString ), g_pVGuiLocalize->Find( "#Achievement_Earned" ), 2, wszPlayerName, pchLocalizedAchievement );
-
-						char szLocalized[128];
-						g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalizedString, szLocalized, sizeof( szLocalized ) );
-
-						m_pChatElement->ChatPrintf(iPlayerIndex, CHAT_FILTER_SERVERMSG, "%s", szLocalized);
-					}
-				}
-			}
 		}
 	}
 #if defined( REPLAY_ENABLED )

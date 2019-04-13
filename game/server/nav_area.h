@@ -322,13 +322,6 @@ public:
 	bool HasAvoidanceObstacle( float maxObstructionHeight = StepHeight ) const; // is there a large, immobile object obstructing this area
 	float GetAvoidanceObstacleHeight( void ) const; // returns the maximum height of the obstruction above the ground
 
-#ifdef NEXT_BOT
-	bool HasPrerequisite( CBaseCombatCharacter *actor = NULL ) const;							// return true if this area has a prerequisite that applies to the given actor
-	const CUtlVector< CHandle< CFuncNavPrerequisite > > &GetPrerequisiteVector( void ) const;	// return vector of prerequisites that must be met before this area can be traversed
-	void RemoveAllPrerequisites( void );
-	void AddPrerequisite( CFuncNavPrerequisite *prereq );
-#endif
-
 	void ClearAllNavCostEntities( void );							// clear set of func_nav_cost entities that affect this area
 	void AddFuncNavCostEntity( CFuncNavCost *cost );				// add the given func_nav_cost entity to the cost of this area
 	float ComputeFuncNavCost( CBaseCombatCharacter *who ) const;	// return the cost multiplier of this area's func_nav_cost entities for the given actor
@@ -734,10 +727,6 @@ private:
 
 	void CalcDebugID();
 
-#ifdef NEXT_BOT
-	CUtlVector< CHandle< CFuncNavPrerequisite > > m_prerequisiteVector;		// list of prerequisites that must be met before this area can be traversed
-#endif
-
 	CNavArea *m_prevHash, *m_nextHash;							// for hash table in CNavMesh
 
 	void ConnectElevators( void );								// find elevator connections between areas
@@ -777,36 +766,6 @@ extern NavAreaVector TheNavAreas;
 //
 // Inlines
 //
-
-#ifdef NEXT_BOT
-
-//--------------------------------------------------------------------------------------------------------------
-inline bool CNavArea::HasPrerequisite( CBaseCombatCharacter *actor ) const
-{
-	return m_prerequisiteVector.Count() > 0;
-}
-
-//--------------------------------------------------------------------------------------------------------------
-inline const CUtlVector< CHandle< CFuncNavPrerequisite > > &CNavArea::GetPrerequisiteVector( void ) const
-{
-	return m_prerequisiteVector;
-}
-
-//--------------------------------------------------------------------------------------------------------------
-inline void CNavArea::RemoveAllPrerequisites( void )
-{
-	m_prerequisiteVector.RemoveAll();
-}
-
-//--------------------------------------------------------------------------------------------------------------
-inline void CNavArea::AddPrerequisite( CFuncNavPrerequisite *prereq )
-{
-	if ( m_prerequisiteVector.Find( prereq ) == m_prerequisiteVector.InvalidIndex() )
-	{
-		m_prerequisiteVector.AddToTail( prereq );
-	}
-}
-#endif
 
 //--------------------------------------------------------------------------------------------------------------
 inline float CNavArea::GetDangerDecayRate( void ) const

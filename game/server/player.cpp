@@ -145,7 +145,7 @@ int gEvilImpulse101;
 
 bool gInitHUD = true;
 
-extern void respawn(CBaseEntity *pEdict, bool fCopyCorpse);
+extern void respawn(CBaseEntity *pEdict);
 extern void	SpawnBlood(Vector vecSpot, const Vector &vecDir, int bloodColor, float flDamage, int hitbox);
 extern void AddMultiDamage( const CTakeDamageInfo &info, CBaseEntity *pEntity );
 
@@ -242,7 +242,6 @@ BEGIN_DATADESC( CBasePlayer )
 
 	DEFINE_FIELD( m_hUseEntity, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_iTrain, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iRespawnFrames, FIELD_FLOAT ),
 	DEFINE_FIELD( m_afPhysicsFlags, FIELD_INTEGER ),
 	DEFINE_FIELD( m_hVehicle, FIELD_EHANDLE ),
 
@@ -315,7 +314,6 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_flSwimSoundTime, FIELD_TIME ),
 	DEFINE_FIELD( m_vecLadderNormal, FIELD_VECTOR ),
 
-	DEFINE_FIELD( m_flFlashTime, FIELD_TIME ),
 	DEFINE_FIELD( m_nDrownDmgRate, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iSuicideCustomKillFlags, FIELD_INTEGER ),
 
@@ -497,7 +495,6 @@ CBasePlayer::CBasePlayer( )
 
 	m_flPlayerUseTime = 0.0f;
 
-	m_flFlashTime = -1;
 	pl.fixangle = FIXANGLE_ABSOLUTE;
 	pl.hltv = false;
 	pl.replay = false;
@@ -945,11 +942,6 @@ bool CBasePlayer::ShouldTakeDamageInCommentaryMode( const CTakeDamageInfo &input
 	// Allow SetHealth inputs to kill player.
 	if ( inputInfo.GetInflictor() == this && inputInfo.GetAttacker() == this )
 		return true;
-
-#ifdef PORTAL
-	if ( inputInfo.GetDamageType() & DMG_ACID )
-		return true;
-#endif
 
 	// In commentary, ignore all damage except for falling and leeches
 	if ( !(inputInfo.GetDamageType() & (DMG_BURN | DMG_PLASMA | DMG_FALL | DMG_CRUSH)) && inputInfo.GetDamageType() != DMG_GENERIC )
@@ -1794,17 +1786,13 @@ void CBasePlayer::ShowViewPortPanel( const char * name, bool bShow, KeyValues *d
 
 void CBasePlayer::PlayerDeathThink(void)
 {
-	float flForward;
-
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
 	if (GetFlags() & FL_ONGROUND)
 	{
-		flForward = GetAbsVelocity().Length() - 20;
-		if (flForward <= 0)
-		{
-			SetAbsVelocity( vec3_origin );
-		}
+		float flForward = GetAbsVelocity().Length() - 20;
+		if (flForward <= 0)		
+			SetAbsVelocity( vec3_origin );		
 		else
 		{
 			Vector vecNewVelocity = GetAbsVelocity();
@@ -1816,64 +1804,21 @@ void CBasePlayer::PlayerDeathThink(void)
 
 	RemoveAllItems();
 
-	if (GetModelIndex() && (!IsSequenceFinished()) && (m_lifeState == LIFE_DYING))
-	{
-		//StudioFrameAdvance( ); <- BB2 Warn - Client Anims Should COver this!
-
-		m_iRespawnFrames++;
-		if ( m_iRespawnFrames < 60 )  // animations should be no longer than this
-			return;
-	}
-
 	if (m_lifeState == LIFE_DYING)
 	{
 		m_lifeState = LIFE_DEAD;
 		m_flDeathAnimTime = gpGlobals->curtime;
 	}
 	
-	StopAnimation();
-
 	IncrementInterpolationFrame();
-	m_flPlaybackRate = 0.0;
-	
-	int fAnyButtonDown = (m_nButtons & ~IN_SCORE);
-	
-	// Strip out the duck key from this check if it's toggled
-	if ( (fAnyButtonDown & IN_DUCK) && GetToggledDuckState())
-	{
-		fAnyButtonDown &= ~IN_DUCK;
-	}
-
-	// wait for all buttons released
-	if (m_lifeState == LIFE_DEAD)
-	{
-		if (fAnyButtonDown)
-			return;
-
-		if ( g_pGameRules->FPlayerCanRespawn( this ) )
-		{
-			m_lifeState = LIFE_RESPAWNABLE;
-		}
-		
-		return;
-	}
-
-// if the player has been dead for one second longer than allowed by forcerespawn, 
-// forcerespawn isn't on. Send the player off to an intermission camera until they 
-// choose to respawn.
-	if ( g_pGameRules->IsMultiplayer() && ( gpGlobals->curtime > (m_flDeathTime + DEATH_ANIMATION_TIME) ) && !IsObserver() )
-	{
-		// go to dead camera. 
-		StartObserverMode( m_iObserverLastMode );
-	}
+	StopAnimation();
 	
 	// BB2, 3 sec until respawn no matter what.
-	//if (gpGlobals->curtime < (m_flDeathTime + 3.0f)) bug bug
-	if (!((gpGlobals->curtime > (m_flDeathTime + 3))))
+	float timeElapsed = (gpGlobals->curtime - m_flDeathTime.Get());	
+	if (timeElapsed <= DEATH_ANIMATION_TIME)
 		return;
 
 	m_nButtons = 0;
-	m_iRespawnFrames = 0;
 
 	CHL2MP_Player *pClient = ToHL2MPPlayer( this );
 
@@ -1910,7 +1855,7 @@ void CBasePlayer::PlayerDeathThink(void)
 	if (HL2MPRules()->CanPlayersRespawnIndividually())
 		pClient->m_BB2Local.m_flPlayerRespawnTime = HL2MPRules()->GetPlayerRespawnTime(pClient);
 
-	respawn( this, !IsObserver() ); // don't copy a corpse if we're in deathcam.
+	respawn(this);
 	SetNextThink( TICK_NEVER_THINK );
 }
 
@@ -4240,8 +4185,6 @@ void CBasePlayer::Spawn( void )
 
 	SetThink(NULL);
 	m_fInitHUD = true;
-	m_fWeapon = false;
-	m_iClientBattery = -1;
 
 	Q_strncpy( m_szLastPlaceName.GetForModify(), "", MAX_PLACE_NAME_LENGTH );
 	
@@ -4297,8 +4240,6 @@ void CBasePlayer::Spawn( void )
 
 	// track where we are in the nav mesh
 	UpdateLastKnownArea();
-
-	m_weaponFiredTimer.Invalidate();
 }
 
 void CBasePlayer::Activate( void )
@@ -4321,7 +4262,6 @@ void CBasePlayer::Precache( void )
 	PrecacheScriptSound("Flesh.BulletImpact");
 	PrecacheScriptSound( "Player.Wade" );
 	PrecacheScriptSound( "Player.AmbientUnderWater" );
-	enginesound->PrecacheSentenceGroup( "HEV" );
 
 	// These are always needed
 	PrecacheParticleSystem( "slime_splash_01" );
@@ -4350,22 +4290,8 @@ void CBasePlayer::Precache( void )
 	// SOUNDS / MODELS ARE PRECACHED in ClientPrecache() (game specific)
 	// because they need to precache before any clients have connected
 
-#if 0
-	// @Note (toml 04-19-04): These are saved, used to be slammed here
-	m_bitsDamageType = 0;
-	m_bitsHUDDamage = -1;
-	SetPlayerUnderwter( false );
-
-	m_iTrain = TRAIN_NEW;
-#endif
-
-	m_iClientBattery = -1;
-
-	m_iUpdateTime = 5;  // won't update for 1/2 a second
-
 	if ( gInitHUD )
 		m_fInitHUD = true;
-
 }
 
 //-----------------------------------------------------------------------------
@@ -5032,9 +4958,7 @@ Reset stuff so that the state is transmitted.
 */
 void CBasePlayer::ForceClientDllUpdate( void )
 {
-	m_iClientBattery = -1;
 	m_iTrain |= TRAIN_NEW;  // Force new train message.
-	m_fWeapon = false;          // Force weapon send
 
 	// Force all HUD data to be resent to client
 	m_fInitHUD = true;
@@ -5537,9 +5461,6 @@ void CBasePlayer::UpdateClientData( void )
 		world->SetDisplayTitle( false );
 	}
 
-	if (m_ArmorValue != m_iClientBattery)
-		m_iClientBattery = m_ArmorValue;
-
 	CheckTrainUpdate();
 
 	// Update all the items
@@ -5610,13 +5531,6 @@ Vector CBasePlayer::GetAutoaimVector( float flScale )
 void CBasePlayer::GetAimVectors(Vector& forward, Vector& right, Vector& up)
 {
 	AngleVectors((EyeAngles() + m_Local.m_vecPunchAngle), &forward, &right, &up);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CBasePlayer::ResetAutoaim( void )
-{
 }
 
 // ==========================================================================
@@ -7223,10 +7137,6 @@ const int CPlayerInfo::GetMaxHealth()
 	Assert( m_pParent );
 	return m_pParent->GetMaxHealth(); 
 }
-
-
-
-
 
 void CPlayerInfo::SetAbsOrigin( Vector & vec ) 
 { 

@@ -889,7 +889,7 @@ void CBaseCombatWeapon::Equip( CBaseCombatCharacter *pOwner )
 void CBaseCombatWeapon::SetActivity( Activity act, float duration ) 
 { 
 	//Adrian: Oh man...
-#if !defined( CLIENT_DLL ) && (defined( HL2MP ) || defined( PORTAL ))
+#ifndef CLIENT_DLL
 	SetModel( GetWorldModel() );
 #endif
 
@@ -900,7 +900,7 @@ void CBaseCombatWeapon::SetActivity( Activity act, float duration )
 		sequence = SelectWeightedSequence( ACT_VM_IDLE );
 
 	//Adrian: Oh man again...
-#if !defined( CLIENT_DLL ) && (defined( HL2MP ) || defined( PORTAL ) || defined( SDK_DLL ) )
+#ifndef CLIENT_DLL
 	if (GetOwner() && GetOwner()->IsPlayer())
 		SetModel(GetViewModel());
 #endif

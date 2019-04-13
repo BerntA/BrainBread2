@@ -274,11 +274,6 @@ $Project
 	
 	$Folder	"Source Files"
 	{
-		$File	"$SRCDIR\game\shared\achievement_saverestore.cpp"
-		$File	"$SRCDIR\game\shared\achievement_saverestore.h"
-		$File	"$SRCDIR\game\shared\achievementmgr.cpp"
-		$File	"$SRCDIR\game\shared\achievementmgr.h"
-		$File	"$SRCDIR\game\shared\achievements_hlx.cpp"
 		$File	"$SRCDIR\game\shared\activitylist.cpp"
 		$File	"$SRCDIR\game\shared\activitylist.h"
 		$File	"ai_activity.cpp"
@@ -411,10 +406,7 @@ $Project
 		$File	"$SRCDIR\game\shared\animation.cpp"
 		$File	"$SRCDIR\game\shared\animation.h"
 		$File	"$SRCDIR\game\shared\apparent_velocity_helper.h"
-		$File	"$SRCDIR\game\shared\base_playeranimstate.cpp"
 		$File	"base_transmit_proxy.cpp"
-		$File	"$SRCDIR\game\shared\baseachievement.cpp"
-		$File	"$SRCDIR\game\shared\baseachievement.h"
 		$File	"baseanimating.cpp"
 		$File	"baseanimating.h"
 		$File	"BaseAnimatingOverlay.cpp"
@@ -968,7 +960,6 @@ $Project
 	{
 		$File	"$SRCDIR\public\mathlib\amd3dx.h"
 		$File	"$SRCDIR\game\shared\ammodef.h"
-		$File	"$SRCDIR\game\shared\base_playeranimstate.h"
 		$File	"base_transmit_proxy.h"
 		$File	"$SRCDIR\public\basehandle.h"
 		$File	"basetempentity.h"

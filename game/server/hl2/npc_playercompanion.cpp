@@ -847,12 +847,8 @@ int CNPC_PlayerCompanion::SelectSchedulePlayerPush()
 {
 	if ( HasCondition( COND_PLAYER_PUSHING ) && !IsInAScript() && !IgnorePlayerPushing() )
 	{
-		// Ignore move away before gordon becomes the man
-		if ( GlobalEntity_GetState("gordon_precriminal") != GLOBAL_ON )
-		{
-			m_bMovingAwayFromPlayer = true;
-			return SCHED_MOVE_AWAY;
-		}
+		m_bMovingAwayFromPlayer = true;
+		return SCHED_MOVE_AWAY;
 	}
 
 	return SCHED_NONE;
@@ -1669,9 +1665,6 @@ void CNPC_PlayerCompanion::ModifyOrAppendCriteria( AI_CriteriaSet& set )
 //-----------------------------------------------------------------------------
 bool CNPC_PlayerCompanion::IsReadinessCapable()
 {
-	if ( GlobalEntity_GetState("gordon_precriminal") == GLOBAL_ON )
-		return false;
-
 #ifndef HL2_EPISODIC
 	// Allow episodic companions to use readiness even if unarmed. This allows for the panicked 
 	// citizens in ep1_c17_05 (sjb)

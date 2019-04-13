@@ -117,16 +117,6 @@ void CHudHistoryResource::AddToHistory( int iType, int iId, int iCount )
 		if ( !iCount )
 			return;
 
-#if defined( CSTRIKE_DLL )
-		// don't leave blank gaps for ammo we're not going to display
-		const FileWeaponInfo_t *pWpnInfo = gWR.GetWeaponFromAmmo( iId );
-		if ( pWpnInfo && ( pWpnInfo->iMaxClip1 >= 0 || pWpnInfo->iMaxClip2 >= 0 ) )
-		{
-			if ( !pWpnInfo->iconSmall )
-				return;
-		}
-#endif
-
 		// clear out any ammo pickup denied icons, since we can obviously pickup again
 		for ( int i = 0; i < m_PickupHistory.Count(); i++ )
 		{
@@ -343,16 +333,6 @@ void CHudHistoryResource::Paint( void )
 						itemIcon = gWR.GetAmmoIconFromWeapon( m_PickupHistory[i].iId );
 						itemAmmoIcon = NULL;
 					}
-
-#ifdef CSTRIKE_DLL
-					// show grenades as the weapon icon
-					if ( pWpnInfo && pWpnInfo->iFlags & ITEM_FLAG_EXHAUSTIBLE )	
-					{
-						itemIcon = pWpnInfo->iconActive;
-						itemAmmoIcon = NULL;
-						bHalfHeight = false;
-					}
-#endif
 
 					iAmount = m_PickupHistory[i].iCount;
 				}

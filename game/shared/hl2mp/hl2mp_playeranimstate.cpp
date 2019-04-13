@@ -1,14 +1,12 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+
 #include "cbase.h"
-#include "base_playeranimstate.h"
+#include "hl2mp_playeranimstate.h"
 #include "tier0/vprof.h"
 #include "animation.h"
 #include "studio.h"
 #include "apparent_velocity_helper.h"
 #include "utldict.h"
-
-#include "hl2mp_playeranimstate.h"
-#include "base_playeranimstate.h"
+#include "iplayeranimstate.h"
 #include "datacache/imdlcache.h"
 #include "GameBase_Shared.h"
 #include "weapon_hl2mpbasebasebludgeon.h"

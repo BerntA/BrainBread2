@@ -29,16 +29,8 @@ public:
 	virtual void Spawn( void );
 	virtual void Activate( void );
 	bool CreateVPhysics( void );
-
 	virtual int BloodColor( void ) { return DONT_BLEED; }
-
-#if defined( HL2_DLL )
-	virtual Class_T Classify( void ) { return CLASS_MILITARY; }
-#elif defined( HL1_DLL )
-	virtual Class_T Classify( void ) { return CLASS_MACHINE; }
-#else
-	virtual Class_T Classify( void ) { return CLASS_NONE; }
-#endif
+	virtual Class_T Classify(void) { return CLASS_MILITARY; }
 	virtual int OnTakeDamage( const CTakeDamageInfo &info );
 	virtual Vector BodyTarget( const Vector &posSrc, bool bNoisy = true ) { return GetAbsOrigin(); }
 

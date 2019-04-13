@@ -46,13 +46,6 @@
 #include "tier1/callqueue.h"
 #include "vphysics/constraints.h"
 
-#ifdef PORTAL
-#include "portal_physics_collisionevent.h"
-#include "physicsshadowclone.h"
-#include "PortalSimulation.h"
-void PortalPhysFrame( float deltaTime ); //small wrapper for PhysFrame that simulates all 3 environments at once
-#endif
-
 void PrecachePhysicsSounds( void );
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -65,9 +58,6 @@ extern IPhysicsConstraintEvent *g_pConstraintEvents;
 
 
 CEntityList *g_pShadowEntities = NULL;
-#ifdef PORTAL
-CEntityList *g_pShadowEntities_Main = NULL;
-#endif
 
 // local variables
 static float g_PhysAverageSimTime;
@@ -93,12 +83,7 @@ ConVar phys_timescale( "phys_timescale", "1", 0, "Scale time for physics", Times
 ConVar phys_dontprintint( "phys_dontprintint", "1", FCVAR_NONE, "Don't print inter-penetration warnings." );
 #endif
 
-#ifdef PORTAL
-	CPortal_CollisionEvent g_Collisions;
-#else
-	CCollisionEvent g_Collisions;
-#endif
-
+CCollisionEvent g_Collisions;
 
 IPhysicsCollisionSolver * const g_pCollisionSolver = &g_Collisions;
 IPhysicsCollisionEvent * const g_pCollisionEventHandler = &g_Collisions;
@@ -224,10 +209,6 @@ void CPhysicsHook::LevelInitPreEntity()
 	params.Defaults();
 	params.maxCollisionsPerObjectPerTimestep = 10;
 	physenv->SetPerformanceSettings( &params );
-
-#ifdef PORTAL
-	physenv_main = physenv;
-#endif
 	{
 	g_EntityCollisionHash = physics->CreateObjectPairHash();
 	}
@@ -251,9 +232,6 @@ void CPhysicsHook::LevelInitPreEntity()
 	g_PhysWorldObject = PhysCreateWorld( GetWorldEntity() );
 
 	g_pShadowEntities = new CEntityList;
-#ifdef PORTAL
-	g_pShadowEntities_Main  = g_pShadowEntities;
-#endif
 
 	PrecachePhysicsSounds();
 
@@ -383,21 +361,11 @@ void CPhysicsHook::FrameUpdatePostEntityThink( )
 	if ( CBaseEntity::IsSimulatingOnAlternateTicks() )
 	{
 		m_isFinalTick = false;
-
-#ifdef PORTAL //slight detour if we're the portal mod
-		PortalPhysFrame( interval );
-#else
-		PhysFrame( interval );
-#endif
-
+		PhysFrame(interval);
 	}
 	m_isFinalTick = true;
 
-#ifdef PORTAL //slight detour if we're the portal mod
-	PortalPhysFrame( interval );
-#else
-	PhysFrame( interval );
-#endif
+	PhysFrame(interval);
 
 }
 
@@ -1639,29 +1607,6 @@ CON_COMMAND( physics_budget, "Times the cost of each active object" )
 
 }
 
-
-#ifdef PORTAL
-ConVar sv_fullsyncclones("sv_fullsyncclones", "1", FCVAR_CHEAT );
-void PortalPhysFrame( float deltaTime ) //small wrapper for PhysFrame that simulates all environments at once
-{
-	CPortalSimulator::PrePhysFrame();
-
-	if( sv_fullsyncclones.GetBool() )
-		CPhysicsShadowClone::FullSyncAllClones();
-
-	g_Collisions.BufferTouchEvents( true );
-
-	PhysFrame( deltaTime );
-
-	g_Collisions.PortalPostSimulationFrame();
-
-	g_Collisions.BufferTouchEvents( false );
-	g_Collisions.FrameUpdate();
-
-	CPortalSimulator::PostPhysFrame();
-}
-#endif
-
 // Advance physics by time (in seconds)
 void PhysFrame( float deltaTime )
 {
@@ -1700,9 +1645,7 @@ void PhysFrame( float deltaTime )
 	physenv->DebugCheckContacts();
 #endif
 
-#ifndef PORTAL //instead of wrapping 1 simulation with this, portal needs to wrap 3
-	g_Collisions.BufferTouchEvents( true );
-#endif
+	g_Collisions.BufferTouchEvents(true);
 
 	physenv->Simulate( deltaTime );
 
@@ -1761,10 +1704,8 @@ void PhysFrame( float deltaTime )
 		lastObjectCount = activeCount;
 	}
 
-#ifndef PORTAL //instead of wrapping 1 simulation with this, portal needs to wrap 3
-	g_Collisions.BufferTouchEvents( false );
+	g_Collisions.BufferTouchEvents(false);
 	g_Collisions.FrameUpdate();
-#endif
 }
 
 

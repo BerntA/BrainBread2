@@ -67,17 +67,10 @@ ConVar cl_yawspeed( "cl_yawspeed", "210", FCVAR_NONE, "Client yaw speed.", true,
 ConVar cl_pitchspeed( "cl_pitchspeed", "225", FCVAR_NONE, "Client pitch speed.", true, -100000, true, 100000 );
 ConVar cl_pitchdown( "cl_pitchdown", "89", FCVAR_CHEAT );
 ConVar cl_pitchup( "cl_pitchup", "89", FCVAR_CHEAT );
-#if defined( CSTRIKE_DLL )
-ConVar cl_sidespeed( "cl_sidespeed", "4500", FCVAR_CHEAT );
-ConVar cl_upspeed( "cl_upspeed", "4500", FCVAR_ARCHIVE|FCVAR_CHEAT );
-ConVar cl_forwardspeed( "cl_forwardspeed", "4500", FCVAR_ARCHIVE|FCVAR_CHEAT );
-ConVar cl_backspeed( "cl_backspeed", "4500", FCVAR_ARCHIVE|FCVAR_CHEAT );
-#else
-ConVar cl_sidespeed( "cl_sidespeed", "4500", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar cl_upspeed( "cl_upspeed", "4500", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar cl_forwardspeed( "cl_forwardspeed", "4500", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar cl_backspeed( "cl_backspeed", "4500", FCVAR_REPLICATED | FCVAR_CHEAT );
-#endif // CSTRIKE_DLL
+ConVar cl_sidespeed("cl_sidespeed", "4500", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar cl_upspeed("cl_upspeed", "4500", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar cl_forwardspeed("cl_forwardspeed", "4500", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar cl_backspeed("cl_backspeed", "4500", FCVAR_REPLICATED | FCVAR_CHEAT);
 ConVar lookspring( "lookspring", "0", FCVAR_ARCHIVE );
 ConVar lookstrafe( "lookstrafe", "0", FCVAR_ARCHIVE );
 ConVar in_joystick( "joystick","0", FCVAR_ARCHIVE );
@@ -731,16 +724,14 @@ void CInput::ClampAngles( QAngle& viewangles )
 		viewangles[PITCH] = -cl_pitchup.GetFloat();
 	}
 
-#ifndef PORTAL	// Don't constrain Roll in Portal because the player can be upside down! -Jeep
-	if ( viewangles[ROLL] > 50 )
+	if (viewangles[ROLL] > 50)
 	{
 		viewangles[ROLL] = 50;
 	}
-	if ( viewangles[ROLL] < -50 )
+	if (viewangles[ROLL] < -50)
 	{
 		viewangles[ROLL] = -50;
 	}
-#endif
 }
 
 /*
@@ -943,13 +934,6 @@ void CInput::ControllerMove( float frametime, CUserCmd *cmd )
 			haptics->MenuProcess();
 			return;
 		}
-#ifdef CSTRIKE_DLL
-		// NVNT cstrike fov grabing.
-		C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
-		if(player){
-			haptics->UpdatePlayerFOV(player->GetFOV());
-		}
-#endif
 		// NVNT calculate move with the navigation on the haptics system.
 		haptics->CalculateMove(cmd->forwardmove, cmd->sidemove, frametime);
 		// NVNT send a game process to the haptics system.

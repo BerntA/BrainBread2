@@ -1014,7 +1014,7 @@ float CMultiPlayerAnimState::GetInterpolatedGroundSpeed( void )
 //-----------------------------------------------------------------------------
 void CMultiPlayerAnimState::ComputeSequences( CStudioHdr *pStudioHdr )
 {
-	VPROF( "CBasePlayerAnimState::ComputeSequences" );
+	VPROF( "CMultiPlayerAnimState::ComputeSequences" );
 
 	// Lower body (walk/run/idle).
 	ComputeMainSequence();
@@ -1030,7 +1030,7 @@ void CMultiPlayerAnimState::ComputeSequences( CStudioHdr *pStudioHdr )
 //-----------------------------------------------------------------------------
 void CMultiPlayerAnimState::ComputeMainSequence()
 {
-	VPROF( "CBasePlayerAnimState::ComputeMainSequence" );
+	VPROF( "CMultiPlayerAnimState::ComputeMainSequence" );
 
 #ifdef CLIENT_DLL
 	CBaseAnimatingOverlay *pPlayer = GetBasePlayer();
@@ -1113,7 +1113,7 @@ void CMultiPlayerAnimState::ResetGroundSpeed( void )
 //-----------------------------------------------------------------------------
 void CMultiPlayerAnimState::UpdateInterpolators()
 {
-	VPROF( "CBasePlayerAnimState::UpdateInterpolators" );
+	VPROF( "CMultiPlayerAnimState::UpdateInterpolators" );
 
 	// First, figure out their current max speed based on their current activity.
 	float flCurMaxSpeed = GetCurrentMaxGroundSpeed();
@@ -1205,9 +1205,6 @@ void CMultiPlayerAnimState::UpdateGestureLayer( CStudioHdr *pStudioHdr, GestureS
 
 #endif
 }
-
-extern ConVar mp_facefronttime;
-extern ConVar mp_feetyawrate;
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1951,11 +1948,8 @@ void CMultiPlayerAnimState::DebugShowAnimState( int iStartLine )
 	}
 #endif
 
-	Anim_StatePrintf( iLine++, "vel: %.2f, time: %.2f, max: %.2f", 
-		vOuterVel.Length2D(), gpGlobals->curtime, GetInterpolatedGroundSpeed() );
-		
-//	AnimStatePrintf( iLine++, "ent yaw: %.2f, body_yaw: %.2f, body_pitch: %.2f, move_x: %.2f, move_y: %.2f", 
-//		m_angRender[YAW], g_flLastBodyYaw, g_flLastBodyPitch, m_vLastMovePose.x, m_vLastMovePose.y );
+	Anim_StatePrintf(iLine++, "vel: %.2f, time: %.2f, max: %.2f",
+		vOuterVel.Length2D(), gpGlobals->curtime, GetInterpolatedGroundSpeed());
 
 	Anim_StateLog( "--------------------------------------------\n\n" );
 

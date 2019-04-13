@@ -70,12 +70,10 @@ ConVar func_break_max_pieces( "func_break_max_pieces", "15", FCVAR_ARCHIVE | FCV
 
 ConVar cl_fasttempentcollision( "cl_fasttempentcollision", "5" );
 
-#if !defined( HL1_CLIENT_DLL )		// HL1 implements a derivative of CTempEnts
 // Temp entity interface
 static CTempEnts g_TempEnts;
 // Expose to rest of the client .dll
-ITempEnts *tempents = ( ITempEnts * )&g_TempEnts;
-#endif
+ITempEnts* tempents = (ITempEnts*)& g_TempEnts;
 
 C_LocalTempEntity::C_LocalTempEntity()
 {
@@ -1833,79 +1831,69 @@ void CTempEnts::MuzzleFlash( int type, ClientEntityHandle_t hEntity, int attachm
 // Input  : *pos1 - 
 //			type - 
 //-----------------------------------------------------------------------------
-void CTempEnts::MuzzleFlash( const Vector& pos1, const QAngle& angles, int type, ClientEntityHandle_t hEntity, bool firstPerson )
+void CTempEnts::MuzzleFlash(const Vector& pos1, const QAngle& angles, int type, ClientEntityHandle_t hEntity, bool firstPerson)
 {
-#ifdef CSTRIKE_DLL
-
-	return;
-
-#else
-
 	//NOTENOTE: This function is becoming obsolete as the muzzles are moved over to being local to attachments
-
-	switch ( type )
+	switch (type)
 	{
-	//
-	// Shotgun
-	//
+		//
+		// Shotgun
+		//
 	case MUZZLEFLASH_SHOTGUN:
-		if ( firstPerson )
+		if (firstPerson)
 		{
-			MuzzleFlash_Shotgun_Player( hEntity, 1 );
+			MuzzleFlash_Shotgun_Player(hEntity, 1);
 		}
 		else
 		{
-			MuzzleFlash_Shotgun_NPC( hEntity, 1 );
+			MuzzleFlash_Shotgun_NPC(hEntity, 1);
 		}
 		break;
 
-	// UNDONE: These need their own effects/sprites.  For now use the pistol
-	// SMG1
+		// UNDONE: These need their own effects/sprites.  For now use the pistol
+		// SMG1
 	case MUZZLEFLASH_SMG1:
-		if ( firstPerson )
+		if (firstPerson)
 		{
-			MuzzleFlash_SMG1_Player( hEntity, 1 );
+			MuzzleFlash_SMG1_Player(hEntity, 1);
 		}
 		else
 		{
-			MuzzleFlash_SMG1_NPC( hEntity, 1 );
+			MuzzleFlash_SMG1_NPC(hEntity, 1);
 		}
 		break;
 
-	// SMG2
+		// SMG2
 	case MUZZLEFLASH_SMG2:
 	case MUZZLEFLASH_PISTOL:
-		if ( firstPerson )
+		if (firstPerson)
 		{
-			MuzzleFlash_Pistol_Player( hEntity, 1 );
+			MuzzleFlash_Pistol_Player(hEntity, 1);
 		}
 		else
 		{
-			MuzzleFlash_Pistol_NPC( hEntity, 1 );
+			MuzzleFlash_Pistol_NPC(hEntity, 1);
 		}
 		break;
 
 	case MUZZLEFLASH_COMBINE:
-		if ( firstPerson )
+		if (firstPerson)
 		{
 			//FIXME: These should go away
-			MuzzleFlash_Combine_Player( hEntity, 1 );
+			MuzzleFlash_Combine_Player(hEntity, 1);
 		}
 		else
 		{
 			//FIXME: These should go away
-			MuzzleFlash_Combine_NPC( hEntity, 1 );
+			MuzzleFlash_Combine_NPC(hEntity, 1);
 		}
 		break;
-	
+
 	default:
 		// There's no supported muzzle flash for the type specified!
 		Assert(0);
 		break;
 	}
-
-#endif
-
 }
 
 //-----------------------------------------------------------------------------
@@ -2222,27 +2210,6 @@ void CTempEnts::PlaySound ( C_LocalTempEntity *pTemp, float damp )
 			soundname = "Bounce.Concrete";
 		}
 		break;
-
-#ifdef CSTRIKE_DLL
-
-		case TE_PISTOL_SHELL:
-		{
-			soundname = "Bounce.PistolShell";
-		}
-		break;
-
-		case TE_RIFLE_SHELL:
-		{
-			soundname = "Bounce.RifleShell";
-		}
-		break;
-
-		case TE_SHOTGUN_SHELL:
-		{
-			soundname = "Bounce.ShotgunShell";
-		}
-		break;
-#endif
 	}
 
 	zvel = abs( pTemp->GetVelocity()[2] );
@@ -3227,9 +3194,6 @@ void CTempEnts::MuzzleFlash_Pistol_NPC( ClientEntityHandle_t hEntity, int attach
 	FX_MuzzleEffectAttached( 0.5f, hEntity, attachmentIndex, NULL, true );
 }
 
-
-
-
 //==================================================
 // Purpose: 
 // Input: 
@@ -3241,8 +3205,6 @@ void CTempEnts::MuzzleFlash_RPG_NPC( ClientEntityHandle_t hEntity, int attachmen
 	FX_MuzzleEffectAttached( 1.5f, hEntity, attachmentIndex );
 
 }
-
-
 
 void CTempEnts::RocketFlare( const Vector& pos )
 {
@@ -3272,141 +3234,3 @@ void CTempEnts::RocketFlare( const Vector& pos )
 	pTemp->SetAbsOrigin( pos );
 	pTemp->die = gpGlobals->curtime + 0.01;
 }
-
-
-void CTempEnts::HL1EjectBrass( const Vector &vecPosition, const QAngle &angAngles, const Vector &vecVelocity, int nType )
-{
-	const model_t *pModel = NULL;
-
-#if defined( HL1_CLIENT_DLL )
-	switch ( nType )
-	{
-	case 0:
-	default:
-		pModel = m_pHL1Shell;
-		break;
-	case 1:
-		pModel = m_pHL1ShotgunShell;
-		break;
-	}
-#endif
-	if ( pModel == NULL )
-		return;
-
-	C_LocalTempEntity	*pTemp = TempEntAlloc( vecPosition, pModel );
-
-	if ( pTemp == NULL )
-		return;
-
-	switch ( nType )
-	{
-	case 0:
-	default:
-		pTemp->hitSound = BOUNCE_SHELL;
-		break;
-	case 1:
-		pTemp->hitSound = BOUNCE_SHOTSHELL;
-		break;
-	}
-
-	pTemp->m_nBody	= 0;
-	pTemp->flags |= ( FTENT_COLLIDEWORLD | FTENT_FADEOUT | FTENT_GRAVITY | FTENT_ROTATE );
-
-	pTemp->m_vecTempEntAngVelocity[0] = random->RandomFloat( -512,511 );
-	pTemp->m_vecTempEntAngVelocity[1] = random->RandomFloat( -256,255 );
-	pTemp->m_vecTempEntAngVelocity[2] = random->RandomFloat( -256,255 );
-
-	//Face forward
-	pTemp->SetAbsAngles( angAngles );
-
-	pTemp->SetRenderMode( kRenderNormal );
-	pTemp->tempent_renderamt	= 255;		// Set this for fadeout
-
-	pTemp->SetVelocity( vecVelocity );
-
-	pTemp->die = gpGlobals->curtime + 2.5;
-}
-
-#define SHELLTYPE_PISTOL	0
-#define SHELLTYPE_RIFLE		1
-#define SHELLTYPE_SHOTGUN	2
-
-
-void CTempEnts::CSEjectBrass( const Vector &vecPosition, const QAngle &angVelocity, int nVelocity, int shellType, CBasePlayer *pShooter )
-{
-	const model_t *pModel = NULL;
-	int hitsound = TE_BOUNCE_SHELL;
-
-	if ( pModel == NULL )
-		return;
-
-	Vector forward, right, up;
-	Vector velocity;
-	Vector origin;
-	QAngle angle;
-	
-	// Add some randomness to the velocity
-
-	AngleVectors( angVelocity, &forward, &right, &up );
-	
-	velocity = forward * nVelocity * random->RandomFloat( 1.2, 2.8 ) +
-			   up * random->RandomFloat( -10, 10 ) +
-			   right * random->RandomFloat( -20, 20 );
-
-	if( pShooter )
-		velocity += pShooter->GetAbsVelocity();
-
-	C_LocalTempEntity *pTemp = TempEntAlloc( vecPosition, pModel );
-	if ( !pTemp )
-		return;
-
-	if( pShooter )
-		pTemp->SetAbsAngles( pShooter->EyeAngles() );
-	else
-		pTemp->SetAbsAngles( vec3_angle );
-
-	pTemp->SetVelocity( velocity );
-
-	pTemp->hitSound = hitsound;
-
-	pTemp->SetGravity( 0.4 );
-
-	pTemp->m_nBody	= 0;
-	pTemp->flags = FTENT_FADEOUT | FTENT_GRAVITY | FTENT_COLLIDEALL | FTENT_HITSOUND | FTENT_ROTATE | FTENT_CHANGERENDERONCOLLIDE;
-
-	pTemp->m_vecTempEntAngVelocity[0] = random->RandomFloat(-256,256);
-	pTemp->m_vecTempEntAngVelocity[1] = random->RandomFloat(-256,256);
-	pTemp->m_vecTempEntAngVelocity[2] = 0;
-	pTemp->SetRenderMode( kRenderNormal );
-	pTemp->tempent_renderamt = 255;
-	
-	pTemp->die = gpGlobals->curtime + 10;
-
-	bool bViewModelBrass = false;
-
-	if ( pShooter && pShooter->GetObserverMode() == OBS_MODE_IN_EYE )
-	{
-		// we are spectating the shooter in first person view
-		pShooter = ToBasePlayer( pShooter->GetObserverTarget() );
-		bViewModelBrass = true;
-	}
-
-	if ( pShooter )
-	{
-		pTemp->clientIndex = pShooter->entindex();
-		bViewModelBrass |= pShooter->IsLocalPlayer();
-	}
-	else
-	{
-		pTemp->clientIndex = 0;
-	}
-
-	if ( bViewModelBrass )
-	{
-		// for viewmodel brass put it in the viewmodel renderer group
-		pTemp->m_RenderGroup = RENDER_GROUP_VIEW_MODEL_OPAQUE;
-	}
-
-	
-}
-

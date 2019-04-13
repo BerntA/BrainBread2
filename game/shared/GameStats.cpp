@@ -1024,11 +1024,6 @@ void CBaseGameStats_Driver::CollectData( StatSendType_t sendType )
 
 	// add game-specific data
 	pGamestatsData->m_bHaveData |= gamestats->AddDataForSend( pKV, sendType );
-
-// Need to initialiate a reset since cs isn't using the gamestat system to add data
-#if defined(CSTRIKE_DLL) && defined(CLIENT_DLL)
-	ResetData();
-#endif
 }
 
 
@@ -1239,18 +1234,6 @@ void CBaseGameStats_Driver::ResetData()
 	pKV->SetInt( "MaxDxLevel", g_pMaterialSystemHardwareConfig->GetMaxDXSupportLevel() );
 
 	engine->SetGamestatsData( m_pGamestatsData );
-#endif
-
-#if defined(CSTRIKE_DLL) && defined(CLIENT_DLL)
-	// reset perf buffer for next map
-	for( int i = 0; i < STATS_WINDOW_SIZE; i++ )
-	{
-		m_StatsBuffer[i].m_flFrameRate = 0;
-		m_StatsBuffer[i].m_flServerPing = 0;
-	}
-	
-	m_bBufferFull = false;
-	m_nWriteIndex = 0;
 #endif
 }
 

@@ -2891,18 +2891,6 @@ float CGameMovement::ClimbSpeed(void)
 	return (MAX_CLIMB_SPEED / 2.0f);
 }
 
-//=============================================================================
-// HPE_BEGIN
-// [sbodenbender] make ladders easier to climb in cstrike
-//=============================================================================
-#if defined (CSTRIKE_DLL)
-ConVar sv_ladder_dampen ( "sv_ladder_dampen", "0.2", FCVAR_REPLICATED, "Amount to dampen perpendicular movement on a ladder", true, 0.0f, true, 1.0f );
-ConVar sv_ladder_angle( "sv_ladder_angle", "-0.707", FCVAR_REPLICATED, "Cos of angle of incidence to ladder perpendicular for applying ladder_dampen", true, -1.0f, true, 1.0f );
-#endif
-//=============================================================================
-// HPE_END
-//=============================================================================
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -3035,30 +3023,6 @@ bool CGameMovement::LadderMove( void )
 			// because the velocity is a sum of the directional velocity and the converted
 			// velocity through the face of the ladder -- by design.
 			CrossProduct( pm.plane.normal, perp, tmp );
-
-			//=============================================================================
-			// HPE_BEGIN
-			// [sbodenbender] make ladders easier to climb in cstrike
-			//=============================================================================
-#if defined (CSTRIKE_DLL)
-			// break lateral into direction along tmp (up the ladder) and direction along perp (perpendicular to ladder)
-			float tmpDist = DotProduct ( tmp, lateral );
-			float perpDist = DotProduct ( perp, lateral );
-
-			Vector angleVec = perp * perpDist;
-			angleVec += cross;
-			// angleVec is our desired movement in the ladder normal/perpendicular plane
-			VectorNormalize(angleVec);
-			float angleDot = DotProduct(angleVec, pm.plane.normal);
-			// angleDot is our angle of incidence to the laddernormal in the ladder normal/perpendicular plane
-
-			if (angleDot < sv_ladder_angle.GetFloat())
-				lateral = (tmp * tmpDist) + (perp * sv_ladder_dampen.GetFloat() * perpDist);
-#endif // CSTRIKE_DLL
-			//=============================================================================
-			// HPE_END
-			//=============================================================================
-
 			VectorMA( lateral, -normal, tmp, mv->m_vecVelocity );
 
 			if ( onFloor && normal > 0 )	// On ground moving away from the ladder

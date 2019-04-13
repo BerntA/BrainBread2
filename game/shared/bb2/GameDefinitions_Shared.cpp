@@ -12,6 +12,7 @@
 #include "hl2mp_gamerules.h"
 #include "gibs_shared.h"
 #include "decals.h"
+#include "icommandline.h"
 
 #ifdef CLIENT_DLL
 #include "hud.h"
@@ -2020,4 +2021,22 @@ Vector TryPenetrateSurface(trace_t *tr, ITraceFilter *filter)
 	}
 
 	return vec3_invalid;
+}
+
+const char* COM_GetModDirectory()
+{
+	static char modDir[MAX_PATH];
+	if (Q_strlen(modDir) == 0)
+	{
+		const char* gamedir = CommandLine()->ParmValue("-game", CommandLine()->ParmValue("-defaultgamedir", "hl2"));
+		Q_strncpy(modDir, gamedir, sizeof(modDir));
+		if (strchr(modDir, '/') || strchr(modDir, '\\'))
+		{
+			Q_StripLastDir(modDir, sizeof(modDir));
+			int dirlen = Q_strlen(modDir);
+			Q_strncpy(modDir, gamedir + dirlen, sizeof(modDir) - dirlen);
+		}
+	}
+
+	return modDir;
 }

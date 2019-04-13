@@ -1278,10 +1278,6 @@ void CBaseEntity::Activate( void )
 	{
 		AddContext( m_iszResponseContext.ToCStr() );
 	}
-
-#ifdef HL1_DLL
-	ValidateEntityConnections();
-#endif //HL1_DLL
 }
 
 ////////////////////////////  old CBaseEntity stuff ///////////////////////////////////
@@ -2759,14 +2755,6 @@ bool CBaseEntity::FVisible( CBaseEntity *pEntity, int traceMask, CBaseEntity **p
 	if ( pEntity->GetFlags() & FL_NOTARGET )
 		return false;
 
-#if HL1_DLL
-	// FIXME: only block LOS through opaque water
-	// don't look through water
-	if ((m_nWaterLevel != 3 && pEntity->m_nWaterLevel == 3) 
-		|| (m_nWaterLevel == 3 && pEntity->m_nWaterLevel == 0))
-		return false;
-#endif
-
 	Vector vecLookerOrigin = EyePosition();//look through the caller's 'eyes'
 	Vector vecTargetOrigin = pEntity->EyePosition();
 
@@ -2825,18 +2813,6 @@ bool CBaseEntity::FVisible( CBaseEntity *pEntity, int traceMask, CBaseEntity **p
 //=========================================================
 bool CBaseEntity::FVisible( const Vector &vecTarget, int traceMask, CBaseEntity **ppBlocker )
 {
-#if HL1_DLL
-	
-	// don't look through water
-	// FIXME: only block LOS through opaque water
-	bool inWater = ( UTIL_PointContents( vecTarget ) & (CONTENTS_SLIME|CONTENTS_WATER) ) ? true : false;
-
-	// Don't allow it if we're straddling two areas
-	if ( ( m_nWaterLevel == 3 && !inWater ) || ( m_nWaterLevel != 3 && inWater ) )
-		return false;
-
-#endif 
-
 	trace_t tr;
 	Vector vecLookerOrigin = EyePosition();// look through the caller's 'eyes'
 
@@ -3221,7 +3197,7 @@ void CBaseEntity::OnSave( IEntitySaveUtils *pUtils )
 //-----------------------------------------------------------------------------
 void CBaseEntity::OnRestore()
 {
-#if defined( PORTAL ) || defined( HL2_EPISODIC ) || defined ( HL2_DLL ) || defined( HL2_LOSTCOAST )
+#if defined ( HL2_DLL )
 	// We had a short period during the 2013 beta where the FL_* flags had a bogus value near the top, so detect
 	// these bad saves and just give up. Only saves from the short beta period should have been effected.
 	if ( GetFlags() & FL_FAKECLIENT )

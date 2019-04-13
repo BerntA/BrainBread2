@@ -440,35 +440,12 @@ bool CBaseCombatCharacter::IsAbleToSee( const CBaseEntity *pEntity, FieldOfViewC
 	if ( !ComputeLOS( vecEyePosition, vecTargetPosition ) )
 		return false;
 
-#if defined(GAME_DLL) && defined(TERROR)
-	if ( flDistToOther > NavObscureRange.GetFloat() )
-	{
-		const float flMaxDistance = 100.0f;
-		TerrorNavArea *pTargetArea = static_cast< TerrorNavArea* >( TheNavMesh->GetNearestNavArea( vecTargetPosition, false, flMaxDistance ) );
-		if ( !pTargetArea || pTargetArea->HasSpawnAttributes( TerrorNavArea::SPAWN_OBSCURED ) )
-			return false;
-
-		if ( ComputeTargetIsInDarkness( vecEyePosition, pTargetArea, vecTargetPosition ) )
-			return false;
-	}
-#endif
-
 	return ( checkFOV != USE_FOV || IsInFieldOfView( vecTargetPosition ) );
 }
 
 static void ComputeSeeTestPosition( Vector *pEyePosition, CBaseCombatCharacter *pBCC )
 {
-#if defined(GAME_DLL) && defined(TERROR)
-	if ( pBCC->IsPlayer() )
-	{
-		CTerrorPlayer *pPlayer = ToTerrorPlayer( pBCC );
-		*pEyePosition = !pPlayer->IsDead() ? pPlayer->EyePosition() : pPlayer->GetDeathPosition();
-	}
-	else
-#endif
-	{
-		*pEyePosition = pBCC->EyePosition();
-	}	
+	*pEyePosition = pBCC->EyePosition();
 }
 
 bool CBaseCombatCharacter::IsAbleToSee( CBaseCombatCharacter *pBCC, FieldOfViewCheckType checkFOV )
@@ -486,17 +463,6 @@ bool CBaseCombatCharacter::IsAbleToSee( CBaseCombatCharacter *pBCC, FieldOfViewC
 	// We can't see because they are too far in the fog
 	if ( IsHiddenByFog( flDistToOther ) )
 		return false;
-
-#ifdef TERROR
-	// Check this every time also, it's cheap; check to see if the enemy is in an obscured area.
-	bool bIsInNavObscureRange = ( flDistToOther > NavObscureRange.GetFloat() );
-	if ( bIsInNavObscureRange )
-	{
-		TerrorNavArea *pOtherNavArea = static_cast< TerrorNavArea* >( pBCC->GetLastKnownArea() );
-		if ( !pOtherNavArea || pOtherNavArea->HasSpawnAttributes( TerrorNavArea::SPAWN_OBSCURED ) )
-			return false;
-	}
-#endif // TERROR
 #endif
 
 	// Check if we have a cached-off visibility
@@ -509,19 +475,7 @@ bool CBaseCombatCharacter::IsAbleToSee( CBaseCombatCharacter *pBCC, FieldOfViewC
 		bool bThisCanSeeOther = false, bOtherCanSeeThis = false;
 		if ( ComputeLOS( vecEyePosition, vecOtherEyePosition ) )
 		{
-#if defined(GAME_DLL) && defined(TERROR)
-			if ( !bIsInNavObscureRange )
-			{
-				bThisCanSeeOther = true, bOtherCanSeeThis = true;
-			}
-			else
-			{
-				bThisCanSeeOther = !ComputeTargetIsInDarkness( vecEyePosition, pBCC->GetLastKnownArea(), vecOtherEyePosition );
-				bOtherCanSeeThis = !ComputeTargetIsInDarkness( vecOtherEyePosition, GetLastKnownArea(), vecEyePosition );
-			}
-#else
 			bThisCanSeeOther = true, bOtherCanSeeThis = true;
-#endif
 		}
 
 		s_CombatCharVisCache.RegisterVisibility( iCache, bThisCanSeeOther, bOtherCanSeeThis );
@@ -572,41 +526,6 @@ bool CBaseCombatCharacter::ComputeLOS( const Vector &vecEyePosition, const Vecto
 	UTIL_TraceLine( vecEyePosition, vecTarget, MASK_OPAQUE | CONTENTS_IGNORE_NODRAW_OPAQUE | CONTENTS_MONSTER, &traceFilter, &result );
 	return ( result.fraction == 1.0f );
 }
-
-#if defined(GAME_DLL) && defined(TERROR)
-bool CBaseCombatCharacter::ComputeTargetIsInDarkness( const Vector &vecEyePosition, CNavArea *pTargetNavArea, const Vector &vecTargetPos ) const
-{
-	if ( GetTeamNumber() != TEAM_SURVIVOR )
-		return false;
-
-	// Check light info
-	const float flMinLightIntensity = 0.1f;
-
-	if ( !pTargetNavArea || ( pTargetNavArea->GetLightIntensity() >= flMinLightIntensity ) )
-		return false;
-
-	CTraceFilterNoNPCsOrPlayer lightingFilter( this, COLLISION_GROUP_NONE );
-
-	Vector vecSightDirection;
-	VectorSubtract( vecTargetPos, vecEyePosition, vecSightDirection );
-	VectorNormalize( vecSightDirection );
-
-	trace_t result;
-	UTIL_TraceLine( vecTargetPos, vecTargetPos + vecSightDirection * 32768.0f, MASK_L4D_VISION, &lightingFilter, &result );
-	if ( ( result.fraction < 1.0f ) && ( ( result.surface.flags & SURF_SKY ) == 0 ) )	
-	{
-		const float flMaxDistance = 100.0f;
-		TerrorNavArea *pFarArea = (TerrorNavArea *)TheNavMesh->GetNearestNavArea( result.endpos, false, flMaxDistance );
-
-		// Target is in darkness, the wall behind him is too, and we are too far away
-		if ( pFarArea && pFarArea->GetLightIntensity() < flMinLightIntensity )
-			return true;
-	}
-
-	return false;
-}
-#endif
-
 
 //-----------------------------------------------------------------------------
 /**
@@ -726,20 +645,11 @@ bool CBaseCombatCharacter::IsLineOfSightClear( const Vector &pos, LineOfSightChe
 #endif
 	if( checkType == IGNORE_ACTORS )
 	{
-
 		// use the query cache unless it causes problems
-#if defined(GAME_DLL) && defined(TERROR)
-		return IsLineOfSightBetweenTwoEntitiesClear( const_cast<CBaseCombatCharacter *>(this), EOFFSET_MODE_EYEPOSITION,
-			entityToIgnore, EOFFSET_MODE_WORLDSPACE_CENTER,
-			entityToIgnore, COLLISION_GROUP_NONE,
-			MASK_L4D_VISION, TraceFilterNoCombatCharacters, 1.0 );
-#else
 		trace_t trace;
-		CTraceFilterNoCombatCharacters traceFilter( entityToIgnore, COLLISION_GROUP_NONE );
-		UTIL_TraceLine( EyePosition(), pos, MASK_OPAQUE | CONTENTS_IGNORE_NODRAW_OPAQUE | CONTENTS_MONSTER, &traceFilter, &trace );
-
+		CTraceFilterNoCombatCharacters traceFilter(entityToIgnore, COLLISION_GROUP_NONE);
+		UTIL_TraceLine(EyePosition(), pos, MASK_OPAQUE | CONTENTS_IGNORE_NODRAW_OPAQUE | CONTENTS_MONSTER, &traceFilter, &trace);
 		return trace.fraction == 1.0f;
-#endif
 	}
 	else
 	{

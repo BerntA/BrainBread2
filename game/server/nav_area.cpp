@@ -24,11 +24,6 @@
 #include "props_shared.h"
 #include "func_breakablesurf.h"
 
-#ifdef TERROR
-#include "func_elevator.h"
-#include "AmbientLight.h"
-#endif
-
 #include "Color.h"
 #include "collisionutils.h"
 #include "functorutils.h"
@@ -559,100 +554,6 @@ void CNavArea::ConnectElevators( void )
 	m_elevator = NULL;
 	m_attributeFlags &= ~NAV_MESH_HAS_ELEVATOR;
 	m_elevatorAreas.RemoveAll();
-
-#ifdef TERROR
-	// connect elevators
-	CFuncElevator *elevator = NULL;
-	while( ( elevator = (CFuncElevator *)gEntList.FindEntityByClassname( elevator, "func_elevator" ) ) != NULL )
-	{
-		if ( elevator->GetNumFloors() < 2 )
-		{
-			// broken elevator
-			continue;
-		}
-
-		Extent elevatorExtent;
-		elevator->CollisionProp()->WorldSpaceSurroundingBounds( &elevatorExtent.lo, &elevatorExtent.hi );
-
-		if ( IsOverlapping( elevatorExtent ) )
-		{
-			// overlaps in 2D - check that this area is within the shaft of the elevator
-			const Vector &center = GetCenter();
-
-			for( int f=0; f<elevator->GetNumFloors(); ++f ) 
-			{
-				const FloorInfo	*floor = elevator->GetFloor( f );
-				const float tolerance = 30.0f;
-
-				if ( center.z <= floor->height + tolerance && center.z >= floor->height - tolerance )
-				{
-					if ( m_elevator )
-					{
-						Warning( "Multiple elevators overlap navigation area #%d\n", GetID() );
-						break;
-					}
-
-					// this area is part of an elevator system
-					m_elevator = elevator;
-					m_attributeFlags |= NAV_MESH_HAS_ELEVATOR;
-
-					// find the largest area overlapping this elevator on each other floor 
-					for( int of=0; of<elevator->GetNumFloors(); ++of ) 
-					{
-						if ( of == f )
-						{
-							// we are on this floor
-							continue;
-						}
-
-						const FloorInfo	*otherFloor = elevator->GetFloor( of );
-
-						// find the largest area at this floor
-						CNavArea *floorArea = NULL;
-						float floorAreaSize = 0.0f;
-
-						FOR_EACH_VEC( TheNavAreas, it )
-						{
-							CNavArea *area = TheNavAreas[ it ];
-
-							if ( area->IsOverlapping( elevatorExtent ) )
-							{
-								if ( area->GetCenter().z <= otherFloor->height + tolerance && area->GetCenter().z >= otherFloor->height - tolerance )
-								{
-									float size = area->GetSizeX() * area->GetSizeY();
-									if ( size > floorAreaSize )
-									{
-										floorArea = area;
-										floorAreaSize = size;
-									}
-								}
-							}
-						}
-
-						if ( floorArea )
-						{
-							// add this area to the set of areas reachable via elevator
-							NavConnect con;
-							con.area = floorArea;
-							con.length = ( floorArea->GetCenter() - GetCenter() ).Length();
-							m_elevatorAreas.AddToTail( con );
-						}
-						else
-						{
-							Warning( "Floor %d ('%s') of elevator at ( %3.2f, %3.2f, %3.2f ) has no matching navigation areas\n", 
-									 of, 
-									 otherFloor->name.ToCStr(),
-									 elevator->GetAbsOrigin().x, elevator->GetAbsOrigin().y, elevator->GetAbsOrigin().z );
-						}
-					}
-
-					// we found our floor
-					break;
-				}
-			}
-		}
-	}
-#endif // TERROR
 }
 
 
@@ -4633,11 +4534,6 @@ bool CNavArea::IsBlocked( int teamID, bool ignoreNavBlockers ) const
 		return false;
 	}
 
-#ifdef TERROR
-	if ( ( teamID == TEAM_SURVIVOR ) && ( m_attributeFlags & CNavArea::NAV_PLAYERCLIP ) )
-		return true;
-#endif
-
 	if ( teamID == TEAM_ANY )
 	{
 		bool isBlocked = false;
@@ -4856,12 +4752,7 @@ void CNavArea::UpdateBlocked( bool force, int teamID )
 	bool wasBlocked = IsBlocked( TEAM_ANY );
 
 	// See if spot is valid
-#ifdef TERROR
-	// don't unblock func_doors
-	CTraceFilterWalkableEntities filter( NULL, COLLISION_GROUP_PLAYER_MOVEMENT, WALK_THRU_PROP_DOORS | WALK_THRU_BREAKABLES );
-#else
-	CTraceFilterWalkableEntities filter( NULL, COLLISION_GROUP_PLAYER_MOVEMENT, WALK_THRU_DOORS | WALK_THRU_BREAKABLES );
-#endif
+	CTraceFilterWalkableEntities filter(NULL, COLLISION_GROUP_PLAYER_MOVEMENT, WALK_THRU_DOORS | WALK_THRU_BREAKABLES);
 	trace_t tr;
 	{
 	VPROF( "CNavArea::UpdateBlocked-Trace" );
@@ -4879,13 +4770,7 @@ void CNavArea::UpdateBlocked( bool force, int teamID )
 	if ( !tr.startsolid )
 	{
 		// unblock ourself
-#ifdef TERROR
-		extern ConVar DebugZombieBreakables;
-		if ( DebugZombieBreakables.GetBool() )
-#else
-		if ( false )
-#endif
-
+		if (false)
 		{
 			NDebugOverlay::Box( origin, bounds.lo, bounds.hi, 0, 255, 0, 10, 5.0f );
 		}

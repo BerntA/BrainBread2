@@ -21,7 +21,7 @@ void ClientPutInServer( edict_t *pEdict, const char *playername );
 void Bot_Think( CHL2MP_Player *pBot );
 
 // Names for bots.
-const char *pszBotNames[] =
+static const char *pszBotNames[] =
 {
 	"Mike",
 	"John",
@@ -42,18 +42,11 @@ ConVar bot_flipout( "bot_flipout", "0", 0, "When on, all bots fire their guns." 
 ConVar bot_defend( "bot_defend", "0", 0, "Set to a team number, and that team will all keep their combat shields raised." );
 ConVar bot_changeclass( "bot_changeclass", "0", 0, "Force all bots to change to the specified class." );
 ConVar bot_zombie( "bot_zombie", "0", 0, "Brraaaaaiiiins." );
-static ConVar bot_mimic_yaw_offset( "bot_mimic_yaw_offset", "0", 0, "Offsets the bot yaw." );
+ConVar bot_mimic_yaw_offset( "bot_mimic_yaw_offset", "0", 0, "Offsets the bot yaw." );
 ConVar bot_attack( "bot_attack", "1", 0, "Shoot!" );
-
 ConVar bot_sendcmd( "bot_sendcmd", "", 0, "Forces bots to send the specified command." );
-
 ConVar bot_crouch( "bot_crouch", "0", 0, "Bot crouches" );
-
-#ifdef NEXT_BOT
-extern ConVar bot_mimic;
-#else
-ConVar bot_mimic( "bot_mimic", "0", 0, "Bot uses usercmd of player by index." );
-#endif
+ConVar bot_mimic("bot_mimic", "0", 0, "Bot uses usercmd of player by index.");
 
 static int g_iNextBotTeam = -1;
 static int g_iNextBotClass = -1;

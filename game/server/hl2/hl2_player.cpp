@@ -66,12 +66,6 @@ extern ConVar weapon_showproficiency;
 ConVar player_showpredictedposition( "player_showpredictedposition", "0" );
 ConVar player_showpredictedposition_timestep( "player_showpredictedposition_timestep", "1.0" );
 
-#ifndef HL2MP
-#ifndef PORTAL
-LINK_ENTITY_TO_CLASS( player, CHL2_Player );
-#endif
-#endif
-
 PRECACHE_REGISTER(player);
 
 CBaseEntity *FindEntityForward( CBasePlayer *pMe, bool fHull );
@@ -101,7 +95,6 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_FIELD( m_flLastDamageTime, FIELD_TIME ),
 	DEFINE_FIELD( m_flTargetFindTime, FIELD_TIME ),
 
-	DEFINE_FIELD( m_flNextFlashlightCheckTime, FIELD_TIME ),
 	DEFINE_FIELD( m_bFlashlightDisabled, FIELD_BOOLEAN ),
 
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "IgnoreFallDamage", InputIgnoreFallDamage ),
@@ -196,14 +189,10 @@ void CHL2_Player::PreThink(void)
 	WaterMove();
 	VPROF_SCOPE_END();
 
-	if ( g_pGameRules && g_pGameRules->FAllowFlashlight() )
-	{
-		m_Local.m_iHideHUD &= ~HIDEHUD_FLASHLIGHT;
-	}
-	else
-	{
-		m_Local.m_iHideHUD |= HIDEHUD_FLASHLIGHT;
-	}
+	if ( g_pGameRules && g_pGameRules->FAllowFlashlight() )	
+		m_Local.m_iHideHUD &= ~HIDEHUD_FLASHLIGHT;	
+	else	
+		m_Local.m_iHideHUD |= HIDEHUD_FLASHLIGHT;	
 
 	// checks if new client data (for HUD and view control) needs to be sent to the client
 	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-UpdateClientData" );
@@ -349,87 +338,79 @@ void CHL2_Player::PostThink( void )
 			UTIL_TraceLine(EyePosition(), EyePosition() + vecAim * 300.0f, MASK_SHOT, &traceFilter, &tr);
 
 			CBaseEntity *aimTarget = tr.m_pEnt;
-			if (aimTarget && !tr.DidHitWorld())
+			if (aimTarget && !tr.DidHitWorld() && (EyePosition().DistTo(aimTarget->GetAbsOrigin()) <= (PLAYER_USE_RADIUS + 16.0f)))
 			{
-				if (EyePosition().DistTo(aimTarget->GetAbsOrigin()) <= PLAYER_USE_RADIUS + 16.0f)
+				if (!strcmp(aimTarget->GetClassname(), "bbc_ammo_box"))
 				{
-					if (!strcmp(aimTarget->GetClassname(), "bbc_ammo_box"))
+					int timeLeft = ((int)(m_flNextAmmoReplenishTime - gpGlobals->curtime));
+					if (timeLeft > 0)
 					{
-						int timeLeft = ((int)(m_flNextAmmoReplenishTime - gpGlobals->curtime));
-						if (timeLeft > 0)
-						{
-							char pchArg1[16];
-							Q_snprintf(pchArg1, 16, "%d:%02d", (timeLeft / 60), (timeLeft % 60));
-							GameBaseServer()->SendToolTip("#TOOLTIP_AMMOBOX_WAIT", "", 2.0f, GAME_TIP_WARNING, entindex(), pchArg1);
-							return;
-						}
+						char pchArg1[16];
+						Q_snprintf(pchArg1, 16, "%d:%02d", (timeLeft / 60), (timeLeft % 60));
+						GameBaseServer()->SendToolTip("#TOOLTIP_AMMOBOX_WAIT", "", 2.0f, GAME_TIP_WARNING, entindex(), pchArg1);
+						return;
+					}
 
-						bool bDidReplenish = false;
-						
-						// Check through all available weapons that the user currently holds, give max ammo clip every sec.
-						for (int i = 0; i < MAX_WEAPONS; i++)
+					bool bDidReplenish = false;
+
+					// Check through all available weapons that the user currently holds, give max ammo clip every sec.
+					for (int i = 0; i < MAX_WEAPONS; i++)
+					{
+						CBaseCombatWeapon* pWeapon = GetWeapon(i);
+						if ((pWeapon != NULL) && (pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL))
 						{
-							CBaseCombatWeapon *pWeapon = GetWeapon(i);
-							if ((pWeapon != NULL) && (pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL))
+							bool bCanCheckSecondary = (pWeapon->GetPrimaryAmmoType() != pWeapon->GetSecondaryAmmoType());
+
+							if (pWeapon->UsesPrimaryAmmo())
 							{
-								bool bCanCheckSecondary = (pWeapon->GetPrimaryAmmoType() != pWeapon->GetSecondaryAmmoType());
+								if (GiveAmmo(pWeapon->GetMaxClip1(), pWeapon->GetPrimaryAmmoType(), false))
+									bDidReplenish = true;
+							}
 
-								if (pWeapon->UsesPrimaryAmmo())
-								{
-									if (GiveAmmo(pWeapon->GetMaxClip1(), pWeapon->GetPrimaryAmmoType(), false))
-										bDidReplenish = true;
-								}
-
-								if (bCanCheckSecondary && pWeapon->UsesSecondaryAmmo())
-								{
-									if (GiveAmmo(pWeapon->GetMaxClip2(), pWeapon->GetSecondaryAmmoType(), false))
-										bDidReplenish = true;
-								}
+							if (bCanCheckSecondary && pWeapon->UsesSecondaryAmmo())
+							{
+								if (GiveAmmo(pWeapon->GetMaxClip2(), pWeapon->GetSecondaryAmmoType(), false))
+									bDidReplenish = true;
 							}
 						}
+					}
 
-						// We received some ammo, check if we should be punished:
-						if (bDidReplenish && !GameBaseServer()->IsTutorialModeEnabled())
+					// We received some ammo, check if we should be punished:
+					if (bDidReplenish && !GameBaseServer()->IsTutorialModeEnabled())
+					{
+						float timeSinceLastReplenish = gpGlobals->curtime - m_flLastTimeReplenishedAmmo;
+						if (timeSinceLastReplenish <= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flMaxAmmoReplensihInterval)
 						{
-							float timeSinceLastReplenish = gpGlobals->curtime - m_flLastTimeReplenishedAmmo;
-							if (timeSinceLastReplenish <= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flMaxAmmoReplensihInterval)
+							m_iNumAmmoReplenishes++;
+							if (m_iNumAmmoReplenishes >= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iMaxAmmoReplenishWithinInterval)
 							{
-								m_iNumAmmoReplenishes++;
-								if (m_iNumAmmoReplenishes >= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iMaxAmmoReplenishWithinInterval)
-								{
-									float penaltyTime = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flAmmoReplenishPenalty;
-									m_flNextAmmoReplenishTime = gpGlobals->curtime + penaltyTime;
-									m_iNumAmmoReplenishes = 0;
-									m_flLastTimeReplenishedAmmo = 0.0f;
-
-									// Reduce the penalty if we have this skill!
-									if (iResourcefulSkillValue > 0) // Reduces the value by max 1 min.
-									{
-										float fraction = ((float)iResourcefulSkillValue) / 10.0f;
-										m_flNextAmmoReplenishTime -= clamp((fraction * (penaltyTime / 2.0f)), 0.0f, 60.0f);
-									}
-
-									return;
-								}
-							}
-							else
-							{
-								m_flNextAmmoReplenishTime = 0.0f;
+								float penaltyTime = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flAmmoReplenishPenalty;
+								m_flNextAmmoReplenishTime = gpGlobals->curtime + penaltyTime;
 								m_iNumAmmoReplenishes = 0;
-							}
+								m_flLastTimeReplenishedAmmo = 0.0f;
 
-							m_flLastTimeReplenishedAmmo = gpGlobals->curtime;
+								// Reduce the penalty if we have this skill!
+								if (iResourcefulSkillValue > 0) // Reduces the value by max 1 min.
+								{
+									float fraction = ((float)iResourcefulSkillValue) / 10.0f;
+									m_flNextAmmoReplenishTime -= clamp((fraction * (penaltyTime / 2.0f)), 0.0f, 60.0f);
+								}
+
+								return;
+							}
 						}
+						else
+						{
+							m_flNextAmmoReplenishTime = 0.0f;
+							m_iNumAmmoReplenishes = 0;
+						}
+
+						m_flLastTimeReplenishedAmmo = gpGlobals->curtime;
 					}
 				}
 			}
 		}
 	}
-}
-
-void CHL2_Player::Activate( void )
-{
-	BaseClass::Activate();
 }
 
 //------------------------------------------------------------------------------
@@ -555,36 +536,6 @@ CHL2_Player::~CHL2_Player( void )
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : iImpulse - 
-//-----------------------------------------------------------------------------
-void CHL2_Player::CheatImpulseCommands( int iImpulse )
-{
-	switch( iImpulse )
-	{
-	case 52:
-		{
-			// Rangefinder
-			trace_t tr;
-			UTIL_TraceLine( EyePosition(), EyePosition() + EyeDirection3D() * MAX_COORD_RANGE, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
-
-			if( tr.fraction != 1.0 )
-			{
-				float flDist = (tr.startpos - tr.endpos).Length();
-				float flDist2D = (tr.startpos - tr.endpos).Length2D();
-				DevMsg( 1,"\nStartPos: %.4f %.4f %.4f --- EndPos: %.4f %.4f %.4f\n", tr.startpos.x,tr.startpos.y,tr.startpos.z,tr.endpos.x,tr.endpos.y,tr.endpos.z );
-				DevMsg( 1,"3D Distance: %.4f units  (%.2f feet) --- 2D Distance: %.4f units  (%.2f feet)\n", flDist, flDist / 12.0, flDist2D, flDist2D / 12.0 );
-			}
-
-			break;
-		}
-
-	default:
-		BaseClass::CheatImpulseCommands( iImpulse );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
 //-----------------------------------------------------------------------------
 void CHL2_Player::SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize )
 {
@@ -636,84 +587,6 @@ void CHL2_Player::FlashlightTurnOff( void )
 {
 	RemoveEffects( EF_DIMLIGHT );
 	EmitSound( "HL2Player.FlashLightOff" );
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-#define FLASHLIGHT_RANGE	Square(600)
-bool CHL2_Player::IsIlluminatedByFlashlight( CBaseEntity *pEntity, float *flReturnDot )
-{
-	if( !FlashlightIsOn() )
-		return false;
-
-	// Within 50 feet?
-	float flDistSqr = GetLocalOrigin().DistToSqr(pEntity->GetLocalOrigin());
-	if( flDistSqr > FLASHLIGHT_RANGE )
-		return false;
-
-	// Within 45 degrees?
-	Vector vecSpot = pEntity->WorldSpaceCenter();
-	Vector los;
-
-	// If the eyeposition is too close, move it back. Solves problems
-	// caused by the player being too close the target.
-	if ( flDistSqr < (128 * 128) )
-	{
-		Vector vecForward;
-		EyeVectors( &vecForward );
-		Vector vecMovedEyePos = EyePosition() - (vecForward * 128);
-		los = ( vecSpot - vecMovedEyePos );
-	}
-	else
-	{
-		los = ( vecSpot - EyePosition() );
-	}
-
-	VectorNormalize( los );
-	Vector facingDir = EyeDirection3D( );
-	float flDot = DotProduct( los, facingDir );
-
-	if ( flReturnDot )
-	{
-		*flReturnDot = flDot;
-	}
-
-	if ( flDot < 0.92387f )
-		return false;
-
-	if( !FVisible(pEntity) )
-		return false;
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Let NPCs know when the flashlight is trained on them
-//-----------------------------------------------------------------------------
-void CHL2_Player::CheckFlashlight( void )
-{
-	if ( !FlashlightIsOn() )
-		return;
-
-	if ( m_flNextFlashlightCheckTime > gpGlobals->curtime )
-		return;
-
-	m_flNextFlashlightCheckTime = gpGlobals->curtime + FLASHLIGHT_NPC_CHECK_INTERVAL;
-
-	// Loop through NPCs looking for illuminated ones
-	for ( int i = 0; i < g_AI_Manager.NumAIs(); i++ )
-	{
-		CAI_BaseNPC *pNPC = g_AI_Manager.AccessAIs()[i];
-		if (pNPC == NULL)
-			continue;
-
-		float flDot;
-
-		if ( IsIlluminatedByFlashlight( pNPC, &flDot ) )
-		{
-			pNPC->PlayerHasIlluminatedNPC( this, flDot );
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -829,22 +702,15 @@ void CHL2_Player::NotifyFriendsOfDamage( CBaseEntity *pAttackerEntity )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-ConVar test_massive_dmg("test_massive_dmg", "30" );
-ConVar test_massive_dmg_clip("test_massive_dmg_clip", "0.5" );
 int	CHL2_Player::OnTakeDamage( const CTakeDamageInfo &info )
 {
-	if ( GlobalEntity_GetState( "gordon_invulnerable" ) == GLOBAL_ON )
-		return 0;
-
 	// ignore fall damage if instructed to do so by input
 	if ( ( info.GetDamageType() & DMG_FALL ) && m_flTimeIgnoreFallDamage > gpGlobals->curtime )
 	{
 		// usually, we will reset the input flag after the first impact. However there is another input that
 		// prevents this behavior.
-		if ( m_bIgnoreFallDamageResetAfterImpact )
-		{
-			m_flTimeIgnoreFallDamage = 0;
-		}
+		if ( m_bIgnoreFallDamageResetAfterImpact )		
+			m_flTimeIgnoreFallDamage = 0;		
 		return 0;
 	}
 
@@ -853,10 +719,8 @@ int	CHL2_Player::OnTakeDamage( const CTakeDamageInfo &info )
 		if( GetWaterLevel() > 2 )
 		{
 			// Don't take blast damage from anything above the surface.
-			if( info.GetInflictor()->GetWaterLevel() == 0 )
-			{
+			if (info.GetInflictor()->GetWaterLevel() == 0)
 				return 0;
-			}
 		}
 	}
 
@@ -879,14 +743,6 @@ int	CHL2_Player::OnTakeDamage( const CTakeDamageInfo &info )
 		// Only do a skill level adjustment if the player isn't his own attacker AND inflictor.
 		// This prevents damage from SetHealth() inputs from being adjusted for skill level.
 		bAdjustForSkillLevel = false;
-	}
-
-	if ( GetVehicleEntity() != NULL && GlobalEntity_GetState("gordon_protect_driver") == GLOBAL_ON )
-	{
-		if( playerDamage.GetDamage() > test_massive_dmg.GetFloat() && playerDamage.GetInflictor() == GetVehicleEntity() && (playerDamage.GetDamageType() & DMG_CRUSH) )
-		{
-			playerDamage.ScaleDamage( test_massive_dmg_clip.GetFloat() / playerDamage.GetDamage() );
-		}
 	}
 
 	if( bAdjustForSkillLevel )
@@ -1182,7 +1038,7 @@ bool CHL2_Player::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
 	return true;
 }
 
-extern ConVar sv_turbophysics;
+//extern ConVar sv_turbophysics;
 
 void CHL2_Player::PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize )
 {
@@ -1191,10 +1047,7 @@ void CHL2_Player::PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize )
 	//	return;
 
 	// can't pick up what you're standing on
-	if ( GetGroundEntity() == pObject )
-		return;
-
-	if ( !GetGroundEntity() )
+	if (!GetGroundEntity() || (GetGroundEntity() == pObject))
 		return;
 
 	if ( bLimitMassAndSize == true )
@@ -1272,19 +1125,11 @@ void CHL2_Player::UpdateClientData( void )
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-void CHL2_Player::OnRestore()
-{
-	BaseClass::OnRestore();
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
 Vector CHL2_Player::EyeDirection2D( void )
 {
 	Vector vecReturn = EyeDirection3D();
 	vecReturn.z = 0;
 	vecReturn.AsVector2D().NormalizeInPlace();
-
 	return vecReturn;
 }
 
@@ -1324,16 +1169,11 @@ bool CHL2_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, bool bWantDraw, int
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-WeaponProficiency_t CHL2_Player::CalcWeaponProficiency( CBaseCombatWeapon *pWeapon )
+WeaponProficiency_t CHL2_Player::CalcWeaponProficiency(CBaseCombatWeapon* pWeapon)
 {
-	WeaponProficiency_t proficiency;
-
-	proficiency = WEAPON_PROFICIENCY_PERFECT;
-
-	if( weapon_showproficiency.GetBool() != 0 )
-	{
-		Msg("Player switched to %s, proficiency is %s\n", pWeapon->GetClassname(), GetWeaponProficiencyName( proficiency ) );
-	}
+	WeaponProficiency_t proficiency = WEAPON_PROFICIENCY_PERFECT;
+	if (weapon_showproficiency.GetBool() != 0)
+		Msg("Player switched to %s, proficiency is %s\n", pWeapon->GetClassname(), GetWeaponProficiencyName(proficiency));
 
 	return proficiency;
 }
@@ -1642,17 +1482,6 @@ void CHL2_Player::StopLoopingSounds( void )
 	}
 
 	BaseClass::StopLoopingSounds();
-}
-
-//-----------------------------------------------------------------------------
-void CHL2_Player::ModifyOrAppendPlayerCriteria( AI_CriteriaSet& set )
-{
-	BaseClass::ModifyOrAppendPlayerCriteria( set );
-
-	if ( GlobalEntity_GetIndex( "gordon_precriminal" ) == -1 )
-	{
-		set.AppendCriteria( "gordon_precriminal", "0" );
-	}
 }
 
 //-----------------------------------------------------------------------------

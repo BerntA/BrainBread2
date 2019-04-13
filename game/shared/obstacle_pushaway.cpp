@@ -8,11 +8,7 @@
 #include "obstacle_pushaway.h"
 #include "props_shared.h"
 
-#if defined( CSTRIKE_DLL )
-#define SV_PUSH_CONVAR_FLAGS  (FCVAR_REPLICATED)
-#else
 #define SV_PUSH_CONVAR_FLAGS  (FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY)
-#endif // CSTRIKE_DLL
 
 //-----------------------------------------------------------------------------------------------------
 ConVar sv_pushaway_force( "sv_pushaway_force", "30000", SV_PUSH_CONVAR_FLAGS, "How hard physics objects are pushed away from the players on the server." );

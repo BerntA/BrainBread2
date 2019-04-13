@@ -103,17 +103,10 @@ static ConVar	cl_smoothtime	(
 	true, 2.0
 	 );
 
-#ifdef CSTRIKE_DLL
-ConVar	spec_freeze_time( "spec_freeze_time", "5.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Time spend frozen in observer freeze cam." );
-ConVar	spec_freeze_traveltime( "spec_freeze_traveltime", "0.7", FCVAR_CHEAT | FCVAR_REPLICATED, "Time taken to zoom in to frame a target in observer freeze cam.", true, 0.01, false, 0 );
-ConVar	spec_freeze_distance_min( "spec_freeze_distance_min", "80", FCVAR_CHEAT, "Minimum random distance from the target to stop when framing them in observer freeze cam." );
-ConVar	spec_freeze_distance_max( "spec_freeze_distance_max", "90", FCVAR_CHEAT, "Maximum random distance from the target to stop when framing them in observer freeze cam." );
-#else
-ConVar	spec_freeze_time( "spec_freeze_time", "4.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Time spend frozen in observer freeze cam." );
-ConVar	spec_freeze_traveltime( "spec_freeze_traveltime", "0.4", FCVAR_CHEAT | FCVAR_REPLICATED, "Time taken to zoom in to frame a target in observer freeze cam.", true, 0.01, false, 0 );
-ConVar	spec_freeze_distance_min( "spec_freeze_distance_min", "96", FCVAR_CHEAT, "Minimum random distance from the target to stop when framing them in observer freeze cam." );
-ConVar	spec_freeze_distance_max( "spec_freeze_distance_max", "200", FCVAR_CHEAT, "Maximum random distance from the target to stop when framing them in observer freeze cam." );
-#endif
+ConVar	spec_freeze_time("spec_freeze_time", "4.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Time spend frozen in observer freeze cam.");
+ConVar	spec_freeze_traveltime("spec_freeze_traveltime", "0.4", FCVAR_CHEAT | FCVAR_REPLICATED, "Time taken to zoom in to frame a target in observer freeze cam.", true, 0.01, false, 0);
+ConVar	spec_freeze_distance_min("spec_freeze_distance_min", "96", FCVAR_CHEAT, "Minimum random distance from the target to stop when framing them in observer freeze cam.");
+ConVar	spec_freeze_distance_max("spec_freeze_distance_max", "200", FCVAR_CHEAT, "Maximum random distance from the target to stop when framing them in observer freeze cam.");
 
 static ConVar	cl_first_person_uses_world_model ( "cl_first_person_uses_world_model", "0", FCVAR_ARCHIVE, "Causes the third person model to be drawn instead of the view model" );
 
@@ -428,8 +421,6 @@ C_BasePlayer::C_BasePlayer() : m_iv_vecViewOffset( "C_BasePlayer::m_iv_vecViewOf
 	m_pSurfaceData = NULL;
 	m_surfaceFriction = 1.0f;
 	m_chTextureType = 0;
-
-	m_flNextAchievementAnnounceTime = 0;
 
 	m_bIsSelectingWeapons = false;
 
@@ -1378,14 +1369,8 @@ int C_BasePlayer::DrawModel( int flags )
 	if (bb2_render_client_in_mirrors.GetBool() && IsLocalPlayer() && g_bShouldRenderLocalPlayerExternally)
 		return BaseClass::DrawModel(flags);
 
-#ifndef PORTAL
-	// In Portal this check is already performed as part of
-	// C_Portal_Player::DrawModel()
 	if (!ShouldDrawThisPlayer())
-	{
 		return 0;
-	}
-#endif
 
 	return BaseClass::DrawModel(flags);
 }
@@ -1468,24 +1453,6 @@ void C_BasePlayer::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 	{
 		viewangles = EyeAngles();
 	}
-
-	//=============================================================================
-	// HPE_BEGIN:
-	// [Forrest] Fix for (at least one potential case of) CSB-194.  Spectating someone
-	// who is headshotted by a teammate and then switching to chase cam leaves
-	// you with a permanent roll to the camera that doesn't decay and is not reset
-	// even when switching to different players or at the start of the next round
-	// if you are still a spectator.  (If you spawn as a player, the view is reset.
-	// if you switch spectator modes, the view is reset.)
-	//=============================================================================
-#ifdef CSTRIKE_DLL
-	// The chase camera adopts the yaw and pitch of the previous camera, but the camera
-	// should not roll.
-	viewangles.z = 0;
-#endif
-	//=============================================================================
-	// HPE_END
-	//=============================================================================
 
 	m_flObserverChaseDistance += gpGlobals->frametime*48.0f;
 
@@ -2230,13 +2197,6 @@ void C_BasePlayer::PlayPlayerJingle()
 
 	C_BaseEntity::EmitSound( filter, GetSoundSourceIndex(), ep );
 #endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_BasePlayer::ResetAutoaim( void )
-{
 }
 
 bool C_BasePlayer::ShouldPredict( void )

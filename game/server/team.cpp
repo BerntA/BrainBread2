@@ -248,30 +248,6 @@ void CTeam::ResetScores( void )
 	SetScore(0);
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTeam::AwardAchievement( int iAchievement )
-{
-	Assert( iAchievement >= 0 && iAchievement < 255 );	// must fit in short 
-
-	CRecipientFilter filter;
-
-	int iNumPlayers = GetNumPlayers();
-
-	for ( int i=0;i<iNumPlayers;i++ )
-	{
-		if ( GetPlayer(i) )
-		{
-			filter.AddRecipient( GetPlayer(i) );
-		}
-	}
-
-	UserMessageBegin( filter, "AchievementEvent" );
-		WRITE_SHORT( iAchievement );
-	MessageEnd();
-}
-
 int CTeam::GetAliveMembers( void )
 {
 	int iAlive = 0;

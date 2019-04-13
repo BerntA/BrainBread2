@@ -13,9 +13,6 @@
 	#include "c_prop_vehicle.h"
 	#include "prediction.h"
 	#include "activitylist.h"
-#ifdef TERROR
-	#include "ClientTerrorPlayer.h"
-#endif
 extern vgui::IInputInternal *g_InputInternal;
 #else
 	#include "usermessages.h"
@@ -24,10 +21,8 @@ extern vgui::IInputInternal *g_InputInternal;
 #include "haptics/haptic_utils.h"
 #include "haptics/haptic_msgs.h"
 
-#ifndef TERROR
 #ifndef FCVAR_RELEASE
 #define FCVAR_RELEASE 0
-#endif
 #endif
 
 #ifdef CLIENT_DLL 
@@ -172,20 +167,13 @@ void HapticsHandleMsg_HapPunch( QAngle const &angle )
 	haptics->HapticsPunch(1,angle);
 
 }
-#ifdef TERROR
-ConVar hap_zombie_damage_scale("hap_zombie_damage_scale", "0.25", FCVAR_RELEASE|FCVAR_NEVER_AS_STRING);
-#endif
+
 void HapticsHandleMsg_HapDmg( float pitch, float yaw, float damage, int damageType )
 {
 	if(!haptics->HasDevice())
 		return;
 
-#ifdef TERROR
-	C_TerrorPlayer *pPlayer = C_TerrorPlayer::GetLocalTerrorPlayer();
-#else
-	C_BasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
-#endif
-
+	C_BasePlayer* pPlayer = CBasePlayer::GetLocalPlayer();
 	if(pPlayer)
 	{
 		Vector damageDirection;
@@ -193,12 +181,6 @@ void HapticsHandleMsg_HapDmg( float pitch, float yaw, float damage, int damageTy
 		damageDirection.x = cos(pitch*M_PI/180.0)*sin(yaw*M_PI/180.0);
 		damageDirection.y = -sin(pitch*M_PI/180.0);
 		damageDirection.z = -(cos(pitch*M_PI/180.0)*cos(yaw*M_PI/180.0));
-#ifdef TERROR
-		if(pPlayer->GetTeamNumber()==TEAM_ZOMBIE)
-		{
-			damageDirection *= hap_zombie_damage_scale.GetFloat();
-		}
-#endif
 
 		haptics->ApplyDamageEffect(damage, damageType, damageDirection);
 	}
@@ -308,15 +290,6 @@ void HapticsDamage(CBasePlayer* pPlayer, const CTakeDamageInfo &info)
 		// just burn, use the z axis here.
 		pitchAngle = 0.0;
 	}
-#ifdef TERROR
-	else if(
-		(bitDamageType & ( DMG_PARALYZE | DMG_NERVEGAS | DMG_POISON | DMG_RADIATION | DMG_DROWNRECOVER | DMG_ACID | DMG_SLOWBURN ) ) && 
-		(bitDamageType & ~( DMG_PARALYZE | DMG_NERVEGAS | DMG_POISON | DMG_RADIATION | DMG_DROWNRECOVER | DMG_ACID | DMG_SLOWBURN ) )==0 )
-	{
-		// it is time based. and should not really do a punch.
-		return;
-	}
-#endif
 	
 	float sendDamage = info.GetDamage();
 

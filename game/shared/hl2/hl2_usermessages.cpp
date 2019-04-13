@@ -38,7 +38,6 @@ void RegisterUserMessages(void)
 	usermessages->Register("AmmoDenied", 2);
 	usermessages->Register("CreditsMsg", 1);
 	usermessages->Register("LogoTimeMsg", 4);
-	usermessages->Register("AchievementEvent", -1);
 
 	// BB2 : 
 	usermessages->Register("ShowNote", -1); // Sends the note filename and its header.

@@ -10,8 +10,6 @@
 #pragma once
 #endif
 
-
-
 typedef enum
 {
 	LEGANIM_9WAY,		// Legs use a 9-way blend, with "move_x" and "move_y" pose parameters.
@@ -19,7 +17,20 @@ typedef enum
 	LEGANIM_GOLDSRC	// Legs always point in the direction he's running and the torso rotates.
 } LegAnimType_t;
 
+#ifdef CLIENT_DLL
+class C_BaseAnimatingOverlay;
+#define CBaseAnimatingOverlay C_BaseAnimatingOverlay
+#else
+class CBaseAnimatingOverlay;
+#endif
 
+// If a guy is moving slower than this, then he's considered to not be moving
+// (so he goes to his idle animation at full playback rate rather than his walk 
+// animation at low playback rate).
+#define MOVING_MINIMUM_SPEED 0.5f
+#define MAIN_IDLE_SEQUENCE_LAYER 0	// For 8-way blended models, this layer blends an idle on top of the run/walk animation to simulate a 9-way blend. For 9-way blended models, we don't use this layer.
+#define AIMSEQUENCE_LAYER		1	// Aim sequence uses layers 0 and 1 for the weapon idle animation (needs 2 layers so it can blend).
+#define NUM_AIMSEQUENCE_LAYERS	4	// Then it uses layers 2 and 3 to blend in the weapon run/walk/crouchwalk animation.
 
 abstract_class IPlayerAnimState
 {
@@ -42,6 +53,5 @@ public:
 	// it will change his body_yaw pose parameter before changing his rendered angle).
 	virtual const QAngle& GetRenderAngles() = 0;
 };
-
 
 #endif // IPLAYERANIMSTATE_H

@@ -129,21 +129,11 @@ void ClientGamePrecache( void )
 }
 
 // called by ClientKill and DeadThink
-void respawn( CBaseEntity *pEdict, bool fCopyCorpse )
+void respawn(CBaseEntity* pEdict)
 {
-	CHL2MP_Player *pPlayer = ToHL2MPPlayer( pEdict );
-	if ( pPlayer )
-	{
-		if ( gpGlobals->curtime > pPlayer->GetDeathTime() + DEATH_ANIMATION_TIME )
-		{		
-			// respawn player
-			pPlayer->Spawn();			
-		}
-		else
-		{
-			pPlayer->SetNextThink( gpGlobals->curtime + 0.1f );
-		}
-	}
+	CHL2MP_Player* pPlayer = ToHL2MPPlayer(pEdict);
+	if (pPlayer)
+		pPlayer->Spawn();
 }
 
 void GameStartFrame( void )
