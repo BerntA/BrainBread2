@@ -11911,7 +11911,6 @@ bool CAI_BaseNPC::CineCleanup()
 		SetCondition( COND_LIGHT_DAMAGE );
 	}
 
-	//	SetAnimation( m_NPCState );
 	CLEARBITS(m_spawnflags, SF_NPC_WAIT_FOR_SCRIPT );
 
 	if ( bDestroyCine )

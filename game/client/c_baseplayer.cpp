@@ -68,30 +68,19 @@
 #undef CBasePlayer	
 #endif
 
-int g_nKillCamMode = OBS_MODE_NONE;
-int g_nKillCamTarget1 = 0;
-int g_nKillCamTarget2 = 0;
 bool g_bShouldRenderLocalPlayerExternally = false;
 
 extern ConVar mp_forcecamera; // in gamevars_shared.h
 
 #define FLASHLIGHT_DISTANCE		1000
-#define MAX_VGUI_INPUT_MODE_SPEED 30
-#define MAX_VGUI_INPUT_MODE_SPEED_SQ (MAX_VGUI_INPUT_MODE_SPEED*MAX_VGUI_INPUT_MODE_SPEED)
 
 static Vector WALL_MIN(-WALL_OFFSET,-WALL_OFFSET,-WALL_OFFSET);
 static Vector WALL_MAX(WALL_OFFSET,WALL_OFFSET,WALL_OFFSET);
 
 bool CommentaryModeShouldSwallowInput( C_BasePlayer *pPlayer );
 
-extern ConVar default_fov;
-#ifndef _XBOX
-extern ConVar sensitivity;
-#endif
-
 static C_BasePlayer *s_pLocalPlayer = NULL;
 
-static ConVar	cl_customsounds ( "cl_customsounds", "0", 0, "Enable customized player sound playback" );
 static ConVar	spec_track		( "spec_track", "0", 0, "Tracks an entity in spec mode" );
 static ConVar	cl_smooth		( "cl_smooth", "1", 0, "Smooth view/eye origin after prediction errors" );
 static ConVar	cl_smoothtime	( 
@@ -780,10 +769,6 @@ void C_BasePlayer::PostDataUpdate( DataUpdateType_t updateType )
 		// Make sure s_pLocalPlayer is correct
 
 		int iLocalPlayerIndex = engine->GetLocalPlayer();
-
-		if ( g_nKillCamMode )
-			iLocalPlayerIndex = g_nKillCamTarget1;
-
 		if ( iLocalPlayerIndex == index )
 		{
 			Assert( s_pLocalPlayer == NULL );
@@ -924,15 +909,6 @@ void C_BasePlayer::ReceiveMessage( int classID, bf_read &msg )
 		BaseClass::ReceiveMessage( classID, msg );
 		return;
 	}
-
-	int messageType = msg.ReadByte();
-
-	switch( messageType )
-	{
-		case PLAY_PLAYER_JINGLE:
-			PlayPlayerJingle();
-			break;
-	}
 }
 
 void C_BasePlayer::OnRestore()
@@ -1040,16 +1016,6 @@ void C_BasePlayer::DetermineVguiInputMode( CUserCmd *pCmd )
 	// We're not in vgui input mode if we're moving, or have hit a key
 	// that will make us move...
 
-	// Not in vgui mode if we're moving too quickly
-	// ROBIN: Disabled movement preventing VGUI screen usage
-	//if (GetVelocity().LengthSqr() > MAX_VGUI_INPUT_MODE_SPEED_SQ)
-	if ( 0 )
-	{
-		DeactivateVguiScreen( m_pCurrentVguiScreen.Get() );
-		m_pCurrentVguiScreen.Set( NULL );
-		return;
-	}
-
 	// Don't enter vgui mode if we've got combat buttons held down
 	bool bAttacking = false;
 	if ( ((pCmd->buttons & IN_ATTACK) || (pCmd->buttons & IN_ATTACK2)) && !m_pCurrentVguiScreen.Get() )
@@ -1060,11 +1026,6 @@ void C_BasePlayer::DetermineVguiInputMode( CUserCmd *pCmd )
 	// Not in vgui mode if we're pushing any movement key at all
 	// Not in vgui mode if we're in a vehicle...
 	// ROBIN: Disabled movement preventing VGUI screen usage
-	//if ((pCmd->forwardmove > MAX_VGUI_INPUT_MODE_SPEED) ||
-	//	(pCmd->sidemove > MAX_VGUI_INPUT_MODE_SPEED) ||
-	//	(pCmd->upmove > MAX_VGUI_INPUT_MODE_SPEED) ||
-	//	(pCmd->buttons & IN_JUMP) ||
-	//	(bAttacking) )
 	if ( bAttacking || IsInAVehicle() )
 	{ 
 		DeactivateVguiScreen( m_pCurrentVguiScreen.Get() );
@@ -1925,13 +1886,6 @@ int	C_BasePlayer::GetUserID( void )
 	return pi.userID;
 }
 
-
-// For weapon prediction
-void C_BasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
-{
-	// FIXME
-}
-
 void C_BasePlayer::UpdateClientData( void )
 {
 	// Update all the items
@@ -2147,56 +2101,6 @@ Vector C_BasePlayer::GetAutoaimVector( float flScale )
 	Vector	forward;
 	AngleVectors( GetAbsAngles() + m_Local.m_vecPunchAngle, &forward );
 	return	forward;
-}
-
-void C_BasePlayer::PlayPlayerJingle()
-{
-#ifndef _XBOX
-	// Find player sound for shooter
-	player_info_t info;
-	engine->GetPlayerInfo( entindex(), &info );
-
-	if ( !cl_customsounds.GetBool() )
-		return;
-
-	// Doesn't have a jingle sound
-	 if ( !info.customFiles[1] )	
-		return;
-
-	char soundhex[ 16 ];
-	Q_binarytohex( (byte *)&info.customFiles[1], sizeof( info.customFiles[1] ), soundhex, sizeof( soundhex ) );
-
-	// See if logo has been downloaded.
-	char fullsoundname[ 512 ];
-	Q_snprintf( fullsoundname, sizeof( fullsoundname ), "sound/temp/%s.wav", soundhex );
-
-	if ( !filesystem->FileExists( fullsoundname ) )
-	{
-		char custname[ 512 ];
-		Q_snprintf( custname, sizeof( custname ), "download/user_custom/%c%c/%s.dat", soundhex[0], soundhex[1], soundhex );
-		// it may have been downloaded but not copied under materials folder
-		if ( !filesystem->FileExists( custname ) )
-			return; // not downloaded yet
-
-		// copy from download folder to materials/temp folder
-		// this is done since material system can access only materials/*.vtf files
-
-		if ( !engine->CopyLocalFile( custname, fullsoundname) )
-			return;
-	}
-
-	Q_snprintf( fullsoundname, sizeof( fullsoundname ), "temp/%s.wav", soundhex );
-
-	CLocalPlayerFilter filter;
-
-	EmitSound_t ep;
-	ep.m_nChannel = CHAN_VOICE;
-	ep.m_pSoundName =  fullsoundname;
-	ep.m_flVolume = VOL_NORM;
-	ep.m_SoundLevel = SNDLVL_NORM;
-
-	C_BaseEntity::EmitSound( filter, GetSoundSourceIndex(), ep );
-#endif
 }
 
 bool C_BasePlayer::ShouldPredict( void )

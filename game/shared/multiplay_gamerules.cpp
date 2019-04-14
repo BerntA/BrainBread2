@@ -635,10 +635,7 @@ bool CMultiplayRules::Init()
 		else if ( pScorer )
 		{
 			// if a player dies in a deathmatch game and the killer is a client, award the killer some points
-			pScorer->IncrementFragCount( IPointsForKill( pScorer, pVictim ) );
-			
-			// Allow the scorer to immediately paint a decal
-			pScorer->AllowImmediateDecalPainting();
+			pScorer->IncrementFragCount( IPointsForKill( pScorer, pVictim ) );			
 
 			// dvsents2: uncomment when removing all FireTargets
 			//variant_t value;

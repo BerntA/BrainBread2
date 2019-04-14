@@ -671,7 +671,7 @@ void CViewRender::SetUpViews()
 			// If we are looking through another entities eyes, then override the angles/origin for view
 			int viewentity = render->GetViewEntity();
 
-			if ( !g_nKillCamMode && (pPlayer->entindex() != viewentity) )
+			if ( pPlayer->entindex() != viewentity )
 			{
 				C_BaseEntity *ve = cl_entitylist->GetEnt( viewentity );
 				if ( ve )

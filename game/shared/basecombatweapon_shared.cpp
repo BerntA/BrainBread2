@@ -2079,12 +2079,6 @@ bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActi
 #endif
 	SendWeaponAnim( iActivity );
 
-	// Play the player's reload animation
-	if ( pOwner->IsPlayer() )
-	{
-		( ( CBasePlayer * )pOwner)->SetAnimation( PLAYER_RELOAD );
-	}
-
 	MDLCACHE_CRITICAL_SECTION();
 	float flSequenceEndTime = gpGlobals->curtime + SequenceDuration();
 	pOwner->SetNextAttack( flSequenceEndTime );

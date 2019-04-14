@@ -68,8 +68,6 @@ ConVar player_showpredictedposition_timestep( "player_showpredictedposition_time
 
 PRECACHE_REGISTER(player);
 
-CBaseEntity *FindEntityForward( CBasePlayer *pMe, bool fHull );
-
 BEGIN_SIMPLE_DATADESC( LadderMove_t )
 	DEFINE_FIELD( m_bForceLadderMove, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bForceMount, FIELD_BOOLEAN ),
@@ -121,7 +119,6 @@ CHL2_Player::CHL2_Player()
 IMPLEMENT_SERVERCLASS_ST(CHL2_Player, DT_HL2_Player)
 	SendPropDataTable(SENDINFO_DT(m_HL2Local), &REFERENCE_SEND_TABLE(DT_HL2Local), SendProxy_SendLocalDataTable),
 END_SEND_TABLE()
-
 
 void CHL2_Player::Precache( void )
 {

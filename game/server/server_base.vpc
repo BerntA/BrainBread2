@@ -943,7 +943,6 @@ $Project
 			$File	"te_particlesystem.cpp"
 			$File	"te_particlesystem.h"
 			$File	"te_physicsprop.cpp"
-			$File	"te_playerdecal.cpp"
 			$File	"te_projecteddecal.cpp"
 			$File	"te_showline.cpp"
 			$File	"te_smoke.cpp"

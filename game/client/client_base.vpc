@@ -844,7 +844,6 @@ $Project
 			$File	"c_te_muzzleflash.cpp"
 			$File	"c_te_particlesystem.cpp"
 			$File	"c_te_physicsprop.cpp"
-			$File	"c_te_playerdecal.cpp"
 			$File	"c_te_projecteddecal.cpp"
 			$File	"c_te_showline.cpp"
 			$File	"c_te_smoke.cpp"

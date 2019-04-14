@@ -498,7 +498,4 @@ void CWeaponPropane::ThrowGrenade(CBasePlayer *pPlayer)
 #endif
 
 	WeaponSound(SINGLE);
-
-	// player "shoot" animation
-	pPlayer->SetAnimation(PLAYER_ATTACK1);
 }

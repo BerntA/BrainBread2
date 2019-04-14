@@ -94,8 +94,6 @@ public:
 		const Vector* pos, const Vector* dir ) = 0;
 	virtual void EnergySplash( IRecipientFilter& filer, float delay,
 		const Vector* pos, const Vector* dir, bool bExplosive ) = 0;
-	virtual void PlayerDecal( IRecipientFilter& filer, float delay,
-		const Vector* pos, int player, int entity ) = 0;
 	virtual void ShowLine( IRecipientFilter& filer, float delay,
 		const Vector* start, const Vector* end ) = 0;
 	virtual void Smoke( IRecipientFilter& filer, float delay,

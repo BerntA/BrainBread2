@@ -548,8 +548,6 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 	if ( !moving_fast_enough || !(fLadder || ( onground && movingalongground )) )
 			return;
 
-//	MoveHelper()->PlayerSetAnimation( PLAYER_WALK );
-
 	bWalking = speed < velrun;		
 
 	VectorCopy( vecOrigin, knee );

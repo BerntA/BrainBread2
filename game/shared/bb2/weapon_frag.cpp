@@ -496,7 +496,4 @@ void CWeaponFrag::ThrowGrenade(CBasePlayer *pPlayer, float timer)
 #endif
 
 	m_bRedraw = true;
-	
-	// player "shoot" animation
-	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 }

@@ -1555,26 +1555,6 @@ void UTIL_ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCustomImpa
 	pEntity->ImpactTrace( pTrace, iDamageType, pCustomImpactName );
 }
 
-/*
-==============
-UTIL_PlayerDecalTrace
-
-A player is trying to apply his custom decal for the spray can.
-Tell connected clients to display it, or use the default spray can decal
-if the custom can't be loaded.
-==============
-*/
-void UTIL_PlayerDecalTrace( trace_t *pTrace, int playernum )
-{
-	if (pTrace->fraction == 1.0)
-		return;
-
-	CBroadcastRecipientFilter filter;
-
-	te->PlayerDecal( filter, 0.0,
-		&pTrace->endpos, playernum, pTrace->m_pEnt->entindex() );
-}
-
 bool UTIL_TeamsMatch( const char *pTeamName1, const char *pTeamName2 )
 {
 	// Everyone matches unless it's teamplay
@@ -1590,7 +1570,6 @@ bool UTIL_TeamsMatch( const char *pTeamName1, const char *pTeamName2 )
 
 	return false;
 }
-
 
 void UTIL_AxisStringToPointPoint( Vector &start, Vector &end, const char *pString )
 {

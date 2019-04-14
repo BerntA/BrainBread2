@@ -181,7 +181,6 @@ void C_HL2MP_Player::TraceAttack( const CTakeDamageInfo &info, const Vector &vec
 	}
 }
 
-
 C_HL2MP_Player* C_HL2MP_Player::GetLocalHL2MPPlayer()
 {
 	return (C_HL2MP_Player*)C_BasePlayer::GetLocalPlayer();
@@ -191,12 +190,12 @@ C_HL2MP_Player* C_HL2MP_Player::GetLocalHL2MPPlayer()
 {
 	for (int i = 1; i <= MAX_PLAYERS; i++)
 	{
-		C_HL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+		C_HL2MP_Player* pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
 		if (!pPlayer)
 			continue;
 
-		for (int i = (_ARRAYSIZE(pPlayer->m_pAttachments) - 1); i >= 0; i--)
-			pPlayer->m_pAttachments[i] = NULL;
+		for (int x = (_ARRAYSIZE(pPlayer->m_pAttachments) - 1); x >= 0; x--)
+			pPlayer->m_pAttachments[x] = NULL;
 
 		pPlayer->m_pNewPlayerModel = NULL;
 	}
@@ -254,14 +253,7 @@ void C_HL2MP_Player::PreThink( void )
 
 const QAngle &C_HL2MP_Player::EyeAngles()
 {
-	if( IsLocalPlayer() )
-	{
-		return BaseClass::EyeAngles();
-	}
-	else
-	{
-		return m_angEyeAngles;
-	}
+	return (IsLocalPlayer() ? BaseClass::EyeAngles() : m_angEyeAngles);
 }
 
 //-----------------------------------------------------------------------------
@@ -404,7 +396,6 @@ ShadowType_t C_HL2MP_Player::ShadowCastType( void )
 {
 	return SHADOWS_NONE;
 }
-
 
 const QAngle& C_HL2MP_Player::GetRenderAngles()
 {
@@ -649,14 +640,7 @@ void C_HL2MP_Player::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNea
 
 IRagdoll* C_HL2MP_Player::GetRepresentativeRagdoll() const
 {
-	if (m_pPlayerRagdoll)
-	{
-		return m_pPlayerRagdoll->GetIRagdoll();
-	}
-	else
-	{
-		return NULL;
-	}
+	return (m_pPlayerRagdoll ? m_pPlayerRagdoll->GetIRagdoll() : NULL);
 }
 
 int C_HL2MP_Player::GetSkillValue(int index)

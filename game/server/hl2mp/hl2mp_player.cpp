@@ -2900,15 +2900,6 @@ Vector CHL2MP_Player::GetAutoaimVector(float flScale)
 	return forward;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Do nothing multiplayer_animstate takes care of animation.
-// Input  : playerAnim - 
-//-----------------------------------------------------------------------------
-void CHL2MP_Player::SetAnimation(PLAYER_ANIM playerAnim)
-{
-	return;
-}
-
 // BB2 SKILL SETUP, THIS IS HOW WE FIGURE OUT WHAT SPEED OFFSET(S) WE SHOULD HAVE AT ALL TIMES!!!
 
 float CHL2MP_Player::GetTeamPerkValue(float flOriginalValue)

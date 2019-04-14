@@ -434,7 +434,6 @@ public:
 	virtual void			OnEmitFootstepSound( const CSoundParameters& params, const Vector& vecOrigin, float fVolume ) {}
 
 	virtual Class_T			Classify ( void );
-	virtual void			SetAnimation( PLAYER_ANIM playerAnim );
 
 	// custom player functions
 	virtual void			ImpulseCommands( void );
@@ -654,8 +653,6 @@ public:
 
 	// Used to set private physics flags PFLAG_*
 	void	SetPhysicsFlag( int nFlag, bool bSet );
-
-	void	AllowImmediateDecalPainting();
 
 	// Suicide...
 	virtual void CommitSuicide( bool bExplode = false, bool bForce = false );
@@ -951,8 +948,6 @@ private:
 
 	int						m_iFrags;
 	int						m_iDeaths;
-
-	float					m_flNextDecalTime; // next time this player can spray a decal
 
 	// Multiplayer handling
 	PlayerConnectedState	m_iConnected;

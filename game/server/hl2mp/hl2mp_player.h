@@ -199,7 +199,6 @@ public:
 
 	void NoteWeaponFired(void);
 
-	void SetAnimation(PLAYER_ANIM playerAnim);
 	void SetPlayerModel(int overrideTeam = -1);
 	void SetupCustomization(void);
 

@@ -2485,8 +2485,6 @@ bool CGameMovement::CheckJumpButton( void )
 
 	player->PlayStepSound((Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
 
-	MoveHelper()->PlayerSetAnimation(PLAYER_JUMP);
-
 	float flGroundFactor = 1.0f;
 	if (player->m_pSurfaceData)
 	{
@@ -4064,11 +4062,6 @@ void CGameMovement::CheckFalling( void )
 		}
 
 		PlayerRoughLandingEffects( fvol );
-
-		if (bAlive)
-		{
-			MoveHelper( )->PlayerSetAnimation( PLAYER_WALK );
-		}
 	}
 
 	// let any subclasses know that the player has landed and how hard

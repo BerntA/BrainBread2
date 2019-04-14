@@ -371,7 +371,6 @@ bool CMoveHelperServer::PlayerFallingDamage( void )
 //-----------------------------------------------------------------------------
 void CMoveHelperServer::PlayerSetAnimation( PLAYER_ANIM eAnim )
 {
-	m_pHostPlayer->SetAnimation( eAnim );
 }
 
 bool CMoveHelperServer::IsWorldEntity( const CBaseHandle &handle )

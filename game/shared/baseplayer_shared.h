@@ -26,10 +26,7 @@
 #define TRAIN_FAST		0x04 
 #define TRAIN_BACK		0x05
 
-// entity messages
-#define PLAY_PLAYER_JINGLE	1
-
-#define DEATH_ANIMATION_TIME	3.0f
+#define DEATH_ANIMATION_TIME	3.5f
 
 enum stepsoundtimes_t
 {

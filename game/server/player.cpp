@@ -292,7 +292,6 @@ BEGIN_DATADESC( CBasePlayer )
 
 	DEFINE_FIELD( m_iFrags, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iDeaths, FIELD_INTEGER ),
-	DEFINE_FIELD( m_flNextDecalTime, FIELD_TIME ),
 
 	// from edict_t
 	DEFINE_FIELD( m_ArmorValue, FIELD_INTEGER ),
@@ -484,7 +483,6 @@ CBasePlayer::CBasePlayer( )
 		NetworkProp()->AttachEdict( s_PlayerEdict );
 		s_PlayerEdict = NULL;
 	}
-
 
 	// Skills
 	m_flHealthRegenAmount = 0;
@@ -738,16 +736,7 @@ int TrainSpeed(int iSpeed, int iMax)
 
 void CBasePlayer::DeathSound( const CTakeDamageInfo &info )
 {
-	// Did we die from falling?
-	if ( m_bitsDamageType & DMG_FALL )
-	{
-		// They died in the fall. Play a splat sound.
-		HL2MPRules()->EmitSoundToClient(this, "FallGib", GetSoundType(), GetSoundsetGender());
-	}
-	else
-	{
-		HL2MPRules()->EmitSoundToClient(this, "Death", GetSoundType(), GetSoundsetGender());
-	}
+	HL2MPRules()->EmitSoundToClient(this, ((m_bitsDamageType & (DMG_FALL | DMG_CRUSH | DMG_VEHICLE)) != 0) ? "FallGib" : "Death", GetSoundType(), GetSoundsetGender());
 }
 
 // override takehealth
@@ -1147,7 +1136,6 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 				pClient->m_BB2Local.m_flInfectionTimer = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->flInfectionDuration;
 				pClient->SetPlayerInfected(true);
 				SetCollisionGroup(COLLISION_GROUP_PLAYER_ZOMBIE);
-				SetAnimation(PLAYER_IDLE);
 				SetHealth(1);
 				HL2MPRules()->EmitSoundToClient(this, "Infected", BB2_SoundTypes::TYPE_PLAYER, GetSoundsetGender());
 				GameBaseServer()->SendToolTip("#TOOLTIP_INFECTION_START", "", 2.5f, GAME_TIP_WARNING, entindex());
@@ -1469,8 +1457,12 @@ int CBasePlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		(!attacker->IsSolidFlagSet(FSOLID_TRIGGER) || info.GetNoForceLimit()))
 	{
 		Vector force = vecDir * -DamageForce(WorldAlignSize(), info.GetBaseDamage());
+		if (info.GetNoForceLimit())
+			force = info.GetDamageForce();
+
 		if (force.z > 250.0f)
 			force.z = 250.0f;
+
 		ApplyAbsVelocityImpulse(force, info.GetNoForceLimit());
 	}
 
@@ -1540,8 +1532,6 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 	// holster the current weapon
 	if ( GetActiveWeapon() )
 		GetActiveWeapon()->FullHolster();
-
-	SetAnimation( PLAYER_DIE );
 
 	if ( !IsObserver() )
 	{
@@ -1616,30 +1606,15 @@ void CBasePlayer::PostAbsVelocityImpulse(bool bNoLimit)
 	BaseClass::PostAbsVelocityImpulse(bNoLimit);
 }
 
-// Set the activity based on an event or current state
-void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
-{
-}
-
 /*
 ===========
 WaterMove
 ============
 */
-#ifdef HL2_DLL
 
-// test for HL2 drowning damage increase (aux power used instead)
 #define AIRTIME						7		// lung full of air lasts this many seconds
 #define DROWNING_DAMAGE_INITIAL		10
 #define DROWNING_DAMAGE_MAX			10
-
-#else
-
-#define AIRTIME						12		// lung full of air lasts this many seconds
-#define DROWNING_DAMAGE_INITIAL		2
-#define DROWNING_DAMAGE_MAX			5
-
-#endif
 
 void CBasePlayer::WaterMove()
 {
@@ -3883,25 +3858,11 @@ void CBasePlayer::PostThink()
 				}
 				m_Local.m_flFallVelocity = 0;
 			}
-
-			// select the proper animation for the player character	
-			VPROF( "CBasePlayer::PostThink-Animation" );
-			// If he's in a vehicle, sit down
-			if ( IsInAVehicle() )
-				SetAnimation( PLAYER_IN_VEHICLE );
-			else if (!GetAbsVelocity().x && !GetAbsVelocity().y)
-				SetAnimation( PLAYER_IDLE );
-			else if ((GetAbsVelocity().x || GetAbsVelocity().y) && ( GetFlags() & FL_ONGROUND ))
-				SetAnimation( PLAYER_WALK );
-			else if (GetWaterLevel() > 1)
-				SetAnimation( PLAYER_WALK );
 		}
 
 		// Don't allow bogus sequence on player
-		if ( GetSequence() == -1 )
-		{
-			SetSequence( 0 );
-		}
+		if (GetSequence() == -1)
+			SetSequence(0);
 
 		// BB2 Warn - Client Anims Should cover this!
 
@@ -4156,8 +4117,6 @@ void CBasePlayer::Spawn( void )
 	m_idrownrestored = m_idrowndmg;
 
 	SetFOV( this, 0 );
-
-	m_flNextDecalTime	= 0;// let this player decal as soon as he spawns.
 
 	m_flPlayerUseTime = 0.0f;
 	
@@ -4422,11 +4381,6 @@ void CBasePlayer::SetPhysicsFlag( int nFlag, bool bSet )
 		m_afPhysicsFlags |= nFlag;
 	else
 		m_afPhysicsFlags &= ~nFlag;
-}
-
-void CBasePlayer::AllowImmediateDecalPainting()
-{
-	m_flNextDecalTime = gpGlobals->curtime;
 }
 
 // Suicide...
@@ -4713,64 +4667,6 @@ void CBasePlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExi
 	RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
 }
 
-
-//==============================================
-// !!!UNDONE:ultra temporary SprayCan entity to apply
-// decal frame at a time. For PreAlpha CD
-//==============================================
-class CSprayCan : public CPointEntity
-{
-public:
-	DECLARE_CLASS( CSprayCan, CPointEntity );
-
-	void	Spawn ( CBasePlayer *pOwner );
-	void	Think( void );
-
-	virtual void Precache();
-
-	virtual int	ObjectCaps( void ) { return FCAP_DONT_SAVE; }
-};
-
-LINK_ENTITY_TO_CLASS( spraycan, CSprayCan );
-PRECACHE_REGISTER( spraycan );
-
-void CSprayCan::Spawn ( CBasePlayer *pOwner )
-{
-	SetLocalOrigin( pOwner->WorldSpaceCenter() + Vector ( 0 , 0 , 32 ) );
-	SetLocalAngles( pOwner->EyeAngles() );
-	SetOwnerEntity( pOwner );
-	SetNextThink( gpGlobals->curtime );
-	EmitSound( "SprayCan.Paint" );
-}
-
-void CSprayCan::Precache()
-{
-	BaseClass::Precache();
-
-	PrecacheScriptSound( "SprayCan.Paint" );
-}
-
-void CSprayCan::Think( void )
-{
-	CBasePlayer *pPlayer = ToBasePlayer( GetOwnerEntity() );
-	if ( pPlayer )
-	{
-       	int playernum = pPlayer->entindex();
-		
-		Vector forward;
-		trace_t	tr;	
-
-		AngleVectors( GetAbsAngles(), &forward );
-		UTIL_TraceLine ( GetAbsOrigin(), GetAbsOrigin() + forward * 128, 
-			MASK_SOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_NONE, & tr);
-
-		UTIL_PlayerDecalTrace( &tr, playernum );
-	}
-	
-	// Just painted last custom frame.
-	UTIL_Remove( this );
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Create and give the named item to the player. Then return it.
 //-----------------------------------------------------------------------------
@@ -4995,75 +4891,7 @@ ImpulseCommands
 
 void CBasePlayer::ImpulseCommands( )
 {
-	trace_t	tr;
-		
-	int iImpulse = (int)m_nImpulse;
-	switch (iImpulse)
-	{
-	case 200:
-		if ( sv_cheats->GetBool() )
-		{
-			CBaseCombatWeapon *pWeapon;
-
-			pWeapon = GetActiveWeapon();
-			
-			if( pWeapon->IsEffectActive( EF_NODRAW ) )
-			{
-				pWeapon->Deploy();
-			}
-			else
-			{
-				pWeapon->FullHolster();
-			}
-		}
-		break;
-
-	case 201:// paint decal
-		
-		if ( gpGlobals->curtime < m_flNextDecalTime )
-		{
-			// too early!
-			break;
-		}
-
-		{
-			Vector forward;
-			EyeVectors( &forward );
-			UTIL_TraceLine ( EyePosition(), 
-				EyePosition() + forward * 128, 
-				MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, & tr);
-		}
-
-		if ( tr.fraction != 1.0 )
-		{// line hit something, so paint a decal
-			m_flNextDecalTime = gpGlobals->curtime + decalfrequency.GetFloat();
-			CSprayCan *pCan = CREATE_UNSAVED_ENTITY( CSprayCan, "spraycan" );
-			pCan->Spawn( this );			
-		}
-
-		break;
-
-	case	202:// player jungle sound 
-		if ( gpGlobals->curtime < m_flNextDecalTime )
-		{
-			// too early!
-			break;
-
-		}
-		
-		EntityMessageBegin( this );
-			WRITE_BYTE( PLAY_PLAYER_JINGLE );
-		MessageEnd();
-
-		m_flNextDecalTime = gpGlobals->curtime + decalfrequency.GetFloat();
-		break;
-
-	default:
-		// check all of the cheat impulse commands now
-		CheatImpulseCommands( iImpulse );
-		break;
-	}
-	
+	CheatImpulseCommands(m_nImpulse);
 	m_nImpulse = 0;
 }
 
@@ -5071,13 +4899,10 @@ void CBasePlayer::ImpulseCommands( )
 //=========================================================
 void CBasePlayer::CheatImpulseCommands( int iImpulse )
 {
-#if !defined( HLDEMO_BUILD )
-	if ( !sv_cheats->GetBool() )
-	{
-		return;
-	}
+	if ( !sv_cheats->GetBool() )	
+		return;	
 
-	CBaseEntity *pEntity;
+	CBaseEntity *pEntity = NULL;
 	trace_t tr;
 
 	switch (iImpulse)
@@ -5088,18 +4913,12 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 
 	case 101:
 		gEvilImpulse101 = true;
-
-		if (GetHealth() < 100)
-		{
-			TakeHealth(25, DMG_GENERIC);
-		}
-
+		if (GetHealth() < GetMaxHealth())		
+			TakeHealth(25, DMG_GENERIC);		
 		gEvilImpulse101 = false;
-
 		break;
 
 	case 103:
-		// What the hell are you doing?
 		pEntity = FindEntityForward(this, true);
 		if (pEntity)
 		{
@@ -5110,7 +4929,6 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 		break;
 
 	case 106:
-		// Give me the classname and targetname of this entity.
 		pEntity = FindEntityForward(this, true);
 		if (pEntity)
 		{
@@ -5137,7 +4955,6 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 	case 107:
 	{
 		trace_t tr;
-
 		edict_t		*pWorld = engine->PEntityOfEntIndex(0);
 
 		Vector start = EyePosition();
@@ -5149,11 +4966,21 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 			pWorld = tr.m_pEnt->edict();
 
 		const char *pTextureName = tr.surface.name;
-
 		if (pTextureName)
 			Msg("Texture: %s\n", pTextureName);
 	}
 	break;
+
+	case 200:
+	{
+		CBaseCombatWeapon* pWeapon = GetActiveWeapon();
+		if (pWeapon->IsEffectActive(EF_NODRAW))
+			pWeapon->Deploy();
+		else
+			pWeapon->FullHolster();
+
+		break;
+	}		
 
 	case 203: // remove creature.
 		pEntity = FindEntityForward(this, true);
@@ -5161,7 +4988,6 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 			UTIL_Remove(pEntity);
 		break;
 	}
-#endif	// HLDEMO_BUILD
 }
 
 bool CBasePlayer::ClientCommand( const CCommand &args )
@@ -5330,8 +5156,6 @@ bool CBasePlayer::ClientCommand( const CCommand &args )
 
 	return false;
 }
-
-extern bool UTIL_ItemCanBeTouchedByPlayer( CBaseEntity *pItem, CBasePlayer *pPlayer );
 
 bool CBasePlayer::RemovePlayerItem( CBaseCombatWeapon *pItem )
 {

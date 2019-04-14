@@ -37,9 +37,6 @@ class C_FuncLadder;
 class CFlashlightEffect;
 class C_EconWearable;
 
-extern int g_nKillCamMode;
-extern int g_nKillCamTarget1;
-extern int g_nKillCamTarget2;
 extern bool g_bShouldRenderLocalPlayerExternally;
 
 class C_CommandContext
@@ -80,7 +77,7 @@ public:
 
 	virtual void	Spawn( void );
 	virtual void	SharedSpawn(); // Shared between client and server.
-	virtual void SetNewSolidFlags( bool bNonSolid );
+	virtual void	SetNewSolidFlags( bool bNonSolid );
 	virtual bool	GetSteamID( CSteamID *pID );
 
 	// IClientEntity overrides.
@@ -316,8 +313,6 @@ public:
 
 	bool					UsingStandardWeaponsInVehicle( void );
 
-	virtual void			SetAnimation( PLAYER_ANIM playerAnim );
-
 	float					GetTimeBase( void ) const;
 	float					GetFinalPredictedTime() const;
 
@@ -347,7 +342,6 @@ public:
 	virtual float GetMinFOV() const;
 
 	virtual void DoMuzzleFlash();
-	virtual void PlayPlayerJingle();
 
 	virtual void UpdateStepSound( surfacedata_t *psurface, const Vector &vecOrigin, const Vector &vecVelocity  );
 	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
@@ -544,14 +538,8 @@ private:
 	friend class CPrediction;
 
 	// HACK FOR TF2 Prediction
-	friend class CTFGameMovementRecon;
 	friend class CGameMovement;
-	friend class CTFGameMovement;
-	friend class CHL1GameMovement;
-	friend class CCSGameMovement;
 	friend class CHL2GameMovement;
-	friend class CDODGameMovement;
-	friend class CPortalGameMovement;
 	
 	// Accessors for gamemovement
 	float GetStepSize( void ) const { return m_Local.m_flStepSize; }
