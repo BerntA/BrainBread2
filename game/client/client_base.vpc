@@ -331,8 +331,8 @@ $Project
 		
 		$Folder "VGUI_Menus"
 		{
-			$File "bb2/base_panel.cpp"
-			$File "bb2/base_panel.h"
+			$File "bb2/quest_panel.cpp"
+			$File "bb2/quest_panel.h"
 			$File "bb2/skill_tree.cpp"
 			$File "bb2/skill_tree.h"
 			$File "bb2/keypad_menu.cpp"

@@ -105,7 +105,7 @@ void CLogicQuest::Spawn()
 	}
 
 	// If pin to map is on we verify that the map has the target entities. (example: info_target entities)
-	for (int i = 0; i < m_pQuestData->m_iObjectivesCount; i++)
+	for (int i = 0; i < m_pQuestData->iObjectivesCount; i++)
 	{
 		const char *szLocation = m_pQuestData->pObjectives[i].szLocationTarget;
 		if (szLocation && szLocation[0])
@@ -134,7 +134,7 @@ void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, 
 			m_iQuestStatusOverall = STATUS_ONGOING;
 
 			// Add our obj. icons.
-			for (int i = 0; i < GetLinkedQuestData()->m_iObjectivesCount; i++)
+			for (int i = 0; i < GetLinkedQuestData()->iObjectivesCount; i++)
 			{
 				const char *szLocation = GetLinkedQuestData()->pObjectives[i].szLocationTarget;
 				if (szLocation && szLocation[0])
@@ -193,8 +193,8 @@ void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, 
 		return;
 	}
 
-	if ((iObjectiveToProgress >= GetLinkedQuestData()->m_iObjectivesCount) || (iObjectiveToProgress < 0) ||
-		GetLinkedQuestData()->pObjectives[iObjectiveToProgress].m_bObjectiveCompleted)
+	if ((iObjectiveToProgress >= GetLinkedQuestData()->iObjectivesCount) || (iObjectiveToProgress < 0) ||
+		GetLinkedQuestData()->pObjectives[iObjectiveToProgress].bObjectiveCompleted)
 		return;
 
 	if (!bFail && bProgress)
@@ -211,7 +211,7 @@ void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, 
 		{
 			event->SetString("name", STRING(szQuestID));
 			event->SetInt("id", iObjectiveToProgress);
-			event->SetInt("kills_current", GetLinkedQuestData()->pObjectives[iObjectiveToProgress].m_iCurrentKills);
+			event->SetInt("kills_current", GetLinkedQuestData()->pObjectives[iObjectiveToProgress].iCurrentKills);
 			event->SetBool("entity_count", bEntityCountUpdate);
 			gameeventmanager->FireEvent(event);
 		}
@@ -247,7 +247,7 @@ void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, 
 			pClient->CanLevelUp(((int)xpToGet), NULL);
 		}
 
-		GetLinkedQuestData()->pObjectives[iObjectiveToProgress].m_bObjectiveCompleted = true;
+		GetLinkedQuestData()->pObjectives[iObjectiveToProgress].bObjectiveCompleted = true;
 		m_iProgressValue++;
 
 		if (GetLinkedQuestData()->bShowInOrder && GetLinkedQuestData()->pObjectives[iObjectiveToProgress].szLocationTarget && GetLinkedQuestData()->pObjectives[iObjectiveToProgress].szLocationTarget[0])
@@ -260,7 +260,7 @@ void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, 
 			}
 		}
 
-		if (GetLinkedQuestData()->m_iObjectivesCount <= m_iProgressValue)
+		if (GetLinkedQuestData()->iObjectivesCount <= m_iProgressValue)
 		{
 			m_OnQuestCompleted.FireOutput(this, this);
 			m_iQuestStatusOverall = STATUS_SUCCESS;
@@ -308,7 +308,7 @@ bool CLogicQuest::ShouldShowEntityCounting(void)
 	if (m_iQuestStatusOverall <= STATUS_WAITING)
 		return false;
 
-	for (int i = 0; i < GetLinkedQuestData()->m_iObjectivesCount; i++)
+	for (int i = 0; i < GetLinkedQuestData()->iObjectivesCount; i++)
 	{
 		if (CheckCanProgressCountingObjective(i))
 			return true;
@@ -328,7 +328,7 @@ bool CLogicQuest::CheckCanProgressCountingObjective(int id)
 				return false;
 		}
 
-		if (!GetLinkedQuestData()->pObjectives[id].m_bObjectiveCompleted)
+		if (!GetLinkedQuestData()->pObjectives[id].bObjectiveCompleted)
 			return true;
 	}
 
@@ -337,10 +337,10 @@ bool CLogicQuest::CheckCanProgressCountingObjective(int id)
 
 void CLogicQuest::ProgressCountingForObjective(int id)
 {
-	GetLinkedQuestData()->pObjectives[id].m_iCurrentKills++;
+	GetLinkedQuestData()->pObjectives[id].iCurrentKills++;
 	SendQuestParameters(id, true, false, true);
 
-	if (GetLinkedQuestData()->pObjectives[id].m_iCurrentKills >= GetLinkedQuestData()->pObjectives[id].m_iKillsNeeded)
+	if (GetLinkedQuestData()->pObjectives[id].iCurrentKills >= GetLinkedQuestData()->pObjectives[id].iKillsNeeded)
 		SendQuestParameters(id, true);
 }
 
@@ -377,35 +377,35 @@ void CLogicQuest::FireGameEvent(IGameEvent *event)
 					event->SetString("name", STRING(szQuestID));
 					event->SetInt("status", m_iQuestStatusOverall);
 
-					event->SetInt("objective1kills", GetLinkedQuestData()->pObjectives[0].m_iCurrentKills);
-					event->SetBool("objective1completed", GetLinkedQuestData()->pObjectives[0].m_bObjectiveCompleted);
+					event->SetInt("objective1kills", GetLinkedQuestData()->pObjectives[0].iCurrentKills);
+					event->SetBool("objective1completed", GetLinkedQuestData()->pObjectives[0].bObjectiveCompleted);
 
-					event->SetInt("objective2kills", GetLinkedQuestData()->pObjectives[1].m_iCurrentKills);
-					event->SetBool("objective2completed", GetLinkedQuestData()->pObjectives[1].m_bObjectiveCompleted);
+					event->SetInt("objective2kills", GetLinkedQuestData()->pObjectives[1].iCurrentKills);
+					event->SetBool("objective2completed", GetLinkedQuestData()->pObjectives[1].bObjectiveCompleted);
 
-					event->SetInt("objective3kills", GetLinkedQuestData()->pObjectives[2].m_iCurrentKills);
-					event->SetBool("objective3completed", GetLinkedQuestData()->pObjectives[2].m_bObjectiveCompleted);
+					event->SetInt("objective3kills", GetLinkedQuestData()->pObjectives[2].iCurrentKills);
+					event->SetBool("objective3completed", GetLinkedQuestData()->pObjectives[2].bObjectiveCompleted);
 
-					event->SetInt("objective4kills", GetLinkedQuestData()->pObjectives[3].m_iCurrentKills);
-					event->SetBool("objective4completed", GetLinkedQuestData()->pObjectives[3].m_bObjectiveCompleted);
+					event->SetInt("objective4kills", GetLinkedQuestData()->pObjectives[3].iCurrentKills);
+					event->SetBool("objective4completed", GetLinkedQuestData()->pObjectives[3].bObjectiveCompleted);
 
-					event->SetInt("objective5kills", GetLinkedQuestData()->pObjectives[4].m_iCurrentKills);
-					event->SetBool("objective5completed", GetLinkedQuestData()->pObjectives[4].m_bObjectiveCompleted);
+					event->SetInt("objective5kills", GetLinkedQuestData()->pObjectives[4].iCurrentKills);
+					event->SetBool("objective5completed", GetLinkedQuestData()->pObjectives[4].bObjectiveCompleted);
 
-					event->SetInt("objective6kills", GetLinkedQuestData()->pObjectives[5].m_iCurrentKills);
-					event->SetBool("objective6completed", GetLinkedQuestData()->pObjectives[5].m_bObjectiveCompleted);
+					event->SetInt("objective6kills", GetLinkedQuestData()->pObjectives[5].iCurrentKills);
+					event->SetBool("objective6completed", GetLinkedQuestData()->pObjectives[5].bObjectiveCompleted);
 
-					event->SetInt("objective7kills", GetLinkedQuestData()->pObjectives[6].m_iCurrentKills);
-					event->SetBool("objective7completed", GetLinkedQuestData()->pObjectives[6].m_bObjectiveCompleted);
+					event->SetInt("objective7kills", GetLinkedQuestData()->pObjectives[6].iCurrentKills);
+					event->SetBool("objective7completed", GetLinkedQuestData()->pObjectives[6].bObjectiveCompleted);
 
-					event->SetInt("objective8kills", GetLinkedQuestData()->pObjectives[7].m_iCurrentKills);
-					event->SetBool("objective8completed", GetLinkedQuestData()->pObjectives[7].m_bObjectiveCompleted);
+					event->SetInt("objective8kills", GetLinkedQuestData()->pObjectives[7].iCurrentKills);
+					event->SetBool("objective8completed", GetLinkedQuestData()->pObjectives[7].bObjectiveCompleted);
 
-					event->SetInt("objective9kills", GetLinkedQuestData()->pObjectives[8].m_iCurrentKills);
-					event->SetBool("objective9completed", GetLinkedQuestData()->pObjectives[8].m_bObjectiveCompleted);
+					event->SetInt("objective9kills", GetLinkedQuestData()->pObjectives[8].iCurrentKills);
+					event->SetBool("objective9completed", GetLinkedQuestData()->pObjectives[8].bObjectiveCompleted);
 
-					event->SetInt("objective10kills", GetLinkedQuestData()->pObjectives[9].m_iCurrentKills);
-					event->SetBool("objective10completed", GetLinkedQuestData()->pObjectives[9].m_bObjectiveCompleted);
+					event->SetInt("objective10kills", GetLinkedQuestData()->pObjectives[9].iCurrentKills);
+					event->SetBool("objective10completed", GetLinkedQuestData()->pObjectives[9].bObjectiveCompleted);
 
 					gameeventmanager->FireEvent(event);
 				}
@@ -426,10 +426,10 @@ void CLogicQuest::FireGameEvent(IGameEvent *event)
 			if ((m_iQuestStatusOverall >= STATUS_SUCCESS) || !ShouldShowEntityCounting())
 				return;
 
-			for (int i = 0; i < GetLinkedQuestData()->m_iObjectivesCount; i++)
+			for (int i = 0; i < GetLinkedQuestData()->iObjectivesCount; i++)
 			{
 				const char *szSubString = GetLinkedQuestData()->pObjectives[i].szTargetEntityToKill;
-				if (szSubString && szSubString[0] && !GetLinkedQuestData()->pObjectives[i].m_bObjectiveCompleted && FClassnameIs(pVictim, szSubString))
+				if (szSubString && szSubString[0] && !GetLinkedQuestData()->pObjectives[i].bObjectiveCompleted && FClassnameIs(pVictim, szSubString))
 					ProgressCountingForObjective(i);
 			}
 		}

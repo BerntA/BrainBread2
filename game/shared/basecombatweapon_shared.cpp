@@ -1500,7 +1500,7 @@ void CBaseCombatWeapon::DoWeaponFX( void )
 		if (pPlayer)
 		{
 			if (IsAkimboWeapon())
-				DispatchParticleEffect(GetParticleEffect(PARTICLE_TYPE_SMOKE), PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), GetMuzzleflashAttachment(m_bLastFiredPrimary));
+				DispatchParticleEffect(GetParticleEffect(PARTICLE_TYPE_SMOKE), PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), GetMuzzleflashAttachment(m_bLastFiredPrimary, false));
 			else
 				DispatchParticleEffect(GetParticleEffect(PARTICLE_TYPE_SMOKE), PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), "muzzle");
 		}

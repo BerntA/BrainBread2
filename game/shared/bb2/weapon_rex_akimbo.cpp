@@ -29,7 +29,7 @@ public:
 	int GetUniqueWeaponID() { return WEAPON_ID_REXMP412_AKIMBO; }
 	int GetWeaponType(void) { return WEAPON_TYPE_REVOLVER; }
 	const char *GetAmmoEntityLink(void) { return "ammo_revolver"; }
-	const char *GetMuzzleflashAttachment(bool bPrimaryAttack)
+	const char *GetMuzzleflashAttachment(bool bPrimaryAttack, bool bThirdperson)
 	{
 		if (bPrimaryAttack)
 			return "left_muzzle";

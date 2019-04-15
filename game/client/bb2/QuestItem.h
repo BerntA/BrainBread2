@@ -34,19 +34,18 @@ namespace vgui
 		virtual void SetSize(int wide, int tall);
 
 	protected:
-
 		virtual void OnThink();
 		virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
-		virtual void PerformLayout();
-		virtual void OnCommand(const char *pcCommand);
 
 	private:
-
 		int m_iIndex;
 		bool m_bIsActive;
-		vgui::Button *m_pButton;
+
 		vgui::ImagePanel *m_pBackground;
 		vgui::Label *m_pLabelTitle;
+
+		Color m_colActivated;
+		Color m_colDeactivated;
 	};
 }
 

@@ -66,15 +66,8 @@ public:
 void C_TEBulletShot::CreateEffects(void)
 {
 	CAmmoDef *pAmmoDef = GetAmmoDef();
-	if (pAmmoDef == NULL)
-		return;
-
-	C_BaseEntity *pEnt = ClientEntityList().GetEnt(m_iWeaponIndex);
-	if (!pEnt)
-		return;
-
-	C_BaseCombatWeapon *pWpn = dynamic_cast<C_BaseCombatWeapon *>(pEnt);
-	if (!pWpn)
+	C_BaseCombatWeapon *pWpn = dynamic_cast<C_BaseCombatWeapon *>(ClientEntityList().GetEnt(m_iWeaponIndex));
+	if (!pAmmoDef || !pWpn)
 		return;
 
 	C_BaseCombatCharacter *pOwnerOfWep = pWpn->GetOwner();
@@ -90,7 +83,7 @@ void C_TEBulletShot::CreateEffects(void)
 		CTraceFilterClientBulletFire traceFilter(pOwnerOfWep, COLLISION_GROUP_NONE);
 
 		if (m_bUseTraceHull)
-			UTIL_TraceHull(m_vecOrigin, vecEnd, Vector(-3, -3, -3), Vector(3, 3, 3), MASK_SHOT, &traceFilter, &tr);
+			UTIL_TraceHull(m_vecOrigin, vecEnd, Vector(-3, -3, -3), Vector(3, 3, 3), MASK_SHOT_HULL, &traceFilter, &tr);
 		else
 			UTIL_TraceLine(m_vecOrigin, vecEnd, MASK_SHOT, &traceFilter, &tr);
 
@@ -141,7 +134,6 @@ void C_TEBulletShot::CreateEffects(void)
 	if (!pLocalPlayer)
 		return;
 
-	const char *particleAttachment = pWpn->GetMuzzleflashAttachment(m_bPrimaryAttack);
 	bool bThirdpersonDispatch = true;
 	C_BaseAnimating *pDispatcher = pWpn;
 	C_BasePlayer *pPlayer = ToBasePlayer(pOwnerOfWep);
@@ -162,7 +154,7 @@ void C_TEBulletShot::CreateEffects(void)
 	}
 
 	if (bParticleGunFX)
-		DispatchParticleEffect(pWpn->GetParticleEffect(PARTICLE_TYPE_MUZZLE, bThirdpersonDispatch), PATTACH_POINT_FOLLOW, pDispatcher, particleAttachment);
+		DispatchParticleEffect(pWpn->GetParticleEffect(PARTICLE_TYPE_MUZZLE, bThirdpersonDispatch), PATTACH_POINT_FOLLOW, pDispatcher, pWpn->GetMuzzleflashAttachment(m_bPrimaryAttack, bThirdpersonDispatch));
 	else
 		pWpn->DoMuzzleFlash();
 }

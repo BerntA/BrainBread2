@@ -20,7 +20,7 @@
 #include "NotePanel.h"
 #include "vote_menu.h"
 #include "ivoicetweak.h"
-#include "base_panel.h"
+#include "quest_panel.h"
 
 // Other helpers
 #include "clientmode_shared.h"
@@ -110,7 +110,7 @@ class CGameBaseClient : public IGameBaseClient
 private:
 
 	// VGUI Panel Members
-	CBaseGamePanel *GamePanel;
+	CQuestPanel *QuestPanel;
 	CNotePanel *NotePanel;
 	CVotePanel *VotePanel;
 	CMainMenu *MainMenu;
@@ -162,8 +162,6 @@ public:
 	void RunClientEffect(int iEffect, int iState);
 	// Display in-game note. New screenoverlay logic.
 	void ShowNote(const char *szHeader, const char *szFile);
-	// Display the base / generic overview game panel to show off stats, inventory, etc...
-	void ShowGamePanel(bool bForceOff = false);
 	// Display the default voting panel.
 	void ShowVotePanel(bool bForceOff = false);
 
@@ -213,7 +211,7 @@ CGameBaseClient::CGameBaseClient(void)
 	MainMenu = NULL;
 	NotePanel = NULL;
 	VotePanel = NULL;
-	GamePanel = NULL;
+	QuestPanel = NULL;
 	GameUI = NULL;
 	pLeaderboardHandler = NULL;
 
@@ -260,7 +258,7 @@ void CGameBaseClient::CreateInGamePanels(vgui::VPANEL parent)
 {
 	NotePanel = new CNotePanel(parent);
 	VotePanel = new CVotePanel(parent);
-	GamePanel = new CBaseGamePanel(parent);
+	QuestPanel = new CQuestPanel(parent);
 }
 
 // Cleanup - called in vgui_int.cpp
@@ -293,10 +291,10 @@ void CGameBaseClient::Destroy(void)
 		delete VotePanel;
 	}
 
-	if (GamePanel)
+	if (QuestPanel)
 	{
-		GamePanel->SetParent((vgui::Panel *)NULL);
-		delete GamePanel;
+		QuestPanel->SetParent((vgui::Panel *)NULL);
+		delete QuestPanel;
 	}
 
 	if (pLeaderboardHandler)
@@ -313,31 +311,6 @@ void CGameBaseClient::ShowNote(const char *szHeader, const char *szFile)
 {
 	if (NotePanel)
 		NotePanel->SetupNote(szHeader, szFile);
-}
-
-// Display the base / generic overview game panel to show off stats, inventory, etc...
-void CGameBaseClient::ShowGamePanel(bool bForceOff)
-{
-	if (GamePanel)
-	{
-		if (bForceOff)
-		{
-			if (!GamePanel->IsVisible())
-				return;
-
-			GamePanel->OnShowPanel(false);
-			return;
-		}
-
-		C_HL2MP_Player *pClient = C_HL2MP_Player::GetLocalHL2MPPlayer();
-		if (!pClient)
-			return;
-
-		if (pClient->GetTeamNumber() != TEAM_HUMANS)
-			return;
-
-		GamePanel->OnShowPanel(!GamePanel->IsVisible());
-	}
 }
 
 // Display the voting panel/menu.
@@ -365,8 +338,8 @@ void CGameBaseClient::ShowVotePanel(bool bForceOff)
 // Swap between quest previews within the Game Panel GUI.
 void CGameBaseClient::SelectQuestPreview(int index)
 {
-	if (GamePanel)
-		GamePanel->OnSelectQuest(index);
+	if (QuestPanel)
+		QuestPanel->OnSelectQuest(index);
 }
 
 // Is this viewport panel visible?
@@ -589,34 +562,9 @@ bool CGameBaseClient::CanOpenPanel(void)
 {
 	// Prevents a big issue which will make the scoreboard "stuck"/"toggled" (not looking for key input) 
 	// Wait for it to be fully removed:
-	IViewPortPanel *pBaseViewPort = gViewPortInterface->GetActivePanel();
-	if (pBaseViewPort)
-	{
-		vgui::Frame *pBasePanel = dynamic_cast<vgui::Frame*> (pBaseViewPort);
-		if (pBasePanel)
-		{
-			if (pBasePanel->IsVisible())
-				return false;
-		}
-	}
-
-	if (NotePanel)
-	{
-		if (NotePanel->IsVisible())
-			return false;
-	}
-
-	if (VotePanel)
-	{
-		if (VotePanel->IsVisible())
-			return false;
-	}
-
-	if (GamePanel)
-	{
-		if (GamePanel->IsVisible())
-			return false;
-	}
+	vgui::Frame* pBasePanel = dynamic_cast<vgui::Frame*> (gViewPortInterface->GetActivePanel());
+	if ((pBasePanel && pBasePanel->IsVisible()) || (QuestPanel && QuestPanel->IsVisible()) || (NotePanel && NotePanel->IsVisible()) || (VotePanel && VotePanel->IsVisible()))
+		return false;
 
 	return true;
 }
@@ -624,8 +572,8 @@ bool CGameBaseClient::CanOpenPanel(void)
 // Due to the fade out function not all panels get fully closed when we rush out of a game, that's why we have to handle proper forcing here!
 void CGameBaseClient::CloseGamePanels(bool bInGamePanelsOnly)
 {
-	if (GamePanel)
-		GamePanel->ForceClose();
+	if (QuestPanel)
+		QuestPanel->ForceClose();
 
 	if (NotePanel)
 		NotePanel->ForceClose();
@@ -975,17 +923,6 @@ CON_COMMAND(CloseGameConsole, "Force the Console to close!")
 CON_COMMAND(ClearGameConsole, "Reset Console/Clear all history text.")
 {
 	GameBaseClient->ClearConsole();
-};
-
-// Base Panel for in-game use.
-CON_COMMAND(player_tree, "Open Player Tree")
-{
-	bool bForce = false;
-
-	if (args.ArgC() >= 2)
-		bForce = ((atoi(args[1]) >= 1) ? true : false);
-
-	GameBaseClient->ShowGamePanel(bForce);
 };
 
 CON_COMMAND(vote_menu, "Open Vote Menu")

@@ -94,7 +94,6 @@ public:
 
 	// In-Game Panel Accessors
 	virtual void ShowNote(const char *szHeader, const char *szFile) = 0;
-	virtual void ShowGamePanel(bool bForceOff = false) = 0;
 	virtual void ShowVotePanel(bool bForceOff = false) = 0;
 	virtual void SelectQuestPreview(int index) = 0;
 	virtual bool IsViewPortPanelVisible(const char *panel) = 0;

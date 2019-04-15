@@ -49,6 +49,8 @@ ConVar zombie_moanfreq( "zombie_moanfreq", "1" );
 static int s_iAngryZombies = 0;
 int g_pZombiesInWorld = 0;
 
+static CUtlVector<CNPC_BaseZombie*> zombieList;
+
 class CAngryZombieCounter : public CAutoGameSystem
 {
 public:
@@ -86,11 +88,14 @@ int AE_ZOMBIE_ALERTSOUND;
 
 BEGIN_DATADESC( CNPC_BaseZombie )
 
-	DEFINE_FIELD( m_flNextFlinch, FIELD_TIME ),
-	DEFINE_FIELD( m_flBurnDamage, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flBurnDamageResetTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flNextMoanSound, FIELD_TIME ),
+	DEFINE_FIELD(m_flNextFlinch, FIELD_TIME),
+	DEFINE_FIELD(m_flBurnDamage, FIELD_FLOAT),
+	DEFINE_FIELD(m_flBurnDamageResetTime, FIELD_TIME),
+	DEFINE_FIELD(m_flNextMoanSound, FIELD_TIME),
 	DEFINE_FIELD(m_bUseNormalSpeed, FIELD_BOOLEAN),
+	DEFINE_FIELD(m_bMarkedForDeath, FIELD_BOOLEAN),
+	DEFINE_FIELD(m_bLifeTimeOver, FIELD_BOOLEAN),
+	DEFINE_FIELD(m_flSpawnTime, FIELD_TIME),
 
 END_DATADESC()
 
@@ -110,7 +115,9 @@ CNPC_BaseZombie::CNPC_BaseZombie()
 {
 	m_hLastIgnitionSource = NULL;
 	g_pZombiesInWorld++;
-	m_bUseNormalSpeed = false;
+	m_bUseNormalSpeed = m_bLifeTimeOver = m_bMarkedForDeath = false;
+
+	zombieList.AddToTail(this);
 }
 
 CNPC_BaseZombie::~CNPC_BaseZombie()
@@ -118,6 +125,8 @@ CNPC_BaseZombie::~CNPC_BaseZombie()
 	g_pZombiesInWorld--;
 	m_hBlockingEntity = NULL;
 	m_hLastIgnitionSource = NULL;
+
+	zombieList.FindAndRemove(this);
 }
 
 //-----------------------------------------------------------------------------
@@ -731,7 +740,6 @@ void CNPC_BaseZombie::Spawn( void )
 	}
 
 	m_flLastObstructionCheck = 0.0f;
-	m_bLifeTimeOver = false;
 
 	OnSetGibHealth();
 }
@@ -938,18 +946,14 @@ void CNPC_BaseZombie::PrescheduleThink(void)
 	if ((m_flBurnDamageResetTime) && (gpGlobals->curtime >= m_flBurnDamageResetTime))
 		m_flBurnDamage = 0;
 
-	// Non boss zombies/monsters have a limited lifetime:
-	if (!IsBoss() && !GameBaseServer()->IsTutorialModeEnabled())
+	// Non boss zombies/monsters have a limited lifetime/lifeline:
+	if (!IsBoss() && !GameBaseServer()->IsTutorialModeEnabled() && (GetLifeSpan() < gpGlobals->curtime) && !m_bLifeTimeOver)
 	{
-		if ((GetLifeSpan() < gpGlobals->curtime) && !m_bLifeTimeOver)
-		{
-			m_bLifeTimeOver = true;
-			SetLastHitGroup(HITGROUP_GENERIC);
-			KillMe();
-		}
+		m_bLifeTimeOver = true;
+		SetLastHitGroup(HITGROUP_GENERIC);
+		KillMe();
 	}
 }
-
 
 //---------------------------------------------------------
 //---------------------------------------------------------
@@ -1007,7 +1011,6 @@ void CNPC_BaseZombie::StartTask( const Task_t *pTask )
 		break;
 	}
 }
-
 
 //---------------------------------------------------------
 //---------------------------------------------------------
@@ -1111,6 +1114,34 @@ void CNPC_BaseZombie::OnStateChange( NPC_STATE OldState, NPC_STATE NewState )
 	}
 }
 
+// Called when the zombie volume wants us to die quickly...
+void CNPC_BaseZombie::MarkForDeath(void)
+{
+	m_bMarkedForDeath = true; // Set regardless of success so we don't waste our time.
+	if (IsBoss() || GameBaseServer()->IsTutorialModeEnabled() || m_bLifeTimeOver || (HL2MPRules() && (HL2MPRules()->GetCurrentGamemode() != MODE_OBJECTIVE)))
+		return;
+
+	float minTimeToLive = ((bb2_zombie_lifespan_min.GetFloat() * 60.0f) / 6.0f);
+	float duration = (m_flSpawnTime - gpGlobals->curtime);
+	if (minTimeToLive >= duration)
+		return;
+
+	m_flSpawnTime = gpGlobals->curtime + minTimeToLive;
+}
+
+/*static*/ void CNPC_BaseZombie::MarkOldestNPCForDeath(void)
+{
+	for (int i = 0; i < zombieList.Count(); i++)
+	{
+		CNPC_BaseZombie* zmb = zombieList[i];
+		Assert(zmb != NULL);
+		if (!zmb || zmb->IsMarkedForDeath())
+			continue;
+
+		zmb->MarkForDeath();
+		break;
+	}
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Refines a base activity into something more specific to our internal state.

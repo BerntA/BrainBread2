@@ -35,9 +35,11 @@ struct QuestObjectiveItem_t
 	char szLocationTarget[64];
 	char szLocationTexture[MAX_WEAPON_STRING];
 	char szTargetEntityToKill[64];
-	int m_iKillsNeeded;
-	int m_iCurrentKills;
-	bool m_bObjectiveCompleted;
+
+	int iKillsNeeded;
+	int iCurrentKills;
+
+	bool bObjectiveCompleted;
 };
 
 class CQuestItem;
@@ -45,16 +47,16 @@ class CQuestItem
 {
 public:
 	char szQuestName[MAX_MAP_NAME_SAVE];
-	int m_iQuestIndex;
-	bool bIsActive;
-	int m_iObjectivesCount;
-	int m_iQuestStatus;
 	char szTitle[MAX_MAP_NAME_SAVE];
-	char szHeader[MAX_WEAPON_STRING];
 	char szDescription[256];
-	char szImage[MAX_WEAPON_STRING];
-	bool bIsSideQuest;
+
+	int iQuestIndex;
+	int iObjectivesCount;
+	int iQuestStatus;
+
+	bool bIsActive;
 	bool bShowInOrder;
+
 	QuestObjectiveItem_t pObjectives[MAX_QUEST_OBJECTIVES];
 };
 

@@ -11,6 +11,7 @@
 #include "cbase.h"
 #include "ZombieVolume.h"
 #include "ai_basenpc.h"
+#include "npc_BaseZombie.h"
 #include "hl2mp_gamerules.h"
 #include "hl2mp_player.h"
 #include "GameBase_Server.h"
@@ -166,10 +167,17 @@ void CZombieVolume::VolumeThink()
 	}
 
 	// If the round has started + we haven't  reached any limits, try to spawn!
-	if (HL2MPRules()->CanSpawnZombie() && (m_iSpawnNum < m_iZombiesToSpawn) && HL2MPRules()->m_bRoundStarted && !HL2MPRules()->IsGameoverOrScoresVisible())
+	if ((m_iSpawnNum < m_iZombiesToSpawn) && HL2MPRules()->m_bRoundStarted && !HL2MPRules()->IsGameoverOrScoresVisible())
 	{
-		if (m_bSpawnNoMatterWhat || IsAllowedToSpawn(this, m_flMaxDistance, m_flMaxZDifference, (HasSpawnFlags(SF_NOVISCHECK) == false)))
-			SpawnWave();
+		if (HL2MPRules()->CanSpawnZombie())
+		{
+			if (m_bSpawnNoMatterWhat || IsAllowedToSpawn(this, m_flMaxDistance, m_flMaxZDifference, (HasSpawnFlags(SF_NOVISCHECK) == false)))
+				SpawnWave();
+		}
+		else // Not able to spawn, tell zomb class to mark some for quick death stuff!
+		{
+			CNPC_BaseZombie::MarkOldestNPCForDeath();
+		}
 	}
 
 	SetNextThink(gpGlobals->curtime + GetSpawnFrequency());

@@ -8,6 +8,10 @@
 #include "GameDefinitions_QuestData.h"
 #include "GameBase_Shared.h"
 
+#ifdef CLIENT_DLL
+#include "quest_panel.h"
+#endif
+
 CGameDefinitionsQuestData::CGameDefinitionsQuestData()
 {
 	ListenForGameEvent("round_start");
@@ -33,24 +37,21 @@ void CGameDefinitionsQuestData::ParseQuestData(KeyValues *pkvData)
 		for (KeyValues *questData = pkvData->GetFirstSubKey(); questData; questData = questData->GetNextKey())
 		{
 			CQuestItem *questItem = new CQuestItem();
-
-			questItem->m_iQuestIndex = questItemIndex;
+			
+			questItem->iQuestIndex = questItemIndex;			
 			questItem->bIsActive = false;
+			questItem->bShowInOrder = (questData->GetInt("DoInOrder") >= 1);
+
 			Q_strncpy(questItem->szQuestName, questData->GetName(), MAX_MAP_NAME_SAVE);
 			Q_strncpy(questItem->szTitle, questData->GetString("Title"), MAX_MAP_NAME_SAVE);
-			Q_strncpy(questItem->szHeader, questData->GetString("Header"), MAX_WEAPON_STRING);
-			Q_strncpy(questItem->szDescription, questData->GetString("Description"), 256);
-			Q_strncpy(questItem->szImage, questData->GetString("Image"), MAX_WEAPON_STRING);
-
-			questItem->bIsSideQuest = (questData->GetInt("SideQuest") >= 1);
-			questItem->bShowInOrder = (questData->GetInt("DoInOrder") >= 1);
+			Q_strncpy(questItem->szDescription, questData->GetString("Description"), 256);			
 
 			// Init default vars for all the objs.
 			for (int objs = 0; objs < MAX_QUEST_OBJECTIVES; objs++)
 			{
-				questItem->pObjectives[objs].m_bObjectiveCompleted = false;
-				questItem->pObjectives[objs].m_iCurrentKills = 0;
-				questItem->pObjectives[objs].m_iKillsNeeded = 0;
+				questItem->pObjectives[objs].bObjectiveCompleted = false;
+				questItem->pObjectives[objs].iCurrentKills = 0;
+				questItem->pObjectives[objs].iKillsNeeded = 0;
 
 				Q_strncpy(questItem->pObjectives[objs].szObjective, "", 128);
 				Q_strncpy(questItem->pObjectives[objs].szLocationTarget, "", 64);
@@ -66,9 +67,9 @@ void CGameDefinitionsQuestData::ParseQuestData(KeyValues *pkvData)
 				{
 					if ((iObjectiveCount >= 0) && (iObjectiveCount < MAX_QUEST_OBJECTIVES))
 					{
-						questItem->pObjectives[iObjectiveCount].m_bObjectiveCompleted = false;
-						questItem->pObjectives[iObjectiveCount].m_iCurrentKills = 0;
-						questItem->pObjectives[iObjectiveCount].m_iKillsNeeded = questObjectiveData->GetInt("KillsNeeded");
+						questItem->pObjectives[iObjectiveCount].bObjectiveCompleted = false;
+						questItem->pObjectives[iObjectiveCount].iCurrentKills = 0;
+						questItem->pObjectives[iObjectiveCount].iKillsNeeded = questObjectiveData->GetInt("KillsNeeded");
 
 						Q_strncpy(questItem->pObjectives[iObjectiveCount].szObjective, questObjectiveData->GetName(), 128);
 						Q_strncpy(questItem->pObjectives[iObjectiveCount].szLocationTarget, questObjectiveData->GetString("LocationTarget"), 64);
@@ -80,8 +81,8 @@ void CGameDefinitionsQuestData::ParseQuestData(KeyValues *pkvData)
 				}
 			}
 
-			questItem->m_iQuestStatus = STATUS_WAITING;
-			questItem->m_iObjectivesCount = iObjectiveCount;
+			questItem->iQuestStatus = STATUS_WAITING;
+			questItem->iObjectivesCount = iObjectiveCount;
 			m_pQuestData.AddToTail(questItem);
 
 			questItemIndex++;
@@ -91,10 +92,8 @@ void CGameDefinitionsQuestData::ParseQuestData(KeyValues *pkvData)
 
 void CGameDefinitionsQuestData::CleanupQuestData(void)
 {
-	for (int i = (m_pQuestData.Count() - 1); i >= 0; i--)
-	{
-		delete m_pQuestData[i];
-	}
+	for (int i = (m_pQuestData.Count() - 1); i >= 0; i--)	
+		delete m_pQuestData[i];	
 
 	m_pQuestData.Purge();
 }
@@ -107,12 +106,12 @@ void CGameDefinitionsQuestData::ResetQuestStates(void)
 	for (int i = 0; i < m_pQuestData.Count(); i++)
 	{
 		m_pQuestData[i]->bIsActive = false;
-		m_pQuestData[i]->m_iQuestStatus = STATUS_WAITING;
+		m_pQuestData[i]->iQuestStatus = STATUS_WAITING;
 
 		for (int obj = 0; obj < MAX_QUEST_OBJECTIVES; obj++)
 		{
-			m_pQuestData[i]->pObjectives[obj].m_bObjectiveCompleted = false;
-			m_pQuestData[i]->pObjectives[obj].m_iCurrentKills = 0;
+			m_pQuestData[i]->pObjectives[obj].bObjectiveCompleted = false;
+			m_pQuestData[i]->pObjectives[obj].iCurrentKills = 0;
 		}
 	}
 }
@@ -180,16 +179,17 @@ void CGameDefinitionsQuestData::FireGameEvent(IGameEvent *event)
 		if (!questData)
 			return;
 
-		if (questData->m_iQuestStatus <= STATUS_ONGOING)
+		if (questData->iQuestStatus <= STATUS_ONGOING)
 		{
 			if (bUpdateCounter)
 			{
-				questData->pObjectives[id].m_iCurrentKills = iKillsCurrent;
+				questData->pObjectives[id].iCurrentKills = iKillsCurrent;
 			}
 			else
 			{
-				questData->pObjectives[id].m_bObjectiveCompleted = true;
+				questData->pObjectives[id].bObjectiveCompleted = true;
 				// Refresh GUI here... ?
+				// TODO
 			}
 		}
 	}
@@ -202,8 +202,8 @@ void CGameDefinitionsQuestData::FireGameEvent(IGameEvent *event)
 		if (!questData)
 			return;
 
-		if (questData->m_iQuestStatus <= STATUS_ONGOING)
-			questData->m_iQuestStatus = status;
+		if (questData->iQuestStatus <= STATUS_ONGOING)
+			questData->iQuestStatus = status;
 	}
 	else if (!strcmp(type, "quest_send"))
 	{
@@ -248,37 +248,40 @@ void CGameDefinitionsQuestData::FireGameEvent(IGameEvent *event)
 			return;
 
 		questData->bIsActive = true;
-		questData->m_iQuestStatus = status;
+		questData->iQuestStatus = status;
 
-		questData->pObjectives[0].m_iCurrentKills = killsForObjective1;
-		questData->pObjectives[0].m_bObjectiveCompleted = bCompletedObjective1;
+		questData->pObjectives[0].iCurrentKills = killsForObjective1;
+		questData->pObjectives[0].bObjectiveCompleted = bCompletedObjective1;
 
-		questData->pObjectives[1].m_iCurrentKills = killsForObjective2;
-		questData->pObjectives[1].m_bObjectiveCompleted = bCompletedObjective2;
+		questData->pObjectives[1].iCurrentKills = killsForObjective2;
+		questData->pObjectives[1].bObjectiveCompleted = bCompletedObjective2;
 
-		questData->pObjectives[2].m_iCurrentKills = killsForObjective3;
-		questData->pObjectives[2].m_bObjectiveCompleted = bCompletedObjective3;
+		questData->pObjectives[2].iCurrentKills = killsForObjective3;
+		questData->pObjectives[2].bObjectiveCompleted = bCompletedObjective3;
 
-		questData->pObjectives[3].m_iCurrentKills = killsForObjective4;
-		questData->pObjectives[3].m_bObjectiveCompleted = bCompletedObjective4;
+		questData->pObjectives[3].iCurrentKills = killsForObjective4;
+		questData->pObjectives[3].bObjectiveCompleted = bCompletedObjective4;
 
-		questData->pObjectives[4].m_iCurrentKills = killsForObjective5;
-		questData->pObjectives[4].m_bObjectiveCompleted = bCompletedObjective5;
+		questData->pObjectives[4].iCurrentKills = killsForObjective5;
+		questData->pObjectives[4].bObjectiveCompleted = bCompletedObjective5;
 
-		questData->pObjectives[5].m_iCurrentKills = killsForObjective6;
-		questData->pObjectives[5].m_bObjectiveCompleted = bCompletedObjective6;
+		questData->pObjectives[5].iCurrentKills = killsForObjective6;
+		questData->pObjectives[5].bObjectiveCompleted = bCompletedObjective6;
 
-		questData->pObjectives[6].m_iCurrentKills = killsForObjective7;
-		questData->pObjectives[6].m_bObjectiveCompleted = bCompletedObjective7;
+		questData->pObjectives[6].iCurrentKills = killsForObjective7;
+		questData->pObjectives[6].bObjectiveCompleted = bCompletedObjective7;
 
-		questData->pObjectives[7].m_iCurrentKills = killsForObjective8;
-		questData->pObjectives[7].m_bObjectiveCompleted = bCompletedObjective8;
+		questData->pObjectives[7].iCurrentKills = killsForObjective8;
+		questData->pObjectives[7].bObjectiveCompleted = bCompletedObjective8;
 
-		questData->pObjectives[8].m_iCurrentKills = killsForObjective9;
-		questData->pObjectives[8].m_bObjectiveCompleted = bCompletedObjective9;
+		questData->pObjectives[8].iCurrentKills = killsForObjective9;
+		questData->pObjectives[8].bObjectiveCompleted = bCompletedObjective9;
 
-		questData->pObjectives[9].m_iCurrentKills = killsForObjective10;
-		questData->pObjectives[9].m_bObjectiveCompleted = bCompletedObjective10;
+		questData->pObjectives[9].iCurrentKills = killsForObjective10;
+		questData->pObjectives[9].bObjectiveCompleted = bCompletedObjective10;
 	}
+
+	if (g_pQuestPanel)
+		g_pQuestPanel->UpdateSelectedQuest();
 #endif
 }

@@ -93,6 +93,7 @@ public:
 	virtual Class_T Classify(void);
 	virtual void HandleAnimEvent(animevent_t *pEvent);
 	virtual void OnStateChange(NPC_STATE OldState, NPC_STATE NewState);
+	virtual void MarkForDeath(void);
 
 	void KillMe(void)
 	{
@@ -169,16 +170,19 @@ public:
 	virtual float		GetIdealSpeed() const;
 	virtual float		GetIdealAccel() const;
 
+	virtual bool		IsMarkedForDeath(void) { return m_bMarkedForDeath; }
+
+	static void			MarkOldestNPCForDeath(void);
+
 protected:
 
-	float	m_flNextFlinch;
+	float m_flNextFlinch;
+	float m_flNextMoanSound;
 
 	// Zombies catch on fire if they take too much burn damage in a given time period.
-	float	m_flBurnDamage;				// Keeps track of how much burn damage we've incurred in the last few seconds.
-	float	m_flBurnDamageResetTime;	// Time at which we reset the burn damage.
-	bool	m_bUseNormalSpeed;
-
-	float m_flNextMoanSound;
+	float m_flBurnDamage;				// Keeps track of how much burn damage we've incurred in the last few seconds.
+	float m_flBurnDamageResetTime;	// Time at which we reset the burn damage.
+	bool m_bUseNormalSpeed;	
 
 	virtual BB2_SoundTypes GetNPCType() { return TYPE_ZOMBIE; }
 	virtual Activity SelectDoorBash();
@@ -193,6 +197,7 @@ private:
 	float m_flLastObstructionCheck;
 	float m_flSpawnTime;
 	bool m_bLifeTimeOver;
+	bool m_bMarkedForDeath; // Zombie volume wants to spawn, but too many zombs are alive! Mark us for quick deletion.
 };
 
 extern int g_pZombiesInWorld;

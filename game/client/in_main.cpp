@@ -7,7 +7,6 @@
 // $NoKeywords: $
 //=============================================================================//
 
-
 #include "cbase.h"
 #include "kbutton.h"
 #include "usercmd.h"
@@ -40,6 +39,7 @@
 
 // BB2 Experimental
 #include "ScoreBoardPanel.h"
+#include "quest_panel.h"
 
 extern ConVar in_joystick;
 extern ConVar cam_idealpitch;
@@ -137,6 +137,7 @@ static	kbutton_t	in_break;
 static	kbutton_t	in_attack3;
 static  kbutton_t   in_bash;
 static  kbutton_t   in_slide;
+static  kbutton_t   in_quest;
 kbutton_t	in_ducktoggle;
 
 /*
@@ -480,6 +481,25 @@ void IN_BashDown( const CCommand &args ) { KeyDown( &in_bash, args[1] ); }
 void IN_BashUp( const CCommand &args ) { KeyUp( &in_bash, args[1] ); }
 void IN_SlideDown(const CCommand &args) { KeyDown(&in_slide, args[1]); }
 void IN_SlideUp(const CCommand &args) { KeyUp(&in_slide, args[1]); }
+
+void IN_QuestDown(const CCommand& args) 
+{ 
+	KeyDown(&in_quest, args[1]);
+
+	C_HL2MP_Player* pClient = C_HL2MP_Player::GetLocalHL2MPPlayer();
+	if (!pClient || (pClient->GetTeamNumber() != TEAM_HUMANS))
+		return;
+
+	if (g_pQuestPanel)
+		g_pQuestPanel->OnShowPanel(true);
+}
+
+void IN_QuestUp(const CCommand& args) 
+{ 
+	KeyUp(&in_quest, args[1]); 
+	if (g_pQuestPanel)
+		g_pQuestPanel->OnShowPanel(false);
+}
 
 void IN_DuckToggle( const CCommand &args ) 
 { 
@@ -1438,6 +1458,7 @@ int CInput::GetButtonBits( int bResetState )
 	CalcButtonBits( bits, IN_ATTACK3, s_ClearInputState, &in_attack3, bResetState );
 	CalcButtonBits( bits, IN_BASH, s_ClearInputState, &in_bash, bResetState );
 	CalcButtonBits(bits, IN_SLIDE, s_ClearInputState, &in_slide, bResetState);
+	CalcButtonBits(bits, IN_QUEST, s_ClearInputState, &in_quest, bResetState);
 
 	if ( KeyState(&in_ducktoggle) )
 	{
@@ -1591,6 +1612,8 @@ static ConCommand startbash( "+bash", IN_BashDown );
 static ConCommand endbash( "-bash",  IN_BashUp );
 static ConCommand startslide("+slide", IN_SlideDown);
 static ConCommand endslide("-slide", IN_SlideUp);
+static ConCommand startquest("+quest", IN_QuestDown);
+static ConCommand endquest("-quest", IN_QuestUp);
 
 // Xbox 360 stub commands
 static ConCommand xboxmove("xmove", IN_XboxStub);

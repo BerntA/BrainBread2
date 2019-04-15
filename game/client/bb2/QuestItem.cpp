@@ -21,22 +21,9 @@ using namespace vgui;
 
 QuestItem::QuestItem(vgui::Panel *parent, char const *panelName, const char *title, int iStatus, int iIndex) : vgui::Panel(parent, panelName)
 {
-	SetMouseInputEnabled(true);
-	SetKeyBoardInputEnabled(true);
-	SetProportional(true);
-
-	SetScheme("BaseScheme");
-
 	m_iIndex = iIndex;
-
-	m_pButton = vgui::SETUP_PANEL(new vgui::Button(this, "Button", ""));
-	m_pButton->SetPaintBorderEnabled(false);
-	m_pButton->SetPaintEnabled(false);
-	m_pButton->SetReleasedSound("ui/button_click.wav");
-	m_pButton->SetArmedSound("ui/button_over.wav");
-	m_pButton->SetZPos(10);
-	m_pButton->AddActionSignalTarget(this);
-	m_pButton->SetCommand("Open");
+	SetProportional(true);
+	SetScheme("BaseScheme");
 
 	m_pBackground = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Background"));
 	m_pBackground->SetZPos(-1);
@@ -44,32 +31,23 @@ QuestItem::QuestItem(vgui::Panel *parent, char const *panelName, const char *tit
 
 	m_pLabelTitle = vgui::SETUP_PANEL(new vgui::Label(this, "Title", ""));
 	m_pLabelTitle->SetZPos(5);
-	m_pLabelTitle->SetContentAlignment(Label::a_center);
 	m_pLabelTitle->SetText(title);
-	m_pLabelTitle->SetContentAlignment(Label::a_center);
 
 	switch (iStatus)
 	{
-	case STATUS_ONGOING:
-	{
-		m_pBackground->SetImage("base/quest/quest_active");
-		break;
-	}
+	
 	case STATUS_FAILED:
 	{
 		m_pBackground->SetImage("base/quest/quest_failed");
 		break;
 	}
+
 	case STATUS_SUCCESS:
 	{
 		m_pBackground->SetImage("base/quest/quest_completed");
 		break;
 	}
-	default:
-	{
-		m_pBackground->SetImage("base/quest/quest_active");
-		break;
-	}
+
 	}
 
 	InvalidateLayout();
@@ -80,33 +58,20 @@ QuestItem::~QuestItem()
 {
 }
 
-void QuestItem::PerformLayout()
-{
-	BaseClass::PerformLayout();
-}
-
 void QuestItem::OnThink()
 {
 	BaseClass::OnThink();
-
-	int x, y;
-	vgui::input()->GetCursorPos(x, y);
-
-	if (!m_bIsActive)
-	{
-		if (m_pButton->IsWithin(x, y))
-			m_pLabelTitle->SetFgColor(Color(255, 20, 20, 240));
-		else
-			m_pLabelTitle->SetFgColor(Color(255, 255, 255, 255));
-	}
-	else
-		m_pLabelTitle->SetFgColor(Color(255, 20, 20, 240));
+	m_pLabelTitle->SetFgColor(m_bIsActive ? m_colActivated : m_colDeactivated);
 }
 
 void QuestItem::ApplySchemeSettings(vgui::IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
+
 	m_pLabelTitle->SetFont(pScheme->GetFont("DefaultBold"));
+	
+	m_colActivated = pScheme->GetColor("QuestItemActivated", Color(0, 0, 0, 255));
+	m_colDeactivated = pScheme->GetColor("QuestItemDeactivated", Color(0, 0, 0, 255));
 }
 
 void QuestItem::SetSize(int wide, int tall)
@@ -116,24 +81,6 @@ void QuestItem::SetSize(int wide, int tall)
 	m_pBackground->SetSize(wide, tall);
 	m_pBackground->SetPos(0, 0);
 
-	m_pButton->SetSize(wide, tall);
-	m_pButton->SetPos(0, 0);
-
 	m_pLabelTitle->SetSize(wide, tall);
 	m_pLabelTitle->SetPos(0, 0);
-	m_pLabelTitle->SetContentAlignment(Label::a_center);
-}
-
-void QuestItem::OnCommand(const char* pcCommand)
-{
-	if (!Q_stricmp(pcCommand, "Open"))
-	{
-		if (!m_bIsActive)
-		{
-			m_bIsActive = true;
-			GameBaseClient->SelectQuestPreview(GetIndex());
-		}
-	}
-
-	BaseClass::OnCommand(pcCommand);
 }

@@ -25,7 +25,7 @@ namespace vgui
 		DECLARE_CLASS_SIMPLE(QuestList, vgui::Panel);
 
 	public:
-		QuestList(vgui::Panel *parent, char const *panelName, bool bSideQuest);
+		QuestList(vgui::Panel *parent, char const *panelName);
 		virtual ~QuestList();
 
 		void Cleanup(void);
@@ -35,14 +35,10 @@ namespace vgui
 		int GetFirstItem(void);
 
 	protected:
-
 		virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
-		virtual void PerformLayout();
 		virtual void OnMouseWheeled(int delta);
 
 	private:
-
-		bool m_bSideQuest;
 		int m_iScrollOffset;
 		CUtlVector<QuestItem*> pszQuestItems;
 	};

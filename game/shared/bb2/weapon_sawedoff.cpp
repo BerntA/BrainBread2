@@ -41,7 +41,7 @@ public:
 	void PrimaryAttack(void) { }
 	void SecondaryAttack() { }
 	void AffectedByPlayerSkill(int skill);
-	const char *GetMuzzleflashAttachment(bool bPrimaryAttack);
+	const char *GetMuzzleflashAttachment(bool bPrimaryAttack, bool bThirdperson);
 
 private:
 	CWeaponSawedOff(const CWeaponSawedOff &);
@@ -178,7 +178,7 @@ void CWeaponSawedOff::AffectedByPlayerSkill(int skill)
 	}
 }
 
-const char *CWeaponSawedOff::GetMuzzleflashAttachment(bool bPrimaryAttack)
+const char *CWeaponSawedOff::GetMuzzleflashAttachment(bool bPrimaryAttack, bool bThirdperson)
 {
 	if (bPrimaryAttack)
 	{

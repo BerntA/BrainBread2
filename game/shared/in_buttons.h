@@ -33,5 +33,6 @@
 #define IN_WEAPON2		(1 << 19)	// weapon defines these bits
 #define IN_BASH         (1 << 20)   // Melee bashing
 #define IN_SLIDE        (1 << 21)   // Player Slide.
+#define IN_QUEST		(1 << 22)	// Quest/Extra Objectives menu.
 
 #endif // IN_BUTTONS_H

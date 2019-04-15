@@ -42,7 +42,7 @@ public:
 	virtual const char* GetAmmoEntityLink(void) { return "ammo_pistol"; }
 
 	virtual bool IsAkimboWeapon(void) { return true; }
-	virtual const char* GetMuzzleflashAttachment(bool bPrimaryAttack)
+	virtual const char* GetMuzzleflashAttachment(bool bPrimaryAttack, bool bThirdperson)
 	{
 		if (bPrimaryAttack)
 			return "muzzle_left";

@@ -200,8 +200,9 @@ void CNPCFred::OnChangeActivity(Activity eNewActivity)
 	if (eNewActivity == ACT_RAGE)
 	{
 		const float RAGE_RADIUS = 500.0f;
+		const float MAX_FORCE = (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE) ? 1100.0 : 500.0;
 		const Vector &vecStart = WorldSpaceCenter();
-		Vector vecEnd, vecDown, vecForce = Vector(1400.0, 0.0, 0.0);
+		Vector vecEnd, vecDown, vecForce = Vector(MAX_FORCE, 0.0, 0.0);
 		AngleVectors(GetAbsAngles(), NULL, NULL, &vecDown);
 		VectorNormalize(vecDown);
 		vecDown *= -1.0f;
