@@ -1195,7 +1195,7 @@ float CGameDefinitionsShared::GetPlayerSkillValue(int iSkillType, int iTeam, int
 		}
 	}
 
-	return 0;
+	return 0.0f;
 }
 
 int CGameDefinitionsShared::GetIndexForPowerup(const char *name) const

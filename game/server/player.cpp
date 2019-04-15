@@ -1442,7 +1442,6 @@ int CBasePlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		return 0;
 
 	CBaseEntity * attacker = info.GetAttacker();
-
 	if ( !attacker )
 		return 0;
 
@@ -1460,8 +1459,9 @@ int CBasePlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		if (info.GetNoForceLimit())
 			force = info.GetDamageForce();
 
-		if (force.z > 250.0f)
-			force.z = 250.0f;
+		float maxZ = (info.GetNoForceLimit() ? 600.0f : 250.0f);
+		if (force.z > maxZ)
+			force.z = maxZ;
 
 		ApplyAbsVelocityImpulse(force, info.GetNoForceLimit());
 	}

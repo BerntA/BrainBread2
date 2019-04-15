@@ -1237,22 +1237,19 @@ void CGameBaseShared::ComputePlayerWeight(CHL2MP_Player *pPlayer)
 	for (int i = 0; i < MAX_WEAPONS; i++)
 	{
 		CBaseCombatWeapon *pWeapon = pPlayer->GetWeapon(i);
-		if (!pWeapon)
-			continue;
-
-		if ((pWeapon->GetSlot() >= MAX_WEAPON_SLOTS) || !pWeapon->VisibleInWeaponSelection())
+		if (!pWeapon || (pWeapon->GetSlot() >= MAX_WEAPON_SLOTS) || !pWeapon->VisibleInWeaponSelection())
 			continue;
 
 		m_flWeight += pWeapon->GetWpnData().m_flPhysicalWeight;
 	}
 
-	if (pPlayer->m_BB2Local.m_iActiveArmorType > 0)
-		m_flWeight += (float)GameBaseShared()->GetSharedGameDetails()->GetInventoryArmorDataValue("weight", pPlayer->m_BB2Local.m_iActiveArmorType);
+	if (pPlayer->m_BB2Local.m_iActiveArmorType.Get() > 0)
+		m_flWeight += ((float)GameBaseShared()->GetSharedGameDetails()->GetInventoryArmorDataValue("weight", pPlayer->m_BB2Local.m_iActiveArmorType.Get()));
 
 	if (pPlayer->IsHuman() && (pPlayer->GetSkillValue(PLAYER_SKILL_HUMAN_LIGHTWEIGHT) > 0))
-		m_flWeight -= ((m_flWeight / 100) * pPlayer->GetSkillValue(PLAYER_SKILL_HUMAN_LIGHTWEIGHT, TEAM_HUMANS));
+		m_flWeight -= ((m_flWeight / 100.0f) * pPlayer->GetSkillValue(PLAYER_SKILL_HUMAN_LIGHTWEIGHT, TEAM_HUMANS));
 
-	if ((m_flWeight <= 0) || (pPlayer->GetTeamNumber() == TEAM_DECEASED))
+	if ((m_flWeight <= 0.0f) || (pPlayer->GetTeamNumber() == TEAM_DECEASED))
 		m_flWeight = 0.0f;
 
 	pPlayer->m_BB2Local.m_flCarryWeight = m_flWeight;

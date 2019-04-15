@@ -98,7 +98,7 @@ public:
 	int GetSkillValue(int index);
 	float GetSkillValue(int skillType, int team, bool bDataValueOnly = false, int dataSubType = -1);
 	float GetSkillValue(const char *pszType, int skillType, int team = 2, int dataSubType = -1);
-	float GetSkillCombination(int skillDefault, int skillExtra);
+	float GetSkillCombination(float def, float extra);
 	float GetSkillWeaponDamage(float flDefaultDamage, float dmgFactor, int weaponType);
 
 	// JoinTeam Fix

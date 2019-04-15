@@ -483,9 +483,9 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 		else
 		{
 			// Assume the force passed in is the maximum force. Decay it based on falloff.
-			float flForce = adjustedInfo.GetDamageForce().Length() * falloff;
-			adjustedInfo.SetDamageForce( dir * flForce );
-			adjustedInfo.SetDamagePosition( vecSrc );
+			float flForce = adjustedInfo.GetDamageForce().Length() * (info.GetNoForceLimit() ? 1.0f : falloff);
+			adjustedInfo.SetDamageForce(dir * flForce);
+			adjustedInfo.SetDamagePosition(vecSrc);
 		}
 
 		if ( tr.fraction != 1.0 && pEntity == tr.m_pEnt )

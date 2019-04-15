@@ -201,7 +201,7 @@ void CNPCFred::OnChangeActivity(Activity eNewActivity)
 	{
 		const float RAGE_RADIUS = 500.0f;
 		const Vector &vecStart = WorldSpaceCenter();
-		Vector vecEnd, vecDown, vecForce = Vector(1000, 1000, 1000);
+		Vector vecEnd, vecDown, vecForce = Vector(1400.0, 0.0, 0.0);
 		AngleVectors(GetAbsAngles(), NULL, NULL, &vecDown);
 		VectorNormalize(vecDown);
 		vecDown *= -1.0f;
@@ -214,7 +214,7 @@ void CNPCFred::OnChangeActivity(Activity eNewActivity)
 		UTIL_DecalTrace(&tr, "Scorch");
 		UTIL_ScreenShake(vecStart, 20.0, 100.0, 1.0, RAGE_RADIUS, SHAKE_START);
 
-		CTakeDamageInfo info(this, this, sk_npc_boss_fred_rage_blastdmg.GetFloat(), DMG_BULLET);
+		CTakeDamageInfo info(this, this, sk_npc_boss_fred_rage_blastdmg.GetFloat(), DMG_CLUB);
 		info.SetDamageForce(vecForce);
 		info.SetDamagePosition(vecStart);
 		info.SetForceRelationship(true);

@@ -643,38 +643,6 @@ IRagdoll* C_HL2MP_Player::GetRepresentativeRagdoll() const
 	return (m_pPlayerRagdoll ? m_pPlayerRagdoll->GetIRagdoll() : NULL);
 }
 
-int C_HL2MP_Player::GetSkillValue(int index)
-{
-	if ((index < 0) || (index >= PLAYER_SKILL_END))
-		return 0;
-
-	return m_BB2Local.m_iPlayerSkills[index];
-}
-
-float C_HL2MP_Player::GetSkillValue(int skillType, int team, bool bDataValueOnly, int dataSubType)
-{
-	if (bDataValueOnly)
-		return GameBaseShared()->GetSharedGameDetails()->GetPlayerSkillValue(skillType, team, dataSubType);
-
-	return (GameBaseShared()->GetSharedGameDetails()->GetPlayerSkillValue(skillType, team, dataSubType) * (float)GetSkillValue(skillType));
-}
-
-float C_HL2MP_Player::GetSkillValue(const char *pszType, int skillType, int team, int dataSubType)
-{
-	float flDefaultValue = GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedValue(pszType, team);
-	if (flDefaultValue <= 0.0f)
-		return (GetSkillValue(skillType, team, false, dataSubType));
-
-	float flReturn = (flDefaultValue + ((flDefaultValue / 100) * ((float)GetSkillValue(skillType) * GameBaseShared()->GetSharedGameDetails()->GetPlayerSkillValue(skillType, team, dataSubType))));
-	return flReturn;
-}
-
-float C_HL2MP_Player::GetSkillCombination(int skillDefault, int skillExtra)
-{
-	float flDefault = (float)skillDefault;
-	return (flDefault + ((flDefault / 100) * skillExtra));
-}
-
 void C_HL2MP_Player::UpdateClientSideAnimation()
 {
 	m_PlayerAnimState->Update(EyeAngles()[YAW], EyeAngles()[PITCH]);

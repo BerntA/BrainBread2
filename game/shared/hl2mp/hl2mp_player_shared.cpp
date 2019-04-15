@@ -309,3 +309,38 @@ float CHL2MP_Player::GetPlaybackRateForAnimEvent(PlayerAnimEvent_t event, int nD
 
 	return 1.0f;
 }
+
+int CHL2MP_Player::GetSkillValue(int index)
+{
+	if ((index < 0) || (index >= PLAYER_SKILL_END) || (HL2MPRules() && !HL2MPRules()->CanUseSkills()))
+		return 0;
+
+#ifdef CLIENT_DLL
+	return m_BB2Local.m_iPlayerSkills[index];
+#else
+	return m_BB2Local.m_iPlayerSkills.Get(index);
+#endif
+}
+
+float CHL2MP_Player::GetSkillValue(int skillType, int team, bool bDataValueOnly, int dataSubType)
+{
+	if (bDataValueOnly)
+		return GameBaseShared()->GetSharedGameDetails()->GetPlayerSkillValue(skillType, team, dataSubType);
+
+	return (GameBaseShared()->GetSharedGameDetails()->GetPlayerSkillValue(skillType, team, dataSubType) * ((float)GetSkillValue(skillType)));
+}
+
+float CHL2MP_Player::GetSkillValue(const char* pszType, int skillType, int team, int dataSubType)
+{
+	float flDefaultValue = GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedValue(pszType, team),
+		flSkillValue = GetSkillValue(skillType, team, false, dataSubType);
+	if (flDefaultValue <= 0.0f)
+		return flSkillValue;
+
+	return (flDefaultValue + ((flDefaultValue / 100.0f) * flSkillValue));
+}
+
+float CHL2MP_Player::GetSkillCombination(float def, float extra)
+{
+	return (def + ((def / 100.0f) * extra));
+}
