@@ -66,7 +66,6 @@ public:
 	void UserCmd_NextWeapon( void );
 	void UserCmd_PrevWeapon( void );
 	void UserCmd_LastWeapon( void );
-	void UserCmd_DropPrimary( void );
 
 	virtual void		SelectSlot( int iSlot );
 

@@ -9,15 +9,12 @@
 #include "hl2mp_gamerules.h"
 #include "c_hl2mp_player.h"
 #include "GameBase_Shared.h"
-#include "IGameUIFuncs.h"
-
-extern IGameUIFuncs* gameuifuncs; // for key binding details
 
 using namespace vgui;
 
 CQuestPanel* g_pQuestPanel = NULL;
 
-CQuestPanel::CQuestPanel(vgui::VPANEL parent) : BaseClass(NULL, "QuestPanel", true, 0.2f, true)
+CQuestPanel::CQuestPanel(vgui::VPANEL parent) : BaseClass(NULL, "QuestPanel", false, 0.2f, true)
 {
 	g_pQuestPanel = this;
 	m_iSelectedQuestIdx = 0;
@@ -42,21 +39,20 @@ CQuestPanel::CQuestPanel(vgui::VPANEL parent) : BaseClass(NULL, "QuestPanel", tr
 	m_pPageTitle = vgui::SETUP_PANEL(new vgui::Label(this, "PageTitle", ""));
 	m_pPageTitle->SetZPos(20);
 	m_pPageTitle->SetContentAlignment(Label::a_center);
+	m_pPageTitle->SetText("#VGUI_BasePanel_QuestHeader");
 
 	m_pLabelWarning = vgui::SETUP_PANEL(new vgui::Label(this, "PageWarning", ""));
 	m_pLabelWarning->SetZPos(100);
 	m_pLabelWarning->SetContentAlignment(Label::a_center);
+	m_pLabelWarning->SetText("#VGUI_BasePanel_NoQuests");
 	m_pLabelWarning->SetVisible(false);
 
 	m_pQuestDetailList = vgui::SETUP_PANEL(new vgui::QuestDetailPanel(this, "QuestDetailList"));
-	m_pQuestDetailList->AddActionSignalTarget(this);
 	m_pQuestDetailList->SetZPos(85);
 	m_pQuestDetailList->SetVisible(false);
-	m_pQuestDetailList->MoveToFront();
 
 	m_pQuestLists = vgui::SETUP_PANEL(new vgui::QuestList(this, "QuestList"));
 	m_pQuestLists->SetZPos(30);
-	m_pQuestLists->AddActionSignalTarget(this);
 
 	SetScheme("BaseScheme");
 	LoadControlSettings("resource/ui/questpanel.res");
@@ -81,9 +77,10 @@ void CQuestPanel::OnScreenSizeChanged(int iOldWide, int iOldTall)
 
 void CQuestPanel::UpdateLayout(void)
 {
+	SetSize(scheme()->GetProportionalScaledValue(435), scheme()->GetProportionalScaledValue(435));
 	MoveToCenterOfScreen();
 
-	int w, h, x, y;
+	int w, h;
 	GetSize(w, h);
 	
 	GetBackground()->SetSize(w, h);
@@ -99,7 +96,7 @@ void CQuestPanel::UpdateLayout(void)
 	m_pLabelWarning->SetPos(scheme()->GetProportionalScaledValue(26), scheme()->GetProportionalScaledValue(88));
 
 	m_pQuestLists->SetSize(scheme()->GetProportionalScaledValue(181), scheme()->GetProportionalScaledValue(245));
-	m_pQuestLists->SetPos(scheme()->GetProportionalScaledValue(26), scheme()->GetProportionalScaledValue(101));
+	m_pQuestLists->SetPos(scheme()->GetProportionalScaledValue(26), scheme()->GetProportionalScaledValue(104));
 
 	m_pQuestDetailList->SetSize(scheme()->GetProportionalScaledValue(179), scheme()->GetProportionalScaledValue(245));
 	m_pQuestDetailList->SetPos(scheme()->GetProportionalScaledValue(228), scheme()->GetProportionalScaledValue(88));
@@ -109,22 +106,11 @@ void CQuestPanel::ApplySchemeSettings(vgui::IScheme* pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
 
-	m_pPageTitle->SetFgColor(pScheme->GetColor("BasePanelTitleTextColor", Color(255, 255, 255, 255)));
-	m_pPageTitle->SetFont(pScheme->GetFont("DefaultLargeBold"));
+	m_pPageTitle->SetFgColor(pScheme->GetColor("QuestPanelTitleTextColor", Color(0, 0, 0, 255)));
+	m_pPageTitle->SetFont(pScheme->GetFont("QuestTitle"));
 
-	m_pLabelWarning->SetFgColor(pScheme->GetColor("BasePanelWarningTextColor", Color(255, 255, 255, 255)));
-	m_pLabelWarning->SetFont(pScheme->GetFont("DefaultExtraLargeBold"));
-}
-
-void CQuestPanel::OnKeyCodeTyped(vgui::KeyCode code)
-{
-	if ((code == KEY_ESCAPE) || (gameuifuncs->GetButtonCodeForBind("player_tree") == code))
-	{
-		OnShowPanel(false);
-		return;
-	}
-
-	BaseClass::OnKeyCodeTyped(code);
+	m_pLabelWarning->SetFgColor(pScheme->GetColor("QuestPanelWarningTextColor", Color(0, 0, 0, 255)));
+	m_pLabelWarning->SetFont(pScheme->GetFont("QuestTitle"));
 }
 
 void CQuestPanel::PaintBackground()
@@ -137,45 +123,29 @@ void CQuestPanel::PaintBackground()
 void CQuestPanel::OnShowPanel(bool bShow)
 {
 	BaseClass::OnShowPanel(bShow);
-
-	UpdateLayout();
-
-	m_pLabelWarning->SetVisible(false);
-	m_pLabelWarning->MoveToFront();
+	UpdateLayout();	
 
 	C_HL2MP_Player* pClient = C_HL2MP_Player::GetLocalHL2MPPlayer();
 	if (!pClient)
 		return;
 
-	m_pPageTitle->SetText("#VGUI_BasePanel_QuestHeader");
-	if ((pClient->GetTeamNumber() != TEAM_HUMANS) || (HL2MPRules()->GetCurrentGamemode() != MODE_OBJECTIVE) || (!GameBaseShared()->GetSharedQuestData()->IsAnyQuestActive()))
-	{
-		m_pLabelWarning->SetText("#VGUI_BasePanel_NoQuests");
-		m_pLabelWarning->SetVisible(true);
-		m_pQuestDetailList->SetVisible(false);
-	}
-	else
-	{
-		m_pQuestDetailList->SetVisible(true);
-		m_pQuestDetailList->SetupLayout();
+	bool bNoQuests = (pClient->GetTeamNumber() != TEAM_HUMANS) || (HL2MPRules()->GetCurrentGamemode() != MODE_OBJECTIVE) || !GameBaseShared()->GetSharedQuestData()->IsAnyQuestActive();	
+	m_pLabelWarning->SetVisible(bNoQuests);
+	m_pQuestDetailList->SetVisible(!bNoQuests);
 
-		m_pQuestLists->CreateList();
+	m_pQuestDetailList->SetupLayout();
+	m_pQuestLists->CreateList();
+
+	if (!bNoQuests)
 		OnSelectQuest(m_pQuestLists->GetFirstItem());
-	}
-}
-
-void CQuestPanel::OnDropInvItem(KeyValues* data)
-{
-	char pszDropCommand[80];
-	Q_snprintf(pszDropCommand, 80, "bb_inventory_item_drop %u %i\n", (uint)data->GetInt("item"), data->GetInt("mapitem"));
-	engine->ClientCmd(pszDropCommand);
-	engine->ClientCmd("player_tree 1\n");
 }
 
 void CQuestPanel::OnSelectQuest(int index)
 {	
 	if (m_pQuestDetailList->SelectID(index))
 	{
+		m_pQuestDetailList->SetVisible(true);
+		m_pLabelWarning->SetVisible(false);
 		m_iSelectedQuestIdx = index;
 		m_pQuestLists->SetActiveIndex(index);
 	}		
@@ -188,4 +158,10 @@ void CQuestPanel::UpdateSelectedQuest(void)
 
 	m_pQuestLists->CreateList();
 	OnSelectQuest(m_iSelectedQuestIdx);
+}
+
+// Weapon switch buttons are checked while the quest menu is active:
+void CQuestPanel::OnScrolled(bool bUp)
+{
+	OnSelectQuest(m_pQuestLists->GetNextItem(m_iSelectedQuestIdx, bUp));
 }

@@ -33,7 +33,7 @@
 #define MAX_OBJECTIVE_EXPERIENCE 0.02f
 
 #define DELAYED_USE_TIME 1.5f
-#define MAX_MELEE_LAGCOMP_DIST 275.0f
+#define MAX_MELEE_LAGCOMP_DIST 300.0f
 
 // Min. required distance in order to activate/use an inv. item.
 #define MAX_ENTITY_LINK_RANGE 140.0f
@@ -55,40 +55,14 @@
 #ifdef CLIENT_DLL
 #define CGameBaseShared C_GameBaseShared
 
-extern ConVar bb2_inventory_item_debugging;
-extern ConVar bb2_inventory_origin_x;
-extern ConVar bb2_inventory_origin_y;
-extern ConVar bb2_inventory_origin_z;
-extern ConVar bb2_inventory_model;
-extern ConVar bb2_inventory_angle_x;
-extern ConVar bb2_inventory_angle_y;
-extern ConVar bb2_inventory_angle_z;
+extern ConVar bb2_preview_debugging;
+extern ConVar bb2_preview_origin_x;
+extern ConVar bb2_preview_origin_y;
+extern ConVar bb2_preview_origin_z;
+extern ConVar bb2_preview_angle_x;
+extern ConVar bb2_preview_angle_y;
+extern ConVar bb2_preview_angle_z;
 #endif
-
-////////////////////////////////////////////////
-// Purpose:
-// Returns a default template which can be parsed by CModelPanel
-// Used for debugging.
-///////////////////////////////////////////////
-const char GetInventoryModelTemplate[] =
-"\"model\"\n"
-"{\n"
-"		\"spotlight\" \"1\"\n"
-"		\"modelname\" \"models/weapons/rifles/ak47/a_ak47.mdl\"\n"
-"		\"origin_x\" \"60\"\n"
-"		\"origin_y\" \"0\"\n"
-"		\"origin_z\" \"0\"\n"
-"		\"angles_x\" \"0\"\n"
-"		\"angles_y\" \"0\"\n"
-"		\"angles_z\" \"90\"\n"
-"       \"frame_origin_x\" \"0\"\n"
-"       \"frame_origin_y\" \"0\"\n"
-"       \"frame_origin_z\" \"0\"\n"
-"		\"animation\"\n"
-"		{\n"
-"				\"sequence\" \"idle\"\n"
-"		}\n"
-"}";
 
 enum ServerConnection_Direct
 {
@@ -96,13 +70,6 @@ enum ServerConnection_Direct
 	CONNECTION_SEARCH_INTERNET,
 	CONNECTION_SEARCH_LAN,
 	CONNECTION_DEFAULT,
-};
-
-enum InventoryItem_Rarity
-{
-	RARITY_COMMON = 0,
-	RARITY_RARE,
-	RARITY_LEGENDARY,
 };
 
 enum InventoryItem_Type
@@ -333,12 +300,6 @@ public:
 	// Misc
 	void ComputePlayerWeight(CHL2MP_Player *pPlayer);
 #endif
-
-	// Inventory
-	KeyValues *GetInventoryItemDetails(uint itemID, bool bIsMapItem);
-	KeyValues *GetInventoryItemByID(KeyValues *pkvDetails, uint iID);
-	const char *GetInventoryItemRarity(int iRarity);
-	const char *GetInventoryItemType(int iType);
 
 private:
 

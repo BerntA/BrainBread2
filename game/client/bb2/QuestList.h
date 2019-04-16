@@ -25,18 +25,17 @@ namespace vgui
 		DECLARE_CLASS_SIMPLE(QuestList, vgui::Panel);
 
 	public:
-		QuestList(vgui::Panel *parent, char const *panelName);
+		QuestList(vgui::Panel* parent, char const* panelName);
 		virtual ~QuestList();
 
 		void Cleanup(void);
 		void CreateList(void);
 		void UpdateLayout(void);
 		void SetActiveIndex(int index);
-		int GetFirstItem(void);
 
-	protected:
-		virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
-		virtual void OnMouseWheeled(int delta);
+		int GetFirstItem(void);
+		int GetLastItem(void);
+		int GetNextItem(int ID, bool bUp);
 
 	private:
 		int m_iScrollOffset;

@@ -44,6 +44,7 @@
 #include "c_bb2_player_shared.h"
 #include "c_ai_basenpc.h"
 #include "hud_npc_health_bar.h"
+#include "quest_panel.h"
 
 #if defined( _X360 )
 #include "xbox/xbox_console.h"
@@ -701,39 +702,38 @@ int	ClientModeShared::KeyInput( int down, ButtonCode_t keynum, const char *pszCu
 		}
 	}
 
-	// Should we start typing a message?
-	if ( pszCurrentBinding &&
-		( Q_strcmp( pszCurrentBinding, "messagemode" ) == 0 ||
-		  Q_strcmp( pszCurrentBinding, "say" ) == 0 ) )
+	if (pszCurrentBinding)
 	{
-		if ( down )
+		if (g_pQuestPanel && g_pQuestPanel->IsVisible())
 		{
-			StartMessageMode( MM_SAY );
+			if (Q_strcmp(pszCurrentBinding, "invnext") == 0)
+			{
+				if (down)
+					g_pQuestPanel->OnScrolled(true);
+				return 0;
+			}
+			else if (Q_strcmp(pszCurrentBinding, "invprev") == 0)
+			{
+				if (down)
+					g_pQuestPanel->OnScrolled(false);
+				return 0;
+			}
 		}
-		return 0;
-	}
-	else if ( pszCurrentBinding &&
-				( Q_strcmp( pszCurrentBinding, "messagemode2" ) == 0 ||
-				  Q_strcmp( pszCurrentBinding, "say_team" ) == 0 ) )
-	{
-		if ( down )
+
+		// Should we start typing a message?
+		if (Q_strcmp(pszCurrentBinding, "messagemode") == 0 || Q_strcmp(pszCurrentBinding, "say") == 0)
 		{
-			StartMessageMode( MM_SAY_TEAM );
+			if (down)
+				StartMessageMode(MM_SAY);
+			return 0;
 		}
-		return 0;
-	}
-	
-	// If we're voting...
-#ifdef VOTING_ENABLED
-	CHudVote *pHudVote = GET_HUDELEMENT( CHudVote );
-	if ( pHudVote && pHudVote->IsVisible() )
-	{
-		if ( !pHudVote->KeyInput( down, keynum, pszCurrentBinding ) )
+		else if (Q_strcmp(pszCurrentBinding, "messagemode2") == 0 || Q_strcmp(pszCurrentBinding, "say_team") == 0)
 		{
+			if (down)
+				StartMessageMode(MM_SAY_TEAM);
 			return 0;
 		}
 	}
-#endif
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 

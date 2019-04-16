@@ -47,6 +47,7 @@ namespace vgui
 		vgui::Label* m_pLabelObjectives;
 		vgui::RichText* m_pTextDescription;
 
+		Color m_colCheckBox;
 		CUtlVector<GraphicalCheckBox*> pszObjectives;
 	};
 }

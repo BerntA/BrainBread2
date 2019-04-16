@@ -513,11 +513,11 @@ void CharacterPreviewPanel::CalculateFrameDistance(void)
 
 void CharacterPreviewPanel::OnCheckCameraRotationOrZoom(void)
 {
-	if (bb2_inventory_item_debugging.GetBool())
+	if (bb2_preview_debugging.GetBool())
 	{
 		m_bWantsToRotate = false;
-		vecCameraPosition = Vector(bb2_inventory_origin_x.GetFloat(), bb2_inventory_origin_y.GetFloat(), bb2_inventory_origin_z.GetFloat());
-		angCameraAngle = QAngle(bb2_inventory_angle_x.GetFloat(), bb2_inventory_angle_y.GetFloat(), bb2_inventory_angle_z.GetFloat());
+		vecCameraPosition = Vector(bb2_preview_origin_x.GetFloat(), bb2_preview_origin_y.GetFloat(), bb2_preview_origin_z.GetFloat());
+		angCameraAngle = QAngle(bb2_preview_angle_x.GetFloat(), bb2_preview_angle_y.GetFloat(), bb2_preview_angle_z.GetFloat());
 		return;
 	}
 

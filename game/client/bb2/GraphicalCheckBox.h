@@ -26,7 +26,7 @@ namespace vgui
 		DECLARE_CLASS_SIMPLE(GraphicalCheckBox, vgui::Panel);
 
 	public:
-		GraphicalCheckBox(vgui::Panel *parent, char const *panelName, const char *text, const char *fontName = "MainMenuTextBig", bool bDisableOutput = false);
+		GraphicalCheckBox(vgui::Panel *parent, char const *panelName, const char *text, const char *fontName = "MainMenuTextBig", bool bDisableInput = false);
 		~GraphicalCheckBox();
 
 		void SetEnabled(bool state);

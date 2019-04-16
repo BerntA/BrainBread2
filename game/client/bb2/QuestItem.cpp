@@ -22,6 +22,8 @@ using namespace vgui;
 QuestItem::QuestItem(vgui::Panel *parent, char const *panelName, const char *title, int iStatus, int iIndex) : vgui::Panel(parent, panelName)
 {
 	m_iIndex = iIndex;
+	SetMouseInputEnabled(false);
+	SetKeyBoardInputEnabled(false);
 	SetProportional(true);
 	SetScheme("BaseScheme");
 
@@ -61,6 +63,7 @@ QuestItem::~QuestItem()
 void QuestItem::OnThink()
 {
 	BaseClass::OnThink();
+
 	m_pLabelTitle->SetFgColor(m_bIsActive ? m_colActivated : m_colDeactivated);
 }
 
@@ -68,8 +71,7 @@ void QuestItem::ApplySchemeSettings(vgui::IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
 
-	m_pLabelTitle->SetFont(pScheme->GetFont("DefaultBold"));
-	
+	m_pLabelTitle->SetFont(pScheme->GetFont("QuestItemTitle"));	
 	m_colActivated = pScheme->GetColor("QuestItemActivated", Color(0, 0, 0, 255));
 	m_colDeactivated = pScheme->GetColor("QuestItemDeactivated", Color(0, 0, 0, 255));
 }
@@ -82,5 +84,5 @@ void QuestItem::SetSize(int wide, int tall)
 	m_pBackground->SetPos(0, 0);
 
 	m_pLabelTitle->SetSize(wide, tall);
-	m_pLabelTitle->SetPos(0, 0);
+	m_pLabelTitle->SetPos(XRES(3), 0);
 }

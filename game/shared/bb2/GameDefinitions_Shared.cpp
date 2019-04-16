@@ -1321,7 +1321,6 @@ void CGameDefinitionsShared::ParseInventoryData(KeyValues *pkvData, bool bIsMapI
 			item.iType = sub->GetInt("Type");
 			item.iSubType = sub->GetInt("SubType");
 			item.iWeight = sub->GetInt("Weight");
-			item.iRarity = sub->GetInt("Rarity");
 			item.iSkin = 0;
 			item.bIsMapItem = bIsMapItem;
 
@@ -1359,7 +1358,8 @@ void CGameDefinitionsShared::ParseInventoryData(KeyValues *pkvData, bool bIsMapI
 					vgui::surface()->DrawSetTextureFile(hudTextureID, hudIconPath, true, false);
 				}
 			}
-			item.iHUDTextureID = hudTextureID;		
+			item.iHUDTextureID = hudTextureID;	
+			Q_strncpy(item.szTitle, sub->GetString("Title"), MAX_WEAPON_STRING);
 #else
 			item.iLevelReq = sub->GetInt("LevelReq");
 

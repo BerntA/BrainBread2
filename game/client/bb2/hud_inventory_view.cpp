@@ -33,6 +33,12 @@ public:
 	virtual void Reset(void);
 	virtual bool ShouldDraw(void);
 
+	void UserCmd_ItemSwitch(void);
+	void UserCmd_ItemUse(void);
+	void UserCmd_ItemDrop(void);
+
+	const DataInventoryItem_Base_t* GetActiveItem(void) const;
+
 protected:
 
 	virtual void Paint();
@@ -46,10 +52,22 @@ private:
 	CPanelAnimationVarAliasType(float, width_spacing, "width_spacing", "0", "proportional_float");
 	CPanelAnimationVarAliasType(float, height_spacing, "height_spacing", "0", "proportional_float");
 
+	CPanelAnimationVar(Color, m_colActiveItem, "ActiveItem", "30 255 30 255");
+
 	int m_nTextureDefaultIcon;
+	int m_iActiveItem;
+	int m_iLastItemCount;
 };
 
 DECLARE_HUDELEMENT(CHudInventoryView);
+
+DECLARE_HUD_COMMAND_NAME(CHudInventoryView, ItemSwitch, "CHudInventoryView");
+DECLARE_HUD_COMMAND_NAME(CHudInventoryView, ItemUse, "CHudInventoryView");
+DECLARE_HUD_COMMAND_NAME(CHudInventoryView, ItemDrop, "CHudInventoryView");
+
+HOOK_COMMAND(item_switch, ItemSwitch);
+HOOK_COMMAND(item_use, ItemUse);
+HOOK_COMMAND(item_drop, ItemDrop);
 
 CHudInventoryView::CHudInventoryView(const char * pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudInventoryView")
 {
@@ -76,11 +94,12 @@ void CHudInventoryView::Reset(void)
 {
 	SetFgColor(Color(255, 255, 255, 255));
 	SetAlpha(255);
+	m_iActiveItem = m_iLastItemCount = 0;
 }
 
 bool CHudInventoryView::ShouldDraw(void)
 {
-	return (CHudElement::ShouldDraw() && g_PR && GameBaseShared()->GetGameInventory().Count());
+	return (CHudElement::ShouldDraw() && g_PR && GameBaseShared()->GetSharedGameDetails() && GameBaseShared()->GetGameInventory().Count());
 }
 
 //------------------------------------------------------------------------
@@ -88,32 +107,29 @@ bool CHudInventoryView::ShouldDraw(void)
 //------------------------------------------------------------------------
 void CHudInventoryView::Paint()
 {
-	if (!GameBaseShared()->GetSharedGameDetails() || !g_PR)
-		return;
-
 	float xpos = 0, ypos = 0;
-	int itemsDrawn = 0;
+	m_iLastItemCount = 0;
 	for (int i = 0; i < GameBaseShared()->GetGameInventory().Count(); i++)
 	{
-		const DataInventoryItem_Base_t *data = GameBaseShared()->GetSharedGameDetails()->GetInventoryData(GameBaseShared()->GetGameInventory()[i].m_iItemID, GameBaseShared()->GetGameInventory()[i].bIsMapItem);
-		if (!data)
+		const DataInventoryItem_Base_t* data = GameBaseShared()->GetSharedGameDetails()->GetInventoryData(GameBaseShared()->GetGameInventory()[i].m_iItemID, GameBaseShared()->GetGameInventory()[i].bIsMapItem);
+		if (!data || (data->bShouldRenderIcon == false))
 			continue;
 
-		if (data->bShouldRenderIcon == false)
-			continue;
-
-		if (itemsDrawn == 6)
+		if (m_iLastItemCount == 6)
 		{
 			ypos = 0;
 			xpos = item_width + width_spacing;
 		}
 
-		surface()->DrawSetColor(GetFgColor());
+		surface()->DrawSetColor(((i == m_iActiveItem) ? m_colActiveItem : GetFgColor()));
 		surface()->DrawSetTexture((data->iHUDTextureID == -1) ? m_nTextureDefaultIcon : data->iHUDTextureID);
 		surface()->DrawTexturedRect(xpos, ypos, item_width + xpos, item_height + ypos);
-		itemsDrawn++;
-		ypos += item_height + height_spacing;
+		ypos += (item_height + height_spacing);
+
+		m_iLastItemCount++;
 	}
+
+	m_iActiveItem = clamp(m_iActiveItem, 0, (m_iLastItemCount - 1)); // Prevent it from going out of range.
 }
 
 void CHudInventoryView::ApplySchemeSettings(vgui::IScheme *scheme)
@@ -122,4 +138,57 @@ void CHudInventoryView::ApplySchemeSettings(vgui::IScheme *scheme)
 
 	SetPaintBackgroundEnabled(false);
 	SetPaintBorderEnabled(false);
+}
+
+void CHudInventoryView::UserCmd_ItemSwitch(void)
+{
+	if (ShouldDraw() == false)
+		return;
+
+	m_iActiveItem++;
+	if (m_iActiveItem >= m_iLastItemCount)
+		m_iActiveItem = 0;
+}
+
+void CHudInventoryView::UserCmd_ItemUse(void)
+{
+	if (ShouldDraw() == false)
+		return;
+
+	const DataInventoryItem_Base_t * item = GetActiveItem();
+	if (item == NULL)
+		return;
+
+	char pchCommand[MAX_WEAPON_STRING];
+	Q_snprintf(pchCommand, MAX_WEAPON_STRING, "bb_inventory_item_use %u %i\n", item->iItemID, (item->bIsMapItem ? 1 : 0));
+	engine->ClientCmd_Unrestricted(pchCommand);
+}
+
+void CHudInventoryView::UserCmd_ItemDrop(void)
+{
+	if (ShouldDraw() == false)
+		return;
+
+	const DataInventoryItem_Base_t * item = GetActiveItem();
+	if (item == NULL)
+		return;
+
+	char pchCommand[MAX_WEAPON_STRING];
+	Q_snprintf(pchCommand, MAX_WEAPON_STRING, "bb_inventory_item_drop %u %i\n", item->iItemID, (item->bIsMapItem ? 1 : 0));
+	engine->ClientCmd_Unrestricted(pchCommand);
+}
+
+const DataInventoryItem_Base_t * CHudInventoryView::GetActiveItem(void) const
+{
+	for (int i = 0; i < GameBaseShared()->GetGameInventory().Count(); i++)
+	{
+		const DataInventoryItem_Base_t* data = GameBaseShared()->GetSharedGameDetails()->GetInventoryData(GameBaseShared()->GetGameInventory()[i].m_iItemID, GameBaseShared()->GetGameInventory()[i].bIsMapItem);
+		if (!data || (data->bShouldRenderIcon == false))
+			continue;
+
+		if (i == m_iActiveItem)
+			return data;
+	}
+
+	return NULL;
 }

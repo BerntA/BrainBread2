@@ -20,14 +20,13 @@
 #endif
 
 #ifdef CLIENT_DLL
-ConVar bb2_inventory_item_debugging("bb2_inventory_item_debugging", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Must be enabled in order for bb2_inventory_ convars to take effect.");
-ConVar bb2_inventory_origin_x("bb2_inventory_origin_x", "0", FCVAR_CLIENTDLL, "Changes the origin of all model previews for inventory items.");
-ConVar bb2_inventory_origin_y("bb2_inventory_origin_y", "0", FCVAR_CLIENTDLL, "Changes the origin of all model previews for inventory items.");
-ConVar bb2_inventory_origin_z("bb2_inventory_origin_z", "0", FCVAR_CLIENTDLL, "Changes the origin of all model previews for inventory items.");
-ConVar bb2_inventory_model("bb2_inventory_model", "models/weapons/rifles/ak47/a_ak47.mdl", FCVAR_CLIENTDLL, "Overrides the model on every model preview for inventory items.");
-ConVar bb2_inventory_angle_x("bb2_inventory_angle_x", "0", FCVAR_CLIENTDLL, "Changes the angle of all model previews for inventory items.");
-ConVar bb2_inventory_angle_y("bb2_inventory_angle_y", "0", FCVAR_CLIENTDLL, "Changes the angle of all model previews for inventory items.");
-ConVar bb2_inventory_angle_z("bb2_inventory_angle_z", "0", FCVAR_CLIENTDLL, "Changes the angle of all model previews for inventory items.");
+ConVar bb2_preview_debugging("bb2_preview_debugging", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Enable character preview debugging.");
+ConVar bb2_preview_origin_x("bb2_preview_origin_x", "0", FCVAR_CLIENTDLL, "Changes the origin of all model preview.");
+ConVar bb2_preview_origin_y("bb2_preview_origin_y", "0", FCVAR_CLIENTDLL, "Changes the origin of all model previews.");
+ConVar bb2_preview_origin_z("bb2_preview_origin_z", "0", FCVAR_CLIENTDLL, "Changes the origin of all model previews.");
+ConVar bb2_preview_angle_x("bb2_preview_angle_x", "0", FCVAR_CLIENTDLL, "Changes the angle of all model previews.");
+ConVar bb2_preview_angle_y("bb2_preview_angle_y", "0", FCVAR_CLIENTDLL, "Changes the angle of all model previews.");
+ConVar bb2_preview_angle_z("bb2_preview_angle_z", "0", FCVAR_CLIENTDLL, "Changes the angle of all model previews.");
 
 static void __MsgFunc_InventoryUpdate(bf_read &msg)
 {
@@ -465,97 +464,6 @@ void CGameBaseShared::DispatchBleedout(CBaseEntity *pEntity)
 	{
 		QAngle qAngle(0, 0, 0);
 		DispatchParticleEffect(GameBaseShared()->GetSharedGameDetails()->GetBleedoutParticle(), tr.endpos, qAngle, pEntity);
-	}
-}
-
-////////////////////////////////////////////////
-// Purpose:
-// Returns details for the item. If it exists...
-///////////////////////////////////////////////
-KeyValues *CGameBaseShared::GetInventoryItemDetails(uint itemID, bool bIsMapItem)
-{
-	if (bIsMapItem)
-	{
-		KeyValues *pkvRet = NULL;
-		char pchPath[128];
-		pchPath[0] = 0;
-
-#ifdef CLIENT_DLL
-		char pchMap[128];
-		Q_FileBase(engine->GetLevelName(), pchMap, 128);
-		Q_snprintf(pchPath, 128, "data/maps/%s", pchMap);
-#else
-		if (HL2MPRules())
-			Q_snprintf(pchPath, 128, "data/maps/%s", HL2MPRules()->szCurrentMap);
-#endif
-
-		KeyValues *pkvData = ReadEncryptedKeyValueFile(filesystem, pchPath);
-		if (!pkvData)
-			return NULL;
-
-		KeyValues *pkvInventoryData = pkvData->FindKey("InventoryData");
-		if (pkvInventoryData)
-			pkvRet = pkvInventoryData->MakeCopy();
-
-		pkvData->deleteThis();
-
-		return pkvRet;
-	}
-
-	return ReadEncryptedKeyValueFile(filesystem, "data/game/inventory_items");
-}
-
-////////////////////////////////////////////////
-// Purpose:
-// Returns the keyvalue for the input id.
-///////////////////////////////////////////////
-KeyValues *CGameBaseShared::GetInventoryItemByID(KeyValues *pkvDetails, uint iID)
-{
-	char szID[32];
-	Q_snprintf(szID, 32, "%u", iID);
-
-	return pkvDetails->FindKey(szID);
-}
-
-////////////////////////////////////////////////
-// Purpose:
-// Helps our GUI to figure out what kind of rarity this item has.
-///////////////////////////////////////////////
-const char *CGameBaseShared::GetInventoryItemRarity(int iRarity)
-{
-	switch (iRarity)
-	{
-	case RARITY_COMMON:
-		return "common";
-	case RARITY_RARE:
-		return "rare";
-	case RARITY_LEGENDARY:
-		return "legendary";
-	default:
-		return "common";
-	}
-}
-
-////////////////////////////////////////////////
-// Purpose:
-// Helps our GUI to figure out what type of item this is.
-///////////////////////////////////////////////
-const char *CGameBaseShared::GetInventoryItemType(int iType)
-{
-	switch (iType)
-	{
-	case TYPE_MISC:
-		return "Misc";
-	case TYPE_OBJECTIVE:
-		return "Quest";
-	case TYPE_ATTACHMENT:
-		return "Attachment";
-	case TYPE_ARMOR:
-		return "Equipment";
-	case TYPE_SPECIAL:
-		return "Unknown";
-	default:
-		return "N/A";
 	}
 }
 

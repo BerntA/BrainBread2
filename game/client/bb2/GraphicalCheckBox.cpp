@@ -12,15 +12,15 @@
 
 using namespace vgui;
 
-GraphicalCheckBox::GraphicalCheckBox(vgui::Panel *parent, char const *panelName, const char *text, const char *fontName, bool bDisableOutput) : vgui::Panel(parent, panelName)
+GraphicalCheckBox::GraphicalCheckBox(vgui::Panel *parent, char const *panelName, const char *text, const char *fontName, bool bDisableInput) : vgui::Panel(parent, panelName)
 {
 	Q_strncpy(szFont, fontName, 32);
 
 	SetParent(parent);
 	SetName(panelName);
 
-	SetMouseInputEnabled(true);
-	SetKeyBoardInputEnabled(true);
+	SetMouseInputEnabled(!bDisableInput);
+	SetKeyBoardInputEnabled(!bDisableInput);
 	SetProportional(true);
 
 	SetScheme("BaseScheme");
@@ -46,7 +46,7 @@ GraphicalCheckBox::GraphicalCheckBox(vgui::Panel *parent, char const *panelName,
 	m_pLabelTitle->SetContentAlignment(Label::a_center);
 	m_pLabelTitle->SetText(text);
 
-	m_bDisableInput = bDisableOutput;
+	m_bDisableInput = bDisableInput;
 
 	InvalidateLayout();
 

@@ -20,10 +20,12 @@ using namespace vgui;
 
 QuestDetailPanel::QuestDetailPanel(vgui::Panel *parent, char const *panelName) : vgui::Panel(parent, panelName)
 {
+	m_colCheckBox = Color(0, 0, 0, 255);
+
 	SetParent(parent);
 	SetName(panelName);
-	SetMouseInputEnabled(true);
-	SetKeyBoardInputEnabled(true);
+	SetMouseInputEnabled(false);
+	SetKeyBoardInputEnabled(false);
 	SetProportional(true);
 	SetScheme("BaseScheme");
 
@@ -42,6 +44,8 @@ QuestDetailPanel::QuestDetailPanel(vgui::Panel *parent, char const *panelName) :
 
 	m_pTextDescription = vgui::SETUP_PANEL(new vgui::RichText(this, "Description"));
 	m_pTextDescription->SetZPos(20);
+	m_pTextDescription->SetUnusedScrollbarInvisible(true);
+	m_pTextDescription->SetVerticalScrollbar(false);
 
 	m_pLabelObjectives = vgui::SETUP_PANEL(new vgui::Label(this, "Objectives", ""));
 	m_pLabelObjectives->SetZPos(20);
@@ -72,11 +76,13 @@ void QuestDetailPanel::SetupLayout(void)
 	int wide, tall;
 	GetSize(wide, tall);
 
+	int labelXOffset = scheme()->GetProportionalScaledValue(2);
+
 	m_pLabelTitle->SetSize(wide, scheme()->GetProportionalScaledValue(15));
-	m_pLabelTitle->SetPos(0, 0);
+	m_pLabelTitle->SetPos(labelXOffset, scheme()->GetProportionalScaledValue(3));
 
 	m_pLabelObjectives->SetSize(wide, scheme()->GetProportionalScaledValue(15));
-	m_pLabelObjectives->SetPos(0, tall - scheme()->GetProportionalScaledValue(120));
+	m_pLabelObjectives->SetPos(labelXOffset, tall - scheme()->GetProportionalScaledValue(119));
 
 	m_pTextDescription->SetSize(wide, scheme()->GetProportionalScaledValue(100));
 	m_pTextDescription->SetPos(0, scheme()->GetProportionalScaledValue(18));
@@ -93,7 +99,10 @@ void QuestDetailPanel::SetupLayout(void)
 	{
 		pszObjectives[i]->SetSize(wide, scheme()->GetProportionalScaledValue(10));
 		pszObjectives[i]->SetPos(0, startY + (i * scheme()->GetProportionalScaledValue(12)));
+		pszObjectives[i]->GetTitleLabel()->SetFgColor(m_colCheckBox);
 	}
+
+	m_pTextDescription->SetScrollbarAlpha(0);
 }
 
 void QuestDetailPanel::SetSize(int wide, int tall)
@@ -112,16 +121,18 @@ void QuestDetailPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
 	
-	m_pLabelTitle->SetFont(pScheme->GetFont("DefaultLargeBold"));
+	m_pLabelTitle->SetFont(pScheme->GetFont("QuestDetailTitle"));
 	m_pLabelTitle->SetFgColor(pScheme->GetColor("QuestPanelTitleTextColor", Color(0, 0, 0, 255)));
 
 	m_pTextDescription->SetFgColor(pScheme->GetColor("QuestPanelDescriptionTextColor", Color(0, 0, 0, 255)));
 	m_pTextDescription->SetBgColor(Color(0, 0, 0, 0));
 	m_pTextDescription->SetBorder(NULL);	
-	m_pTextDescription->SetFont(pScheme->GetFont("DefaultBold"));
+	m_pTextDescription->SetFont(pScheme->GetFont("QuestDetailDescription"));
 
-	m_pLabelObjectives->SetFont(pScheme->GetFont("DefaultBold"));
+	m_pLabelObjectives->SetFont(pScheme->GetFont("QuestDetailTitle"));
 	m_pLabelObjectives->SetFgColor(pScheme->GetColor("QuestPanelObjectivesTextColor", Color(0, 0, 0, 255)));	
+
+	m_colCheckBox = pScheme->GetColor("QuestPanelObjectiveBox", Color(0, 0, 0, 255));
 }
 
 bool QuestDetailPanel::SelectID(int index)
@@ -168,9 +179,10 @@ bool QuestDetailPanel::SelectID(int index)
 
 		if (bShouldShow)
 		{
-			GraphicalCheckBox *pCheckBox = vgui::SETUP_PANEL(new vgui::GraphicalCheckBox(this, "CheckBox", szOutput, "DefaultBold", true));
+			GraphicalCheckBox *pCheckBox = vgui::SETUP_PANEL(new vgui::GraphicalCheckBox(this, "CheckBox", szOutput, "QuestDetailObjective", true));
 			pCheckBox->SetCheckedStatus(pQuestItem->pObjectives[i].bObjectiveCompleted);
 			pCheckBox->SetZPos(50);
+			pCheckBox->GetTitleLabel()->SetFgColor(m_colCheckBox);
 			pszObjectives.AddToTail(pCheckBox);
 		}
 	}

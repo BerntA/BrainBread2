@@ -29,18 +29,16 @@ public:
 	virtual void OnShowPanel(bool bShow);
 	virtual void OnSelectQuest(int index);
 	virtual void UpdateSelectedQuest(void);
+	virtual void OnScrolled(bool bUp);
 
 protected:
 
 	virtual void OnScreenSizeChanged(int iOldWide, int iOldTall);
 	virtual void ApplySchemeSettings(vgui::IScheme* pScheme);
 	virtual void UpdateLayout(void);
-	virtual void OnKeyCodeTyped(vgui::KeyCode code);
 	virtual void PaintBackground();
 
 private:
-
-	MESSAGE_FUNC_PARAMS(OnDropInvItem, "DropItem", data);
 
 	vgui::ImagePanel* m_pPageDivider;
 	vgui::Label* m_pPageTitle;

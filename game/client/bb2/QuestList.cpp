@@ -16,9 +16,11 @@
 
 using namespace vgui;
 
-QuestList::QuestList(vgui::Panel *parent, char const *panelName) : vgui::Panel(parent, panelName)
+QuestList::QuestList(vgui::Panel* parent, char const* panelName) : vgui::Panel(parent, panelName)
 {
 	SetProportional(true);
+	SetMouseInputEnabled(false);
+	SetKeyBoardInputEnabled(false);
 	SetScheme("BaseScheme");
 	InvalidateLayout();
 	PerformLayout();
@@ -44,81 +46,80 @@ void QuestList::CreateList(void)
 	int w, h;
 	GetSize(w, h);
 	m_iScrollOffset = 0;
-	int iPositioning = 0;
+
 	for (int i = 0; i < GameBaseShared()->GetSharedQuestData()->GetQuestList().Count(); i++)
 	{
-		const CQuestItem *data = GameBaseShared()->GetSharedQuestData()->GetQuestList()[i];
+		const CQuestItem* data = GameBaseShared()->GetSharedQuestData()->GetQuestList()[i];
 		if (!data->bIsActive)
 			continue;
 
-		QuestItem *pItem = vgui::SETUP_PANEL(new QuestItem(this, "QuestItem", data->szTitle, data->iQuestStatus, data->iQuestIndex));
+		QuestItem* pItem = vgui::SETUP_PANEL(new QuestItem(this, "QuestItem", data->szTitle, data->iQuestStatus, data->iQuestIndex));
 		pItem->SetZPos(10);
 		pItem->SetSize(w, scheme()->GetProportionalScaledValue(14));
-		pItem->SetPos(0, (iPositioning * scheme()->GetProportionalScaledValue(14)));
-		pItem->AddActionSignalTarget(this);
 		pszQuestItems.AddToTail(pItem);
-		iPositioning++;
 	}
+
+	UpdateLayout();
 }
 
 void QuestList::UpdateLayout(void)
 {
+	int offset = m_iScrollOffset * scheme()->GetProportionalScaledValue(20);
 	for (int i = 0; i < pszQuestItems.Count(); i++)
-		pszQuestItems[i]->SetPos(0, (scheme()->GetProportionalScaledValue(m_iScrollOffset) + (i * scheme()->GetProportionalScaledValue(20))));
+	{
+		pszQuestItems[i]->SetPos(0, (i * scheme()->GetProportionalScaledValue(15)) - (m_iScrollOffset ? offset : 0));
+		offset -= scheme()->GetProportionalScaledValue(15);
+	}
 }
 
 void QuestList::SetActiveIndex(int index)
 {
+	int item = 0;
 	for (int i = 0; i < pszQuestItems.Count(); i++)
+	{
 		pszQuestItems[i]->SetActive(pszQuestItems[i]->GetIndex() == index);
+		if (pszQuestItems[i]->GetIndex() == index)
+			item = i + 1;
+	}
+
+	int tall = item * scheme()->GetProportionalScaledValue(15);
+	m_iScrollOffset = (tall > GetTall()) ? item : 0;
+	UpdateLayout();
 }
 
 int QuestList::GetFirstItem(void)
 {
-	if (pszQuestItems.Count() <= 0)
-		return 0;
-
-	return pszQuestItems[0]->GetIndex();
+	return ((pszQuestItems.Count() > 0) ? pszQuestItems[0]->GetIndex() : 0);
 }
 
-void QuestList::ApplySchemeSettings(vgui::IScheme *pScheme)
+int QuestList::GetLastItem(void)
 {
-	BaseClass::ApplySchemeSettings(pScheme);
+	return ((pszQuestItems.Count() > 0) ? pszQuestItems[(pszQuestItems.Count() - 1)]->GetIndex() : 0);
 }
 
-void QuestList::OnMouseWheeled(int delta)
+int QuestList::GetNextItem(int ID, bool bUp)
 {
-	int w, h, x, y;
-	GetSize(w, h);
-
-	float flMaxItemsToShow = (h / scheme()->GetProportionalScaledValue(20));
-	bool bCanScroll = ((pszQuestItems.Count() * scheme()->GetProportionalScaledValue(20)) > h);
-	if (bCanScroll)
+	int count = pszQuestItems.Count();
+	for (int i = 0; i < count; i++)
 	{
-		bool bScrollUp = (delta > 0);
-		if (bScrollUp)
+		if (pszQuestItems[i]->GetIndex() == ID)
 		{
-			if (m_iScrollOffset < 0)
+			if (bUp)
 			{
-				m_iScrollOffset += 1;
-				UpdateLayout();
+				if ((i - 1) >= 0)
+					return pszQuestItems[(i - 1)]->GetIndex();
+
+				return GetLastItem(); // No prev item, go back to end!
 			}
-		}
-		else
-		{
-			int iIndexInList = (pszQuestItems.Count() - flMaxItemsToShow);
-			if (iIndexInList < 0)
-				iIndexInList = 0;
-
-			pszQuestItems[iIndexInList]->GetPos(x, y);
-
-			if (y > 0)
+			else
 			{
-				m_iScrollOffset -= 1;
-				UpdateLayout();
+				if ((i + 1) < count)
+					return pszQuestItems[(i + 1)]->GetIndex();
+
+				return GetFirstItem(); // If there is no next ID, go back to the start!
 			}
 		}
 	}
 
-	BaseClass::OnMouseWheeled(delta);
+	return 0;
 }

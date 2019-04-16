@@ -289,7 +289,6 @@ struct DataInventoryItem_Base_t
 
 	int iType;
 	int iSubType;
-	int iRarity;
 	int iWeight;
 	int iSkin;
 	char szModelPath[MAX_WEAPON_STRING];
@@ -297,6 +296,7 @@ struct DataInventoryItem_Base_t
 #ifdef CLIENT_DLL
 	int iHUDTextureID;
 	bool bShouldRenderIcon;
+	char szTitle[MAX_WEAPON_STRING];
 #else
 	int iLevelReq;
 

@@ -275,8 +275,6 @@ $Project
 			$File "bb2/CheckBoxList.h"	
 			$File "bb2/TopPlayersPanel.cpp"
 			$File "bb2/TopPlayersPanel.h"	
-			$File "bb2/InventoryItem.cpp"
-			$File "bb2/InventoryItem.h"
 			$File "bb2/QuestItem.cpp"
 			$File "bb2/QuestItem.h"			
 			$File "bb2/CharacterPreviewPanel.cpp"
