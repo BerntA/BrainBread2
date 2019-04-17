@@ -182,15 +182,9 @@ void CGameDefinitionsQuestData::FireGameEvent(IGameEvent *event)
 		if (questData->iQuestStatus <= STATUS_ONGOING)
 		{
 			if (bUpdateCounter)
-			{
 				questData->pObjectives[id].iCurrentKills = iKillsCurrent;
-			}
 			else
-			{
 				questData->pObjectives[id].bObjectiveCompleted = true;
-				// Refresh GUI here... ?
-				// TODO
-			}
 		}
 	}
 	else if (!strcmp(type, "quest_end"))
@@ -241,10 +235,7 @@ void CGameDefinitionsQuestData::FireGameEvent(IGameEvent *event)
 		bool bCompletedObjective10 = event->GetBool("objective10completed");
 
 		CQuestItem *questData = GetQuestDataForIndex(questName);
-		if (!questData)
-			return;
-
-		if (questData->bIsActive)
+		if (!questData || questData->bIsActive)
 			return;
 
 		questData->bIsActive = true;

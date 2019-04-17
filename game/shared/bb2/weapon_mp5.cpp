@@ -5,9 +5,7 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "npcevent.h"
-#include "weapon_hl2mpbase.h"
-#include "weapon_hl2mpbase_machinegun.h"
+#include "weapon_base_sniper.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -16,20 +14,25 @@
 #define CWeaponMP5 C_WeaponMP5
 #endif
 
-class CWeaponMP5 : public CHL2MPMachineGun
+class CWeaponMP5 : public CHL2MPSniperRifle
 {
 public:
-	DECLARE_CLASS(CWeaponMP5, CHL2MPMachineGun);
+	DECLARE_CLASS(CWeaponMP5, CHL2MPSniperRifle);
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
 	DECLARE_ACTTABLE();
 
 	CWeaponMP5();
 
+	bool ShouldDrawCrosshair(void) { return true; }
+	bool ShouldPlayZoomSounds() { return false; }
+	bool ShouldHideViewmodelOnZoom() { return false; }
+	int GetMaxZoomLevel(void) { return 1; }
 	int GetOverloadCapacity() { return 10; }
 	int GetUniqueWeaponID() { return WEAPON_ID_MP5; }
 	int GetWeaponType(void) { return WEAPON_TYPE_SMG; }
 	const char *GetAmmoEntityLink(void) { return "ammo_smg"; }
+	void PrimaryAttack(void) { CWeaponHL2MPBase::PrimaryAttack(); }
 
 private:
 	CWeaponMP5(const CWeaponMP5 &);
