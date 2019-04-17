@@ -1,5 +1,4 @@
 # BrainBread 2 Source Code
-![alt text](https://camo.githubusercontent.com/cfcaf3a99103d61f387761e5fc445d9ba0203b01/68747470733a2f2f7472617669732d63692e6f72672f6477796c2f657374612e7376673f6272616e63683d6d6173746572)
 
 ### Introduction
 BrainBread 2, also known as BrainBread: Source, has been in development for almost a decade. 
@@ -12,9 +11,9 @@ Now anyone can feel free to contribute to this development, now that BrainBread 
 ### Compiling
 Use the VPC scripts to generate the necessary project file(s).
 [Source SDK 2013 Compiling Help](https://developer.valvesoftware.com/wiki/Source_SDK_2013)
-* Windows: You can use VS2010 or VS2013 to compile this project, however newer versions of Visual Studio might work as well.
-* Linux: Use gcc compiler, make sure that you have the latest version of libcurl.
-* OSX: Use XCode.
+* Windows: You can use VS2010, VS2013, 2015, 2017, 2019 to compile this project, however newer versions of Visual Studio might work as well. (Use the 2013 toolset, WinXP)
+* Linux: Use gcc compiler, make sure that you have the latest version of libcurl. Make use of Steam Runtime to get the right headers for compatability. Run creategameprojects then simply write 'make -f games.mak'
+* OSX: Use XCode, run the osx_compile.sh script after running creategameprojects.
 
 ### Contributing
 Feel free to post issues, pull requests and such.
@@ -22,8 +21,7 @@ However, if you create a pull request, be sure to test your changes properly bef
 
 ### Future Implementations & Improvements
 - [ ] Add skill tree templates for fast switching between skill choices.
-- [ ] Improve movement mechanics, such as camera movement when reloading weapons.
-- [ ] New GUI for the inventory and quest system.
+- [ ] Improve movement mechanics, such as camera movement when reloading weapons, more viewmodel swaying/movement.
 - [ ] Fix tiny HUD / GUI text for some languages like Russian, Chinese, etc...
 
 ### Current Bugs
