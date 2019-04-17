@@ -25,7 +25,6 @@ public:
 	CHL2MPBaseAkimbo();
 
 	virtual void AddViewKick(void);
-	virtual int	GetTracerAttachment(void);
 	virtual void ItemPostFrame(void);
 	virtual void PerformAttack(bool bPrimary);
 	virtual void PrimaryAttack(void) { PerformAttack(true); }
@@ -42,7 +41,7 @@ public:
 	virtual const char* GetAmmoEntityLink(void) { return "ammo_pistol"; }
 
 	virtual bool IsAkimboWeapon(void) { return true; }
-	virtual const char* GetMuzzleflashAttachment(bool bPrimaryAttack, bool bThirdperson)
+	virtual const char* GetMuzzleflashAttachment(bool bPrimaryAttack)
 	{
 		if (bPrimaryAttack)
 			return "muzzle_left";

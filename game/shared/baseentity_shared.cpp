@@ -2188,14 +2188,7 @@ void CBaseEntity::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int
 //-----------------------------------------------------------------------------
 int CBaseEntity::GetTracerAttachment( void )
 {
-	int iAttachment = TRACER_DONT_USE_ATTACHMENT;
-
-	if ( g_pGameRules->IsMultiplayer() )
-	{
-		iAttachment = 1;
-	}
-
-	return iAttachment;
+	return 1;
 }
 
 int CBaseEntity::BloodColor()

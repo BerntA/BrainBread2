@@ -99,7 +99,7 @@ void C_TEBulletShot::CreateEffects(void)
 			if (!m_bIsPenetrationBullet)
 			{
 				data.m_fFlags |= TRACER_FLAG_USEATTACHMENT;
-				data.m_nAttachmentIndex = pWpn->GetTracerAttachment();
+				data.m_nAttachmentIndex = (pWpn->IsAkimboWeapon() ? pWpn->LookupAttachment(pWpn->GetMuzzleflashAttachment(m_bPrimaryAttack)) : pWpn->GetTracerAttachment());
 			}
 
 			if (bParticleGunFX)
@@ -154,7 +154,7 @@ void C_TEBulletShot::CreateEffects(void)
 	}
 
 	if (bParticleGunFX)
-		DispatchParticleEffect(pWpn->GetParticleEffect(PARTICLE_TYPE_MUZZLE, bThirdpersonDispatch), PATTACH_POINT_FOLLOW, pDispatcher, pWpn->GetMuzzleflashAttachment(m_bPrimaryAttack, bThirdpersonDispatch));
+		DispatchParticleEffect(pWpn->GetParticleEffect(PARTICLE_TYPE_MUZZLE, bThirdpersonDispatch), PATTACH_POINT_FOLLOW, pDispatcher, pWpn->GetMuzzleflashAttachment(m_bPrimaryAttack));
 	else
 		pWpn->DoMuzzleFlash();
 }

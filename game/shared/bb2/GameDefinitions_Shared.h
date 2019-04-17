@@ -507,7 +507,7 @@ extern const char *GetGamemodeName(int gamemode);
 extern const char *GetGamemodeNameForPrefix(const char *map);
 extern int GetGamemodeForMap(const char *map);
 
-#define CURRENT_ACHIEVEMENT_NUMBER 82
+#define CURRENT_ACHIEVEMENT_NUMBER 83
 
 extern const achievementStatItem_t GAME_STAT_AND_ACHIEVEMENT_DATA[CURRENT_ACHIEVEMENT_NUMBER];
 extern const DataPenetrationItem_t *GetPenetrationDataForMaterial(unsigned short material);

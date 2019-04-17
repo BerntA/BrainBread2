@@ -58,11 +58,6 @@ void CHL2MPBaseAkimbo::AddViewKick(void)
 		pPlayer->ViewPunch(GetViewKickAngle());
 }
 
-int CHL2MPBaseAkimbo::GetTracerAttachment(void)
-{
-	return (m_bLastFiredPrimary ? 1 : 2);
-}
-
 void CHL2MPBaseAkimbo::ItemPostFrame(void)
 {
 	BaseClass::ItemPostFrame();

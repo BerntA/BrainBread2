@@ -233,10 +233,8 @@ public:
 																	// but they are out of ammo. The default implementation
 																	// either reloads, switches weapons, or plays an empty sound.
 
-	virtual int	GetTracerAttachment(void);
 	virtual int GetReloadActivity(bool bCanDoEmpty = true);
-
-	virtual const char *GetMuzzleflashAttachment(bool bPrimaryAttack, bool bThirdperson) { return "muzzle"; }
+	virtual const char *GetMuzzleflashAttachment(bool bPrimaryAttack) { return "muzzle"; }
 
 	// Each wep should override this one to tell us how many bullets before this wep sort of overheats?
 	virtual int GetOverloadCapacity();

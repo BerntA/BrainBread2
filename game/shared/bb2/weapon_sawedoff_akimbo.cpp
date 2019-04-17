@@ -35,11 +35,6 @@ public:
 		return ((GetViewModelSequenceDuration() / 2.0f) + GetWpnData().m_flFireRate);
 	}
 
-	//int	GetTracerAttachment(void)
-	//{
-	//	return (m_bLastFiredPrimary ? 3 : 1);
-	//}
-
 	const char* GetAmmoEntityLink(void) { return "ammo_slugs"; }
 
 private:

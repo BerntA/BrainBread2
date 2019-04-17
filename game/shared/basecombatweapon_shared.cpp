@@ -784,7 +784,7 @@ void CBaseCombatWeapon::MakeTracer( const Vector &vecTracerSrc, const trace_t &t
 
 	Vector vNewSrc = vecTracerSrc;
 	int iEntIndex = entindex();
-	int iAttachment = GetTracerAttachment();
+	int iAttachment = (IsAkimboWeapon() ? LookupAttachment(GetMuzzleflashAttachment(m_bLastFiredPrimary)) : GetTracerAttachment());
 
 	// Players fire off particle based tracers...
 	if (pOwner->IsPlayer())
@@ -1500,7 +1500,7 @@ void CBaseCombatWeapon::DoWeaponFX( void )
 		if (pPlayer)
 		{
 			if (IsAkimboWeapon())
-				DispatchParticleEffect(GetParticleEffect(PARTICLE_TYPE_SMOKE), PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), GetMuzzleflashAttachment(m_bLastFiredPrimary, false));
+				DispatchParticleEffect(GetParticleEffect(PARTICLE_TYPE_SMOKE), PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), GetMuzzleflashAttachment(m_bLastFiredPrimary));
 			else
 				DispatchParticleEffect(GetParticleEffect(PARTICLE_TYPE_SMOKE), PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), "muzzle");
 		}
@@ -1744,11 +1744,6 @@ void CBaseCombatWeapon::HandleFireOnEmpty(bool bPrimary)
 		m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 	else
 		m_flNextSecondaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
-}
-
-int CBaseCombatWeapon::GetTracerAttachment(void)
-{
-	return 1;
 }
 
 int CBaseCombatWeapon::GetReloadActivity(bool bCanDoEmpty)

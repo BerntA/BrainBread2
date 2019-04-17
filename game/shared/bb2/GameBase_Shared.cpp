@@ -1020,6 +1020,8 @@ void CGameBaseShared::OnGameOver(float timeLeft, int iWinner)
 			pAchievement = "ACH_MAP_TERMOIL";
 		else if (!strcmp(currMap, "bbc_mecklenburg"))
 			pAchievement = "ACH_MAP_MECKLENBURG";
+		else if (!strcmp(currMap, "bbc_compound"))
+			pAchievement = "ACH_MAP_COMPOUND";
 		else if (!strcmp(currMap, "bbc_coltec"))
 			pAchievement = "ACH_MAP_COLTEC_C";
 		else if (!strcmp(currMap, "bbc_ikrom"))
