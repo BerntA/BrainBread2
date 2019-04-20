@@ -9,6 +9,8 @@
 #include "hl2mp_gamerules.h"
 #include "logic_quest.h"
 #include "ai_basenpc.h"
+#include "GameBase_Shared.h"
+#include "achievement_manager.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -271,6 +273,16 @@ void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, 
 				event->SetString("name", STRING(szQuestID));
 				event->SetInt("status", m_iQuestStatusOverall);
 				gameeventmanager->FireEvent(event);
+			}
+
+			// Write achievs for completing X quests.
+			for (int i = 1; i <= gpGlobals->maxClients; i++)
+			{
+				CHL2MP_Player* pClient = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+				if (!pClient || pClient->IsBot() || (pClient->GetTeamNumber() != TEAM_HUMANS))
+					continue;
+
+				GameBaseShared()->GetAchievementManager()->WriteToStat(pClient, "BBX_QUESTS");
 			}
 		}
 	}

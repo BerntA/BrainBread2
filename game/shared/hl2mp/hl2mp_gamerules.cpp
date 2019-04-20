@@ -2197,8 +2197,9 @@ bool CHL2MPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	if (collisionGroup1 == COLLISION_GROUP_NPC_MILITARY && (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE))
 		return false;
 
-	if (collisionGroup0 == COLLISION_GROUP_NPC_MILITARY && collisionGroup1 == COLLISION_GROUP_NPC_MILITARY)
-		return false;
+	// Military npcs should collide...
+	//if (collisionGroup0 == COLLISION_GROUP_NPC_MILITARY && collisionGroup1 == COLLISION_GROUP_NPC_MILITARY)
+	//	return false;
 
 	// Zombie NPCS
 	if ((collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE && collisionGroup1 == COLLISION_GROUP_PLAYER_ZOMBIE) ||

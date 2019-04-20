@@ -21,6 +21,7 @@ ConVar sk_npc_boss_fred_rage_health("sk_npc_boss_fred_rage_health", "20", FCVAR_
 ConVar sk_npc_boss_fred_rage_duration("sk_npc_boss_fred_rage_duration", "40", FCVAR_GAMEDLL, "For how long should Fred rage?", true, 5.0f, true, 140.0f);
 ConVar sk_npc_boss_fred_max_jump_height("sk_npc_boss_fred_max_jump_height", "240", FCVAR_GAMEDLL, "Set how high Fred can jump!", true, 80.0f, true, 500.0f);
 ConVar sk_npc_boss_fred_rage_blastdmg("sk_npc_boss_fred_rage_blastdmg", "35", FCVAR_GAMEDLL, "When Fred enters rage mode how much radius damage should he do?", true, 10.0f, true, 100.0f);
+ConVar sk_npc_boss_fred_navmesh("sk_npc_boss_fred_navmesh", "1", FCVAR_GAMEDLL, "Should Fred use navmesh?", true, 0, true, 1);
 
 #define CAMPER_CHECK_TIME 2.5f
 #define CAMPER_MAX_LAST_TIME_SEEN 20.0f // SEC
@@ -59,7 +60,7 @@ public:
 	bool IsBoss() { return true; }
 	bool CanAlwaysSeePlayers() { return true; }
     bool AllowedToIgnite( void ) { return false; }
-	bool UsesNavMesh(void) { return false; }
+	bool UsesNavMesh(void) { return sk_npc_boss_fred_navmesh.GetBool(); }
 	bool ShouldAlwaysThink() { return true; }
 	Class_T Classify(void) { return CLASS_ZOMBIE_BOSS; }
 
