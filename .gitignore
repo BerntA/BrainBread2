@@ -41,6 +41,7 @@ obj*/
 !utils/smdlexp/smdlexp.mak
 *.dSYM
 *.dbg
+*.project
 
 # Misc Folders
 ipch
