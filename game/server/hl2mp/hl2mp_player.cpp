@@ -2907,6 +2907,7 @@ void CHL2MP_Player::SetSkillValue(int skillType, int value)
 	if ((skillType < 0) || (skillType >= PLAYER_SKILL_END))
 		return;
 
+	value = clamp(value, 0, 10);
 	m_BB2Local.m_iPlayerSkills.Set(skillType, value);
 }
 
