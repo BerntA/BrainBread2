@@ -3033,10 +3033,10 @@ bool CHL2MP_Player::HandleLocalProfile(bool bSave)
 				"}\n",
 
 				m_iSkill_Level,
-				m_BB2Local.m_iSkill_XPCurrent,
-				m_BB2Local.m_iSkill_XPLeft,
-				m_BB2Local.m_iSkill_Talents,
-				m_BB2Local.m_iZombieCredits,
+				m_BB2Local.m_iSkill_XPCurrent.Get(),
+				m_BB2Local.m_iSkill_XPLeft.Get(),
+				m_BB2Local.m_iSkill_Talents.Get(),
+				m_BB2Local.m_iZombieCredits.Get(),
 
 				GetSkillValue(PLAYER_SKILL_HUMAN_SPEED),
 				GetSkillValue(PLAYER_SKILL_HUMAN_ACROBATICS),

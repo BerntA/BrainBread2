@@ -154,7 +154,7 @@ void C_RotorWashEmitter::ClientThink( void )
 	SetNextClientThink( gpGlobals->curtime + ROTORWASH_THINK_INTERVAL );
 
 	trace_t	tr;
-	UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin()+(Vector(0, 0, -1024)), (MASK_SOLID_BRUSHONLY|CONTENTS_WATER|CONTENTS_SLIME), NULL, COLLISION_GROUP_NONE, &tr );
+	UTIL_TraceLine(GetAbsOrigin(), GetAbsOrigin() + (Vector(0, 0, -1024)), (MASK_SOLID_BRUSHONLY | CONTENTS_WATER | CONTENTS_SLIME), NULL, COLLISION_GROUP_NONE, &tr);
 
 	if ( /*!m_bIgnoreSolid && */(tr.fraction == 1.0f || tr.startsolid || tr.allsolid) )
 		return;
@@ -247,7 +247,7 @@ void C_RotorWashEmitter::ClientThink( void )
 	int		numRingSprites = 32;
 	float	yaw = random->RandomFloat( 0, 2*M_PI ); // Randomly placed on the unit circle
 	float	yawIncr = (2*M_PI) / numRingSprites;
-	Vector	vecForward;
+	Vector	vecForward = vec3_origin;
 	Vector	offset;
 	SimpleParticle	*pParticle;
 

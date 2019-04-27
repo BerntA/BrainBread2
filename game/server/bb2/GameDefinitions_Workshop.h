@@ -32,6 +32,9 @@ public:
 	int GetItemInList(PublishedFileId_t itemID);
 	int GetLastItemInList(void) { return (m_pWorkshopItemDownloadList.Count() - 1); }
 
+	// Populate a list with the available workshop IDs found in the workshop folder.
+	void GetListOfAddons(CUtlVector<PublishedFileId_t> &list, bool bMapsOnly = false);
+
 	const char *GetWorkshopDir() { return pszWorkshopDir; }
 
 protected:

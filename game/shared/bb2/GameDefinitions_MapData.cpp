@@ -171,32 +171,16 @@ bool CGameDefinitionsMapData::FetchMapData(void)
 	}
 
 #ifndef CLIENT_DLL
-	KeyValues *pkvWorkshopData = new KeyValues("WorkshopItemList");
-	if (pkvWorkshopData->LoadFromFile(filesystem, "workshop/appworkshop_346330.acf", "MOD"))
-	{
-		KeyValues *pkvInstalledItems = pkvWorkshopData->FindKey("WorkshopItemsInstalled");
-		if (pkvInstalledItems)
-		{
-			for (KeyValues *sub = pkvInstalledItems->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-			{
-				PublishedFileId_t itemID = ((PublishedFileId_t)Q_atoui64(sub->GetName()));
-				if (itemID)
-					pszWorkshopItemList.AddToTail(itemID);
-			}
-		}
-	}
-	pkvWorkshopData->deleteThis();
-#endif
-
-#ifdef CLIENT_DLL
+	if (GameBaseShared() && GameBaseShared()->GetServerWorkshopData())
+		GameBaseShared()->GetServerWorkshopData()->GetListOfAddons(pszWorkshopItemList, true);
+#else
 	// Add other unknown custom maps (non workshop)...
 	char pszFileName[80];
 	FileFindHandle_t findHandle;
 	const char *pFilename = filesystem->FindFirstEx("data/maps/*.*", "MOD", &findHandle);
 	while (pFilename)
 	{
-		bool bIsDirectory = filesystem->IsDirectory(pFilename, "MOD");
-		if ((strlen(pFilename) > 4) && !bIsDirectory)
+		if (strlen(pFilename) > 4)
 		{
 			Q_snprintf(pszFileName, 80, "data/maps/%s", pFilename);
 			pszFileName[strlen(pszFileName) - 4] = 0; // strip the file extension!
@@ -474,7 +458,7 @@ void CGameDefinitionsMapData::GetMapImageData(const char *map, gameMapItem_t &it
 		if (numImagePreviews >= MAX_MAP_PREVIEW_IMAGES)
 			break;
 
-		if (!filesystem->IsDirectory(pFilename, "MOD") && Q_stristr(pFilename, map))
+		if (Q_stristr(pFilename, map))
 		{
 			Q_snprintf(item.pszImagePreview[numImagePreviews], MAX_WEAPON_STRING, "maps/%s_%i", map, numImagePreviews);
 			numImagePreviews++;
@@ -487,8 +471,8 @@ void CGameDefinitionsMapData::GetMapImageData(const char *map, gameMapItem_t &it
 	pFilename = filesystem->FindFirstEx("materials/vgui/loading/*.vmt", "MOD", &findHandle);
 	while (pFilename)
 	{
-		if (!filesystem->IsDirectory(pFilename, "MOD") && Q_stristr(pFilename, map))
-			numLoadingScreens++;		
+		if (Q_stristr(pFilename, map))
+			numLoadingScreens++;
 
 		pFilename = filesystem->FindNext(findHandle);
 	}

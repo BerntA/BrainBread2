@@ -129,27 +129,24 @@ void CGameBaseServer::SetCurrentMapAddon(const char *map)
 		return;
 	}
 
-	char pchWorkshopID[80], pchTargetFile[256];
+	char pchWorkshopID[80], pchTargetFile[MAX_PATH];
 	Q_strncpy(pchWorkshopID, "0", 80);
 
-	KeyValues *pkvWorkshopData = new KeyValues("WorkshopItemList");
-	if (pkvWorkshopData->LoadFromFile(filesystem, "workshop/appworkshop_346330.acf", "MOD"))
+	CUtlVector<PublishedFileId_t> workshopMaps;
+	if (GameBaseShared() && GameBaseShared()->GetServerWorkshopData())
+		GameBaseShared()->GetServerWorkshopData()->GetListOfAddons(workshopMaps, true);
+
+	for (int i = 0; i < workshopMaps.Count(); i++)
 	{
-		KeyValues *pkvInstalledItems = pkvWorkshopData->FindKey("WorkshopItemsInstalled");
-		if (pkvInstalledItems)
+		Q_snprintf(pchTargetFile, MAX_PATH, "workshop/content/346330/%llu/maps/%s.bsp", workshopMaps[i], map);
+		if (filesystem->FileExists(pchTargetFile, "MOD"))
 		{
-			for (KeyValues *sub = pkvInstalledItems->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-			{
-				Q_snprintf(pchTargetFile, 256, "workshop/content/346330/%s/maps/%s.bsp", sub->GetName(), map);
-				if (filesystem->FileExists(pchTargetFile, "MOD"))
-				{
-					Q_strncpy(pchWorkshopID, sub->GetName(), 80);
-					break;
-				}
-			}
+			Q_snprintf(pchWorkshopID, 80, "%llu", workshopMaps[i]);
+			break;
 		}
 	}
-	pkvWorkshopData->deleteThis();
+
+	workshopMaps.Purge();
 
 	bb2_active_workshop_item.SetValue(pchWorkshopID);
 }
@@ -359,7 +356,7 @@ void CGameBaseServer::IterateAddonsPath(const char *path)
 			else
 			{
 				char pchFile[128];
-				Q_snprintf(pchFile, 128, pFilename);
+				Q_strncpy(pchFile, pFilename, 128);
 				Q_strlower(pchFile);
 
 				if (Q_strstr(pchFile, ".so") || Q_strstr(pchFile, ".srv") || Q_strstr(pchFile, ".dylib") || Q_strstr(pchFile, ".dll"))

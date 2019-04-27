@@ -2059,14 +2059,14 @@ C_BaseViewModel *C_BasePlayer::GetViewModel( int index /*= 0*/, bool bObserverOK
 
 	C_BaseViewModel *vm = m_hViewModel[ index ];
 	
-	if ( bObserverOK && GetObserverMode() == OBS_MODE_IN_EYE )
+	if ( bObserverOK && (GetObserverMode() == OBS_MODE_IN_EYE) )
 	{
 		C_BasePlayer *target =  ToBasePlayer( GetObserverTarget() );
 
 		// get the targets viewmodel unless the target is an observer itself
-		if ( target && target != this && !target->IsObserver() )
+		if ( target && (target != this) && !target->IsObserver() && target->IsAlive() && (target->GetTeamNumber() >= TEAM_HUMANS) )
 		{
-			vm = target->GetViewModel( index );
+			vm = target->GetViewModel(index);
 		}
 	}
 

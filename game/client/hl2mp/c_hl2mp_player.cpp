@@ -680,7 +680,7 @@ public:
 	virtual void PostDataUpdate(DataUpdateType_t updateType)
 	{
 		// Create the effect.
-		C_HL2MP_Player *pPlayer = dynamic_cast<C_HL2MP_Player*>(m_hPlayer.Get());
+		C_HL2MP_Player *pPlayer = ToHL2MPPlayer(m_hPlayer.Get());
 		if (pPlayer && !pPlayer->IsDormant())
 			pPlayer->DoAnimationEvent((PlayerAnimEvent_t)m_iEvent.Get(), m_nData, m_flData);
 	}

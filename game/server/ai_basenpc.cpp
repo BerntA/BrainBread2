@@ -7680,7 +7680,7 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 		if ( m_bIgnoreUnseenEnemies )
 		{
 			const float TIME_CONSIDER_ENEMY_UNSEEN = .4;
-			if ( pEMemory->timeLastSeen < gpGlobals->curtime - TIME_CONSIDER_ENEMY_UNSEEN )
+			if ( pEMemory->timeLastSeen < (gpGlobals->curtime - TIME_CONSIDER_ENEMY_UNSEEN) )
 			{
 				DbgEnemyMsg( this, "    %s rejected: not seen and set to ignore unseen enemies\n", pEnemy->GetDebugName() );
 				continue;
@@ -7689,19 +7689,19 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 
 		// UNDONE: Move relationship checks into IsValidEnemy?
 		Disposition_t relation = IRelationType( pEnemy );
-		if ( (relation != D_HT && relation != D_FR)  )
+		if ( (relation != D_HT) && (relation != D_FR)  )
 		{
 			DbgEnemyMsg( this, "    %s rejected: no hate/fear\n", pEnemy->GetDebugName() );
 			continue;
 		}
 
-		if ( m_flAcceptableTimeSeenEnemy > 0.0 && pEMemory->timeLastSeen < m_flAcceptableTimeSeenEnemy )
+		if ( (m_flAcceptableTimeSeenEnemy > 0.0) && (pEMemory->timeLastSeen < m_flAcceptableTimeSeenEnemy) )
 		{
 			DbgEnemyMsg( this, "    %s rejected: old\n", pEnemy->GetDebugName() );
 			continue;
 		}
 
-		if ( pEMemory->timeValidEnemy > gpGlobals->curtime )
+		if ( (pEMemory->timeValidEnemy > gpGlobals->curtime) )
 		{
 			DbgEnemyMsg( this, "    %s rejected: not yet valid\n", pEnemy->GetDebugName() );
 			continue;
@@ -7715,7 +7715,7 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 		}
 
 		// Skip enemies I fear that I've never seen. (usually seen through an enemy finder)
-		if ( relation == D_FR && !pEMemory->bUnforgettable && pEMemory->timeFirstSeen == AI_INVALID_TIME )
+		if ( (relation == D_FR) && !pEMemory->bUnforgettable && (pEMemory->timeFirstSeen == AI_INVALID_TIME) )
 		{
 			DbgEnemyMsg( this, "    %s rejected: feared, but never seen\n", pEnemy->GetDebugName() );
 			continue;

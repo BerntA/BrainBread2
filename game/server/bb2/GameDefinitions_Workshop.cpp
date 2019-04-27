@@ -127,23 +127,7 @@ void CGameDefinitionsWorkshop::UpdateDownloadedItems()
 
 	m_currentFileID = 0;
 	m_pWorkshopItemDownloadList.Purge();
-
-	KeyValues *pkvWorkshopData = new KeyValues("Data");
-	if (pkvWorkshopData->LoadFromFile(filesystem, "workshop/appworkshop_346330.acf", "MOD"))
-	{
-		KeyValues *pkvInstalledItems = pkvWorkshopData->FindKey("WorkshopItemsInstalled");
-		if (pkvInstalledItems)
-		{
-			for (KeyValues *sub = pkvInstalledItems->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-			{
-				uint64 itemID = Q_atoui64(sub->GetName());
-				if (itemID)
-					AddItemToList(((PublishedFileId_t)itemID));
-			}
-		}
-	}
-	pkvWorkshopData->deleteThis();
-
+	GetListOfAddons(m_pWorkshopItemDownloadList);
 	DownloadNextItemInList();
 }
 
@@ -257,6 +241,36 @@ void CGameDefinitionsWorkshop::DownloadedItem(DownloadItemResult_t *pItem)
 	}
 }
 
+// Populate a list with the available workshop IDs found in the workshop folder.
+void CGameDefinitionsWorkshop::GetListOfAddons(CUtlVector<PublishedFileId_t> &list, bool bMapsOnly)
+{
+	list.Purge();
+
+	char pchTemporary[MAX_PATH]; pchTemporary[0] = 0;
+	FileFindHandle_t findHandle;
+	const char *pFilename = filesystem->FindFirstEx("workshop/content/346330/*.*", "MOD", &findHandle);
+	while (pFilename)
+	{
+		Q_strncpy(pchTemporary, pFilename, MAX_PATH);
+		PublishedFileId_t id = ((PublishedFileId_t)Q_atoui64(pchTemporary));
+		if (id)
+		{
+			// Check if the addon has an actual maps folder.
+			if (bMapsOnly)
+			{
+				Q_snprintf(pchTemporary, MAX_PATH, "workshop/content/346330/%llu/maps", id);
+				if (filesystem->IsDirectory(pchTemporary, "MOD"))
+					list.AddToTail(id);
+			}
+			else
+				list.AddToTail(id);
+		}
+
+		pFilename = filesystem->FindNext(findHandle);
+	}
+	filesystem->FindClose(findHandle);
+}
+
 CON_COMMAND(workshop_help, "Display some help & tips related to gameserver workshop stuff.")
 {
 	if (UTIL_GetCommandClientIndex() != 0)
@@ -272,6 +286,7 @@ CON_COMMAND(workshop_help, "Display some help & tips related to gameserver works
 	Msg("workshop_download_item <publishedID> - Downloads the specified item.\n");
 	Msg("workshop_download_collection <collectionID> - Downloads an entire collection of workshop items.\n");
 	Msg("workshop_update_items - Updates all of your downloaded items.\n");
+	Msg("workshop_print_searchpath - Displays loaded searchpaths.\n");
 	Msg("Whenever you download or update workshop items make sure to restart the server so that the items will load properly!\n");
 }
 
@@ -300,13 +315,7 @@ CON_COMMAND(workshop_download_collection, "Downloads a collection of workshop it
 	if (!m_bLoaded || m_bDownloadListOfItems)
 		return;
 
-	if (UTIL_GetCommandClientIndex() != 0)
-		return;
-
-	if (!GameBaseShared()->GetServerWorkshopData())
-		return;
-
-	if (args.ArgC() != 2)
+	if ((UTIL_GetCommandClientIndex() != 0) || !GameBaseShared()->GetServerWorkshopData() || (args.ArgC() != 2))
 		return;
 
 	PublishedFileId_t itemID = ((PublishedFileId_t)Q_atoui64(args[1]));
@@ -322,12 +331,19 @@ CON_COMMAND(workshop_update_items, "Updates downloaded items if possible.")
 	if (!m_bLoaded || m_bDownloadListOfItems)
 		return;
 
-	if (UTIL_GetCommandClientIndex() != 0)
-		return;
-
-	if (!GameBaseShared()->GetServerWorkshopData())
+	if ((UTIL_GetCommandClientIndex() != 0) || !GameBaseShared()->GetServerWorkshopData())
 		return;
 
 	Msg("Trying to update downloaded workshop items...\n");
 	GameBaseShared()->GetServerWorkshopData()->UpdateDownloadedItems();
+}
+
+CON_COMMAND(workshop_print_searchpath, "Print current searchpaths.")
+{
+	if (!m_bLoaded || (UTIL_GetCommandClientIndex() != 0) || !filesystem)
+		return;
+
+	Msg("Search Paths:\n");
+	filesystem->PrintSearchPaths();
+	Msg("\n");
 }

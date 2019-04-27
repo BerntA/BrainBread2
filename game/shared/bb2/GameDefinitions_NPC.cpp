@@ -52,7 +52,7 @@ bool CGameDefinitionsNPC::LoadNPCData(void)
 	const char *pFilename = filesystem->FindFirstEx("data/npc/*.*", "MOD", &findHandle);
 	while (pFilename)
 	{
-		if ((strlen(pFilename) > 4) && !filesystem->IsDirectory(pFilename, "MOD"))
+		if (strlen(pFilename) > 4)
 		{
 			char npcName[MAX_MAP_NAME_SAVE];
 			Q_strncpy(npcName, pFilename, MAX_MAP_NAME_SAVE);

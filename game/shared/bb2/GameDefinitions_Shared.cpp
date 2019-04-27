@@ -641,7 +641,7 @@ bool CGameDefinitionsShared::LoadData(void)
 	pFilename = filesystem->FindFirstEx("data/soundsets/*.txt", "MOD", &findHandle);
 	while (pFilename)
 	{
-		if ((strlen(pFilename) > 4) && strcmp(pFilename, "default.txt") && !filesystem->IsDirectory(pFilename, "MOD"))
+		if ((strlen(pFilename) > 4) && strcmp(pFilename, "default.txt"))
 		{
 			char filePath[MAX_WEAPON_STRING];
 			Q_snprintf(filePath, MAX_WEAPON_STRING, "data/soundsets/%s", pFilename);
@@ -695,7 +695,7 @@ bool CGameDefinitionsShared::LoadData(void)
 	pFilename = filesystem->FindFirstEx("data/characters/*.txt", "MOD", &findHandle);
 	while (pFilename)
 	{
-		if ((strlen(pFilename) > 4) && !filesystem->IsDirectory(pFilename, "MOD"))
+		if (strlen(pFilename) > 4)
 		{
 			char filePath[MAX_WEAPON_STRING];
 			Q_snprintf(filePath, MAX_WEAPON_STRING, "data/characters/%s", pFilename);

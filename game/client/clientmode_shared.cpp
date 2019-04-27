@@ -1043,7 +1043,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 	}
 	else if ((Q_strcmp("player_connection", eventname) == 0))
 	{		
-		if (!g_PR || HL2MPRules() && ((HL2MPRules()->GetCurrentGamemode() != MODE_OBJECTIVE) && (HL2MPRules()->GetCurrentGamemode() != MODE_ARENA)))
+		if (!g_PR || (HL2MPRules() && ((HL2MPRules()->GetCurrentGamemode() != MODE_OBJECTIVE) && (HL2MPRules()->GetCurrentGamemode() != MODE_ARENA))))
 			return;
 
 		char szLocalized[128];

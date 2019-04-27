@@ -137,8 +137,8 @@ void CBB2PlayerShared::UpdatePlayerBody(C_HL2MP_Player *pOwner)
 		m_pPlayerBody->UpdateVisibility();
 	}
 
-	m_pPlayerBody->m_nSkin = pOwner->GetSkin();
-	m_pPlayerBody->m_nBody = pOwner->GetBody();
+	m_pPlayerBody->m_nSkin = pOwner->GetNewPlayerModel() ? pOwner->GetNewPlayerModel()->GetSkin() : 0;
+	m_pPlayerBody->m_nBody = pOwner->GetNewPlayerModel() ? pOwner->GetNewPlayerModel()->GetBody() : 0;
 }
 
 void CBB2PlayerShared::UpdatePlayerHands(C_BaseViewModel *pParent, C_HL2MP_Player *pOwner)
@@ -164,10 +164,10 @@ void CBB2PlayerShared::UpdatePlayerHands(C_BaseViewModel *pParent, C_HL2MP_Playe
 	if ((m_pPlayerHands->GetMoveParent() != pParent) && bCanFollow)
 		m_pPlayerHands->AttachmentFollow(pParent);
 
-	m_pPlayerHands->m_nSkin = pOwner->GetSkin();
-	m_pPlayerHands->m_nBody = pOwner->GetBody();
+	m_pPlayerHands->m_nSkin = pOwner->GetNewPlayerModel() ? pOwner->GetNewPlayerModel()->GetSkin() : 0;
+	m_pPlayerHands->m_nBody = pOwner->GetNewPlayerModel() ? pOwner->GetNewPlayerModel()->GetBody() : 0;
 
-	//m_pPlayerHands->StudioFrameAdvance();
+	// m_pPlayerHands->StudioFrameAdvance();
 }
 
 const model_t *CBB2PlayerShared::GetPlayerHandModel(C_HL2MP_Player *pOwner)
@@ -197,10 +197,6 @@ const model_t *CBB2PlayerShared::GetPlayerBodyModel(C_HL2MP_Player *pOwner)
 bool CBB2PlayerShared::IsBodyOwner(C_BaseAnimating *pTarget)
 {
 	if (!pTarget || !m_pPlayerBody)
-		return false;
-
-	C_HL2MP_Player *pLocal = C_HL2MP_Player::GetLocalHL2MPPlayer();
-	if (!pLocal)
 		return false;
 
 	C_HL2MP_Player *pOwner = ToHL2MPPlayer(m_pPlayerBody->GetOwnerEntity());
@@ -281,7 +277,6 @@ void CBB2PlayerShared::BodyUpdate(C_HL2MP_Player *pOwner)
 	m_pPlayerBody->m_EntClientFlags |= ENTCLIENTFLAG_DONTUSEIK;
 	m_pPlayerBody->SetAbsOrigin(origin);
 	m_pPlayerBody->SetAbsAngles(angle);
-
 	m_pPlayerBody->StudioFrameAdvance();
 }
 

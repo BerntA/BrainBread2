@@ -145,7 +145,7 @@ void C_ClientAttachment::ClientThink(void)
 	if (m_flUpdateTime < gpGlobals->curtime)
 	{
 		m_flUpdateTime = gpGlobals->curtime + UPDATE_TIME;
-		C_HL2MP_Player *pPlayer = dynamic_cast<C_HL2MP_Player*> (GetPlayerLink());
+		C_HL2MP_Player *pPlayer = ToHL2MPPlayer(GetPlayerLink());
 		if (pPlayer && g_PR)
 		{
 			int teamNum = g_PR->GetTeam(pPlayer->entindex());
@@ -215,7 +215,7 @@ int C_ClientAttachment::DrawModel(int flags)
 	if (m_bShouldHide || !bb2_render_weapon_attachments.GetBool())
 		return 0;
 
-	C_HL2MP_Player *pOwner = dynamic_cast<C_HL2MP_Player*> (GetPlayerLink());
+	C_HL2MP_Player *pOwner = ToHL2MPPlayer(GetPlayerLink());
 	C_HL2MP_Player *pLocal = C_HL2MP_Player::GetLocalHL2MPPlayer();
 	if ((pOwner == pLocal) && !g_bShouldRenderLocalPlayerExternally && !input->CAM_IsThirdPerson())
 		return 0;
