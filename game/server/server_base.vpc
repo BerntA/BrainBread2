@@ -50,7 +50,7 @@ $Configuration
 	
 	$Compiler
 	{
-		$AdditionalIncludeDirectories	"$BASE;.\;$SRCDIR\game\shared;$SRCDIR\utils\common;$SRCDIR\game\shared\econ;$SRCDIR\game\server\NextBot;$SRCDIR\fmod;$SRCDIR\game\server\bb2;$SRCDIR\game\shared\bb2"
+		$AdditionalIncludeDirectories	"$BASE;.\;$SRCDIR\game\shared;$SRCDIR\utils\common;$SRCDIR\fmod;$SRCDIR\game\server\bb2;$SRCDIR\game\shared\bb2"
 		$PreprocessorDefinitions		"$BASE;GAME_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead"
 		$PreprocessorDefinitions		"$BASE;SWDS" [$POSIX]
 		$PreprocessorDefinitions		"$BASE;fopen=dont_use_fopen" [$WINDOWS||$X360]
@@ -93,7 +93,8 @@ $Project
 			$File "$SRCDIR\game\shared\bb2\gibs_shared.h"
 			
 			$File "$SRCDIR\game\shared\bb2\random_extended.h"
-			$File "$SRCDIR\game\shared\bb2\random_extended.cpp"
+			$File "$SRCDIR\game\shared\bb2\random_extended.cpp" [$OSXALL]
+			$File "$SRCDIR\game\shared\bb2\random_extended.cpp" [$WIN32||$LINUXALL]
 			{
 				$Configuration
 				{
