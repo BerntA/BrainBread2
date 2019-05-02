@@ -34,6 +34,27 @@ public:
 	const char *GetAmmoEntityLink(void) { return "ammo_smg"; }
 	void PrimaryAttack(void) { CWeaponHL2MPBase::PrimaryAttack(); }
 
+	bool Reload(void)
+	{
+		if (m_flNextPrimaryAttack > gpGlobals->curtime)
+			return false;
+
+		CHL2MP_Player *pClient = ToHL2MPPlayer(GetOwner());
+		if (pClient)
+		{
+			int reloadAct = GetReloadActivity();
+			if (DefaultReload(GetMaxClip1(), GetMaxClip2(), reloadAct))
+			{
+				pClient->DoAnimationEvent(PLAYERANIMEVENT_RELOAD, reloadAct);
+				WeaponSound(RELOAD);
+				SetZoomLevel(0);
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 private:
 	CWeaponMP5(const CWeaponMP5 &);
 };
