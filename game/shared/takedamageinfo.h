@@ -11,16 +11,21 @@
 #pragma once
 #endif
 
-
 #include "networkvar.h" // todo: change this when DECLARE_CLASS is moved into a better location.
 
 // Used to initialize m_flBaseDamage to something that we know pretty much for sure
 // hasn't been modified by a user. 
 #define BASEDAMAGE_NOT_SPECIFIED	FLT_MAX
 
+enum TakeDamageInfoMiscFlags
+{
+	TAKEDMGINFO_FORCE_RELATIONSHIP_CHECK = 0x01, // Force relationship based checking.
+	TAKEDMGINFO_DISABLE_FORCELIMIT = 0x02, // Allows greater pushback force.
+	TAKEDMGINFO_FORCE_FRIENDLYFIRE = 0x04, // Ideally this would be a dmg type, but we can't add more.
+	TAKEDMGINFO_USE_DMG_AS_PERCENT = 0x08, // Damage will equal to percent of your health, EX 25 = reduce 25% of remaining HP.
+};
+
 class CBaseEntity;
-
-
 class CTakeDamageInfo
 {
 public:
@@ -73,8 +78,6 @@ public:
 	void			AddDamageType( int bitsDamageType );
 	int				GetDamageCustom( void ) const;
 	void			SetDamageCustom( int iDamageCustom );
-	void			SetForceFriendlyFire( bool bValue ) { m_bForceFriendlyFire = bValue; }
-	bool			IsForceFriendlyFire( void ) const { return m_bForceFriendlyFire; }	
 
 	int				GetAmmoType() const;
 	void			SetAmmoType( int iAmmoType );
@@ -89,11 +92,10 @@ public:
 	int				GetRelationshipLink() const;
 	void			SetRelationshipLink(int link);
 
-	bool			IsForceRelationshipOn() const;
-	void			SetForceRelationship(bool value);
-
-	bool			GetNoForceLimit() const;
-	void			SetNoForceLimit(bool value);
+	bool			IsMiscFlagActive(int flag) const { return ((m_nMiscFlags & flag) != 0); }
+	int				GetMiscFlag() const { return m_nMiscFlags; }
+	void			SetMiscFlag(int flag) { m_nMiscFlags = flag; }
+	void			AddMiscFlag(int flag) { m_nMiscFlags |= flag; }
 
 	void			Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, float flDamage, int bitsDamageType, int iKillType = 0 );
 	void			Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBaseEntity *pWeapon, float flDamage, int bitsDamageType, int iKillType = 0 );
@@ -126,13 +128,11 @@ protected:
 	int				m_bitsDamageType;
 	int				m_iDamageCustom;
 	int				m_iAmmoType;			// AmmoType of the weapon used to cause this damage, if any
-	bool			m_bForceFriendlyFire;	// Ideally this would be a dmg type, but we can't add more
 
 	int				m_nSkillFlags;
 	int				m_iWeaponIDForced;
 	int				m_cRelationshipLink; // Useful in case the attacker goes NULL.
-	bool			m_bForceRelationshipLink; // Force relationship based checking.
-	bool			m_bNoForceLimit; // Allows greater pushback force.
+	int				m_nMiscFlags; // Misc DMG Flag Stuff.
 
 	DECLARE_SIMPLE_DATADESC();
 };
@@ -174,7 +174,6 @@ void CalculateBulletDamageForce( CTakeDamageInfo *info, int iBulletType, const V
 void CalculateMeleeDamageForce( CTakeDamageInfo *info, const Vector &vecMeleeDir, const Vector &vecForceOrigin, float flScale = 1.0 );
 void GuessDamageForce( CTakeDamageInfo *info, const Vector &vecForceDir, const Vector &vecForceOrigin, float flScale = 1.0 );
 
-
 // -------------------------------------------------------------------------------------------------- //
 // Inlines.
 // -------------------------------------------------------------------------------------------------- //
@@ -184,18 +183,15 @@ inline CBaseEntity* CTakeDamageInfo::GetInflictor() const
 	return m_hInflictor;
 }
 
-
 inline void CTakeDamageInfo::SetInflictor( CBaseEntity *pInflictor )
 {
 	m_hInflictor = pInflictor;
 }
 
-
 inline CBaseEntity* CTakeDamageInfo::GetAttacker() const
 {
 	return m_hAttacker;
 }
-
 
 inline void CTakeDamageInfo::SetAttacker( CBaseEntity *pAttacker )
 {
@@ -207,12 +203,10 @@ inline CBaseEntity* CTakeDamageInfo::GetWeapon() const
 	return m_hWeapon;
 }
 
-
 inline void CTakeDamageInfo::SetWeapon( CBaseEntity *pWeapon )
 {
 	m_hWeapon = pWeapon;
 }
-
 
 inline float CTakeDamageInfo::GetDamage() const
 {
@@ -368,26 +362,6 @@ inline int CTakeDamageInfo::GetRelationshipLink() const
 inline void CTakeDamageInfo::SetRelationshipLink(int link)
 {
 	m_cRelationshipLink = link;
-}
-
-inline bool CTakeDamageInfo::IsForceRelationshipOn() const
-{
-	return m_bForceRelationshipLink;
-}
-
-inline void CTakeDamageInfo::SetForceRelationship(bool value)
-{
-	m_bForceRelationshipLink = value;
-}
-
-inline bool CTakeDamageInfo::GetNoForceLimit() const
-{
-	return m_bNoForceLimit;
-}
-
-inline void CTakeDamageInfo::SetNoForceLimit(bool value)
-{
-	m_bNoForceLimit = value;
 }
 
 // -------------------------------------------------------------------------------------------------- //

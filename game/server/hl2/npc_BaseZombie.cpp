@@ -44,6 +44,8 @@ int g_interactionZombieMeleeWarning;
 #define ZOMBIE_BURN_TIME_NOISE	2  // Give or take this many seconds.
 #define ZOMBIE_LIFETIME (gpGlobals->curtime + ((random->RandomFloat(bb2_zombie_lifespan_min.GetFloat(), bb2_zombie_lifespan_max.GetFloat())) * 60.0f))
 
+#define HEALTH_REGEN_SUSPEND 10.0f // How many seconds to suspend hp regen when taking dmg?
+
 ConVar zombie_moanfreq( "zombie_moanfreq", "1" );
 
 static int s_iAngryZombies = 0;
@@ -116,6 +118,7 @@ CNPC_BaseZombie::CNPC_BaseZombie()
 	m_hLastIgnitionSource = NULL;
 	g_pZombiesInWorld++;
 	m_bUseNormalSpeed = m_bLifeTimeOver = m_bMarkedForDeath = false;
+	m_flHealthRegenSuspended = m_flHealthRegenValue = 0.0f;
 
 	zombieList.AddToTail(this);
 }
@@ -293,7 +296,13 @@ int CNPC_BaseZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 	if (ShouldIgnite(inputInfo))
 		Ignite( 100.0f );
 
-	return BaseClass::OnTakeDamage_Alive(inputInfo);
+	int ret = BaseClass::OnTakeDamage_Alive(inputInfo);
+	if (ret)
+	{
+		m_flHealthRegenSuspended = (gpGlobals->curtime + HEALTH_REGEN_SUSPEND);
+	}
+
+	return ret;
 }
 
 //-----------------------------------------------------------------------------
@@ -436,10 +445,13 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack(float flDist, int iDamage, QAngle &qaVi
 		if (GetEnemy()) // If enemy is behind a wall, don't do attack dmg!
 		{
 			trace_t	tr;
-			AI_TraceHull(WorldSpaceCenter(), GetEnemy()->WorldSpaceCenter(), -Vector(8, 8, 8), Vector(8, 8, 8), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr);
+			AI_TraceHull(WorldSpaceCenter(), GetEnemy()->WorldSpaceCenter(), -Vector(8, 8, 8), Vector(8, 8, 8), MASK_SOLID_BRUSHONLY, this, GetCollisionGroup(), &tr);
 			if (tr.fraction < 1.0f)
 				return NULL;
 		}
+
+		if (CanDoMeleeAttack() == false)
+			return NULL;
 
 		//
 		// Trace out a cubic section of our hull and see what we hit.
@@ -952,6 +964,18 @@ void CNPC_BaseZombie::PrescheduleThink(void)
 		m_bLifeTimeOver = true;
 		SetLastHitGroup(HITGROUP_GENERIC);
 		KillMe();
+		return;
+	}
+
+	// Health Regen:
+	if (CanRegenHealth() && (GetHealth() < GetMaxHealth()) && (gpGlobals->curtime > m_flHealthRegenSuspended))
+	{
+		m_flHealthRegenValue += (GetHealthRegenRate() * gpGlobals->frametime);
+		if (m_flHealthRegenValue >= 1.0f) // When we've recovered at least 1HP, regen it!
+		{
+			m_flHealthRegenValue = ceil(m_flHealthRegenValue);
+			TakeHealth(((int)m_flHealthRegenValue), DMG_GENERIC);
+		}
 	}
 }
 
@@ -1129,8 +1153,14 @@ void CNPC_BaseZombie::MarkForDeath(void)
 	m_flSpawnTime = gpGlobals->curtime + minTimeToLive;
 }
 
+static ConVar bb2_zombie_lifetime_advanced("bb2_zombie_lifetime_advanced", "1", FCVAR_GAMEDLL, "Enable more aggressive zombie lifetime, whenever spawners are stopped due to zombie limit they will force an old zombie to die much sooner than originally intended.", true, 0, true, 1);
+
 /*static*/ void CNPC_BaseZombie::MarkOldestNPCForDeath(void)
 {
+	// Allow maps to disable this.
+	if (bb2_zombie_lifetime_advanced.GetBool() == false)
+		return;
+
 	for (int i = 0; i < zombieList.Count(); i++)
 	{
 		CNPC_BaseZombie* zmb = zombieList[i];

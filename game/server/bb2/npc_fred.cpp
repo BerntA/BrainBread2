@@ -19,9 +19,13 @@
 ConVar sk_npc_boss_fred_rage_damage("sk_npc_boss_fred_rage_damage", "80", FCVAR_GAMEDLL, "When Fred is taking damage higher or equal to this value he will insta rage.", true, 10.0f, true, 1000.0f);
 ConVar sk_npc_boss_fred_rage_health("sk_npc_boss_fred_rage_health", "20", FCVAR_GAMEDLL, "When Fred has this much % left of his max health he will go into a rage mode.", true, 0.0f, true, 100.0f);
 ConVar sk_npc_boss_fred_rage_duration("sk_npc_boss_fred_rage_duration", "40", FCVAR_GAMEDLL, "For how long should Fred rage?", true, 5.0f, true, 140.0f);
+
 ConVar sk_npc_boss_fred_max_jump_height("sk_npc_boss_fred_max_jump_height", "240", FCVAR_GAMEDLL, "Set how high Fred can jump!", true, 80.0f, true, 500.0f);
-ConVar sk_npc_boss_fred_rage_blastdmg("sk_npc_boss_fred_rage_blastdmg", "35", FCVAR_GAMEDLL, "When Fred enters rage mode how much radius damage should he do?", true, 10.0f, true, 100.0f);
+
+ConVar sk_npc_boss_fred_rage_blastdmg("sk_npc_boss_fred_rage_blastdmg", "50", FCVAR_GAMEDLL | FCVAR_CHEAT, "When Fred enters rage mode how much radius damage % should he do?", true, 10.0f, true, 100.0f);
+
 ConVar sk_npc_boss_fred_navmesh("sk_npc_boss_fred_navmesh", "1", FCVAR_GAMEDLL, "Should Fred use navmesh?", true, 0, true, 1);
+ConVar sk_npc_boss_fred_regenrate("sk_npc_boss_fred_regenrate", "0.135", FCVAR_GAMEDLL | FCVAR_CHEAT, "Set the health regen rate for Fred.", true, 0.0f, true, 100.0f);
 
 #define CAMPER_CHECK_TIME 2.5f
 #define CAMPER_MAX_LAST_TIME_SEEN 20.0f // SEC
@@ -90,6 +94,9 @@ public:
 	bool GetGender() { return true; } // force male
 	Activity NPC_TranslateActivity( Activity newActivity );
 	void		OnChangeActivity(Activity eNewActivity);
+
+	bool CanRegenHealth(void) { return true; }
+	float GetHealthRegenRate(void) { return sk_npc_boss_fred_regenrate.GetFloat(); }
 
 protected:
 	float m_flRageTime;
@@ -219,8 +226,7 @@ void CNPCFred::OnChangeActivity(Activity eNewActivity)
 		CTakeDamageInfo info(this, this, sk_npc_boss_fred_rage_blastdmg.GetFloat(), DMG_CLUB);
 		info.SetDamageForce(vecForce);
 		info.SetDamagePosition(vecStart);
-		info.SetForceRelationship(true);
-		info.SetNoForceLimit(true);
+		info.SetMiscFlag((TAKEDMGINFO_FORCE_RELATIONSHIP_CHECK | TAKEDMGINFO_DISABLE_FORCELIMIT | TAKEDMGINFO_USE_DMG_AS_PERCENT));
 		info.SetRelationshipLink(Classify());
 		RadiusDamage(info, vecStart, RAGE_RADIUS, CLASS_NONE, NULL);
 
@@ -537,14 +543,16 @@ int CNPCFred::TranslateSchedule( int scheduleType )
 int CNPCFred::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 {
 	int ret = BaseClass::OnTakeDamage_Alive(inputInfo);
+	if (ret)
+	{
+		float damageTaken = inputInfo.GetDamage();
+		if (damageTaken >= sk_npc_boss_fred_rage_damage.GetFloat())
+			StartRageMode();
 
-	float damageTaken = inputInfo.GetDamage();
-	if (damageTaken >= sk_npc_boss_fred_rage_damage.GetFloat())
-		StartRageMode();
-
-	float flHealthPercent = ((float)(((float)GetHealth() / (float)GetMaxHealth())));
-	if ((flHealthPercent * 100.0f) <= sk_npc_boss_fred_rage_health.GetFloat())
-		StartRageMode();
+		float flHealthPercent = ((float)(((float)GetHealth() / (float)GetMaxHealth())));
+		if ((flHealthPercent * 100.0f) <= sk_npc_boss_fred_rage_health.GetFloat())
+			StartRageMode();
+	}
 
 	return ret;
 }

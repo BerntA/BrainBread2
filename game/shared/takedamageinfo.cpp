@@ -30,9 +30,7 @@ BEGIN_SIMPLE_DATADESC( CTakeDamageInfo )
 	DEFINE_FIELD(m_nSkillFlags, FIELD_INTEGER),
 	DEFINE_FIELD(m_iWeaponIDForced, FIELD_INTEGER),
 	DEFINE_FIELD(m_cRelationshipLink, FIELD_INTEGER),
-	DEFINE_FIELD(m_bForceFriendlyFire, FIELD_BOOLEAN),	
-	DEFINE_FIELD(m_bForceRelationshipLink, FIELD_BOOLEAN),
-	DEFINE_FIELD(m_bNoForceLimit, FIELD_BOOLEAN),
+	DEFINE_FIELD(m_nMiscFlags, FIELD_INTEGER),
 END_DATADESC()
 
 void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBaseEntity *pWeapon, const Vector &damageForce, const Vector &damagePosition, const Vector &reportedPosition, float flDamage, int bitsDamageType, int iCustomDamage )
@@ -62,12 +60,8 @@ void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBa
 	m_vecReportedPosition = reportedPosition;
 	m_iAmmoType = -1;
 
-	m_bForceFriendlyFire = false;
-	m_nSkillFlags = 0;
 	m_iWeaponIDForced = WEAPON_ID_NONE;
-	m_cRelationshipLink = 0;
-	m_bForceRelationshipLink = false;
-	m_bNoForceLimit = false;
+	m_cRelationshipLink = m_nMiscFlags = m_nSkillFlags = 0;
 }
 
 CTakeDamageInfo::CTakeDamageInfo()
@@ -254,9 +248,7 @@ void AddMultiDamage( const CTakeDamageInfo &info, CBaseEntity *pEntity )
 	g_MultiDamage.SetSkillFlags(info.GetSkillFlags());
 	g_MultiDamage.SetForcedWeaponID(info.GetForcedWeaponID());
 	g_MultiDamage.SetRelationshipLink(info.GetRelationshipLink());
-	g_MultiDamage.SetForceFriendlyFire(info.IsForceFriendlyFire());
-	g_MultiDamage.SetForceRelationship(info.IsForceRelationshipOn());
-	g_MultiDamage.SetNoForceLimit(info.GetNoForceLimit());
+	g_MultiDamage.SetMiscFlag(info.GetMiscFlag());
 
 	bool bHasPhysicsForceDamage = !g_pGameRules->Damage_NoPhysicsForce( info.GetDamageType() );
 	if ( bHasPhysicsForceDamage && g_MultiDamage.GetDamageType() != DMG_GENERIC )

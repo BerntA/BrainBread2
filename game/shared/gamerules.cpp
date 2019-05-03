@@ -335,7 +335,7 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 			continue;
 
 		// Entity relationship extended check:
-		if ((info.GetRelationshipLink() != CLASS_NONE) && ((info.GetAttacker() == NULL) || info.IsForceRelationshipOn()) && pEntity->MyCombatCharacterPointer() && (pEntity->MyCombatCharacterPointer()->IRelationType(NULL, info.GetRelationshipLink()) == D_LI))
+		if ((info.GetRelationshipLink() != CLASS_NONE) && ((info.GetAttacker() == NULL) || info.IsMiscFlagActive(TAKEDMGINFO_FORCE_RELATIONSHIP_CHECK)) && pEntity->MyCombatCharacterPointer() && (pEntity->MyCombatCharacterPointer()->IRelationType(NULL, info.GetRelationshipLink()) == D_LI))
 			continue;
 
 		// blast's don't tavel into or out of water
@@ -441,14 +441,13 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 				}
 			}
 		}
+
 		// decrease damage for an ent that's farther from the bomb.
 		flAdjustedDamage = ( vecSrc - tr.endpos ).Length() * falloff;
-		flAdjustedDamage = info.GetDamage() - flAdjustedDamage;
+		flAdjustedDamage = info.GetDamage() - (info.IsMiscFlagActive(TAKEDMGINFO_USE_DMG_AS_PERCENT) ? 0.0f : flAdjustedDamage);
 
-		if ( flAdjustedDamage <= 0 )
-		{
+		if (flAdjustedDamage <= 0)
 			continue;
-		}
 
 		// the explosion can 'see' this entity, so hurt them!
 		if (tr.startsolid)
@@ -461,6 +460,13 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 		CTakeDamageInfo adjustedInfo = info;
 		//Msg("%s: Blocked damage: %f percent (in:%f  out:%f)\n", pEntity->GetClassname(), flBlockedDamagePercent * 100, flAdjustedDamage, flAdjustedDamage - (flAdjustedDamage * flBlockedDamagePercent) );
 		adjustedInfo.SetDamage( flAdjustedDamage - (flAdjustedDamage * flBlockedDamagePercent) );
+
+		if (info.IsMiscFlagActive(TAKEDMGINFO_USE_DMG_AS_PERCENT))
+		{
+			float damageToTake = ceil(((float)pEntity->GetHealth()) * (info.GetDamage() / 100.0f));
+			damageToTake = MAX(damageToTake, 1.0f);
+			adjustedInfo.SetDamage((damageToTake - (damageToTake * flBlockedDamagePercent)));
+		}
 
 		// Now make a consideration for skill level!
 		if( info.GetAttacker() && info.GetAttacker()->IsPlayer() && pEntity->IsNPC() )
@@ -483,7 +489,7 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 		else
 		{
 			// Assume the force passed in is the maximum force. Decay it based on falloff.
-			float flForce = adjustedInfo.GetDamageForce().Length() * (info.GetNoForceLimit() ? 1.0f : falloff);
+			float flForce = adjustedInfo.GetDamageForce().Length() * (info.IsMiscFlagActive(TAKEDMGINFO_DISABLE_FORCELIMIT) ? 1.0f : falloff);
 			adjustedInfo.SetDamageForce(dir * flForce);
 			adjustedInfo.SetDamagePosition(vecSrc);
 		}

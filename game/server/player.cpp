@@ -1452,18 +1452,19 @@ int CBasePlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		VectorNormalize( vecDir );
 	}
 
+	bool bNoForceLimit = info.IsMiscFlagActive(TAKEDMGINFO_DISABLE_FORCELIMIT);
 	if (info.GetInflictor() && ((GetMoveType() == MOVETYPE_WALK) || (GetMoveType() == MOVETYPE_STEP)) &&
-		(!attacker->IsSolidFlagSet(FSOLID_TRIGGER) || info.GetNoForceLimit()))
+		(!attacker->IsSolidFlagSet(FSOLID_TRIGGER) || bNoForceLimit))
 	{
 		Vector force = vecDir * -DamageForce(WorldAlignSize(), info.GetBaseDamage());
-		if (info.GetNoForceLimit())
+		if (bNoForceLimit)
 			force = info.GetDamageForce();
 
-		float maxZ = (info.GetNoForceLimit() ? 600.0f : 250.0f);
+		float maxZ = (bNoForceLimit ? 600.0f : 250.0f);
 		if (force.z > maxZ)
 			force.z = maxZ;
 
-		ApplyAbsVelocityImpulse(force, info.GetNoForceLimit());
+		ApplyAbsVelocityImpulse(force, bNoForceLimit);
 	}
 
 	// fire global game event

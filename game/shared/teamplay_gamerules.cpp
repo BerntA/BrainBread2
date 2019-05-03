@@ -166,7 +166,7 @@ bool CTeamplayRules::IsTeamplay( void )
 
 bool CTeamplayRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker, const CTakeDamageInfo &info )
 {
-	if ( pAttacker && (PlayerRelationship( pPlayer, pAttacker ) == GR_TEAMMATE) && !info.IsForceFriendlyFire() )
+	if ( pAttacker && (PlayerRelationship( pPlayer, pAttacker ) == GR_TEAMMATE) && !info.IsMiscFlagActive(TAKEDMGINFO_FORCE_FRIENDLYFIRE) )
 	{
 		// my teammate hit me.
 		if ( (friendlyfire.GetInt() == 0) && (pAttacker != pPlayer) )

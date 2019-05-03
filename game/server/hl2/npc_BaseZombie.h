@@ -95,12 +95,16 @@ public:
 	virtual void OnStateChange(NPC_STATE OldState, NPC_STATE NewState);
 	virtual void MarkForDeath(void);
 
+	virtual bool CanRegenHealth(void) { return false; }
+	virtual float GetHealthRegenRate(void) { return 0.0f; }
+
 	void KillMe(void)
 	{
 		m_iHealth = 5;
 		OnTakeDamage(CTakeDamageInfo(this, this, m_iHealth * 2, DMG_GENERIC));
 	}
 
+	virtual bool CanDoMeleeAttack(void) { return true; }
 	int MeleeAttack1Conditions(float flDot, float flDist);
 	virtual float GetClawAttackRange() const { return m_flRange; }
 	virtual bool CanFlinch(void) { return false; }
@@ -178,6 +182,9 @@ protected:
 
 	float m_flNextFlinch;
 	float m_flNextMoanSound;
+
+	float m_flHealthRegenSuspended;
+	float m_flHealthRegenValue;
 
 	// Zombies catch on fire if they take too much burn damage in a given time period.
 	float m_flBurnDamage;				// Keeps track of how much burn damage we've incurred in the last few seconds.

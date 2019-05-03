@@ -58,6 +58,7 @@ public:
 	void Ignite( float flFlameLifetime, bool bNPCOnly = true, float flSize = 0.0f, bool bCalledByLevelDesigner = false );
 	void Extinguish();
 	int OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo );
+	bool CanDoMeleeAttack(void);
 
 	void PrescheduleThink( void );
 	int SelectSchedule ( void );
@@ -782,6 +783,26 @@ int CNPCWalker::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 		return 0;
 
 	return BaseClass::OnTakeDamage_Alive(inputInfo);
+}
+
+bool CNPCWalker::CanDoMeleeAttack(void)
+{
+	if (m_bIsRunner == false)
+		return true;
+
+	// Runners attack 24/7, check that there is not a wall blocking our attack trace.
+
+	const Vector & start = WorldSpaceCenter();
+	Vector forward;
+	AngleVectors(GetLocalAngles(), &forward);
+	VectorNormalize(forward);
+
+	trace_t	tr;
+	AI_TraceHull(start, start + (forward * GetClawAttackRange()), -Vector(10, 10, 10), Vector(10, 10, 10), MASK_SHOT_HULL, this, GetCollisionGroup(), &tr);
+	if (tr.DidHitNonWorldEntity() && tr.m_pEnt && tr.m_pEnt->m_takedamage.Get() == DAMAGE_YES)
+		return true;
+
+	return false;
 }
 
 AI_BEGIN_CUSTOM_NPC( npc_walker, CNPCWalker )

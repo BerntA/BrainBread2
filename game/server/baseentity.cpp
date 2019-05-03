@@ -1341,8 +1341,9 @@ int CBaseEntity::OnTakeDamage( const CTakeDamageInfo &info )
 		}
 		else
 		{
+			bool bNoForceLimit = info.IsMiscFlagActive(TAKEDMGINFO_DISABLE_FORCELIMIT);
 			if ( info.GetInflictor() && (GetMoveType() == MOVETYPE_WALK || GetMoveType() == MOVETYPE_STEP) && 
-				(!info.GetAttacker()->IsSolidFlagSet(FSOLID_TRIGGER) || info.GetNoForceLimit()))
+				(!info.GetAttacker()->IsSolidFlagSet(FSOLID_TRIGGER) || bNoForceLimit))
 			{
 				Vector vecDir, vecInflictorCentroid;
 				vecDir = WorldSpaceCenter( );
@@ -1354,7 +1355,7 @@ int CBaseEntity::OnTakeDamage( const CTakeDamageInfo &info )
 				
 				if (flForce > 1000.0) 
 					flForce = 1000.0;
-				ApplyAbsVelocityImpulse(vecDir * flForce, info.GetNoForceLimit());
+				ApplyAbsVelocityImpulse(vecDir * flForce, bNoForceLimit);
 			}
 		}
 	}
