@@ -3032,9 +3032,9 @@ bool CAI_BaseNPC::SpawnRunSchedule(CBaseEntity *pTarget, Activity act, bool path
 
 	bool ret;
 	if (pathcorner)
-		ret = ScheduledFollowPath(SCHED_IDLE_WALK, pTarget, act);
+		ret = ScheduledFollowPath(SCHED_MOVE_TO_TARGET, pTarget, act);
 	else
-		ret = ScheduledMoveToGoalEntity(SCHED_IDLE_WALK, pTarget, act);
+		ret = ScheduledMoveToGoalEntity(SCHED_MOVE_TO_TARGET, pTarget, act);
 
 	if (ret)
 		SetScriptedScheduleIgnoreConditions((Interruptability_t)interruptType);
@@ -7385,7 +7385,7 @@ void CAI_BaseNPC::StartTargetHandling( CBaseEntity *pTargetEnt )
 					   AIN_DEF_TOLERANCE, AIN_YAW_TO_DEST);
 
 	SetState( NPC_STATE_IDLE );
-	SetSchedule( SCHED_IDLE_WALK );
+	SetSchedule(SCHED_MOVE_TO_TARGET);
 
 	if ( !GetNavigator()->SetGoal( goal ) )
 	{

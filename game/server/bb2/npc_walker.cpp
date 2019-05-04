@@ -60,7 +60,9 @@ public:
 	int OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo );
 	bool CanDoMeleeAttack(void);
 
-	void PrescheduleThink( void );
+	void PrescheduleThink(void);
+	void PostscheduleThink(void);
+	bool SpawnRunSchedule(CBaseEntity* pTarget, Activity act, bool pathcorner, int interruptType);
 	int SelectSchedule ( void );
 	int	SelectFailSchedule(int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode);
 
@@ -119,6 +121,12 @@ private:
 	bool m_bGibbedForCrawl;
 	int m_nZombieSpawnFlags;
 	float m_flNextTimeToCheckCollisionChange;
+
+	// Target Script Schedule Pathing:
+	EHANDLE m_hScriptTarget;
+	Activity m_actScriptActivity;
+	bool m_bScriptPathcorner;
+	int m_iScriptInterruptType;
 };
 
 LINK_ENTITY_TO_CLASS(npc_walker, CNPCWalker);
@@ -267,6 +275,33 @@ void CNPCWalker::PrescheduleThink( void )
 	}
 
 	BaseClass::PrescheduleThink();
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CNPCWalker::PostscheduleThink(void)
+{
+	BaseClass::PostscheduleThink();
+
+	// Check if we want to run a 'late' schedule thing.
+	CBaseEntity* pTarget = m_hScriptTarget.Get();
+	if (pTarget && IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_SPAWNED) && (GetCollisionGroup() != COLLISION_GROUP_NPC_ZOMBIE_SPAWNING))
+	{
+		BaseClass::SpawnRunSchedule(pTarget, m_actScriptActivity, m_bScriptPathcorner, m_iScriptInterruptType);
+		m_hScriptTarget = NULL;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Delay until we've fully spawned / faded in, etc.
+//-----------------------------------------------------------------------------
+bool CNPCWalker::SpawnRunSchedule(CBaseEntity* pTarget, Activity act, bool pathcorner, int interruptType)
+{
+	m_hScriptTarget = pTarget;
+	m_actScriptActivity = act;
+	m_bScriptPathcorner = pathcorner;
+	m_iScriptInterruptType = interruptType;
+	return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -799,7 +834,7 @@ bool CNPCWalker::CanDoMeleeAttack(void)
 
 	trace_t	tr;
 	AI_TraceHull(start, start + (forward * GetClawAttackRange()), -Vector(10, 10, 10), Vector(10, 10, 10), MASK_SHOT_HULL, this, GetCollisionGroup(), &tr);
-	if (tr.DidHitNonWorldEntity() && tr.m_pEnt && tr.m_pEnt->m_takedamage.Get() == DAMAGE_YES)
+	if (tr.DidHitNonWorldEntity() && tr.m_pEnt && (tr.m_pEnt->m_takedamage.Get() == DAMAGE_YES) && (IRelationType(tr.m_pEnt) != D_LI))
 		return true;
 
 	return false;

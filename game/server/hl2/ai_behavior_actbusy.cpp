@@ -3088,7 +3088,7 @@ void CAI_ActBusyQueueGoal::NPCFinishedBusy( CAI_BaseNPC *pNPC )
 	// If this NPC was at the head of the line, move him to the exit node
 	if ( m_hExitingNPC == pNPC )
 	{
-		pNPC->ScheduledMoveToGoalEntity( SCHED_IDLE_WALK, m_hExitNode, ACT_WALK );
+		pNPC->ScheduledMoveToGoalEntity(SCHED_MOVE_TO_TARGET, m_hExitNode, ACT_WALK );
 		m_OnNPCLeftQueue.Set( pNPC, pNPC, this );
 		m_hExitingNPC = NULL;
 	}

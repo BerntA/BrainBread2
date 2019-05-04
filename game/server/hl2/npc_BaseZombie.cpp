@@ -1083,6 +1083,7 @@ bool CNPC_BaseZombie::ShouldUseNormalSpeedForSchedule(int scheduleType)
 	case SCHED_ZOMBIE_WANDER_STANDOFF:
 	case SCHED_ZOMBIE_MELEE_ATTACK1:
 	case SCHED_ZOMBIE_BASH_DOOR:
+	case SCHED_MOVE_TO_TARGET:
 		return true;
 	}
 
