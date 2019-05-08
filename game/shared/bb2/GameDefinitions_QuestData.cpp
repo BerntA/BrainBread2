@@ -180,11 +180,15 @@ void CGameDefinitionsQuestData::FireGameEvent(IGameEvent *event)
 		// Notify @ the chat.
 		if (g_pClientMode && g_pClientMode->GetGameChat() && !questData->bIsActive)
 		{
-			g_pVGuiLocalize->ConvertANSIToUnicode(questData->szTitle, argument, sizeof(argument));
-			g_pVGuiLocalize->ConstructString(unicode, sizeof(unicode), g_pVGuiLocalize->Find("#QUEST_STARTED"), 1, argument);
-			g_pVGuiLocalize->ConvertUnicodeToANSI(unicode, pchChatString, sizeof(pchChatString));
-			g_pClientMode->GetGameChat()->SetCustomColor(Color(200, 110, 5, 255));
-			g_pClientMode->GetGameChat()->Printf(CHAT_FILTER_ACHIEVEMENT, "%c%s", COLOR_CUSTOM, pchChatString);
+			wchar_t *token = g_pVGuiLocalize->Find("#QUEST_STARTED");
+			if (token)
+			{
+				g_pVGuiLocalize->ConvertANSIToUnicode(questData->szTitle, argument, sizeof(argument));
+				g_pVGuiLocalize->ConstructString(unicode, sizeof(unicode), token, 1, argument);
+				g_pVGuiLocalize->ConvertUnicodeToANSI(unicode, pchChatString, sizeof(pchChatString));
+				g_pClientMode->GetGameChat()->SetCustomColor(Color(200, 110, 5, 255));
+				g_pClientMode->GetGameChat()->Printf(CHAT_FILTER_ACHIEVEMENT, "%c%s", COLOR_CUSTOM, pchChatString);
+			}
 			OnNotifyQuestState(STATUS_ONGOING);
 		}
 
@@ -225,11 +229,15 @@ void CGameDefinitionsQuestData::FireGameEvent(IGameEvent *event)
 			// Notify @ the chat.
 			if (g_pClientMode && g_pClientMode->GetGameChat())
 			{
-				g_pVGuiLocalize->ConvertANSIToUnicode(questData->szTitle, argument, sizeof(argument));
-				g_pVGuiLocalize->ConstructString(unicode, sizeof(unicode), g_pVGuiLocalize->Find((questData->iQuestStatus == STATUS_FAILED) ? "#QUEST_FAILED" : "#QUEST_SUCCEEDED"), 1, argument);
-				g_pVGuiLocalize->ConvertUnicodeToANSI(unicode, pchChatString, sizeof(pchChatString));
-				g_pClientMode->GetGameChat()->SetCustomColor((questData->iQuestStatus == STATUS_FAILED) ? Color(170, 0, 0, 255) : Color(45, 185, 45, 255));
-				g_pClientMode->GetGameChat()->Printf(CHAT_FILTER_ACHIEVEMENT, "%c%s", COLOR_CUSTOM, pchChatString);
+				wchar_t *token = g_pVGuiLocalize->Find((questData->iQuestStatus == STATUS_FAILED) ? "#QUEST_FAILED" : "#QUEST_SUCCEEDED");
+				if (token)
+				{
+					g_pVGuiLocalize->ConvertANSIToUnicode(questData->szTitle, argument, sizeof(argument));
+					g_pVGuiLocalize->ConstructString(unicode, sizeof(unicode), token, 1, argument);
+					g_pVGuiLocalize->ConvertUnicodeToANSI(unicode, pchChatString, sizeof(pchChatString));
+					g_pClientMode->GetGameChat()->SetCustomColor((questData->iQuestStatus == STATUS_FAILED) ? Color(170, 0, 0, 255) : Color(45, 185, 45, 255));
+					g_pClientMode->GetGameChat()->Printf(CHAT_FILTER_ACHIEVEMENT, "%c%s", COLOR_CUSTOM, pchChatString);
+				}
 				OnNotifyQuestState(questData->iQuestStatus);
 			}
 		}
