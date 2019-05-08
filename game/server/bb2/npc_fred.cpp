@@ -285,7 +285,7 @@ void CNPCFred::PostscheduleThink(void)
 		for (int i = (m_hPlayersOnMyHead.Count() - 1); i >= 0; i--)
 		{
 			CBaseEntity *pOther = m_hPlayersOnMyHead[i].Get();
-			if (pOther)
+			if (pOther && pOther->IsPlayer() && pOther->IsHuman() && pOther->IsAlive())
 			{
 				float damage = ceil(((float)pOther->GetMaxHealth()) * (sk_npc_boss_fred_camp_dmg.GetFloat() / 100.0f));
 
