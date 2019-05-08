@@ -290,10 +290,10 @@ void CNPCFred::PostscheduleThink(void)
 				float damage = ceil(((float)pOther->GetMaxHealth()) * (sk_npc_boss_fred_camp_dmg.GetFloat() / 100.0f));
 
 				Vector vecPush;
-				const float maxVEL = 550.0f;
+				const float maxVEL = 300.0f;
 				vecPush.x = maxVEL * ((random->RandomInt(0, 1) == 0) ? 1.0f : -1.0f);
 				vecPush.y = maxVEL * ((random->RandomInt(0, 1) == 0) ? 1.0f : -1.0f);
-				vecPush.z = 250.0f;
+				vecPush.z = 135.0f;
 
 				IPredictionSystem::SuppressHostEvents(NULL);
 				DispatchParticleEffect("bb2_item_spawn", PATTACH_ROOTBONE_FOLLOW, pOther);
