@@ -78,35 +78,14 @@ void CHudTargetIdentifier::Reset(void)
 void CHudTargetIdentifier::Paint()
 {
 	C_HL2MP_Player *pMe = C_HL2MP_Player::GetLocalHL2MPPlayer();
-	if (!pMe)
-		return;
-
-	if (!pMe->IsAlive() || (pMe->GetTeamNumber() < TEAM_HUMANS))
-		return;
-
-	if (!HL2MPRules()->IsTeamplay())
+	if (!pMe || !pMe->IsAlive() || (pMe->GetTeamNumber() < TEAM_HUMANS) || !HL2MPRules()->IsTeamplay())
 		return;
 
 	// Draw all player names if within range and visible:
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		C_HL2MP_Player *pClient = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-		if (!pClient)
-			continue;
-
-		if (i == pMe->entindex())
-			continue;
-
-		if (!pClient->IsAlive())
-			continue;
-
-		if (pClient->GetTeamNumber() < TEAM_HUMANS)
-			continue;
-
-		if (pClient->GetTeamNumber() != pMe->GetTeamNumber())
-			continue;
-
-		if (pClient->IsDormant())
+		if (!pClient || (i == pMe->entindex()) || !pClient->IsAlive() || (pClient->GetTeamNumber() < TEAM_HUMANS) || (pClient->GetTeamNumber() != pMe->GetTeamNumber()) || pClient->IsDormant())
 			continue;
 
 		if (pClient->GetLocalOrigin().DistTo(pMe->GetLocalOrigin()) < MAX_TEAMMATE_DISTANCE)

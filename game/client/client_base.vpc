@@ -448,7 +448,6 @@ $Project
 		$File	"$SRCDIR\game\shared\beam_shared.cpp"
 		$File	"$SRCDIR\public\bone_accessor.cpp"
 		$File	"bone_merge_cache.cpp"
-		$File	"c_ai_basehumanoid.cpp"
 		$File	"c_ai_basenpc.cpp"
 		$File	"c_baseanimating.cpp"
 		$File	"c_baseanimatingoverlay.cpp"

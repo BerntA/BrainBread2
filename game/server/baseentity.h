@@ -992,6 +992,7 @@ public:
 
 	void					StartGroundContact( CBaseEntity *ground );
 	void					EndGroundContact( CBaseEntity *ground );
+	virtual void			OnEntityStandingOnMe(CBaseEntity *pOther) { }
 
 	void					SetGroundChangeTime( float flTime );
 	float					GetGroundChangeTime( void );

@@ -23,6 +23,7 @@ ConVar sk_npc_boss_fred_rage_duration("sk_npc_boss_fred_rage_duration", "40", FC
 ConVar sk_npc_boss_fred_max_jump_height("sk_npc_boss_fred_max_jump_height", "240", FCVAR_GAMEDLL, "Set how high Fred can jump!", true, 80.0f, true, 500.0f);
 
 ConVar sk_npc_boss_fred_rage_blastdmg("sk_npc_boss_fred_rage_blastdmg", "50", FCVAR_GAMEDLL | FCVAR_CHEAT, "When Fred enters rage mode how much radius damage % should he do?", true, 10.0f, true, 100.0f);
+ConVar sk_npc_boss_fred_camp_dmg("sk_npc_boss_fred_camp_dmg", "20", FCVAR_GAMEDLL | FCVAR_CHEAT, "When someone stands on Fred's head, how much % of their total HP should they lose as punishment?", true, 10.0f, true, 100.0f);
 
 ConVar sk_npc_boss_fred_navmesh("sk_npc_boss_fred_navmesh", "1", FCVAR_GAMEDLL, "Should Fred use navmesh?", true, 0, true, 1);
 ConVar sk_npc_boss_fred_regenrate("sk_npc_boss_fred_regenrate", "0.135", FCVAR_GAMEDLL | FCVAR_CHEAT, "Set the health regen rate for Fred.", true, 0.0f, true, 100.0f);
@@ -50,6 +51,11 @@ public:
 		m_hTargetPlayer = NULL;
 	}
 
+	virtual ~CNPCFred()
+	{
+		m_hPlayersOnMyHead.RemoveAll();
+	}
+
 	void Precache(void)
 	{
 		PrecacheParticleSystem("bb2_healing_effect");
@@ -74,7 +80,9 @@ public:
 	int OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo );
 	void BuildScheduleTestBits( void );
 
-	void PrescheduleThink( void );
+	void PrescheduleThink(void);
+	void PostscheduleThink(void);
+
 	int SelectSchedule ( void );
 	void OnStartSchedule(int scheduleType);
 
@@ -98,6 +106,8 @@ public:
 	bool CanRegenHealth(void) { return true; }
 	float GetHealthRegenRate(void) { return sk_npc_boss_fred_regenrate.GetFloat(); }
 
+	void OnEntityStandingOnMe(CBaseEntity *pOther);
+
 protected:
 	float m_flRageTime;
 	float m_flLastCamperCheck;
@@ -112,6 +122,7 @@ protected:
 
 private:
 	CHandle<CHL2MP_Player> m_hTargetPlayer;
+	CUtlVector<EHANDLE> m_hPlayersOnMyHead;
 };
 
 int ACT_RAGE;
@@ -235,6 +246,15 @@ void CNPCFred::OnChangeActivity(Activity eNewActivity)
 	}
 }
 
+void CNPCFred::OnEntityStandingOnMe(CBaseEntity *pOther)
+{
+	if (pOther && pOther->IsPlayer() && pOther->IsHuman() && pOther->IsAlive())
+	{
+		EHANDLE hPlayer = pOther;
+		m_hPlayersOnMyHead.AddToTail(hPlayer);
+	}
+}
+
 void CNPCFred::PrescheduleThink( void )
 {
 	if( gpGlobals->curtime > m_flNextMoanSound )
@@ -254,6 +274,44 @@ void CNPCFred::PrescheduleThink( void )
 	FindAndPunishCampers();
 
 	BaseClass::PrescheduleThink();
+}
+
+void CNPCFred::PostscheduleThink(void)
+{
+	BaseClass::PostscheduleThink();
+
+	if (m_hPlayersOnMyHead.Count())
+	{
+		for (int i = (m_hPlayersOnMyHead.Count() - 1); i >= 0; i--)
+		{
+			CBaseEntity *pOther = m_hPlayersOnMyHead[i].Get();
+			if (pOther)
+			{
+				float damage = ceil(((float)pOther->GetMaxHealth()) * (sk_npc_boss_fred_camp_dmg.GetFloat() / 100.0f));
+
+				Vector vecPush;
+				const float maxVEL = 550.0f;
+				vecPush.x = maxVEL * ((random->RandomInt(0, 1) == 0) ? 1.0f : -1.0f);
+				vecPush.y = maxVEL * ((random->RandomInt(0, 1) == 0) ? 1.0f : -1.0f);
+				vecPush.z = 250.0f;
+
+				IPredictionSystem::SuppressHostEvents(NULL);
+				DispatchParticleEffect("bb2_item_spawn", PATTACH_ROOTBONE_FOLLOW, pOther);
+
+				if (pOther->m_takedamage == DAMAGE_YES)
+				{
+					CTakeDamageInfo info(this, this, ((int)damage), DMG_FALL);
+					info.SetDamageForce(vec3_origin);
+					info.SetDamagePosition(vec3_origin);
+					AddMultiDamage(info, pOther);
+					ApplyMultiDamage();
+				}
+
+				pOther->ApplyAbsVelocityImpulse(vecPush, true);
+			}
+			m_hPlayersOnMyHead.Remove(i);
+		}
+	}
 }
 
 void CNPCFred::StartRageMode(void)

@@ -2165,6 +2165,10 @@ CBaseEntity *CBaseEntity::GetGroundEntity( void )
 void CBaseEntity::StartGroundContact( CBaseEntity *ground )
 {
 	AddFlag( FL_ONGROUND );
+#ifdef GAME_DLL
+	if (ground)
+		ground->OnEntityStandingOnMe(this);
+#endif
 //	Msg( "+++ %s starting contact with ground %s\n", GetClassname(), ground->GetClassname() );
 }
 

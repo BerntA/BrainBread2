@@ -16,6 +16,7 @@ class CViewSetup;
 class C_BaseEntity;
 class C_BasePlayer;
 class CUserCmd;
+class CBaseHudChat;
 
 namespace vgui
 {
@@ -88,6 +89,7 @@ public:
 	virtual void	OverrideMouseInput( float *x, float *y ) = 0;
 	virtual bool	CreateMove( float flInputSampleTime, CUserCmd *cmd ) = 0;
 	virtual bool	CreateMove(float flInputSampleTime, CUserCmd *cmd, bool bFakeInput) = 0;
+	virtual CBaseHudChat *GetGameChat(void) = 0;
 
 	virtual void	LevelInit( const char *newmap ) = 0;
 	virtual void	LevelShutdown( void ) = 0;

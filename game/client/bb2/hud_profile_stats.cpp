@@ -35,6 +35,7 @@ enum SharedHUDTextureIcons
 	SHARED_HUD_ICON_KICK_CD_FG,
 	SHARED_HUD_ICON_SLIDE_CD_BG,
 	SHARED_HUD_ICON_SLIDE_CD_FG,
+	SHARED_HUD_ICON_QUEST,
 
 	SHARED_HUD_ICON_COUNT
 };
@@ -55,6 +56,7 @@ public:
 	virtual void VidInit(void);
 	virtual void Reset(void);
 	virtual bool ShouldDraw(void);
+	virtual void DisplayQuestNotification(int status);
 
 protected:
 
@@ -100,6 +102,10 @@ private:
 
 	// HUD Texture Icons:
 	CHudTexture *m_pSharedHUDIcons[SHARED_HUD_ICON_COUNT];
+
+	// Quest Notification Icon:
+	float m_flQuestNotificationTime;
+	Color m_colQuestNotification;
 
 	CPanelAnimationVarAliasType(float, level_x, "level_x", "0", "proportional_float");
 	CPanelAnimationVarAliasType(float, level_y, "level_y", "0", "proportional_float");
@@ -161,6 +167,13 @@ private:
 	CPanelAnimationVar(vgui::HFont, m_hSmallFont, "DefFontSmall", "DefaultVerySmall");
 };
 
+static CHudProfileStats *g_pProfileStatsHUD = NULL;
+void OnNotifyQuestState(int state) // HACK
+{
+	if (g_pProfileStatsHUD)
+		g_pProfileStatsHUD->DisplayQuestNotification(state);
+}
+
 DECLARE_HUDELEMENT(CHudProfileStats);
 
 //------------------------------------------------------------------------
@@ -219,10 +232,13 @@ CHudProfileStats::CHudProfileStats(const char * pElementName) : CHudElement(pEle
 		m_pSharedHUDIcons[i] = NULL;
 
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_INVEHICLE | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
+
+	g_pProfileStatsHUD = this;
 }
 
 CHudProfileStats::~CHudProfileStats()
 {
+	g_pProfileStatsHUD = NULL;
 }
 
 //------------------------------------------------------------------------
@@ -251,6 +267,7 @@ void CHudProfileStats::VidInit(void)
 		"kick_cd_fg",
 		"slide_cd_bg",
 		"slide_cd_fg",
+		"quest",
 	};
 
 	for (int i = 0; i < SHARED_HUD_ICON_COUNT; i++)
@@ -264,6 +281,8 @@ void CHudProfileStats::Reset(void)
 {
 	SetFgColor(Color(255, 255, 255, 255));
 	SetAlpha(255);
+	m_flQuestNotificationTime = 0.0f;
+	m_colQuestNotification = GetFgColor();
 }
 
 //------------------------------------------------------------------------
@@ -280,6 +299,23 @@ bool CHudProfileStats::ShouldDraw(void)
 
 	UpdatePlayer(pPlayer);
 	return true;
+}
+
+void CHudProfileStats::DisplayQuestNotification(int status)
+{
+	m_flQuestNotificationTime = gpGlobals->curtime + 3.5f;
+	switch (status)
+	{
+	case STATUS_SUCCESS:
+		m_colQuestNotification = Color(45, 185, 45, 255);
+		break;
+	case STATUS_FAILED:
+		m_colQuestNotification = Color(170, 0, 0, 255);
+		break;
+	default:
+		m_colQuestNotification = Color(255, 255, 255, 255);
+		break;
+	}
 }
 
 //------------------------------------------------------------------------
@@ -678,37 +714,51 @@ void CHudProfileStats::Paint()
 		cdypos = dm_cooldown_ypos;
 	}
 
-	if (!m_bIsZombie && (pPlayer->m_BB2Local.m_flSlideKickCooldownEnd > gpGlobals->curtime))
+	if (!m_bIsZombie)
 	{
-		float flEndTime = pPlayer->m_BB2Local.m_flSlideKickCooldownEnd;
-		float flStartTime = pPlayer->m_BB2Local.m_flSlideKickCooldownStart;
-		float timeToTake = flEndTime - flStartTime;
-		float percentage = 1.0f - ((flEndTime - gpGlobals->curtime) / timeToTake);
-		percentage = clamp(percentage, 0.0f, 1.0f);
-
-		CHudTexture *pCooldownIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_KICK_CD_BG];
-		if (pCooldownIcon)
+		if (pPlayer->m_BB2Local.m_flSlideKickCooldownEnd > gpGlobals->curtime)
 		{
-			surface()->DrawSetColor(GetFgColor());
-			surface()->DrawSetTexture(pCooldownIcon->textureId);
-			surface()->DrawTexturedRect(pCooldownIcon->GetOrigPosX() + cdxpos, pCooldownIcon->GetOrigPosY() + cdypos, cdxpos + pCooldownIcon->GetOrigPosX() + pCooldownIcon->GetOrigWide(), cdypos + pCooldownIcon->GetOrigPosY() + pCooldownIcon->GetOrigTall());
+			float flEndTime = pPlayer->m_BB2Local.m_flSlideKickCooldownEnd;
+			float flStartTime = pPlayer->m_BB2Local.m_flSlideKickCooldownStart;
+			float timeToTake = flEndTime - flStartTime;
+			float percentage = 1.0f - ((flEndTime - gpGlobals->curtime) / timeToTake);
+			percentage = clamp(percentage, 0.0f, 1.0f);
+
+			CHudTexture *pCooldownIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_KICK_CD_BG];
+			if (pCooldownIcon)
+			{
+				surface()->DrawSetColor(GetFgColor());
+				surface()->DrawSetTexture(pCooldownIcon->textureId);
+				surface()->DrawTexturedRect(pCooldownIcon->GetOrigPosX() + cdxpos, pCooldownIcon->GetOrigPosY() + cdypos, cdxpos + pCooldownIcon->GetOrigPosX() + pCooldownIcon->GetOrigWide(), cdypos + pCooldownIcon->GetOrigPosY() + pCooldownIcon->GetOrigTall());
+			}
+
+			pCooldownIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_SLIDE_CD_BG];
+			if (pCooldownIcon)
+			{
+				surface()->DrawSetColor(GetFgColor());
+				surface()->DrawSetTexture(pCooldownIcon->textureId);
+				surface()->DrawTexturedRect(pCooldownIcon->GetOrigPosX() + cdxpos, pCooldownIcon->GetOrigPosY() + cdypos, cdxpos + pCooldownIcon->GetOrigPosX() + pCooldownIcon->GetOrigWide(), cdypos + pCooldownIcon->GetOrigPosY() + pCooldownIcon->GetOrigTall());
+			}
+
+			pCooldownIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_KICK_CD_FG];
+			if (pCooldownIcon)
+				pCooldownIcon->DrawCircularProgression(GetFgColor(), pCooldownIcon->GetOrigPosX() + cdxpos, pCooldownIcon->GetOrigPosY() + cdypos, pCooldownIcon->GetOrigWide(), pCooldownIcon->GetOrigTall(), percentage);
+
+			pCooldownIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_SLIDE_CD_FG];
+			if (pCooldownIcon)
+				pCooldownIcon->DrawCircularProgression(GetFgColor(), pCooldownIcon->GetOrigPosX() + cdxpos, pCooldownIcon->GetOrigPosY() + cdypos, pCooldownIcon->GetOrigWide(), pCooldownIcon->GetOrigTall(), percentage);
+
+			cdypos -= (pCooldownIcon ? pCooldownIcon->GetOrigTall() : 0);
 		}
 
-		pCooldownIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_SLIDE_CD_BG];
-		if (pCooldownIcon)
+		// Flash quest notification(s)!
+		CHudTexture *pQuestIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_QUEST];
+		if (pQuestIcon && (m_flQuestNotificationTime >= gpGlobals->curtime))
 		{
-			surface()->DrawSetColor(GetFgColor());
-			surface()->DrawSetTexture(pCooldownIcon->textureId);
-			surface()->DrawTexturedRect(pCooldownIcon->GetOrigPosX() + cdxpos, pCooldownIcon->GetOrigPosY() + cdypos, cdxpos + pCooldownIcon->GetOrigPosX() + pCooldownIcon->GetOrigWide(), cdypos + pCooldownIcon->GetOrigPosY() + pCooldownIcon->GetOrigTall());
+			surface()->DrawSetColor(m_colQuestNotification);
+			surface()->DrawSetTexture(pQuestIcon->textureId);
+			surface()->DrawTexturedRect(pQuestIcon->GetOrigPosX() + cdxpos, pQuestIcon->GetOrigPosY() + cdypos, cdxpos + pQuestIcon->GetOrigPosX() + pQuestIcon->GetOrigWide(), cdypos + pQuestIcon->GetOrigPosY() + pQuestIcon->GetOrigTall());
 		}
-
-		pCooldownIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_KICK_CD_FG];
-		if (pCooldownIcon)
-			pCooldownIcon->DrawCircularProgression(GetFgColor(), pCooldownIcon->GetOrigPosX() + cdxpos, pCooldownIcon->GetOrigPosY() + cdypos, pCooldownIcon->GetOrigWide(), pCooldownIcon->GetOrigTall(), percentage);
-
-		pCooldownIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_SLIDE_CD_FG];
-		if (pCooldownIcon)
-			pCooldownIcon->DrawCircularProgression(GetFgColor(), pCooldownIcon->GetOrigPosX() + cdxpos, pCooldownIcon->GetOrigPosY() + cdypos, pCooldownIcon->GetOrigWide(), pCooldownIcon->GetOrigTall(), percentage);
 	}
 }
 

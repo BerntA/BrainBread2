@@ -10,7 +10,15 @@
 
 #ifdef CLIENT_DLL
 #include "quest_panel.h"
+#include "iclientmode.h"
+#include "hud_basechat.h"
+#include <vgui/ILocalize.h>
+
+extern void OnNotifyQuestState(int state);
 #endif
+
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
 
 CGameDefinitionsQuestData::CGameDefinitionsQuestData()
 {
@@ -159,12 +167,26 @@ void CGameDefinitionsQuestData::FireGameEvent(IGameEvent *event)
 		ResetQuestStates();
 
 #ifdef CLIENT_DLL
+	char pchChatString[512]; pchChatString[0] = 0;
+	wchar_t unicode[512], argument[64];
+
 	if (!strcmp(type, "quest_start"))
 	{
 		const char *questName = event->GetString("name");
 		CQuestItem *questData = GetQuestDataForIndex(questName);
 		if (!questData)
 			return;
+
+		// Notify @ the chat.
+		if (g_pClientMode && g_pClientMode->GetGameChat() && !questData->bIsActive)
+		{
+			g_pVGuiLocalize->ConvertANSIToUnicode(questData->szTitle, argument, sizeof(argument));
+			g_pVGuiLocalize->ConstructString(unicode, sizeof(unicode), g_pVGuiLocalize->Find("#QUEST_STARTED"), 1, argument);
+			g_pVGuiLocalize->ConvertUnicodeToANSI(unicode, pchChatString, sizeof(pchChatString));
+			g_pClientMode->GetGameChat()->SetCustomColor(Color(200, 110, 5, 255));
+			g_pClientMode->GetGameChat()->Printf(CHAT_FILTER_ACHIEVEMENT, "%c%s", COLOR_CUSTOM, pchChatString);
+			OnNotifyQuestState(STATUS_ONGOING);
+		}
 
 		questData->bIsActive = true;
 	}
@@ -197,11 +219,28 @@ void CGameDefinitionsQuestData::FireGameEvent(IGameEvent *event)
 			return;
 
 		if (questData->iQuestStatus <= STATUS_ONGOING)
+		{
 			questData->iQuestStatus = status;
+
+			// Notify @ the chat.
+			if (g_pClientMode && g_pClientMode->GetGameChat())
+			{
+				g_pVGuiLocalize->ConvertANSIToUnicode(questData->szTitle, argument, sizeof(argument));
+				g_pVGuiLocalize->ConstructString(unicode, sizeof(unicode), g_pVGuiLocalize->Find((questData->iQuestStatus == STATUS_FAILED) ? "#QUEST_FAILED" : "#QUEST_SUCCEEDED"), 1, argument);
+				g_pVGuiLocalize->ConvertUnicodeToANSI(unicode, pchChatString, sizeof(pchChatString));
+				g_pClientMode->GetGameChat()->SetCustomColor((questData->iQuestStatus == STATUS_FAILED) ? Color(170, 0, 0, 255) : Color(45, 185, 45, 255));
+				g_pClientMode->GetGameChat()->Printf(CHAT_FILTER_ACHIEVEMENT, "%c%s", COLOR_CUSTOM, pchChatString);
+				OnNotifyQuestState(questData->iQuestStatus);
+			}
+		}
 	}
 	else if (!strcmp(type, "quest_send"))
 	{
 		const char *questName = event->GetString("name");
+		CQuestItem *questData = GetQuestDataForIndex(questName);
+		if (!questData || questData->bIsActive)
+			return;
+
 		int status = event->GetInt("status");
 
 		int killsForObjective1 = event->GetInt("objective1kills");
@@ -233,10 +272,6 @@ void CGameDefinitionsQuestData::FireGameEvent(IGameEvent *event)
 
 		int killsForObjective10 = event->GetInt("objective10kills");
 		bool bCompletedObjective10 = event->GetBool("objective10completed");
-
-		CQuestItem *questData = GetQuestDataForIndex(questName);
-		if (!questData || questData->bIsActive)
-			return;
 
 		questData->bIsActive = true;
 		questData->iQuestStatus = status;

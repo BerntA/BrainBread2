@@ -83,6 +83,7 @@ public:
 	virtual void	ProcessInput(bool bActive);
 	virtual bool	CreateMove( float flInputSampleTime, CUserCmd *cmd );
 	virtual bool	CreateMove(float flInputSampleTime, CUserCmd *cmd, bool bFakeInput);
+	virtual CBaseHudChat *GetGameChat(void) { return m_pChatElement; }
 	virtual void	Update();
 
 	// Input

@@ -1241,23 +1241,14 @@ Color CBaseHudChat::GetTextColorForClient( TextColor colorNum, int clientIndex )
 
 	case COLOR_ACHIEVEMENT:
 		{
-			vgui::IScheme *pSourceScheme = vgui::scheme()->GetIScheme( vgui::scheme()->GetScheme( "SourceScheme" ) ); 
-			if ( pSourceScheme )
-			{
-				c = pSourceScheme->GetColor( "SteamLightGreen", GetBgColor() );
-			}
-			else
-			{
-				c = GetDefaultTextColor();
-			}
+			vgui::IScheme *pSourceScheme = vgui::scheme()->GetIScheme(vgui::scheme()->GetScheme("SourceScheme"));
+			c = (pSourceScheme ? pSourceScheme->GetColor("SteamLightGreen", GetBgColor()) : GetDefaultTextColor());
 		}
 		break;
 
-	case COLOR_CREEPY:
-	{
-		c = Color(70, 0, 0, 255);
-	}
-	break;
+	case COLOR_CREEPY:	
+		c = Color(125, 0, 0, 255);
+		break;
 
 	default:
 		c = GetDefaultTextColor();
