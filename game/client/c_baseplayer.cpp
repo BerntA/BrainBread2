@@ -97,8 +97,6 @@ ConVar	spec_freeze_traveltime("spec_freeze_traveltime", "0.4", FCVAR_CHEAT | FCV
 ConVar	spec_freeze_distance_min("spec_freeze_distance_min", "96", FCVAR_CHEAT, "Minimum random distance from the target to stop when framing them in observer freeze cam.");
 ConVar	spec_freeze_distance_max("spec_freeze_distance_max", "200", FCVAR_CHEAT, "Maximum random distance from the target to stop when framing them in observer freeze cam.");
 
-static ConVar	cl_first_person_uses_world_model ( "cl_first_person_uses_world_model", "0", FCVAR_ARCHIVE, "Causes the third person model to be drawn instead of the view model" );
-
 ConVar demo_fov_override( "demo_fov_override", "0", FCVAR_CLIENTDLL | FCVAR_DONTRECORD, "If nonzero, this value will be used to override FOV during demo playback." );
 
 // This only needs to be approximate - it just controls the distance to the pivot-point of the head ("the neck") of the in-game character, not the player's real-world neck length.
@@ -1779,7 +1777,6 @@ void C_BasePlayer::ThirdPersonSwitch( bool bThirdperson )
 	}
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: single place to decide whether the camera is in the first-person position
 //          NOTE - ShouldDrawLocalPlayer() can be true even if the camera is in the first-person position, e.g. in VR.
@@ -1806,16 +1803,8 @@ void C_BasePlayer::ThirdPersonSwitch( bool bThirdperson )
 //-----------------------------------------------------------------------------
 /*static*/ bool C_BasePlayer::ShouldDrawLocalPlayer()
 {
-	if ( !UseVR() )
-	{
-		return !LocalPlayerInFirstPersonView() || cl_first_person_uses_world_model.GetBool() || (bb2_render_client_in_mirrors.GetBool() && g_bShouldRenderLocalPlayerExternally);
-	}
-
-	static ConVarRef vr_first_person_uses_world_model( "vr_first_person_uses_world_model" );
-	return !LocalPlayerInFirstPersonView() || vr_first_person_uses_world_model.GetBool() || (bb2_render_client_in_mirrors.GetBool() && g_bShouldRenderLocalPlayerExternally);
+	return (!LocalPlayerInFirstPersonView() || (bb2_render_client_in_mirrors.GetBool() && g_bShouldRenderLocalPlayerExternally));
 }
-
-
 
 //-----------------------------------------------------------------------------
 // Purpose: single place to decide whether the camera is in the first-person position
@@ -1846,26 +1835,11 @@ bool C_BasePlayer::InFirstPersonView()
 //-----------------------------------------------------------------------------
 bool C_BasePlayer::ShouldDrawThisPlayer()
 {
-	if ( !InFirstPersonView() )
-	{
+	if (!InFirstPersonView())
 		return true;
-	}
-	if ( !UseVR() && cl_first_person_uses_world_model.GetBool() )
-	{
-		return true;
-	}
-	if ( UseVR() )
-	{
-		static ConVarRef vr_first_person_uses_world_model( "vr_first_person_uses_world_model" );
-		if ( vr_first_person_uses_world_model.GetBool() )
-		{
-			return true;
-		}
-	}
+
 	return false;
 }
-
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 

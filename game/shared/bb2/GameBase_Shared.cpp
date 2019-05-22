@@ -525,7 +525,7 @@ void CGameBaseShared::AddInventoryItem(int iPlayerIndex, const DataInventoryItem
 			GetAchievementManager()->WriteToAchievement(pClient, "ACH_SURVIVOR_CAPTURE_BRIEFCASE");
 
 			// Announce Pickup... 'hihi'
-			if (TryTheLuck(0.45) || pClient->GetNearbyTeammates())
+			if (TryTheLuck(0.30) || pClient->GetNearbyTeammates())
 				HL2MPRules()->EmitSoundToClient(pClient, "PickupBriefcase", BB2_SoundTypes::TYPE_PLAYER, pClient->GetSoundsetGender());
 		}
 	}
@@ -612,7 +612,7 @@ bool CGameBaseShared::UseInventoryItem(int iPlayerIndex, uint iItemID, bool bIsM
 
 			pClient->TakeHealth(flHealthToAdd, DMG_GENERIC);
 
-			if (TryTheLuck(0.45))
+			if (TryTheLuck(0.30))
 				HL2MPRules()->EmitSoundToClient(pClient, "PickupHealth", BB2_SoundTypes::TYPE_PLAYER, pClient->GetSoundsetGender());
 		}
 		else if ((iSubType == TYPE_ARMOR_LARGE) || (iSubType == TYPE_ARMOR_MEDIUM) || (iSubType == TYPE_ARMOR_SMALL))

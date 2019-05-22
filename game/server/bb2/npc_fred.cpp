@@ -239,7 +239,7 @@ void CNPCFred::OnChangeActivity(Activity eNewActivity)
 		info.SetDamagePosition(vecStart);
 		info.SetMiscFlag((TAKEDMGINFO_FORCE_RELATIONSHIP_CHECK | TAKEDMGINFO_DISABLE_FORCELIMIT | TAKEDMGINFO_USE_DMG_AS_PERCENT));
 		info.SetRelationshipLink(Classify());
-		RadiusDamage(info, vecStart, RAGE_RADIUS, CLASS_NONE, NULL);
+		RadiusDamage(info, vecStart, RAGE_RADIUS, CLASS_ZOMBIE, this);
 
 		IPredictionSystem::SuppressHostEvents(NULL);
 		DispatchParticleEffect("bb2_item_spawn", vecStart, vec3_angle, this);

@@ -361,6 +361,21 @@ void CHL2MP_Player::OnLateStatsLoadEnterGame(void)
 
 	if (!GameBaseServer()->IsTutorialModeEnabled())
 	{
+		// Verify Skills! Check if the player somehow managed to get more points than allowed!
+		if (HL2MPRules()->CanUseSkills())
+		{
+			int pointsTotal = m_BB2Local.m_iSkill_Talents.Get();
+			for (int i = 0; i < PLAYER_SKILL_ZOMBIE_HEALTH; i++)
+				pointsTotal += m_BB2Local.m_iPlayerSkills.Get(i);
+
+			if (pointsTotal > MAX_PLAYER_TALENTS)
+			{
+				m_BB2Local.m_iSkill_Talents = GameBaseShared()->GetSharedGameDetails()->CalculatePointsForLevel(GetPlayerLevel());
+				for (int i = 0; i < PLAYER_SKILL_ZOMBIE_HEALTH; i++)
+					m_BB2Local.m_iPlayerSkills.Set(i, 0);
+			}
+		}
+
 		if (HL2MPRules()->GetCurrentGamemode() == MODE_ARENA)
 		{
 			if (!HL2MPRules()->m_bRoundStarted)
@@ -1414,36 +1429,46 @@ bool CHL2MP_Player::PerformLevelUp(int iXP)
 		m_BB2Local.m_iSkill_XPCurrent = 0;
 
 		// Add talent point(s).
-		int pointsToGive = 1; // Get 1 pnt from lvl 1-99, 2 pnt for lvl 100, 5 pnt for every 100 lvl, 10 pnt for lvl 500!
+		int pointsToGive = (m_iSkill_Level < 100) ? 1 : 0; // Get 1 pnt from lvl 1-99, 2 pnt for lvl 100, 5 pnt for every 100 lvl, 10 pnt for lvl 500!
 
-		switch (m_iSkill_Level)
+		if (m_iSkill_Level >= 100)
 		{
-		case 100:
-			pointsToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iPointsForLvlHundred;
-			break;
-		case MAX_PLAYER_LEVEL:
-			pointsToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iPointsForLvlFiveHundred;
-			break;
-		default: // For every 100 lvl after lvl 100, give X pnts!
-			int lvl = (m_iSkill_Level - 100);
-			if ((lvl % 100) == 0)
-				pointsToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iPointsForEveryHundredLvl;
-			break;
+			switch (m_iSkill_Level)
+			{
+			case 100:
+				pointsToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iPointsForLvlHundred;
+				break;
+			case MAX_PLAYER_LEVEL:
+				pointsToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iPointsForLvlFiveHundred;
+				break;
+			default: // For every 100 lvl after lvl 100, give X pnts!
+				int lvl = (m_iSkill_Level - 100);
+				if ((lvl % 100) == 0)
+					pointsToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iPointsForEveryHundredLvl;
+				break;
+			}
 		}
 
 		m_BB2Local.m_iSkill_Talents += pointsToGive;
 
-		// Congrats!
-		char pchArg1[16];
-		Q_snprintf(pchArg1, 16, "%i", pointsToGive);
-		GameBaseServer()->SendToolTip("#TOOLTIP_LEVELUP2", GAME_TIP_DEFAULT, this->entindex(), pchArg1);
-
 		if (!IsBot())
 		{
-			// Friendly messages:
-			char pchArg1[16];
-			Q_snprintf(pchArg1, 16, "%i", m_iSkill_Level);
-			GameBaseServer()->SendToolTip("#TOOLTIP_LEVELUP1", GAME_TIP_DEFAULT, this->entindex(), pchArg1);
+			if (pointsToGive > 0)
+			{
+				// Congrats!
+				char pchArg[32]; pchArg[0] = 0;
+				Q_snprintf(pchArg, 32, "%i", pointsToGive);
+				GameBaseServer()->SendToolTip("#TOOLTIP_LEVELUP2", GAME_TIP_DEFAULT, this->entindex(), pchArg);
+			}
+
+			{
+				// Friendly messages:	
+				char pchArg[32]; pchArg[0] = 0;
+				Q_snprintf(pchArg, 32, "%i", m_iSkill_Level);
+				GameBaseServer()->SendToolTip("#TOOLTIP_LEVELUP1", GAME_TIP_DEFAULT, this->entindex(), pchArg);
+			}
+
+			// Particle fanciness...
 			IPredictionSystem::SuppressHostEvents(NULL);
 			DispatchParticleEffect("bb2_levelup_effect", PATTACH_ROOTBONE_FOLLOW, this, -1, true);
 		}
@@ -1458,7 +1483,7 @@ bool CHL2MP_Player::PerformLevelUp(int iXP)
 	return false;
 }
 
-#define PERCENT_TO_TAUNT 0.35 // X%
+#define PERCENT_TO_TAUNT 0.20 // X%
 
 bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 {

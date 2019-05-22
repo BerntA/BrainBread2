@@ -12,6 +12,7 @@
 
 #define MAX_SKILL_ARRAY 40
 #define MAX_PLAYER_LEVEL 500
+#define MAX_PLAYER_TALENTS 125
 
 enum playerSkills_t
 {

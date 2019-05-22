@@ -40,13 +40,13 @@ C_BaseCombatWeapon *GetActiveWeapon( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void C_BaseCombatWeapon::SetDormant( bool bDormant )
+void C_BaseCombatWeapon::SetDormant(bool bDormant)
 {
-	// If I'm going from active to dormant and I'm carried by another player, holster me.
-	if ( !IsDormant() && bDormant && GetOwner() && !IsCarriedByLocalPlayer() )
-		FullHolster();
+	// If I'm going from active to dormant and I'm carried by another player/npc, holster me.
+	if ((IsDormant() != bDormant) && GetOwner() && !IsCarriedByLocalPlayer())
+		SetWeaponVisible(!bDormant);
 
-	BaseClass::SetDormant( bDormant );
+	BaseClass::SetDormant(bDormant);
 }
 
 //-----------------------------------------------------------------------------
@@ -218,7 +218,6 @@ bool C_BaseCombatWeapon::IsCarriedByLocalPlayer( void )
 	return ( GetOwner() == C_BasePlayer::GetLocalPlayer() );
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Returns true if this client is carrying this weapon and is
 //			using the view models
@@ -227,7 +226,6 @@ bool C_BaseCombatWeapon::ShouldDrawUsingViewModel( void )
 {
 	return IsCarriedByLocalPlayer() && !C_BasePlayer::ShouldDrawLocalPlayer();
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Returns true if this weapon is the local client's currently wielded weapon
@@ -347,10 +345,7 @@ bool C_BaseCombatWeapon::ShouldDraw( void )
 	{
 		// Show it if it's active...
 		// Bernt - We will always draw every weapon that the player has but not slots above 3 which are weapons like hands, random items, etc...
-		if (!VisibleInWeaponSelection())
-			return false;
-		else
-			return bIsActive;
+		return (VisibleInWeaponSelection() && bIsActive);
 	}
 
 	// FIXME: We may want to only show active weapons on NPCs
@@ -363,10 +358,7 @@ bool C_BaseCombatWeapon::ShouldDraw( void )
 //-----------------------------------------------------------------------------
 bool C_BaseCombatWeapon::ShouldDrawPickup( void )
 {
-	if ( GetWeaponFlags() & ITEM_FLAG_NOITEMPICKUP )
-		return false;
-
-	if ( m_bJustRestored )
+	if ( (GetWeaponFlags() & ITEM_FLAG_NOITEMPICKUP) || m_bJustRestored)
 		return false;
 
 	return true;
@@ -379,15 +371,11 @@ bool C_BaseCombatWeapon::ShouldDrawPickup( void )
 int C_BaseCombatWeapon::DrawModel( int flags )
 {
 	VPROF_BUDGET( "C_BaseCombatWeapon::DrawModel", VPROF_BUDGETGROUP_MODEL_RENDERING );
-	if ( !m_bReadyToDraw )
-		return 0;
-
-	if ( !IsVisible() )
+	if (!m_bReadyToDraw || !IsVisible())
 		return 0;
 
 	// check if local player chases owner of this weapon in first person
 	C_BasePlayer *localplayer = C_BasePlayer::GetLocalPlayer();
-
 	if ( localplayer && localplayer->IsObserver() && GetOwner() )
 	{
 		// don't draw weapon if chasing this guy as spectator
@@ -434,7 +422,7 @@ int C_BaseCombatWeapon::CalcOverrideModelIndex()
 { 
 	C_BasePlayer *localplayer = C_BasePlayer::GetLocalPlayer();
 	if ( localplayer && 
-		localplayer == GetOwner() &&
+		(localplayer == GetOwner()) &&
 		ShouldDrawLocalPlayerViewModel() )
 	{
 		return BaseClass::CalcOverrideModelIndex();
@@ -444,7 +432,6 @@ int C_BaseCombatWeapon::CalcOverrideModelIndex()
 		return GetWorldModelIndex();
 	}
 }
-
 
 //-----------------------------------------------------------------------------
 // tool recording
@@ -491,7 +478,7 @@ bool C_BaseCombatWeapon::ShouldDoAnimEvents()
 		return true;
 
 	C_BasePlayer *localplayer = C_BasePlayer::GetLocalPlayer();
-	if (localplayer && localplayer == GetOwner())
+	if (localplayer && (localplayer == GetOwner()))
 		return false;
 
 	return true;
@@ -504,18 +491,15 @@ bool C_BaseCombatWeapon::EnsureCorrectRenderingModel()
 		return false;
 
 	C_BasePlayer *localplayer = C_BasePlayer::GetLocalPlayer();
-	if (localplayer && localplayer != GetOwner())
+	if (localplayer && (localplayer != GetOwner()))
 		return false;
 
 	SetModelIndex(GetWorldModelIndex());
 
 	// Validate our current sequence just in case ( in theory the view and weapon models should have the same sequences for sequences that overlap at least )
 	CStudioHdr *pStudioHdr = GetModelPtr();
-	if (pStudioHdr &&
-		GetSequence() >= pStudioHdr->GetNumSeq())
-	{
+	if (pStudioHdr && (GetSequence() >= pStudioHdr->GetNumSeq()))
 		SetSequence(0);
-	}
 
 	return true;
 }
