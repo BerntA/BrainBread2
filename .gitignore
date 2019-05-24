@@ -2,6 +2,7 @@
 
 # Visual Studio
 *.obj
+*.cache
 *.pdb
 *.idb
 *.tlog
@@ -29,7 +30,7 @@
 
 # Version Controlling
 *.hg
-/.hg/*
+/.hg
 hg
 
 # OSX/Linux build products
@@ -42,25 +43,40 @@ obj*/
 *.dSYM
 *.dbg
 *.project
+*.map
 
 # Misc Folders
 ipch
 /ipch/*
 /Debug_brainbread2/*
 /Release_brainbread2/*
+/Debug_mod_*/*
+/Release_mod_*/*
 /Debug/*
 /Release/*
+/obj_*_linux32/*
+obj_*_linux32
 /stdshaders/game/*
 /stdshaders/game/bin/*
 /stdshaders/game/bb2/*
 /stdshaders/game/bb2/shaders/*
 /stdshaders/game/bb2/shaders/fxc/*
+Debug_dx9_*
+Debug_dx9_*
+Release_dx9_*
+Release_dx9_*
+Release_brainbread2
+Debug_brainbread2
 Debug_mod_brainbread2
 Release_mod_brainbread2
+Debug_mod_*
+Release_mod_*
 Debug
 Release
+*_osx32_*
 
 # shader files
+*.TMP
 *.tmp
 *.TEMP
 
@@ -75,3 +91,111 @@ Release
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# Build results
+
+[Dd]ebug/
+[Rr]elease/
+[Oo]bj/
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+*_i.c
+*_p.c
+*_i.h
+*.meta
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp_proj
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+
+# Visual C++ cache files
+ipch/
+*.aps
+*.ncb
+*.cachefile
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+
+# Guidance Automation Toolkit
+*.gpState
+
+# ReSharper is a .NET coding add-in
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Click-Once directory
+publish/
+
+# Publish Web Output
+*.Publish.xml
+*.pubxml
+*.azurePubxml
+
+# Windows Azure Build Output
+csx/
+*.build.csdef
+
+# Windows Store app package directory
+AppPackages/
+
+# Others
+sql/
+*.Cache
+ClientBin/
+[Ss]tyle[Cc]op.*
+![Ss]tyle[Cc]op.targets
+~$*
+*~
+*.dbmdl
+*.[Pp]ublish.xml
+
+*.publishsettings
+
+# RIA/Silverlight projects
+Generated_Code/
+
+# Backup & report files from converting an old project file to a newer
+# Visual Studio version. Backup files are not needed, because we have git ;-)
+_UpgradeReport_Files/
+Backup*/
+UpgradeLog*.XML
+UpgradeLog*.htm
+
+# SQL Server files
+App_Data/*.mdf
+App_Data/*.ldf
+
+# =========================
+# Windows detritus
+# =========================
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Mac desktop service store files
+.DS_Store
+
+_NCrunch*
