@@ -124,6 +124,7 @@ public:
 	int m_iRangeMax;
 	int m_iRangeMin;
 	int m_iAccuracy;
+	int m_iAccuracyPvP;
 	int m_iZoomModeFOV[MAX_WEAPON_ZOOM_MODES];
 	float m_flPhysicalWeight;
 	float m_flFireRate;

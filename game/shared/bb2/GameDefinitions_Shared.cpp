@@ -869,10 +869,10 @@ int CGameDefinitionsShared::CalculatePointsForLevel(int lvl)
 		return 0;
 
 	float flLvL = ((float)lvl);
+	flLvL = clamp(flLvL, 1.0f, (MAX_PLAYER_LEVEL - 100.0f));
 	float points = MIN((lvl - 1), 98);
 
-	flLvL -= 100.0f;
-	points += MAX(floor(flLvL / 100) - 1, 0.0f) * pszGamemodeData.iPointsForEveryHundredLvl;
+	points += MAX(floor(flLvL / 100.0f) - 1, 0.0f) * pszGamemodeData.iPointsForEveryHundredLvl;
 
 	if (lvl >= 100)
 		points += pszGamemodeData.iPointsForLvlHundred;

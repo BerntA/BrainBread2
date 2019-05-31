@@ -1169,7 +1169,7 @@ void CHL2MPRules::VoteSystemThink(void)
 
 			float yesVotes = (((float)m_iCurrentYesVotes) / ((float)m_iAmountOfVoters)) * 100.0f;
 			bool bVoteStatus = false;
-			if (yesVotes >= bb2_vote_required_percentage.GetFloat())
+			if (yesVotes >= ((voteType == VOTE_TYPE_MAP) ? bb2_vote_required_percentage.GetFloat() : bb2_vote_required_percentage_kickban.GetFloat()))
 			{
 				bVoteStatus = true;
 

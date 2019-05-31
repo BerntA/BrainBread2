@@ -317,6 +317,13 @@ void CHL2MP_Player::Precache(void)
 	PrecacheScriptSound("Music.Round.Start");
 	PrecacheScriptSound("Player.ArmorImpact");
 
+	PrecacheScriptSound("SkillActivated.BlazingAmmo");
+	PrecacheScriptSound("SkillActivated.FrostAmmo");
+	PrecacheScriptSound("SkillActivated.MagRefill");
+	PrecacheScriptSound("SkillActivated.MeleeBleed");
+	PrecacheScriptSound("SkillActivated.BulletPenetration");
+	PrecacheScriptSound("SkillActivated.LifeLeech");
+
 	PrecacheScriptSound("KeyPad.Unlock");
 	PrecacheScriptSound("KeyPad.Fail");
 
@@ -1483,7 +1490,7 @@ bool CHL2MP_Player::PerformLevelUp(int iXP)
 	return false;
 }
 
-#define PERCENT_TO_TAUNT 0.20 // X%
+#define PERCENT_TO_TAUNT 0.075f // X%
 
 bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 {
@@ -1535,6 +1542,7 @@ bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 				float m_flHealthToTake = ((m_flEnemyHealth / 100.0f) * (GetSkillValue(PLAYER_SKILL_HUMAN_LIFE_LEECH, TEAM_HUMANS)));
 				TakeHealth(m_flHealthToTake, DMG_GENERIC);
 				DispatchDamageText(pVictim, (int)m_flHealthToTake);
+				PlaySkillSoundCue("SkillActivated.LifeLeech");
 			}
 		}
 
@@ -1563,7 +1571,10 @@ bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 						}
 
 						if (bAffectedBySkill)
+						{
 							pMyWeapon->AffectedByPlayerSkill(PLAYER_SKILL_HUMAN_MAGAZINE_REFILL);
+							PlaySkillSoundCue("SkillActivated.MagRefill");
+						}
 					}
 				}
 			}

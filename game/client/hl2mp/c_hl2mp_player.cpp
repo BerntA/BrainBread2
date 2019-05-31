@@ -82,6 +82,8 @@ ConVar bb2_zombie_vision_color_r("bb2_zombie_vision_color_r", "80", FCVAR_CLIENT
 ConVar bb2_zombie_vision_color_g("bb2_zombie_vision_color_g", "25", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Sets the color for the zombie vision lighting.", true, 0.0f, true, 255.0f);
 ConVar bb2_zombie_vision_color_b("bb2_zombie_vision_color_b", "15", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Sets the color for the zombie vision lighting.", true, 0.0f, true, 255.0f);
 
+static ConVar bb2_sound_skill_cues("bb2_sound_skill_cues", "1", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_SERVER_CAN_EXECUTE, "Enable or Disable Skill Sound Cues.", true, 0, true, 1);
+
 void SpawnBlood (Vector vecSpot, const Vector &vecDir, int bloodColor, float flDamage, int hitbox);
 
 C_ClientRagdollGib *m_pPlayerRagdoll = NULL;
@@ -306,8 +308,8 @@ void C_HL2MP_Player::AddEntity( void )
 				beamInfo.m_pszHaloName = "sprites/glow01.vmt";
 				beamInfo.m_flHaloScale = 3.0;
 				beamInfo.m_flWidth = 8.0f;
-				beamInfo.m_flEndWidth = 35.0f;
-				beamInfo.m_flFadeLength = 300.0f;
+				beamInfo.m_flEndWidth = 40.0f;
+				beamInfo.m_flFadeLength = 350.0f;
 				beamInfo.m_flAmplitude = 0;
 				beamInfo.m_flBrightness = 60.0;
 				beamInfo.m_flSpeed = 0.0f;
@@ -324,7 +326,7 @@ void C_HL2MP_Player::AddEntity( void )
 				m_pFlashlightBeam = beams->CreateBeamPoints( beamInfo );
 			}
 
-			if( m_pFlashlightBeam )
+			if (m_pFlashlightBeam)
 			{
 				BeamInfo_t beamInfo;
 				beamInfo.m_vecStart = tr.startpos;
@@ -333,11 +335,11 @@ void C_HL2MP_Player::AddEntity( void )
 				beamInfo.m_flGreen = 255.0;
 				beamInfo.m_flBlue = 255.0;
 
-				beams->UpdateBeamInfo( m_pFlashlightBeam, beamInfo );
+				beams->UpdateBeamInfo(m_pFlashlightBeam, beamInfo);
 
-				dlight_t *el = effects->CL_AllocDlight( 0 );
+				dlight_t *el = effects->CL_AllocDlight(0);
 				el->origin = tr.endpos;
-				el->radius = 50; 
+				el->radius = 65;
 				el->color.r = 200;
 				el->color.g = 200;
 				el->color.b = 200;

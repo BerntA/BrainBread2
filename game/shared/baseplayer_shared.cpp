@@ -32,7 +32,6 @@
 	#include "doors.h"
 	#include "ai_basenpc.h"
 	#include "particle_parse.h"
-	#include "env_zoom.h"
     #include "hl2mp_player.h"
 
 	extern int TrainSpeed(int iSpeed, int iMax);
@@ -1990,62 +1989,17 @@ const char *CBasePlayer::GetTracerType( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CBasePlayer::ClearZoomOwner( void )
-{
-	m_hZoomOwner = NULL;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Sets the FOV of the client, doing interpolation between old and new if requested
 // Input  : FOV - New FOV
 //			zoomRate - Amount of time (in seconds) to move between old and new FOV
 //-----------------------------------------------------------------------------
-bool CBasePlayer::SetFOV( CBaseEntity *pRequester, int FOV, float zoomRate, int iZoomStart /* = 0 */ )
+bool CBasePlayer::SetFOV(int FOV, float zoomRate, int iZoomStart /* = 0 */)
 {
-	//NOTENOTE: You MUST specify who is requesting the zoom change
-	assert( pRequester != NULL );
-	if ( pRequester == NULL )
-		return false;
-
-	// If we already have an owner, we only allow requests from that owner
-	if ( ( m_hZoomOwner.Get() != NULL ) && ( m_hZoomOwner.Get() != pRequester ) )
-	{
-#ifdef GAME_DLL
-		if ( CanOverrideEnvZoomOwner( m_hZoomOwner.Get() ) == false )
-#endif
-			return false;
-	}
-	else
-	{
-		//FIXME: Maybe do this is as an accessor instead
-		if ( FOV == 0 )
-		{
-			m_hZoomOwner = NULL;
-		}
-		else
-		{
-			m_hZoomOwner = pRequester;
-		}
-	}
-
 	// Setup our FOV and our scaling time
-
-	if ( iZoomStart > 0 )
-	{
-		m_iFOVStart = iZoomStart;
-	}
-	else
-	{
-		m_iFOVStart = GetFOV();
-	}
-
+	m_iFOVStart = (iZoomStart > 0) ? iZoomStart : GetFOV();
 	m_flFOVTime = gpGlobals->curtime;
 	m_iFOV = FOV;
-
-	m_Local.m_flFOVRate	= zoomRate;
-
+	m_Local.m_flFOVRate = zoomRate;
 	return true;
 }
 

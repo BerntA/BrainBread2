@@ -427,8 +427,6 @@ $Project
 		$File	"baseflex.h"
 		$File	"$SRCDIR\game\shared\basegrenade_shared.cpp"
 		$File	"$SRCDIR\game\shared\basegrenade_shared.h"
-		$File	"basemultiplayerplayer.cpp"
-		$File	"basemultiplayerplayer.h"
 		$File	"$SRCDIR\game\shared\baseparticleentity.cpp"
 		$File	"$SRCDIR\game\shared\baseparticleentity.h"
 		$File	"$SRCDIR\game\shared\baseplayer_shared.cpp"
@@ -514,8 +512,6 @@ $Project
 		$File	"env_tonemap_controller.cpp"
 		$File	"$SRCDIR\game\shared\env_wind_shared.cpp"
 		$File	"$SRCDIR\game\shared\env_wind_shared.h"
-		$File	"env_zoom.cpp"
-		$File	"env_zoom.h"
 		$File	"EnvBeam.cpp"
 		$File	"EnvFade.cpp"
 		$File	"EnvLaser.cpp"
@@ -832,7 +828,6 @@ $Project
 		$File	"weight_button.cpp"
 		$File	"world.cpp"
 		$File	"world.h"
-		$File	"$SRCDIR\game\shared\mp_shareddefs.cpp"
 		$File	"$SRCDIR\game\shared\SharedFunctorUtils.h"
 		//Haptics
 		$File	"$SRCDIR\public\haptics\haptic_msgs.cpp"
@@ -1162,7 +1157,6 @@ $Project
 		$File	"$SRCDIR\public\winlite.h"
 		$File	"$SRCDIR\public\worldsize.h"
 		$File	"$SRCDIR\public\zip_uncompressed.h"
-		$File	"$SRCDIR\game\shared\mp_shareddefs.h"
 		//Haptics
 		$File	"$SRCDIR\public\haptics\haptic_utils.h"	[$WIN32]
 	}

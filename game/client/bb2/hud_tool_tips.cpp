@@ -174,7 +174,7 @@ void CHudToolTips::Paint()
 			surface()->DrawSetColor(Color(255, 255, 255, m_iAlpha));
 			surface()->DrawSetTexture(icon->textureId);
 			surface()->DrawTexturedRect(m_iPosX, y, icon->Width() + m_iPosX, icon->Height() + y);
-			x += icon->Width() + 1;
+			x += icon->Width() + scheme()->GetProportionalScaledValue(2);
 		}
 
 		surface()->DrawSetColor(Color(255, 255, 255, m_iAlpha));

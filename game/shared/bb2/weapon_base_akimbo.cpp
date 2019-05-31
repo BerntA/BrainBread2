@@ -86,7 +86,7 @@ bool CHL2MPBaseAkimbo::Deploy(void)
 void CHL2MPBaseAkimbo::PerformAttack(bool bPrimary)
 {
 	CHL2MP_Player* pPlayer = ToHL2MPPlayer(GetOwner());
-	if (!pPlayer || (bPrimary && !(pPlayer->m_afButtonPressed & IN_ATTACK)) || (!bPrimary && !(pPlayer->m_afButtonPressed & IN_ATTACK2)))
+	if (!pPlayer || (bPrimary && !(pPlayer->m_nButtons & IN_ATTACK)) || (!bPrimary && !(pPlayer->m_nButtons & IN_ATTACK2)))
 		return;
 
 	WeaponSound(SINGLE);
@@ -105,12 +105,21 @@ void CHL2MPBaseAkimbo::PerformAttack(bool bPrimary)
 	if (bPrimary)
 	{
 		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
+		m_flNextSecondaryAttack = gpGlobals->curtime + GetFireRate() * 0.125f;
 		m_iClip1--;
 	}
 	else
 	{
+		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate() * 0.125f;
 		m_flNextSecondaryAttack = gpGlobals->curtime + GetFireRate();
 		m_iClip2--;
+	}
+
+	// Prevent OP'ness.
+	if ((pPlayer->m_nButtons & IN_ATTACK) && (pPlayer->m_nButtons & IN_ATTACK2))
+	{
+		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate() * (bPrimary ? 1.1f : 1.0f);
+		m_flNextSecondaryAttack = gpGlobals->curtime + GetFireRate() * ((!bPrimary) ? 1.1f : 1.0f);
 	}
 
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();

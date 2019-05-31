@@ -1805,6 +1805,9 @@ int CBaseCombatWeapon::GetBulletType( void )
 Vector CBaseCombatWeapon::GetBulletConeByAccLevel(void)
 {
 	int iAccuracyLevel = GetWpnData().m_iAccuracy;
+	if (HL2MPRules() && HL2MPRules()->IsFastPacedGameplay() && (GetWpnData().m_iAccuracyPvP > 0))
+		iAccuracyLevel = GetWpnData().m_iAccuracyPvP;
+
 	if (iAccuracyLevel <= 0) // This weapon uses new accuracy.
 	{
 		float delta = (gpGlobals->curtime - m_flViewKickTime);

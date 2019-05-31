@@ -36,6 +36,8 @@ OptionMenuOther::OptionMenuOther(vgui::Panel *parent, char const *panelName) : B
 		"#GameUI_FastSwitchCheck",
 		"#GameUI_CombatText",
 		"#GameUI_ScopeRefract",
+		"#GameUI_SOUND_SKILL_CUES",
+		"#GameUI_MUSIC_SHUFFLE",
 	};
 
 	for (int i = 0; i < _ARRAYSIZE(m_pCheckBoxVar); i++)
@@ -63,7 +65,7 @@ OptionMenuOther::OptionMenuOther(vgui::Panel *parent, char const *panelName) : B
 	const char *szTitles[] =
 	{
 		"#GameUI_Misc",
-		"#GameUI_NPC_SOUNDSETS",
+		"#GameUI_Misc_Sound",
 	};
 
 	for (int i = 0; i < _ARRAYSIZE(m_pTextTitle); i++)
@@ -144,6 +146,9 @@ void OptionMenuOther::ApplyChanges(void)
 	static ConVarRef bb2_render_damage_text("bb2_render_damage_text");
 	static ConVarRef bb2_scope_refraction("bb2_scope_refraction");
 
+	static ConVarRef bb2_sound_skill_cues("bb2_sound_skill_cues");
+	static ConVarRef bb2_music_system_shuffle("bb2_music_system_shuffle");
+
 	bb2_sound_zombie.SetValue(m_pComboSoundSet[0]->GetComboBox()->GetActiveItem());
 	bb2_sound_fred.SetValue(m_pComboSoundSet[1]->GetComboBox()->GetActiveItem());
 	bb2_sound_military.SetValue(m_pComboSoundSet[2]->GetComboBox()->GetActiveItem());
@@ -157,6 +162,9 @@ void OptionMenuOther::ApplyChanges(void)
 	hud_fastswitch.SetValue(m_pCheckBoxVar[2]->IsChecked());
 	bb2_render_damage_text.SetValue(m_pCheckBoxVar[3]->IsChecked());
 	bb2_scope_refraction.SetValue(m_pCheckBoxVar[4]->IsChecked());
+
+	bb2_sound_skill_cues.SetValue(m_pCheckBoxVar[5]->IsChecked());
+	bb2_music_system_shuffle.SetValue(m_pCheckBoxVar[6]->IsChecked());
 
 	engine->ClientCmd_Unrestricted("host_writeconfig\n");
 }
@@ -210,11 +218,17 @@ void OptionMenuOther::SetupLayout(void)
 		static ConVarRef bb2_render_damage_text("bb2_render_damage_text");
 		static ConVarRef bb2_scope_refraction("bb2_scope_refraction");
 
+		static ConVarRef bb2_sound_skill_cues("bb2_sound_skill_cues");
+		static ConVarRef bb2_music_system_shuffle("bb2_music_system_shuffle");
+
 		m_pCheckBoxVar[0]->SetCheckedStatus(bb2_enable_healthbar_for_all.GetBool());
 		m_pCheckBoxVar[1]->SetCheckedStatus(bb2_show_details.GetBool());
 		m_pCheckBoxVar[2]->SetCheckedStatus(hud_fastswitch.GetBool());
 		m_pCheckBoxVar[3]->SetCheckedStatus(bb2_render_damage_text.GetBool());
 		m_pCheckBoxVar[4]->SetCheckedStatus(bb2_scope_refraction.GetBool());
+
+		m_pCheckBoxVar[5]->SetCheckedStatus(bb2_sound_skill_cues.GetBool());
+		m_pCheckBoxVar[6]->SetCheckedStatus(bb2_music_system_shuffle.GetBool());
 
 		m_pComboSoundSet[0]->GetComboBox()->ActivateItem(clamp(bb2_sound_zombie.GetInt(), 0, (m_pComboSoundSet[0]->GetComboBox()->GetItemCount() - 1)));
 		m_pComboSoundSet[1]->GetComboBox()->ActivateItem(clamp(bb2_sound_fred.GetInt(), 0, (m_pComboSoundSet[1]->GetComboBox()->GetItemCount() - 1)));
@@ -257,6 +271,12 @@ void OptionMenuOther::SetupLayout(void)
 		m_pComboSoundSet[i]->SetSize(scheme()->GetProportionalScaledValue(300), scheme()->GetProportionalScaledValue(24));
 		m_pComboSoundSet[i]->GetSize(wz, hz);
 		m_pComboSoundSet[i]->SetPos((w - scheme()->GetProportionalScaledValue(300 + DIVIDER_START_XPOS)), scheme()->GetProportionalScaledValue(50) + (i * (hz + scheme()->GetProportionalScaledValue(1))));
+	}
+
+	for (int i = 5; i < _ARRAYSIZE(m_pCheckBoxVar); i++)
+	{
+		m_pCheckBoxVar[i]->GetSize(wz, hz);
+		m_pCheckBoxVar[i]->SetPos((w - scheme()->GetProportionalScaledValue(300 + DIVIDER_START_XPOS)), scheme()->GetProportionalScaledValue(185) + ((i - 5) * (hz + scheme()->GetProportionalScaledValue(8))));
 	}
 
 	m_pTextTitle[0]->SetPos(scheme()->GetProportionalScaledValue(DIVIDER_START_XPOS), scheme()->GetProportionalScaledValue(12));

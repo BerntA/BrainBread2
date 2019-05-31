@@ -1855,7 +1855,13 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 				if (!bStartedInWater && !bHitWater && pAttacker && pAttacker->IsPlayer() && pHitEnt && (pHitEnt->IsPlayer() || pHitEnt->IsNPC()))
 				{
 					if (info.m_nPlayerSkillFlags & SKILL_FLAG_EMPOWERED_BULLETS)
+					{
 						flCumulativeDamage += FirePenetrativeBullet(info, tr.endpos, vecDir, pAttacker, pHitEnt, nActualDamageType);
+#ifdef GAME_DLL
+						if (pPlayerFirer)
+							pPlayerFirer->PlaySkillSoundCue("SkillActivated.BulletPenetration");
+#endif
+					}
 				}
 				else if (!bStartedInWater && !bHitWater && pAttacker && pAttacker->IsPlayer() && tr.DidHitWorld() && !tr.IsDispSurface()) // world bullet penetration.
 				{

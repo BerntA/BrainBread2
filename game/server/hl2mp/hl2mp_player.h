@@ -12,7 +12,6 @@
 class CHL2MP_Player;
 class CLogicPlayerEquipper;
 
-#include "basemultiplayerplayer.h"
 #include "hl2_playerlocaldata.h"
 #include "hl2_player.h"
 #include "simtimer.h"

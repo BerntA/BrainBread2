@@ -173,9 +173,8 @@ bool CServerTools::SetPlayerFOV( int fov, IClientEntity *pClientPlayer )
 	if ( pPlayer == NULL )
 		return false;
 
-	pPlayer->SetDefaultFOV( fov );
-	CBaseEntity *pFOVOwner = pPlayer->GetFOVOwner();
-	return pPlayer->SetFOV( pFOVOwner ? pFOVOwner : pPlayer, fov );
+	pPlayer->SetDefaultFOV(fov);
+	return pPlayer->SetFOV(fov);
 }
 
 bool CServerTools::IsInNoClipMode( IClientEntity *pClientPlayer )

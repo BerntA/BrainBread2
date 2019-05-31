@@ -56,7 +56,7 @@ void CHL2MPSniperRifle::SetZoomLevel(int level)
 	if (m_iCurrentZoomLevel)
 	{
 		int extraFOV = GetFOVForZoom(m_iCurrentZoomLevel);
-		pOwner->SetFOV(this, pOwner->GetDefaultFOV() + extraFOV, 0.3f);
+		pOwner->SetFOV(pOwner->GetDefaultFOV() + extraFOV, 0.3f);
 
 		if (ShouldHideViewmodelOnZoom() && !pViewMDL->IsEffectActive(EF_NODRAW))
 			pViewMDL->AddEffects(EF_NODRAW);
@@ -68,7 +68,7 @@ void CHL2MPSniperRifle::SetZoomLevel(int level)
 
 	if (oldLevel)
 	{
-		pOwner->SetFOV(this, 0, 0.3f);
+		pOwner->SetFOV(0, 0.3f);
 
 		if (ShouldHideViewmodelOnZoom())
 			pViewMDL->RemoveEffects(EF_NODRAW);

@@ -14,13 +14,6 @@
 #include "simtimer.h"
 #include "soundenvelope.h"
 
-#if defined (HL2MP)
-#include "basemultiplayerplayer.h"
-#define BASEPLAYERCLASS CBaseMultiplayerPlayer
-#else
-#define BASEPLAYERCLASS CBasePlayer
-#endif
-
 extern int TrainSpeed(int iSpeed, int iMax);
 
 class CAI_Squad;
@@ -30,10 +23,10 @@ class CLogicPlayerProxy;
 //=============================================================================
 // >> HL2_PLAYER
 //=============================================================================
-class CHL2_Player : public BASEPLAYERCLASS
+class CHL2_Player : public CBasePlayer
 {
 public:
-	DECLARE_CLASS(CHL2_Player, BASEPLAYERCLASS);
+	DECLARE_CLASS(CHL2_Player, CBasePlayer);
 
 	CHL2_Player();
 	virtual ~CHL2_Player( void );

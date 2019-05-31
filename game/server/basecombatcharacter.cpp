@@ -2149,6 +2149,8 @@ void CBaseCombatCharacter::OnAffectedBySkill(const CTakeDamageInfo &info)
 
 		if (pKillerWeapon)
 			damage = (info.GetDamage() / 100.0f) * pKillerWeapon->GetWpnData().m_flSkillBleedFactor;
+
+		pAttacker->PlaySkillSoundCue("SkillActivated.MeleeBleed");
 	}
 	else if (skillFlag & SKILL_FLAG_BLAZINGAMMO)
 	{
@@ -2158,6 +2160,8 @@ void CBaseCombatCharacter::OnAffectedBySkill(const CTakeDamageInfo &info)
 		duration = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flNPCBurnDuration;
 		damage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flNPCBurnDamage;
 		timeBetweenDamage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flNPCBurnFrequency;
+
+		pAttacker->PlaySkillSoundCue("SkillActivated.BlazingAmmo");
 	}
 	else if (skillFlag & SKILL_FLAG_COLDSNAP)
 	{
@@ -2165,6 +2169,8 @@ void CBaseCombatCharacter::OnAffectedBySkill(const CTakeDamageInfo &info)
 		nOverlayFlag = MAT_OVERLAY_COLDSNAP;
 
 		duration = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flSlowDownDuration;
+
+		pAttacker->PlaySkillSoundCue("SkillActivated.FrostAmmo");
 	}
 	else if (skillFlag & SKILL_FLAG_CRIPPLING_BLOW)
 	{

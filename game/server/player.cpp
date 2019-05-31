@@ -56,7 +56,6 @@
 #include "saverestore_utlvector.h"
 #include "hltvdirector.h"
 #include "nav_mesh.h"
-#include "env_zoom.h"
 #include "rumble_shared.h"
 #include "gamestats.h"
 #include "npcevent.h"
@@ -239,6 +238,7 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_nUpdateRate, FIELD_INTEGER ),
 	DEFINE_FIELD( m_fLerpTime, FIELD_FLOAT ),
 	DEFINE_FIELD( m_bPredictWeapons, FIELD_BOOLEAN ),
+	DEFINE_FIELD(m_bAllowSkillCues, FIELD_BOOLEAN),
 
 	DEFINE_FIELD( m_hUseEntity, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_iTrain, FIELD_INTEGER ),
@@ -351,7 +351,6 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_flConstraintRadius, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flConstraintWidth, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flConstraintSpeedFactor, FIELD_FLOAT ),
-	DEFINE_FIELD( m_hZoomOwner, FIELD_EHANDLE ),
 	
 	DEFINE_FIELD( m_flLaggedMovementValue, FIELD_FLOAT ),
 
@@ -517,8 +516,6 @@ CBasePlayer::CBasePlayer( )
 	// Setup our default FOV
 	m_iDefaultFOV = g_pGameRules->DefaultFOV();
 
-	m_hZoomOwner = NULL;
-
 	m_nUpdateRate = 20;  // cl_updaterate defualt
 	m_fLerpTime = 0.1f; // cl_interp default
 	m_bPredictWeapons = true;
@@ -563,6 +560,7 @@ CBasePlayer::CBasePlayer( )
 	m_flMovementTimeForUserCmdProcessingRemaining = 0.0f;
 
 	m_vecLagCompHitEndPosition = vec3_invalid;
+	m_bAllowSkillCues = true;
 }
 
 CBasePlayer::~CBasePlayer( )
@@ -1554,7 +1552,7 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 	SetGroundEntity( NULL );
 
 	// reset FOV
-	SetFOV( this, 0 );
+	SetFOV(0);
 	
 	if ( FlashlightIsOn() )
 	{
@@ -1928,7 +1926,7 @@ bool CBasePlayer::SetObserverMode(int mode )
 		case OBS_MODE_NONE:
 		case OBS_MODE_FIXED :
 		case OBS_MODE_DEATHCAM :
-			SetFOV( this, 0 );	// Reset FOV
+			SetFOV(0); // Reset FOV
 			SetViewOffset( vec3_origin );
 			SetMoveType( MOVETYPE_NONE );
 			break;
@@ -1947,7 +1945,7 @@ bool CBasePlayer::SetObserverMode(int mode )
 
 		case OBS_MODE_ROAMING :
 		case OBS_MODE_FREEZECAM :
-			SetFOV( this, 0 );	// Reset FOV
+			SetFOV(0);	// Reset FOV
 			SetObserverTarget( m_hObserverTarget );
 			SetViewOffset( vec3_origin );
 			SetMoveType( MOVETYPE_OBSERVER );
@@ -2205,7 +2203,7 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 	m_hObserverTarget.Set( target ); 
 
 	// reset fov to default
-	SetFOV( this, 0 );	
+	SetFOV(0);	
 	
 	if ( m_iObserverMode == OBS_MODE_ROAMING )
 	{
@@ -4117,7 +4115,7 @@ void CBasePlayer::Spawn( void )
 
 	m_idrownrestored = m_idrowndmg;
 
-	SetFOV( this, 0 );
+	SetFOV(0);
 
 	m_flPlayerUseTime = 0.0f;
 	
@@ -5923,7 +5921,6 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropInt		(SENDINFO(m_iFOVStart), 8, SPROP_UNSIGNED ),
 		SendPropFloat	(SENDINFO(m_flFOVTime) ),
 		SendPropInt		(SENDINFO(m_iDefaultFOV), 8, SPROP_UNSIGNED ),
-		SendPropEHandle	(SENDINFO(m_hZoomOwner) ),
 		SendPropArray	( SendPropEHandle( SENDINFO_ARRAY( m_hViewModel ) ), m_hViewModel ),
 		SendPropString	(SENDINFO(m_szLastPlaceName) ),
 
@@ -7214,6 +7211,15 @@ const char *CBasePlayer::GetSoundsetSurvivorLink(void)
 bool CBasePlayer::GetSoundsetGender(void)
 {
 	return m_bSoundsetGender;
+}
+
+void CBasePlayer::PlaySkillSoundCue(const char *snd)
+{
+	if (m_bAllowSkillCues == false)
+		return;
+
+	CSingleUserRecipientFilter filter(this);
+	EmitSound(filter, entindex(), snd);
 }
 
 void CBasePlayer::SetHealthRegenAmount(float Amount)

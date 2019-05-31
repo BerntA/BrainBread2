@@ -12,7 +12,6 @@
 #include "gameeventdefs.h"
 #include <KeyValues.h>
 #include "filesystem.h"
-#include "mp_shareddefs.h"
 #include "utlbuffer.h"
 #include "GameBase_Shared.h"
 #include "movevars_shared.h"
@@ -35,7 +34,6 @@
 	#include "hltvdirector.h"
 	#include "AI_Criteria.h"
 	#include "sceneentity.h"
-	#include "basemultiplayerplayer.h"
 	#include "team.h"
 	#include "usermessages.h"
 	#include "tier0/icommandline.h"
@@ -108,7 +106,8 @@ ConVar bb2_allow_latejoin( "bb2_allow_latejoin", "1", FCVAR_REPLICATED, "Allow p
 ConVar bb2_vote_disable_kick("bb2_vote_disable_kick", "0", FCVAR_REPLICATED, "Disable vote kick.", true, 0.0f, true, 1.0f);
 ConVar bb2_vote_disable_ban("bb2_vote_disable_ban", "1", FCVAR_REPLICATED, "Disable vote ban.", true, 0.0f, true, 1.0f);
 ConVar bb2_vote_disable_map("bb2_vote_disable_map", "0", FCVAR_REPLICATED, "Disable vote map.", true, 0.0f, true, 1.0f);
-ConVar bb2_vote_required_percentage("bb2_vote_required_percentage", "70", FCVAR_REPLICATED, "The percent of yes votes required to pass a vote.", true, 0.0f, true, 100.0f);
+ConVar bb2_vote_required_percentage("bb2_vote_required_percentage", "60", FCVAR_REPLICATED, "The percent of yes votes required to pass a map vote.", true, 0.0f, true, 100.0f);
+ConVar bb2_vote_required_percentage_kickban("bb2_vote_required_percentage_kickban", "82", FCVAR_REPLICATED, "The percent of yes votes required to pass a kick or ban vote.", true, 0.0f, true, 100.0f);
 ConVar bb2_vote_required_level("bb2_vote_required_level", "15", FCVAR_REPLICATED, "In Objective, Story & Arena this is the minimum level a player must be in order to create votes.", true, 0.0f, true, 500.0f);
 ConVar bb2_vote_time("bb2_vote_time", "30", FCVAR_REPLICATED, "The time in seconds until the vote ends.", true, 10.0f, true, 120.0f);
 ConVar bb2_vote_time_endgame("bb2_vote_time_endgame", "10", FCVAR_REPLICATED, "When the game ends the players will have this much time to vote for the next map.", true, 10.0f, true, 30.0f);
@@ -1086,7 +1085,7 @@ bool CMultiplayRules::Init()
 
 	void CMultiplayRules::ClientCommandKeyValues( edict_t *pEntity, KeyValues *pKeyValues )
 	{
-		//CBaseMultiplayerPlayer *pPlayer = dynamic_cast< CBaseMultiplayerPlayer * >( CBaseEntity::Instance( pEntity ) );
+		//CBasePlayer *pPlayer = dynamic_cast< CBasePlayer * >( CBaseEntity::Instance( pEntity ) );
 		//if ( !pPlayer )
 		//	return;
 

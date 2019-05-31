@@ -21,8 +21,6 @@
 extern ConVar nextlevel;
 extern INetworkStringTable *g_pStringTableServerMapCycle;
 
-class CBaseMultiplayerPlayer;
-
 #endif
 
 extern ConVar mp_show_voice_icons;
@@ -73,6 +71,7 @@ extern ConVar bb2_vote_disable_kick;
 extern ConVar bb2_vote_disable_ban;
 extern ConVar bb2_vote_disable_map;
 extern ConVar bb2_vote_required_percentage;
+extern ConVar bb2_vote_required_percentage_kickban;
 extern ConVar bb2_vote_required_level;
 extern ConVar bb2_vote_time;
 extern ConVar bb2_vote_time_endgame;

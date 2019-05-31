@@ -41,7 +41,7 @@ namespace vgui
 		vgui::ImagePanel *m_pDivider[2];
 		vgui::Label *m_pTextTitle[2];
 
-		vgui::GraphicalCheckBox *m_pCheckBoxVar[5];
+		vgui::GraphicalCheckBox *m_pCheckBoxVar[7];
 		vgui::ComboList *m_pComboSoundSet[5];
 
 		vgui::ComboImageList *m_pComboImgList[1];

@@ -121,7 +121,7 @@ void CPointDevShotCamera::DevShotThink_Setup( void )
 	pPlayer->AddSolidFlags( FSOLID_NOT_SOLID );
 	pPlayer->EnableControl(FALSE);
 	pPlayer->SetViewEntity( this );
-	pPlayer->SetFOV( this, m_iFOV );
+	pPlayer->SetFOV(m_iFOV);
 
 	// Hide the player's viewmodel
 	if ( pPlayer->GetActiveWeapon() )
@@ -163,7 +163,7 @@ void CPointDevShotCamera::DevShotThink_PostShot( void )
 	if ( !pPlayer )
 		return;
 
-	pPlayer->SetFOV( this, 0 );
+	pPlayer->SetFOV(0);
 
 	// If all cameras have taken their shots, move to the next map
 	g_iDevShotCameraCount--;

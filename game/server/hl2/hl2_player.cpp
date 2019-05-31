@@ -36,7 +36,6 @@
 #include "ai_basenpc.h"
 #include "AI_Criteria.h"
 #include "entitylist.h"
-#include "env_zoom.h"
 #include "datacache/imdlcache.h"
 #include "eventqueue.h"
 #include "gamestats.h"
@@ -373,9 +372,9 @@ void CHL2_Player::PostThink( void )
 					}
 
 					// We received some ammo, check if we should be punished:
-					if (bDidReplenish && !GameBaseServer()->IsTutorialModeEnabled())
+					if (bDidReplenish && !GameBaseServer()->IsTutorialModeEnabled() && HL2MPRules() && !HL2MPRules()->IsFastPacedGameplay())
 					{
-						float timeSinceLastReplenish = gpGlobals->curtime - m_flLastTimeReplenishedAmmo;
+						float timeSinceLastReplenish = (gpGlobals->curtime - m_flLastTimeReplenishedAmmo);
 						if (timeSinceLastReplenish <= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flMaxAmmoReplensihInterval)
 						{
 							m_iNumAmmoReplenishes++;
@@ -387,10 +386,11 @@ void CHL2_Player::PostThink( void )
 								m_flLastTimeReplenishedAmmo = 0.0f;
 
 								// Reduce the penalty if we have this skill!
-								if (iResourcefulSkillValue > 0) // Reduces the value by max 1 min.
+								if (iResourcefulSkillValue > 0) // Reduces the value by max 50%.
 								{
-									float fraction = ((float)iResourcefulSkillValue) / 10.0f;
-									m_flNextAmmoReplenishTime -= clamp((fraction * (penaltyTime / 2.0f)), 0.0f, 60.0f);
+									float fraction = (((float)iResourcefulSkillValue) / 10.0f);
+									fraction = clamp(fraction, 0.0f, 1.0f);
+									m_flNextAmmoReplenishTime -= (fraction * (penaltyTime / 2.0f));
 								}
 
 								return;

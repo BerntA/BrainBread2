@@ -272,8 +272,7 @@ public:
 	virtual float				GetFOV( void );	
 	int							GetDefaultFOV( void ) const;
 	virtual bool				IsZoomed( void )	{ return false; }
-	bool						SetFOV( CBaseEntity *pRequester, int FOV, float zoomRate = 0.0f, int iZoomStart = 0 );
-	void						ClearZoomOwner( void );
+	bool						SetFOV(int FOV, float zoomRate = 0.0f, int iZoomStart = 0);
 
 	float						GetFOVDistanceAdjustFactor();
 
@@ -407,8 +406,6 @@ public:
 	int						m_iFOVStart;		// starting value of the FOV changing over time (client only)
 	float					m_flFOVTime;		// starting time of the FOV zoom
 	int						m_iDefaultFOV;		// default FOV if no other zooms are occurring
-	EHANDLE					m_hZoomOwner;		// This is a pointer to the entity currently controlling the player's zoom
-												// Only this entity can change the zoom state once it has ownership
 
 	int				m_afButtonLast;
 	int				m_afButtonPressed;

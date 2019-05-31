@@ -253,7 +253,6 @@ END_RECV_TABLE()
 		RecvPropInt		(RECVINFO(m_iFOVStart)),
 		RecvPropFloat	(RECVINFO(m_flFOVTime)),
 		RecvPropInt		(RECVINFO(m_iDefaultFOV)),
-		RecvPropEHandle (RECVINFO(m_hZoomOwner)),
 
 		RecvPropEHandle( RECVINFO(m_hVehicle) ),
 		RecvPropEHandle( RECVINFO(m_hUseEntity) ),
@@ -330,7 +329,6 @@ BEGIN_PREDICTION_DATA( C_BasePlayer )
 	DEFINE_PRED_TYPEDESCRIPTION( pl, CPlayerState ),
 
 	DEFINE_PRED_FIELD( m_iFOV, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_hZoomOwner, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flFOVTime, FIELD_FLOAT, 0 ),
 	DEFINE_PRED_FIELD( m_iFOVStart, FIELD_INTEGER, 0 ),
 

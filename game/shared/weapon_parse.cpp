@@ -329,6 +329,7 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 	m_iLevelReq = 0;
 	m_iPellets = 1;
 	m_iAccuracy = 0;
+	m_iAccuracyPvP = 0;
 	m_iRangeMin = 64;
 	m_iRangeMax = 1024;
 
@@ -424,6 +425,7 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 	m_iLevelReq = pPropertiesField ? pPropertiesField->GetInt("level_required", 0) : 0;
 	m_iPellets = pPropertiesField ? pPropertiesField->GetInt("pellets", 1) : 1;
 	m_iAccuracy = pPropertiesField ? pPropertiesField->GetInt("accuracy", 0) : 0;
+	m_iAccuracyPvP = pPropertiesField ? pPropertiesField->GetInt("accuracy_pvp", 0) : 0;
 	m_iRangeMin = pPropertiesField ? pPropertiesField->GetInt("range_min", 64) : 64;
 	m_iRangeMax = pPropertiesField ? pPropertiesField->GetInt("range_max", 1024) : 1024;
 	m_flFireRate = pPropertiesField ? pPropertiesField->GetFloat("fire_rate", 1.0f) : 1.0f;

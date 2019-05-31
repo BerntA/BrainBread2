@@ -521,6 +521,7 @@ public:
 	virtual const char *GetSoundsetPrefix(void);
 	virtual const char *GetSoundsetSurvivorLink(void);
 	virtual bool GetSoundsetGender(void);
+	virtual void PlaySkillSoundCue(const char *snd);
 
 	// Movement:
 	virtual float GetPlayerSpeed() { return 240.0f; }
@@ -680,9 +681,8 @@ public:
 	int		GetFOV( void );														// Get the current FOV value
 	int		GetDefaultFOV( void ) const;										// Default FOV if not specified otherwise
 	int		GetFOVForNetworking( void );										// Get the current FOV used for network computations
-	bool	SetFOV( CBaseEntity *pRequester, int FOV, float zoomRate = 0.0f, int iZoomStart = 0 );	// Alters the base FOV of the player (must have a valid requester)
+	bool	SetFOV(int FOV, float zoomRate = 0.0f, int iZoomStart = 0);	// Alters the base FOV of the player (must have a valid requester)
 	void	SetDefaultFOV( int FOV );											// Sets the base FOV if nothing else is affecting it by zooming
-	CBaseEntity *GetFOVOwner( void ) { return m_hZoomOwner; }
 	float	GetFOVDistanceAdjustFactor(); // shared between client and server
 	float	GetFOVDistanceAdjustFactorForNetworking();
 
@@ -826,10 +826,9 @@ public:
 	int						m_nUpdateRate;		// user snapshot rate cl_updaterate
 	float					m_fLerpTime;		// users cl_interp
 	bool					m_bPredictWeapons; //  user has client side predicted weapons
+	bool					m_bAllowSkillCues;
 	
 	float		GetDeathTime( void ) { return m_flDeathTime; }
-
-	void		ClearZoomOwner( void );
 
 	void		SetPreviouslyPredictedOrigin( const Vector &vecAbsOrigin );
 	const Vector &GetPreviouslyPredictedOrigin() const;
@@ -893,9 +892,6 @@ protected:
 	int						m_iObserverLastMode; // last used observer mode
 	CNetworkHandle( CBaseEntity, m_hObserverTarget );	// entity handle to m_iObserverTarget
 	bool					m_bForcedObserverMode; // true, player was forced by invalid targets to switch mode
-	
-	CNetworkHandle( CBaseEntity, m_hZoomOwner );	//This is a pointer to the entity currently controlling the player's zoom
-													//Only this entity can change the zoom state once it has ownership
 
 	float					m_tbdPrev;				// Time-based damage timer
 	int						m_idrowndmg;			// track drowning damage taken

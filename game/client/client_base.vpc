@@ -722,7 +722,6 @@ $Project
 		$File	"WorldDimsProxy.cpp"
 		$File	"vgui_video.cpp"
 		$File   "vgui_video_player.cpp"
-		$File	"$SRCDIR\game\shared\mp_shareddefs.cpp"
 		//Haptics
 		$File	"$SRCDIR\public\haptics\haptic_msgs.cpp"	[!$X360]
 		$File	"$SRCDIR\public\haptics\haptic_utils.cpp"	[$WIN32&&!$X360]
@@ -1417,7 +1416,6 @@ $Project
 		$File	"$SRCDIR\game\shared\vphysics_sound.h"
 		$File	"$SRCDIR\game\shared\weapon_parse.h"
 		$File	"$SRCDIR\game\shared\weapon_proficiency.h"
-		$File	"$SRCDIR\game\shared\mp_shareddefs.h"
 	}
 
 	$Folder	"game_controls Header Files"
