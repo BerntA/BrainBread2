@@ -27,6 +27,8 @@ public:
 	// Every NPC will scale up with the amount of players in game to make sure it always is a challenge! (also take the player's level into account?)
 	virtual void UpdateNPCScaling();
 
+	virtual void UpdateMeleeRange(const Vector &bounds);
+
 	// Shared Accessors.
 	virtual bool GetGender() { return m_bGender; }
 	virtual int GetXP() { return m_iXPToGive; }

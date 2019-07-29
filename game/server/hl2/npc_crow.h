@@ -142,7 +142,7 @@ public:
 	virtual void IdleSound( void );
 	virtual void AlertSound( void );
 	virtual void StopLoopingSounds( void );
-	virtual void UpdateEfficiency( bool bInPVS );
+	virtual void UpdateEfficiency(CBasePlayer *pPVSTarget);
 
 	virtual bool QueryHearSound( CSound *pSound );
 

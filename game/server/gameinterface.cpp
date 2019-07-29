@@ -2590,8 +2590,6 @@ void CServerGameClients::ClientSettingsChanged( edict_t *pEdict )
 	{
 		player->m_bPredictWeapons  = false;
 	}
-	
-	player->m_bAllowSkillCues = (Q_atoi(QUICKGETCVARVALUE("bb2_sound_skill_cues")) >= 1);
 
 #undef QUICKGETCVARVALUE
 	}
@@ -2640,7 +2638,6 @@ void CServerGameClients::ClientSetupVisibility( edict_t *pViewEntity, edict_t *p
 	{
 		org = pPlayer->EyePosition();
 		pPlayer->SetupVisibility( pVE, pvs, pvssize );
-		UTIL_SetClientVisibilityPVS( pClient, pvs, pvssize );
 		fovDistanceAdjustFactor = pPlayer->GetFOVDistanceAdjustFactorForNetworking();
 	}
 

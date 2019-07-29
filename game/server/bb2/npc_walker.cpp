@@ -91,6 +91,7 @@ public:
 	void EnterCrawlMode(void);
 	void LeaveCrawlMode(void);
 	void BecomeCrawler(void);
+	void HullChangeUnstuck(void);
 
 	bool IsCrawlingWithNoLegs(void)
 	{
@@ -435,13 +436,14 @@ void CNPCWalker::EnterCrawlMode(void)
 	if (bWasMoving)
 		GetMotor()->MoveStop();
 
-	SetHullType(HULL_TINY);
-	SetHullSizeNormal(true);
+	SetHullType(HULL_WIDE_SHORT);
+	SetHullSizeSmall(true);
 	SetDefaultEyeOffset();
 
 	if (VPhysicsGetObject())
 		SetupVPhysicsHull();
 
+	HullChangeUnstuck();
 	ResetIdealActivity((Activity)ACT_CRAWL_IDLE);
 
 	if (bWasMoving)
@@ -468,9 +470,10 @@ void CNPCWalker::LeaveCrawlMode(void)
 	SetHullSizeNormal(true);
 	SetDefaultEyeOffset();
 
-	if (VPhysicsGetObject())	
-		SetupVPhysicsHull();	
+	if (VPhysicsGetObject())
+		SetupVPhysicsHull();
 
+	UpdateMeleeRange(NAI_Hull::Bounds(GetHullType(), IsUsingSmallHull()));
 	ResetIdealActivity(ACT_IDLE);
 
 	if (bWasMoving)
@@ -486,21 +489,41 @@ void CNPCWalker::BecomeCrawler(void)
 	if (bWasMoving)
 		GetMotor()->MoveStop();
 
-	CapabilitiesRemove(bits_CAP_MOVE_CLIMB | bits_CAP_MOVE_CRAWL | bits_CAP_DOORS_GROUP); // We also remove the crawl flag because we can already crawl by default in this state.
-
-	SetHullType(HULL_TINY);
-	SetHullSizeNormal(true);
+	CapabilitiesRemove(bits_CAP_MOVE_CLIMB | bits_CAP_MOVE_JUMP | bits_CAP_MOVE_CRAWL | bits_CAP_DOORS_GROUP); // We also remove the crawl flag because we can already crawl by default in this state.
+	
+	SetHullType(HULL_WIDE_SHORT);
+	SetHullSizeSmall(true);
 	SetDefaultEyeOffset();
 
 	if (VPhysicsGetObject())	
 		SetupVPhysicsHull();	
 
+	HullChangeUnstuck();
 	ResetIdealActivity((Activity)ACT_CRAWL_NOLEGS_IDLE);
 
 	if (bWasMoving)
 		GetMotor()->MoveStart();
 
 	m_bGibbedForCrawl = true;
+}
+
+void CNPCWalker::HullChangeUnstuck(void)
+{
+	m_nZombieSpawnFlags |= ZOMBIE_SPAWN_FLAG_CHECKCOLLISION;
+	SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE_SPAWNING);
+
+	const Vector &vMins = WorldAlignMins();
+	const Vector &vMaxs = WorldAlignMaxs();
+	const Vector &vOrigin = GetAbsOrigin();
+	Vector vStart = vOrigin + Vector(0, 0, 1.0f + (vMaxs.z - vMins.z));
+
+	CTraceFilterWorldAndPropsOnly filter;
+	trace_t tr;
+	AI_TraceHull(vStart, vStart + Vector(0, 0, -1.0f) * MAX_TRACE_LENGTH, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &filter, &tr);
+
+	SetGroundEntity(NULL);
+	UTIL_SetOrigin(this, tr.endpos);
+	UpdateMeleeRange(NAI_Hull::Bounds(GetHullType(), IsUsingSmallHull()));
 }
 
 float CNPCWalker::MaxYawSpeed(void)

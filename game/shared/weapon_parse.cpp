@@ -354,6 +354,7 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 	m_flSkillDamageFactor = 6.0f;
 	m_flSkillFireRateFactor = 3.0f;
 	m_flSkillBleedFactor = 10.0f;
+	m_flSkillCrippleFactor = 1.0f;
 }
 
 void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
@@ -452,6 +453,7 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 	m_flSkillDamageFactor = pSkillField ? pSkillField->GetFloat("DamageFactor", 6.0f) : 6.0f;
 	m_flSkillFireRateFactor = pSkillField ? pSkillField->GetFloat("FireRateFactor", 3.0f) : 3.0f;
 	m_flSkillBleedFactor = pSkillField ? pSkillField->GetFloat("BleedFactor", 10.0f) : 10.0f;
+	m_flSkillCrippleFactor = pSkillField ? pSkillField->GetFloat("CrippleFactor", 1.0f) : 1.0f;
 
 	KeyValues *pParticleField = pKeyValuesData->FindKey( "MuzzleParticles" );
 	if (pParticleField)

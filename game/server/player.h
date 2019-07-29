@@ -521,7 +521,7 @@ public:
 	virtual const char *GetSoundsetPrefix(void);
 	virtual const char *GetSoundsetSurvivorLink(void);
 	virtual bool GetSoundsetGender(void);
-	virtual void PlaySkillSoundCue(const char *snd);
+	virtual void PlaySkillSoundCue(int cmd);
 
 	// Movement:
 	virtual float GetPlayerSpeed() { return 240.0f; }
@@ -826,7 +826,6 @@ public:
 	int						m_nUpdateRate;		// user snapshot rate cl_updaterate
 	float					m_fLerpTime;		// users cl_interp
 	bool					m_bPredictWeapons; //  user has client side predicted weapons
-	bool					m_bAllowSkillCues;
 	
 	float		GetDeathTime( void ) { return m_flDeathTime; }
 

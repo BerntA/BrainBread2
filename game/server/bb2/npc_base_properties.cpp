@@ -136,6 +136,15 @@ void CNPCBaseProperties::UpdateNPCScaling()
 	OnNPCScaleUpdated();
 }
 
+void CNPCBaseProperties::UpdateMeleeRange(const Vector &bounds) // Make sure that we can still hit our targets, regardless of bbox.
+{
+	if (m_pNPCData == NULL)
+		return;
+
+	float bboxMaxRange = ceil(sqrt(2.0f * bounds.x * bounds.x)) + 1.0f;
+	m_flRange = MAX(m_pNPCData->flRange, bboxMaxRange);
+}
+
 void CNPCBaseProperties::FireGameEvent(IGameEvent *event)
 {
 	const char *type = event->GetName();

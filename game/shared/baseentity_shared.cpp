@@ -1859,7 +1859,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 						flCumulativeDamage += FirePenetrativeBullet(info, tr.endpos, vecDir, pAttacker, pHitEnt, nActualDamageType);
 #ifdef GAME_DLL
 						if (pPlayerFirer)
-							pPlayerFirer->PlaySkillSoundCue("SkillActivated.BulletPenetration");
+							pPlayerFirer->PlaySkillSoundCue(SKILL_SOUND_CUE_AMMO_PENETRATE);
 #endif
 					}
 				}

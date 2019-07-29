@@ -238,7 +238,6 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_nUpdateRate, FIELD_INTEGER ),
 	DEFINE_FIELD( m_fLerpTime, FIELD_FLOAT ),
 	DEFINE_FIELD( m_bPredictWeapons, FIELD_BOOLEAN ),
-	DEFINE_FIELD(m_bAllowSkillCues, FIELD_BOOLEAN),
 
 	DEFINE_FIELD( m_hUseEntity, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_iTrain, FIELD_INTEGER ),
@@ -560,7 +559,6 @@ CBasePlayer::CBasePlayer( )
 	m_flMovementTimeForUserCmdProcessingRemaining = 0.0f;
 
 	m_vecLagCompHitEndPosition = vec3_invalid;
-	m_bAllowSkillCues = true;
 }
 
 CBasePlayer::~CBasePlayer( )
@@ -7213,13 +7211,13 @@ bool CBasePlayer::GetSoundsetGender(void)
 	return m_bSoundsetGender;
 }
 
-void CBasePlayer::PlaySkillSoundCue(const char *snd)
+void CBasePlayer::PlaySkillSoundCue(int cmd)
 {
-	if (m_bAllowSkillCues == false)
-		return;
-
 	CSingleUserRecipientFilter filter(this);
-	EmitSound(filter, entindex(), snd);
+	filter.MakeReliable();
+	UserMessageBegin(filter, "SkillSoundCue");
+	WRITE_BYTE(cmd);
+	MessageEnd();
 }
 
 void CBasePlayer::SetHealthRegenAmount(float Amount)

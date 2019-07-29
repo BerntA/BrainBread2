@@ -20,10 +20,11 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-static ConVar hud_deathnotice_time( "hud_deathnotice_time", "6", 0 );
+static ConVar hud_deathnotice_time("hud_deathnotice_time", "6", 0);
+static ConVar hud_deathnotice_npcs("hud_deathnotice_npcs", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Display kills by NPCs in the killfeed.\n", true, 0, true, 1);
 
 // Contents of each entry in our list of death notices
-struct DeathNoticeItem 
+struct DeathNoticeItem
 {
 	char killerName[MAX_PLAYER_NAME_LENGTH];
 	char victimName[MAX_PLAYER_NAME_LENGTH];
@@ -40,83 +41,83 @@ struct DeathNoticeItem
 //-----------------------------------------------------------------------------
 class CHudDeathNotice : public CHudElement, public vgui::Panel
 {
-	DECLARE_CLASS_SIMPLE( CHudDeathNotice, vgui::Panel );
+	DECLARE_CLASS_SIMPLE(CHudDeathNotice, vgui::Panel);
 public:
-	CHudDeathNotice( const char *pElementName );
+	CHudDeathNotice(const char *pElementName);
 
-	void Init( void );
-	void VidInit( void );
-	virtual bool ShouldDraw( void );
-	virtual void Paint( void );
-	virtual void ApplySchemeSettings( vgui::IScheme *scheme );
+	void Init(void);
+	void VidInit(void);
+	virtual bool ShouldDraw(void);
+	virtual void Paint(void);
+	virtual void ApplySchemeSettings(vgui::IScheme *scheme);
 
-	void RetireExpiredDeathNotices( void );
+	void RetireExpiredDeathNotices(void);
 
-	virtual void FireGameEvent( IGameEvent * event );
+	virtual void FireGameEvent(IGameEvent * event);
 
 private:
 
-	CPanelAnimationVarAliasType( float, m_flLineHeight, "LineHeight", "15", "proportional_float" );
-	CPanelAnimationVar( float, m_flMaxDeathNotices, "MaxDeathNotices", "4" );
-	CPanelAnimationVar( bool, m_bRightJustify, "RightJustify", "1" );
-	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "Default" );
+	CPanelAnimationVarAliasType(float, m_flLineHeight, "LineHeight", "15", "proportional_float");
+	CPanelAnimationVar(float, m_flMaxDeathNotices, "MaxDeathNotices", "4");
+	CPanelAnimationVar(bool, m_bRightJustify, "RightJustify", "1");
+	CPanelAnimationVar(vgui::HFont, m_hTextFont, "TextFont", "Default");
 
 	// Texture for skull symbol
-	CHudTexture		*m_iconD_skull; 
+	CHudTexture		*m_iconD_skull;
 
 	CUtlVector<DeathNoticeItem> m_DeathNotices;
 };
 
 using namespace vgui;
 
-DECLARE_HUDELEMENT( CHudDeathNotice );
+DECLARE_HUDELEMENT(CHudDeathNotice);
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-CHudDeathNotice::CHudDeathNotice( const char *pElementName ) :
-CHudElement( pElementName ), BaseClass( NULL, "HudDeathNotice" )
+CHudDeathNotice::CHudDeathNotice(const char *pElementName) :
+CHudElement(pElementName), BaseClass(NULL, "HudDeathNotice")
 {
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
-	SetParent( pParent );
+	SetParent(pParent);
 
 	m_iconD_skull = NULL;
 
-	SetHiddenBits( HIDEHUD_MISCSTATUS | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD );
+	SetHiddenBits(HIDEHUD_MISCSTATUS | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CHudDeathNotice::ApplySchemeSettings( IScheme *scheme )
+void CHudDeathNotice::ApplySchemeSettings(IScheme *scheme)
 {
-	BaseClass::ApplySchemeSettings( scheme );
-	SetPaintBackgroundEnabled( false );
+	BaseClass::ApplySchemeSettings(scheme);
+	SetPaintBackgroundEnabled(false);
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CHudDeathNotice::Init( void )
+void CHudDeathNotice::Init(void)
 {
-	ListenForGameEvent("death_notice");	
+	ListenForGameEvent("death_notice");
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CHudDeathNotice::VidInit( void )
+void CHudDeathNotice::VidInit(void)
 {
-	m_iconD_skull = gHUD.GetIcon( "d_skull" );
+	m_iconD_skull = gHUD.GetIcon("d_skull");
 	m_DeathNotices.Purge();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Draw if we've got at least one death notice in the queue
 //-----------------------------------------------------------------------------
-bool CHudDeathNotice::ShouldDraw( void )
+bool CHudDeathNotice::ShouldDraw(void)
 {
-	return ( CHudElement::ShouldDraw() && ( m_DeathNotices.Count() ) );
+	return (CHudElement::ShouldDraw() && (m_DeathNotices.Count()));
 }
 
 //-----------------------------------------------------------------------------
@@ -124,61 +125,61 @@ bool CHudDeathNotice::ShouldDraw( void )
 //-----------------------------------------------------------------------------
 void CHudDeathNotice::Paint()
 {
-	if ( !m_iconD_skull || !g_PR )
+	if (!m_iconD_skull || !g_PR)
 		return;
 
 	int yStart = GetClientModeHL2MPNormal()->GetDeathMessageStartHeight();
 
-	surface()->DrawSetTextFont( m_hTextFont );
-	surface()->DrawSetTextColor( GameResources()->GetTeamColor( 0 ) );
+	surface()->DrawSetTextFont(m_hTextFont);
+	surface()->DrawSetTextColor(GameResources()->GetTeamColor(0));
 
 	int iCount = m_DeathNotices.Count();
-	for ( int i = 0; i < iCount; i++ )
+	for (int i = 0; i < iCount; i++)
 	{
 		CHudTexture *icon = m_DeathNotices[i].iconDeath;
 		CHudTexture *hshotIcon = m_DeathNotices[i].iconHeadshot;
-		if ( !icon )
+		if (!icon)
 			continue;
 
-		wchar_t victim[ 256 ];
-		wchar_t killer[ 256 ];
+		wchar_t victim[256];
+		wchar_t killer[256];
 
-		g_pVGuiLocalize->ConvertANSIToUnicode( m_DeathNotices[i].victimName, victim, sizeof( victim ) );
-		g_pVGuiLocalize->ConvertANSIToUnicode( m_DeathNotices[i].killerName, killer, sizeof( killer ) );
+		g_pVGuiLocalize->ConvertANSIToUnicode(m_DeathNotices[i].victimName, victim, sizeof(victim));
+		g_pVGuiLocalize->ConvertANSIToUnicode(m_DeathNotices[i].killerName, killer, sizeof(killer));
 
 		// Get the local position for this notice
-		int len = UTIL_ComputeStringWidth( m_hTextFont, victim );
+		int len = UTIL_ComputeStringWidth(m_hTextFont, victim);
 		int y = yStart + (m_flLineHeight * i);
 
 		int x;
-		if ( m_bRightJustify )
+		if (m_bRightJustify)
 			x = GetWide() - len - icon->Width() - ((hshotIcon != NULL) ? hshotIcon->Width() : 0);
 		else
 			x = 0;
 
 		// Only draw killers name if it wasn't a suicide
-		if ( !m_DeathNotices[i].iSuicide )
+		if (!m_DeathNotices[i].iSuicide)
 		{
-			if ( m_bRightJustify )
-				x -= UTIL_ComputeStringWidth( m_hTextFont, killer );
+			if (m_bRightJustify)
+				x -= UTIL_ComputeStringWidth(m_hTextFont, killer);
 
 			surface()->DrawSetTextColor(m_DeathNotices[i].colItemKiller);
 
 			// Draw killer's name
-			surface()->DrawSetTextPos( x, y );
-			surface()->DrawSetTextFont( m_hTextFont );
-			surface()->DrawUnicodeString( killer );
-			surface()->DrawGetTextPos( x, y );
+			surface()->DrawSetTextPos(x, y);
+			surface()->DrawSetTextFont(m_hTextFont);
+			surface()->DrawUnicodeString(killer);
+			surface()->DrawGetTextPos(x, y);
 		}
 
-		Color iconColor( 255, 255, 255, 255 );
+		Color iconColor(255, 255, 255, 255);
 
 		// Draw death weapon
 		//If we're using a font char, this will ignore iconTall and iconWide
 		//icon->DrawSelf( x, y, iconWide, iconTall, iconColor );
-		surface()->DrawSetColor( iconColor );
-		surface()->DrawSetTexture( icon->textureId );
-		surface()->DrawTexturedRect( x, y, icon->Width() + x , icon->Height() + y );
+		surface()->DrawSetColor(iconColor);
+		surface()->DrawSetTexture(icon->textureId);
+		surface()->DrawTexturedRect(x, y, icon->Width() + x, icon->Height() + y);
 
 		x += icon->Width();
 
@@ -188,14 +189,14 @@ void CHudDeathNotice::Paint()
 			surface()->DrawSetTexture(hshotIcon->textureId);
 			surface()->DrawTexturedRect(x, y, hshotIcon->Width() + x, hshotIcon->Height() + y);
 			x += hshotIcon->Width();
-		}	
+		}
 
 		surface()->DrawSetTextColor(m_DeathNotices[i].colItemVictim);
 
 		// Draw victims name
-		surface()->DrawSetTextPos( x, y );
-		surface()->DrawSetTextFont( m_hTextFont );	//reset the font, draw icon can change it
-		surface()->DrawUnicodeString( victim );
+		surface()->DrawSetTextPos(x, y);
+		surface()->DrawSetTextFont(m_hTextFont);	//reset the font, draw icon can change it
+		surface()->DrawUnicodeString(victim);
 	}
 
 	// Now retire any death notices that have expired
@@ -205,13 +206,13 @@ void CHudDeathNotice::Paint()
 //-----------------------------------------------------------------------------
 // Purpose: This message handler may be better off elsewhere
 //-----------------------------------------------------------------------------
-void CHudDeathNotice::RetireExpiredDeathNotices( void )
+void CHudDeathNotice::RetireExpiredDeathNotices(void)
 {
 	// Loop backwards because we might remove one
 	int iSize = m_DeathNotices.Size();
-	for ( int i = iSize-1; i >= 0; i-- )
+	for (int i = iSize - 1; i >= 0; i--)
 	{
-		if ( m_DeathNotices[i].flDisplayTime < gpGlobals->curtime )
+		if (m_DeathNotices[i].flDisplayTime < gpGlobals->curtime)
 			m_DeathNotices.Remove(i);
 	}
 }
@@ -219,7 +220,7 @@ void CHudDeathNotice::RetireExpiredDeathNotices( void )
 //-----------------------------------------------------------------------------
 // Purpose: Server's told us that someone's died
 //-----------------------------------------------------------------------------
-void CHudDeathNotice::FireGameEvent( IGameEvent * event )
+void CHudDeathNotice::FireGameEvent(IGameEvent * event)
 {
 	if (!g_PR || !HL2MPRules() || (hud_deathnotice_time.GetFloat() == 0))
 		return;
@@ -233,6 +234,9 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	const char *npcVictimName = event->GetString("npcVictim");
 	const char *npcKillerName = event->GetString("npcKiller");
 	const char *weaponName = event->GetString("weapon");
+
+	if (!hud_deathnotice_npcs.GetBool() && !IsPlayerIndex(killerID) && !IsPlayerIndex(victimID))
+		return;
 
 	if (npcVictimName && npcVictimName[0])
 		victimName = npcVictimName;
@@ -305,13 +309,13 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	}
 
 	// Add it to our list of death notices
-	m_DeathNotices.AddToTail( deathMsg );
+	m_DeathNotices.AddToTail(deathMsg);
 
 	// PRINT TO CONSOLE, EVENT LOGGING, ETC...
 	char sDeathMsg[512];
 
 	// Record the death notice in the console
-	if ( deathMsg.iSuicide )
+	if (deathMsg.iSuicide)
 	{
 		if (!strcmp(killedWith, "death_world"))
 			Q_snprintf(sDeathMsg, sizeof(sDeathMsg), "%s died.\n", victimName);
@@ -323,5 +327,5 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 		Q_snprintf(sDeathMsg, sizeof(sDeathMsg), "%s killed %s with %s.\n", killerName, victimName, weaponName);
 	}
 
-	Msg( "%s", sDeathMsg );
+	Msg("%s", sDeathMsg);
 }

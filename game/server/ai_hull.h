@@ -61,6 +61,8 @@ namespace NAI_Hull
 	const Vector &SmallMins(int id);
 	const Vector &SmallMaxs(int id);
 
+	Vector		Bounds(int id, bool bSmall = false);
+
 	float		Length(int id);
 	float		Width(int id);
 	float		Height(int id);

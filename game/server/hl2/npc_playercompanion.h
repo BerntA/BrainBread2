@@ -204,7 +204,7 @@ public:
 	void			EnterVehicle( CBaseEntity *pEntityVehicle, bool bImmediately );
 	virtual bool	ExitVehicle( void );
 
-	virtual void	UpdateEfficiency( bool bInPVS );
+	virtual void	UpdateEfficiency( CBasePlayer *pPVSTarget );
 	virtual bool	IsInAVehicle( void ) const;
 	virtual	IServerVehicle *GetVehicle( void );
 	virtual CBaseEntity *GetVehicleEntity( void );

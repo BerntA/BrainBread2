@@ -230,6 +230,8 @@ void CNPCM1A1::Spawn(void)
 
 	SetThink(&CNPCM1A1::TankLogicThinkFrame);
 	SetNextThink(gpGlobals->curtime + 0.01f);
+
+	SetBlocksLOS(false);
 }
 
 void CNPCM1A1::Precache(void)

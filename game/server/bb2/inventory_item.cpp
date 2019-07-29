@@ -247,6 +247,27 @@ void CInventoryItem::UpdateObjectiveIconPosition(const Vector &pos)
 	}
 }
 
+bool CInventoryItem::MyTouch(CBasePlayer *pPlayer)
+{
+	if (HL2MPRules()->IsFastPacedGameplay() && m_pData && m_pData->bAutoConsume)
+	{
+		CHL2MP_Player *pInteractor = GetHumanInteractor(pPlayer);
+		if (!pInteractor)
+			return false;
+
+		int iArmorType = (m_pData->iSubType - TYPE_ARMOR_SMALL + 1);
+		bool bWantsDelayedUse = ((m_pData->iType == TYPE_MISC) && (m_pData->iSubType >= TYPE_ARMOR_SMALL) && (m_pData->iSubType <= TYPE_ARMOR_LARGE) && (pInteractor->m_BB2Local.m_iActiveArmorType.Get() < iArmorType));
+		if (!GameBaseShared()->UseInventoryItem(pInteractor->entindex(), m_iItemID, m_bIsMapItem, true, bWantsDelayedUse))
+			return false;
+
+		CSingleUserRecipientFilter filter(pInteractor);
+		EmitSound(filter, pInteractor->entindex(), m_pData->szSoundScriptSuccess);
+		return true;
+	}
+
+	return false;
+}
+
 void CInventoryItem::FireGameEvent(IGameEvent *event)
 {
 	const char *type = event->GetName();

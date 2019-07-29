@@ -90,7 +90,10 @@ void CPropButton::Spawn(void)
 	{
 		Warning("Removing BB2_PROP_BUTTON!\n");
 		UTIL_Remove(this);
+		return;
 	}
+
+	SetBlocksLOS(false);
 }
 
 void CPropButton::Precache(void)

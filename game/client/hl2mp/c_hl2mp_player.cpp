@@ -82,7 +82,7 @@ ConVar bb2_zombie_vision_color_r("bb2_zombie_vision_color_r", "80", FCVAR_CLIENT
 ConVar bb2_zombie_vision_color_g("bb2_zombie_vision_color_g", "25", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Sets the color for the zombie vision lighting.", true, 0.0f, true, 255.0f);
 ConVar bb2_zombie_vision_color_b("bb2_zombie_vision_color_b", "15", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Sets the color for the zombie vision lighting.", true, 0.0f, true, 255.0f);
 
-static ConVar bb2_sound_skill_cues("bb2_sound_skill_cues", "1", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_SERVER_CAN_EXECUTE, "Enable or Disable Skill Sound Cues.", true, 0, true, 1);
+ConVar bb2_sound_skill_cues("bb2_sound_skill_cues", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Enable or Disable Skill Sound Cues.", true, 0, true, 1);
 
 void SpawnBlood (Vector vecSpot, const Vector &vecDir, int bloodColor, float flDamage, int hitbox);
 

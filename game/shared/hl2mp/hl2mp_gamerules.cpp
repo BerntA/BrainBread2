@@ -522,10 +522,7 @@ const char *CHL2MPRules::GetNameForCombatCharacter(int index)
 	pCharacter = UTIL_EntityByIndex(index);
 #endif
 
-	if (!pCharacter)
-		return "";
-
-	if (!pCharacter->MyCombatCharacterPointer())
+	if (!pCharacter || !pCharacter->MyCombatCharacterPointer())
 		return "";
 
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(pCharacter);

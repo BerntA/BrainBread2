@@ -309,6 +309,55 @@ static void __MsgFunc_ClientEffect(bf_read &msg)
 	GameBaseClient->RunClientEffect(iType, iState);
 }
 
+extern ConVar bb2_sound_skill_cues;
+static void __MsgFunc_SkillSoundCue(bf_read &msg)
+{
+	int cmd = msg.ReadByte();
+	if ((cmd <= 0) || !bb2_sound_skill_cues.GetBool())
+		return;
+
+	const char *script = NULL;
+	switch (cmd)
+	{
+	case SKILL_SOUND_CUE_AMMO_BLAZE:
+		script = "SkillActivated.BlazingAmmo";
+		break;
+
+	case SKILL_SOUND_CUE_AMMO_FROST:
+		script = "SkillActivated.FrostAmmo";
+		break;
+
+	case SKILL_SOUND_CUE_AMMO_REFILL:
+		script = "SkillActivated.MagRefill";
+		break;
+
+	case SKILL_SOUND_CUE_AMMO_PENETRATE:
+		script = "SkillActivated.BulletPenetration";
+		break;
+
+	case SKILL_SOUND_CUE_MELEE_BLEED:
+		script = "SkillActivated.MeleeBleed";
+		break;
+
+	case SKILL_SOUND_CUE_MELEE_STUN:
+		script = "SkillActivated.MeleeStun";
+		break;
+
+	case SKILL_SOUND_CUE_LIFE_LEECH:
+		script = "SkillActivated.LifeLeech";
+		break;
+	}
+
+	if (script == NULL)
+		return;
+
+	CSoundParameters params;
+	if (CBaseEntity::GetParametersForSound(script, params, NULL) == false)
+		return;
+
+	enginesound->EmitAmbientSound(params.soundname, 1.0f, random->RandomInt(params.pitchlow, params.pitchhigh));
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -415,6 +464,7 @@ void ClientModeShared::Init()
 	HOOK_MESSAGE(Rumble);
 	HOOK_MESSAGE(ShowNote);
 	HOOK_MESSAGE(ClientEffect);
+	HOOK_MESSAGE(SkillSoundCue);
 }
 
 

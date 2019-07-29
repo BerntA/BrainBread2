@@ -3065,7 +3065,7 @@ bool CAI_BaseNPC::ShouldPlayerAvoid( void )
 
 //-----------------------------------------------------------------------------
 
-void CAI_BaseNPC::UpdateEfficiency( bool bInPVS )
+void CAI_BaseNPC::UpdateEfficiency(CBasePlayer *pPVSTarget)
 {
 	// Sleeping NPCs always dormant
 	if ( GetSleepState() != AISS_AWAKE )
@@ -3083,33 +3083,21 @@ void CAI_BaseNPC::UpdateEfficiency( bool bInPVS )
 		return;
 	}
 
+	float playerDist = 0.0f;
+	bool bPlayerFacing = true;
 	Vector vPlayerEyePosition = vec3_origin, vPlayerForward = vec3_origin;
-	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetLocalOrigin(), true);
-	if (pPlayer)
-		pPlayer->EyePositionAndVectors(&vPlayerEyePosition, &vPlayerForward, NULL, NULL);
-
-	Vector	vToNPC = GetLocalOrigin() - vPlayerEyePosition;
-	float	playerDist = VectorNormalize(vToNPC);
-	bool	bPlayerFacing;
-	bool	bClientPVSExpanded = UTIL_ClientPVSIsExpanded();
-
-	if ( pPlayer )	
-		bPlayerFacing = (bClientPVSExpanded || (bInPVS && vPlayerForward.Dot(vToNPC) > 0));	
-	else
+	if (pPVSTarget)
 	{
-		playerDist = 0;
-		bPlayerFacing = true;
+		pPVSTarget->EyePositionAndVectors(&vPlayerEyePosition, &vPlayerForward, NULL, NULL);
+		Vector vToNPC = (GetLocalOrigin() - vPlayerEyePosition);
+		playerDist = VectorNormalize(vToNPC);
+		bPlayerFacing = (vPlayerForward.Dot(vToNPC) > 0);
 	}
 
-	bool bInVisibilityPVS = (bClientPVSExpanded && UTIL_FindClientInVisibilityPVS(edict()) != NULL);
-	if ((bInPVS && (bPlayerFacing || playerDist < GetSenses()->GetDistLook())) || bClientPVSExpanded)
-	{
-		SetMoveEfficiency( AIME_NORMAL );
-	}
-	else
-	{
-		SetMoveEfficiency( AIME_EFFICIENT );
-	}
+	if ((pPVSTarget && (bPlayerFacing || (playerDist < GetSenses()->GetDistLook()))) || ShouldAlwaysThink())
+		SetMoveEfficiency( AIME_NORMAL );	
+	else	
+		SetMoveEfficiency( AIME_EFFICIENT );	
 
 	//---------------------------------
 
@@ -3122,7 +3110,7 @@ void CAI_BaseNPC::UpdateEfficiency( bool bInPVS )
 	//---------------------------------
 
 	// Some conditions will always force normal
-	if ( gpGlobals->curtime - GetLastAttackTime() < .15 )
+	if ((gpGlobals->curtime - GetLastAttackTime() < 0.15) || ShouldAlwaysThink())
 	{
 		SetEfficiency( AIE_NORMAL );
 		return;
@@ -3134,7 +3122,7 @@ void CAI_BaseNPC::UpdateEfficiency( bool bInPVS )
 		 gpGlobals->curtime - GetLastAttackTime() < .2 ||
 		 gpGlobals->curtime - m_flLastDamageTime < .2 ||
 		 ( GetState() < NPC_STATE_IDLE || GetState() > NPC_STATE_SCRIPT ) ||
-		 ( ( bInPVS || bInVisibilityPVS ) && 
+		 (pPVSTarget &&
 		   ( ( GetTask() && !TaskIsRunning() ) ||
 			 GetTaskInterrupt() > 0 ||
 			 m_bInChoreo ) ) )
@@ -3183,125 +3171,18 @@ void CAI_BaseNPC::UpdateEfficiency( bool bInPVS )
 		}
 	}
 
-	if ( bPotentialDanger )
+	if (bPotentialDanger || pPVSTarget)
 	{
 		SetEfficiency( minEfficiency );
 		return;
 	}
 
-	//---------------------------------
-
-	if ( !pPlayer )
-	{
-		// No heuristic currently for dedicated servers
-		SetEfficiency( minEfficiency );
-		return;
-	}
-
-	enum
-	{
-		DIST_NEAR,
-		DIST_MID,
-		DIST_FAR
-	};
-
-	int	range;
-	if (bInPVS || (playerDist < m_flDistTooFar))
-	{
-		SetEfficiency(minEfficiency);
-		return;
-	}
-	else
-	{
-		range = (playerDist < GetSenses()->GetDistLook()) ? DIST_NEAR :
-			(playerDist < (GetSenses()->GetDistLook() * 1.5f)) ? DIST_MID : DIST_FAR;
-	}
-
-	// Efficiency mappings
-	int state = GetState();
-	if (state == NPC_STATE_SCRIPT ) // Treat script as alert. Already confirmed not in PVS
-		state = NPC_STATE_ALERT;
-
-	static AI_Efficiency_t mappings[] =
-	{
-		// Idle
-			// In PVS
-				// Facing
-					AIE_NORMAL,
-					AIE_NORMAL,
-					AIE_EFFICIENT,
-				// Not facing
-					AIE_NORMAL,
-					AIE_EFFICIENT,
-					AIE_EFFICIENT,
-			// Not in PVS
-					AIE_NORMAL,
-					AIE_VERY_EFFICIENT,
-					AIE_SUPER_EFFICIENT,
-		// Alert
-			// In PVS
-				// Facing
-					AIE_NORMAL,
-					AIE_NORMAL,
-					AIE_NORMAL,
-				// Not facing
-					AIE_NORMAL,
-					AIE_NORMAL,
-					AIE_EFFICIENT,
-			// Not in PVS
-					AIE_NORMAL,
-					AIE_EFFICIENT,
-					AIE_VERY_EFFICIENT,
-		// Combat
-			// In PVS
-				// Facing
-					AIE_NORMAL,
-					AIE_NORMAL,
-					AIE_NORMAL,
-				// Not facing
-					AIE_NORMAL,
-					AIE_NORMAL,
-					AIE_NORMAL,
-			// Not in PVS
-					AIE_NORMAL,
-					AIE_NORMAL,
-					AIE_EFFICIENT,
-	};
-
-	static const int stateBase[] = { 0, 9, 18 };
-	const int NOT_FACING_OFFSET = 3;
-	const int NO_PVS_OFFSET = 6;
-
-	int iStateOffset = stateBase[state - NPC_STATE_IDLE] ;
-	int iFacingOffset = (!bInPVS || bPlayerFacing) ? 0 : NOT_FACING_OFFSET;
-	int iPVSOffset = (bInPVS) ? 0 : NO_PVS_OFFSET;
-	int iMapping = iStateOffset + iPVSOffset + iFacingOffset + range;
-
-	Assert( iMapping < ARRAYSIZE( mappings ) );
-
-	AI_Efficiency_t efficiency = mappings[iMapping];
-
-	//---------------------------------
-
-	AI_Efficiency_t maxEfficiency = AIE_SUPER_EFFICIENT;
-	if ( bInVisibilityPVS && state >= NPC_STATE_ALERT )
-	{
-		maxEfficiency = AIE_EFFICIENT;
-	}
-	else if ( bInVisibilityPVS || HasCondition( COND_SEE_PLAYER ) )
-	{
-		maxEfficiency = AIE_VERY_EFFICIENT;
-	}
-	
-	//---------------------------------
-
-	SetEfficiency( clamp( efficiency, minEfficiency, maxEfficiency ) );
+	SetEfficiency(AIE_SUPER_EFFICIENT); // Dormant is only used for 'sleeping' npcs. so this is the best we can do here.
 }
-
 
 //-----------------------------------------------------------------------------
 
-void CAI_BaseNPC::UpdateSleepState( bool bInPVS )
+void CAI_BaseNPC::UpdateSleepState(CBasePlayer *pPVSTarget)
 {
 	if ( GetSleepState() > AISS_AWAKE )
 	{
@@ -3327,7 +3208,7 @@ void CAI_BaseNPC::UpdateSleepState( bool bInPVS )
 			Wake();
 		else if ( GetSleepState() == AISS_WAITING_FOR_PVS )
 		{
-			if ( bInPVS )
+			if (pPVSTarget)
 				Wake();
 		}
 		else if ( GetSleepState() == AISS_WAITING_FOR_THREAT )
@@ -3336,15 +3217,8 @@ void CAI_BaseNPC::UpdateSleepState( bool bInPVS )
 				Wake();
 			else
 			{
-				if ( bInPVS )
-				{
-					for (int i = 1; i <= gpGlobals->maxClients; i++ )
-					{
-						CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
-						if ( pPlayer && !(pPlayer->GetFlags() & FL_NOTARGET) && pPlayer->FVisible( this ) )
-							Wake();
-					}
-				}
+				if (pPVSTarget)				
+					Wake();				
 			
 				// Should check for visible danger sounds
 				if ( (GetSoundInterests() & SOUND_DANGER) && !(HasSpawnFlags(SF_NPC_WAIT_TILL_SEEN)) )
@@ -3519,14 +3393,9 @@ void CAI_BaseNPC::RebalanceThinks()
 			if (!pCandidate)
 				continue;
 
-			Vector vPlayerForward = vec3_origin, vPlayerEyePosition = vec3_origin;
-			CBasePlayer *pPlayer = UTIL_GetNearestPlayer(pCandidate->GetLocalOrigin(), true);
-			if (pPlayer)
-				pPlayer->EyePositionAndVectors(&vPlayerEyePosition, &vPlayerForward, NULL, NULL);
-
-			if ( pCandidate->CanThinkRebalance() &&
-				( pCandidate->GetNextThinkTick() >= iMinTickRebalance && 
-				pCandidate->GetNextThinkTick() < iMaxTickRebalance ) )
+			if (pCandidate->CanThinkRebalance() &&
+				(pCandidate->GetNextThinkTick() >= iMinTickRebalance &&
+				pCandidate->GetNextThinkTick() < iMaxTickRebalance))
 			{
 				int iInfo = rebalanceCandidates.AddToTail();
 
@@ -3534,26 +3403,30 @@ void CAI_BaseNPC::RebalanceThinks()
 				rebalanceCandidates[iInfo].iNextThinkTick = pCandidate->GetNextThinkTick();
 				rebalanceCandidates[iInfo].distLook = pCandidate->GetSenses()->GetDistLook();
 
-				if ( pCandidate->IsFlaggedEfficient() )
-				{
-					rebalanceCandidates[iInfo].bInPVS = false;
-				}
-				else if ( pPlayer )
-				{
-					Vector vToCandidate = pCandidate->EyePosition() - vPlayerEyePosition;
-					rebalanceCandidates[iInfo].bInPVS = ( UTIL_FindClientInPVS( pCandidate->edict() ) != NULL );
-					rebalanceCandidates[iInfo].distPlayer = VectorNormalize( vToCandidate );
-					rebalanceCandidates[iInfo].dotPlayer = vPlayerForward.Dot( vToCandidate );
-				}
+				if (pCandidate->IsFlaggedEfficient())				
+					rebalanceCandidates[iInfo].bInPVS = false;				
 				else
 				{
-					rebalanceCandidates[iInfo].bInPVS = true;
-					rebalanceCandidates[iInfo].dotPlayer = 1;
-					rebalanceCandidates[iInfo].distPlayer = 0;
+					Vector vPlayerForward = vec3_origin, vPlayerEyePosition = vec3_origin;
+					CBasePlayer *pPlayer = UTIL_FindPlayerWithinRange(pCandidate);
+					if (pPlayer)
+					{
+						pPlayer->EyePositionAndVectors(&vPlayerEyePosition, &vPlayerForward, NULL, NULL);
+						Vector vToCandidate = pCandidate->EyePosition() - vPlayerEyePosition;
+						rebalanceCandidates[iInfo].bInPVS = true;
+						rebalanceCandidates[iInfo].distPlayer = VectorNormalize(vToCandidate);
+						rebalanceCandidates[iInfo].dotPlayer = vPlayerForward.Dot(vToCandidate);
+					}
+					else
+					{
+						rebalanceCandidates[iInfo].bInPVS = false;
+						rebalanceCandidates[iInfo].dotPlayer = 1;
+						rebalanceCandidates[iInfo].distPlayer = 0;
+					}
 				}
 			}
-			else if ( bDebugThinkTicks )
-				DevMsg( "   Ignoring %d\n", pCandidate->GetNextThinkTick() );
+			else if (bDebugThinkTicks)
+				DevMsg("   Ignoring %d\n", pCandidate->GetNextThinkTick());
 		}
 
 		if ( rebalanceCandidates.Count() )
@@ -3839,18 +3712,15 @@ void CAI_BaseNPC::PlayerPenetratingVPhysics( void )
 
 //-----------------------------------------------------------------------------
 
-bool CAI_BaseNPC::CheckPVSCondition()
+CBasePlayer *CAI_BaseNPC::CheckPVSCondition()
 {
-	bool bInPVS = ( UTIL_FindClientInPVS( edict() ) != NULL ) || (UTIL_ClientPVSIsExpanded() && UTIL_FindClientInVisibilityPVS( edict() ));
-
-	if ( bInPVS )
-		SetCondition( COND_IN_PVS );
+	CBasePlayer *pTarget = UTIL_FindPlayerWithinRange(this);
+	if (pTarget)
+		SetCondition(COND_IN_PVS);
 	else
-		ClearCondition( COND_IN_PVS );
-
-	return bInPVS;
+		ClearCondition(COND_IN_PVS);
+	return pTarget;
 }
-
 
 //-----------------------------------------------------------------------------
 // NPC Think - calls out to core AI functions and handles this
@@ -3872,11 +3742,11 @@ void CAI_BaseNPC::NPCThink( void )
 
 	//---------------------------------
 
-	bool bInPVS = CheckPVSCondition();
+	CBasePlayer *pPVSTarget = CheckPVSCondition();
 		
 	//---------------------------------
 
-	UpdateSleepState( bInPVS );
+	UpdateSleepState( pPVSTarget );
 
 	//---------------------------------
 	bool bRanDecision = false;
@@ -3958,7 +3828,7 @@ void CAI_BaseNPC::NPCThink( void )
 
 	m_bUsingStandardThinkTime = ( GetNextThinkTick() == TICK_NEVER_THINK );
 
-	UpdateEfficiency( bInPVS );
+	UpdateEfficiency(pPVSTarget);
 
 	if ( m_bUsingStandardThinkTime )
 	{
@@ -3984,8 +3854,8 @@ void CAI_BaseNPC::NPCThink( void )
 		{
 			.1,	//	AIE_NORMAL
 			.2, //	AIE_EFFICIENT
-			.4, //	AIE_VERY_EFFICIENT
-			.6, //	AIE_SUPER_EFFICIENT
+			.3, //	AIE_VERY_EFFICIENT
+			.5, //	AIE_SUPER_EFFICIENT
 		};
 
 		if ( bRanDecision )
@@ -4607,7 +4477,7 @@ void CAI_BaseNPC::GatherConditions( void )
 
 		if ( m_pfnThink != (BASEPTR)&CAI_BaseNPC::CallNPCThink )
 		{
-			if ( UTIL_FindClientInPVS( edict() ) != NULL )
+			if (UTIL_FindPlayerWithinRange(this) != NULL)
 				SetCondition( COND_IN_PVS );
 			else
 				ClearCondition( COND_IN_PVS );

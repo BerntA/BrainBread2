@@ -1381,7 +1381,7 @@ bool CAI_PlayerAlly::IsOkToSpeak( ConceptCategory_t category, bool fRespondingTo
 	}
 
 	// if player is not in pvs, don't speak
-	if ( !UTIL_FindClientInPVS(edict()) )
+	if (!UTIL_FindPlayerWithinRange(this))
 		return false;
 
 	if ( category != SPEECH_PRIORITY )

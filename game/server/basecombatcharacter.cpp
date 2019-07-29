@@ -844,19 +844,25 @@ void CBaseCombatCharacter::Weapon_FrameUpdate( void )
 // Input   :
 // Output  :
 //------------------------------------------------------------------------------
-CBaseEntity *CBaseCombatCharacter::CheckTraceHullAttack( float flDist, const Vector &mins, const Vector &maxs, int iDamage, int iDmgType, float forceScale, bool bDamageAnyNPC )
+CBaseEntity *CBaseCombatCharacter::CheckTraceHullAttack(float flDist, const Vector &mins, const Vector &maxs, int iDamage, int iDmgType, float forceScale, bool bDamageAnyNPC)
 {
-	// If only a length is given assume we want to trace in our facing direction
 	Vector forward;
-	AngleVectors( GetAbsAngles(), &forward );
 	Vector vStart = GetAbsOrigin();
+	CBaseEntity *pEnemy = GetEnemy();
+	if (pEnemy)
+	{
+		forward = (pEnemy->WorldSpaceCenter() - WorldSpaceCenter());
+		VectorNormalize(forward);
+	}
+	else
+		AngleVectors(GetAbsAngles(), &forward);
 
 	// The ideal place to start the trace is in the center of the attacker's bounding box.
 	// however, we need to make sure there's enough clearance. Some of the smaller monsters aren't 
 	// as big as the hull we try to trace with. (SJB)
 	float flVerticalOffset = WorldAlignSize().z * 0.5;
 
-	if( flVerticalOffset < maxs.z )
+	if (flVerticalOffset < maxs.z)
 	{
 		// There isn't enough room to trace this hull, it's going to drag the ground.
 		// so make the vertical offset just enough to clear the ground.
@@ -864,8 +870,8 @@ CBaseEntity *CBaseCombatCharacter::CheckTraceHullAttack( float flDist, const Vec
 	}
 
 	vStart.z += flVerticalOffset;
-	Vector vEnd = vStart + (forward * flDist );
-	return CheckTraceHullAttack( vStart, vEnd, mins, maxs, iDamage, iDmgType, forceScale, bDamageAnyNPC );
+	Vector vEnd = vStart + (forward * flDist);
+	return CheckTraceHullAttack(vStart, vEnd, mins, maxs, iDamage, iDmgType, forceScale, bDamageAnyNPC);
 }
 
 //-----------------------------------------------------------------------------
@@ -2124,10 +2130,7 @@ void CBaseCombatCharacter::OnAffectedBySkill(const CTakeDamageInfo &info)
 		return;
 
 	CHL2MP_Player *pAttacker = ToHL2MPPlayer(info.GetAttacker());
-	if (!pAttacker)
-		return;
-
-	if (IsAffectedBySkillFlag(skillFlag))
+	if (!pAttacker || IsAffectedBySkillFlag(skillFlag))
 		return;
 
 	CBaseCombatWeapon *pKillerWeapon = pAttacker->GetActiveWeapon();
@@ -2150,7 +2153,7 @@ void CBaseCombatCharacter::OnAffectedBySkill(const CTakeDamageInfo &info)
 		if (pKillerWeapon)
 			damage = (info.GetDamage() / 100.0f) * pKillerWeapon->GetWpnData().m_flSkillBleedFactor;
 
-		pAttacker->PlaySkillSoundCue("SkillActivated.MeleeBleed");
+		pAttacker->PlaySkillSoundCue(SKILL_SOUND_CUE_MELEE_BLEED);
 	}
 	else if (skillFlag & SKILL_FLAG_BLAZINGAMMO)
 	{
@@ -2161,23 +2164,22 @@ void CBaseCombatCharacter::OnAffectedBySkill(const CTakeDamageInfo &info)
 		damage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flNPCBurnDamage;
 		timeBetweenDamage = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flNPCBurnFrequency;
 
-		pAttacker->PlaySkillSoundCue("SkillActivated.BlazingAmmo");
+		if (info.GetForcedWeaponID() != WEAPON_ID_FLAMETHROWER)
+			pAttacker->PlaySkillSoundCue(SKILL_SOUND_CUE_AMMO_BLAZE);
 	}
 	else if (skillFlag & SKILL_FLAG_COLDSNAP)
 	{
 		nFlag = SKILL_FLAG_COLDSNAP;
 		nOverlayFlag = MAT_OVERLAY_COLDSNAP;
-
 		duration = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flSlowDownDuration;
-
-		pAttacker->PlaySkillSoundCue("SkillActivated.FrostAmmo");
+		pAttacker->PlaySkillSoundCue(SKILL_SOUND_CUE_AMMO_FROST);
 	}
 	else if (skillFlag & SKILL_FLAG_CRIPPLING_BLOW)
 	{
 		nFlag = SKILL_FLAG_CRIPPLING_BLOW;
 		nOverlayFlag = MAT_OVERLAY_CRIPPLED;
-
 		duration = GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flStunDuration;
+		pAttacker->PlaySkillSoundCue(SKILL_SOUND_CUE_MELEE_STUN);
 	}
 
 	if (!nFlag)

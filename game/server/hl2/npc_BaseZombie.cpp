@@ -217,45 +217,53 @@ bool CNPC_BaseZombie::OverrideMoveFacing( const AILocalMoveGoal_t &move, float f
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-int CNPC_BaseZombie::MeleeAttack1Conditions ( float flDot, float flDist )
+int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flDist)
 {
-	float range = GetClawAttackRange();
-
-	if (flDist > range )
+	CBaseEntity *pEnemy = GetEnemy();
+	if (!pEnemy)
 		return COND_TOO_FAR_TO_ATTACK;
 
 	if (flDot < 0.7)
 		return COND_NOT_FACING_ATTACK;
 
-	// Build a cube-shaped hull, the same hull that ClawAttack() is going to use.
-	Vector vecMins = GetHullMins();
-	Vector vecMaxs = GetHullMaxs();
-	vecMins.z = vecMins.x;
-	vecMaxs.z = vecMaxs.x;
+	float range = GetClawAttackRange(), flDistToEnemy2D, flHeightDiff, flMaxHeight;
+	const Vector &vecTargetPos = pEnemy->GetAbsOrigin();
+	const Vector &vecNPCPos = GetAbsOrigin();
+	Vector vecAttackDir = (vecTargetPos - vecNPCPos);
+	const Vector &vecMins = GetHullMins();
+	const Vector &vecMaxs = GetHullMaxs();
+	Vector vecBounds = Vector((vecMaxs.x - vecMins.x) - 2.0f, (vecMaxs.y - vecMins.y) - 2.0f, ((vecMaxs.z - vecMins.z) - 4.0f));
+	vecBounds /= 2.0f;
+	Vector vecStart = vecNPCPos + Vector(0, 0, vecBounds.z);
+	flDistToEnemy2D = vecAttackDir.Length2D();
+	flHeightDiff = abs(vecTargetPos.z - vecNPCPos.z);
+	flMaxHeight = (vecMaxs.z - vecMins.z) + (pEnemy->WorldAlignMaxs().z - pEnemy->WorldAlignMins().z);
+	VectorNormalize(vecAttackDir);
 
-	Vector forward;
-	GetVectors( &forward, NULL, NULL );
-
-	trace_t	tr;
-	CTraceFilterNav traceFilter(this, false, this, GetCollisionGroup());
-	AI_TraceHull( WorldSpaceCenter(), WorldSpaceCenter() + forward * GetClawAttackRange(), vecMins, vecMaxs, MASK_NPCSOLID, &traceFilter, &tr );
-
-	if( tr.fraction == 1.0 || !tr.m_pEnt )
-		// This attack would miss completely. Trick the zombie into moving around some more.
+	if ((flDistToEnemy2D > range) || (flHeightDiff > flMaxHeight))
 		return COND_TOO_FAR_TO_ATTACK;
 
-	if (tr.m_pEnt == GetEnemy())
-		return COND_CAN_MELEE_ATTACK1;
+	trace_t	tr;
 
-	CBasePropDoor *pDoor = dynamic_cast<CBasePropDoor*> (tr.m_pEnt);
-	if (pDoor && HL2MPRules()->IsBreakableDoor(tr.m_pEnt))
+	CTraceFilterWorldAndPropsOnly worldCheckFilter;
+	AI_TraceHull(vecStart, vecStart + vecAttackDir * GetClawAttackRange(), -Vector(4, 4, 4), Vector(4, 4, 4), MASK_SOLID_BRUSHONLY, &worldCheckFilter, &tr);
+	if (tr.DidHit()) // Behind a wall!
+		return COND_TOO_FAR_TO_ATTACK;
+
+	CTraceFilterNav traceFilter(this, true, this, GetCollisionGroup());
+	AI_TraceHull(vecStart, vecStart + vecAttackDir * GetClawAttackRange(), -vecBounds, vecBounds, MASK_SOLID_BRUSHONLY, &traceFilter, &tr);
+
+	if (tr.m_pEnt && !tr.m_pEnt->MyCombatCharacterPointer())
 	{
-		m_hBlockingEntity = pDoor;
-		return COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT;
+		CBasePropDoor *pDoor = dynamic_cast<CBasePropDoor*> (tr.m_pEnt);
+		if (pDoor && HL2MPRules()->IsBreakableDoor(tr.m_pEnt))
+		{
+			m_hBlockingEntity = pDoor;
+			return COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT;
+		}
 	}
 
-	// Move around some more
-	return COND_TOO_FAR_TO_ATTACK;
+	return COND_CAN_MELEE_ATTACK1;
 }
 
 //-----------------------------------------------------------------------------
@@ -458,8 +466,10 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack(float flDist, int iDamage, QAngle &qaVi
 		//
 		Vector vecMins = GetHullMins();
 		Vector vecMaxs = GetHullMaxs();
-		vecMins.z = vecMins.x;
-		vecMaxs.z = vecMaxs.x;
+		float height = (vecMaxs.z - vecMins.z) - 2.0f;
+		height /= 2.0f;
+		vecMins.z = -height;
+		vecMaxs.z = height;
 
 		// Try to hit them with a trace
 		pHurt = CheckTraceHullAttack(flDist, vecMins, vecMaxs, iDamage, DMG_ZOMBIE);
@@ -708,6 +718,7 @@ void CNPC_BaseZombie::Spawn( void )
 
 		m_nSkin = m_iModelSkin;
 		UpdateNPCScaling();
+		UpdateMeleeRange(NAI_Hull::Bounds(GetHullType(), IsUsingSmallHull()));
 	}
 	else
 	{

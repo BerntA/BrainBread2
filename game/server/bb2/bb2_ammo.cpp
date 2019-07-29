@@ -140,10 +140,7 @@ void CAmmoItemBase::Spawn(void)
 
 void CAmmoItemBase::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
 {
-	if (!pActivator)
-		return;
-
-	if (!pActivator->IsPlayer() || pActivator->IsZombie() || !CanPickup())
+	if (!pActivator || !pActivator->IsPlayer() || pActivator->IsZombie() || !CanPickup())
 		return;
 
 	CBasePlayer *pPlayer = ToBasePlayer(pActivator);

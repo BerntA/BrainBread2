@@ -615,10 +615,9 @@ bool CGameBaseShared::UseInventoryItem(int iPlayerIndex, uint iItemID, bool bIsM
 			if (TryTheLuck(0.30))
 				HL2MPRules()->EmitSoundToClient(pClient, "PickupHealth", BB2_SoundTypes::TYPE_PLAYER, pClient->GetSoundsetGender());
 		}
-		else if ((iSubType == TYPE_ARMOR_LARGE) || (iSubType == TYPE_ARMOR_MEDIUM) || (iSubType == TYPE_ARMOR_SMALL))
+		else if ((iSubType >= TYPE_ARMOR_SMALL) && (iSubType <= TYPE_ARMOR_LARGE))
 		{
-			int iArmorType = (iSubType - 4);
-
+			int iArmorType = (iSubType - TYPE_ARMOR_SMALL + 1);
 			if ((pClient->m_BB2Local.m_iActiveArmorType <= TYPE_NONE) || (bDelayedUse && (pClient->m_BB2Local.m_iActiveArmorType != iArmorType)))
 				pClient->ApplyArmor(100.0f, iArmorType);
 			else if ((pClient->m_BB2Local.m_iActiveArmorType == iArmorType) && (pClient->ArmorValue() < 100))
@@ -1153,7 +1152,7 @@ void CGameBaseShared::ComputePlayerWeight(CHL2MP_Player *pPlayer)
 		m_flWeight += pWeapon->GetWpnData().m_flPhysicalWeight;
 	}
 
-	if (pPlayer->m_BB2Local.m_iActiveArmorType.Get() > 0)
+	if ((pPlayer->m_BB2Local.m_iActiveArmorType.Get() > 0) && (HL2MPRules()->GetCurrentGamemode() != MODE_DEATHMATCH))
 		m_flWeight += ((float)GameBaseShared()->GetSharedGameDetails()->GetInventoryArmorDataValue("weight", pPlayer->m_BB2Local.m_iActiveArmorType.Get()));
 
 	if (pPlayer->IsHuman() && (pPlayer->GetSkillValue(PLAYER_SKILL_HUMAN_LIGHTWEIGHT) > 0))

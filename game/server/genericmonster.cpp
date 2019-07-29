@@ -207,7 +207,7 @@ public:
 	void	Spawn( void );
 	void	Precache( void );
 	void	Die( void );
-	void	UpdateEfficiency( bool bInPVS )	{ SetEfficiency( ( GetSleepState() != AISS_AWAKE ) ? AIE_DORMANT : AIE_NORMAL ); SetMoveEfficiency( AIME_NORMAL ); }
+	void	UpdateEfficiency(CBasePlayer *pPVSTarget)	{ SetEfficiency((GetSleepState() != AISS_AWAKE) ? AIE_DORMANT : AIE_NORMAL); SetMoveEfficiency(AIME_NORMAL); }
 	Class_T	Classify ( void );
 	float	MaxYawSpeed( void ){ return 0; }
 	virtual int	ObjectCaps( void );

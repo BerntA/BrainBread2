@@ -281,18 +281,18 @@ bool CItem::ItemCanBeTouchedByPlayer( CBasePlayer *pPlayer )
 // Purpose: 
 // Input  : pOther - 
 //-----------------------------------------------------------------------------
-void CItem::ItemTouch( CBaseEntity *pOther )
+void CItem::ItemTouch(CBaseEntity *pOther)
 {
 	// Vehicles can touch items + pick them up
-	if ( pOther->GetServerVehicle() )
+	if (pOther->GetServerVehicle())
 	{
 		pOther = pOther->GetServerVehicle()->GetPassenger();
-		if ( !pOther )
+		if (!pOther)
 			return;
 	}
 
 	// if it's not a player, ignore
-	if ( !pOther->IsPlayer() )
+	if (!pOther->IsPlayer())
 		return;
 
 	CBasePlayer *pPlayer = (CBasePlayer *)pOther;
@@ -300,44 +300,34 @@ void CItem::ItemTouch( CBaseEntity *pOther )
 	// Must be a valid pickup scenario (no blocking). Though this is a more expensive
 	// check than some that follow, this has to be first Obecause it's the only one
 	// that inhibits firing the output OnCacheInteraction.
-	if ( ItemCanBeTouchedByPlayer( pPlayer ) == false )
+	if (ItemCanBeTouchedByPlayer(pPlayer) == false)
 		return;
 
 	m_OnCacheInteraction.FireOutput(pOther, this);
 
 	// Can I even pick stuff up?
-	if ( !pPlayer->IsAllowedToPickupWeapons() )
+	if (!pPlayer->IsAllowedToPickupWeapons())
 		return;
 
 	// ok, a player is touching this item, but can he have it?
-	if ( !g_pGameRules->CanHaveItem( pPlayer, this ) )
+	if (!g_pGameRules->CanHaveItem(pPlayer, this))
 	{
 		// no? Ignore the touch.
 		return;
 	}
 
-	if ( MyTouch( pPlayer ) )
+	if (MyTouch(pPlayer))
 	{
 		m_OnPlayerTouch.FireOutput(pOther, this);
 
-		SetTouch( NULL );
-		SetThink( NULL );
+		SetTouch(NULL);
+		SetThink(NULL);
 
-		// player grabbed the item. 
-		g_pGameRules->PlayerGotItem( pPlayer, this );
-		if ( g_pGameRules->ItemShouldRespawn( this ) == GR_ITEM_RESPAWN_YES )
-		{
-			Respawn(); 
-		}
-		else
-		{
-			UTIL_Remove( this );
-		}
+		g_pGameRules->PlayerGotItem(pPlayer, this);
+		UTIL_Remove(this);
 	}
 	else if (gEvilImpulse101)
-	{
-		UTIL_Remove( this );
-	}
+		UTIL_Remove(this);
 }
 
 CBaseEntity* CItem::Respawn( void )

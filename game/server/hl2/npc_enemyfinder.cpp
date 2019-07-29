@@ -42,7 +42,7 @@ public:
 	void	StartNPC ( void );
 	void	PrescheduleThink();
 	bool 	ShouldAlwaysThink();
-	void	UpdateEfficiency( bool bInPVS )	{ SetEfficiency( ( GetSleepState() != AISS_AWAKE ) ? AIE_DORMANT : AIE_NORMAL ); SetMoveEfficiency( AIME_NORMAL ); }
+	void	UpdateEfficiency(CBasePlayer *pPVSTarget)	{ SetEfficiency((GetSleepState() != AISS_AWAKE) ? AIE_DORMANT : AIE_NORMAL); SetMoveEfficiency(AIME_NORMAL); }
 	void	GatherConditions( void );
 	bool	ShouldChooseNewEnemy();
 	bool	IsValidEnemy( CBaseEntity *pTarget );

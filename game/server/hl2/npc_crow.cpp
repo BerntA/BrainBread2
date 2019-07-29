@@ -354,7 +354,7 @@ void CNPC_Crow::InputFlyAway( inputdata_t &inputdata )
 
 }
 
-void CNPC_Crow::UpdateEfficiency( bool bInPVS )	
+void CNPC_Crow::UpdateEfficiency(CBasePlayer *pPVSTarget)
 {
 	if ( IsFlying() )
 	{
@@ -363,7 +363,7 @@ void CNPC_Crow::UpdateEfficiency( bool bInPVS )
 		return;
 	}
 
-	BaseClass::UpdateEfficiency( bInPVS );
+	BaseClass::UpdateEfficiency(pPVSTarget);
 }
 
 //-----------------------------------------------------------------------------

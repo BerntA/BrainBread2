@@ -135,25 +135,20 @@ void CGib::SpawnHeadGib( CBaseEntity *pVictim )
 		Vector vecNewVelocity = pGib->GetAbsVelocity();
 
 		pGib->SetLocalOrigin( pVictim->EyePosition() );
-		
-		edict_t *pentPlayer = UTIL_FindClientInPVS( pGib->edict() );
-		
-		if ( random->RandomInt ( 0, 100 ) <= 5 && pentPlayer )
+				
+		if (random->RandomInt(0, 100) <= 5)
 		{
-			// 5% chance head will be thrown at player's face.
-			CBasePlayer *player = (CBasePlayer *)CBaseEntity::Instance( pentPlayer );
-			if ( player )
+			CBasePlayer *player = UTIL_FindPlayerWithinRange(pGib);
+			if (player)
 			{
-				vecNewVelocity = ( player->EyePosition() ) - pGib->GetAbsOrigin();
+				vecNewVelocity = player->EyePosition() - pGib->GetAbsOrigin();
 				VectorNormalize(vecNewVelocity);
 				vecNewVelocity *= 300;
 				vecNewVelocity.z += 100;
 			}
 		}
 		else
-		{
-			vecNewVelocity = Vector (random->RandomFloat(-100,100), random->RandomFloat(-100,100), random->RandomFloat(200,300));
-		}
+			vecNewVelocity = Vector(random->RandomFloat(-100, 100), random->RandomFloat(-100, 100), random->RandomFloat(200, 300));
 
 		QAngle vecNewAngularVelocity = pGib->GetLocalAngularVelocity();
 		vecNewAngularVelocity.x = random->RandomFloat ( 100, 200 );

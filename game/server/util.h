@@ -240,6 +240,8 @@ CBasePlayer *UTIL_GetNearestHumanPlayer( const Vector &origin );
 CBasePlayer *UTIL_GetMostDistantPlayer(CBasePlayer *pIgnore, const Vector &origin);
 
 CBasePlayer *UTIL_GetNearestVisiblePlayer(CBaseEntity *pLooker, int mask = MASK_SOLID_BRUSHONLY, bool bNoMatterWhat = false);
+
+CBasePlayer *UTIL_FindPlayerWithinRange(CBaseEntity *pLooker, int mask = MASK_SOLID_BRUSHONLY);
 #endif //BB2_AI
 
 // get the local player on a listen server
@@ -255,17 +257,6 @@ bool UTIL_IsCommandIssuedByServerAdmin( void );
 CBaseEntity* UTIL_EntityByIndex( int entityIndex );
 
 void		UTIL_GetPlayerConnectionInfo( int playerIndex, int& ping, int &packetloss );
-
-void		UTIL_SetClientVisibilityPVS( edict_t *pClient, const unsigned char *pvs, int pvssize );
-bool		UTIL_ClientPVSIsExpanded();
-
-edict_t		*UTIL_FindClientInPVS( edict_t *pEdict );
-edict_t		*UTIL_FindClientInVisibilityPVS( edict_t *pEdict );
-
-// This is a version which finds any clients whose PVS intersects the box
-CBaseEntity *UTIL_FindClientInPVS( const Vector &vecBoxMins, const Vector &vecBoxMaxs );
-
-CBaseEntity *UTIL_EntitiesInPVS( CBaseEntity *pPVSEntity, CBaseEntity *pStartingEntity );
 
 //-----------------------------------------------------------------------------
 // class CFlaggedEntitiesEnum

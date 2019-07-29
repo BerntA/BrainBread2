@@ -146,6 +146,7 @@ public:
 	float m_flSkillDamageFactor;
 	float m_flSkillFireRateFactor;
 	float m_flSkillBleedFactor;
+	float m_flSkillCrippleFactor;
 
 	CUtlVector<particleItem_t> pszMuzzleParticles;
 	CUtlVector<particleItem_t> pszSmokeParticles;

@@ -48,6 +48,7 @@ void RegisterUserMessages(void)
 	usermessages->Register("ToolTip", -1); // Tool tips that fade in from the far left. 
 	usermessages->Register("CapturePointProgress", -1); // Sends the capture info when capturing points.
 	usermessages->Register("DamageTextInfo", -1); // Sends how much damage you dealt to your target.
+	usermessages->Register("SkillSoundCue", 1); // Send a client skill sound cue idx to the player in question.
 
 #ifndef _X360
 	// NVNT register haptic user messages

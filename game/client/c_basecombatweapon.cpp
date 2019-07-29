@@ -384,7 +384,7 @@ int C_BaseCombatWeapon::DrawModel( int flags )
 		
 		if ( localplayer->GetObserverMode() == OBS_MODE_IN_EYE &&
 			 localplayer->GetObserverTarget() == GetOwner() ) 
-			return false;
+			return 0;
 	}
 
 	EnsureCorrectRenderingModel();
@@ -397,15 +397,12 @@ int C_BaseCombatWeapon::InternalDrawModel(int flags)
 	if (!(flags & STUDIO_SKIP_MATERIAL_OVERRIDES))
 	{
 		C_HL2MP_Player *pOwnerEnt = ToHL2MPPlayer(m_hOwner.Get());
-		if (pOwnerEnt)
+		if (pOwnerEnt && !pOwnerEnt->IsDormant() && pOwnerEnt->IsPerkFlagActive(PERK_POWERUP_PREDATOR))
 		{
-			if (!pOwnerEnt->IsDormant() && pOwnerEnt->IsPerkFlagActive(PERK_POWERUP_PREDATOR))
-			{
-				modelrender->ForcedMaterialOverride(GlobalRenderEffects->GetCloakOverlay());
-				int retVal = BaseClass::InternalDrawModel(STUDIO_RENDER | STUDIO_TRANSPARENCY);
-				modelrender->ForcedMaterialOverride(0);
-				return retVal;
-			}
+			modelrender->ForcedMaterialOverride(GlobalRenderEffects->GetCloakOverlay());
+			int retVal = BaseClass::InternalDrawModel(STUDIO_RENDER | STUDIO_TRANSPARENCY);
+			modelrender->ForcedMaterialOverride(0);
+			return retVal;
 		}
 	}
 

@@ -66,6 +66,7 @@ class CBasePropDoor;
 struct AI_Waypoint_t;
 class AI_Response;
 class CBaseFilter;
+class CBasePlayer;
 
 typedef CBitVec<MAX_CONDITIONS> CAI_ScheduleBits;
 
@@ -634,7 +635,7 @@ protected:
 
 	virtual void		PostRunStopMoving();
 
-	bool				CheckPVSCondition();
+	CBasePlayer			*CheckPVSCondition();
 
 private:
 	bool				CanThinkRebalance();
@@ -885,7 +886,7 @@ public:
 	void				SetEfficiency( AI_Efficiency_t efficiency )	{ m_Efficiency = efficiency; }
 	AI_MoveEfficiency_t GetMoveEfficiency() const					{ return m_MoveEfficiency; }
 	void				SetMoveEfficiency( AI_MoveEfficiency_t efficiency )	{ m_MoveEfficiency = efficiency; }
-	virtual void		UpdateEfficiency( bool bInPVS );
+	virtual void		UpdateEfficiency(CBasePlayer *pPVSTarget);
 	void				ForceDecisionThink()						{ m_flNextDecisionTime = 0; SetEfficiency( AIE_NORMAL ); }
 
 	bool				IsFlaggedEfficient() const					{ return HasSpawnFlags( SF_NPC_START_EFFICIENT ); }
@@ -896,7 +897,7 @@ public:
 	void				RemoveSleepFlags( int flags ) { m_SleepFlags &= ~flags; }
 	bool				HasSleepFlags( int flags ) { return (m_SleepFlags & flags) == flags; }
 
-	void				UpdateSleepState( bool bInPVS );
+	void				UpdateSleepState(CBasePlayer *pPVSTarget);
 	virtual	void		Wake( bool bFireOutput = true );
 	void				Sleep();
 	bool				WokeThisTick() const;

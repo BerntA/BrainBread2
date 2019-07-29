@@ -356,7 +356,7 @@ int CBaseHL2MPBludgeonWeapon::GetMeleeSkillFlags(void)
 
 	if (pOwner->GetSkillValue(PLAYER_SKILL_HUMAN_CRIPPLING_BLOW) > 0)
 	{
-		perc = (pOwner->GetSkillValue(PLAYER_SKILL_HUMAN_CRIPPLING_BLOW, TEAM_HUMANS) / PERCENT_BASE);
+		perc = (pOwner->GetSkillValue(PLAYER_SKILL_HUMAN_CRIPPLING_BLOW, TEAM_HUMANS) / PERCENT_BASE) * GetWpnData().m_flSkillCrippleFactor;
 		if (TryTheLuck(perc))
 			iSkillFlags |= SKILL_FLAG_CRIPPLING_BLOW;
 	}

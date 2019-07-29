@@ -530,12 +530,11 @@ CBaseEntity *CGlobalEntityList::FindEntityProcedural( const char *szName, CBaseE
 		{
 			if ( pSearchingEntity )
 			{
-				return CBaseEntity::Instance( UTIL_FindClientInPVS( pSearchingEntity->edict() ) );
+				return UTIL_FindPlayerWithinRange(pSearchingEntity);
 			}
 			else if ( pActivator )
 			{
-				// FIXME: error condition?
-				return CBaseEntity::Instance( UTIL_FindClientInPVS( pActivator->edict() ) );
+				return UTIL_FindPlayerWithinRange(pActivator);
 			}
 			else
 			{

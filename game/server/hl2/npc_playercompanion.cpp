@@ -3527,10 +3527,10 @@ CBaseEntity *CNPC_PlayerCompanion::GetVehicleEntity( void )
 //			of our enter/exit animations.
 // Input  : bInPVS - Whether we're in the PVS or not
 //-----------------------------------------------------------------------------
-void CNPC_PlayerCompanion::UpdateEfficiency( bool bInPVS )
+void CNPC_PlayerCompanion::UpdateEfficiency( CBasePlayer *pPVSTarget )
 { 
 	// If we're transitioning and in the PVS, we override our efficiency
-	if ( IsInAVehicle() && bInPVS )
+	if ( IsInAVehicle() && pPVSTarget )
 	{
 		PassengerState_e nState = m_PassengerBehavior.GetPassengerState();
 		if ( nState == PASSENGER_STATE_ENTERING || nState == PASSENGER_STATE_EXITING )
@@ -3541,7 +3541,7 @@ void CNPC_PlayerCompanion::UpdateEfficiency( bool bInPVS )
 	}
 
 	// Do the default behavior
-	BaseClass::UpdateEfficiency( bInPVS );
+	BaseClass::UpdateEfficiency( pPVSTarget );
 }
 
 //-----------------------------------------------------------------------------

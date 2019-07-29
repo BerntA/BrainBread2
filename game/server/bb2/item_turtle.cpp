@@ -120,7 +120,7 @@ void CTurtleThing::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 		return;
 
 	CBasePlayer *pPlayer = ToBasePlayer(pActivator);
-	if (!pPlayer)
+	if (!pPlayer || !pPlayer->IsHuman(true))
 		return;
 
 	if (!IsPlayerInList(pPlayer, m_iTurtleIndex))

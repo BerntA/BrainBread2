@@ -33,6 +33,7 @@ public:
 	void OnRotationEffect(void);
 	void Teleport(const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity);
 	void UpdateObjectiveIconPosition(const Vector &pos);
+	bool MyTouch(CBasePlayer *pPlayer);
 
 	CHL2MP_Player *GetHumanInteractor(CBaseEntity *pActivator);
 	bool SetItem(const DataInventoryItem_Base_t &data, bool bMapItem);
