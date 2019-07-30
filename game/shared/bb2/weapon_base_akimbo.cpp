@@ -11,6 +11,22 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+IMPLEMENT_NETWORKCLASS_ALIASED(HL2MPBaseAkimbo, DT_HL2MPBaseAkimbo)
+
+BEGIN_NETWORK_TABLE(CHL2MPBaseAkimbo, DT_HL2MPBaseAkimbo)
+#if !defined( CLIENT_DLL )
+SendPropBool(SENDINFO(m_bFireNext)),
+#else
+RecvPropBool(RECVINFO(m_bFireNext)),
+#endif
+END_NETWORK_TABLE()
+
+#ifdef CLIENT_DLL
+BEGIN_PREDICTION_DATA(CHL2MPBaseAkimbo)
+DEFINE_PRED_FIELD(m_bFireNext, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE),
+END_PREDICTION_DATA()
+#endif
+
 acttable_t CHL2MPBaseAkimbo::m_acttable[] =
 {
 	{ ACT_MP_STAND_IDLE, ACT_HL2MP_IDLE_AKIMBO, false },
@@ -42,6 +58,7 @@ IMPLEMENT_ACTTABLE(CHL2MPBaseAkimbo);
 CHL2MPBaseAkimbo::CHL2MPBaseAkimbo(void)
 {
 	m_bReloadsSingly = m_bFiresUnderwater = false;
+	m_bFireNext.Set(false);
 }
 
 void CHL2MPBaseAkimbo::AddViewKick(void)
@@ -83,11 +100,14 @@ bool CHL2MPBaseAkimbo::Deploy(void)
 	return BaseClass::Deploy();
 }
 
-void CHL2MPBaseAkimbo::PerformAttack(bool bPrimary)
+void CHL2MPBaseAkimbo::PerformAttack(void)
 {
 	CHL2MP_Player* pPlayer = ToHL2MPPlayer(GetOwner());
-	if (!pPlayer || (bPrimary && !(pPlayer->m_nButtons & IN_ATTACK)) || (!bPrimary && !(pPlayer->m_nButtons & IN_ATTACK2)))
+	if (!pPlayer)
 		return;
+
+	m_bFireNext.Set(!m_bFireNext.Get());
+	bool bPrimary = m_bFireNext.Get();
 
 	WeaponSound(SINGLE);
 
@@ -103,29 +123,14 @@ void CHL2MPBaseAkimbo::PerformAttack(bool bPrimary)
 	SendWeaponAnim(shootAct);
 
 	if (bPrimary)
-	{
-		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
-		m_flNextSecondaryAttack = gpGlobals->curtime + GetFireRate() * 0.125f;
 		m_iClip1--;
-	}
 	else
-	{
-		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate() * 0.125f;
-		m_flNextSecondaryAttack = gpGlobals->curtime + GetFireRate();
 		m_iClip2--;
-	}
-
-	// Prevent OP'ness.
-	if ((pPlayer->m_nButtons & IN_ATTACK) && (pPlayer->m_nButtons & IN_ATTACK2))
-	{
-		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate() * (bPrimary ? 1.1f : 1.0f);
-		m_flNextSecondaryAttack = gpGlobals->curtime + GetFireRate() * ((!bPrimary) ? 1.1f : 1.0f);
-	}
 
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
 	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);
 
-	FireBulletsInfo_t info(GetWpnData().m_iPellets, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
+	FireBulletsInfo_t info(GetWpnData().m_iPellets, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, bPrimary ? m_iPrimaryAmmoType.Get() : m_iSecondaryAmmoType.Get());
 	info.m_pAttacker = pPlayer;
 	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
 	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
@@ -134,4 +139,19 @@ void CHL2MPBaseAkimbo::PerformAttack(bool bPrimary)
 	pPlayer->FireBullets(info);
 	pPlayer->DoAnimationEvent((bPrimary ? PLAYERANIMEVENT_ATTACK_PRIMARY : PLAYERANIMEVENT_ATTACK_SECONDARY), shootAct);
 	AddViewKick();
+}
+
+void CHL2MPBaseAkimbo::PrimaryAttack(void)
+{
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
+	if (!pPlayer || !(pPlayer->m_afButtonPressed & IN_ATTACK))
+		return;
+
+	m_flNextPrimaryAttack = (gpGlobals->curtime + (GetFireRate() / 2.0f));
+	PerformAttack();
+}
+
+void CHL2MPBaseAkimbo::SecondaryAttack(void)
+{
+	// NOTHING
 }

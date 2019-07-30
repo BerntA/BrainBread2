@@ -21,14 +21,17 @@ class CHL2MPBaseAkimbo : public CBaseHL2MPCombatWeapon
 public:
 	DECLARE_CLASS(CHL2MPBaseAkimbo, CBaseHL2MPCombatWeapon);
 	DECLARE_ACTTABLE();
+	DECLARE_NETWORKCLASS();
+	DECLARE_PREDICTABLE();
 
 	CHL2MPBaseAkimbo();
 
 	virtual void AddViewKick(void);
 	virtual void ItemPostFrame(void);
-	virtual void PerformAttack(bool bPrimary);
-	virtual void PrimaryAttack(void) { PerformAttack(true); }
-	virtual void SecondaryAttack(void) { PerformAttack(false); }
+	virtual void PerformAttack(void);
+	virtual void PrimaryAttack(void);
+	virtual void SecondaryAttack(void);
+	virtual bool DidFirePrimary(void) { return m_bFireNext.Get(); }
 
 	virtual void StartHolsterSequence();
 	virtual bool Holster(CBaseCombatWeapon* pSwitchingTo = NULL);
@@ -48,6 +51,9 @@ public:
 
 		return "muzzle";
 	}
+
+protected:
+	CNetworkVar(bool, m_bFireNext);
 
 private:
 	CHL2MPBaseAkimbo(const CHL2MPBaseAkimbo&);

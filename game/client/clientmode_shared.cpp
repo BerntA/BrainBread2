@@ -1092,22 +1092,14 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 		GameBaseClient->Changelevel(szMap);
 	}
 	else if ((Q_strcmp("player_connection", eventname) == 0))
-	{		
+	{
 		if (!g_PR || (HL2MPRules() && ((HL2MPRules()->GetCurrentGamemode() != MODE_OBJECTIVE) && (HL2MPRules()->GetCurrentGamemode() != MODE_ARENA))))
 			return;
 
 		char szLocalized[128];
 		bool bState = event->GetBool("state");
-		if (bState)
-		{
-			g_pVGuiLocalize->ConvertUnicodeToANSI(g_pVGuiLocalize->Find("#NOTIFICATION_LEAVE"), szLocalized, sizeof(szLocalized));
-			m_pChatElement->Printf(CHAT_FILTER_ACHIEVEMENT, "%c%s", COLOR_CREEPY, szLocalized);
-		}
-		else
-		{
-			g_pVGuiLocalize->ConvertUnicodeToANSI(g_pVGuiLocalize->Find("#NOTIFICATION_JOIN"), szLocalized, sizeof(szLocalized));
-			m_pChatElement->Printf(CHAT_FILTER_ACHIEVEMENT, "%c%s", COLOR_CREEPY, szLocalized);
-		}
+		g_pVGuiLocalize->ConvertUnicodeToANSI(g_pVGuiLocalize->Find(bState ? "#NOTIFICATION_LEAVE" : "#NOTIFICATION_JOIN"), szLocalized, sizeof(szLocalized));
+		m_pChatElement->Printf("%c%s", COLOR_CREEPY, szLocalized);
 	}
 	else if (Q_strcmp("game_achievement", eventname) == 0)
 	{
@@ -1133,7 +1125,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			char szLocalized[512];
 			g_pVGuiLocalize->ConvertUnicodeToANSI(wszLocalized, szLocalized, sizeof(szLocalized));
 
-			m_pChatElement->Printf(CHAT_FILTER_ACHIEVEMENT, "%c%s", COLOR_ACHIEVEMENT, szLocalized);
+			m_pChatElement->Printf("%c%s", COLOR_ACHIEVEMENT, szLocalized);
 		}		
 
 		if (pClient && (pClient->entindex() == m_iIndex))
@@ -1267,7 +1259,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			char szLocalized[100];
 			g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );
 
-			m_pChatElement->Printf(CHAT_FILTER_JOINLEAVE, "%s", szLocalized);
+			m_pChatElement->Printf("%s", szLocalized);
 		}
 	}
 	else if ( Q_strcmp( "player_disconnect", eventname ) == 0 )
@@ -1308,7 +1300,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			char szLocalized[100];
 			g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );
 
-			m_pChatElement->Printf(CHAT_FILTER_JOINLEAVE, "%s", szLocalized);
+			m_pChatElement->Printf("%s", szLocalized);
 		}
 	}
 	else if ( Q_strcmp( "player_team", eventname ) == 0 )
@@ -1375,7 +1367,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 				char szLocalized[100];
 				g_pVGuiLocalize->ConvertUnicodeToANSI(wszLocalized, szLocalized, sizeof(szLocalized));
 
-				m_pChatElement->Printf(CHAT_FILTER_TEAMCHANGE, "%s", szLocalized);
+				m_pChatElement->Printf("%s", szLocalized);
 			}
 		}
 
@@ -1406,7 +1398,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 		char szLocalized[100];
 		g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );
 
-		m_pChatElement->Printf(CHAT_FILTER_NAMECHANGE, "%s", szLocalized);
+		m_pChatElement->Printf("%s", szLocalized);
 	}
 	else if (Q_strcmp( "teamplay_broadcast_audio", eventname ) == 0 )
 	{
@@ -1474,7 +1466,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			char szLocalized[256];
 			g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );
 
-			m_pChatElement->Printf(CHAT_FILTER_SERVERMSG, "%s", szLocalized);
+			m_pChatElement->Printf("%s", szLocalized);
 		}
 	}
 #if defined( REPLAY_ENABLED )

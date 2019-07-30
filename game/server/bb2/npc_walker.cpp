@@ -528,37 +528,32 @@ void CNPCWalker::HullChangeUnstuck(void)
 
 float CNPCWalker::MaxYawSpeed(void)
 {
-	if ((GetActivity() == (Activity)ACT_MELEE_ATTACK_HEAVY) ||
-		(GetActivity() == (Activity)ACT_MELEE_ATTACK_LEFT) ||
-		(GetActivity() == (Activity)ACT_MELEE_ATTACK_RIGHT))
-		return 100;
-
-	if (IsCrawlingWithNoLegs() || m_bIsInCrawlMode)
+	if (IsCrawlingWithNoLegs() || m_bIsInCrawlMode || m_bGibbedForCrawl)
 	{
 		if ((GetActivity() == (Activity)ACT_CRAWL_NOLEGS_ATTACK_LEFT) ||
 			(GetActivity() == (Activity)ACT_CRAWL_NOLEGS_ATTACK_RIGHT))
-			return 15;
+			return 15.0f;
 
 		if ((GetActivity() == (Activity)ACT_CRAWL_ATTACK_LEFT) ||
 			(GetActivity() == (Activity)ACT_CRAWL_ATTACK_RIGHT))
-			return 15;
+			return 15.0f;
 
 		switch (GetActivity())
 		{
-		case ACT_TURN_LEFT:
-		case ACT_TURN_RIGHT:
-			return 20;
-			break;
 		case ACT_RANGE_ATTACK1:
 		case ACT_RANGE_ATTACK2:
 		case ACT_MELEE_ATTACK1:
 		case ACT_MELEE_ATTACK2:
-			return 20;
-		default:
-			return 10;
-			break;
+			return 15.0f;
 		}
+
+		return 10.0f;
 	}
+
+	if ((GetActivity() == (Activity)ACT_MELEE_ATTACK_HEAVY) ||
+		(GetActivity() == (Activity)ACT_MELEE_ATTACK_LEFT) ||
+		(GetActivity() == (Activity)ACT_MELEE_ATTACK_RIGHT))
+		return 100.0f;
 
 	return BaseClass::MaxYawSpeed();
 }

@@ -22,7 +22,6 @@
 
 class CBaseHudChatInputLine;
 class CBaseHudChatEntry;
-class CHudChatFilterPanel;
 
 namespace vgui
 {
@@ -46,27 +45,6 @@ extern Color g_ColorYellow;
 extern Color g_ColorGrey;
 
 extern ConVar cl_showtextmsg;
-
-enum ChatFilters
-{
-	CHAT_FILTER_NONE		= 0,
-	CHAT_FILTER_JOINLEAVE	= 0x000001,
-	CHAT_FILTER_NAMECHANGE	= 0x000002,
-	CHAT_FILTER_PUBLICCHAT	= 0x000004,
-	CHAT_FILTER_SERVERMSG	= 0x000008,
-	CHAT_FILTER_TEAMCHANGE	= 0x000010,
-    //=============================================================================
-    // HPE_BEGIN:
-    // [tj]Added a filter for achievement announce
-    //=============================================================================
-     
-    CHAT_FILTER_ACHIEVEMENT	= 0x000020,
-     
-    //=============================================================================
-    // HPE_END
-    //=============================================================================
-};
-
 
 //-----------------------------------------------------------------------------
 enum TextColor
@@ -187,33 +165,6 @@ public:
 	virtual void	ApplySchemeSettings(vgui::IScheme *pScheme);
 };
 
-class CHudChatFilterButton : public vgui::Button
-{
-	DECLARE_CLASS_SIMPLE( CHudChatFilterButton, vgui::Button );
-
-public:
-
-	CHudChatFilterButton(  vgui::Panel *pParent, const char *pName, const char *pText );
-
-	virtual void DoClick( void );
-};
-
-class CHudChatFilterCheckButton : public vgui::CheckButton
-{
-	DECLARE_CLASS_SIMPLE( CHudChatFilterCheckButton, vgui::CheckButton );
-
-public:
-
-	CHudChatFilterCheckButton( vgui::Panel *pParent, const char *pName, const char *pText, int iFlag );
-
-	int		GetFilterFlag( void ) { return m_iFlag; }
-
-private:
-
-	int m_iFlag;
-};
-
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -241,8 +192,8 @@ public:
 
 	void			MsgFunc_TextMsg(const char *pszName, int iSize, void *pbuf);
 	
-	virtual void	Printf( int iFilter, PRINTF_FORMAT_STRING const char *fmt, ... );
-	virtual void	ChatPrintf( int iPlayerIndex, int iFilter, PRINTF_FORMAT_STRING const char *fmt, ... ) FMTFUNCTION( 4, 5 );
+	virtual void	Printf( PRINTF_FORMAT_STRING const char *fmt, ... );
+	virtual void	ChatPrintf( int iPlayerIndex, PRINTF_FORMAT_STRING const char *fmt, ... ) FMTFUNCTION( 3, 4 );
 	
 	virtual void	StartMessageMode( int iMessageModeType );
 	virtual void	StopMessageMode( void );
@@ -277,19 +228,12 @@ public:
 	virtual void			MsgFunc_SayText2( bf_read &msg );
 	virtual void			MsgFunc_TextMsg( bf_read &msg );
 
-	
 	CBaseHudChatInputLine	*GetChatInput( void ) { return m_pChatInput; }
-	CHudChatFilterPanel		*GetChatFilterPanel( void );
-
-	virtual int				GetFilterFlags( void ) { return m_iFilterFlags; }
-	void					SetFilterFlag( int iFilter );
 
 	//-----------------------------------------------------------------------------
 	virtual Color	GetDefaultTextColor( void );
 	virtual Color	GetTextColorForClient( TextColor colorNum, int clientIndex );
 	virtual Color	GetClientColor( int clientIndex );
-
-	virtual int		GetFilterForString( const char *pString );
 
 	int				GetMessageMode( void ) { return m_nMessageMode; }
 
@@ -305,9 +249,6 @@ protected:
 
 	CHudChatHistory			*m_pChatHistory;
 
-	CHudChatFilterButton	*m_pFiltersButton;
-	CHudChatFilterPanel		*m_pFilterPanel;
-
 	Color			m_ColorCustom;
 
 private:	
@@ -320,8 +261,6 @@ private:
 	int				m_nVisibleHeight;
 
 	vgui::HFont		m_hChatFont;
-
-	int				m_iFilterFlags;
 };
 
 class CBaseHudChatEntry : public vgui::TextEntry
@@ -408,26 +347,6 @@ public:
 protected:
 	vgui::Label		*m_pPrompt;
 	CBaseHudChatEntry	*m_pInput;
-};
-
-
-class CHudChatFilterPanel : public vgui::EditablePanel
-{
-	DECLARE_CLASS_SIMPLE( CHudChatFilterPanel, vgui::EditablePanel );
-
-public:
-
-	CHudChatFilterPanel(  vgui::Panel *pParent, const char *pName );
-
-	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
-	MESSAGE_FUNC_PTR( OnFilterButtonChecked, "CheckButtonChecked", panel );
-
-	CBaseHudChat *GetChatParent( void ) { return dynamic_cast < CBaseHudChat * > ( GetParent() ); }
-
-	virtual void SetVisible(bool state);
-
-private:
-
 };
 
 #endif // HUD_BASECHAT_H

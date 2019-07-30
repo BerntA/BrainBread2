@@ -229,7 +229,7 @@ public:
 	virtual void			ItemBusyFrame( void );					// called each frame by the player PostThink, if the player's not ready to attack yet
 	virtual void			ItemHolsterFrame( void ) {};			// called each frame by the player PreThink, if the weapon is holstered
 	virtual void			WeaponIdle( void );						// called when no buttons pressed
-	virtual void			HandleFireOnEmpty(bool bPrimary = true); // Called when they have the attack button down
+	virtual void			HandleFireOnEmpty(void); // Called when they have the attack button down
 																	// but they are out of ammo. The default implementation
 																	// either reloads, switches weapons, or plays an empty sound.
 
@@ -379,6 +379,8 @@ public:
 	virtual int				GetSecondaryAmmoType( void )  const { return m_iSecondaryAmmoType; }
 	virtual int				Clip1() { return m_iClip1; }
 	virtual int				Clip2() { return m_iClip2; }
+
+	virtual bool			DidFirePrimary(void) { return true; }
 
 	virtual void SetupWeaponRanges(void);
 	virtual void AffectedByPlayerSkill(int skill) {}
@@ -618,8 +620,6 @@ public:
 
 	float					m_flUnlockTime;
 	EHANDLE					m_hLocker;				// Who locked this weapon.
-
-	bool m_bLastFiredPrimary;
 
 private:
 	WEAPON_FILE_INFO_HANDLE	m_hWeaponFileInfo;

@@ -13,6 +13,7 @@
 #include "datacache/imdlcache.h"
 #include "activitylist.h"
 #include "GameBase_Shared.h"
+#include "random_extended.h"
 
 // NVNT start extra includes
 #include "haptics/haptic_utils.h"
@@ -784,7 +785,7 @@ void CBaseCombatWeapon::MakeTracer( const Vector &vecTracerSrc, const trace_t &t
 
 	Vector vNewSrc = vecTracerSrc;
 	int iEntIndex = entindex();
-	int iAttachment = (IsAkimboWeapon() ? LookupAttachment(GetMuzzleflashAttachment(m_bLastFiredPrimary)) : GetTracerAttachment());
+	int iAttachment = (IsAkimboWeapon() ? LookupAttachment(GetMuzzleflashAttachment(DidFirePrimary())) : GetTracerAttachment());
 
 	// Players fire off particle based tracers...
 	if (pOwner->IsPlayer())
@@ -1500,7 +1501,10 @@ void CBaseCombatWeapon::DoWeaponFX( void )
 		if (pPlayer)
 		{
 			if (IsAkimboWeapon())
-				DispatchParticleEffect(GetParticleEffect(PARTICLE_TYPE_SMOKE), PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), GetMuzzleflashAttachment(m_bLastFiredPrimary));
+			{
+				DispatchParticleEffect(GetParticleEffect(PARTICLE_TYPE_SMOKE), PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), GetMuzzleflashAttachment(true));
+				DispatchParticleEffect(GetParticleEffect(PARTICLE_TYPE_SMOKE), PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), GetMuzzleflashAttachment(false));
+			}
 			else
 				DispatchParticleEffect(GetParticleEffect(PARTICLE_TYPE_SMOKE), PATTACH_POINT_FOLLOW, pPlayer->GetViewModel(), "muzzle");
 		}
@@ -1649,41 +1653,14 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 	if ( UsesClipsForAmmo1() )
 		CheckReload();
 
-	bool bFired = false;
-	if (IsAkimboWeapon() && (pOwner->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime))
+	if ((pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 	{
-		if (!IsMeleeWeapon() &&
-			((UsesClipsForAmmo2() && m_iClip2 <= 0) || (!UsesClipsForAmmo2() && pOwner->GetAmmoCount(m_iSecondaryAmmoType) <= 0)))
-		{
-			HandleFireOnEmpty(false);
-		}
-		else if (pOwner->GetWaterLevel() == 3 && m_bAltFiresUnderwater == false)
-		{
-			WeaponSound(EMPTY);
-			m_flNextSecondaryAttack = gpGlobals->curtime + 0.2;
-			return;
-		}
-		else
-		{
-			bFired = true;
-			if ((pOwner->m_afButtonPressed & IN_ATTACK) || (pOwner->m_afButtonReleased & IN_ATTACK2))		
-				m_flNextSecondaryAttack = gpGlobals->curtime;			
+		bool bHasEmptyClipOrAmmo = (UsesClipsForAmmo1() && (m_iClip1 <= 0)) || (!UsesClipsForAmmo1() && (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0));
+		if (IsAkimboWeapon())
+			bHasEmptyClipOrAmmo = bHasEmptyClipOrAmmo && ((UsesClipsForAmmo2() && (m_iClip2 <= 0)) || (!UsesClipsForAmmo2() && (pOwner->GetAmmoCount(m_iSecondaryAmmoType) <= 0)));
 
-			m_bLastFiredPrimary = false;
-			SecondaryAttack();
-
-			if (AutoFiresFullClip())
-				m_bFiringWholeClip = true;
-		}
-	}
-
-	if (!bFired && (pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
-	{
-		if ( !IsMeleeWeapon() &&  
-			(( UsesClipsForAmmo1() && m_iClip1 <= 0) || ( !UsesClipsForAmmo1() && pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )) )
-		{
-			HandleFireOnEmpty(true);
-		}
+		if (!IsMeleeWeapon() && bHasEmptyClipOrAmmo)		
+			HandleFireOnEmpty();
 		else if (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
 		{
 			WeaponSound(EMPTY);
@@ -1695,10 +1672,8 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 			if ((pOwner->m_afButtonPressed & IN_ATTACK) || (pOwner->m_afButtonReleased & IN_ATTACK2))
 				m_flNextPrimaryAttack = gpGlobals->curtime;
 
-			m_bLastFiredPrimary = true;
 			PrimaryAttack();
-
-			if ( AutoFiresFullClip() )
+			if (AutoFiresFullClip())
 				m_bFiringWholeClip = true;
 		}
 	}
@@ -1726,24 +1701,16 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 	}
 }
 
-void CBaseCombatWeapon::HandleFireOnEmpty(bool bPrimary)
+void CBaseCombatWeapon::HandleFireOnEmpty()
 {
 	WeaponSound(EMPTY);
 
-	if (IsAkimboWeapon())
-	{
-		if (bPrimary)
-			SendWeaponAnim(ACT_VM_SHOOT_LEFT_DRYFIRE);
-		else
-			SendWeaponAnim(ACT_VM_SHOOT_RIGHT_DRYFIRE);
-	}
+	if (IsAkimboWeapon()) // TODO, play shared dryfire for both weps...
+		SendWeaponAnim(TryTheLuck(0.5f) ? ACT_VM_SHOOT_LEFT_DRYFIRE : ACT_VM_SHOOT_RIGHT_DRYFIRE);
 	else
 		SendWeaponAnim(ACT_VM_DRYFIRE);
 
-	if (bPrimary)
-		m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
-	else
-		m_flNextSecondaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
 }
 
 int CBaseCombatWeapon::GetReloadActivity(bool bCanDoEmpty)

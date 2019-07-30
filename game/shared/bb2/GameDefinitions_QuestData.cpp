@@ -187,7 +187,7 @@ void CGameDefinitionsQuestData::FireGameEvent(IGameEvent *event)
 				g_pVGuiLocalize->ConstructString(unicode, sizeof(unicode), token, 1, argument);
 				g_pVGuiLocalize->ConvertUnicodeToANSI(unicode, pchChatString, sizeof(pchChatString));
 				g_pClientMode->GetGameChat()->SetCustomColor(Color(200, 110, 5, 255));
-				g_pClientMode->GetGameChat()->Printf(CHAT_FILTER_ACHIEVEMENT, "%c%s", COLOR_CUSTOM, pchChatString);
+				g_pClientMode->GetGameChat()->Printf("%c%s", COLOR_CUSTOM, pchChatString);
 			}
 			OnNotifyQuestState(STATUS_ONGOING);
 		}
@@ -236,7 +236,7 @@ void CGameDefinitionsQuestData::FireGameEvent(IGameEvent *event)
 					g_pVGuiLocalize->ConstructString(unicode, sizeof(unicode), token, 1, argument);
 					g_pVGuiLocalize->ConvertUnicodeToANSI(unicode, pchChatString, sizeof(pchChatString));
 					g_pClientMode->GetGameChat()->SetCustomColor((questData->iQuestStatus == STATUS_FAILED) ? Color(170, 0, 0, 255) : Color(45, 185, 45, 255));
-					g_pClientMode->GetGameChat()->Printf(CHAT_FILTER_ACHIEVEMENT, "%c%s", COLOR_CUSTOM, pchChatString);
+					g_pClientMode->GetGameChat()->Printf("%c%s", COLOR_CUSTOM, pchChatString);
 				}
 				OnNotifyQuestState(questData->iQuestStatus);
 			}
