@@ -1458,7 +1458,7 @@ AIMoveResult_t CAI_Navigator::MoveClimb()
 
 	if ( GetNavType() != NAV_CLIMB )
 	{
-		if (!GetPathfinder()->CanClimbToPoint(GetLocalOrigin(), climbDest))
+		if (!GetPathfinder()->CanClimbToPoint(((climbDir.z >= 0) ? 1.0f : -1.0f), GetLocalOrigin(), climbDest))
 		{
 			DbgNavMsg(GetOuter(), "Climb fail\n");
 			GetMotor()->MoveClimbStop();

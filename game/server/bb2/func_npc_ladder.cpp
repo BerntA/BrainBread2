@@ -12,10 +12,7 @@ class CFuncNPCLadder : public CFuncBrush
 {
 public:
 	DECLARE_CLASS(CFuncNPCLadder, CFuncBrush);
-	DECLARE_DATADESC();
+	bool IsNPCObstacle(void) { return true; }
 };
 
-BEGIN_DATADESC(CFuncNPCLadder)
-END_DATADESC()
-
-LINK_ENTITY_TO_CLASS(func_npc_obstacle, CFuncBrush);
+LINK_ENTITY_TO_CLASS(func_npc_obstacle, CFuncNPCLadder);

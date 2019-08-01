@@ -80,8 +80,8 @@ public:
 	void UnlockRouteNodes( AI_Waypoint_t * );
 
 #ifdef BB2_USE_NAVMESH
-	virtual AI_Waypoint_t *BuildNavRoute(CNavArea *goalArea, CNavArea *lastArea, AI_Waypoint_t *waypoint, const Vector &start, const Vector &end);
-	virtual bool CanClimbToPoint(const Vector &vecStart, const Vector &vecEnd);
+	virtual AI_Waypoint_t *BuildNavRoute(CBaseEntity *pTarget, CNavArea *area, const Vector &start, const Vector &end, int buildFlags);
+	virtual bool CanClimbToPoint(float dir, const Vector &vecStart, const Vector &vecEnd);
 #endif
 
 	// --------------------------------

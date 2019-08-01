@@ -21,6 +21,7 @@
 #include "ai_dynamiclink.h"
 #include "ai_hint.h"
 #include "bitstring.h"
+#include "collisionutils.h"
 
 //@todo: bad dependency!
 #include "ai_navigator.h"
@@ -1436,45 +1437,9 @@ AI_Waypoint_t *CAI_Pathfinder::BuildRoute( const Vector &vStart, const Vector &v
 		CNavArea *closestArea = NULL;
 		CNavArea *startArea = TheNavMesh->GetNearestNavArea(vStart);
 		CNavArea *goalArea = TheNavMesh->GetNearestNavArea(vEnd);
-
 		ShortestPathCost costfunc;
-
 		if (NavAreaBuildPath(startArea, goalArea, &vEnd, costfunc, &closestArea))
-		{
-			float yawToUse = 0;
-			CNavArea *endRoute = closestArea;
-			CNavArea *previousRoute = closestArea ? closestArea->GetParent() : NULL;
-
-			Navigation_t currentNAVType = NAV_GROUND;
-			if (endRoute)
-			{
-				// Try to build a crawl/crouch route if possible:
-				if ((endRoute->HasAttributes(NAV_MESH_CROUCH) || (previousRoute && previousRoute->HasAttributes(NAV_MESH_CROUCH))) && (CapabilitiesGet() & bits_CAP_MOVE_CRAWL))
-					currentNAVType = NAV_CRAWL;
-
-				// Build a proper climbing route if necessary:
-				if ((CapabilitiesGet() & bits_CAP_MOVE_CLIMB) && previousRoute && previousRoute->HasAttributes(NAV_MESH_LADDER_POINT) && endRoute->HasAttributes(NAV_MESH_LADDER_POINT))
-				{
-					Vector vecStart = previousRoute->GetCenter();
-					Vector vecEnd = endRoute->GetCenter();
-					float heightBetweenNodes = (vecEnd.z - vecStart.z);
-					if (CanClimbToPoint(vecStart, vecEnd))
-					{
-						yawToUse = UTIL_VecToYaw((vEnd - vecStart));
-						if (heightBetweenNodes > 40.0f)
-							currentNAVType = NAV_CLIMB;
-						else if (heightBetweenNodes < -40.0f)
-						{
-							yawToUse += 180.0f;
-							currentNAVType = NAV_CLIMB;
-						}
-					}
-				}
-			}
-
-			AI_Waypoint_t *newway = new AI_Waypoint_t(vEnd, yawToUse, currentNAVType, bits_WP_TO_GOAL, NO_NODE);
-			pResult = BuildNavRoute(closestArea, closestArea, newway, vStart, vEnd);
-		}
+			pResult = BuildNavRoute(pTarget, closestArea, vStart, vEnd, buildFlags);
 	}
 #endif // BB2_USE_NAVMESH
 
@@ -1806,154 +1771,224 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNearestNodeRoute( const Vector &vGoal, bool 
 }
 
 #ifdef BB2_USE_NAVMESH
-AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CNavArea *goalArea, CNavArea *lastArea, AI_Waypoint_t *waypoint, const Vector &start, const Vector &end)
+// Figure out how far from the edge we are... UGLY.
+static Vector GetDistUntilEdge(const Vector &origin, const Vector &dir, float flFallDist)
 {
-	if (!goalArea)
-		return waypoint;
-
-	Vector center, center_portal, delta;
-	float hwidth, hwidthhull, yaw = 0;
-	NavDirType dir;
-
-	Vector closestpoint;
-	CNavArea *nextArea = lastArea;
-	CNavArea *previousArea = goalArea->GetParent();
-	if (previousArea)
+	flFallDist /= 2.0f;
+	float distMoved = 1.0f;
+	trace_t trace;
+	CTraceFilterWorldAndPropsOnly traceFilter;
+	Vector vecStart;
+	while (1) // Limit this?
 	{
-		AI_Waypoint_t *newWaypoint = waypoint;
-
-		center = previousArea->GetCenter();
-		dir = goalArea->ComputeDirection(&center);
-		goalArea->ComputePortal(previousArea, dir, &center_portal, &hwidth);
-		goalArea->ComputeClosestPointInPortal(previousArea, dir, previousArea->GetCenter(), &closestpoint);
-
-		// This point would be the closest route, but does our hull fit?
-		trace_t trace;
-		CTraceFilterWorldOnly traceFilter;
-		AI_TraceHull(closestpoint, closestpoint, WorldAlignMins(), WorldAlignMaxs(), MASK_SOLID, &traceFilter, &trace);
-		if (trace.fraction != 1.0f)
+		vecStart = origin + dir * distMoved;
+		AI_TraceLine(vecStart, vecStart + Vector(0, 0, -1.0f) * flFallDist, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
+		if (trace.DidHit())
 		{
-			// Move a bit to the center.
-			delta = closestpoint - center_portal;
-			hwidthhull = GetOuter()->GetHullWidth() / 2.0f;
-			if (delta.IsLengthGreaterThan(hwidthhull))
-			{
-				closestpoint = closestpoint + ((hwidthhull / delta.Length()) * delta);
-			}
+			distMoved += 1.0f;
+			continue;
 		}
+		return trace.startpos;
+	}
+	return vec3_invalid;
+}
 
-		// Build a proper climbing route if necessary:
-		if (CapabilitiesGet() & bits_CAP_MOVE_CLIMB)
-		{
-			Vector vecStart = previousArea->GetCenter();
-			Vector vecEnd = goalArea->GetCenter();
+AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *area, const Vector &start, const Vector &end, int buildFlags)
+{
+	CUtlVector<CNavArea*> pNavAreas;
+	CUtlVector<AI_Waypoint_t*> pWaypoints;
 
-			float heightBetweenNodes = (vecEnd.z - vecStart.z);
-			if (goalArea->HasAttributes(NAV_MESH_LADDER_POINT) && (previousArea->HasAttributes(NAV_MESH_LADDER_POINT) || nextArea->HasAttributes(NAV_MESH_LADDER_POINT)))
-			{
-				yaw = UTIL_VecToYaw((vecEnd - vecStart));
-				Vector vecDir = (vecEnd - vecStart);
-				VectorNormalize(vecDir);
-				vecDir.z = 0;
+#define ADDWAYPOINT(a) pWaypoints.AddToTail(a)
 
-				if (heightBetweenNodes > 40.0f)
-				{
-					Vector vecUpPos, vecForwardPos;
-					vecUpPos = (vecStart + Vector(0, 0, (heightBetweenNodes + 6.0f)));
-					vecForwardPos = (vecEnd + (vecDir * 50.0f) + Vector(0, 0, 10));
-
-					if (CanClimbToPoint(vecStart, vecUpPos))
-					{
-						AI_Waypoint_t *first = new AI_Waypoint_t(vecUpPos, yaw, NAV_CLIMB, 0, NO_NODE);
-						AI_Waypoint_t *next = new AI_Waypoint_t(vecForwardPos, yaw, NAV_CLIMB, 0, NO_NODE);
-						first->SetNext(next);
-						if (newWaypoint)
-							next->SetNext(newWaypoint);
-
-						return BuildNavRoute(previousArea, nextArea, first, start, end);
-					}
-				}
-				else if (heightBetweenNodes < -40.0f)
-				{
-					yaw += 180.0f;
-					Vector vecDownPos, vecForwardPos, vecClosestPos;
-					vecForwardPos = (vecEnd + (vecDir * 50.0f) + Vector(0, 0, fabs(heightBetweenNodes) + 10));
-					vecDownPos = (vecForwardPos + Vector(0, 0, heightBetweenNodes));
-
-					if (CanClimbToPoint(vecForwardPos, vecDownPos))
-					{
-						AI_Waypoint_t *first = new AI_Waypoint_t(vecForwardPos, yaw, NAV_CLIMB, 0, NO_NODE);
-						AI_Waypoint_t *next = new AI_Waypoint_t(vecDownPos, yaw, NAV_CLIMB, 0, NO_NODE);
-						first->SetNext(next);
-						if (newWaypoint)
-							next->SetNext(newWaypoint);
-
-						return BuildNavRoute(previousArea, nextArea, first, start, end);
-					}
-				}
-				else
-				{
-					// If both above fails then we try to check if we can climb over some obstacle instead. Or upon some box.
-					Vector vecSearchStart = vecEnd;
-					vecSearchStart += Vector(0, 0, 4);
-					Vector vecForward = (end - start);
-					VectorNormalize(vecForward);
-					vecForward.z = 0;
-					AI_TraceLine(vecSearchStart, (vecSearchStart + (vecForward * MAX_COORD_RANGE)), MASK_NPCSOLID, GetOuter(), COLLISION_GROUP_NONE, &trace);
-					CBaseEntity *pEnt = trace.m_pEnt;
-					if (pEnt && nextArea)
-					{
-						vecStart = goalArea->GetCenter();
-						vecEnd = nextArea->GetCenter();
-						vecDir = (vecEnd - vecStart);
-						VectorNormalize(vecDir);
-						vecDir.z = 0;
-						yaw = UTIL_VecToYaw((vecEnd - vecStart));
-
-						float entityHeight = (pEnt->CollisionProp()->OBBSize().z + 10.0f);
-						Vector climbUpPos = vecStart + Vector(0, 0, entityHeight);
-						Vector middlePos = vecEnd + Vector(0, 0, entityHeight + 5) + (vecDir * 20.0f);
-						Vector climbDownPos = middlePos + Vector(0, 0, (-entityHeight + 14));
-
-						if (FClassnameIs(pEnt, "func_npc_obstacle"))
-						{
-							if (CanClimbToPoint(vecStart, climbUpPos) && CanClimbToPoint(climbUpPos, middlePos) && CanClimbToPoint(middlePos, climbDownPos))
-							{
-								yaw += 180.0f;
-								AI_Waypoint_t *upNode = new AI_Waypoint_t(climbUpPos, (yaw - 180.0f), NAV_CLIMB, 0, NO_NODE);
-								AI_Waypoint_t *ForwardNode = new AI_Waypoint_t(middlePos, (yaw - 180.0f), NAV_CLIMB, 0, NO_NODE);
-								AI_Waypoint_t *DownNode = new AI_Waypoint_t(climbDownPos, yaw, NAV_CLIMB, 0, NO_NODE);
-								upNode->SetNext(ForwardNode);
-								ForwardNode->SetNext(DownNode);
-
-								if (newWaypoint)
-									DownNode->SetNext(newWaypoint);
-
-								return BuildNavRoute(previousArea, nextArea, upNode, start, end);
-							}
-						}
-					}
-
-					nextArea = goalArea;
-				}
-			}
-		}
-
-		Navigation_t currentNAVType = NAV_GROUND;
-		// Try to build a crawl/crouch route if possible:
-		if ((goalArea->HasAttributes(NAV_MESH_CROUCH) || previousArea->HasAttributes(NAV_MESH_CROUCH)) && (CapabilitiesGet() & bits_CAP_MOVE_CRAWL))
-			currentNAVType = NAV_CRAWL;
-
-		// A straight route...
-		closestpoint.z = goalArea->GetZ(closestpoint);
-		AI_Waypoint_t *newway = new AI_Waypoint_t(closestpoint, 0, currentNAVType, 0, NO_NODE);
-		if (newWaypoint)
-			newway->SetNext(newWaypoint);
-
-		return BuildNavRoute(previousArea, nextArea, newway, start, end);
+	CNavArea *pCurrentArea = area;
+	CNavArea *pNextArea = NULL;
+	while (pCurrentArea)
+	{
+		pNavAreas.AddToHead(pCurrentArea);
+		pCurrentArea = pCurrentArea->GetParent();
 	}
 
-	return waypoint;
+	Vector center, center_portal, delta, closestpoint;
+	NavDirType dir;
+
+	trace_t trace;
+	CTraceFilterWorldAndPropsOnly traceFilter;
+	CTraceFilterNoNPCsOrPlayer traceFilterNoNPCPlayer(GetOuter(), COLLISION_GROUP_NPC);
+
+	const Vector &vMins = WorldAlignMins();
+	const Vector &vMaxs = WorldAlignMaxs();
+	float hullWide = (((vMaxs.y - vMins.y) / 2.0f) + 1.0f), hwidth, hwidthhull;
+	Navigation_t currentNAVType = NAV_GROUND;
+	AIMoveTrace_t moveTrace;
+
+	int index = 0;
+	pCurrentArea = pNavAreas.Count() ? pNavAreas[index] : NULL;
+	while (pCurrentArea)
+	{
+		pNextArea = pNavAreas.IsValidIndex(index + 1) ? pNavAreas[index + 1] : NULL;
+		currentNAVType = NAV_GROUND;
+
+		if (pNextArea)
+		{
+			center = pNextArea->GetCenter();
+			dir = pCurrentArea->ComputeDirection(&center);
+			pCurrentArea->ComputePortal(pNextArea, dir, &center_portal, &hwidth);
+			pCurrentArea->ComputeClosestPointInPortal(pNextArea, dir, pNextArea->GetCenter(), &closestpoint);
+
+			// This point would be the closest route, but does our hull fit?
+			AI_TraceHull(closestpoint, closestpoint, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
+			if (trace.fraction != 1.0f)
+			{
+				// Move a bit to the center.
+				delta = (closestpoint - center_portal);
+				hwidthhull = ((vMaxs.y - vMins.y) / 2.0f);
+				if (delta.IsLengthGreaterThan(hwidthhull))
+					closestpoint = closestpoint + ((hwidthhull / delta.Length()) * delta);
+			}
+
+			const Vector &vecStart = pCurrentArea->GetCenter();
+			const Vector &vecEnd = pNextArea->GetCenter();
+
+			Vector vecDir;
+			DirectionToVector2D(dir, (Vector2D*)&vecDir);
+			vecDir.z = 0.0f;
+
+			float heightDiff = (vecEnd.z - vecStart.z) + 2.0f;
+			bool bBuildSpecial = false;
+
+			// Check if this route can be jumped to/from etc...
+			// TODO
+			if ((buildFlags & bits_BUILD_JUMP) && (CapabilitiesGet() & bits_CAP_MOVE_JUMP) && (abs(heightDiff) >= (GetOuter()->StepHeight() * 2.0f)))
+			{
+				closestpoint.z = pCurrentArea->GetZ(closestpoint);
+				GetOuter()->GetMoveProbe()->MoveLimit(NAV_JUMP, closestpoint, vecEnd, MASK_NPCSOLID, pTarget, &moveTrace);
+				if (!IsMoveBlocked(moveTrace))
+				{
+					ADDWAYPOINT(new AI_Waypoint_t(vecEnd + Vector(0.0f, 0.0f, 10.0f), 0.0f, NAV_JUMP, 0, NO_NODE)); // Move to climb up/down pos.
+					bBuildSpecial = true;
+				}
+			}
+
+			// Can we build a climb route? If so, try to figure out if we can establish it on this node.
+			if (!bBuildSpecial && (CapabilitiesGet() & bits_CAP_MOVE_CLIMB) && pCurrentArea->HasAttributes(NAV_MESH_LADDER_POINT) && pNextArea->HasAttributes(NAV_MESH_LADDER_POINT))
+			{
+				float yaw = 0.0f;
+				float dist = 0.0f;
+				float normalizedDiff = (heightDiff >= 0.0f) ? 1.0f : -1.0f;
+
+				Vector vecObstacleStartCheck = vecStart + Vector(0.0f, 0.0f, 4.0f);
+				AI_TraceLine(vecObstacleStartCheck, vecObstacleStartCheck + vecDir * MAX_TRACE_LENGTH, MASK_NPCSOLID, &traceFilterNoNPCPlayer, &trace);
+				CBaseEntity *pDynamicObstacle = trace.m_pEnt;
+				if (trace.DidHitNonWorldEntity() && pDynamicObstacle && pDynamicObstacle->IsNPCObstacle() && pDynamicObstacle->CollisionProp())
+				{
+					bBuildSpecial = true; // found obstacle, yeah we can climb it, I thinks!!
+					float distToEnd, distToStart;
+
+					const Vector &objMins = pDynamicObstacle->WorldAlignMins();
+					const Vector &objMaxs = pDynamicObstacle->WorldAlignMaxs();
+					const Vector &objSize = pDynamicObstacle->WorldAlignSize();
+					const Vector &objOrigin = pDynamicObstacle->GetAbsOrigin();
+					Vector objTemp;
+
+					float maxExtents = MAX(objSize.x, objSize.y);
+					float minExtents = MIN(objSize.x, objSize.y);
+					dist = maxExtents;
+
+					objTemp = objOrigin + vecDir * dist;
+					if (!IsPointInBox(objTemp, objMins, objMaxs))
+						dist = minExtents;
+
+					distToStart = (trace.endpos - trace.startpos).Length2D();
+					distToEnd = dist;
+
+					Vector vStartClimb = vecStart + vecDir * (distToStart - hullWide);
+					Vector vClimbUp = vStartClimb + Vector(0.0f, 0.0f, objSize.z + 4.0f);
+					Vector vClimbEnd = vClimbUp + vecDir * (distToEnd + hullWide * 2.0f);
+					AI_TraceHull(vClimbEnd, vClimbEnd + Vector(0.0f, 0.0f, -1.0f) * MAX_TRACE_LENGTH, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
+					yaw = AngleNormalize(UTIL_VecToYaw(vecEnd - vecStart));
+
+					ADDWAYPOINT(new AI_Waypoint_t(vStartClimb, 0.0f, NAV_GROUND, 0, NO_NODE));
+					ADDWAYPOINT(new AI_Waypoint_t(vClimbUp, yaw, NAV_CLIMB, 0, NO_NODE));
+					ADDWAYPOINT(new AI_Waypoint_t(vClimbEnd, AngleNormalize(yaw + 180.0f), NAV_CLIMB, 0, NO_NODE));
+					ADDWAYPOINT(new AI_Waypoint_t(trace.endpos + Vector(0.0f, 0.0f, 2.0f), AngleNormalize(yaw + 180.0f), NAV_CLIMB, 0, NO_NODE));
+				}
+				else if ((heightDiff != 0.0f) && (abs(heightDiff) > GetOuter()->StepHeight())) // Climbing a MARKED ladder, doesn't climb over it but simply ON TOP OF IT.
+				{
+					Vector vecClimbStart = vec3_origin,
+						vecClimbEnd = vec3_origin,
+						vecClimbDismount = vec3_origin;
+
+					if (heightDiff >= 0.0f) // climb up
+					{
+						AI_TraceLine(vecStart, vecStart + vecDir * MAX_TRACE_LENGTH, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
+						dist = (trace.endpos - trace.startpos).Length2D();
+						vecClimbStart = vecStart + vecDir * (dist - hullWide);
+						vecClimbEnd = vecClimbStart + Vector(0.0f, 0.0f, heightDiff);
+						vecClimbDismount = vecClimbEnd + Vector(0, 0, 2.0f) + vecDir * ((hullWide + 1.0f) * 2.0f);
+						yaw = AngleNormalize(UTIL_VecToYaw(vecEnd - vecStart));
+
+						bBuildSpecial = CanClimbToPoint(normalizedDiff, vecClimbStart, vecClimbEnd);
+					}
+					else // climb down
+					{
+						dist = (hwidth - hullWide);
+						vecClimbStart = vecStart + vecDir * dist;
+						dist = (GetDistUntilEdge(vecClimbStart, vecDir, abs(heightDiff)) - vecStart).Length2D();
+						vecClimbStart = vecStart + vecDir * (dist - hullWide * 2.0f);
+						vecClimbEnd = vecStart + vecDir * (dist + hullWide * 2.0f + 2.0f) + Vector(0.0f, 0.0f, heightDiff);
+						vecClimbDismount = vecStart + vecDir * (dist + hullWide * 2.0f + 2.0f) + Vector(0, 0, 5.0f);
+						yaw = UTIL_VecToYaw(vecEnd - vecStart) + 180.0f;
+						yaw = AngleNormalize(yaw);
+
+						bBuildSpecial = CanClimbToPoint(normalizedDiff, vecClimbDismount, vecClimbEnd);
+					}
+
+					//debugoverlay->AddBoxOverlay(vecClimbStart, vMins, vMaxs, vec3_angle, 255, 0, 0, 100, 3.0f);
+					//debugoverlay->AddBoxOverlay(vecClimbEnd, vMins, vMaxs, vec3_angle, 0, 255, 0, 100, 3.0f);
+					//debugoverlay->AddBoxOverlay(vecClimbDismount, vMins, vMaxs, vec3_angle, 0, 0, 255, 100, 4.0f);
+
+					if (bBuildSpecial)
+					{
+						ADDWAYPOINT(new AI_Waypoint_t(vecClimbStart, 0.0f, NAV_GROUND, 0, NO_NODE)); // Move to climb up/down pos.
+						if (normalizedDiff < 0.0f)
+							ADDWAYPOINT(new AI_Waypoint_t(vecClimbDismount, yaw, NAV_CLIMB, 0, NO_NODE)); // Climb outwards before climbing downwards!
+						ADDWAYPOINT(new AI_Waypoint_t(vecClimbEnd, yaw, NAV_CLIMB, 0, NO_NODE)); // Climb
+						if (normalizedDiff >= 0.0f)
+							ADDWAYPOINT(new AI_Waypoint_t(vecClimbDismount, yaw, NAV_CLIMB, 0, NO_NODE)); // Move to dismount pos.
+					}
+				}
+			}
+
+			if (!bBuildSpecial)
+			{
+				// Try to build a crawl/crouch route if possible:
+				if ((pCurrentArea->HasAttributes(NAV_MESH_CROUCH) || pNextArea->HasAttributes(NAV_MESH_CROUCH)) && (CapabilitiesGet() & bits_CAP_MOVE_CRAWL))
+					currentNAVType = NAV_CRAWL;
+
+				closestpoint.z = pCurrentArea->GetZ(closestpoint);
+				ADDWAYPOINT(new AI_Waypoint_t(closestpoint, 0, currentNAVType, 0, NO_NODE));
+			}
+		}
+
+		index++;
+		pCurrentArea = pNavAreas.IsValidIndex(index) ? pNavAreas[index] : NULL;
+	}
+
+	ADDWAYPOINT(new AI_Waypoint_t(end, 0.0f, NAV_GROUND, bits_WP_TO_GOAL, NO_NODE));
+
+	for (int i = 0; i < pWaypoints.Count(); i++)
+	{
+		AI_Waypoint_t *node = pWaypoints[i];
+		AI_Waypoint_t *next = pWaypoints.IsValidIndex(i + 1) ? pWaypoints[i + 1] : NULL;
+		node->SetNext(next);
+	}
+
+#undef ADDWAYPOINT
+
+	AI_Waypoint_t *pWaypoint = pWaypoints[0];
+	pNavAreas.RemoveAll();
+	pWaypoints.RemoveAll();
+	return pWaypoint;
 }
 
 class CTraceFilterClimbingNPCs : public CTraceFilterSkipTwoClassnames
@@ -1973,19 +2008,21 @@ BaseClass(passentity, pchClassname, pchClassname2, collisionGroup)
 {
 }
 
-bool CAI_Pathfinder::CanClimbToPoint(const Vector &vecStart, const Vector &vecEnd)
+bool CAI_Pathfinder::CanClimbToPoint(float dir, const Vector &vecStart, const Vector &vecEnd)
 {
+	const Vector &vMins = WorldAlignMins();
+	const Vector &vMaxs = WorldAlignMaxs();
+	const Vector &vOrigin = GetAbsOrigin();
+	float height = (vMaxs.z - vMins.z) + 4.0f;
+
 	trace_t trace;
 	CTraceFilterClimbingNPCs traceFilter(GetOuter(), "worldspawn", "func_npc_obstacle", COLLISION_GROUP_NPC);
 
-	Vector hullMin = Vector(-16, -16, 0);
-	Vector hullMax = Vector(16, 16, 82);
-
-	AI_TraceHull(GetAbsOrigin(), (GetAbsOrigin() + Vector(0, 0, 150)), hullMin, hullMax, MASK_NPCSOLID, &traceFilter, &trace);
+	AI_TraceHull(vOrigin, (vOrigin + Vector(0, 0, dir * height)), vMins, vMaxs, MASK_NPCSOLID, &traceFilter, &trace);
 	if (trace.fraction != 1.0f)
 		return false;
 
-	AI_TraceHull(vecStart, vecEnd, hullMin, hullMax, MASK_NPCSOLID, &traceFilter, &trace);
+	AI_TraceHull(vecStart, vecEnd, vMins, vMaxs, MASK_NPCSOLID, &traceFilter, &trace);
 	if (trace.fraction != 1.0f)
 		return false;
 

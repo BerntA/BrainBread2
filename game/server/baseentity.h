@@ -901,6 +901,8 @@ public:
 		return false;
 	}
 
+	virtual bool	IsNPCObstacle(void) { return false; }
+
 	virtual bool	OnControls( CBaseEntity *pControls ) { return false; }
 	virtual bool	HasTarget( string_t targetname );
 	virtual	bool	IsPlayer( void ) const { return false; }

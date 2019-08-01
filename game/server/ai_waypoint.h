@@ -109,6 +109,8 @@ public:
 	const Vector &		GetPos() const				{ return vecLocation; }
 	void 				SetPos(const Vector &newPos) { vecLocation = newPos; }
 
+	void				ModifyNAVType(Navigation_t type) { m_iWPType = type; }
+
 	EHANDLE				GetEHandleData() { return m_hData; }
 	
 	//---------------------------------
