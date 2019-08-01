@@ -81,6 +81,9 @@ public:
 
 #ifdef BB2_USE_NAVMESH
 	virtual AI_Waypoint_t *BuildNavRoute(CBaseEntity *pTarget, CNavArea *area, const Vector &start, const Vector &end, int buildFlags);
+	virtual AI_Waypoint_t *BuildJumpRoute(CBaseEntity *pTarget, const Vector &areaStart, const Vector &areaEnd, const Vector &dir, Vector &jumpStart, Vector &jumpEnd, const float &heightDiff, const float &hullWide, bool bDirect = false);
+	virtual AI_Waypoint_t *BuildJumpRoute(CBaseEntity *pTarget, const Vector &from, const Vector &to);
+	virtual AI_Waypoint_t *BuildDirectJumpRoute(CBaseEntity *pTarget, const Vector &start, const Vector &end, int buildFlags);
 	virtual bool CanClimbToPoint(float dir, const Vector &vecStart, const Vector &vecEnd);
 #endif
 

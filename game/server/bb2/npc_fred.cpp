@@ -118,6 +118,7 @@ protected:
 	void CheckRageState(void);
 
 	float GetMaxJumpRise() const { return sk_npc_boss_fred_max_jump_height.GetFloat(); }
+	float GetMaxJumpDrop() const { return MAX_COORD_FLOAT; }
 	void FindAndPunishCampers(void);
 
 private:

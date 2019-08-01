@@ -2189,29 +2189,6 @@ CBaseGrenade* CAI_BaseNPC::IncomingGrenade(void)
 	return NULL;
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: Check my physical state with the environment
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::TryRestoreHull(void)
-{
-	if ( IsUsingSmallHull() && GetCurSchedule() )
-	{
-		trace_t tr;
-		Vector	vUpBit = GetAbsOrigin();
-		vUpBit.z += 1;
-
-		AI_TraceHull( GetAbsOrigin(), vUpBit, GetHullMins(),
-			GetHullMaxs(), MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
-		if ( !tr.startsolid && (tr.fraction == 1.0) )
-		{
-			SetHullSizeNormal();
-		}
-	}
-}
-
 //=========================================================
 //=========================================================
 int CAI_BaseNPC::GetSoundInterests( void )
@@ -4678,8 +4655,6 @@ void CAI_BaseNPC::RunAI( void )
 	if ( !m_bConditionsGathered )
 		m_bConditionsGathered = true; // derived class didn't call to base
 
-	TryRestoreHull();
-
 	g_AIPrescheduleThinkTimer.Start();
 
 	AI_PROFILE_SCOPE_BEGIN(CAI_RunAI_PrescheduleThink);
@@ -6524,13 +6499,10 @@ void CAI_BaseNPC::SetHullSizeNormal( bool force )
 {
 	if ( m_fIsUsingSmallHull || force )
 	{
-		// Find out what the height difference will be between the versions and adjust our bbox accordingly to keep us level
 		const float flScale = GetModelScale();
 		Vector vecMins = ( GetHullMins() * flScale );
-		Vector vecMaxs = ( GetHullMaxs() * flScale );
-		
+		Vector vecMaxs = ( GetHullMaxs() * flScale );	
 		UTIL_SetSize( this, vecMins, vecMaxs );
-
 		m_fIsUsingSmallHull = false;
 		if ( VPhysicsGetObject() )
 		{
@@ -6549,7 +6521,10 @@ bool CAI_BaseNPC::SetHullSizeSmall( bool force )
 {
 	if ( !m_fIsUsingSmallHull || force )
 	{
-		UTIL_SetSize(this, NAI_Hull::SmallMins(GetHullType()),NAI_Hull::SmallMaxs(GetHullType()));
+		const float flScale = GetModelScale();
+		Vector vecMins = (NAI_Hull::SmallMins(GetHullType()) * flScale);
+		Vector vecMaxs = (NAI_Hull::SmallMaxs(GetHullType()) * flScale);
+		UTIL_SetSize(this, vecMins, vecMaxs);
 		m_fIsUsingSmallHull = true;
 		if ( VPhysicsGetObject() )
 		{

@@ -1913,7 +1913,6 @@ public:
 	void				CheckPhysicsContacts();
 
 private:
-	void				TryRestoreHull( void );
 	bool				m_fIsUsingSmallHull;
 	bool				m_bCheckContacts;
 

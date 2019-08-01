@@ -1434,12 +1434,16 @@ AI_Waypoint_t *CAI_Pathfinder::BuildRoute( const Vector &vStart, const Vector &v
 #ifdef BB2_USE_NAVMESH
 	if (GetOuter()->UsesNavMesh() && !pResult && (curNavType != NAV_FLY))
 	{
-		CNavArea *closestArea = NULL;
-		CNavArea *startArea = TheNavMesh->GetNearestNavArea(vStart);
-		CNavArea *goalArea = TheNavMesh->GetNearestNavArea(vEnd);
-		ShortestPathCost costfunc;
-		if (NavAreaBuildPath(startArea, goalArea, &vEnd, costfunc, &closestArea))
-			pResult = BuildNavRoute(pTarget, closestArea, vStart, vEnd, buildFlags);
+		pResult = BuildDirectJumpRoute(pTarget, vStart, vEnd, buildFlags);
+		if (!pResult)
+		{
+			CNavArea *closestArea = NULL;
+			CNavArea *startArea = TheNavMesh->GetNearestNavArea(vStart);
+			CNavArea *goalArea = TheNavMesh->GetNearestNavArea(vEnd);
+			ShortestPathCost costfunc;
+			if (NavAreaBuildPath(startArea, goalArea, &vEnd, costfunc, &closestArea))
+				pResult = BuildNavRoute(pTarget, closestArea, vStart, vEnd, buildFlags);
+		}
 	}
 #endif // BB2_USE_NAVMESH
 
@@ -1772,7 +1776,7 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNearestNodeRoute( const Vector &vGoal, bool 
 
 #ifdef BB2_USE_NAVMESH
 // Figure out how far from the edge we are... UGLY.
-static Vector GetDistUntilEdge(const Vector &origin, const Vector &dir, float flFallDist)
+static Vector FindEdgeFromPos(const Vector &origin, const Vector &dir, float flFallDist)
 {
 	flFallDist /= 2.0f;
 	float distMoved = 1.0f;
@@ -1813,13 +1817,12 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 
 	trace_t trace;
 	CTraceFilterWorldAndPropsOnly traceFilter;
-	CTraceFilterNoNPCsOrPlayer traceFilterNoNPCPlayer(GetOuter(), COLLISION_GROUP_NPC);
+	CTraceFilterNoNPCsOrPlayer traceFilterNoNPCPlayer(GetOuter(), GetCollisionGroup());
 
 	const Vector &vMins = WorldAlignMins();
 	const Vector &vMaxs = WorldAlignMaxs();
 	float hullWide = (((vMaxs.y - vMins.y) / 2.0f) + 1.0f), hwidth, hwidthhull;
 	Navigation_t currentNAVType = NAV_GROUND;
-	AIMoveTrace_t moveTrace;
 
 	int index = 0;
 	pCurrentArea = pNavAreas.Count() ? pNavAreas[index] : NULL;
@@ -1830,6 +1833,9 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 
 		if (pNextArea)
 		{
+			const Vector &vecStart = pCurrentArea->GetCenter();
+			const Vector &vecEnd = pNextArea->GetCenter();
+
 			center = pNextArea->GetCenter();
 			dir = pCurrentArea->ComputeDirection(&center);
 			pCurrentArea->ComputePortal(pNextArea, dir, &center_portal, &hwidth);
@@ -1846,9 +1852,6 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 					closestpoint = closestpoint + ((hwidthhull / delta.Length()) * delta);
 			}
 
-			const Vector &vecStart = pCurrentArea->GetCenter();
-			const Vector &vecEnd = pNextArea->GetCenter();
-
 			Vector vecDir;
 			DirectionToVector2D(dir, (Vector2D*)&vecDir);
 			vecDir.z = 0.0f;
@@ -1856,15 +1859,20 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 			float heightDiff = (vecEnd.z - vecStart.z) + 2.0f;
 			bool bBuildSpecial = false;
 
+			Vector vecObstacleStartCheck = vecStart + Vector(0.0f, 0.0f, 4.0f);
+			AI_TraceLine(vecObstacleStartCheck, vecObstacleStartCheck + vecDir * MAX_TRACE_LENGTH, MASK_NPCSOLID, &traceFilterNoNPCPlayer, &trace);
+			CBaseEntity *pDynamicObstacle = trace.m_pEnt;
+			bool bFoundNPCObstacle = (trace.DidHitNonWorldEntity() && pDynamicObstacle && pDynamicObstacle->IsNPCObstacle() && pDynamicObstacle->CollisionProp());
+
 			// Check if this route can be jumped to/from etc...
-			// TODO
-			if ((buildFlags & bits_BUILD_JUMP) && (CapabilitiesGet() & bits_CAP_MOVE_JUMP) && (abs(heightDiff) >= (GetOuter()->StepHeight() * 2.0f)))
+			if ((buildFlags & bits_BUILD_JUMP) && (CapabilitiesGet() & bits_CAP_MOVE_JUMP) && ((abs(heightDiff) >= GetOuter()->StepHeight()) || bFoundNPCObstacle))
 			{
-				closestpoint.z = pCurrentArea->GetZ(closestpoint);
-				GetOuter()->GetMoveProbe()->MoveLimit(NAV_JUMP, closestpoint, vecEnd, MASK_NPCSOLID, pTarget, &moveTrace);
-				if (!IsMoveBlocked(moveTrace))
+				Vector vecJumpStart, vecJumpEnd;
+				AI_Waypoint_t *pJumpPoint = BuildJumpRoute(pTarget, vecStart, vecEnd, vecDir, vecJumpStart, vecJumpEnd, heightDiff, hullWide, bFoundNPCObstacle);
+				if (pJumpPoint)
 				{
-					ADDWAYPOINT(new AI_Waypoint_t(vecEnd + Vector(0.0f, 0.0f, 10.0f), 0.0f, NAV_JUMP, 0, NO_NODE)); // Move to climb up/down pos.
+					ADDWAYPOINT(new AI_Waypoint_t(vecJumpStart, 0.0f, NAV_GROUND, 0, NO_NODE));
+					ADDWAYPOINT(pJumpPoint);
 					bBuildSpecial = true;
 				}
 			}
@@ -1875,11 +1883,7 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 				float yaw = 0.0f;
 				float dist = 0.0f;
 				float normalizedDiff = (heightDiff >= 0.0f) ? 1.0f : -1.0f;
-
-				Vector vecObstacleStartCheck = vecStart + Vector(0.0f, 0.0f, 4.0f);
-				AI_TraceLine(vecObstacleStartCheck, vecObstacleStartCheck + vecDir * MAX_TRACE_LENGTH, MASK_NPCSOLID, &traceFilterNoNPCPlayer, &trace);
-				CBaseEntity *pDynamicObstacle = trace.m_pEnt;
-				if (trace.DidHitNonWorldEntity() && pDynamicObstacle && pDynamicObstacle->IsNPCObstacle() && pDynamicObstacle->CollisionProp())
+				if (bFoundNPCObstacle)
 				{
 					bBuildSpecial = true; // found obstacle, yeah we can climb it, I thinks!!
 					float distToEnd, distToStart;
@@ -1920,7 +1924,7 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 
 					if (heightDiff >= 0.0f) // climb up
 					{
-						AI_TraceLine(vecStart, vecStart + vecDir * MAX_TRACE_LENGTH, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
+						AI_TraceHull(vecStart, vecStart + vecDir * MAX_TRACE_LENGTH, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
 						dist = (trace.endpos - trace.startpos).Length2D();
 						vecClimbStart = vecStart + vecDir * (dist - hullWide);
 						vecClimbEnd = vecClimbStart + Vector(0.0f, 0.0f, heightDiff);
@@ -1933,7 +1937,7 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 					{
 						dist = (hwidth - hullWide);
 						vecClimbStart = vecStart + vecDir * dist;
-						dist = (GetDistUntilEdge(vecClimbStart, vecDir, abs(heightDiff)) - vecStart).Length2D();
+						dist = (FindEdgeFromPos(vecClimbStart, vecDir, abs(heightDiff)) - vecStart).Length2D();
 						vecClimbStart = vecStart + vecDir * (dist - hullWide * 2.0f);
 						vecClimbEnd = vecStart + vecDir * (dist + hullWide * 2.0f + 2.0f) + Vector(0.0f, 0.0f, heightDiff);
 						vecClimbDismount = vecStart + vecDir * (dist + hullWide * 2.0f + 2.0f) + Vector(0, 0, 5.0f);
@@ -1991,6 +1995,118 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 	return pWaypoint;
 }
 
+AI_Waypoint_t *CAI_Pathfinder::BuildJumpRoute(CBaseEntity *pTarget, const Vector &areaStart, const Vector &areaEnd, const Vector &dir, Vector &jumpStart, Vector &jumpEnd, const float &heightDiff, const float &hullWide, bool bDirect)
+{
+	trace_t trace;
+	CTraceFilterWorldAndPropsOnly traceFilter;
+
+	bool bShouldJumpUP = (heightDiff >= 0.0f);
+	float dist = 0.0f, maxDist = 0.0f;
+	AI_Waypoint_t *pJumpPoint = NULL;
+	Vector vMins, vMaxs;
+	jumpStart = areaStart;
+	jumpEnd = areaEnd;
+	vMins = Vector(-3.0f, -3.0f, 0.0f);
+	vMaxs = Vector(3.0f, 3.0f, ceil(abs(heightDiff)));
+
+	Vector vAreaStart, vAreaEnd;
+	AI_TraceHull(areaStart + Vector(0.0f, 0.0f, 16.0f), areaStart + Vector(0.0f, 0.0f, 16.0f) - Vector(0.0f, 0.0f, 1.0f) * MAX_TRACE_LENGTH, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
+	vAreaStart = trace.endpos + Vector(0.0f, 0.0f, 2.0f);
+	AI_TraceHull(areaEnd + Vector(0.0f, 0.0f, 16.0f), areaEnd + Vector(0.0f, 0.0f, 16.0f) - Vector(0.0f, 0.0f, 1.0f) * MAX_TRACE_LENGTH, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
+	vAreaEnd = trace.endpos + Vector(0.0f, 0.0f, 2.0f);
+
+	vAreaStart.z = MAX(vAreaStart.z, areaStart.z);
+	vAreaEnd.z = MAX(vAreaEnd.z, areaEnd.z);
+
+	if (bShouldJumpUP)
+	{
+		if (!bDirect)
+		{
+			jumpEnd = FindEdgeFromPos(vAreaEnd, -dir, abs(heightDiff));
+			jumpEnd.z = vAreaEnd.z;
+			AI_TraceHull(vAreaEnd, jumpEnd, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
+			jumpEnd = trace.endpos + dir * 2.0f;
+			debugoverlay->AddBoxOverlay(jumpEnd, vMins, vMaxs, vec3_angle, 200, 0, 0, 200, 4.0f);
+		}
+		AI_TraceHull(vAreaStart, vAreaStart - dir * MAX_TRACE_LENGTH, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
+	}
+	else
+	{
+		if (!bDirect)
+		{
+			jumpStart = FindEdgeFromPos(vAreaStart, dir, abs(heightDiff));
+			jumpStart.z = vAreaStart.z;
+			AI_TraceHull(vAreaStart, jumpStart, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
+			jumpStart = trace.endpos - dir * 2.0f;
+			debugoverlay->AddBoxOverlay(jumpStart, vMins, vMaxs, vec3_angle, 200, 0, 0, 200, 4.0f);
+		}
+		AI_TraceHull(vAreaEnd, vAreaEnd + dir * MAX_TRACE_LENGTH, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
+	}
+
+	maxDist = (trace.endpos - trace.startpos).Length2D();
+	maxDist = MIN(maxDist, 128.0f); // Limit...
+
+	do // Find a decent jump spot.
+	{
+		pJumpPoint = BuildJumpRoute(pTarget, jumpStart, jumpEnd);
+		if (pJumpPoint)
+			break;
+
+		dist += (hullWide / 2.0f);
+		if (bShouldJumpUP)
+		{
+			jumpStart -= dir * dist;
+			jumpEnd += dir * dist;
+		}
+		else
+		{
+			jumpEnd += dir * dist;
+			jumpStart -= dir * dist;
+		}
+
+		debugoverlay->AddBoxOverlay(bShouldJumpUP ? jumpStart : jumpEnd, -Vector(8, 8, 0), Vector(8, 8, 8), vec3_angle, 100, 50, 200, 200, 4.0f);
+	} while ((abs(dist) < maxDist) && (maxDist > 0.0f));
+
+	return pJumpPoint;
+}
+
+AI_Waypoint_t *CAI_Pathfinder::BuildJumpRoute(CBaseEntity *pTarget, const Vector &from, const Vector &to)
+{
+	//debugoverlay->AddBoxOverlay(from, -Vector(12, 12, 0), Vector(12, 12, 15), vec3_angle, 0, 255, 0, 200, 5.0f);
+	//debugoverlay->AddBoxOverlay(to, -Vector(12, 12, 0), Vector(12, 12, 15), vec3_angle, 0, 0, 255, 200, 5.0f);
+
+	AIMoveTrace_t moveTrace;
+	GetOuter()->GetMoveProbe()->MoveLimit(NAV_JUMP, from, to, MASK_NPCSOLID, pTarget, &moveTrace);
+	if (!IsMoveBlocked(moveTrace))
+		return new AI_Waypoint_t(to, 0, NAV_JUMP, 0, NO_NODE);
+	return NULL;
+}
+
+AI_Waypoint_t *CAI_Pathfinder::BuildDirectJumpRoute(CBaseEntity *pTarget, const Vector &start, const Vector &end, int buildFlags) // Try to jump near the enemy pos!
+{
+	if (!((buildFlags & bits_BUILD_JUMP) && (CapabilitiesGet() & bits_CAP_MOVE_JUMP)))
+		return NULL;
+
+	Vector dir = (end - start);
+	float height = dir.z;
+	VectorNormalize(dir);
+	dir.z = 0.0f;
+		
+	if (abs(height) < GetOuter()->StepHeight())
+		return NULL;
+
+	Vector vecJumpStart, vecJumpEnd;
+	AI_Waypoint_t *pStartPoint = NULL;
+	AI_Waypoint_t *pJumpPoint = BuildJumpRoute(pTarget, start, end, dir, vecJumpStart, vecJumpEnd, height, (GetOuter()->WorldAlignSize().y / 2.0f), true);
+	if (pJumpPoint)
+	{
+		pStartPoint = new AI_Waypoint_t(vecJumpStart, 0.0f, NAV_GROUND, 0, NO_NODE);
+		pStartPoint->SetNext(pJumpPoint);
+	}
+
+	return pStartPoint;
+}
+
 class CTraceFilterClimbingNPCs : public CTraceFilterSkipTwoClassnames
 {
 public:
@@ -2013,16 +2129,16 @@ bool CAI_Pathfinder::CanClimbToPoint(float dir, const Vector &vecStart, const Ve
 	const Vector &vMins = WorldAlignMins();
 	const Vector &vMaxs = WorldAlignMaxs();
 	const Vector &vOrigin = GetAbsOrigin();
-	float height = (vMaxs.z - vMins.z) + 4.0f;
+	float height = (vMaxs.z - vMins.z) + 2.0f;
 
 	trace_t trace;
-	CTraceFilterClimbingNPCs traceFilter(GetOuter(), "worldspawn", "func_npc_obstacle", COLLISION_GROUP_NPC);
+	CTraceFilterClimbingNPCs traceFilter(GetOuter(), "worldspawn", "func_npc_obstacle", GetCollisionGroup());
 
 	AI_TraceHull(vOrigin, (vOrigin + Vector(0, 0, dir * height)), vMins, vMaxs, MASK_NPCSOLID, &traceFilter, &trace);
 	if (trace.fraction != 1.0f)
 		return false;
 
-	AI_TraceHull(vecStart, vecEnd, vMins, vMaxs, MASK_NPCSOLID, &traceFilter, &trace);
+	AI_TraceHull(vecStart + Vector(0, 0, dir * height), vecEnd, vMins, vMaxs, MASK_NPCSOLID, &traceFilter, &trace);
 	if (trace.fraction != 1.0f)
 		return false;
 
