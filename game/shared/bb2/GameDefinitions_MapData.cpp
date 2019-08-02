@@ -141,6 +141,10 @@ bool CGameDefinitionsMapData::FetchMapData(void)
 	pszWorkshopItemList.Purge();
 #endif
 
+	m_iMatchingItems = 0;
+	m_iCurrentPage = 1;
+	m_bSatRequestInfo = false;
+
 	// Fetch the official map list!
 	KeyValues *pkvOfficialMapData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/game/officialmaps");
 	if (pkvOfficialMapData)
@@ -173,6 +177,9 @@ bool CGameDefinitionsMapData::FetchMapData(void)
 #ifndef CLIENT_DLL
 	if (GameBaseShared() && GameBaseShared()->GetServerWorkshopData())
 		GameBaseShared()->GetServerWorkshopData()->GetListOfAddons(pszWorkshopItemList, true);
+
+	m_iMatchingItems = pszWorkshopItemList.Count();
+	m_bSatRequestInfo = true;
 #else
 	// Add other unknown custom maps (non workshop)...
 	char pszFileName[80];
@@ -209,6 +216,11 @@ bool CGameDefinitionsMapData::FetchMapData(void)
 	filesystem->FindClose(findHandle);
 #endif
 
+	return QueryUGC(m_iCurrentPage);
+}
+
+bool CGameDefinitionsMapData::QueryUGC(int page)
+{
 #ifndef CLIENT_DLL
 	if (!STEAM_API_INTERFACE || (STEAM_API_INTERFACE && !STEAM_API_INTERFACE->SteamUGC()) || !engine->IsDedicatedServer())
 #else
@@ -230,23 +242,17 @@ bool CGameDefinitionsMapData::FetchMapData(void)
 	}
 
 #ifdef CLIENT_DLL
-	AccountID_t steamAccountID = NULL;
-	steamAccountID = STEAM_API_INTERFACE->SteamUser()->GetSteamID().GetAccountID();
-	queryHandler = STEAM_API_INTERFACE->SteamUGC()->CreateQueryUserUGCRequest(steamAccountID, k_EUserUGCList_Subscribed, k_EUGCMatchingUGCType_Items, k_EUserUGCListSortOrder_TitleAsc, (AppId_t)382990, (AppId_t)346330, 1);
+	AccountID_t steamAccountID = STEAM_API_INTERFACE->SteamUser()->GetSteamID().GetAccountID();
+	queryHandler = STEAM_API_INTERFACE->SteamUGC()->CreateQueryUserUGCRequest(steamAccountID, k_EUserUGCList_Subscribed, k_EUGCMatchingUGCType_Items, k_EUserUGCListSortOrder_TitleAsc, (AppId_t)382990, (AppId_t)346330, page);
 #else
-	// Fetches ALL data, not what we want!
-	//steamAccountID = STEAM_API_INTERFACE->SteamGameServer()->GetSteamID().GetAccountID();
-	//queryHandler = STEAM_API_INTERFACE->SteamUGC()->CreateQueryAllUGCRequest(k_EUGCQuery_RankedByVote, k_EUGCMatchingUGCType_Items, (AppId_t)382990, (AppId_t)346330, 1);
-	//STEAM_API_INTERFACE->SteamUGC()->AddRequiredTag(queryHandler, "Whitelisted");
-
-	if (pszWorkshopItemList.Count() <= 0)
+	page--;
+	if ((pszWorkshopItemList.Count() <= 0) || (pszWorkshopItemList.Count() <= (page * 50)))
 		return false;
 
-	queryHandler = STEAM_API_INTERFACE->SteamUGC()->CreateQueryUGCDetailsRequest(&pszWorkshopItemList[0], pszWorkshopItemList.Count());
+	queryHandler = STEAM_API_INTERFACE->SteamUGC()->CreateQueryUGCDetailsRequest(&pszWorkshopItemList[(page * 50)], pszWorkshopItemList.Count());
 #endif
 
 	STEAM_API_INTERFACE->SteamUGC()->SetReturnKeyValueTags(queryHandler, true);
-
 	SteamAPICall_t apiCallback = STEAM_API_INTERFACE->SteamUGC()->SendQueryUGCRequest(queryHandler);
 	m_SteamCallResultUGCQuery.Set(apiCallback, this, &CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll);
 
@@ -296,6 +302,13 @@ bool CGameDefinitionsMapData::IsMapWhiteListed(const char *pszMap)
 //-----------------------------------------------------------------------------
 void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted_t *pCallback, bool bIOFailure)
 {
+	if (!m_bSatRequestInfo)
+	{
+		m_iMatchingItems = pCallback->m_unTotalMatchingResults;
+		m_bSatRequestInfo = true;
+		Msg("Loaded %i workshop addons.\n", pCallback->m_unTotalMatchingResults);
+	}
+
 	for (uint32 i = 0; i < pCallback->m_unNumResultsReturned; ++i)
 	{
 		SteamUGCDetails_t WorkshopItem;
@@ -379,6 +392,14 @@ void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted
 	{
 		STEAM_API_INTERFACE->SteamUGC()->ReleaseQueryUGCRequest(queryHandler);
 		queryHandler = NULL;
+	}
+
+	m_iMatchingItems -= pCallback->m_unNumResultsReturned;
+	if (m_iMatchingItems > 0)
+	{
+		m_iCurrentPage++;
+		QueryUGC(m_iCurrentPage);
+		return;
 	}
 
 #ifndef CLIENT_DLL

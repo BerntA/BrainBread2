@@ -1806,7 +1806,7 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 
 	CNavArea *pCurrentArea = area;
 	CNavArea *pNextArea = NULL;
-	while (pCurrentArea)
+	while (pCurrentArea) // Reverse the area 'list', triangulate/backtrack, then process the list in a start->next manner...
 	{
 		pNavAreas.AddToHead(pCurrentArea);
 		pCurrentArea = pCurrentArea->GetParent();
@@ -1821,7 +1821,7 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 
 	const Vector &vMins = WorldAlignMins();
 	const Vector &vMaxs = WorldAlignMaxs();
-	float hullWide = (((vMaxs.y - vMins.y) / 2.0f) + 1.0f), hwidth, hwidthhull;
+	float hullWide = (((vMaxs.y - vMins.y) / 2.0f) + 1.0f), hwidth;
 	Navigation_t currentNAVType = NAV_GROUND;
 
 	int index = 0;
@@ -1847,20 +1847,27 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 			{
 				// Move a bit to the center.
 				delta = (closestpoint - center_portal);
-				hwidthhull = ((vMaxs.y - vMins.y) / 2.0f);
-				if (delta.IsLengthGreaterThan(hwidthhull))
-					closestpoint = closestpoint + ((hwidthhull / delta.Length()) * delta);
+				if (delta.IsLengthGreaterThan(hullWide))
+					closestpoint = closestpoint + ((hullWide / delta.Length()) * delta);
+			}
+
+			// Can we crawl + not fit the hull still? Try to go into crawl mode then.
+			if (CapabilitiesGet() & bits_CAP_MOVE_CRAWL)
+			{
+				AI_TraceHull(closestpoint, closestpoint, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
+				if (trace.fraction != 1.0f)
+					currentNAVType = NAV_CRAWL;
 			}
 
 			Vector vecDir;
 			DirectionToVector2D(dir, (Vector2D*)&vecDir);
 			vecDir.z = 0.0f;
 
-			float heightDiff = (vecEnd.z - vecStart.z) + 2.0f;
+			float heightDiff = ((vecEnd.z - vecStart.z) + 2.0f);
 			bool bBuildSpecial = false;
 
 			Vector vecObstacleStartCheck = vecStart + Vector(0.0f, 0.0f, 4.0f);
-			AI_TraceLine(vecObstacleStartCheck, vecObstacleStartCheck + vecDir * MAX_TRACE_LENGTH, MASK_NPCSOLID, &traceFilterNoNPCPlayer, &trace);
+			AI_TraceLine(vecObstacleStartCheck, vecObstacleStartCheck + vecDir * MAX_TRACE_LENGTH, MASK_SOLID_BRUSHONLY, &traceFilterNoNPCPlayer, &trace);
 			CBaseEntity *pDynamicObstacle = trace.m_pEnt;
 			bool bFoundNPCObstacle = (trace.DidHitNonWorldEntity() && pDynamicObstacle && pDynamicObstacle->IsNPCObstacle() && pDynamicObstacle->CollisionProp());
 
@@ -1947,10 +1954,6 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 						bBuildSpecial = CanClimbToPoint(normalizedDiff, vecClimbDismount, vecClimbEnd);
 					}
 
-					//debugoverlay->AddBoxOverlay(vecClimbStart, vMins, vMaxs, vec3_angle, 255, 0, 0, 100, 3.0f);
-					//debugoverlay->AddBoxOverlay(vecClimbEnd, vMins, vMaxs, vec3_angle, 0, 255, 0, 100, 3.0f);
-					//debugoverlay->AddBoxOverlay(vecClimbDismount, vMins, vMaxs, vec3_angle, 0, 0, 255, 100, 4.0f);
-
 					if (bBuildSpecial)
 					{
 						ADDWAYPOINT(new AI_Waypoint_t(vecClimbStart, 0.0f, NAV_GROUND, 0, NO_NODE)); // Move to climb up/down pos.
@@ -1966,7 +1969,7 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 			if (!bBuildSpecial)
 			{
 				// Try to build a crawl/crouch route if possible:
-				if ((pCurrentArea->HasAttributes(NAV_MESH_CROUCH) || pNextArea->HasAttributes(NAV_MESH_CROUCH)) && (CapabilitiesGet() & bits_CAP_MOVE_CRAWL))
+				if ((CapabilitiesGet() & bits_CAP_MOVE_CRAWL) && (pCurrentArea->HasAttributes(NAV_MESH_CROUCH) || pNextArea->HasAttributes(NAV_MESH_CROUCH)))
 					currentNAVType = NAV_CRAWL;
 
 				closestpoint.z = pCurrentArea->GetZ(closestpoint);
@@ -2002,7 +2005,6 @@ AI_Waypoint_t *CAI_Pathfinder::BuildJumpRoute(CBaseEntity *pTarget, const Vector
 
 	bool bShouldJumpUP = (heightDiff >= 0.0f);
 	float dist = 0.0f, maxDist = 0.0f;
-	AI_Waypoint_t *pJumpPoint = NULL;
 	Vector vMins, vMaxs;
 	jumpStart = areaStart;
 	jumpEnd = areaEnd;
@@ -2026,7 +2028,6 @@ AI_Waypoint_t *CAI_Pathfinder::BuildJumpRoute(CBaseEntity *pTarget, const Vector
 			jumpEnd.z = vAreaEnd.z;
 			AI_TraceHull(vAreaEnd, jumpEnd, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
 			jumpEnd = trace.endpos + dir * 2.0f;
-			debugoverlay->AddBoxOverlay(jumpEnd, vMins, vMaxs, vec3_angle, 200, 0, 0, 200, 4.0f);
 		}
 		AI_TraceHull(vAreaStart, vAreaStart - dir * MAX_TRACE_LENGTH, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
 	}
@@ -2038,7 +2039,6 @@ AI_Waypoint_t *CAI_Pathfinder::BuildJumpRoute(CBaseEntity *pTarget, const Vector
 			jumpStart.z = vAreaStart.z;
 			AI_TraceHull(vAreaStart, jumpStart, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
 			jumpStart = trace.endpos - dir * 2.0f;
-			debugoverlay->AddBoxOverlay(jumpStart, vMins, vMaxs, vec3_angle, 200, 0, 0, 200, 4.0f);
 		}
 		AI_TraceHull(vAreaEnd, vAreaEnd + dir * MAX_TRACE_LENGTH, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
 	}
@@ -2046,40 +2046,57 @@ AI_Waypoint_t *CAI_Pathfinder::BuildJumpRoute(CBaseEntity *pTarget, const Vector
 	maxDist = (trace.endpos - trace.startpos).Length2D();
 	maxDist = MIN(maxDist, 128.0f); // Limit...
 
+	Vector vJumpStartFinal = vec3_invalid, vJumpEndFinal = vec3_invalid;
+
 	do // Find a decent jump spot.
 	{
-		pJumpPoint = BuildJumpRoute(pTarget, jumpStart, jumpEnd);
-		if (pJumpPoint)
+		if (BuildJumpRoute(pTarget, jumpStart, jumpEnd, vJumpStartFinal, vJumpEndFinal))
 			break;
 
 		dist += (hullWide / 2.0f);
+
 		if (bShouldJumpUP)
 		{
-			jumpStart -= dir * dist;
-			jumpEnd += dir * dist;
+			if (BuildJumpRoute(pTarget, jumpStart - dir * dist, jumpEnd, vJumpStartFinal, vJumpEndFinal))
+				break;
+
+			if (BuildJumpRoute(pTarget, jumpStart, jumpEnd + dir * dist, vJumpStartFinal, vJumpEndFinal))
+				break;
 		}
 		else
 		{
-			jumpEnd += dir * dist;
-			jumpStart -= dir * dist;
+			if (BuildJumpRoute(pTarget, jumpStart, jumpEnd + dir * dist, vJumpStartFinal, vJumpEndFinal))
+				break;
+
+			if (BuildJumpRoute(pTarget, jumpStart - dir * dist, jumpEnd, vJumpStartFinal, vJumpEndFinal))
+				break;
 		}
 
-		debugoverlay->AddBoxOverlay(bShouldJumpUP ? jumpStart : jumpEnd, -Vector(8, 8, 0), Vector(8, 8, 8), vec3_angle, 100, 50, 200, 200, 4.0f);
+		if (BuildJumpRoute(pTarget, jumpStart - dir * dist, jumpEnd + dir * dist, vJumpStartFinal, vJumpEndFinal))
+			break;
 	} while ((abs(dist) < maxDist) && (maxDist > 0.0f));
 
-	return pJumpPoint;
+	if ((vJumpStartFinal != vec3_invalid) && (vJumpEndFinal != vec3_invalid))
+	{
+		jumpStart = vJumpStartFinal;
+		jumpEnd = vJumpEndFinal;
+		return new AI_Waypoint_t(vJumpEndFinal, 0.0f, NAV_JUMP, 0, NO_NODE);
+	}
+
+	return NULL;
 }
 
-AI_Waypoint_t *CAI_Pathfinder::BuildJumpRoute(CBaseEntity *pTarget, const Vector &from, const Vector &to)
+bool CAI_Pathfinder::BuildJumpRoute(CBaseEntity *pTarget, const Vector &from, const Vector &to, Vector &start, Vector &end)
 {
-	//debugoverlay->AddBoxOverlay(from, -Vector(12, 12, 0), Vector(12, 12, 15), vec3_angle, 0, 255, 0, 200, 5.0f);
-	//debugoverlay->AddBoxOverlay(to, -Vector(12, 12, 0), Vector(12, 12, 15), vec3_angle, 0, 0, 255, 200, 5.0f);
-
 	AIMoveTrace_t moveTrace;
 	GetOuter()->GetMoveProbe()->MoveLimit(NAV_JUMP, from, to, MASK_NPCSOLID, pTarget, &moveTrace);
 	if (!IsMoveBlocked(moveTrace))
-		return new AI_Waypoint_t(to, 0, NAV_JUMP, 0, NO_NODE);
-	return NULL;
+	{
+		start = from;
+		end = to;
+		return true;
+	}
+	return false;
 }
 
 AI_Waypoint_t *CAI_Pathfinder::BuildDirectJumpRoute(CBaseEntity *pTarget, const Vector &start, const Vector &end, int buildFlags) // Try to jump near the enemy pos!
@@ -2091,17 +2108,19 @@ AI_Waypoint_t *CAI_Pathfinder::BuildDirectJumpRoute(CBaseEntity *pTarget, const 
 	float height = dir.z;
 	VectorNormalize(dir);
 	dir.z = 0.0f;
-		
+
 	if (abs(height) < GetOuter()->StepHeight())
 		return NULL;
 
 	Vector vecJumpStart, vecJumpEnd;
-	AI_Waypoint_t *pStartPoint = NULL;
+	AI_Waypoint_t *pStartPoint = NULL, *pEndPoint = NULL;
 	AI_Waypoint_t *pJumpPoint = BuildJumpRoute(pTarget, start, end, dir, vecJumpStart, vecJumpEnd, height, (GetOuter()->WorldAlignSize().y / 2.0f), true);
 	if (pJumpPoint)
 	{
 		pStartPoint = new AI_Waypoint_t(vecJumpStart, 0.0f, NAV_GROUND, 0, NO_NODE);
 		pStartPoint->SetNext(pJumpPoint);
+		pEndPoint = new AI_Waypoint_t(end, 0.0f, NAV_GROUND, bits_WP_TO_GOAL, NO_NODE);
+		pJumpPoint->SetNext(pEndPoint);
 	}
 
 	return pStartPoint;

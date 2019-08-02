@@ -20,12 +20,11 @@ ConVar sk_npc_boss_fred_rage_damage("sk_npc_boss_fred_rage_damage", "80", FCVAR_
 ConVar sk_npc_boss_fred_rage_health("sk_npc_boss_fred_rage_health", "20", FCVAR_GAMEDLL, "When Fred has this much % left of his max health he will go into a rage mode.", true, 0.0f, true, 100.0f);
 ConVar sk_npc_boss_fred_rage_duration("sk_npc_boss_fred_rage_duration", "40", FCVAR_GAMEDLL, "For how long should Fred rage?", true, 5.0f, true, 140.0f);
 
-ConVar sk_npc_boss_fred_max_jump_height("sk_npc_boss_fred_max_jump_height", "240", FCVAR_GAMEDLL, "Set how high Fred can jump!", true, 80.0f, true, 500.0f);
+ConVar sk_npc_boss_fred_max_jump_height("sk_npc_boss_fred_max_jump_height", "300", FCVAR_GAMEDLL, "Set how high Fred can jump!", true, 80.0f, true, 500.0f);
 
 ConVar sk_npc_boss_fred_rage_blastdmg("sk_npc_boss_fred_rage_blastdmg", "50", FCVAR_GAMEDLL | FCVAR_CHEAT, "When Fred enters rage mode how much radius damage % should he do?", true, 10.0f, true, 100.0f);
 ConVar sk_npc_boss_fred_camp_dmg("sk_npc_boss_fred_camp_dmg", "20", FCVAR_GAMEDLL | FCVAR_CHEAT, "When someone stands on Fred's head, how much % of their total HP should they lose as punishment?", true, 10.0f, true, 100.0f);
 
-ConVar sk_npc_boss_fred_navmesh("sk_npc_boss_fred_navmesh", "1", FCVAR_GAMEDLL, "Should Fred use navmesh?", true, 0, true, 1);
 ConVar sk_npc_boss_fred_regenrate("sk_npc_boss_fred_regenrate", "0.135", FCVAR_GAMEDLL | FCVAR_CHEAT, "Set the health regen rate for Fred.", true, 0.0f, true, 100.0f);
 
 #define CAMPER_CHECK_TIME 2.5f
@@ -70,7 +69,7 @@ public:
 	bool IsBoss() { return true; }
 	bool CanAlwaysSeePlayers() { return true; }
     bool AllowedToIgnite( void ) { return false; }
-	bool UsesNavMesh(void) { return sk_npc_boss_fred_navmesh.GetBool(); }
+	bool UsesNavMesh(void) { return true; }
 	bool ShouldAlwaysThink() { return true; }
 	Class_T Classify(void) { return CLASS_ZOMBIE_BOSS; }
 
@@ -119,6 +118,8 @@ protected:
 
 	float GetMaxJumpRise() const { return sk_npc_boss_fred_max_jump_height.GetFloat(); }
 	float GetMaxJumpDrop() const { return MAX_COORD_FLOAT; }
+	float GetMaxJumpDistance() const { return MAX_COORD_FLOAT; }
+
 	void FindAndPunishCampers(void);
 
 private:

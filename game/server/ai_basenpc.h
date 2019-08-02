@@ -37,7 +37,6 @@
 #include "ai_navigator.h"
 #include "tier1/functors.h"
 
-
 #define PLAYER_SQUADNAME "player_squad"
 
 class CAI_Schedule;
@@ -2015,7 +2014,7 @@ protected:
 	static CAI_GlobalNamespace gm_SquadSlotNamespace;
 	static CAI_LocalIdSpace    gm_SquadSlotIdSpace;
 
-	virtual float GetMaxJumpRise() const { return 80.0f; }
+	virtual float GetMaxJumpRise() const { return 100.0f; }
 	virtual float GetMaxJumpDistance() const { return 250.0f; }
 	virtual float GetMaxJumpDrop() const { return 192.0f; }
 
@@ -2117,7 +2116,7 @@ public:
 	// Crawl Mode Logic
 	virtual void EnterCrawlMode(void) { }
 	virtual void LeaveCrawlMode(void) { }
-	bool m_bIsInCrawlMode;
+	virtual bool IsInCrawlMode(void) { return false; }
 
 	// Prevent NPCs from spamming sounds.
 	float GetSoundPenaltyTime(void) { return m_flSoundPenalty; }
@@ -2138,6 +2137,7 @@ public:
 	int					GetAIIndex() { return m_iAIIndex; } 
 
 protected:
+	bool m_bIsInCrawlMode;
 	CNetworkVar(bool, m_bPerformAvoidance);
 	CNetworkVar(bool, m_bIsMoving);
 	CNetworkString(m_szNPCName, MAX_MAP_NAME_SAVE);

@@ -3385,7 +3385,7 @@ void CAI_BaseNPC::RebalanceThinks()
 				else
 				{
 					Vector vPlayerForward = vec3_origin, vPlayerEyePosition = vec3_origin;
-					CBasePlayer *pPlayer = UTIL_FindPlayerWithinRange(pCandidate);
+					CBasePlayer *pPlayer = (pCandidate->ShouldAlwaysThink() ? UTIL_GetNearestPlayer(pCandidate->GetLocalOrigin()) : UTIL_FindPlayerWithinRange(pCandidate));
 					if (pPlayer)
 					{
 						pPlayer->EyePositionAndVectors(&vPlayerEyePosition, &vPlayerForward, NULL, NULL);

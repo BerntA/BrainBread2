@@ -92,6 +92,10 @@ public:
 	void LeaveCrawlMode(void);
 	void BecomeCrawler(void);
 	void HullChangeUnstuck(void);
+	bool IsInCrawlMode(void)
+	{
+		return (IsCrawlingWithNoLegs() || m_bIsInCrawlMode || m_bGibbedForCrawl);
+	}
 
 	bool IsCrawlingWithNoLegs(void)
 	{
@@ -411,10 +415,7 @@ bool CNPCWalker::CanAlwaysSeePlayers()
 
 bool CNPCWalker::IsAllowedToBreakDoors(void)
 {
-	if (IsCrawlingWithNoLegs() || m_bIsInCrawlMode)
-		return false;
-
-	return true;
+	return !IsInCrawlMode();
 }
 
 bool CNPCWalker::ShouldUseNormalSpeedForSchedule(int scheduleType)
@@ -427,7 +428,7 @@ bool CNPCWalker::ShouldUseNormalSpeedForSchedule(int scheduleType)
 
 void CNPCWalker::EnterCrawlMode(void)
 {
-	if (m_bIsInCrawlMode || IsCrawlingWithNoLegs())
+	if (IsInCrawlMode())
 		return;
 
 	m_bIsInCrawlMode = true;
@@ -452,11 +453,11 @@ void CNPCWalker::EnterCrawlMode(void)
 
 void CNPCWalker::LeaveCrawlMode(void)
 {
-	if (IsCrawlingWithNoLegs() || !m_bIsInCrawlMode)
+	if (IsCrawlingWithNoLegs() || m_bGibbedForCrawl || !m_bIsInCrawlMode)
 		return;
 
 	trace_t trace;
-	AI_TraceHull(GetAbsOrigin(), GetAbsOrigin(), Vector(-20, -20, 0), Vector(20, 20, 74), MASK_NPCSOLID, this, COLLISION_GROUP_NPC, &trace);
+	AI_TraceHull(GetAbsOrigin(), GetAbsOrigin(), Vector(-20, -20, 0), Vector(20, 20, 74), MASK_NPCSOLID, this, GetCollisionGroup(), &trace);
 	if (trace.DidHit())
 		return;
 
@@ -528,7 +529,7 @@ void CNPCWalker::HullChangeUnstuck(void)
 
 float CNPCWalker::MaxYawSpeed(void)
 {
-	if (IsCrawlingWithNoLegs() || m_bIsInCrawlMode || m_bGibbedForCrawl)
+	if (IsInCrawlMode())
 	{
 		if ((GetActivity() == (Activity)ACT_CRAWL_NOLEGS_ATTACK_LEFT) ||
 			(GetActivity() == (Activity)ACT_CRAWL_NOLEGS_ATTACK_RIGHT))

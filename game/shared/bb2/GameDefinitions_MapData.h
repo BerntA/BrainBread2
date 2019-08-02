@@ -75,6 +75,7 @@ public:
 	void CleanupMapData(void);
 
 	bool FetchMapData(void);
+	bool QueryUGC(int page = 1);
 	gameMapItem_t *GetMapData(const char *pszMap);
 	int GetMapIndex(const char *pszMap);
 	bool IsMapWhiteListed(const char *pszMap);
@@ -92,6 +93,11 @@ public:
 	CCallResult< CGameDefinitionsMapData, SteamUGCQueryCompleted_t > m_SteamCallResultUGCQuery;
 
 	CUtlVector<gameMapItem_t> pszGameMaps;
+
+protected:
+	int m_iMatchingItems;
+	int m_iCurrentPage;
+	bool m_bSatRequestInfo;
 };
 
 #endif // GAME_DEFINITIONS_MAPDATA_H
