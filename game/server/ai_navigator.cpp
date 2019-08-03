@@ -2494,12 +2494,14 @@ bool CAI_Navigator::Move( float flInterval )
 					if ( m_hBigStepGroundEnt && m_hBigStepGroundEnt != GetOuter()->GetGroundEntity() )
 						m_hBigStepGroundEnt = NULL;
 
-					if (GetPath()->CurWaypointNavType() == NAV_CRAWL)
+					const Navigation_t currNavWaypointType = GetPath()->CurWaypointNavType();
+
+					if ((currNavWaypointType == NAV_CRAWL) || (GetPath()->GetCurWaypoint() && GetPath()->GetCurWaypoint()->GetNext() && (GetPath()->GetCurWaypoint()->GetNext()->NavType() == NAV_CRAWL)))
 						GetOuter()->EnterCrawlMode();
 					else
 						GetOuter()->LeaveCrawlMode();
 					
-					switch (GetPath()->CurWaypointNavType())
+					switch (currNavWaypointType)
 					{
 					case NAV_CLIMB:
 						moveResult = MoveClimb();

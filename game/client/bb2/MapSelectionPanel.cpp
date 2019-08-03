@@ -55,6 +55,7 @@ MapSelectionPanel::MapSelectionPanel(vgui::Panel *parent, char const *panelName)
 MapSelectionPanel::~MapSelectionPanel()
 {
 	Cleanup();
+	m_pMapIndexes.Purge();
 }
 
 void MapSelectionPanel::Cleanup(void)
@@ -72,25 +73,24 @@ void MapSelectionPanel::Cleanup(void)
 void MapSelectionPanel::PerformLayout()
 {
 	BaseClass::PerformLayout();
+	m_pMapIndexes.Purge();
 
 	if (GameBaseShared()->GetSharedMapData())
 	{
 		m_iCurrPage = 0;
 		m_iPageNum = 0;
 
-		int items = 0;
-		int itemCount = GameBaseShared()->GetSharedMapData()->pszGameMaps.Count();
-		for (int i = 0; i < itemCount; i++)
+		for (int i = 0; i < GameBaseShared()->GetSharedMapData()->pszGameMaps.Count(); i++)
 		{
 			if (GameBaseShared()->GetSharedMapData()->pszGameMaps[i].bExclude)
 				continue;
 
-			items++;
+			m_pMapIndexes.AddToTail(i);
 		}
 
-		if (items > 0)
+		if (m_pMapIndexes.Count())
 		{
-			float pages = ceil(((float)items) / ((float)_ARRAYSIZE(m_pMapItems)));
+			float pages = (ceil(((float)m_pMapIndexes.Count()) / ((float)_ARRAYSIZE(m_pMapItems))));
 			m_iPageNum = ((int)pages);
 			m_iCurrPage = 1;
 		}
@@ -201,27 +201,23 @@ int MapSelectionPanel::GetSelectedMapIndex()
 	return -1;
 }
 
-void MapSelectionPanel::Redraw(int index)
+void MapSelectionPanel::Redraw()
 {
 	if (GameBaseShared()->GetSharedMapData())
 	{
 		Cleanup();
 
-		int mapCount = GameBaseShared()->GetSharedMapData()->pszGameMaps.Count();
 		int startIndex = 0;
 		int mapChoice = -1;
-		for (int i = index; i < mapCount; i++)
+		for (int i = ((m_iCurrPage - 1) * _ARRAYSIZE(m_pMapItems)); i < m_pMapIndexes.Count(); i++)
 		{
 			if (startIndex >= _ARRAYSIZE(m_pMapItems))
 				break;
 
-			if (GameBaseShared()->GetSharedMapData()->pszGameMaps[i].bExclude)
-				continue;
-
 			if (mapChoice == -1)
-				mapChoice = i;
+				mapChoice = m_pMapIndexes[i];
 
-			m_pMapItems[startIndex] = vgui::SETUP_PANEL(new MapSelectionItem(this, "MapItem", i));
+			m_pMapItems[startIndex] = vgui::SETUP_PANEL(new MapSelectionItem(this, "MapItem", m_pMapIndexes[i]));
 			m_pMapItems[startIndex]->SetZPos(10);
 			m_pMapItems[startIndex]->SetPos(scheme()->GetProportionalScaledValue(32) + (scheme()->GetProportionalScaledValue(104) * startIndex), 0);
 			m_pMapItems[startIndex]->SetSize(scheme()->GetProportionalScaledValue(100), scheme()->GetProportionalScaledValue(100));
@@ -245,7 +241,7 @@ void MapSelectionPanel::OnCommand(const char* pcCommand)
 			if (m_iCurrPage > 1)
 			{
 				m_iCurrPage--;
-				Redraw(((m_iCurrPage - 1) * _ARRAYSIZE(m_pMapItems)));
+				Redraw();
 			}
 		}
 		else if (!Q_stricmp(pcCommand, "Right"))
@@ -253,7 +249,7 @@ void MapSelectionPanel::OnCommand(const char* pcCommand)
 			if (m_iCurrPage < m_iPageNum)
 			{
 				m_iCurrPage++;
-				Redraw(((m_iCurrPage - 1) * _ARRAYSIZE(m_pMapItems)));
+				Redraw();
 			}
 		}
 	}

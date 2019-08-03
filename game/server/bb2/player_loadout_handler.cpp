@@ -39,10 +39,7 @@ void CPlayerLoadoutHandler::SaveLoadoutData()
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-		if (!pPlayer)
-			continue;
-
-		if (pPlayer->IsBot() || !pPlayer->HasFullySpawned() || !pPlayer->IsAlive())
+		if (!pPlayer || pPlayer->IsBot() || !pPlayer->HasFullySpawned() || !pPlayer->IsAlive())
 			continue;
 
 		PlayerLoadoutItem_t item;
@@ -90,7 +87,7 @@ void CPlayerLoadoutHandler::SaveLoadoutData()
 		item.iHealth = pPlayer->GetHealth();
 		item.iMaxHealth = pPlayer->GetMaxHealth();
 		item.iArmorValue = pPlayer->ArmorValue();
-		item.iArmorType = pPlayer->m_BB2Local.m_iActiveArmorType;
+		item.iArmorType = pPlayer->m_BB2Local.m_iActiveArmorType.Get();
 
 		m_pLoadoutList.AddToTail(item);
 	}

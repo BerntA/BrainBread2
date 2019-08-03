@@ -28,7 +28,7 @@ SendPropArray3(SENDINFO_ARRAY3(m_iTeam), SendPropInt(SENDINFO_ARRAY(m_iTeam), 4)
 SendPropArray3(SENDINFO_ARRAY3(m_bAlive), SendPropInt(SENDINFO_ARRAY(m_bAlive), 1, SPROP_UNSIGNED)),
 SendPropArray3(SENDINFO_ARRAY3(m_bAdmin), SendPropInt(SENDINFO_ARRAY(m_bAdmin), 1, SPROP_UNSIGNED)),
 SendPropArray3(SENDINFO_ARRAY3(m_iHealth), SendPropInt(SENDINFO_ARRAY(m_iHealth), -1, SPROP_VARINT | SPROP_UNSIGNED)),
-SendPropArray3(SENDINFO_ARRAY3(m_vecPosition), SendPropVector(SENDINFO_ARRAY(m_vecPosition), -1, SPROP_COORD)),
+SendPropArray3(SENDINFO_ARRAY3(m_vecPosition), SendPropVector(SENDINFO_ARRAY(m_vecPosition), -1, SPROP_COORD_MP_LOWPRECISION | SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT)),
 END_SEND_TABLE()
 
 BEGIN_DATADESC(CPlayerResource)
@@ -59,7 +59,7 @@ void CPlayerResource::Spawn(void)
 		m_iTeam.Set(i, 0);
 		m_bAlive.Set(i, 0);
 		m_bAdmin.Set(i, 0);
-		m_vecPosition.Set(i, Vector(0, 0, 0));
+		m_vecPosition.Set(i, vec3_origin);
 	}
 
 	SetThink(&CPlayerResource::ResourceThink);

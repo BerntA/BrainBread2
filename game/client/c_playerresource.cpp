@@ -342,10 +342,10 @@ int	C_PlayerResource::GetHealth(int iIndex)
 	return m_iHealth[iIndex];
 }
 
-Vector C_PlayerResource::GetPosition(int index)
+const Vector &C_PlayerResource::GetPosition(int index)
 {
 	if (!IsConnected(index))
-		return Vector(0, 0, 0);
+		return vec3_origin;
 
 	return m_vecPosition[index];
 }

@@ -116,39 +116,34 @@ CGlobalRenderEffects *GlobalRenderEffects = &g_GlobalRenderFX;
 
 void DrawHumanIndicators(void)
 {
-	if (!g_PR || !HL2MPRules())
-		return;
-
 	C_HL2MP_Player *pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
-	if (!pPlayer)
+	if (!g_PR || !HL2MPRules() || !pPlayer || (pPlayer->GetTeamNumber() != TEAM_DECEASED) || !pPlayer->IsAlive())
 		return;
 
-	if ((pPlayer->GetTeamNumber() != TEAM_DECEASED) || !pPlayer->IsAlive())
-		return;
-
+	IMaterial *renderTexture = GlobalRenderEffects->GetHumanIndicationIcon();
 	bool bCanShow = ((HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE) || ((HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION) && pPlayer->IsZombieVisionOn()));
-	if (!bCanShow)
+	if (!bCanShow || !renderTexture)
 		return;
 
 	CMatRenderContextPtr pRenderContext(materials);
+	const Vector &vecLocalPlayerPos = pPlayer->GetLocalOrigin();
+
+	// Align it so it never points up or down.
+	Vector vUp(0, 0, 1);
+	Vector vRight = CurrentViewRight();
+	if (fabs(vRight.z) > 0.95)	// don't draw it edge-on
+		return;
+
+	vRight.z = 0.0f;
+	VectorNormalize(vRight);
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
-		if ((pPlayer->entindex() == i) || (!g_PR->IsConnected(i)))
+		if ((pPlayer->entindex() == i) || !g_PR->IsConnected(i) || !g_PR->IsAlive(i) || (g_PR->GetTeam(i) != TEAM_HUMANS))
 			continue;
 
-		C_HL2MP_Player *pOther = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-		if (!pOther)
-			continue;
-
-		int iTeam = g_PR->GetTeam(i);
-		bool bAlive = g_PR->IsAlive(i);
-
-		if (!bAlive || (iTeam != TEAM_HUMANS))
-			continue;
-
-		Vector vecLocalPlayerPos = pPlayer->GetLocalOrigin();
 		Vector vecPosition = g_PR->GetPosition(i);
+		C_BasePlayer *pOther = UTIL_PlayerByIndex(i);
 		if (pOther && !pOther->IsDormant())
 			vecPosition = pOther->GetLocalOrigin();
 
@@ -163,72 +158,6 @@ void DrawHumanIndicators(void)
 			iconSize += (iconSize * (dist / minDist));
 		}
 
-		IMaterial *renderTexture = GlobalRenderEffects->GetHumanIndicationIcon();
-		if (renderTexture != NULL)
-		{
-			Vector vOrigin = vecPosition;
-
-			// Align it so it never points up or down.
-			Vector vUp(0, 0, 1);
-			Vector vRight = CurrentViewRight();
-			if (fabs(vRight.z) > 0.95)	// don't draw it edge-on
-				continue;
-
-			vRight.z = 0;
-			VectorNormalize(vRight);
-
-			float flSize = iconSize;
-
-			pRenderContext->Bind(renderTexture);
-			IMesh *pMesh = pRenderContext->GetDynamicMesh();
-			CMeshBuilder meshBuilder;
-			meshBuilder.Begin(pMesh, MATERIAL_QUADS, 1);
-
-			meshBuilder.Color3f(1.0, 1.0, 1.0);
-			meshBuilder.TexCoord2f(0, 0, 0);
-			meshBuilder.Position3fv((vOrigin + (vRight * -flSize) + (vUp * flSize)).Base());
-			meshBuilder.AdvanceVertex();
-
-			meshBuilder.Color3f(1.0, 1.0, 1.0);
-			meshBuilder.TexCoord2f(0, 1, 0);
-			meshBuilder.Position3fv((vOrigin + (vRight * flSize) + (vUp * flSize)).Base());
-			meshBuilder.AdvanceVertex();
-
-			meshBuilder.Color3f(1.0, 1.0, 1.0);
-			meshBuilder.TexCoord2f(0, 1, 1);
-			meshBuilder.Position3fv((vOrigin + (vRight * flSize) + (vUp * -flSize)).Base());
-			meshBuilder.AdvanceVertex();
-
-			meshBuilder.Color3f(1.0, 1.0, 1.0);
-			meshBuilder.TexCoord2f(0, 0, 1);
-			meshBuilder.Position3fv((vOrigin + (vRight * -flSize) + (vUp * -flSize)).Base());
-			meshBuilder.AdvanceVertex();
-			meshBuilder.End();
-			pMesh->Draw();
-		}
-	}
-}
-
-void DrawDizzyIcon(const Vector &vecOrigin)
-{
-	IMaterial *renderTexture = GlobalRenderEffects->GetDizzyIcon();
-	if (renderTexture != NULL)
-	{
-		CMatRenderContextPtr pRenderContext(materials);
-
-		Vector vOrigin = vecOrigin;
-
-		// Align it so it never points up or down.
-		Vector vUp(0, 0, 1);
-		Vector vRight = CurrentViewRight();
-		if (fabs(vRight.z) > 0.95)	// don't draw it edge-on
-			return;
-
-		vRight.z = 0;
-		VectorNormalize(vRight);
-
-		float flSize = 8.0f;
-
 		pRenderContext->Bind(renderTexture);
 		IMesh *pMesh = pRenderContext->GetDynamicMesh();
 		CMeshBuilder meshBuilder;
@@ -236,24 +165,73 @@ void DrawDizzyIcon(const Vector &vecOrigin)
 
 		meshBuilder.Color3f(1.0, 1.0, 1.0);
 		meshBuilder.TexCoord2f(0, 0, 0);
-		meshBuilder.Position3fv((vOrigin + (vRight * -flSize) + (vUp * flSize)).Base());
+		meshBuilder.Position3fv((vecPosition + (vRight * -iconSize) + (vUp * iconSize)).Base());
 		meshBuilder.AdvanceVertex();
 
 		meshBuilder.Color3f(1.0, 1.0, 1.0);
 		meshBuilder.TexCoord2f(0, 1, 0);
-		meshBuilder.Position3fv((vOrigin + (vRight * flSize) + (vUp * flSize)).Base());
+		meshBuilder.Position3fv((vecPosition + (vRight * iconSize) + (vUp * iconSize)).Base());
 		meshBuilder.AdvanceVertex();
 
 		meshBuilder.Color3f(1.0, 1.0, 1.0);
 		meshBuilder.TexCoord2f(0, 1, 1);
-		meshBuilder.Position3fv((vOrigin + (vRight * flSize) + (vUp * -flSize)).Base());
+		meshBuilder.Position3fv((vecPosition + (vRight * iconSize) + (vUp * -iconSize)).Base());
 		meshBuilder.AdvanceVertex();
 
 		meshBuilder.Color3f(1.0, 1.0, 1.0);
 		meshBuilder.TexCoord2f(0, 0, 1);
-		meshBuilder.Position3fv((vOrigin + (vRight * -flSize) + (vUp * -flSize)).Base());
+		meshBuilder.Position3fv((vecPosition + (vRight * -iconSize) + (vUp * -iconSize)).Base());
 		meshBuilder.AdvanceVertex();
 		meshBuilder.End();
+
 		pMesh->Draw();
 	}
+}
+
+void DrawDizzyIcon(const Vector &vecOrigin)
+{
+	IMaterial *renderTexture = GlobalRenderEffects->GetDizzyIcon();
+	if (!renderTexture)
+		return;
+
+	CMatRenderContextPtr pRenderContext(materials);
+	const Vector &vOrigin = vecOrigin;
+
+	// Align it so it never points up or down.
+	Vector vUp(0, 0, 1);
+	Vector vRight = CurrentViewRight();
+	if (fabs(vRight.z) > 0.95)	// don't draw it edge-on
+		return;
+
+	vRight.z = 0.0f;
+	VectorNormalize(vRight);
+
+	float flSize = 8.0f;
+
+	pRenderContext->Bind(renderTexture);
+	IMesh *pMesh = pRenderContext->GetDynamicMesh();
+	CMeshBuilder meshBuilder;
+	meshBuilder.Begin(pMesh, MATERIAL_QUADS, 1);
+
+	meshBuilder.Color3f(1.0, 1.0, 1.0);
+	meshBuilder.TexCoord2f(0, 0, 0);
+	meshBuilder.Position3fv((vOrigin + (vRight * -flSize) + (vUp * flSize)).Base());
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color3f(1.0, 1.0, 1.0);
+	meshBuilder.TexCoord2f(0, 1, 0);
+	meshBuilder.Position3fv((vOrigin + (vRight * flSize) + (vUp * flSize)).Base());
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color3f(1.0, 1.0, 1.0);
+	meshBuilder.TexCoord2f(0, 1, 1);
+	meshBuilder.Position3fv((vOrigin + (vRight * flSize) + (vUp * -flSize)).Base());
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color3f(1.0, 1.0, 1.0);
+	meshBuilder.TexCoord2f(0, 0, 1);
+	meshBuilder.Position3fv((vOrigin + (vRight * -flSize) + (vUp * -flSize)).Base());
+	meshBuilder.AdvanceVertex();
+	meshBuilder.End();
+	pMesh->Draw();
 }

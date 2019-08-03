@@ -3691,7 +3691,7 @@ void CAI_BaseNPC::PlayerPenetratingVPhysics( void )
 
 CBasePlayer *CAI_BaseNPC::CheckPVSCondition()
 {
-	CBasePlayer *pTarget = UTIL_FindPlayerWithinRange(this);
+	CBasePlayer *pTarget = (ShouldAlwaysThink() ? UTIL_GetNearestPlayer(GetLocalOrigin()) : UTIL_FindPlayerWithinRange(this));
 	if (pTarget)
 		SetCondition(COND_IN_PVS);
 	else

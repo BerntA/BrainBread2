@@ -95,10 +95,7 @@ void CTriggerChangelevel::OnThink(void)
 			for (int i = 1; i <= gpGlobals->maxClients; i++)
 			{
 				CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-				if (!pPlayer)
-					continue;
-
-				if (pPlayer->IsBot())
+				if (!pPlayer || pPlayer->IsBot())
 					continue;
 
 				color32 black = { 0, 0, 0, 0 };

@@ -31,7 +31,7 @@ namespace vgui
 		void OnUpdate();
 		void ShowMap(int iIndex);
 		void Cleanup(void);
-		void Redraw(int index = 0);
+		void Redraw();
 		const char *GetSelectedMap(void);
 		int GetSelectedMapIndex();
 
@@ -39,6 +39,7 @@ namespace vgui
 
 	private:
 		MapSelectionItem *m_pMapItems[6];
+		CUtlVector<int> m_pMapIndexes;
 
 		vgui::ImagePanel *m_pImgArrowBox[2];
 		vgui::Button *m_pBtnArrowBox[2];

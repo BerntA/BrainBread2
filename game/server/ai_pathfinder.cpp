@@ -1851,14 +1851,6 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 					closestpoint = closestpoint + ((hullWide / delta.Length()) * delta);
 			}
 
-			// Can we crawl + not fit the hull still? Try to go into crawl mode then.
-			if (CapabilitiesGet() & bits_CAP_MOVE_CRAWL)
-			{
-				AI_TraceHull(closestpoint, closestpoint, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &traceFilter, &trace);
-				if (trace.fraction != 1.0f)
-					currentNAVType = NAV_CRAWL;
-			}
-
 			Vector vecDir;
 			DirectionToVector2D(dir, (Vector2D*)&vecDir);
 			vecDir.z = 0.0f;

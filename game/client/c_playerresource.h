@@ -58,7 +58,7 @@ public: // IGameResources intreface
 	virtual int		GetSelectedTeam(int index);
 	virtual int		GetTeam(int index);
 	virtual int		GetHealth(int index);
-	virtual Vector  GetPosition(int index);
+	virtual const Vector &GetPosition(int index);
 
 	virtual void ClientThink();
 	virtual	void	OnDataChanged(DataUpdateType_t updateType);
