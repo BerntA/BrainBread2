@@ -39,7 +39,7 @@ ConVar sk_npc_boss_fred_regenrate("sk_npc_boss_fred_regenrate", "0.135", FCVAR_G
 
 class CNPCFred : public CAI_BlendingHost<CNPC_BaseZombie>
 {
-	DECLARE_CLASS( CNPCFred, CAI_BlendingHost<CNPC_BaseZombie> );
+	DECLARE_CLASS(CNPCFred, CAI_BlendingHost<CNPC_BaseZombie>);
 	DEFINE_CUSTOM_AI;
 
 public:
@@ -52,6 +52,7 @@ public:
 
 	virtual ~CNPCFred()
 	{
+		m_hTargetPlayer = NULL;
 		m_hPlayersOnMyHead.RemoveAll();
 	}
 
@@ -68,39 +69,40 @@ public:
 	BB2_SoundTypes GetNPCType() { return TYPE_FRED; }
 	bool IsBoss() { return true; }
 	bool CanAlwaysSeePlayers() { return true; }
-    bool AllowedToIgnite( void ) { return false; }
+	bool AllowedToIgnite(void) { return false; }
 	bool UsesNavMesh(void) { return true; }
 	bool ShouldAlwaysThink() { return true; }
 	Class_T Classify(void) { return CLASS_ZOMBIE_BOSS; }
 
-	int SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode );
-	int TranslateSchedule( int scheduleType );
+	int SelectFailSchedule(int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode);
+	int TranslateSchedule(int scheduleType);
 
-	int OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo );
-	void BuildScheduleTestBits( void );
+	int OnTakeDamage_Alive(const CTakeDamageInfo &inputInfo);
+	void BuildScheduleTestBits(void);
 
+	void GatherConditions(void);
 	void PrescheduleThink(void);
 	void PostscheduleThink(void);
 
-	int SelectSchedule ( void );
+	int SelectSchedule(void);
 	void OnStartSchedule(int scheduleType);
 
 	void StartTask(const Task_t *pTask);
 	void RunTask(const Task_t *pTask);
 
-	void PainSound( const CTakeDamageInfo &info );
-	void DeathSound( const CTakeDamageInfo &info );
-	void AlertSound( void );
-	void IdleSound( void );
-	void AttackSound( void );
-	void AttackHitSound( void );
-	void AttackMissSound( void );
-	void FootstepSound( bool fRightFoot );
-	void FootscuffSound( bool fRightFoot );
+	void PainSound(const CTakeDamageInfo &info);
+	void DeathSound(const CTakeDamageInfo &info);
+	void AlertSound(void);
+	void IdleSound(void);
+	void AttackSound(void);
+	void AttackHitSound(void);
+	void AttackMissSound(void);
+	void FootstepSound(bool fRightFoot);
+	void FootscuffSound(bool fRightFoot);
 
 	bool GetGender() { return true; } // force male
-	Activity NPC_TranslateActivity( Activity newActivity );
-	void		OnChangeActivity(Activity eNewActivity);
+	Activity NPC_TranslateActivity(Activity newActivity);
+	void OnChangeActivity(Activity eNewActivity);
 
 	bool CanRegenHealth(void) { return true; }
 	float GetHealthRegenRate(void) { return sk_npc_boss_fred_regenrate.GetFloat(); }
@@ -155,32 +157,33 @@ enum
 enum
 {
 	COND_FRED_SHOULD_SHOCKWAVE = LAST_BASE_ZOMBIE_CONDITION,
+	COND_FRED_ENTER_RAGE,
 };
 
-LINK_ENTITY_TO_CLASS( npc_fred, CNPCFred );
+LINK_ENTITY_TO_CLASS(npc_fred, CNPCFred);
 
 int CNPCFred::AllowEntityToBeGibbed(void)
 {
 	return GIB_FULL_GIBS;
 }
 
-void CNPCFred::Spawn( void )
+void CNPCFred::Spawn(void)
 {
 	Precache();
 
-	SetBloodColor( BLOOD_COLOR_RED );
+	SetBloodColor(BLOOD_COLOR_RED);
 
 	m_flFieldOfView = 0.2;
 
-	AddSpawnFlags( SF_NPC_LONG_RANGE );
+	AddSpawnFlags(SF_NPC_LONG_RANGE);
 
 	CapabilitiesClear();
 
-	CapabilitiesAdd( bits_CAP_MOVE_GROUND | bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_MOVE_JUMP );
+	CapabilitiesAdd(bits_CAP_MOVE_GROUND | bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_MOVE_JUMP);
 
 	BaseClass::Spawn();
 
-	m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat( 1.0, 4.0 );
+	m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat(1.0, 4.0);
 
 	SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE_BOSS);
 
@@ -192,7 +195,7 @@ void CNPCFred::Spawn( void )
 	m_bIsInRageMode = false;
 }
 
-Activity CNPCFred::NPC_TranslateActivity( Activity newActivity )
+Activity CNPCFred::NPC_TranslateActivity(Activity newActivity)
 {
 	Activity wantedActivity = BaseClass::NPC_TranslateActivity(newActivity);
 
@@ -222,12 +225,10 @@ void CNPCFred::OnChangeActivity(Activity eNewActivity)
 	{
 		const float RAGE_RADIUS = 500.0f;
 		const float MAX_FORCE = (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE) ? 1100.0 : 500.0;
+
 		const Vector &vecStart = WorldSpaceCenter();
-		Vector vecEnd, vecDown, vecForce = Vector(MAX_FORCE, 0.0, 0.0);
-		AngleVectors(GetAbsAngles(), NULL, NULL, &vecDown);
-		VectorNormalize(vecDown);
-		vecDown *= -1.0f;
-		vecEnd = vecStart + vecDown * MAX_TRACE_LENGTH;
+		const Vector vecEnd = vecStart + Vector(0.0f, 0.0f, -1.0f) * MAX_TRACE_LENGTH;
+		const Vector vecForce = Vector(MAX_FORCE, 0.0, 0.0);
 
 		trace_t tr;
 		CTraceFilterNoNPCsOrPlayer filter(this, this->GetCollisionGroup());
@@ -257,24 +258,28 @@ void CNPCFred::OnEntityStandingOnMe(CBaseEntity *pOther)
 	}
 }
 
-void CNPCFred::PrescheduleThink( void )
+void CNPCFred::GatherConditions(void)
 {
-	if( gpGlobals->curtime > m_flNextMoanSound )
+	BaseClass::GatherConditions();
+	FindAndPunishCampers();
+}
+
+void CNPCFred::PrescheduleThink(void)
+{
+	if (gpGlobals->curtime > m_flNextMoanSound)
 	{
-		if( CanPlayMoanSound() )
+		if (CanPlayMoanSound())
 		{
 			IdleSound();
-			m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat( 2.0, 5.0 );
+			m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat(2.0, 5.0);
 		}
 		else
 		{
-			m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat( 1.0, 2.0 );
+			m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat(1.0, 2.0);
 		}
 	}
 
 	CheckRageState();
-	FindAndPunishCampers();
-
 	BaseClass::PrescheduleThink();
 }
 
@@ -323,28 +328,20 @@ void CNPCFred::StartRageMode(void)
 
 	m_bIsInRageMode = true;
 	m_flRageTime = gpGlobals->curtime + sk_npc_boss_fred_rage_duration.GetFloat();
-
-	SetSchedule(SCHED_FRED_RAGE_START);
+	SetCondition(COND_FRED_ENTER_RAGE);
 }
 
 void CNPCFred::EndRageMode(void)
 {
-	if (!m_bIsInRageMode)
-		return;
-
 	m_bIsInRageMode = false;
 	m_flRageTime = 0.0f;
+	ClearCondition(COND_FRED_ENTER_RAGE);
 }
 
 void CNPCFred::CheckRageState(void)
 {
-	if (m_bIsInRageMode)
-	{
-		if (gpGlobals->curtime > m_flRageTime)
-		{
-			EndRageMode();
-		}
-	}
+	if (m_bIsInRageMode && (gpGlobals->curtime > m_flRageTime))
+		EndRageMode();
 }
 
 void CNPCFred::FindAndPunishCampers(void)
@@ -356,7 +353,7 @@ void CNPCFred::FindAndPunishCampers(void)
 	{
 		m_flLastCamperCheck = gpGlobals->curtime + CAMPER_CHECK_TIME;
 
-		if (GetEnemy() && GetEnemies() && (GetEnemies()->NumEnemies() > 0) && 
+		if (GetEnemy() && GetEnemies() && (GetEnemies()->NumEnemies() > 0) &&
 			!IsCurSchedule(SCHED_FRED_RAGE_START) && !IsCurSchedule(SCHED_FRED_SHOCKWAVE) &&
 			!HasCondition(COND_FRED_SHOULD_SHOCKWAVE))
 		{
@@ -367,14 +364,14 @@ void CNPCFred::FindAndPunishCampers(void)
 			CTraceFilterNoNPCsOrPlayer filter(this, GetCollisionGroup());
 			for (AI_EnemyInfo_t *pEMemory = GetEnemies()->GetFirst(&iter); pEMemory != NULL; pEMemory = GetEnemies()->GetNext(&iter))
 			{
-				if (pEMemory->bDangerMemory || pEMemory->hEnemy.Get() == NULL || ((gpGlobals->curtime - pEMemory->timeLastSeen) > CAMPER_MAX_LAST_TIME_SEEN))
+				if (pEMemory->bDangerMemory || (pEMemory->hEnemy.Get() == NULL) || ((gpGlobals->curtime - pEMemory->timeLastSeen) > CAMPER_MAX_LAST_TIME_SEEN))
 					continue;
 
 				CHL2MP_Player *pPlayer = ToHL2MPPlayer(pEMemory->hEnemy.Get());
-				if (pPlayer == NULL || 
-					!pPlayer->IsAlive() || 
-					(pPlayer->GetTeamNumber() != TEAM_HUMANS) || 
-					pPlayer->IsPlayerInfected() || 
+				if ((pPlayer == NULL) ||
+					!pPlayer->IsAlive() ||
+					(pPlayer->GetTeamNumber() != TEAM_HUMANS) ||
+					pPlayer->IsPlayerInfected() ||
 					pPlayer->IsObserver() ||
 					pPlayer->IsBot() ||
 					(pPlayer->GetFlags() & (FL_NOTARGET | FL_FROZEN)))
@@ -407,13 +404,22 @@ void CNPCFred::FindAndPunishCampers(void)
 	}
 }
 
-int CNPCFred::SelectSchedule ( void )
+int CNPCFred::SelectSchedule(void)
 {
-	if (HasCondition(COND_FRED_SHOULD_SHOCKWAVE))
-		return SCHED_FRED_SHOCKWAVE;
+	if (HasCondition(COND_FRED_ENTER_RAGE))
+	{
+		ClearCondition(COND_FRED_ENTER_RAGE);
+		return SCHED_FRED_RAGE_START;
+	}
 
-	if( HasCondition( COND_PHYSICS_DAMAGE ) && CanFlinch() )	
-		return SCHED_FLINCH_PHYSICS;	
+	if (HasCondition(COND_FRED_SHOULD_SHOCKWAVE))
+	{
+		ClearCondition(COND_FRED_SHOULD_SHOCKWAVE);
+		return SCHED_FRED_SHOCKWAVE;
+	}
+
+	//if (HasCondition(COND_PHYSICS_DAMAGE) && CanFlinch())
+	//	return SCHED_FLINCH_PHYSICS;
 
 	return BaseClass::SelectSchedule();
 }
@@ -454,7 +460,7 @@ void CNPCFred::StartTask(const Task_t *pTask)
 				vecForward.x *= CAMPER_VELOCITY_PUNCH;
 				vecForward.y *= CAMPER_VELOCITY_PUNCH;
 				vecForward.z *= CAMPER_VELOCITY_PUNCH_Z;
-			
+
 				pOther->ApplyAbsVelocityImpulse(vecForward, true);
 
 				DispatchParticleEffect("bb2_item_spawn", PATTACH_ROOTBONE_FOLLOW, pOther);
@@ -462,7 +468,6 @@ void CNPCFred::StartTask(const Task_t *pTask)
 		}
 
 		m_hTargetPlayer = NULL;
-		ClearCondition(COND_FRED_SHOULD_SHOCKWAVE);
 		TaskComplete();
 		break;
 	}
@@ -480,7 +485,7 @@ void CNPCFred::StartTask(const Task_t *pTask)
 	}
 
 	case TASK_FRED_SHOCKWAVE_FINISH:
-		m_flLastCamperCheck = gpGlobals->curtime + SHOCKWAVE_COOLDOWN;
+		m_flLastCamperCheck = (gpGlobals->curtime + SHOCKWAVE_COOLDOWN);
 		TaskComplete();
 		break;
 
@@ -506,34 +511,34 @@ void CNPCFred::RunTask(const Task_t *pTask)
 	}
 }
 
-void CNPCFred::FootstepSound( bool fRightFoot )
+void CNPCFred::FootstepSound(bool fRightFoot)
 {
-	if( fRightFoot )
-		EmitSound(  "NPC_BaseZombie.FootstepRight" );
+	if (fRightFoot)
+		EmitSound("NPC_BaseZombie.FootstepRight");
 	else
-		EmitSound( "NPC_BaseZombie.FootstepLeft" );
+		EmitSound("NPC_BaseZombie.FootstepLeft");
 }
 
-void CNPCFred::FootscuffSound( bool fRightFoot )
+void CNPCFred::FootscuffSound(bool fRightFoot)
 {
-	if( fRightFoot )
-		EmitSound( "NPC_BaseZombie.ScuffRight" );
+	if (fRightFoot)
+		EmitSound("NPC_BaseZombie.ScuffRight");
 	else
-		EmitSound( "NPC_BaseZombie.ScuffLeft" );
+		EmitSound("NPC_BaseZombie.ScuffLeft");
 }
 
-void CNPCFred::AttackHitSound( void )
+void CNPCFred::AttackHitSound(void)
 {
-	EmitSound( "NPC_BaseZombie.AttackHit" );
+	EmitSound("NPC_BaseZombie.AttackHit");
 }
 
-void CNPCFred::AttackMissSound( void )
+void CNPCFred::AttackMissSound(void)
 {
 	// Play a random attack miss sound
-	EmitSound( "NPC_BaseZombie.AttackMiss" );
+	EmitSound("NPC_BaseZombie.AttackMiss");
 }
 
-void CNPCFred::PainSound( const CTakeDamageInfo &info )
+void CNPCFred::PainSound(const CTakeDamageInfo &info)
 {
 	// We're constantly taking damage when we are on fire. Don't make all those noises!
 	if (IsOnFire() || IsCurSchedule(SCHED_FRED_SHOCKWAVE))
@@ -542,7 +547,7 @@ void CNPCFred::PainSound( const CTakeDamageInfo &info )
 	HL2MPRules()->EmitSoundToClient(this, "Pain", GetNPCType(), GetGender());
 }
 
-void CNPCFred::DeathSound( const CTakeDamageInfo &info ) 
+void CNPCFred::DeathSound(const CTakeDamageInfo &info)
 {
 	if (IsCurSchedule(SCHED_FRED_SHOCKWAVE))
 		return;
@@ -550,7 +555,7 @@ void CNPCFred::DeathSound( const CTakeDamageInfo &info )
 	HL2MPRules()->EmitSoundToClient(this, "Die", GetNPCType(), GetGender());
 }
 
-void CNPCFred::AlertSound( void )
+void CNPCFred::AlertSound(void)
 {
 	if (IsCurSchedule(SCHED_FRED_SHOCKWAVE))
 		return;
@@ -558,25 +563,25 @@ void CNPCFred::AlertSound( void )
 	HL2MPRules()->EmitSoundToClient(this, "Alert", GetNPCType(), GetGender());
 
 	// Don't let a moan sound cut off the alert sound.
-	m_flNextMoanSound += random->RandomFloat( 2.0, 4.0 );
+	m_flNextMoanSound += random->RandomFloat(2.0, 4.0);
 }
 
-void CNPCFred::IdleSound( void )
+void CNPCFred::IdleSound(void)
 {
 	if (IsCurSchedule(SCHED_FRED_SHOCKWAVE))
 		return;
 
-	if( GetState() == NPC_STATE_IDLE && random->RandomFloat( 0, 1 ) == 0 )
+	if (GetState() == NPC_STATE_IDLE && random->RandomFloat(0, 1) == 0)
 	{
 		// Moan infrequently in IDLE state.
 		return;
 	}
 
 	HL2MPRules()->EmitSoundToClient(this, "Idle", GetNPCType(), GetGender());
-	MakeAISpookySound( 360.0f );
+	MakeAISpookySound(360.0f);
 }
 
-void CNPCFred::AttackSound( void )
+void CNPCFred::AttackSound(void)
 {
 	if (IsCurSchedule(SCHED_FRED_SHOCKWAVE))
 		return;
@@ -584,40 +589,34 @@ void CNPCFred::AttackSound( void )
 	HL2MPRules()->EmitSoundToClient(this, "Attack", GetNPCType(), GetGender());
 }
 
-int CNPCFred::SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode )
+int CNPCFred::SelectFailSchedule(int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode)
 {
 	if (failedSchedule == SCHED_FRED_SHOCKWAVE)
-	{
-		ClearCondition(COND_FRED_SHOULD_SHOCKWAVE);
 		m_flLastCamperCheck = gpGlobals->curtime + (SHOCKWAVE_COOLDOWN / 2.0f);
-	}
 
-	return BaseClass::SelectFailSchedule( failedSchedule, failedTask, taskFailCode );
+	return BaseClass::SelectFailSchedule(failedSchedule, failedTask, taskFailCode);
 }
 
-int CNPCFred::TranslateSchedule( int scheduleType )
+int CNPCFred::TranslateSchedule(int scheduleType)
 {
-	return BaseClass::TranslateSchedule( scheduleType );
+	return BaseClass::TranslateSchedule(scheduleType);
 }
 
-int CNPCFred::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
+int CNPCFred::OnTakeDamage_Alive(const CTakeDamageInfo &inputInfo)
 {
 	int ret = BaseClass::OnTakeDamage_Alive(inputInfo);
 	if (ret)
 	{
 		float damageTaken = inputInfo.GetDamage();
-		if (damageTaken >= sk_npc_boss_fred_rage_damage.GetFloat())
-			StartRageMode();
-
-		float flHealthPercent = ((float)(((float)GetHealth() / (float)GetMaxHealth())));
-		if ((flHealthPercent * 100.0f) <= sk_npc_boss_fred_rage_health.GetFloat())
+		float flHealthPercent = (((float)GetHealth()) / ((float)GetMaxHealth()));
+		if ((damageTaken >= sk_npc_boss_fred_rage_damage.GetFloat()) || ((flHealthPercent * 100.0f) <= sk_npc_boss_fred_rage_health.GetFloat()))
 			StartRageMode();
 	}
 
 	return ret;
 }
 
-void CNPCFred::BuildScheduleTestBits( void )
+void CNPCFred::BuildScheduleTestBits(void)
 {
 	BaseClass::BuildScheduleTestBits();
 
@@ -628,10 +627,18 @@ void CNPCFred::BuildScheduleTestBits( void )
 		IsCurSchedule(SCHED_ZOMBIE_BASH_DOOR) ||
 		IsCurSchedule(SCHED_ZOMBIE_WANDER_MEDIUM) ||
 		IsCurSchedule(SCHED_ZOMBIE_MELEE_ATTACK1))
+	{
 		SetCustomInterruptCondition(COND_FRED_SHOULD_SHOCKWAVE);
+		SetCustomInterruptCondition(COND_FRED_ENTER_RAGE);
+	}
+	else
+	{
+		ClearCustomInterruptCondition(COND_FRED_SHOULD_SHOCKWAVE);
+		ClearCustomInterruptCondition(COND_FRED_ENTER_RAGE);
+	}
 }
 
-AI_BEGIN_CUSTOM_NPC( npc_fred, CNPCFred )
+AI_BEGIN_CUSTOM_NPC(npc_fred, CNPCFred)
 
 DECLARE_ACTIVITY(ACT_RAGE);
 DECLARE_ACTIVITY(ACT_MELEE_ATTACK_RUN);
@@ -641,6 +648,7 @@ DECLARE_TASK(TASK_FRED_FACE_TARGET);
 DECLARE_TASK(TASK_FRED_SHOCKWAVE_FINISH);
 
 DECLARE_CONDITION(COND_FRED_SHOULD_SHOCKWAVE);
+DECLARE_CONDITION(COND_FRED_ENTER_RAGE);
 
 DEFINE_SCHEDULE
 (
