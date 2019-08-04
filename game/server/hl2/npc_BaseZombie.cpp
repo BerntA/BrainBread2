@@ -31,6 +31,7 @@
 #include "vehicle_base.h"
 #include "hl2mp_gamerules.h"
 #include "GameBase_Server.h"
+#include "random_extended.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -42,7 +43,7 @@ int g_interactionZombieMeleeWarning;
 #define ZOMBIE_FLINCH_DELAY			3
 #define ZOMBIE_BURN_TIME		10 // If ignited, burn for this many seconds
 #define ZOMBIE_BURN_TIME_NOISE	2  // Give or take this many seconds.
-#define ZOMBIE_LIFETIME (gpGlobals->curtime + ((random->RandomFloat(bb2_zombie_lifespan_min.GetFloat(), bb2_zombie_lifespan_max.GetFloat())) * 60.0f))
+#define ZOMBIE_LIFETIME (gpGlobals->curtime + (((float)RandomDoubleNumber(bb2_zombie_lifespan_min.GetFloat(), bb2_zombie_lifespan_max.GetFloat())) * 60.0f))
 
 #define HEALTH_REGEN_SUSPEND 10.0f // How many seconds to suspend hp regen when taking dmg?
 
@@ -970,7 +971,9 @@ void CNPC_BaseZombie::PrescheduleThink(void)
 		m_flBurnDamage = 0;
 
 	// Non boss zombies/monsters have a limited lifetime/lifeline:
-	if (!IsBoss() && !GameBaseServer()->IsTutorialModeEnabled() && (GetLifeSpan() < gpGlobals->curtime) && !m_bLifeTimeOver)
+	CBaseEntity *pEnemy = GetEnemy();
+	bool bHasNearbyEnemy = (pEnemy && pEnemy->IsPlayer() && pEnemy->IsHuman() && (this->GetLocalOrigin().DistTo(pEnemy->GetLocalOrigin()) <= 700.0f) && ((gpGlobals->curtime - GetEnemies()->LastTimeSeen(pEnemy, false)) <= 10.0f));
+	if (!IsBoss() && !GameBaseServer()->IsTutorialModeEnabled() && (GetLifeSpan() < gpGlobals->curtime) && !m_bLifeTimeOver && !bHasNearbyEnemy)
 	{
 		m_bLifeTimeOver = true;
 		SetLastHitGroup(HITGROUP_GENERIC);
@@ -1158,6 +1161,7 @@ void CNPC_BaseZombie::MarkForDeath(void)
 		return;
 
 	float minTimeToLive = ((bb2_zombie_lifespan_min.GetFloat() * 60.0f) / 6.0f);
+	minTimeToLive = MAX(minTimeToLive, 10.0f);
 	float duration = (m_flSpawnTime - gpGlobals->curtime);
 	if (minTimeToLive >= duration)
 		return;
