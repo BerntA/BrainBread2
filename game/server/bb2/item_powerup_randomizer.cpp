@@ -14,7 +14,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-const char *pchPowerups[] =
+static const char *pchPowerups[] =
 {
 	"Critical",
 	"Cheetah",

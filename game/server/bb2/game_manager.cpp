@@ -20,7 +20,11 @@ public:
 	DECLARE_DATADESC();
 
 	CGameManager();
+	virtual ~CGameManager();
+
 	void Spawn();
+	void EndGame(int iWinner);
+	void EndRound(int iWinner);
 
 private:
 	void FireGameEvent(IGameEvent *event);
@@ -42,6 +46,8 @@ private:
 	int m_iTriesPerRound;
 	int m_iCurrentTries;
 };
+
+static CGameManager *g_pGameManager = NULL;
 
 BEGIN_DATADESC(CGameManager)
 DEFINE_INPUTFUNC(FIELD_INTEGER, "EndGame", InputEndGame),
@@ -79,6 +85,13 @@ CGameManager::CGameManager()
 
 	ListenForGameEvent("round_started");
 	ListenForGameEvent("round_end");
+
+	g_pGameManager = this;
+}
+
+CGameManager::~CGameManager()
+{
+	g_pGameManager = NULL;
 }
 
 void CGameManager::Spawn()
@@ -91,15 +104,23 @@ void CGameManager::Spawn()
 
 void CGameManager::InputEndGame(inputdata_t &inputData)
 {
-	int iWinner = (inputData.value.Int() >= 1) ? TEAM_DECEASED : TEAM_HUMANS;
-	HL2MPRules()->GoToIntermission(iWinner);
-	m_OnEndGame.FireOutput(this, this);
+	EndGame(inputData.value.Int());
 }
 
 void CGameManager::InputEndRound(inputdata_t &inputData)
 {
+	EndRound(inputData.value.Int());
+}
+
+void CGameManager::EndGame(int iWinner)
+{
+	HL2MPRules()->GoToIntermission((iWinner >= 1) ? TEAM_DECEASED : TEAM_HUMANS);
+	m_OnEndGame.FireOutput(this, this);
+}
+
+void CGameManager::EndRound(int iWinner)
+{
 	m_OnEndRound.FireOutput(this, this);
-	int iWinner = inputData.value.Int();
 
 	if ((m_iRoundsToPlay > 0) && (iWinner <= 0))
 	{
@@ -111,7 +132,7 @@ void CGameManager::InputEndRound(inputdata_t &inputData)
 		}
 	}
 
-	HL2MPRules()->EndRound((iWinner >= 1) ? true : false);
+	HL2MPRules()->EndRound(iWinner >= 1);
 }
 
 void CGameManager::FireGameEvent(IGameEvent *event)
@@ -152,4 +173,28 @@ void CGameManager::FireGameEvent(IGameEvent *event)
 
 		m_OnGameOver.FireOutput(this, this);
 	}
+}
+
+CON_COMMAND_F(bb2_end_game, "End the game.", FCVAR_CHEAT)
+{
+	if (!g_pGameManager || (args.ArgC() != 2))
+		return;
+
+	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
+	if (!pClient || (engine->IsDedicatedServer() && !pClient->IsAdminOnServer()))
+		return;
+
+	g_pGameManager->EndGame(atoi(args[1]));
+}
+
+CON_COMMAND_F(bb2_end_round, "End the round.", FCVAR_CHEAT)
+{
+	if (!g_pGameManager || (args.ArgC() != 2))
+		return;
+
+	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
+	if (!pClient || (engine->IsDedicatedServer() && !pClient->IsAdminOnServer()))
+		return;
+
+	g_pGameManager->EndRound(atoi(args[1]));
 }

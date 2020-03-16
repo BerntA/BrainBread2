@@ -238,7 +238,7 @@ int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flDist)
 	Vector vecStart = vecNPCPos + Vector(0, 0, vecBounds.z);
 	flDistToEnemy2D = vecAttackDir.Length2D();
 	flHeightDiff = abs(vecTargetPos.z - vecNPCPos.z);
-	flMaxHeight = (vecMaxs.z - vecMins.z) + (pEnemy->WorldAlignMaxs().z - pEnemy->WorldAlignMins().z);
+	flMaxHeight = (vecMaxs.z - vecMins.z) + ((pEnemy->WorldAlignMaxs().z - pEnemy->WorldAlignMins().z) / 2.0f);
 	VectorNormalize(vecAttackDir);
 
 	if ((flDistToEnemy2D > range) || (flHeightDiff > flMaxHeight))

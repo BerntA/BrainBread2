@@ -102,7 +102,7 @@ const model_t *LookupClientModelPointer(int index)
 #endif
 
 // Gamemode data
-const char *playerGamemodeFiles[] =
+static const char *playerGamemodeFiles[] =
 {
 	"data/game/game_base_player_objective",
 	"data/game/game_base_player_elimination",

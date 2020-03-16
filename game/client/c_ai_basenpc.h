@@ -51,7 +51,7 @@ protected:
 	bool m_bPerformAvoidance;
 	bool m_bIsMoving;
 
-	char m_szNPCName[MAX_MAP_NAME];
+	char m_szNPCName[MAX_MAP_NAME_SAVE];
 	bool m_bIsBoss;
 	bool m_bHasFadedIn;
 

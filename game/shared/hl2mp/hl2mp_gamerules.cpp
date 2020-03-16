@@ -212,7 +212,6 @@ static const char *s_PreserveEnts[] =
 	"env_fog_controller",
 	"func_brush",
 	"func_wall",
-	"func_buyzone",
 	"func_illusionary",
 	"func_reflective_glass",
 	"infodecal",
@@ -241,6 +240,8 @@ static const char *s_PreserveEnts[] =
 	"game_manager",
 	"trigger_player_block",
 	"trigger_changelevel",
+	"func_npc_obstacle",
+	"func_precipitation",
 	"", // END Marker
 };
 
@@ -284,7 +285,7 @@ IVoiceGameMgrHelper *g_pVoiceGameMgrHelper = &g_VoiceGameMgrHelper;
 #endif
 
 // NOTE: the indices here must match TEAM_TERRORIST, TEAM_CT, TEAM_SPECTATOR, etc.
-char *sTeamNames[] =
+static char *sTeamNames[] =
 {
 	"Unassigned",
 	"Spectator",

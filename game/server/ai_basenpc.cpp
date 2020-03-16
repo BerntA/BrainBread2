@@ -10553,10 +10553,11 @@ BEGIN_SIMPLE_DATADESC( AIScheduleState_t )
 	DEFINE_FIELD( bScheduleWasInterrupted, FIELD_BOOLEAN ),
 END_DATADESC()
 
-IMPLEMENT_SERVERCLASS_ST( CAI_BaseNPC, DT_AI_BaseNPC )
-	SendPropInt( SENDINFO( m_lifeState ), 3, SPROP_UNSIGNED ),
-	SendPropBool( SENDINFO( m_bPerformAvoidance ) ),
-	SendPropBool( SENDINFO( m_bIsMoving ) ),
+IMPLEMENT_SERVERCLASS_ST(CAI_BaseNPC, DT_AI_BaseNPC)
+
+	SendPropInt(SENDINFO(m_lifeState), 3, SPROP_UNSIGNED),
+	SendPropBool(SENDINFO(m_bPerformAvoidance)),
+	SendPropBool(SENDINFO(m_bIsMoving)),
 	SendPropInt(SENDINFO(m_iHealth), 20, SPROP_CHANGES_OFTEN),
 	SendPropInt(SENDINFO(m_iMaxHealth), 20, SPROP_CHANGES_OFTEN),
 	SendPropString(SENDINFO(m_szNPCName)),
@@ -10567,6 +10568,14 @@ IMPLEMENT_SERVERCLASS_ST( CAI_BaseNPC, DT_AI_BaseNPC )
 	SendPropExclude("DT_BaseEntity", "m_iGlowMethod"),
 	SendPropExclude("DT_BaseEntity", "m_GlowColor"),
 	SendPropExclude("DT_BaseEntity", "m_iGlowTeamLink"),
+
+	SendPropExclude("DT_BCCLocalPlayerExclusive", "m_flNextAttack"),
+	SendPropExclude("DT_BaseEntity", "m_vecOrigin"),
+	SendPropExclude("DT_BaseEntity", "m_angRotation"),
+
+	SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_COORD_MP_LOWPRECISION | SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin),
+	SendPropAngle(SENDINFO_VECTORELEM(m_angRotation, 1), 10, SPROP_CHANGES_OFTEN), // Only send YAW.
+
 END_SEND_TABLE()
 
 //-------------------------------------
