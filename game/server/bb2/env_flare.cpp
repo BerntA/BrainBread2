@@ -200,6 +200,8 @@ void CFlare::Spawn(void)
 	}
 
 	AddFlag(FL_OBJECT);
+
+	SetBlocksLOS(false);
 }
 
 //-----------------------------------------------------------------------------

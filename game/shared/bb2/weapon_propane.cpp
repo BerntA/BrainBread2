@@ -198,7 +198,7 @@ void CPropaneExplosive::Spawn(void)
 
 	CreateVPhysics();
 
-	SetCollisionGroup(COLLISION_GROUP_WEAPON);
+	SetCollisionGroup(COLLISION_GROUP_DEBRIS_TRIGGER);
 	m_takedamage = DAMAGE_EVENTS_ONLY;
 	m_iHealth = 1;
 	SetBlocksLOS(false);

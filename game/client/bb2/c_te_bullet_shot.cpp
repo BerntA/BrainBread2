@@ -37,32 +37,6 @@ public:
 	bool    m_bPrimaryAttack;
 };
 
-class CTraceFilterClientBulletFire : public CTraceFilterSimple
-{
-public:
-	DECLARE_CLASS(CTraceFilterClientBulletFire, CTraceFilterSimple);
-
-	CTraceFilterClientBulletFire(const IHandleEntity *passentity, int collisionGroup) : CTraceFilterSimple(passentity, collisionGroup)
-	{ 
-	}
-
-	virtual bool ShouldHitEntity(IHandleEntity *pServerEntity, int contentsMask)
-	{
-		C_BaseEntity *pEntity = EntityFromEntityHandle(pServerEntity);
-		if (pEntity)
-		{
-			if (dynamic_cast<C_BaseViewModel *>(pEntity) != NULL)
-				return false;
-
-			C_BaseCombatWeapon *pWeapon = dynamic_cast<C_BaseCombatWeapon *>(pEntity);
-			if (pWeapon && pWeapon->GetOwner())
-				return false;
-		}
-
-		return BaseClass::ShouldHitEntity(pServerEntity, contentsMask);
-	}
-};
-
 void C_TEBulletShot::CreateEffects(void)
 {
 	CAmmoDef *pAmmoDef = GetAmmoDef();
@@ -80,7 +54,7 @@ void C_TEBulletShot::CreateEffects(void)
 	{
 		Vector vecEnd = m_vecOrigin + m_vecDir * MAX_TRACE_LENGTH;
 		trace_t tr;
-		CTraceFilterClientBulletFire traceFilter(pOwnerOfWep, COLLISION_GROUP_NONE);
+		CBulletsTraceFilter traceFilter(pOwnerOfWep, COLLISION_GROUP_NONE, (pOwnerOfWep->IsPlayer() ? pOwnerOfWep->GetTeamNumber() : TEAM_INVALID));
 
 		if (m_bUseTraceHull)
 			UTIL_TraceHull(m_vecOrigin, vecEnd, Vector(-3, -3, -3), Vector(3, 3, 3), MASK_SHOT_HULL, &traceFilter, &tr);

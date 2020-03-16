@@ -61,6 +61,7 @@ void CBaseGrenadeTimed::Spawn( void )
 	m_flDamage = 100;	// ????
 
 	m_takedamage = DAMAGE_NO;
+	SetBlocksLOS(false);
 }
 
 void CBaseGrenadeTimed::Precache( void )

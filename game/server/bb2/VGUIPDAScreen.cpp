@@ -32,6 +32,7 @@ CVGuiPDAScreen::CVGuiPDAScreen() : CVGuiScreen()
 void CVGuiPDAScreen::Spawn(void)
 {
 	BaseClass::Spawn();
+	SetBlocksLOS(false);
 
 	SetThink(&CVGuiPDAScreen::UpdateState);
 	SetNextThink(gpGlobals->curtime + 0.5f);

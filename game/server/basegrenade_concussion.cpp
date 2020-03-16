@@ -119,6 +119,8 @@ void CBaseGrenadeConcussion::Spawn( void )
 
 	// Allow player to blow this puppy up in the air
 	m_takedamage	= DAMAGE_YES;
+
+	SetBlocksLOS(false);
 }
 
 

@@ -65,6 +65,8 @@ void CBaseProjectile::Spawn()
 #ifdef GAME_DLL
 	ResetCollideWithTeammates();
 #endif // GAME_DLL
+
+	SetBlocksLOS(false);
 }
 
 

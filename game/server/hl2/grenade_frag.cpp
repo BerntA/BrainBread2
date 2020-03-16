@@ -116,6 +116,8 @@ void CGrenadeFrag::Spawn( void )
 	m_punted			= false;
 
 	BaseClass::Spawn();
+
+	SetBlocksLOS(false);
 }
 
 //-----------------------------------------------------------------------------

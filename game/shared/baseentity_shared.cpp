@@ -1569,33 +1569,43 @@ Go to the trouble of combining multiple pellets into a single damage call.
 ================
 */
 
-#if defined( GAME_DLL )
-class CBulletsTraceFilter : public CTraceFilterSimpleList
+CBulletsTraceFilter::CBulletsTraceFilter(const IHandleEntity *passentity, int collisionGroup, int team) : CTraceFilterSimpleList(collisionGroup)
 {
-public:
-	CBulletsTraceFilter( int collisionGroup ) : CTraceFilterSimpleList( collisionGroup ) {}
+	m_iTeamLink = team;
+	SetPassEntity(passentity);
+}
 
-	bool ShouldHitEntity( IHandleEntity *pHandleEntity, int contentsMask )
+bool CBulletsTraceFilter::ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask)
+{
+	CBaseEntity *pEntity = EntityFromEntityHandle(pHandleEntity);
+	if (pEntity)
 	{
-		if ( m_PassEntities.Count() )
-		{
-			CBaseEntity *pEntity = EntityFromEntityHandle( pHandleEntity );
-			CBaseEntity *pPassEntity = EntityFromEntityHandle( m_PassEntities[0] );
-			if ( pEntity && pPassEntity && pEntity->GetOwnerEntity() == pPassEntity && 
-				pPassEntity->IsSolidFlagSet(FSOLID_NOT_SOLID) && pPassEntity->IsSolidFlagSet( FSOLID_CUSTOMBOXTEST ) && 
-				pPassEntity->IsSolidFlagSet( FSOLID_CUSTOMRAYTEST ) )
-			{
-				// It's a bone follower of the entity to ignore (toml 8/3/2007)
-				return false;
-			}
-		}
-		return CTraceFilterSimpleList::ShouldHitEntity( pHandleEntity, contentsMask );
+		if ((pEntity->GetCollisionGroup() == COLLISION_GROUP_WEAPON) || pEntity->IsBaseCombatWeapon()) // Don't hit items, armor, etc...
+			return false;
+
+		if ((m_iTeamLink != TEAM_INVALID) && pEntity->IsPlayer() && (pEntity->GetTeamNumber() == m_iTeamLink) && HL2MPRules() && HL2MPRules()->IsTeamplay() && !friendlyfire.GetBool())
+			return false; // Bullets shouldn't trace against teammates. (plrs)
+
+		if (dynamic_cast<CBaseViewModel*>(pEntity) != NULL) // Don't hit viewmodel!
+			return false;
 	}
 
-};
-#else
-typedef CTraceFilterSimpleList CBulletsTraceFilter;
+#if defined( GAME_DLL )
+	if (m_PassEntities.Count())
+	{
+		CBaseEntity *pPassEntity = EntityFromEntityHandle(m_PassEntities[0]);
+		if (pEntity && pPassEntity && pEntity->GetOwnerEntity() == pPassEntity &&
+			pPassEntity->IsSolidFlagSet(FSOLID_NOT_SOLID) && pPassEntity->IsSolidFlagSet(FSOLID_CUSTOMBOXTEST) &&
+			pPassEntity->IsSolidFlagSet(FSOLID_CUSTOMRAYTEST))
+		{
+			// It's a bone follower of the entity to ignore (toml 8/3/2007)
+			return false;
+		}
+	}
 #endif
+
+	return CTraceFilterSimpleList::ShouldHitEntity(pHandleEntity, contentsMask);
+}
 
 void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 {
@@ -1654,9 +1664,8 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	Vector vecEnd;
 	
 	// Skip multiple entities when tracing
-	CBulletsTraceFilter traceFilter( COLLISION_GROUP_NONE );
-	traceFilter.SetPassEntity( this ); // Standard pass entity for THIS so that it can be easily removed from the list after passing through a portal
-	traceFilter.AddEntityToIgnore( info.m_pAdditionalIgnoreEnt );
+	CBulletsTraceFilter traceFilter(this, COLLISION_GROUP_NONE, (IsPlayer() ? GetTeamNumber() : TEAM_INVALID)); // Standard pass entity for THIS so that it can be easily removed from the list after passing through a portal
+	traceFilter.AddEntityToIgnore(info.m_pAdditionalIgnoreEnt);
 
 	bool bUnderwaterBullets = ShouldDrawUnderwaterBulletBubbles();
 	bool bStartedInWater = false;
@@ -1920,8 +1929,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 float CBaseEntity::FirePenetrativeBullet(const FireBulletsInfo_t &info, Vector &vecStart, Vector &vecDir, CBaseEntity *pAttacker, CBaseEntity *pIgnore, int dmgType)
 {
 	trace_t tr;
-	CBulletsTraceFilter traceFilter(COLLISION_GROUP_NONE);
-	traceFilter.SetPassEntity(this);
+	CBulletsTraceFilter traceFilter(this, COLLISION_GROUP_NONE, (IsPlayer() ? GetTeamNumber() : TEAM_INVALID));
 	traceFilter.AddEntityToIgnore(info.m_pAdditionalIgnoreEnt);
 
 	if (pIgnore != NULL)

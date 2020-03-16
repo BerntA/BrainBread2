@@ -103,6 +103,8 @@ void CGrenadeAR2::Spawn( void )
 			m_hSmokeTrail->FollowEntity(this);
 		}
 	}
+
+	SetBlocksLOS(false);
 }
 
 //-----------------------------------------------------------------------------

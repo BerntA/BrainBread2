@@ -41,6 +41,7 @@ void CObjectiveIcon::Spawn()
 
 	SetSolid(SOLID_NONE);
 	SetMoveType(MOVETYPE_NONE);
+	SetBlocksLOS(false);
 
 	SetTransmitState(FL_EDICT_ALWAYS);
 	DispatchUpdateTransmitState();

@@ -60,6 +60,8 @@ void CBaseGrenadeContact::Spawn( void )
 	m_takedamage	= DAMAGE_YES;
 
 	m_iszBounceSound = NULL_STRING;
+
+	SetBlocksLOS(false);
 }
 
 

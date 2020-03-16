@@ -2788,6 +2788,7 @@ bool CHL2MP_Player::StartObserverMode(int mode)
 	//we only want to go into observer mode if the player asked to, not on a death timeout
 	if (m_bEnterObserver)
 	{
+		ResetSlideVars();
 		VPhysicsDestroyObject();
 		return BaseClass::StartObserverMode(mode);
 	}
@@ -3200,6 +3201,7 @@ void CHL2MP_Player::SetZombie()
 void CHL2MP_Player::SetHuman()
 {
 	SetCollisionGroup(COLLISION_GROUP_PLAYER);
+	ResetZombieSkills();
 
 	if (IsAlive())
 	{

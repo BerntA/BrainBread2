@@ -27,6 +27,7 @@ CVGuiKeyPadScreen::CVGuiKeyPadScreen() : CVGuiScreen(), CBaseKeyPadEntity()
 void CVGuiKeyPadScreen::Spawn(void)
 {
 	BaseClass::Spawn();
+	SetBlocksLOS(false);
 
 	if (!IsKeyCodeValid(this))
 		SetRandomCode(m_iMaxChars);

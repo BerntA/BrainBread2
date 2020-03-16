@@ -216,7 +216,8 @@ void CHL2MP_Player::DoPlayerKick(void)
 	forward = traceHit.endpos - traceHit.startpos;
 	VectorNormalize(forward);
 #else
-	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT, this, COLLISION_GROUP_NONE, &traceHit);
+	CBulletsTraceFilter trFilterClient(this, COLLISION_GROUP_NONE, GetTeamNumber());
+	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT, &trFilterClient, &traceHit);
 #endif
 
 	pHitEnt = traceHit.m_pEnt;
