@@ -41,9 +41,12 @@ public:
 	virtual C_HL2MP_Player *GetPlayerOwner() { return m_pPlayer; }
 
 	virtual void UpdateModel(void);
+	virtual void DrawHelmet(bool bRender = false);
+	virtual void DeleteHelmet(void); // Fades out the helmet!
 
 protected:
 	C_HL2MP_Player *m_pPlayer;
+	CNewParticleEffect *m_pParticleHelmet; // A fancy thing given to either high lvl plrs, admins, devs!
 };
 
 extern bool RemoveAllClientPlayermodels();

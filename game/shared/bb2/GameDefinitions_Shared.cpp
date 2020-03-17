@@ -842,6 +842,12 @@ bool CGameDefinitionsShared::Precache(void)
 	PrecacheParticleSystem("bb2_item_spawn");
 	PrecacheParticleSystem("blood_mist");
 
+	// Helms
+	PrecacheParticleSystem("helm_aurora_parent_green");
+	PrecacheParticleSystem("helm_aurora_parent_orange");
+	PrecacheParticleSystem("helm_aurora_parent_purple");
+	PrecacheParticleSystem("helm_halo01");
+
 	// Impacts
 	PrecacheParticleSystem("impact_concrete");
 	PrecacheParticleSystem("impact_dirt");

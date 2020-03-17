@@ -59,6 +59,7 @@ C_Playermodel *CreateClientPlayermodel(C_HL2MP_Player *pParent)
 C_Playermodel::C_Playermodel(void)
 {
 	m_pPlayer = NULL;
+	m_pParticleHelmet = NULL;
 	m_bNoModelParticles = false;
 	m_bPreferModelPointerOverIndex = true;
 	m_takedamage = DAMAGE_EVENTS_ONLY;
@@ -91,6 +92,10 @@ bool C_Playermodel::Initialize(void)
 
 void C_Playermodel::Release(void)
 {
+	if (m_pParticleHelmet)
+		::ParticleMgr()->RemoveEffect(m_pParticleHelmet);
+	m_pParticleHelmet = NULL;
+
 	BaseClass::Release();
 }
 
@@ -108,12 +113,16 @@ int C_Playermodel::DrawModel(int flags)
 	C_HL2MP_Player *pOwner = GetPlayerOwner();
 	if ((pOwner == NULL) || !pOwner->m_bReadyToDraw ||
 		!((bb2_render_client_in_mirrors.GetBool() && pOwner->IsLocalPlayer() && g_bShouldRenderLocalPlayerExternally) || pOwner->ShouldDrawThisPlayer()))
+	{
+		DeleteHelmet();
 		return 0;
+	}
 
 	bool bShouldDrawOverrides = (!(flags & STUDIO_SKIP_MATERIAL_OVERRIDES));
 
 	if (pOwner->IsPerkFlagActive(PERK_POWERUP_PREDATOR) && bShouldDrawOverrides)
 	{
+		DeleteHelmet();
 		modelrender->ForcedMaterialOverride(GlobalRenderEffects->GetCloakOverlay());
 		int retVal = BaseClass::DrawModel(STUDIO_RENDER | STUDIO_TRANSPARENCY);
 		modelrender->ForcedMaterialOverride(0);
@@ -124,6 +133,8 @@ int C_Playermodel::DrawModel(int flags)
 
 	if (bShouldDrawOverrides)
 	{
+		DrawHelmet(true);
+
 		if (pOwner->IsMaterialOverlayFlagActive(MAT_OVERLAY_SPAWNPROTECTION))
 		{
 			modelrender->ForcedMaterialOverride(GlobalRenderEffects->GetSpawnProtectionOverlay());
@@ -199,6 +210,7 @@ bool C_Playermodel::ShouldReceiveProjectedTextures(int flags)
 void C_Playermodel::OnDormantStateChange(void)
 {
 	UpdateVisibility();
+	DrawHelmet();
 }
 
 void C_Playermodel::OnUpdate(void)
@@ -218,6 +230,8 @@ void C_Playermodel::OnUpdate(void)
 
 	if (GetModel() != NULL)
 		CreateShadow();
+
+	DrawHelmet();
 }
 
 CStudioHdr *C_Playermodel::OnNewModel(void)
@@ -236,6 +250,8 @@ CStudioHdr *C_Playermodel::OnNewModel(void)
 	BB2PlayerGlobals->OnNewModel();
 
 	DestroyShadow();
+	DeleteHelmet();
+
 	return hdr;
 }
 
@@ -266,4 +282,33 @@ void C_Playermodel::UpdateModel(void)
 
 		SetBodygroup(accessoryGroup, pOwner->m_iCustomizationChoices[i]);
 	}
+}
+
+void C_Playermodel::DrawHelmet(bool bRender)
+{
+	C_HL2MP_Player *pOwner = GetPlayerOwner();
+	if (!pOwner || !g_PR || !pOwner->IsAlive() || pOwner->IsObserver() || (pOwner->GetTeamNumber() != TEAM_HUMANS) || pOwner->IsPerkFlagActive(PERK_POWERUP_PREDATOR) ||
+		(g_PR->GetLevel(pOwner->entindex()) < MAX_PLAYER_LEVEL))
+	{
+		DeleteHelmet();
+		return;
+	}
+
+	if (!m_pParticleHelmet && bRender) // Create if otherwise OK.
+	{
+		int iAttachment = LookupAttachment("gore_head");
+		if (iAttachment <= 0) // Invalid ...
+			return;
+
+		m_pParticleHelmet = ParticleProp()->Create("helm_halo01", PATTACH_POINT_FOLLOW, iAttachment);
+	}
+}
+
+void C_Playermodel::DeleteHelmet(void)
+{
+	if (!m_pParticleHelmet)
+		return;
+
+	m_pParticleHelmet->StopEmission(false, false, true);
+	m_pParticleHelmet = NULL;
 }
