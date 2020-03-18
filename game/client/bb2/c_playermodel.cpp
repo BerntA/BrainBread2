@@ -287,8 +287,8 @@ void C_Playermodel::UpdateModel(void)
 void C_Playermodel::DrawHelmet(bool bRender)
 {
 	C_HL2MP_Player *pOwner = GetPlayerOwner();
-	if (!pOwner || !g_PR || !pOwner->IsAlive() || pOwner->IsObserver() || (pOwner->GetTeamNumber() != TEAM_HUMANS) || pOwner->IsPerkFlagActive(PERK_POWERUP_PREDATOR) ||
-		(g_PR->GetLevel(pOwner->entindex()) < MAX_PLAYER_LEVEL))
+	if (!pOwner || !g_PR || !HL2MPRules() || !pOwner->IsAlive() || pOwner->IsObserver() || (pOwner->GetTeamNumber() != TEAM_HUMANS) || pOwner->IsPerkFlagActive(PERK_POWERUP_PREDATOR) ||
+		(g_PR->GetLevel(pOwner->entindex()) < MAX_PLAYER_LEVEL) || HL2MPRules()->IsFastPacedGameplay())
 	{
 		DeleteHelmet();
 		return;

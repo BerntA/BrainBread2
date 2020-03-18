@@ -137,9 +137,6 @@ public:
 	// Get the view vectors for this mod.
 	virtual const CViewVectors* GetViewVectors() const;
 
-// Damage rules for ammo types
-	virtual float GetAmmoDamage( CBaseEntity *pAttacker, CBaseEntity *pVictim, int nAmmoType );
-
 // Functions to verify the single/multiplayer status of a game
 	virtual bool IsMultiplayer( void ) = 0;// is this a multiplayer game? (either coop or deathmatch)
 

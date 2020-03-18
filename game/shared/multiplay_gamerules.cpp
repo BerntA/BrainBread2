@@ -495,29 +495,20 @@ bool CMultiplayRules::Init()
 
 	//=========================================================
 	//=========================================================
-	float CMultiplayRules::FlPlayerFallDamage( CBasePlayer *pPlayer )
+	float CMultiplayRules::FlPlayerFallDamage(CBasePlayer *pPlayer)
 	{
-		int iFallDamage = (int)falldamage.GetFloat();
+		CHL2MP_Player *pClient = ToHL2MPPlayer(pPlayer);
+		if (!pClient || pClient->IsPerkFlagActive(PERK_POWERUP_PREDATOR) || (falldamage.GetInt() <= 0))
+			return 0.0f;
 
 		// We calculate the safe fall limit into feet.	
-		float flMaxSafeFallSpeed = sqrt(2 * sv_gravity.GetFloat() * (bb2_max_fall_height.GetFloat() / 0.3048f) * 12);
-
-		CHL2MP_Player *pClient = ToHL2MPPlayer(pPlayer);
-		if (pClient && pClient->IsHuman() && (pClient->GetSkillValue(PLAYER_SKILL_HUMAN_WEIGHTLESS) > 0))
+		float flMaxSafeFallSpeed = sqrt(2.0f * sv_gravity.GetFloat() * (bb2_max_fall_height.GetFloat() / 0.3048f) * 12.0f);
+		if (pClient->IsHuman() && (pClient->GetSkillValue(PLAYER_SKILL_HUMAN_WEIGHTLESS) > 0))
 			flMaxSafeFallSpeed -= ((flMaxSafeFallSpeed / 100.0f) * pClient->GetSkillValue(PLAYER_SKILL_HUMAN_WEIGHTLESS, TEAM_HUMANS));
 
-		switch ( iFallDamage )
-		{
-		case 1://progressive
-			pPlayer->m_Local.m_flFallVelocity -= flMaxSafeFallSpeed; // OLD PLAYER_MAX_SAFE_FALL_SPEED
-			return pPlayer->m_Local.m_flFallVelocity * DAMAGE_FOR_FALL_SPEED;
-			break;
-		default:
-		case 0:// fixed
-			return 10;
-			break;
-		}
-	} 
+		pPlayer->m_Local.m_flFallVelocity -= flMaxSafeFallSpeed; // OLD PLAYER_MAX_SAFE_FALL_SPEED
+		return (pPlayer->m_Local.m_flFallVelocity * DAMAGE_FOR_FALL_SPEED);
+	}
 
 	//=========================================================
 	//=========================================================

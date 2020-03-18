@@ -48,7 +48,7 @@ CHudTexture *GetAmmoTextureForAmmo(int type, float bulletsLeft, float clipCapaci
 	type = clamp(type, 0, (MAX_AMMO_HUD_TYPES - 1));
 	AmmoBaseData_t *ammoBase = &ammoBaseDataList[type];
 	float flIndex = clamp((bulletsLeft / clipCapacity), 0.0f, 1.0f) * ammoBase->capacity;
-	int wantedIndex = ((int)flIndex);
+	int wantedIndex = ((int)ceil(flIndex));
 	wantedIndex = clamp(wantedIndex, 0, (MAX_AMMO_HUD_TEX_COUNT - 1));
 	return ammoDefinitions[type][wantedIndex];
 }
@@ -236,7 +236,7 @@ void CHudBaseAmmo::Paint()
 		{
 			int iMags = 0;
 			if (iAmmoCount > 0)
-				iMags = ((iAmmoCount < pLocalWeapon->GetDefaultClip1() && iAmmoCount > 0) ? 1 : (iAmmoCount / pLocalWeapon->GetDefaultClip1()));
+				iMags = ((iAmmoCount <= pLocalWeapon->GetDefaultClip1() && iAmmoCount > 0) ? 1 : (iAmmoCount / (pLocalWeapon->GetDefaultClip1() * (pLocalWeapon->IsAkimboWeapon() ? 2 : 1))));
 
 			m_iMagsLeft = iMags;
 		}

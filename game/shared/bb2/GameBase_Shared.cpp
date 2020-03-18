@@ -1129,6 +1129,12 @@ void CGameBaseShared::ComputePlayerWeight(CHL2MP_Player *pPlayer)
 	if (!pPlayer)
 		return;
 
+	if (pPlayer->IsPerkFlagActive(PERK_POWERUP_CHEETAH) || (pPlayer->GetTeamNumber() == TEAM_DECEASED))
+	{
+		pPlayer->m_BB2Local.m_flCarryWeight = 0.0f;
+		return;
+	}
+
 	float m_flWeight = 0.0f;
 
 	for (int i = 0; i < pszInventoryList.Count(); i++)
@@ -1158,7 +1164,7 @@ void CGameBaseShared::ComputePlayerWeight(CHL2MP_Player *pPlayer)
 	if (pPlayer->IsHuman() && (pPlayer->GetSkillValue(PLAYER_SKILL_HUMAN_LIGHTWEIGHT) > 0))
 		m_flWeight -= ((m_flWeight / 100.0f) * pPlayer->GetSkillValue(PLAYER_SKILL_HUMAN_LIGHTWEIGHT, TEAM_HUMANS));
 
-	if ((m_flWeight <= 0.0f) || (pPlayer->GetTeamNumber() == TEAM_DECEASED))
+	if (m_flWeight <= 0.0f)
 		m_flWeight = 0.0f;
 
 	pPlayer->m_BB2Local.m_flCarryWeight = m_flWeight;

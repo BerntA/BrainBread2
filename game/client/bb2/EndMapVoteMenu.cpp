@@ -143,6 +143,8 @@ void CEndMapVoteMenu::ShowPanel(bool bShow)
 
 	GameBaseClient->CloseGamePanels(true);
 	GameBaseClient->CloseConsole();
+	if (gViewPortInterface)
+		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, false);
 
 	PerformLayout();
 	SetMouseInputEnabled(bShow);

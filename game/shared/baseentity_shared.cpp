@@ -1611,9 +1611,8 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 {
 	static int	tracerCount;
 	trace_t		tr;
-	CAmmoDef*	pAmmoDef	= GetAmmoDef();
-	int			nDamageType	= pAmmoDef->DamageType(info.m_iAmmoType);
-	int			nAmmoFlags	= pAmmoDef->Flags(info.m_iAmmoType);	
+	CAmmoDef*	pAmmoDef = GetAmmoDef();
+	int			nDamageType = pAmmoDef->DamageType(info.m_iAmmoType);
 
 #if defined( GAME_DLL )
 	CBasePlayer* pPlayerFirer = ToBasePlayer(this);
@@ -1637,11 +1636,6 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 #endif// GAME_DLL
 
 	int iPlayerDamage = info.m_iPlayerDamage;
-	if ( iPlayerDamage == 0 )
-	{
-		if (nAmmoFlags & AMMO_INTERPRET_PLRDAMAGE_AS_DAMAGE_TO_PLAYER)
-			iPlayerDamage = pAmmoDef->PlrDamage(info.m_iAmmoType);
-	}
 
 	// the default attacker is ourselves
 	CBaseEntity *pAttacker = info.m_pAttacker ? info.m_pAttacker : this;
@@ -1811,14 +1805,10 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 			}
 
 			int nActualDamageType = nDamageType;
-			if ( flActualDamage == 0.0 )
-			{
-				flActualDamage = g_pGameRules->GetAmmoDamage( pAttacker, tr.m_pEnt, info.m_iAmmoType );
-			}
+			if (flActualDamage <= 0.0f)
+				flActualDamage = 4.0f;
 			else
-			{
-				nActualDamageType = nDamageType | ((flActualDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB );
-			}
+				nActualDamageType = nDamageType | ((flActualDamage > 10.0f) ? DMG_ALWAYSGIB : DMG_NEVERGIB);
 
 			if ( !bHitWater || ((info.m_nFlags & FIRE_BULLETS_DONT_HIT_UNDERWATER) == 0) )
 			{
@@ -1852,14 +1842,6 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 					DispatchEffect( "RagdollImpact", data );
 				}
 	
-#ifdef GAME_DLL
-				if ( nAmmoFlags & AMMO_FORCE_DROP_IF_CARRIED )
-				{
-					// Make sure if the player is holding this, he drops it
-					Pickup_ForcePlayerToDropThisObject( tr.m_pEnt );		
-				}
-#endif
-
 				CBaseEntity *pHitEnt = tr.m_pEnt;
 				if (!bStartedInWater && !bHitWater && pAttacker && pAttacker->IsPlayer() && pHitEnt && (pHitEnt->IsPlayer() || pHitEnt->IsNPC()))
 				{

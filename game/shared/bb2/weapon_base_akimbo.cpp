@@ -103,13 +103,21 @@ bool CHL2MPBaseAkimbo::Deploy(void)
 void CHL2MPBaseAkimbo::PerformAttack(void)
 {
 	CHL2MP_Player* pPlayer = ToHL2MPPlayer(GetOwner());
-	if (!pPlayer)
+	if (!pPlayer || ((m_iClip1 <= 0) && (m_iClip2 <= 0)))
 		return;
 
-	m_bFireNext.Set(!m_bFireNext.Get());
-	bool bPrimary = m_bFireNext.Get();
+	if (m_iClip1 <= 0)
+		m_bFireNext.Set(false);
+	else if (m_iClip2 <= 0)
+		m_bFireNext.Set(true);
+	else
+		m_bFireNext.Set(!m_bFireNext.Get());
 
-	WeaponSound(SINGLE);
+	bool bPrimary = m_bFireNext.Get();
+	if (bPrimary)
+		m_iClip1--;
+	else
+		m_iClip2--;
 
 	int shootAct = (bPrimary ? ACT_VM_SHOOT_LEFT : ACT_VM_SHOOT_RIGHT);
 	if (UsesEmptyAnimation())
@@ -120,12 +128,8 @@ void CHL2MPBaseAkimbo::PerformAttack(void)
 			shootAct = ACT_VM_SHOOT_RIGHT_LAST;
 	}
 
+	WeaponSound(SINGLE);
 	SendWeaponAnim(shootAct);
-
-	if (bPrimary)
-		m_iClip1--;
-	else
-		m_iClip2--;
 
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
 	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);

@@ -1052,6 +1052,7 @@ void CHL2MP_Player::PostThink(void)
 					CheckIsPlayerStuck();
 
 				ClearPerkFlags();
+				GameBaseShared()->ComputePlayerWeight(this);
 			}
 
 			if (IsPerkFlagActive(PERK_HUMAN_GUNSLINGER))
@@ -1747,6 +1748,8 @@ bool CHL2MP_Player::CanEnablePowerup(int powerupFlag, float duration)
 		SetHealth(GetMaxHealth());
 
 	RefreshSpeed();
+	GameBaseShared()->ComputePlayerWeight(this);
+
 	return true;
 }
 
@@ -1782,7 +1785,7 @@ void CHL2MP_Player::ResetPerksAndPowerups(void)
 				SetHealth(1);
 			else
 				SetHealth((int)newHealth);
-		}
+		}		
 	}
 
 	if (!m_bIsInfected)

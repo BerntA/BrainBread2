@@ -335,8 +335,15 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 			continue;
 
 		// Entity relationship extended check:
-		if ((info.GetRelationshipLink() != CLASS_NONE) && ((info.GetAttacker() == NULL) || info.IsMiscFlagActive(TAKEDMGINFO_FORCE_RELATIONSHIP_CHECK)) && pEntity->MyCombatCharacterPointer() && (pEntity->MyCombatCharacterPointer()->IRelationType(NULL, info.GetRelationshipLink()) != D_HT))
-			continue;
+		if ((info.GetRelationshipLink() != CLASS_NONE) && pEntity->MyCombatCharacterPointer() && IsTeamplay()) // Prevent accidental FF...
+		{
+			if (((info.GetAttacker() == NULL) || info.IsMiscFlagActive(TAKEDMGINFO_FORCE_RELATIONSHIP_CHECK)) && (pEntity->MyCombatCharacterPointer()->IRelationType(NULL, info.GetRelationshipLink()) != D_HT))
+				continue;
+
+			// Non-infected and infected plrs are still allies!
+			if (((info.GetRelationshipLink() == CLASS_PLAYER) || (info.GetRelationshipLink() == CLASS_PLAYER_INFECTED) || (info.GetAttacker() && info.GetAttacker()->IsPlayer() && (info.GetAttacker()->GetTeamNumber() < TEAM_HUMANS))) && pEntity->IsHuman(true) && !pEntity->IsMercenary())
+				continue;
+		}
 
 		// blast's don't tavel into or out of water
 		if (bInWater && pEntity->GetWaterLevel() == 0)
@@ -727,38 +734,10 @@ bool CGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	return true;
 }
 
-
 const CViewVectors* CGameRules::GetViewVectors() const
 {
 	return &g_DefaultViewVectors;
 }
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Returns how much damage the given ammo type should do to the victim
-//			when fired by the attacker.
-// Input  : pAttacker - Dude what shot the gun.
-//			pVictim - Dude what done got shot.
-//			nAmmoType - What been shot out.
-// Output : How much hurt to put on dude what done got shot (pVictim).
-//-----------------------------------------------------------------------------
-float CGameRules::GetAmmoDamage( CBaseEntity *pAttacker, CBaseEntity *pVictim, int nAmmoType )
-{
-	float flDamage = 0;
-	CAmmoDef *pAmmoDef = GetAmmoDef();
-
-	if (pAttacker && pAttacker->IsPlayer())
-	{
-		flDamage = pAmmoDef->PlrDamage( nAmmoType );
-	}
-	else
-	{
-		flDamage = pAmmoDef->NPCDamage( nAmmoType );
-	}
-
-	return flDamage;
-}
-
 
 #ifndef CLIENT_DLL
 const char *CGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
