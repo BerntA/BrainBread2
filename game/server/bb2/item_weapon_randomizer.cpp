@@ -39,6 +39,8 @@ weaponInfoItem pszWeapons[] =
 	{ "weapon_beretta", 100, false },
 	{ "weapon_akimbo_beretta", 25, false },
 
+	{ "weapon_deagle", 20, false },
+
 	{ "weapon_rex", 30, false },
 	{ "weapon_akimbo_rex", 15, false },
 

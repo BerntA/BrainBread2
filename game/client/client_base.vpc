@@ -380,6 +380,7 @@ $Project
 			$File "$SRCDIR\game\shared\bb2\weapon_mp7.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_microuzi.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_beretta.cpp"
+			$File "$SRCDIR\game\shared\bb2\weapon_deagle.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_rex.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_hands.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_m9_bayonet.cpp"
