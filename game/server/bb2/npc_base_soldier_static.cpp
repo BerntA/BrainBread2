@@ -1405,36 +1405,9 @@ NPC_STATE CNPCBaseSoldierStatic::SelectIdealState(void)
 	return GetIdealState();
 }
 
-WeaponProficiency_t CNPCBaseSoldierStatic::CalcWeaponProficiency(CBaseCombatWeapon *pWeapon)
-{
-	if (pWeapon)
-	{
-		switch (pWeapon->GetWeaponType())
-		{
-		case WEAPON_TYPE_RIFLE:
-		case WEAPON_TYPE_SPECIAL:
-			return WEAPON_PROFICIENCY_GOOD;
-
-		case WEAPON_TYPE_PISTOL:
-		case WEAPON_TYPE_SMG:
-			return WEAPON_PROFICIENCY_VERY_GOOD;
-
-		case WEAPON_TYPE_SHOTGUN:
-		case WEAPON_TYPE_REVOLVER:
-		case WEAPON_TYPE_SNIPER:
-			return WEAPON_PROFICIENCY_PERFECT;
-		}
-	}
-
-	return BaseClass::CalcWeaponProficiency(pWeapon);
-}
-
 bool CNPCBaseSoldierStatic::HasShotgun()
 {
-	if (GetActiveWeapon() && (GetActiveWeapon()->GetWeaponType() == WEAPON_TYPE_SHOTGUN))
-		return true;
-
-	return false;
+	return (GetActiveWeapon() && (GetActiveWeapon()->GetWeaponType() == WEAPON_TYPE_SHOTGUN));
 }
 
 bool CNPCBaseSoldierStatic::ActiveWeaponIsFullyLoaded()

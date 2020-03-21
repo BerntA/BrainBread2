@@ -7,7 +7,6 @@
 // $NoKeywords: $
 //=============================================================================//
 
-
 #include "cbase.h"
 #include "clientmode_shared.h"
 #include "iinput.h"
@@ -34,7 +33,6 @@
 #include "cam_thirdperson.h"
 #include <vgui/ILocalize.h>
 #include "ienginevgui.h"
-#include "sourcevr/isourcevirtualreality.h"
 
 // BB2
 #include "GameBase_Client.h"
@@ -63,10 +61,6 @@
 #include "econ/confirm_dialog.h"
 extern IClientReplayContext *g_pClientReplayContext;
 extern ConVar replay_rendersetting_renderglow;
-#endif
-
-#if defined USES_ECON_ITEMS
-#include "econ_item_view.h"
 #endif
 
 #ifdef BB2_GLOWS
@@ -398,15 +392,9 @@ void ClientModeShared::ReloadScheme( bool flushLowLevel )
 //----------------------------------------------------------------------------
 // Purpose: Let the client mode set some vgui conditions
 //-----------------------------------------------------------------------------
-void	ClientModeShared::ComputeVguiResConditions( KeyValues *pkvConditions ) 
+void ClientModeShared::ComputeVguiResConditions( KeyValues *pkvConditions ) 
 {
-	if ( UseVR() )
-	{
-		pkvConditions->FindKey( "if_vr", true );
-	}
 }
-
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -604,7 +592,6 @@ bool ClientModeShared::ShouldDrawDetailObjects( )
 	return true;
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Returns true if VR mode should black out everything outside the HUD.
 //			This is used for things like sniper scopes and full screen UI
@@ -613,16 +600,6 @@ bool ClientModeShared::ShouldBlackoutAroundHUD()
 {
 	return enginevgui->IsGameUIVisible();
 }
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Allows the client mode to override mouse control stuff in sourcevr
-//-----------------------------------------------------------------------------
-HeadtrackMovementMode_t ClientModeShared::ShouldOverrideHeadtrackControl() 
-{
-	return HMM_NOOVERRIDE;
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 

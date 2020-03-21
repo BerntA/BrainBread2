@@ -73,7 +73,7 @@ CHudInventoryView::CHudInventoryView(const char * pElementName) : CHudElement(pE
 {
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent(pParent);
-	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_INVEHICLE | HIDEHUD_ZOMBIEMODE | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_ZOMBIEMODE | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
 
 	m_nTextureDefaultIcon = surface()->CreateNewTextureID();
 	surface()->DrawSetTextureFile(m_nTextureDefaultIcon, "vgui/hud/inventory/unknown", true, false);

@@ -15,18 +15,13 @@
 #include "GameBase_Shared.h"
 #include "random_extended.h"
 
-// NVNT start extra includes
-#include "haptics/haptic_utils.h"
 #ifdef CLIENT_DLL
 #include "GameBase_Client.h"
 #include "prediction.h"
 #include "c_baseplayer.h"
 #include "c_hl2mp_player.h"
 #include "c_te_effect_dispatch.h"
-#endif
-// NVNT end extra includes
-
-#if !defined( CLIENT_DLL )
+#else
 
 // Game DLL Headers
 #include "soundent.h"
@@ -1055,18 +1050,6 @@ void CBaseCombatWeapon::SetViewModel()
 //-----------------------------------------------------------------------------
 bool CBaseCombatWeapon::SendWeaponAnim( int iActivity )
 {
-#ifdef USES_ECON_ITEMS
-	iActivity = TranslateViewmodelHandActivity( (Activity)iActivity );
-#endif		
-	// NVNT notify the haptics system of this weapons new activity
-#ifdef WIN32
-#ifdef CLIENT_DLL
-	if ( prediction->InPrediction() && prediction->IsFirstTimePredicted() )
-#endif
-#ifndef _X360
-		HapticSendWeaponAnim(this,iActivity);
-#endif
-#endif
 	//For now, just set the ideal activity and be done with it
 	return SetIdealActivity( (Activity) iActivity );
 }
@@ -1858,22 +1841,6 @@ QAngle CBaseCombatWeapon::GetViewKickAngle(void)
 	viewKick = QAngle(flAngX, flAngY, flAngZ);
 
 	return viewKick;
-}
-
-//-----------------------------------------------------------------------------
-const WeaponProficiencyInfo_t *CBaseCombatWeapon::GetProficiencyValues()
-{
-	static WeaponProficiencyInfo_t defaultWeaponProficiencyTable[] =
-	{
-		{ 1.0, 1.0	},
-		{ 1.0, 1.0	},
-		{ 1.0, 1.0	},
-		{ 1.0, 1.0	},
-		{ 1.0, 1.0	},
-	};
-
-	COMPILE_TIME_ASSERT( ARRAYSIZE(defaultWeaponProficiencyTable) == WEAPON_PROFICIENCY_PERFECT + 1);
-	return defaultWeaponProficiencyTable;
 }
 
 //-----------------------------------------------------------------------------

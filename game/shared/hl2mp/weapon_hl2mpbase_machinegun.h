@@ -44,8 +44,6 @@ public:
 	virtual int GetMinBurst() { return 1; }
 	virtual int GetMaxBurst() { return 3; }
 
-	virtual const WeaponProficiencyInfo_t *GetProficiencyValues();
-
 #ifndef CLIENT_DLL
 #ifdef BB2_AI // NPC Firing
 	virtual int CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; }

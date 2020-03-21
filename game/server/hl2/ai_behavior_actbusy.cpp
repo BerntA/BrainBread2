@@ -659,10 +659,6 @@ bool CAI_ActBusyBehavior::IsCurScheduleOverridable( void )
 		return (GetOuter()->GetState() != NPC_STATE_SCRIPT);
 	}
 
-	// Act busies are not valid inside of a vehicle
-	if ( GetOuter()->IsInAVehicle() )
-		return false;
-
 	// Only if we're about to idle (or SCHED_NONE to catch newly spawned guys)		
 	return ( IsCurSchedule( SCHED_IDLE_STAND ) || IsCurSchedule( SCHED_NONE ) );
 }
@@ -2499,9 +2495,6 @@ void CAI_ActBusyGoal::InputForceNPCToActBusy( inputdata_t &inputdata )
 	if ( !pBehavior )
 		return;
 
-	// Wrapped this bugfix so that it doesn't break HL2.
-	bool bEpisodicBugFix = hl2_episodic.GetBool();
-
 	// Do we have a specified node too?
 	pszParam = strtok(NULL," ");
 	if ( pszParam )
@@ -2516,20 +2509,12 @@ void CAI_ActBusyGoal::InputForceNPCToActBusy( inputdata_t &inputdata )
 				Msg("ai_goal_actbusy input ForceNPCToActBusy fired targeting an entity that isn't a hintnode.\n");
 				return;
 			}
-
-			if ( bEpisodicBugFix )
-			{
-				pszParam = strtok(NULL," ");
-			}
 		}
 	}
 
 	Activity activity = ACT_INVALID;
 
-	if ( !bEpisodicBugFix )
-	{
- 		pszParam = strtok(NULL," ");
-	}
+	pszParam = strtok(NULL, " ");
 
 	while ( pszParam )
 	{

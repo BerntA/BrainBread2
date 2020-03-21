@@ -651,10 +651,6 @@ public:
 	int m_nSkin;
 	float m_flGibScale;
 	float m_flGibGravityScale;
-
-#ifdef HL2_EPISODIC
-	float m_flMassOverride;	// allow designer to force a mass for gibs in some cases
-#endif
 };
 
 BEGIN_DATADESC( CEnvShooter )
@@ -662,11 +658,6 @@ BEGIN_DATADESC( CEnvShooter )
 	DEFINE_KEYFIELD( m_nSkin, FIELD_INTEGER, "skin" ),
 	DEFINE_KEYFIELD( m_flGibScale, FIELD_FLOAT ,"scale" ),
 	DEFINE_KEYFIELD( m_flGibGravityScale, FIELD_FLOAT, "gibgravityscale" ),
-
-
-#ifdef HL2_EPISODIC
-	DEFINE_KEYFIELD( m_flMassOverride, FIELD_FLOAT, "massoverride" ),
-#endif
 
 END_DATADESC()
 
@@ -782,19 +773,6 @@ CGib *CEnvShooter::CreateGib ( void )
 	{
 		pGib->AddEffects( EF_NOSHADOW );
 	}
-
-
-#ifdef HL2_EPISODIC
-	// if a mass override is set, apply it to the gib
-	if (m_flMassOverride != 0)
-	{
-		IPhysicsObject *pPhys = pGib->VPhysicsGetObject();
-		if (pPhys)
-		{
-			pPhys->SetMass( m_flMassOverride );
-		}
-	}
-#endif
 
 	return pGib;
 }

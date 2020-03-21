@@ -10,7 +10,6 @@
 #define ICLIENTMODE_H
 
 #include <vgui/VGUI.h>
-#include "client_virtualreality.h"
 
 class CViewSetup;
 class C_BaseEntity;
@@ -144,9 +143,6 @@ public:
 
 	// Returns true if VR mode should black out everything around the UI
 	virtual bool	ShouldBlackoutAroundHUD() = 0;
-
-	// Returns true if VR mode should black out everything around the UI
-	virtual HeadtrackMovementMode_t ShouldOverrideHeadtrackControl() = 0;
 
 	virtual bool	IsInfoPanelAllowed() = 0;
 	virtual void	InfoPanelDisplayed() = 0;

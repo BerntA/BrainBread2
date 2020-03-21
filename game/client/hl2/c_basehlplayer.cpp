@@ -522,15 +522,9 @@ void C_BaseHLPlayer::PerformClientSideObstacleAvoidance( float flFrameTime, CUse
 bool C_BaseHLPlayer::CreateMove(float flInputSampleTime, CUserCmd *pCmd, bool bFakeInput)
 {
 	bool bResult = BaseClass::CreateMove(flInputSampleTime, pCmd, bFakeInput);
-
-	if ( !IsInAVehicle() )
-	{
-		PerformClientSideObstacleAvoidance(TICK_INTERVAL, pCmd);
-	}
-
+	PerformClientSideObstacleAvoidance(TICK_INTERVAL, pCmd);
 	return bResult;
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Input handling
@@ -538,5 +532,4 @@ bool C_BaseHLPlayer::CreateMove(float flInputSampleTime, CUserCmd *pCmd, bool bF
 void C_BaseHLPlayer::BuildTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed )
 {
 	BaseClass::BuildTransformations( hdr, pos, q, cameraTransform, boneMask, boneComputed );
-	BuildFirstPersonMeathookTransformations( hdr, pos, q, cameraTransform, boneMask, boneComputed, "ValveBiped.Bip01_Head1" );
 }

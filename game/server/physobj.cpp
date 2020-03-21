@@ -1638,27 +1638,23 @@ void CPhysMagnet::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 	// and being screwed when the crane can't pick them up. We need to get rid of the object.
 	if ( HasSpawnFlags( SF_MAGNET_COAST_HACK ) )
 	{
-		// If the other isn't the jeep, we need to get rid of it
-		if ( !FClassnameIs( pOther, "prop_vehicle_jeep" ) )
+		// If it takes damage, destroy it
+		if (pOther->m_takedamage != DAMAGE_NO && pOther->m_takedamage != DAMAGE_EVENTS_ONLY)
 		{
-			// If it takes damage, destroy it
-			if ( pOther->m_takedamage != DAMAGE_NO && pOther->m_takedamage != DAMAGE_EVENTS_ONLY )
-			{
-				CTakeDamageInfo info( this, this, pOther->GetHealth(), DMG_GENERIC | DMG_PREVENT_PHYSICS_FORCE );
-				pOther->TakeDamage( info );
-			}
-			else if ( pEvent->pObjects[ otherIndex ]->IsMoveable() )
-			{
-				// Otherwise, we're screwed, so just remove it
-				UTIL_Remove( pOther );
-			}
-			else
-			{
-				Warning( "CPhysMagnet %s:%d blocking magnet\n",
-					pOther->GetClassname(), pOther->entindex() );
-			}
-			return;
+			CTakeDamageInfo info(this, this, pOther->GetHealth(), DMG_GENERIC | DMG_PREVENT_PHYSICS_FORCE);
+			pOther->TakeDamage(info);
 		}
+		else if (pEvent->pObjects[otherIndex]->IsMoveable())
+		{
+			// Otherwise, we're screwed, so just remove it
+			UTIL_Remove(pOther);
+		}
+		else
+		{
+			Warning("CPhysMagnet %s:%d blocking magnet\n",
+				pOther->GetClassname(), pOther->entindex());
+		}
+		return;
 	}
 
 	// Make sure it's made of metal

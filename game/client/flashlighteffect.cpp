@@ -263,62 +263,9 @@ void CFlashlightEffect::UpdateLightNew(const Vector &vecPos, const Vector &vecFo
 
 	state.m_fQuadraticAtten = r_flashlightquadratic.GetFloat();
 
-	bool bFlicker = false;
-
-#ifdef HL2_EPISODIC
-	C_BaseHLPlayer *pPlayer = (C_BaseHLPlayer *)C_BasePlayer::GetLocalPlayer();
-	if ( pPlayer )
-	{
-		float flBatteryPower = ( pPlayer->m_HL2Local.m_flFlashBattery >= 0.0f ) ? ( pPlayer->m_HL2Local.m_flFlashBattery ) : pPlayer->m_HL2Local.m_flSuitPower;
-		if ( flBatteryPower <= 10.0f )
-		{
-			float flScale;
-			if ( flBatteryPower >= 0.0f )
-			{	
-				flScale = ( flBatteryPower <= 4.5f ) ? SimpleSplineRemapVal( flBatteryPower, 4.5f, 0.0f, 1.0f, 0.0f ) : 1.0f;
-			}
-			else
-			{
-				flScale = SimpleSplineRemapVal( flBatteryPower, 10.0f, 4.8f, 1.0f, 0.0f );
-			}
-			
-			flScale = clamp( flScale, 0.0f, 1.0f );
-
-			if ( flScale < 0.35f )
-			{
-				float flFlicker = cosf( gpGlobals->curtime * 6.0f ) * sinf( gpGlobals->curtime * 15.0f );
-				
-				if ( flFlicker > 0.25f && flFlicker < 0.75f )
-				{
-					// On
-					state.m_fLinearAtten = r_flashlightlinear.GetFloat() * flScale;
-				}
-				else
-				{
-					// Off
-					state.m_fLinearAtten = 0.0f;
-				}
-			}
-			else
-			{
-				float flNoise = cosf( gpGlobals->curtime * 7.0f ) * sinf( gpGlobals->curtime * 25.0f );
-				state.m_fLinearAtten = r_flashlightlinear.GetFloat() * flScale + 1.5f * flNoise;
-			}
-
-			state.m_fHorizontalFOVDegrees = r_flashlightfov.GetFloat() - ( 16.0f * (1.0f-flScale) );
-			state.m_fVerticalFOVDegrees = r_flashlightfov.GetFloat() - ( 16.0f * (1.0f-flScale) );
-			
-			bFlicker = true;
-		}
-	}
-#endif // HL2_EPISODIC
-
-	if ( bFlicker == false )
-	{
-		state.m_fLinearAtten = r_flashlightlinear.GetFloat();
-		state.m_fHorizontalFOVDegrees = r_flashlightfov.GetFloat();
-		state.m_fVerticalFOVDegrees = r_flashlightfov.GetFloat();
-	}
+	state.m_fLinearAtten = r_flashlightlinear.GetFloat();
+	state.m_fHorizontalFOVDegrees = r_flashlightfov.GetFloat();
+	state.m_fVerticalFOVDegrees = r_flashlightfov.GetFloat();
 
 	state.m_fConstantAtten = r_flashlightconstant.GetFloat();
 	state.m_Color[0] = 1.0f;

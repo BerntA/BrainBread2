@@ -60,7 +60,7 @@ CHudWeaponView::CHudWeaponView(const char * pElementName) : CHudElement(pElement
 
 	m_pCooldownBG = m_pCooldownFG = NULL;
 
-	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_INVEHICLE | HIDEHUD_ZOMBIEMODE | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_ZOMBIEMODE | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
 }
 
 //------------------------------------------------------------------------

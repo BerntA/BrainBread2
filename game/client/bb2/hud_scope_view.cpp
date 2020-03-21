@@ -54,7 +54,7 @@ CHudScopeView::CHudScopeView(const char * pElementName) : CHudElement(pElementNa
 	m_nTexture_ScopeRefract = surface()->CreateNewTextureID();
 	surface()->DrawSetTextureFile(m_nTexture_ScopeRefract, "effects/scope_refract", true, false);
 
-	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_INVEHICLE | HIDEHUD_ZOMBIEMODE | HIDEHUD_ROUNDSTARTING);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_ZOMBIEMODE | HIDEHUD_ROUNDSTARTING);
 }
 
 //------------------------------------------------------------------------

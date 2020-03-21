@@ -30,15 +30,12 @@
 #include "ai_behavior_functank.h"
 #include "hl2_shared_misc.h"
 #include "effects.h"
-#include "iservervehicle.h"
 #include "soundenvelope.h"
 #include "effect_dispatch_data.h"
 #include "te_effect_dispatch.h"
 #include "props.h"
 #include "rumble_shared.h"
 #include "particle_parse.h"
-// NVNT turret recoil
-#include "haptics/haptic_utils.h"
 
 #ifdef HL2_DLL
 #include "hl2_player.h"
@@ -77,15 +74,12 @@ BEGIN_DATADESC( CFuncTank )
 	DEFINE_KEYFIELD( m_iBulletDamageVsPlayer, FIELD_INTEGER, "bullet_damage_vs_player" ),
 	DEFINE_KEYFIELD( m_iszMaster, FIELD_STRING, "master" ),
 	
-//BB2_MISC_FIXES: We enable all ammo types so that we can have both the old style mounted guns (which players can use) and the new combine cannons (which players can't use, and rely on the new ammo code).
-//#ifdef HL2_EPISODIC	
+	// We enable all ammo types so that we can have both the old style mounted guns (which players can use) and the new combine cannons (which players can't use, and rely on the new ammo code).
 	DEFINE_KEYFIELD( m_iszAmmoType, FIELD_STRING, "ammotype" ),
 	DEFINE_FIELD( m_iAmmoType, FIELD_INTEGER ),
-//#else
 	DEFINE_FIELD( m_iSmallAmmoType, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iMediumAmmoType, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iLargeAmmoType, FIELD_INTEGER ),
-//#endif // HL2_EPISODIC
 
 	DEFINE_KEYFIELD( m_soundStartRotate, FIELD_SOUNDNAME, "rotatestartsound" ),
 	DEFINE_KEYFIELD( m_soundStopRotate, FIELD_SOUNDNAME, "rotatestopsound" ),
@@ -736,15 +730,11 @@ void CFuncTank::Spawn( void )
 {
 	Precache();
 
-//BB2_MISC_FIXES: We enable all ammo types so that we can have both the old style mounted guns (which players can use) and the new combine cannons (which players can't use, and rely on the new ammo code).
-//#ifdef HL2_EPISODIC
+// BB2_MISC_FIXES: We enable all ammo types so that we can have both the old style mounted guns (which players can use) and the new combine cannons (which players can't use, and rely on the new ammo code).
 	m_iAmmoType = GetAmmoDef()->Index( STRING( m_iszAmmoType ) );
-//#else
-
 	m_iSmallAmmoType	= GetAmmoDef()->Index("Beretta");	
 	m_iMediumAmmoType	= GetAmmoDef()->Index("AK47");
 	m_iLargeAmmoType	= GetAmmoDef()->Index("AR2");
-//#endif // HL2_EPISODIC
 
 	SetMoveType( MOVETYPE_PUSH );  // so it doesn't get pushed by anything
 	SetSolid( SOLID_VPHYSICS );
@@ -1188,10 +1178,6 @@ void CFuncTank::ControllerPostFrame( void )
 	
 	Fire( bulletCount, WorldBarrelPosition(), forward, pPlayer, false );
  
-#if defined( WIN32 ) && !defined( _X360 ) 
-	// NVNT apply a punch on the player each time fired
-	HapticPunch(pPlayer,0,0,hap_turret_mag.GetFloat());
-#endif	
 	// HACKHACK -- make some noise (that the AI can hear)
 	CSoundEnt::InsertSound( SOUND_COMBAT, WorldSpaceCenter(), FUNCTANK_FIREVOLUME, 0.2 );
 	
@@ -1934,7 +1920,6 @@ void CFuncTank::AimFuncTankAtTarget( void )
 	QAngle angles;
 	bool bUpdateTime = false;
 
-	CBaseEntity *pTargetVehicle = NULL;
 	Vector barrelEnd = WorldBarrelPosition();
 	Vector worldTargetPosition;
 	if (m_spawnflags & SF_TANK_AIM_AT_POS)
@@ -1959,15 +1944,6 @@ void CFuncTank::AimFuncTankAtTarget( void )
 
 		// Calculate angle needed to aim at target
 		worldTargetPosition = pEntity->EyePosition();
-		if ( pEntity->IsPlayer() )
-		{
-			CBasePlayer *pPlayer = assert_cast<CBasePlayer*>(pEntity);
-			pTargetVehicle = pPlayer->GetVehicleEntity();
-			if ( pTargetVehicle )
-			{
-				worldTargetPosition = pTargetVehicle->BodyTarget( GetAbsOrigin(), false );
-			}
-		}
 	}
 
 	float range2 = worldTargetPosition.DistToSqr( barrelEnd );
@@ -2001,20 +1977,19 @@ void CFuncTank::AimFuncTankAtTarget( void )
 		}
 
 		// No line of sight, don't track
-		if ( tr.fraction == 1.0 || tr.m_pEnt == pTarget || (pTargetVehicle && (tr.m_pEnt == pTargetVehicle)) )
+		if ( tr.fraction == 1.0 || tr.m_pEnt == pTarget )
 		{
 			if ( InRange2( range2 ) && pTarget && pTarget->IsAlive() )
 			{
 				bUpdateTime = true;
 
 				// Sight position is BodyTarget with no noise (so gun doesn't bob up and down)
-				CBaseEntity *pInstance = pTargetVehicle ? pTargetVehicle : pTarget;
-				m_hFuncTankTarget = pInstance;
+				m_hFuncTankTarget = pTarget;
 
-				m_sightOrigin = pInstance->BodyTarget( GetAbsOrigin(), false );
+				m_sightOrigin = pTarget->BodyTarget(GetAbsOrigin(), false);
 				if ( m_bPerformLeading )
 				{
-					ComputeLeadingPosition( barrelEnd, pInstance, &vecAimOrigin );
+					ComputeLeadingPosition(barrelEnd, pTarget, &vecAimOrigin);
 				}
 				else
 				{
@@ -2422,20 +2397,6 @@ bool CFuncTank::HasLOSTo( CBaseEntity *pEntity )
 	// UNDONE: Should this hit BLOCKLOS brushes?
 	AI_TraceLine( vecBarrelEnd, vecTarget, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr );
 	
-	CBaseEntity	*pHitEntity = tr.m_pEnt;
-	
-	// Is entity in a vehicle? if so, verify vehicle is target and return if so (so npc shoots at vehicle)
-	CBaseCombatCharacter *pCCEntity = pEntity->MyCombatCharacterPointer();
-	if ( pCCEntity != NULL && pCCEntity->IsInAVehicle() )
-	{
-		// Ok, player in vehicle, check if vehicle is target we're looking at, fire if it is
-		// Also, check to see if the owner of the entity is the vehicle, in which case it's valid too.
-		// This catches vehicles that use bone followers.
-		CBaseEntity	*pVehicle  = pCCEntity->GetVehicle()->GetVehicleEnt();
-		if ( pHitEntity == pVehicle || ( pHitEntity != NULL && pHitEntity->GetOwnerEntity() == pVehicle ) )
-			return true;
-	}
-
 	return ( tr.fraction == 1.0 || tr.m_pEnt == pEntity );
 }
 
@@ -2480,46 +2441,34 @@ void CFuncTankGun::Fire( int bulletCount, const Vector &barrelEnd, const Vector 
 	info.m_iPlayerDamage = m_iBulletDamageVsPlayer;
 	info.m_pAttacker = pAttacker;
 	info.m_pAdditionalIgnoreEnt = GetParent();
-	
-	//BB2_MISC_FIXES: Here we disable the episode 2 method of mounted guns which doesn't work in hl2mp.
-	/*#ifdef HL2_EPISODIC
-		if ( m_iAmmoType != -1 )
+
+	for (i = 0; i < bulletCount; i++)
+	{
+		switch (m_bulletType)
 		{
-			for ( i = 0; i < bulletCount; i++ )
-			{
-				info.m_iAmmoType = m_iAmmoType;
-				FireBullets( info );
-			}
-		}
-	#else*/
-		for ( i = 0; i < bulletCount; i++ )
-		{
-			switch( m_bulletType )
-			{
-			case TANK_BULLET_SMALL:
-				info.m_iAmmoType = m_iSmallAmmoType;
-				FireBullets( info );
-				break;
-	
-			case TANK_BULLET_MEDIUM:
-				info.m_iAmmoType = m_iMediumAmmoType;
-				FireBullets( info );
-				break;
-	
-			case TANK_BULLET_LARGE:
-				info.m_iAmmoType = m_iLargeAmmoType;
-				FireBullets( info );
-				break;
-	
-			default:
-			case TANK_BULLET_NONE:
+		case TANK_BULLET_SMALL:
+			info.m_iAmmoType = m_iSmallAmmoType;
+			FireBullets(info);
+			break;
+
+		case TANK_BULLET_MEDIUM:
+			info.m_iAmmoType = m_iMediumAmmoType;
+			FireBullets(info);
+			break;
+
+		case TANK_BULLET_LARGE:
+			info.m_iAmmoType = m_iLargeAmmoType;
+			FireBullets(info);
+			break;
+
+		default:
+		case TANK_BULLET_NONE:
 			//BB2_MISC_FIXES: Since only guns without a tank_bullet setting will be episodic (and non-player controllable anyway), here we tell the code to use the episode 2 ammo code.
 			info.m_iAmmoType = m_iAmmoType;
-			FireBullets( info );
-				break;
-			}
+			FireBullets(info);
+			break;
 		}
-	//#endif // HL2_EPISODIC
+	}
 
 	CFuncTank::Fire( bulletCount, barrelEnd, forward, pAttacker, bIgnoreSpread );
 }

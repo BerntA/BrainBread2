@@ -70,7 +70,6 @@ class Vector;
 struct gamevcollisionevent_t;
 class CBaseAnimating;
 class CBasePlayer;
-class IServerVehicle;
 struct solid_t;
 struct notify_system_event_params_t;
 class CAI_BaseNPC;
@@ -919,9 +918,6 @@ public:
 	virtual bool	IsWearable( void ) const { return false; }
 	virtual CBaseCombatWeapon *MyCombatWeaponPointer( void ) { return NULL; }
 
-	// If this is a vehicle, returns the vehicle interface
-	virtual IServerVehicle*			GetServerVehicle() { return NULL; }
-
 	// UNDONE: Make this data instead of procedural?
 	virtual bool	IsViewable( void );					// is this something that would be looked at (model, sprite, etc.)?
 
@@ -1286,7 +1282,6 @@ public:
 	// Used by the PAS filters to ask the entity where in world space the sounds it emits come from.
 	// This is used right now because if you have something sitting on an incline, using our axis-aligned 
 	// bounding boxes can return a position in solid space, so you won't hear sounds emitted by the object.
-	// For now, we're hacking around it by moving the sound emission origin up on certain objects like vehicles.
 	//
 	// When OBBs get in, this can probably go away.
 	virtual Vector			GetSoundEmissionOrigin() const;

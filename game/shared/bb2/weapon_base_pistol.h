@@ -48,8 +48,6 @@ public:
 	virtual void Drop(const Vector &vecVelocity);
 	virtual bool Deploy(void);
 
-	virtual const WeaponProficiencyInfo_t *GetProficiencyValues() { return CWeaponHL2MPBase::GetProficiencyValues(); }
-
 #ifdef BB2_AI
 #ifndef CLIENT_DLL
 	virtual void Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);

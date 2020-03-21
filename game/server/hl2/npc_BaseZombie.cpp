@@ -28,7 +28,6 @@
 #include "vstdlib/random.h"
 #include "engine/IEngineSound.h"
 #include "props.h"
-#include "vehicle_base.h"
 #include "hl2mp_gamerules.h"
 #include "GameBase_Server.h"
 #include "random_extended.h"
@@ -1108,15 +1107,6 @@ bool CNPC_BaseZombie::ShouldUseNormalSpeedForSchedule(int scheduleType)
 //---------------------------------------------------------
 void CNPC_BaseZombie::Event_Killed( const CTakeDamageInfo &info )
 {
-	if ( info.GetDamageType() & DMG_VEHICLE )
-	{
-		Vector vecDamageDir = info.GetDamageForce();
-		VectorNormalize( vecDamageDir );
-
-		// Big blood splat
-		UTIL_BloodSpray( WorldSpaceCenter(), vecDamageDir, BLOOD_COLOR_RED, 8, FX_BLOODSPRAY_CLOUD );
-	}
-
 	CTakeDamageInfo pDamageCopy = info;
 
 	CBaseEntity *pIgniter = m_hLastIgnitionSource.Get();
@@ -1124,9 +1114,7 @@ void CNPC_BaseZombie::Event_Killed( const CTakeDamageInfo &info )
 		pDamageCopy.SetAttacker(pIgniter);
 
 	HL2MPRules()->DeathNotice(this, pDamageCopy);
-
 	BaseClass::Event_Killed(pDamageCopy);
-
 	m_hLastIgnitionSource = NULL;
 }
 
@@ -1221,21 +1209,7 @@ Vector CNPC_BaseZombie::BodyTarget( const Vector &posSrc, bool bNoisy )
 //-----------------------------------------------------------------------------
 void CNPC_BaseZombie::TranslateNavGoal( CBaseEntity *pEnemy, Vector &chasePosition )
 {
-	// If our enemy is in a vehicle, we need them to tell us where to navigate to them
-	if ( pEnemy == NULL )
-		return;
-
-	CBaseCombatCharacter *pBCC = pEnemy->MyCombatCharacterPointer();
-	if ( pBCC && pBCC->IsInAVehicle() )
-	{
-		Vector vecForward, vecRight;
-		pBCC->GetVectors( &vecForward, &vecRight, NULL );
-
-		chasePosition = pBCC->WorldSpaceCenter() + ( vecForward * 24.0f ) + ( vecRight * 48.0f );
-		return;
-	}
-
-	BaseClass::TranslateNavGoal( pEnemy, chasePosition );
+	BaseClass::TranslateNavGoal(pEnemy, chasePosition);
 }
 
 bool CNPC_BaseZombie::OverrideShouldAddToLookList(CBaseEntity *pEntity)

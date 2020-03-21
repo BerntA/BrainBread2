@@ -23,7 +23,6 @@
 #include "npcevent.h"
 #include "igamesystem.h"
 #include "collisionutils.h"
-#include "iservervehicle.h"
 #include "func_break.h"
 #include "GameBase_Server.h"
 #include "GameBase_Shared.h"
@@ -50,7 +49,6 @@ short		g_sModelIndexBubbles;		// holds the index for the bubbles model
 short		g_sModelIndexBloodDrop;		// holds the sprite index for the initial blood
 short		g_sModelIndexBloodSpray;	// holds the sprite index for splattered blood
 
-ConVar weapon_showproficiency( "weapon_showproficiency", "0" );
 extern ConVar ai_debug_shoot_positions;
 
 //-----------------------------------------------------------------------------
@@ -233,44 +231,27 @@ class CWeaponLOSFilter : public CTraceFilterSkipTwoEntities
 {
 	DECLARE_CLASS( CWeaponLOSFilter, CTraceFilterSkipTwoEntities );
 public:
-	CWeaponLOSFilter( IHandleEntity *pHandleEntity, IHandleEntity *pHandleEntity2, int collisionGroup ) :
-	  CTraceFilterSkipTwoEntities( pHandleEntity, pHandleEntity2, collisionGroup ), m_pVehicle( NULL )
+
+	CWeaponLOSFilter( IHandleEntity *pHandleEntity, IHandleEntity *pHandleEntity2, int collisionGroup ) : CTraceFilterSkipTwoEntities( pHandleEntity, pHandleEntity2, collisionGroup )
 	{
-		// If the tracing entity is in a vehicle, then ignore it
-		if ( pHandleEntity != NULL )
-		{
-			CBaseCombatCharacter *pBCC = ((CBaseEntity *)pHandleEntity)->MyCombatCharacterPointer();
-			if ( pBCC != NULL )
-			{
-				m_pVehicle = pBCC->GetVehicleEntity();
-			}
-		}
 	}
-	virtual bool ShouldHitEntity( IHandleEntity *pServerEntity, int contentsMask )
+
+	virtual bool ShouldHitEntity(IHandleEntity *pServerEntity, int contentsMask)
 	{
 		CBaseEntity *pEntity = (CBaseEntity *)pServerEntity;
 
-		if ( pEntity->GetCollisionGroup() == COLLISION_GROUP_WEAPON )
+		if ((pEntity->GetCollisionGroup() == COLLISION_GROUP_WEAPON) || pEntity->IsBaseCombatWeapon())
 			return false;
 
-		// Don't collide with the tracing entity's vehicle (if it exists)
-		if ( pServerEntity == m_pVehicle )
-			return false;
-
-		if ( pEntity->GetHealth() > 0 )
+		if (pEntity->GetHealth() > 0)
 		{
 			CBreakable *pBreakable = dynamic_cast<CBreakable *>(pEntity);
-			if ( pBreakable  && pBreakable->IsBreakable() && pBreakable->GetMaterialType() == matGlass)
-			{
+			if (pBreakable  && pBreakable->IsBreakable() && pBreakable->GetMaterialType() == matGlass)
 				return false;
-			}
 		}
 
-		return BaseClass::ShouldHitEntity( pServerEntity, contentsMask );
+		return BaseClass::ShouldHitEntity(pServerEntity, contentsMask);
 	}
-
-private:
-	CBaseEntity *m_pVehicle;
 };
 
 //-----------------------------------------------------------------------------
@@ -288,8 +269,6 @@ bool CBaseCombatWeapon::WeaponLOSCondition( const Vector &ownerPos, const Vector
 	Vector vecRelativeShootPosition;
 	VectorSubtract( npcOwner->Weapon_ShootPosition(), npcOwner->GetAbsOrigin(), vecRelativeShootPosition );
 	Vector barrelPos = ownerPos + vecRelativeShootPosition;
-
-	// FIXME: If we're in a vehicle, we need some sort of way to handle shooting out of them
 
 	// Use the custom LOS trace filter
 	CWeaponLOSFilter traceFilter( m_hOwner.Get(), npcOwner->GetEnemy(), COLLISION_GROUP_BREAKABLE_GLASS );
@@ -309,19 +288,6 @@ bool CBaseCombatWeapon::WeaponLOSCondition( const Vector &ownerPos, const Vector
 
 	CBaseEntity	*pHitEnt = tr.m_pEnt;
 
-	CBasePlayer *pEnemyPlayer = ToBasePlayer( npcOwner->GetEnemy() );
-
-	// is player in a vehicle? if so, verify vehicle is target and return if so (so npc shoots at vehicle)
-	if ( pEnemyPlayer && pEnemyPlayer->IsInAVehicle() )
-	{
-		// Ok, player in vehicle, check if vehicle is target we're looking at, fire if it is
-		// Also, check to see if the owner of the entity is the vehicle, in which case it's valid too.
-		// This catches vehicles that use bone followers.
-		CBaseEntity	*pVehicle  = pEnemyPlayer->GetVehicle()->GetVehicleEnt();
-		if ( pHitEnt == pVehicle || pHitEnt->GetOwnerEntity() == pVehicle )
-			return true;
-	}
-
 	// Hitting our enemy is a success case
 	if ( pHitEnt == npcOwner->GetEnemy() )
 	{
@@ -333,18 +299,7 @@ bool CBaseCombatWeapon::WeaponLOSCondition( const Vector &ownerPos, const Vector
 		return true;
 	}
 
-	// If a vehicle is blocking the view, grab its driver and use that as the combat character
-	CBaseCombatCharacter *pBCC;
-	IServerVehicle *pVehicle = pHitEnt->GetServerVehicle();
-	if ( pVehicle )
-	{
-		pBCC = pVehicle->GetPassenger( );
-	}
-	else
-	{
-		pBCC = ToBaseCombatCharacter( pHitEnt );
-	}
-
+	CBaseCombatCharacter *pBCC = ToBaseCombatCharacter(pHitEnt);;
 	if ( pBCC ) 
 	{
 		if ( npcOwner->IRelationType( pBCC ) == D_HT )

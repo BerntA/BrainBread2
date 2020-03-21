@@ -46,7 +46,6 @@
 #include "game.h"
 #include "tier0/vprof.h"
 #include "ai_basenpc.h"
-#include "iservervehicle.h"
 #include "eventlist.h"
 #include "scriptevent.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
@@ -2647,20 +2646,7 @@ void CBaseEntity::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 		PhysCollisionSound( this, pEvent->pObjects[index], CHAN_STATIC, pEvent->surfaceProps[index], pEvent->surfaceProps[otherIndex], pEvent->deltaCollisionTime, pEvent->collisionSpeed );
 	}
 	PhysCollisionScreenShake( pEvent, index );
-
-#ifdef HL2_EPISODIC
-	// episodic does something different for when advisor shields are struck
-	if ( phit->game.material == 'Z' || pprops->game.material == 'Z')
-	{
-		PhysCollisionWarpEffect( pEvent, phit );
-	}
-	else
-	{
-		PhysCollisionDust( pEvent, phit );
-	}
-#else
 	PhysCollisionDust( pEvent, phit );
-#endif
 }
 
 void CBaseEntity::VPhysicsFriction( IPhysicsObject *pObject, float energy, int surfaceProps, int surfacePropsHit )
@@ -2788,14 +2774,6 @@ bool CBaseEntity::FVisible( CBaseEntity *pEntity, int traceMask, CBaseEntity **p
 		// If we hit the entity we're looking for, it's visible
 		if ( tr.m_pEnt == pEntity )
 			return true;
-
-		// Got line of sight on the vehicle the player is driving!
-		if ( pEntity && pEntity->IsPlayer() )
-		{
-			CBasePlayer *pPlayer = assert_cast<CBasePlayer*>( pEntity );
-			if ( tr.m_pEnt == pPlayer->GetVehicleEntity() )
-				return true;
-		}
 
 		if (ppBlocker)
 		{
@@ -3219,14 +3197,6 @@ void CBaseEntity::OnRestore()
 		RemoveEFlags( EFL_CHECK_UNTOUCH );
 		SetCheckUntouch( true );
 	}
-
-	// disable touch functions while we recreate the touch links between entities
-	// NOTE: We don't do this on transitions, because we'd miss the OnStartTouch call!
-#if !defined(HL2_DLL) || ( defined(HL2_DLL) && defined(HL2_EPISODIC) )
-	CBaseEntity::sm_bDisableTouchFuncs = ( gpGlobals->eLoadType != MapLoad_Transition );
-	PhysicsTouchTriggers();
-	CBaseEntity::sm_bDisableTouchFuncs = false;
-#endif // HL2_EPISODIC
 
 	//Adrian: If I'm restoring with these fields it means I've become a client side ragdoll.
 	//Don't create another one, just wait until is my time of being removed.

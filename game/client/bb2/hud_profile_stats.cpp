@@ -231,7 +231,7 @@ CHudProfileStats::CHudProfileStats(const char * pElementName) : CHudElement(pEle
 	for (int i = 0; i < SHARED_HUD_ICON_COUNT; i++)
 		m_pSharedHUDIcons[i] = NULL;
 
-	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_INVEHICLE | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
 
 	g_pProfileStatsHUD = this;
 }

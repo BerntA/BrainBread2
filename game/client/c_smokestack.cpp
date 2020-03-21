@@ -13,11 +13,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#ifdef HL2_EPISODIC
-	#define SMOKESTACK_MAX_MATERIALS 8
-#else
-	#define SMOKESTACK_MAX_MATERIALS 1
-#endif
+#define SMOKESTACK_MAX_MATERIALS 1
 
 //==================================================
 // C_SmokeStack
@@ -244,31 +240,7 @@ void C_SmokeStack::Start(CParticleMgr *pParticleMgr, IPrototypeArgAccess *pArgs)
 
 	m_MaterialHandle[0] = m_ParticleEffect.FindOrAddMaterial( str );
 
-#ifdef HL2_EPISODIC
-	int iCount = 1;
-	char szNames[512];
-
-	int iLength = Q_strlen( str );
-	str[iLength-1] = '\0';
-
-	Q_snprintf( szNames, sizeof( szNames ), "%s%d.vmt", str, iCount );
-
-	while ( filesystem->FileExists( VarArgs( "materials/%s", szNames ) ) && iCount < SMOKESTACK_MAX_MATERIALS )
-	{
-		char *pExt = Q_stristr( szNames, ".vmt" );
-		if ( pExt )
-			pExt[0] = 0;
-
-		m_MaterialHandle[iCount] = m_ParticleEffect.FindOrAddMaterial( szNames );
-		iCount++;
-	}
-
-	m_iMaxFrames = iCount-1;
-
-	m_ParticleSpawn.Init( mat_reduceparticles.GetBool() ? m_Rate / 4 : m_Rate ); // Obey mat_reduceparticles in episodic
-#else
 	m_ParticleSpawn.Init( m_Rate );
-#endif
 
 	m_InvLifetime = m_Speed / m_JetLength;
 
@@ -331,11 +303,7 @@ void C_SmokeStack::Update(float fTimeDelta)
 		float tempDelta = fTimeDelta;
 		while(m_ParticleSpawn.NextEvent(tempDelta))
 		{
-			int iRandomFrame = random->RandomInt( 0, m_iMaxFrames );
-
-#ifndef HL2_EPISODIC
-			iRandomFrame = 0;
-#endif
+			int iRandomFrame = 0; //random->RandomInt( 0, m_iMaxFrames );
 	
 			// Make a new particle.
 			if(SmokeStackParticle *pParticle = (SmokeStackParticle*)m_ParticleEffect.AddParticle(sizeof(SmokeStackParticle), m_MaterialHandle[iRandomFrame]))
@@ -354,10 +322,6 @@ void C_SmokeStack::Update(float fTimeDelta)
 				pParticle->m_vAccel = m_vWind;
 				pParticle->m_Lifetime = 0;
 				pParticle->m_flAngle = 0.0f;
-
-#ifdef HL2_EPISODIC
-				pParticle->m_flAngle = RandomFloat( 0, 360 );
-#endif
 				pParticle->m_flRollDelta = random->RandomFloat( -m_flRollSpeed, m_flRollSpeed );
 				pParticle->m_flSortPos = pParticle->m_Pos.z;
 			}
@@ -441,10 +405,8 @@ void C_SmokeStack::SimulateParticles( CParticleSimulateIterator *pIterator )
 		bQuickTest = true;
 	}
 
-#ifndef HL2_EPISODIC
 	bQuickTest = false;
 	bSortNow = true;
-#endif
 
 	if( bQuickTest == false && m_bEmit && (!m_ParticleEffect.WasDrawnPrevFrame() && !m_ParticleEffect.GetAlwaysSimulate()) )
 		return;
@@ -475,15 +437,11 @@ void C_SmokeStack::SimulateParticles( CParticleSimulateIterator *pIterator )
 				pParticle->m_Pos.y = vTwist.x * m_TwistMat[1][0] + vTwist.y * m_TwistMat[1][1] + GetAbsOrigin().y;
 			}
 
-#ifndef HL2_EPISODIC
 			pParticle->m_Pos = pParticle->m_Pos + 
 				pParticle->m_Velocity * pIterator->GetTimeDelta() + 
 				pParticle->m_vAccel * (0.5f * pIterator->GetTimeDelta() * pIterator->GetTimeDelta());
 
 			pParticle->m_Velocity += pParticle->m_vAccel * pIterator->GetTimeDelta();
-#else
-			pParticle->m_Pos = pParticle->m_Pos + pParticle->m_Velocity * pIterator->GetTimeDelta() + pParticle->m_vAccel * pIterator->GetTimeDelta();
-#endif
 
 			pParticle->m_flAngle += pParticle->m_flRollDelta * pIterator->GetTimeDelta();
 

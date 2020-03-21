@@ -2865,28 +2865,13 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 			}
 			else if ( m_scriptState != SCRIPT_CUSTOM_MOVE_TO_MARK )
 			{
-				// FIXME: too many ss assume its safe to leave the npc is whatever sequence they were in before, so only slam their activity
-				//		  if they're playing a recognizable movement animation
-				//
-#ifdef HL2_EPISODIC
-				// dvs: Check current activity rather than ideal activity. Since scripted NPCs early out in MaintainActivity,
-				//      they'll never reach their ideal activity if it's different from their current activity.
-				if ( GetActivity() == ACT_WALK || 
-					 GetActivity() == ACT_RUN || 
-					 GetActivity() == ACT_WALK_AIM || 
-					 GetActivity() == ACT_RUN_AIM )
+				if (GetIdealActivity() == ACT_WALK ||
+					GetIdealActivity() == ACT_RUN ||
+					GetIdealActivity() == ACT_WALK_AIM ||
+					GetIdealActivity() == ACT_RUN_AIM )
 				{
 					SetActivity( ACT_IDLE );
 				}
-#else
-				if ( GetIdealActivity() == ACT_WALK || 
-					 GetIdealActivity() == ACT_RUN || 
-					 GetIdealActivity() == ACT_WALK_AIM || 
-					 GetIdealActivity() == ACT_RUN_AIM )
-				{
-					SetActivity( ACT_IDLE );
-				}
-#endif // HL2_EPISODIC
 			}
 			break;
 		}
@@ -3685,23 +3670,8 @@ void CAI_BaseNPC::RunTask( const Task_t *pTask )
 						}
 					}
 
-#ifdef HL2_EPISODIC
-					// See if we're moving away from a vehicle
-					CSound *pBestSound = GetBestSound( SOUND_MOVE_AWAY );
-					if ( pBestSound && pBestSound->m_hOwner && pBestSound->m_hOwner->GetServerVehicle() )
-					{
-						// Move away from the vehicle's center, regardless of our facing
-						move = ( GetAbsOrigin() - pBestSound->m_hOwner->WorldSpaceCenter() );
-						VectorNormalize( move );
-					}
-					else
-					{
-						// Use the first angles
-						AngleVectors( ang, &move );
-					}
-#else
 					AngleVectors( ang, &move );
-#endif	//HL2_EPISODIC
+
 					if ( GetNavigator()->SetVectorGoal( move, (float)pTask->flTaskData, MIN(36,pTask->flTaskData), true ) && IsValidMoveAwayDest( GetNavigator()->GetGoalPos() ))
 					{
 						TaskComplete();

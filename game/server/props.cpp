@@ -39,7 +39,6 @@
 #include "datacache/imdlcache.h"
 #include "doors.h"
 #include "physics_collisionevent.h"
-#include "vehicle_base.h"
 #include "GameBase_Shared.h"
 #include "gibs_shared.h"
 
@@ -72,21 +71,12 @@ ConVar prop_active_gib_max_fade_time( "prop_active_gib_max_fade_time", "999999" 
 #define ACTIVE_GIB_LIMIT prop_active_gib_limit.GetInt()
 #define ACTIVE_GIB_FADE prop_active_gib_max_fade_time.GetInt()
 
-
 // Damage type modifiers for breakable objects.
 ConVar func_breakdmg_bullet( "func_breakdmg_bullet", "0.5" );
 ConVar func_breakdmg_club( "func_breakdmg_club", "1.5" );
 ConVar func_breakdmg_explosive( "func_breakdmg_explosive", "1.25" );
 
 ConVar sv_turbophysics( "sv_turbophysics", "0", FCVAR_REPLICATED, "Turns on turbo physics" );
-
-#ifdef HL2_EPISODIC
-	#define PROP_FLARE_LIFETIME 30.0f
-	#define PROP_FLARE_IGNITE_SUBSTRACT 5.0f
-	CBaseEntity *CreateFlare( Vector vOrigin, QAngle Angles, CBaseEntity *pOwner, float flDuration );
-	void KillFlare( CBaseEntity *pOwnerEntity, CBaseEntity *pEntity, float flKillTime );
-#endif
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Breakable objects take different levels of damage based upon the damage type.
@@ -246,10 +236,6 @@ void CBaseProp::Precache( void )
 
 	PrecacheScriptSound( "Metal.SawbladeStick" );
 	PrecacheScriptSound( "PropaneTank.Burst" );
-
-#ifdef HL2_EPISODIC
-	UTIL_PrecacheOther( "env_flare" );
-#endif
 
 	BaseClass::Precache();
 }
@@ -990,25 +976,6 @@ void CBreakableProp::BreakablePropTouch( CBaseEntity *pOther )
 			SetNextThink( gpGlobals->curtime + m_flPressureDelay );
 		}
 	}
-
-#ifdef HL2_EPISODIC
-	if ( m_hFlareEnt )
-	{
-		CAI_BaseNPC *pNPC = pOther->MyNPCPointer();
-
-		if ( pNPC && pNPC->AllowedToIgnite() && pNPC->IsOnFire() == false )
-		{
-			pNPC->Ignite( 25.0f );
-			KillFlare( this, m_hFlareEnt, PROP_FLARE_IGNITE_SUBSTRACT );
-			IGameEvent *event = gameeventmanager->CreateEvent( "flare_ignite_npc" );
-			if ( event )
-			{
-				event->SetInt( "entindex", pNPC->entindex() );
-				gameeventmanager->FireEvent( event );
-			}
-		}
-	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1433,51 +1400,7 @@ void CBreakableProp::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t
 	// Store original BlockLOS, and disable BlockLOS
 	m_bOriginalBlockLOS = BlocksLOS();
 	SetBlocksLOS( false );
-
-#ifdef HL2_EPISODIC
-	if ( HasInteraction( PROPINTER_PHYSGUN_CREATE_FLARE ) )
-	{
-		CreateFlare( PROP_FLARE_LIFETIME );
-	}
-#endif
 }
-
-
-#ifdef HL2_EPISODIC
-//-----------------------------------------------------------------------------
-// Purpose: Create a flare at the attachment point
-//-----------------------------------------------------------------------------
-void CBreakableProp::CreateFlare( float flLifetime )
-{
-	// Create the flare
-	CBaseEntity *pFlare = ::CreateFlare( GetAbsOrigin(), GetAbsAngles(), this, flLifetime );
-	if ( pFlare )
-	{
-		int iAttachment = LookupAttachment( "fuse" );
-
-		Vector vOrigin;
-		GetAttachment( iAttachment, vOrigin );
-
-		pFlare->SetMoveType( MOVETYPE_NONE );
-		pFlare->SetSolid( SOLID_NONE );
-		pFlare->SetRenderMode( kRenderTransAlpha );
-		pFlare->SetRenderColorA( 1 );
-		pFlare->SetLocalOrigin( vOrigin );
-		pFlare->SetParent( this, iAttachment );
-		RemoveInteraction( PROPINTER_PHYSGUN_CREATE_FLARE );
-		m_hFlareEnt = pFlare;
-
-		SetThink( &CBreakable::SUB_FadeOut );
-		SetNextThink( gpGlobals->curtime + flLifetime + 5.0f );
-
-		m_nSkin = 1;
-
-		AddEntityToDarknessCheck( pFlare );
-
-		AddEffects( EF_NOSHADOW );
-	}
-}
-#endif // HL2_EPISODIC
 
 //-----------------------------------------------------------------------------
 // Purpose: 

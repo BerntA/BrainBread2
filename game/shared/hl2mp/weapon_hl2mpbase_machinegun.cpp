@@ -244,22 +244,6 @@ bool CHL2MPMachineGun::CanHolster(void)
 	return bCanHolster;
 }
 
-const WeaponProficiencyInfo_t *CHL2MPMachineGun::GetProficiencyValues()
-{
-	static WeaponProficiencyInfo_t proficiencyTable[] =
-	{
-		{ 7.0, 0.75 },
-		{ 5.00, 0.75 },
-		{ 10.0 / 3.0, 0.75 },
-		{ 5.0 / 3.0, 0.75 },
-		{ 1.00, 1.0 },
-	};
-
-	COMPILE_TIME_ASSERT(ARRAYSIZE(proficiencyTable) == WEAPON_PROFICIENCY_PERFECT + 1);
-
-	return proficiencyTable;
-}
-
 #ifndef CLIENT_DLL
 #ifdef BB2_AI
 void CHL2MPMachineGun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir)

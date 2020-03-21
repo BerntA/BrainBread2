@@ -16,7 +16,6 @@
 #include "soundflags.h"
 #include "weapon_parse.h"
 #include "baseviewmodel_shared.h"
-#include "weapon_proficiency.h"
 #include "utlmap.h"
 #include "skills_shareddefs.h"
 #include "hl2mp_gamerules.h"
@@ -108,11 +107,7 @@ namespace vgui2
 // Purpose: Base weapon class, shared on client and server
 //-----------------------------------------------------------------------------
 
-#if defined USES_ECON_ITEMS
-#define BASECOMBATWEAPON_DERIVED_FROM		CEconEntity
-#else 
 #define BASECOMBATWEAPON_DERIVED_FROM		CBaseAnimating
-#endif 
 
 //-----------------------------------------------------------------------------
 // Collect trace attacks for weapons that fire multiple projectiles per attack that also penetrate
@@ -310,8 +305,6 @@ public:
 	// Bullet launch information
 	virtual int				GetBulletType( void );
 	virtual const Vector&	GetBulletSpread(void);
-	virtual Vector			GetBulletSpread( WeaponProficiency_t proficiency )		{ return GetBulletSpread(); }
-	virtual float			GetSpreadBias( WeaponProficiency_t proficiency )			{ return 1.0; }
 	virtual float			GetFireRate( void );
 	virtual int				GetMinBurst() { return 1; }
 	virtual int				GetMaxBurst() { return 1; }
@@ -320,7 +313,6 @@ public:
 	virtual int				GetRandomBurst() { return random->RandomInt( GetMinBurst(), GetMaxBurst() ); }
 	virtual void			WeaponSound( WeaponSound_t sound_type, float soundtime = 0.0f );
 	virtual void			StopWeaponSound( WeaponSound_t sound_type );
-	virtual const WeaponProficiencyInfo_t *GetProficiencyValues();
 
 	virtual void			SetActivity( Activity act, float duration );
 	inline void				SetActivity( Activity eActivity ) { m_Activity = eActivity; }
@@ -464,11 +456,7 @@ public:
 
 	virtual bool			OnFireEvent( C_BaseViewModel *pViewModel, const Vector& origin, const QAngle& angles, int event, const char *options ) 
 	{ 
-#if defined USES_ECON_ITEMS
-		return BaseClass::OnFireEvent( pViewModel, origin, angles, event, options );
-#else
 		return false; 
-#endif
 	}
 
 	// Should this object cast shadows?
@@ -522,14 +510,12 @@ public:
 	virtual bool EnsureCorrectRenderingModel();
 	virtual bool ShouldDoAnimEvents();
 
-#if !defined USES_ECON_ITEMS
 	// Viewmodel overriding
-	virtual bool			ViewModel_IsTransparent( void ) { return IsTransparent(); }
-	virtual bool			ViewModel_IsUsingFBTexture( void ) { return UsesPowerOfTwoFrameBufferTexture(); }
-	virtual bool			IsOverridingViewmodel( void ) { return false; };
-	virtual int				DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags ) { return 0; };
-	bool					WantsToOverrideViewmodelAttachments( void ) { return false; }
-#endif
+	virtual bool			ViewModel_IsTransparent(void) { return IsTransparent(); }
+	virtual bool			ViewModel_IsUsingFBTexture(void) { return UsesPowerOfTwoFrameBufferTexture(); }
+	virtual bool			IsOverridingViewmodel(void) { return false; };
+	virtual int				DrawOverriddenViewmodel(C_BaseViewModel *pViewmodel, int flags) { return 0; };
+	bool					WantsToOverrideViewmodelAttachments(void) { return false; }
 
 #endif // End client-only methods
 

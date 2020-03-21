@@ -36,7 +36,6 @@
 #include "env_wind_shared.h"
 #include "engine/IEngineSound.h"
 #include "ispatialpartition.h"
-#include "textstatsmgr.h"
 #include "bitbuf.h"
 #include "saverestoretypes.h"
 #include "physics_saverestore.h"
@@ -87,7 +86,6 @@
 #include "steam/steam_gameserver.h"
 #endif
 #include "tier3/tier3.h"
-#include "serverbenchmark_base.h"
 #include "querycache.h"
 
 #include "GameBase_Server.h"
@@ -96,10 +94,6 @@
 #ifdef USE_NAV_MESH
 #include "nav_mesh.h"
 #endif
-
-#ifdef USES_ECON_ITEMS
-#include "econ_item_system.h"
-#endif // USES_ECON_ITEMS
 
 #if defined( REPLAY_ENABLED )
 #include "replay/ireplaysystem.h"
@@ -722,13 +716,6 @@ void CServerGameDLL::DLLShutdown( void )
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetPhysSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetEntitySaveRestoreBlockHandler() );
 
-	char *pFilename = g_TextStatsMgr.GetStatsFilename();
-	if ( !pFilename || !pFilename[0] )
-	{
-		g_TextStatsMgr.SetStatsFilename( "stats.txt" );
-	}
-	g_TextStatsMgr.WriteFile( filesystem );
-
 	IGameSystem::ShutdownAllSystems();
 
 #ifndef _XBOX
@@ -919,14 +906,6 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	// Parse map specific data.
 	if (GameBaseShared()->GetSharedMapData())
 		GameBaseShared()->GetSharedMapData()->ParseDataForMap(pMapName);
-
-#ifdef USES_ECON_ITEMS
-	GameItemSchema_t *pItemSchema = ItemSystem()->GetItemSchema();
-	if ( pItemSchema )
-	{
-		pItemSchema->BInitFromDelayedBuffer();
-	}
-#endif // USES_ECON_ITEMS
 	
 	ResetWindspeed();
 	UpdateChapterRestrictions( pMapName );
@@ -1004,8 +983,6 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 		g_MapEntityRefs.Purge();
 		CMapLoadEntityFilter filter;
 		MapEntity_ParseAllEntities( pMapEntities, &filter );
-
-		g_pServerBenchmark->StartBenchmark();
 
 		// Now call the mod specific parse
 		LevelInit_ParseAllEntities( pMapEntities );
@@ -1184,7 +1161,6 @@ void CServerGameDLL::GameFrame( bool simulating )
 #endif
 
 	UpdateQueryCache();
-	g_pServerBenchmark->UpdateBenchmark();
 
 	Physics_RunThinkFunctions( simulating );
 	
@@ -1301,8 +1277,6 @@ void CServerGameDLL::LevelShutdown( void )
 
 	steamgameserverapicontext->Clear();
 #endif
-
-	g_pServerBenchmark->EndBenchmark();
 
 	MDLCACHE_CRITICAL_SECTION();
 	IGameSystem::LevelShutdownPreEntityAllSystems();

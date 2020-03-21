@@ -29,24 +29,8 @@ public:
 		{
 			return true;
 		}
-	
-		if ( Q_strcmp(event->GetName(), "hl2_") == 0 )
-		{
-			return PrintHL2Event( event );
-		}
-
 		return false;
 	}
-
-protected:
-
-	bool PrintHL2Event( IGameEvent * event )	// print Mod specific logs
-	{
-	//	const char * name = event->GetName() + Q_strlen("hl2_"); // remove prefix
-
-		return false;
-	}
-
 };
 
 static CHL2EventLog s_HL2EventLog;
@@ -58,4 +42,3 @@ IGameSystem* GameLogSystem()
 {
 	return &s_HL2EventLog;
 }
-

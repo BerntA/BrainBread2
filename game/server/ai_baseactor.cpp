@@ -27,7 +27,6 @@ ConVar ai_debug_looktargets( "ai_debug_looktargets", "0" );
 ConVar ai_debug_expressions( "ai_debug_expressions", "0", FCVAR_NONE, "Show random expression decisions for NPCs." );
 static ConVar scene_showfaceto( "scene_showfaceto", "0", FCVAR_ARCHIVE, "When playing back, show the directions of faceto events." );
 
-
 BEGIN_DATADESC( CAI_BaseActor )
 
 	DEFINE_FIELD( m_fLatchedPositions, FIELD_INTEGER ),
@@ -1379,21 +1378,7 @@ void CAI_BaseActor::MakeRandomLookTarget( AILookTargetArgs_t *pArgs, float minTi
 {
 	Vector forward, right, up;
 	GetVectors( &forward, &right, &up );
-
-	// DevMsg("random view\n");
-
-	// For now, just look farther afield while driving in the vehicle.  Without this we look around wildly!
-#ifdef HL2_EPISODIC
-	if ( MyCombatCharacterPointer() && MyCombatCharacterPointer()->IsInAVehicle() )
-	{
-		pArgs->vTarget = EyePosition() + forward * 2048 + right * random->RandomFloat(-650,650) + up * random->RandomFloat(-32,32);
-	}
-	else
-#endif // HL2_EPISODIC
-	{
-		pArgs->vTarget = EyePosition() + forward * 128 + right * random->RandomFloat(-32,32) + up * random->RandomFloat(-16,16);
-	}
-
+	pArgs->vTarget = EyePosition() + forward * 128 + right * random->RandomFloat(-32, 32) + up * random->RandomFloat(-16, 16);
 	pArgs->flDuration = random->RandomFloat( minTime, maxTime );
 	pArgs->flInfluence = 0.01;
 	pArgs->flRamp = random->RandomFloat( 0.8, 2.8 );
@@ -1679,26 +1664,6 @@ void CAI_BaseActor::MaintainLookTargets( float flInterval )
 			absVel = absVel + ground->GetAbsVelocity();
 		}
 
-#ifdef HL2_EPISODIC
-		// Translate our position if riding in a vehicle
-		if ( m_hLookTarget->MyCombatCharacterPointer() )
-		{
-			CBaseCombatCharacter *pBCC = m_hLookTarget->MyCombatCharacterPointer();
-			CBaseEntity *pVehicle = pBCC->GetVehicleEntity();
-			if ( pVehicle )
-			{
-				IPhysicsObject *pObj = pVehicle->VPhysicsGetObject();
-				if ( pObj )
-				{
-					Vector vecVelocity;
-					pObj->GetVelocity( &vecVelocity, NULL );
-
-					absVel += vecVelocity;
-				}
-			}
-		}
-#endif //HL2_EPISODIC
-
 		if ( !VectorCompare( absVel, vec3_origin ) )
 		{
 			Vector viewTarget = GetViewtarget();
@@ -1801,15 +1766,6 @@ const char *CAI_BaseActor::SelectRandomExpressionForState( NPC_STATE state )
 void CAI_BaseActor::OnStateChange( NPC_STATE OldState, NPC_STATE NewState )
 {
 	PlayExpressionForState( NewState );
-
-#ifdef HL2_EPISODIC
-	// If we've just switched states, ensure we stop any scenes that asked to be stopped
-	if ( OldState == NPC_STATE_IDLE )
-	{
-		RemoveActorFromScriptedScenes( this, true, true );
-	}
-#endif
-
 	BaseClass::OnStateChange( OldState, NewState );
 }
 

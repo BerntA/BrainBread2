@@ -27,7 +27,6 @@
 #else
 	#include "te_effect_dispatch.h"
 	#include "soundent.h"
-	#include "iservervehicle.h"
 	#include "player_pickup.h"
 	#include "waterbullet.h"
 	#include "func_break.h"
@@ -35,12 +34,6 @@
     #include "te_bullet_shot.h"
 	#include "ilagcompensationmanager.h"
 #endif
-
-#ifdef HL2_EPISODIC
-ConVar hl2_episodic( "hl2_episodic", "1", FCVAR_REPLICATED );
-#else
-ConVar hl2_episodic( "hl2_episodic", "0", FCVAR_REPLICATED | FCVAR_HIDDEN );
-#endif//HL2_EPISODIC
 
 #include "rumble_shared.h"
 
@@ -188,23 +181,6 @@ void CBaseEntity::SetEffects( int nEffects )
 {
 	if ( nEffects != m_fEffects )
 	{
-#if !defined( CLIENT_DLL )
-#ifdef HL2_EPISODIC
-		// Hack for now, to avoid player emitting radius with his flashlight
-		if ( !IsPlayer() )
-		{
-			if ( (nEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT)) && !(m_fEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT)) )
-			{
-				AddEntityToDarknessCheck( this );
-			}
-			else if ( !(nEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT)) && (m_fEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT)) )
-			{
-				RemoveEntityFromDarknessCheck( this );
-			}
-		}
-#endif // HL2_EPISODIC
-#endif // !CLIENT_DLL
-
 		m_fEffects = nEffects;
 
 #ifndef CLIENT_DLL
@@ -217,19 +193,6 @@ void CBaseEntity::SetEffects( int nEffects )
 
 void CBaseEntity::AddEffects( int nEffects ) 
 { 
-#if !defined( CLIENT_DLL )
-#ifdef HL2_EPISODIC
-	if ( (nEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT)) && !(m_fEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT)) )
-	{
-		// Hack for now, to avoid player emitting radius with his flashlight
-		if ( !IsPlayer() )
-		{
-			AddEntityToDarknessCheck( this );
-		}
-	}
-#endif // HL2_EPISODIC
-#endif // !CLIENT_DLL
-
 	m_fEffects |= nEffects; 
 
 	if ( nEffects & EF_NODRAW)
@@ -1789,18 +1752,10 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 			float flActualDamage = info.m_flDamage;
 
 			// If we hit a player, and we have player damage specified, use that instead
-			// Adrian: Make sure to use the currect value if we hit a vehicle the player is currently driving.
 			if ( iPlayerDamage )
 			{
-				if ( tr.m_pEnt->IsPlayer() )
+				if (tr.m_pEnt->IsPlayer())
 					flActualDamage = iPlayerDamage;
-#ifdef GAME_DLL
-				else if ( tr.m_pEnt->GetServerVehicle() )
-				{
-					if ( tr.m_pEnt->GetServerVehicle()->GetPassenger() && tr.m_pEnt->GetServerVehicle()->GetPassenger()->IsPlayer() )
-						flActualDamage = iPlayerDamage;
-				}
-#endif
 			}
 
 			int nActualDamageType = nDamageType;
@@ -1929,18 +1884,7 @@ float CBaseEntity::FirePenetrativeBullet(const FireBulletsInfo_t &info, Vector &
 		if (iPlayerDamage)
 		{
 			if (pEntHit->IsPlayer())
-			{
 				flActualDamage = iPlayerDamage;
-			}
-#ifdef GAME_DLL
-			else if (pEntHit->GetServerVehicle())
-			{
-				if (pEntHit->GetServerVehicle()->GetPassenger() && pEntHit->GetServerVehicle()->GetPassenger()->IsPlayer())
-				{
-					flActualDamage = iPlayerDamage;
-				}
-			}
-#endif
 		}
 
 		float flProperDamage = GameBaseShared()->GetDropOffDamage(info.m_vecFirstStartPos, tr.endpos, flActualDamage, info.m_flDropOffDist);

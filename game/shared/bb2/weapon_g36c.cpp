@@ -36,8 +36,6 @@ public:
 	float GetMinRestTime() { return 0; }
 	float GetMaxRestTime() { return 0; }
 
-	const WeaponProficiencyInfo_t *GetProficiencyValues();
-
 private:
 	CWeaponG36C(const CWeaponG36C &);
 };
@@ -138,20 +136,4 @@ IMPLEMENT_ACTTABLE(CWeaponG36C);
 
 CWeaponG36C::CWeaponG36C()
 {
-}
-
-const WeaponProficiencyInfo_t *CWeaponG36C::GetProficiencyValues()
-{
-	static WeaponProficiencyInfo_t proficiencyTable[] =
-	{
-		{ 7.0, 0.75 },
-		{ 5.00, 0.75 },
-		{ 3.0, 0.85 },
-		{ 5.0 / 3.0, 0.75 },
-		{ 1.00, 1.0 },
-	};
-
-	COMPILE_TIME_ASSERT(ARRAYSIZE(proficiencyTable) == WEAPON_PROFICIENCY_PERFECT + 1);
-
-	return proficiencyTable;
 }

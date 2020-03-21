@@ -1345,20 +1345,15 @@ bool CHL2MP_Player::BumpWeapon(CBaseCombatWeapon *pWeapon)
 	pWeapon->AddEffects(EF_NODRAW);
 	Weapon_Equip(pWeapon);
 
-	if (IsInAVehicle())
-		pWeapon->FullHolster();
-	else
+	CBaseCombatWeapon *pActiveWep = GetActiveWeapon();
+	if (pActiveWep)
 	{
-		CBaseCombatWeapon *pActiveWep = GetActiveWeapon();
-		if (pActiveWep)
-		{
-			bool bCantDeploy = (pActiveWep->m_bInReload || (pActiveWep->m_flNextBashAttack > gpGlobals->curtime) || !pActiveWep->CanDeploy());
-			if (!bCantDeploy)
-				Weapon_Switch(pWeapon);
-		}
-		else
-			Weapon_Switch(pWeapon, true);
+		bool bCantDeploy = (pActiveWep->m_bInReload || (pActiveWep->m_flNextBashAttack > gpGlobals->curtime) || !pActiveWep->CanDeploy());
+		if (!bCantDeploy)
+			Weapon_Switch(pWeapon);
 	}
+	else
+		Weapon_Switch(pWeapon, true);
 
 	return true;
 }

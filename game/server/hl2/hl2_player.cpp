@@ -21,8 +21,6 @@
 #include "point_camera.h"
 #include "engine/IEngineSound.h"
 #include "ndebugoverlay.h"
-#include "iservervehicle.h"
-#include "IVehicle.h"
 #include "globals.h"
 #include "collisionutils.h"
 #include "coordsize.h"
@@ -47,8 +45,6 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-extern ConVar weapon_showproficiency;
 
 // Do not touch with without seeing me, please! (sjb)
 // For consistency's sake, enemy gunfire is traced against a scaled down
@@ -156,17 +152,6 @@ void CHL2_Player::PreThink(void)
 
 		NDebugOverlay::Box( predPos, NAI_Hull::Mins( GetHullType() ), NAI_Hull::Maxs( GetHullType() ), 0, 255, 0, 0, 0.01f );
 		NDebugOverlay::Line( GetAbsOrigin(), predPos, 0, 255, 0, 0, 0.01f );
-	}
-
-	// Riding a vehicle?
-	if ( IsInAVehicle() )	
-	{
-		VPROF( "CHL2_Player::PreThink-Vehicle" );
-		// make sure we update the client, check for timed damage and update suit even if we are in a vehicle
-		UpdateClientData();		
-		CheckTimeBasedDamage();
-		WaterMove();	
-		return;
 	}
 
 	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-Speed" );
@@ -416,22 +401,7 @@ void CHL2_Player::PostThink( void )
 //------------------------------------------------------------------------------
 Class_T CHL2_Player::Classify ( void )
 {
-	// If player controlling another entity?  If so, return this class
-	if (m_nControlClass != CLASS_NONE)
-		return m_nControlClass;
-	else
-	{
-		if(IsInAVehicle())
-		{
-			IServerVehicle *pVehicle = GetVehicle();
-			if ( GetTeamNumber() == TEAM_DECEASED )
-				return pVehicle->ClassifyPassenger( this, CLASS_PLAYER_ZOMB );
-			else
-				return pVehicle->ClassifyPassenger( this, CLASS_PLAYER );		
-		}
-	}
-
-	return CLASS_NONE;
+	return ((m_nControlClass != CLASS_NONE) ? m_nControlClass : CLASS_NONE);
 }
 
 //-----------------------------------------------------------------------------
@@ -1011,16 +981,6 @@ void CHL2_Player::PlayerUse ( void )
 //-----------------------------------------------------------------------------
 bool CHL2_Player::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
 {
-	CBasePlayer *pPlayer = (CBasePlayer *)this;
-#if !defined( CLIENT_DLL )
-	IServerVehicle *pVehicle = pPlayer->GetVehicle();
-#else
-	IClientVehicle *pVehicle = pPlayer->GetVehicle();
-#endif
-
-	if (pVehicle && !pPlayer->UsingStandardWeaponsInVehicle())
-		return false;
-
 	if ( GetActiveWeapon() )
 	{
 		if ( !GetActiveWeapon()->CanHolster() )
@@ -1130,15 +1090,6 @@ Vector CHL2_Player::EyeDirection2D( void )
 Vector CHL2_Player::EyeDirection3D( void )
 {
 	Vector vecForward;
-
-	// Return the vehicle angles if we request them
-	if ( GetVehicle() != NULL )
-	{
-		CacheVehicleView();
-		EyeVectors( &vecForward );
-		return vecForward;
-	}
-
 	AngleVectors( EyeAngles(), &vecForward );
 	return vecForward;
 }
@@ -1148,26 +1099,7 @@ Vector CHL2_Player::EyeDirection3D( void )
 bool CHL2_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, bool bWantDraw, int viewmodelindex )
 {
 	MDLCACHE_CRITICAL_SECTION();
-
-	bool bRet = BaseClass::Weapon_Switch( pWeapon, bWantDraw, viewmodelindex );
-	if ( bRet )
-	{
-		// Recalculate proficiency!
-		SetCurrentWeaponProficiency( CalcWeaponProficiency( pWeapon ) );
-	}
-
-	return bRet;
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-WeaponProficiency_t CHL2_Player::CalcWeaponProficiency(CBaseCombatWeapon* pWeapon)
-{
-	WeaponProficiency_t proficiency = WEAPON_PROFICIENCY_PERFECT;
-	if (weapon_showproficiency.GetBool() != 0)
-		Msg("Player switched to %s, proficiency is %s\n", pWeapon->GetClassname(), GetWeaponProficiencyName(proficiency));
-
-	return proficiency;
+	return BaseClass::Weapon_Switch(pWeapon, bWantDraw, viewmodelindex);
 }
 
 //-----------------------------------------------------------------------------

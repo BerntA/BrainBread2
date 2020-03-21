@@ -392,13 +392,6 @@ bool CAI_FollowBehavior::SetFollowGoal( CAI_FollowGoal *pGoal, bool fFinishCurSc
 	if ( GetOuter()->ShouldAcceptGoal( this, pGoal ) )
 	{
 		GetOuter()->ClearCommandGoal();
-
-		if( hl2_episodic.GetBool() )
-		{
-			// Poke the NPC to interrupt any stubborn schedules
-			GetOuter()->SetCondition(COND_PROVOKED);
-		}
-
 		SetFollowTarget( pGoal->GetGoalEntity() );
 		Assert( pGoal->m_iFormation == AIF_SIMPLE || pGoal->m_iFormation == AIF_WIDE || pGoal->m_iFormation == AIF_MEDIUM || pGoal->m_iFormation == AIF_SIDEKICK || pGoal->m_iFormation == AIF_VORTIGAUNT );
 		SetParameters( AI_FollowParams_t( (AI_Formations_t)pGoal->m_iFormation ) );
@@ -439,17 +432,6 @@ bool CAI_FollowBehavior::UpdateFollowPosition()
 	if ( !g_AIFollowManager.CalcFollowPosition( m_hFollowManagerInfo, &m_FollowNavGoal ) )
 	{
 		return false;
-	}
-
-	CBaseEntity *pFollowTarget = GetFollowTarget();
-
-	if ( pFollowTarget->GetParent() )
-	{
-		if ( pFollowTarget->GetParent()->GetServerVehicle() )
-		{
-			m_FollowNavGoal.targetMoveTolerance *= 1.5;
-			m_FollowNavGoal.range += pFollowTarget->GetParent()->BoundingRadius() * 0.333;
-		}
 	}
 
 #if TODO
@@ -1044,14 +1026,6 @@ int CAI_FollowBehavior::SelectScheduleMoveToFormation()
 
 int CAI_FollowBehavior::SelectSchedule()
 {
-	// Allow a range attack if we need to do it
-	if ( hl2_episodic.GetBool() )
-	{
-		// Range attack
-		if ( GetOuter()->ShouldMoveAndShoot() == false && HasCondition( COND_CAN_RANGE_ATTACK1 ) )
-			return SCHED_RANGE_ATTACK1;
-	}
-
 	if ( GetFollowTarget() )
 	{
 		if ( !GetFollowTarget()->IsAlive() )
@@ -1360,14 +1334,7 @@ void CAI_FollowBehavior::StartTask( const Task_t *pTask )
 				{
 					m_TimeNextSpreadFacing.Reset();
 
-					bool bIsEpisodicVitalAlly;
-					
-#ifdef HL2_DLL
-					bIsEpisodicVitalAlly = (hl2_episodic.GetBool() && GetOuter()->Classify() == CLASS_PLAYER_ALLY_VITAL);
-#else
-					bIsEpisodicVitalAlly = false;
-#endif//HL2_DLL
-
+					bool bIsEpisodicVitalAlly = (GetOuter()->Classify() == CLASS_PLAYER_ALLY_VITAL);				
 					if( bIsEpisodicVitalAlly )
 					{
 						faceTarget = m_hFollowTarget->GetAbsOrigin();
@@ -1617,14 +1584,7 @@ void CAI_FollowBehavior::RunTask( const Task_t *pTask )
 						vGoalPosition = GetGoalPosition();
 
 					AI_NavGoal_t goal( vGoalPosition, AIN_DEF_ACTIVITY, GetGoalTolerance() );
-					if ( !m_hFollowTarget->GetParent() || !m_hFollowTarget->GetParent()->GetServerVehicle() )
-					{
-						goal.pTarget = m_hFollowTarget;
-					}
-					else
-					{
-						goal.pTarget = m_hFollowTarget->GetParent();
-					}
+					goal.pTarget = m_hFollowTarget;
 
 					bool bSuccess = true;
 					if ( !GetNavigator()->SetGoal( goal, AIN_NO_PATH_TASK_FAIL ) )
@@ -1898,26 +1858,18 @@ void CAI_FollowBehavior::BuildScheduleTestBits()
 	bool bIsReload = false;
 	bool bIgnoreMovedMark = false;
 
-	if ( ( GetOuter()->ConditionInterruptsCurSchedule( COND_GIVE_WAY ) || 
-		   GetOuter()->ConditionInterruptsCurSchedule( COND_IDLE_INTERRUPT ) ||
-		   ( bIsHideAndReload = IsCurSchedule(SCHED_HIDE_AND_RELOAD ) ) == true || 
-		   ( bIsReload = IsCurSchedule(SCHED_RELOAD ) ) == true || 
-		   IsCurSchedule(SCHED_STANDOFF ) || 
-		   ( bIsTakeCover = IsCurSchedule(SCHED_TAKE_COVER_FROM_ENEMY ) ) == true || 
-		   IsCurSchedule(SCHED_COMBAT_FACE ) || 
-		   IsCurSchedule(SCHED_ALERT_FACE )  ||
-		   IsCurSchedule(SCHED_COMBAT_STAND ) || 
-		   IsCurSchedule(SCHED_ALERT_STAND) ) ||
-		   IsCurSchedule(SCHED_ALERT_FACE_BESTSOUND ) )
+	if ((GetOuter()->ConditionInterruptsCurSchedule(COND_GIVE_WAY) ||
+		GetOuter()->ConditionInterruptsCurSchedule(COND_IDLE_INTERRUPT) ||
+		(bIsHideAndReload = IsCurSchedule(SCHED_HIDE_AND_RELOAD)) == true ||
+		(bIsReload = IsCurSchedule(SCHED_RELOAD)) == true ||
+		IsCurSchedule(SCHED_STANDOFF) ||
+		(bIsTakeCover = IsCurSchedule(SCHED_TAKE_COVER_FROM_ENEMY)) == true ||
+		IsCurSchedule(SCHED_COMBAT_FACE) ||
+		IsCurSchedule(SCHED_ALERT_FACE) ||
+		IsCurSchedule(SCHED_COMBAT_STAND) ||
+		IsCurSchedule(SCHED_ALERT_STAND)) ||
+		IsCurSchedule(SCHED_ALERT_FACE_BESTSOUND))
 	{
-#ifdef HL2_EPISODIC
-		if( IsCurSchedule(SCHED_RELOAD, false) && GetOuter()->Classify() == CLASS_PLAYER_ALLY_VITAL )
-		{
-			// Alyx and Barney do not stop reloading because the player has moved. 
-			// Citizens and other regular allies do.
-			bIgnoreMovedMark = true;
-		}
-#endif//HL2_EPISODIC
 
 		if( !bIgnoreMovedMark )
 		{
@@ -1928,18 +1880,9 @@ void CAI_FollowBehavior::BuildScheduleTestBits()
 			GetOuter()->SetCustomInterruptCondition( GetClassScheduleIdSpace()->ConditionLocalToGlobal( COND_FOLLOW_DELAY_EXPIRED) );
 	}
 
-	// Add logic for NPCs not able to move and shoot
-	if ( hl2_episodic.GetBool() )
+	if (GetNpcState() == NPC_STATE_COMBAT && IsCurScheduleFollowSchedule())
 	{
-		if ( IsCurScheduleFollowSchedule() && GetOuter()->ShouldMoveAndShoot() == false )
-		{
-			GetOuter()->SetCustomInterruptCondition( COND_CAN_RANGE_ATTACK1 );
-		}
-	}
-
-	if ( GetNpcState() == NPC_STATE_COMBAT && IsCurScheduleFollowSchedule() )
-	{
-		GetOuter()->ClearCustomInterruptCondition( COND_LIGHT_DAMAGE );
+		GetOuter()->ClearCustomInterruptCondition(COND_LIGHT_DAMAGE);
 	}
 }
 
@@ -2069,10 +2012,6 @@ bool CAI_FollowBehavior::ShouldAlwaysThink()
 
 BEGIN_DATADESC( CAI_FollowGoal )
 	DEFINE_KEYFIELD(	m_iFormation, FIELD_INTEGER, "Formation" ),
-
-#ifdef HL2_EPISODIC
-	DEFINE_INPUTFUNC( FIELD_VOID, "OutsideTransition",	InputOutsideTransition ),
-#endif
 END_DATADESC()
 
 //-------------------------------------
@@ -2125,15 +2064,6 @@ void CAI_FollowGoal::DisableGoal( CAI_BaseNPC *pAI  )
 	
 	pBehavior->ClearFollowGoal( this );
 }
-
-//-------------------------------------
-
-#ifdef HL2_EPISODIC
-void CAI_FollowGoal::InputOutsideTransition( inputdata_t &inputdata )
-{
-	EnterDormant();
-}
-#endif
 
 //-----------------------------------------------------------------------------
 //

@@ -57,24 +57,12 @@ bool CBaseCombatCharacter::Weapon_Switch( CBaseCombatWeapon *pWeapon, bool bWant
 // Purpose: Returns whether or not we can switch to the given weapon.
 // Input  : pWeapon - 
 //-----------------------------------------------------------------------------
-bool CBaseCombatCharacter::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
+bool CBaseCombatCharacter::Weapon_CanSwitchTo(CBaseCombatWeapon *pWeapon)
 {
-	if (IsPlayer())
-	{
-		CBasePlayer *pPlayer = (CBasePlayer *)this;
-#if !defined( CLIENT_DLL )
-		IServerVehicle *pVehicle = pPlayer->GetVehicle();
-#else
-		IClientVehicle *pVehicle = pPlayer->GetVehicle();
-#endif
-		if (pVehicle && !pPlayer->UsingStandardWeaponsInVehicle())
-			return false;
-	}
-
-	if ( !pWeapon->CanDeploy() )
+	if (!pWeapon->CanDeploy())
 		return false;
-	
-	if ( m_hActiveWeapon )
+
+	if (m_hActiveWeapon)
 	{
 		if ( !m_hActiveWeapon->CanHolster() )
 			return false;

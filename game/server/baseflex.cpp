@@ -370,16 +370,7 @@ bool CBaseFlex::ClearSceneEvent( CSceneEventInfo *info, bool fastKill, bool canc
 			// Tracker 15420:  Issue stopsound if we need to cut this short...
 			if ( canceled )
 			{
-				StopSound( info->m_pEvent->GetParameters() );
-
-#ifdef HL2_EPISODIC
-				// If we were holding the semaphore because of this speech, release it
-				CAI_BaseActor *pBaseActor = dynamic_cast<CAI_BaseActor*>(this);
-				if ( pBaseActor )
-				{
-					pBaseActor->GetExpresser()->ForceNotSpeaking();
-				}
-#endif
+				StopSound(info->m_pEvent->GetParameters());
 			}
 		}
 		return true;
@@ -689,11 +680,6 @@ bool CBaseFlex::StartFacingSceneEvent( CSceneEventInfo *info, CChoreoScene *scen
 {
 	if ( pTarget )
 	{
-		// Don't allow FACE commands while sitting in the vehicle
-		CAI_BaseNPC *myNpc = MyNPCPointer();
-		if ( myNpc && myNpc->IsInAVehicle() )
-			return false;
-
 		info->m_bIsMoving = false;
 		return true;
 	}
@@ -1384,14 +1370,6 @@ bool CBaseFlex::ProcessMoveToSceneEvent( CSceneEventInfo *info, CChoreoScene *sc
 	if (info->m_hTarget == this)
 	{
 		return true;
-	}
-
-	// If we're in a vehicle, make us exit and *then* begin the run
-	if ( myNpc->IsInAVehicle() )
-	{
-		// Make us exit and wait
-		myNpc->ExitVehicle();
-		return false;
 	}
 
 	const Task_t *pCurTask = myNpc->GetTask();
@@ -2136,7 +2114,7 @@ void CBaseFlex::DoBodyLean( void )
 
 		float dt = gpGlobals->curtime - GetLastThink();
 		bool bSkip = ((GetFlags() & (FL_FLY | FL_SWIM)) != 0) || (GetMoveParent() != NULL) || (GetGroundEntity() == NULL) || (GetGroundEntity()->IsMoving());
-		bSkip |= myNpc->TaskRanAutomovement() || (myNpc->GetVehicleEntity() != NULL);
+		bSkip |= myNpc->TaskRanAutomovement();
 
 		if (!bSkip)
 		{

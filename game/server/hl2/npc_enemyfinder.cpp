@@ -259,14 +259,7 @@ bool CNPC_EnemyFinder::FVisible( CBaseEntity *pTarget, int traceMask, CBaseEntit
 	Vector vStartPos = GetAbsOrigin();
 	Vector vEndPos	 = pTarget->EyePosition();
 
-	CBaseEntity *pVehicle = NULL;
-	if ( pTarget->IsPlayer() )
-	{
-		CBasePlayer *pPlayer = assert_cast<CBasePlayer*>(pTarget);
-		pVehicle = pPlayer->GetVehicleEntity();
-	}
-
-	CTraceFilterSkipTwoEntities traceFilter( pTarget, pVehicle, COLLISION_GROUP_NONE );
+	CTraceFilterSkipTwoEntities traceFilter( pTarget, NULL, COLLISION_GROUP_NONE );
 	AI_TraceLine( vStartPos, vEndPos, MASK_SHOT, &traceFilter, &tr );
 	if ( ppBlocker )
 	{
@@ -315,14 +308,6 @@ bool CNPC_EnemyFinder::IsValidEnemy( CBaseEntity *pTarget )
 	// Test our line of sight to the target
 	trace_t tr;
 	AI_TraceLOS( vStartPos, vEndPos, this, &tr );
-
-	// If the player is in a vehicle, see if we can see that instead
-	if ( pTarget->IsPlayer() )
-	{
-		CBasePlayer *pPlayer = assert_cast<CBasePlayer*>(pTarget);
-		if ( tr.m_pEnt == pPlayer->GetVehicleEntity() )
-			return true;
-	}
 
 	// Line must be clear
 	if ( tr.fraction == 1.0f || tr.m_pEnt == pTarget )

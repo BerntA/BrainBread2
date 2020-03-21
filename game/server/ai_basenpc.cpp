@@ -67,7 +67,6 @@
 #include "globals.h"
 #include "saverestore_bitstring.h"
 #include "checksum_crc.h"
-#include "iservervehicle.h"
 #include "filters.h"
 #ifdef HL2_DLL
 #include "npc_bullseye.h"
@@ -146,10 +145,6 @@ ConVar	ai_frametime_limit( "ai_frametime_limit", "50", FCVAR_NONE, "frametime li
 ConVar	ai_use_think_optimizations( "ai_use_think_optimizations", "1" );
 
 ConVar	ai_test_moveprobe_ignoresmall( "ai_test_moveprobe_ignoresmall", "0" );
-
-#ifdef HL2_EPISODIC
-extern ConVar ai_vehicle_avoidance;
-#endif // HL2_EPISODIC
 
 #ifndef _RETAIL
 #define ShouldUseEfficiency()			( ai_use_think_optimizations.GetBool() && ai_use_efficiency.GetBool() )
@@ -642,16 +637,8 @@ bool CAI_BaseNPC::PassesDamageFilter( const CTakeDamageInfo &info )
 	{
 		// check attackers relationship with me
 		CBaseCombatCharacter *npcEnemy = info.GetAttacker()->MyCombatCharacterPointer();
-		bool bHitByVehicle = false;
-		if ( !npcEnemy )
-		{
-			if ( info.GetAttacker()->GetServerVehicle() )
-			{
-				bHitByVehicle = true;
-			}
-		}
 
-		if ( bHitByVehicle || (npcEnemy && npcEnemy->IRelationType( this ) == D_LI) )
+		if (npcEnemy && (npcEnemy->IRelationType( this ) == D_LI))
 		{
 			m_fNoDamageDecal = true;
 
@@ -2752,10 +2739,6 @@ void CAI_BaseNPC::MaintainLookTargets ( float flInterval )
 
 void CAI_BaseNPC::MaintainTurnActivity( )
 {
-	// Don't bother if we're in a vehicle
-	if ( IsInAVehicle() )
-		return;
-
 	AI_PROFILE_SCOPE( CAI_BaseNPC_MaintainTurnActivity );
 	GetMotor()->MaintainTurnActivity( );
 }
@@ -2932,15 +2915,6 @@ void CAI_BaseNPC::RunAnimation( void )
 		if ( iSequence != ACTIVITY_NOT_AVAILABLE )
 		{
 			ResetSequence( iSequence ); // Set to new anim (if it's there)
-
-			//Adrian: Basically everywhere else in the AI code this variable gets set to whatever our sequence is.
-			//But here it doesn't and not setting it causes any animation set through here to be stomped by the 
-			//ideal sequence before it has a chance of playing out (since there's code that reselects the ideal 
-			//sequence if it doesn't match the current one).
-			if ( hl2_episodic.GetBool() )
-			{
-				m_nIdealSequence = iSequence;
-			}
 		}
 	}
 
@@ -4546,10 +4520,6 @@ void CAI_BaseNPC::PrescheduleThink( void )
 {
 	CheckSkillAffections();
 
-#ifdef HL2_EPISODIC
-	CheckForScriptedNPCInteractions();
-#endif
-
 	// If we use weapons, and our desired weapon state is not the current, fix it
 	if( (CapabilitiesGet() & bits_CAP_USE_WEAPONS) && (m_iDesiredWeaponState == DESIREDWEAPONSTATE_HOLSTERED || m_iDesiredWeaponState == DESIREDWEAPONSTATE_UNHOLSTERED || m_iDesiredWeaponState == DESIREDWEAPONSTATE_HOLSTERED_DESTROYED ) )
 	{
@@ -5172,21 +5142,6 @@ bool CAI_BaseNPC::InnateWeaponLOSCondition( const Vector &ownerPos, const Vector
 	}
 	
 	CBaseEntity	*pHitEntity = tr.m_pEnt;
-	
-	// Translate a hit vehicle into its passenger if found
-	if ( GetEnemy() != NULL )
-	{
-		CBaseCombatCharacter *pCCEnemy = GetEnemy()->MyCombatCharacterPointer();
-		if ( pCCEnemy != NULL && pCCEnemy->IsInAVehicle() )
-		{
-			// Ok, player in vehicle, check if vehicle is target we're looking at, fire if it is
-			// Also, check to see if the owner of the entity is the vehicle, in which case it's valid too.
-			// This catches vehicles that use bone followers.
-			CBaseEntity *pVehicleEnt = pCCEnemy->GetVehicleEntity();
-			if ( pHitEntity == pVehicleEnt || pHitEntity->GetOwnerEntity() == pVehicleEnt )
-				return true;
-		}
-	}
 
 	if ( pHitEntity == GetEnemy() )
 	{
@@ -6431,7 +6386,7 @@ void CAI_BaseNPC::CheckPhysicsContacts()
 				float otherMass = PhysGetEntityMass(pOtherEntity);
 
 				if ( pOtherEntity->GetMoveType() == MOVETYPE_VPHYSICS &&  pOther->IsMoveable() && 
-					otherMass < VPHYSICS_LARGE_OBJECT_MASS  && !pOtherEntity->GetServerVehicle() )
+					otherMass < VPHYSICS_LARGE_OBJECT_MASS )
 				{
 					m_bCheckContacts = true;
 					Vector vel, point;
@@ -9236,10 +9191,6 @@ CanPlaySequence_t CAI_BaseNPC::CanPlaySequence( bool fDisregardNPCState, int int
 		return CANNOT_PLAY;
 	}
 
-	// An NPC in a vehicle cannot play a scripted sequence
-	if ( IsInAVehicle() )
-		return CANNOT_PLAY;
-
 	if ( fDisregardNPCState )
 	{
 		// ok to go, no matter what the npc state. (scripted AI)
@@ -11855,22 +11806,6 @@ bool CAI_BaseNPC::IsNavigationUrgent()
 
 bool CAI_BaseNPC::ShouldFailNav( bool bMovementFailed )
 {
-#ifdef HL2_EPISODIC
-
-	if ( ai_vehicle_avoidance.GetBool() )
-	{
-		// Never be blocked this way by a vehicle (creates too many headaches around the levels)
-		CBaseEntity *pEntity = GetNavigator()->GetBlockingEntity();
-		if ( pEntity && pEntity->GetServerVehicle() )
-		{
-			// Vital allies never get stuck, and urgent moves cannot be blocked by a vehicle
-			if ( Classify() == CLASS_PLAYER_ALLY_VITAL || IsNavigationUrgent() )
-				return false;
-		}
-	}
-
-#endif // HL2_EPISODIC
-
 	// It's up to the schedule that requested movement to deal with failed movement.  Currently, only a handfull of 
 	// schedules are considered Urgent, and they need to deal with what to do when there's no route, which by inspection
 	// they'd don't.
@@ -12401,30 +12336,12 @@ bool CAI_BaseNPC::IsCoverPosition( const Vector &vecThreat, const Vector &vecPos
 		bool bThreatPosIsEnemy = ( (vecThreat - GetEnemy()->EyePosition()).LengthSqr() < 0.1f );
 		if ( bThreatPosIsEnemy )
 		{
-			CBaseCombatCharacter *pCCEnemy = GetEnemy()->MyCombatCharacterPointer();
-			if ( pCCEnemy != NULL && pCCEnemy->IsInAVehicle() )
-			{
-				// Ignore the vehicle
-				filter.SetPassEntity( pCCEnemy->GetVehicleEntity() );
-			}
-
-			if ( !filter.GetPassEntity() )
-			{
-				filter.SetPassEntity( pEnemy );
-			}
+			if (!filter.GetPassEntity())
+				filter.SetPassEntity(pEnemy);
 		}
 	}
 
 	AI_TraceLOS( vecThreat, vecPosition, this, &tr, &filter );
-
-	if( tr.fraction != 1.0 && hl2_episodic.GetBool() )
-	{
-		if( tr.m_pEnt->m_iClassname == m_iClassname )
-		{
-			// Don't hide behind buddies!
-			return false;
-		}
-	}
 
 	return (tr.fraction != 1.0);
 }

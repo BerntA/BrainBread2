@@ -7,7 +7,6 @@
 #include "cbase.h"
 
 #include "modelentities.h"
-#include "iservervehicle.h"
 #include "movevars_shared.h"
 
 #include "ai_moveprobe.h"
@@ -93,12 +92,7 @@ bool CAI_MoveProbe::ShouldBrushBeIgnored( CBaseEntity *pEntity )
 	{
 		CFuncBrush *pFuncBrush = assert_cast<CFuncBrush *>(pEntity);
 
-		// this is true if my class or entity name matches the exclusion name on the func brush
-#if HL2_EPISODIC
-		bool nameMatches = ( pFuncBrush->m_iszExcludedClass == GetOuter()->m_iClassname ) || GetOuter()->NameMatches(pFuncBrush->m_iszExcludedClass);
-#else	// do not match against entity name in base HL2 (just in case there is some case somewhere that might be broken by this)
-		bool nameMatches = ( pFuncBrush->m_iszExcludedClass == GetOuter()->m_iClassname );
-#endif
+		bool nameMatches = (pFuncBrush->m_iszExcludedClass == GetOuter()->m_iClassname);
 
 		// return true (ignore brush) if the name matches, or, if exclusion is inverted, if the name does not match
 		return ( pFuncBrush->m_bInvertExclusion ? !nameMatches : nameMatches );
@@ -709,21 +703,7 @@ void CAI_MoveProbe::GroundMoveLimit( const Vector &vecStart, const Vector &vecEn
 	// Let's try to avoid invalid routes
 	TestGroundMove( vecActualStart, vecDesiredEnd, collisionMask, pctToCheckStandPositions, testGroundMoveFlags, pTrace );
 
-	// Check to see if the target is in a vehicle and the vehicle is blocking our way
-	bool bVehicleMatchesObstruction = false;
-
-	if ( pTarget != NULL )
-	{
-		CBaseCombatCharacter *pCCTarget = ((CBaseEntity *)pTarget)->MyCombatCharacterPointer();
-		if ( pCCTarget != NULL && pCCTarget->IsInAVehicle() )
-		{
-			CBaseEntity *pVehicleEnt = pCCTarget->GetVehicleEntity();
-			if ( pVehicleEnt == pTrace->pObstruction )
-				bVehicleMatchesObstruction = true;
-		}
-	}
-
-	if ( (pTarget && (pTarget == pTrace->pObstruction)) || bVehicleMatchesObstruction )
+	if (pTarget && (pTarget == pTrace->pObstruction))
 	{
 		// Collided with target entity, return there was no collision!!
 		// but leave the end trace position

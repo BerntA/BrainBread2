@@ -25,10 +25,6 @@
 #include "replay/ienginereplay.h"
 #endif
 
-// NVNT haptics system interface
-#include "haptics/ihaptics.h"
-
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -123,10 +119,6 @@ void C_BaseViewModel::FireEvent( const Vector& origin, const QAngle& angles, int
 	C_BaseCombatWeapon *pWeapon = GetActiveWeapon();
 	if ( pWeapon )
 	{
-		// NVNT notify the haptics system of our viewmodel's event
-		if ( haptics )
-			haptics->ProcessHapticEvent(4,"Weapons",pWeapon->GetName(),"AnimationEvents",VarArgs("%i",event));
-
 		bool bResult = pWeapon->OnFireEvent( this, origin, angles, event, options );
 		if ( !bResult )
 		{

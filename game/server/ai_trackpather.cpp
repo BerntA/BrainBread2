@@ -258,17 +258,7 @@ CPathTrack *CAI_TrackPather::BestPointOnPath( CPathTrack *pPath, const Vector &t
 		return NULL;
 	}
 
-	// Our target may be in a vehicle
-	CBaseEntity *pVehicle = NULL;
 	CBaseEntity *pTargetEnt = GetTrackPatherTargetEnt();	
-	if ( pTargetEnt != NULL )
-	{
-		CBaseCombatCharacter *pCCTarget = pTargetEnt->MyCombatCharacterPointer();
-		if ( pCCTarget != NULL && pCCTarget->IsInAVehicle() )
-		{
-			pVehicle = pCCTarget->GetVehicleEntity();
-		}
-	}
 
 	// Faster math...
 	flAvoidRadius *= flAvoidRadius;
@@ -323,11 +313,10 @@ CPathTrack *CAI_TrackPather::BestPointOnPath( CPathTrack *pPath, const Vector &t
 				// If it has to be visible, run those checks
 				CBaseEntity *pBlocker = FindTrackBlocker( pTravPath->GetAbsOrigin(), targetPos );
 
-				// Check to see if we've hit the target, or the player's vehicle if it's a player in a vehicle
-				bool bHitTarget = ( pTargetEnt && ( pTargetEnt == pBlocker ) ) ||
-									( pVehicle && ( pVehicle == pBlocker ) );
+				// Check to see if we've hit the target, or the player's if it's a player in a 
+				bool bHitTarget = (pTargetEnt && (pTargetEnt == pBlocker));
 
-				// If we hit something, and it wasn't the target or his vehicle, then no dice
+				// If we hit something, and it wasn't the target or his, then no dice
 				// If we hit the target and forced move was set, *still* no dice
 				if ( (pBlocker != NULL) && ( !bHitTarget || m_bForcedMove ) )
 					continue;
@@ -490,20 +479,11 @@ bool CAI_TrackPather::HasLOSToTarget( CPathTrack *pTrack )
 	if ( !GetTrackPatherTarget( &targetPos ) )
 		return true;
 
-	// Translate driver into vehicle for testing
-	CBaseEntity *pVehicle = NULL;
-	CBaseCombatCharacter *pCCTarget = pTargetEnt->MyCombatCharacterPointer();
-	if ( pCCTarget != NULL && pCCTarget->IsInAVehicle() )
-	{
-		pVehicle = pCCTarget->GetVehicleEntity();
-	}
-
 	// If it has to be visible, run those checks
 	CBaseEntity *pBlocker = FindTrackBlocker( pTrack->GetAbsOrigin(), targetPos );
 
-	// Check to see if we've hit the target, or the player's vehicle if it's a player in a vehicle
-	bool bHitTarget = ( pTargetEnt && ( pTargetEnt == pBlocker ) ) ||
-						( pVehicle && ( pVehicle == pBlocker ) );
+	// Check to see if we've hit the target, or the player's  if it's a player in a 
+	bool bHitTarget = (pTargetEnt && (pTargetEnt == pBlocker));
 
 	return (pBlocker == NULL) || bHitTarget;
 }
@@ -937,15 +917,7 @@ void CAI_TrackPather::SelectNewDestTarget()
 	if ( !m_bPatrolling )
 		return;
 
-	// NOTE: This version is bugged, but I didn't want to make the fix
-	// here for fear of breaking a lot of maps late in the day.
-	// So, only the chopper does the "right" thing.
-#ifdef HL2_EPISODIC 
-	// Episodic uses the fixed logic for all trackpathers
-	if ( 1 )
-#else
-	if ( ShouldUseFixedPatrolLogic() )
-#endif
+	if (ShouldUseFixedPatrolLogic())
 	{
 		CPathTrack *pOldDest = m_pDestPathTarget;
 

@@ -4,6 +4,7 @@
 //
 // $NoKeywords: $
 //=============================================================================//
+
 #include "cbase.h"
 #include "ai_network.h"
 #include "ai_default.h"
@@ -472,13 +473,6 @@ bool CBaseHelicopter::DoWashPush( washentity_t *pWash, const Vector &vecWashOrig
 	}
 	else
 	{
-		// Airboat gets special treatment
-		if ( FClassnameIs( pEntity, "prop_vehicle_airboat" ) )
-		{
-			DoWashPushOnAirboat( pEntity, vecToSpot, flWashAmount );
-			return true;
-		}
-
 		pPhysObject = pEntity->VPhysicsGetObject();
 		if ( !pPhysObject )
 			return false;
@@ -611,15 +605,6 @@ void CBaseHelicopter::DoRotorPhysicsPush( const Vector &vecRotorOrigin, float fl
 			float flDist = VectorNormalize( vecToSpot );
 			if ( flDist > BASECHOPPER_WASH_RADIUS )
 				continue;
-
-			
-			// Try to cast to the helicopter; if we can't, then we can't be hit.
-			if ( pEntity->GetServerVehicle() )
-			{
-				UTIL_TraceLine( vecSpot, vecPhysicsOrigin, MASK_SOLID_BRUSHONLY, pEntity, COLLISION_GROUP_NONE, &tr );
-				if ( tr.fraction != 1.0f )
-					continue;
-			}
 
 			flLightestMass = flMass;
 			pLightestEntity = pEntity;
@@ -1007,7 +992,7 @@ void CBaseHelicopter::Flight( void )
 	}
 
 	// These functions contain code Ken wrote that used to be right here as part of the flight model,
-	// but we want different helicopter vehicles to have different drag characteristics, so I made
+	// but we want different helicopter to have different drag characteristics, so I made
 	// them virtual functions (sjb)
 	ApplySidewaysDrag( right );
 	ApplyGeneralDrag();

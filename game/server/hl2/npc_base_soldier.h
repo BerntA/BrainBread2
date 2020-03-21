@@ -104,7 +104,6 @@ public:
 	void			OnEndMoveAndShoot();
 
 	// Combat
-	WeaponProficiency_t CalcWeaponProficiency( CBaseCombatWeapon *pWeapon );
 	bool			HasShotgun();
 	bool			ActiveWeaponIsFullyLoaded();
 

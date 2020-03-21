@@ -10,9 +10,7 @@
 #include "igamemovement.h"
 #include "hl_movedata.h"
 #include "ipredictionsystem.h"
-#include "iservervehicle.h"
 #include "hl2_player.h"
-#include "vehicle_base.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -32,6 +30,7 @@ public:
 //
 //
 // PlayerMove Interface
+
 static CHLPlayerMove g_PlayerMove;
 
 //-----------------------------------------------------------------------------
@@ -56,24 +55,10 @@ void CHLPlayerMove::SetupMove(CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *
 
 	player->m_flForwardMove = ucmd->forwardmove;
 	player->m_flSideMove = ucmd->sidemove;
-
-	if (gpGlobals->frametime != 0)
-	{
-		IServerVehicle *pVehicle = player->GetVehicle();
-		if (pVehicle)
-			pVehicle->SetupMove(player, ucmd, pHelper, move);
-	}
 }
-
 
 void CHLPlayerMove::FinishMove(CBasePlayer *player, CUserCmd *ucmd, CMoveData *move)
 {
 	// Call the default FinishMove code.
 	BaseClass::FinishMove(player, ucmd, move);
-	if (gpGlobals->frametime != 0)
-	{
-		IServerVehicle *pVehicle = player->GetVehicle();
-		if (pVehicle)
-			pVehicle->FinishMove(player, ucmd, move);
-	}
 }

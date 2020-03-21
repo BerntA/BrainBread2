@@ -18,11 +18,6 @@
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "util_shared.h"
 
-#if defined USES_ECON_ITEMS
-#include "game_item_schema.h"
-#include "econ_item_view.h"
-#endif
-
 // For queuing and processing usercmds
 class CCommandContext
 {
@@ -80,16 +75,11 @@ class CBaseCombatWeapon;
 class CBaseViewModel;
 class CTeam;
 class IPhysicsPlayerController;
-class IServerVehicle;
 class CUserCmd;
 class CFuncLadder;
 class CNavArea;
 class CHintSystem;
 class CAI_Expresser;
-
-#if defined USES_ECON_ITEMS
-class CEconWearable;
-#endif // USES_ECON_ITEMS
 
 // for step sounds
 struct surfacedata_t;
@@ -177,7 +167,6 @@ public:
 	virtual bool IsPlayer();
 	virtual bool IsFakeClient();
 	virtual bool IsDead();
-	virtual bool IsInAVehicle();
 	virtual bool IsObserver();
 	virtual const Vector GetAbsOrigin();
 	virtual const QAngle GetAbsAngles();
@@ -319,7 +308,6 @@ public:
 	void					EyePositionAndVectors( Vector *pPosition, Vector *pForward, Vector *pRight, Vector *pUp );
 	virtual const QAngle	&LocalEyeAngles();		// Direction of eyes
 	void					EyeVectors( Vector *pForward, Vector *pRight = NULL, Vector *pUp = NULL );
-	void					CacheVehicleView( void );	// Calculate and cache the position of the player in the vehicle
 
 	// Sets the view angles
 	void					SnapEyeAngles( const QAngle &viewAngles );
@@ -459,21 +447,6 @@ public:
 	virtual int				GetReplayEntity();
 
 	virtual CBaseEntity		*EntSelectSpawnPoint( void );
-
-	// Vehicles
-	virtual bool			IsInAVehicle( void ) const;
-			bool			CanEnterVehicle( IServerVehicle *pVehicle, int nRole );
-	virtual bool			GetInVehicle( IServerVehicle *pVehicle, int nRole );
-	virtual void			LeaveVehicle( const Vector &vecExitPoint = vec3_origin, const QAngle &vecExitAngles = vec3_angle );
-	int						GetVehicleAnalogControlBias() { return m_iVehicleAnalogBias; }
-	void					SetVehicleAnalogControlBias( int bias ) { m_iVehicleAnalogBias = bias; }
-	
-	// override these for 
-	virtual void			OnVehicleStart() {}
-	virtual void			OnVehicleEnd( Vector &playerDestPosition ) {} 
-	IServerVehicle			*GetVehicle();
-	CBaseEntity				*GetVehicleEntity( void );
-	bool					UsingStandardWeaponsInVehicle( void );
 	
 	void					AddPoints( int score, bool bAllowNegativeScore );
 	void					AddPointsToTeam( int score, bool bAllowNegativeScore );
@@ -547,8 +520,7 @@ public:
 
 	void					AvoidPhysicsProps( CUserCmd *pCmd );
 
-	// Run a user command. The default implementation calls ::PlayerRunCommand. In TF, this controls a vehicle if
-	// the player is in one.
+	// Run a user command. The default implementation calls ::PlayerRunCommand. 
 	virtual void			PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper);
 	void					RunNullCommand();
 	CUserCmd *				GetCurrentCommand( void )	{ return m_pCurrentCommand; }
@@ -578,13 +550,6 @@ public:
 	virtual void			CreateRagdollEntity( void ) { return; }
 
 	virtual void			HandleAnimEvent( animevent_t *pEvent );
-
-#if defined USES_ECON_ITEMS
-	// Wearables
-	virtual void			EquipWearable( CEconWearable *pItem );
-	virtual void			RemoveWearable( CEconWearable *pItem );
-	void					PlayWearableAnimsForPlaybackEvent( wearableanimplayback_t iPlayback );
-#endif
 
 public:
 	// Player Physics Shadow
@@ -780,10 +745,6 @@ public:
 	//  the player and not to other players.
 	CNetworkVarEmbedded( CPlayerLocalData, m_Local );
 
-#if defined USES_ECON_ITEMS
-	CNetworkVarEmbedded( CAttributeList,	m_AttributeList );
-#endif
-
 	void InitFogController( void );
 	void InputSetFogController( inputdata_t &inputdata );
 
@@ -829,16 +790,9 @@ public:
 
 	void		AdjustDrownDmg( int nAmount );
 
-#if defined USES_ECON_ITEMS
-	CEconWearable			*GetWearable( int i ) { return m_hMyWearables[i]; }
-	int						GetNumWearables( void ) { return m_hMyWearables.Count(); }
-#endif
-
 protected:
 
 	void					CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-	void					CalcVehicleView( IServerVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles, 	
-								float& zNear, float& zFar, float& fov );
 	void					CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	void					CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles);
 
@@ -855,10 +809,6 @@ protected:
 	char pchSoundsetSurvivorLink[64];
 	bool m_bSoundsetGender;
 	
-	// Vehicles
-	CNetworkHandle( CBaseEntity, m_hVehicle );
-
-	int						m_iVehicleAnalogBias;
 	bool                    m_bZombieVisionState;
 
 	void					UpdateButtonState( int nUserCmdButtonMask );
@@ -960,11 +910,6 @@ protected:
 
 	float					m_flStepSoundTime;	// time to check for next footstep sound
 
-#if defined USES_ECON_ITEMS
-	// Wearables
-	CUtlVector<CHandle<CEconWearable > >	m_hMyWearables;
-#endif
-
 private:
 
 // Replicated to all clients
@@ -1045,11 +990,6 @@ protected:
 	// These are generated while running usercmds, then given to UpdateVPhysicsPosition after running all queued commands.
 	Vector m_vNewVPhysicsPosition;
 	Vector m_vNewVPhysicsVelocity;
-	
-	Vector	m_vecVehicleViewOrigin;		// Used to store the calculated view of the player while riding in a vehicle
-	QAngle	m_vecVehicleViewAngles;		// Vehicle angles
-	float	m_flVehicleViewFOV;			// FOV of the vehicle driver
-	int		m_nVehicleViewSavedFrame;	// Used to mark which frame was the last one the view was calculated for
 
 	Vector m_vecPreviouslyPredictedOrigin; // Used to determine if non-gamemovement game code has teleported, or tweaked the player's origin
 	int		m_nBodyPitchPoseParam;
@@ -1080,14 +1020,8 @@ public:
 	inline void DisableAutoKick( bool disabled );
 
 	void	DumpPerfToRecipient( CBasePlayer *pRecipient, int nMaxRecords );
-	// NVNT returns true if user has a haptic device
-	virtual bool HasHaptics(){return m_bhasHaptics;}
-	// NVNT sets weather a user should receive haptic device messages.
-	virtual void SetHaptics(bool has) { m_bhasHaptics = has;}
-private:
-	// NVNT member variable holding if this user is using a haptic device.
-	bool m_bhasHaptics;
 
+private:
 	bool m_autoKickDisabled;
 
 	struct StepSoundCache_t
@@ -1178,22 +1112,6 @@ inline const CUserCmd *CBasePlayer::GetCurrentUserCommand() const
 {
 	Assert( m_pCurrentCommand );
 	return m_pCurrentCommand;
-}
-
-inline IServerVehicle *CBasePlayer::GetVehicle() 
-{ 
-	CBaseEntity *pVehicleEnt = m_hVehicle.Get();
-	return pVehicleEnt ? pVehicleEnt->GetServerVehicle() : NULL;
-}
-
-inline CBaseEntity *CBasePlayer::GetVehicleEntity() 
-{ 
-	return m_hVehicle.Get();
-}
-
-inline bool CBasePlayer::IsInAVehicle( void ) const 
-{ 
-	return ( NULL != m_hVehicle.Get() ) ? true : false; 
 }
 
 inline void CBasePlayer::SetTouchedPhysics( bool bTouch ) 
@@ -1316,12 +1234,5 @@ inline bool ForEachPlayer( IPlayerFunctor &func )
 
 	return isComplete;
 }
-
-enum
-{
-	VEHICLE_ANALOG_BIAS_NONE = 0,
-	VEHICLE_ANALOG_BIAS_FORWARD,
-	VEHICLE_ANALOG_BIAS_REVERSE,
-};
 
 #endif // PLAYER_H

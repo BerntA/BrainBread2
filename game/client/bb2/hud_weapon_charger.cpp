@@ -46,7 +46,7 @@ CHudWeaponCharger::CHudWeaponCharger(const char * pElementName) : CHudElement(pE
 {
 	vgui::Panel * pParent = g_pClientMode->GetViewport();
 	SetParent(pParent);
-	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_INVEHICLE | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
 }
 
 //------------------------------------------------------------------------

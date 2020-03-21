@@ -9,7 +9,6 @@
 #define BASECOMBATCHARACTER_H
 
 #include <limits.h>
-#include "weapon_proficiency.h"
 
 #ifdef _WIN32
 #pragma once
@@ -368,12 +367,6 @@ protected:
 	virtual float GetExplodeFactor(void) { return 50.0f; }
 
 public:
-	
-	// Vehicle queries
-	virtual bool IsInAVehicle( void ) const { return false; }
-	virtual IServerVehicle *GetVehicle( void ) { return NULL; }
-	virtual CBaseEntity *GetVehicleEntity( void ) { return NULL; }
-	virtual bool ExitVehicle( void ) { return false; }
 
 	// Blood color (see BLOOD_COLOR_* macros in baseentity.h)
 	void SetBloodColor( int nBloodColor );
@@ -384,9 +377,6 @@ public:
 	CBaseCombatWeapon*	GetWeapon( int i ) const;
 	bool				RemoveWeapon( CBaseCombatWeapon *pWeapon );
 	virtual void		RemoveAllWeapons();
-	WeaponProficiency_t GetCurrentWeaponProficiency() { return m_CurrentWeaponProficiency; }
-	void				SetCurrentWeaponProficiency( WeaponProficiency_t iProficiency ) { m_CurrentWeaponProficiency = iProficiency; }
-	virtual WeaponProficiency_t CalcWeaponProficiency( CBaseCombatWeapon *pWeapon );
 	virtual	Vector		GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget = NULL );
 	virtual	float		GetSpreadBias(  CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget );
 	virtual void		DoMuzzleFlash();
@@ -485,10 +475,6 @@ private:
 	int					m_LastHitGroup;			// the last body region that took damage
 	float				m_flDamageAccumulator;	// so very small amounts of damage do not get lost.
 	int					m_iDamageCount;			// # of times NPC has been damaged.  used for tracking 1-shot kills.
-	
-	// Weapon proficiency gets calculated each time an NPC changes his weapon, and then
-	// cached off as the CurrentWeaponProficiency.
-	WeaponProficiency_t m_CurrentWeaponProficiency;
 
 	// ---------------
 	//  Relationships

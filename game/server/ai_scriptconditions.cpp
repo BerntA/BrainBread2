@@ -63,11 +63,9 @@ BEGIN_DATADESC( CAI_ScriptConditions )
 
 	DEFINE_KEYFIELD(m_flRequiredTime, 				FIELD_FLOAT, 	"RequiredTime" 				),
 
-#ifndef HL2_EPISODIC
 	DEFINE_FIELD( m_hActor, FIELD_EHANDLE ),
 	DEFINE_EMBEDDED(m_Timer ),
 	DEFINE_EMBEDDED(m_Timeout ),
-#endif
 
 	DEFINE_KEYFIELD(m_fMinState, 					FIELD_INTEGER,	"MinimumState" 				),
 	DEFINE_KEYFIELD(m_fMaxState, 					FIELD_INTEGER,	"MaximumState" 				),
@@ -101,9 +99,6 @@ BEGIN_DATADESC( CAI_ScriptConditions )
 	DEFINE_KEYFIELD(m_flMaxTimeout, 				FIELD_FLOAT,	"MaxTimeout"				),
 
 	DEFINE_KEYFIELD(m_fActorInPVS,					FIELD_INTEGER,  "ActorInPVS"		),
-
-	DEFINE_KEYFIELD(m_fActorInVehicle,				FIELD_INTEGER,	 "ActorInVehicle" ),
-	DEFINE_KEYFIELD(m_fPlayerInVehicle,				FIELD_INTEGER,	 "PlayerInVehicle" ),
 
 	DEFINE_UTLVECTOR( m_ElementList,				FIELD_EMBEDDED ),
 	DEFINE_FIELD( m_bLeaveAsleep,					FIELD_BOOLEAN ),
@@ -139,20 +134,12 @@ CAI_ScriptConditions::EvaluatorInfo_t CAI_ScriptConditions::gm_Evaluators[] =
 		EVALUATOR( ActorSeeTarget),
 		EVALUATOR( PlayerActorLOS ),
 		EVALUATOR( PlayerTargetLOS ),
-
-#ifdef HL2_EPISODIC
-		EVALUATOR( ActorInPVS ),
-		EVALUATOR( PlayerInVehicle ),
-		EVALUATOR( ActorInVehicle ),
-#endif
-
 };
 
 void CAI_ScriptConditions::OnRestore( void )
 {
 	BaseClass::OnRestore();
 
-#ifndef HL2_EPISODIC
 	//Old HL2 save game! Fix up to new system.
 	if ( m_hActor )
 	{
@@ -171,7 +158,6 @@ void CAI_ScriptConditions::OnRestore( void )
 	{
 		AddNewElement( NULL );
 	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -254,14 +240,7 @@ bool CAI_ScriptConditions::EvalActorSeeTarget( const EvalArgs_t &args )
 
 		CAI_BaseNPC *pNPCActor = args.pActor->MyNPCPointer();
 
-#ifdef HL2_EPISODIC
-		// This is the code we want to have written for HL2, but HL2 shipped without the QuerySeeEntity() call. This #ifdef really wants to be
-		// something like #ifndef HL2_RETAIL, since this change does want to be in any products that are built henceforth. (sjb)
-		bool fSee = pNPCActor->FInViewCone( args.pTarget ) && pNPCActor->FVisible( args.pTarget ) && pNPCActor->QuerySeeEntity( args.pTarget );
-#else
-		bool fSee = pNPCActor->FInViewCone( args.pTarget ) && pNPCActor->FVisible( args.pTarget );
-#endif//HL2_EPISODIC
-
+		bool fSee = pNPCActor->FInViewCone(args.pTarget) && pNPCActor->FVisible(args.pTarget);
 		if( fSee )
 		{
 			if( m_fActorSeeTarget == TRS_TRUE )
@@ -388,44 +367,6 @@ bool CAI_ScriptConditions::EvalPlayerBlockingActor( const EvalArgs_t &args )
 	return false; // for now, never say player is blocking
 }
 
-//-----------------------------------------------------------------------------
-
-bool CAI_ScriptConditions::EvalPlayerInVehicle( const EvalArgs_t &args )
-{
-	// We don't care
-	if ( m_fPlayerInVehicle == TRS_NONE )
-		return true;
-
-	// Need a player to test
-	if ( args.pPlayer == NULL )
-		return false;
-
-	// Desired states must match
-	return ( !!args.pPlayer->IsInAVehicle() == m_fPlayerInVehicle );
-}
-
-//-----------------------------------------------------------------------------
-
-bool CAI_ScriptConditions::EvalActorInVehicle( const EvalArgs_t &args )
-{
-	// We don't care
-	if ( m_fActorInVehicle == TRS_NONE )
-		return true;
-
-	if ( !args.pActor )
-		return true;
-
-	// Must be able to be in a vehicle at all
-	CBaseCombatCharacter *pBCC = args.pActor->MyCombatCharacterPointer();
-	if ( pBCC == NULL )
-		return false;
-
-	// Desired states must match
-	return ( !!pBCC->IsInAVehicle() == m_fActorInVehicle );
-}
-
-//-----------------------------------------------------------------------------
-
 void CAI_ScriptConditions::Spawn()
 {
 	Assert( ( m_fMinState == NPC_STATE_IDLE || m_fMinState == NPC_STATE_COMBAT || m_fMinState == NPC_STATE_ALERT ) &&
@@ -448,10 +389,6 @@ void CAI_ScriptConditions::Activate()
 	// following that, we keep it updated and it reflects current state.
 	if( !m_fDisabled )
 		Enable();
-
-#ifdef HL2_EPISODIC
-	gEntList.AddListenerEntity( this );
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -497,13 +434,6 @@ void CAI_ScriptConditions::EvaluationThink()
 
 		CBaseEntity *pActor = pConditionElement->GetActor();
 		CBaseEntity *pActivator = this;
-
-#ifdef HL2_EPISODIC
-		if ( pActor && HasSpawnFlags( SF_ACTOR_AS_ACTIVATOR ) )
-		{
-			pActivator = pActor;
-		}
-#endif
 
 		AssertMsg( !m_fDisabled, ("Violated invariant between CAI_ScriptConditions disabled state and think func setting") );
 
@@ -747,7 +677,7 @@ bool CAI_ScriptConditions::PlayerHasLineOfSight( CBaseEntity *pViewer, CBaseEnti
 
 	if( pCombatantViewer )
 	{
-		// We always trace towards the player, so we handle players-in-vehicles
+		// We always trace towards the player, so we handle players-in
 		if ( pViewed->FVisible( pCombatantViewer ) )
 		{
 			// Line of sight exists.

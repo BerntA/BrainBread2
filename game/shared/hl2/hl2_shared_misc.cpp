@@ -1020,7 +1020,7 @@ unsigned int CMissile::PhysicsSolidMaskForEntity(void) const
 int CMissile::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 {	
 	// The missile can be detonated early if damaged by:
-	if ((info.GetDamageType() & (DMG_BULLET | DMG_BUCKSHOT | DMG_ZOMBIE | DMG_SLASH | DMG_CLUB | DMG_VEHICLE)) == false)
+	if ((info.GetDamageType() & (DMG_BULLET | DMG_BUCKSHOT | DMG_ZOMBIE | DMG_SLASH | DMG_CLUB)) == false)
 		return 0;
 	
 	Explode();

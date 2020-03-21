@@ -115,8 +115,6 @@
 #include "clientsteamcontext.h"
 #include "renamed_recvtable_compat.h"
 #include "mouthinfo.h"
-#include "sourcevr/isourcevirtualreality.h"
-#include "client_virtualreality.h"
 #include "mumble.h"
 
 // BB2 
@@ -126,25 +124,17 @@
 #include "c_client_attachment.h"
 #include "c_playermodel.h"
 
-// NVNT includes
 #include "hud_macros.h"
-#include "haptics/ihaptics.h"
-#include "haptics/haptic_utils.h"
-#include "haptics/haptic_msgs.h"
-
-#ifdef USES_ECON_ITEMS
-#include "econ_item_system.h"
-#endif // USES_ECON_ITEMS
 
 #ifdef WORKSHOP_IMPORT_ENABLED
 #include "fbxsystem/fbxsystem.h"
 #endif
 
-extern vgui::IInputInternal *g_InputInternal;
+namespace vgui {
+	class IInputInternal;
+}
 
-#ifdef SIXENSE
-#include "sixense/in_sixense.h"
-#endif
+extern vgui::IInputInternal *g_InputInternal;
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -190,8 +180,6 @@ IEngineReplay *g_pEngineReplay = NULL;
 IEngineClientReplay *g_pEngineClientReplay = NULL;
 IReplaySystem *g_pReplay = NULL;
 #endif
-
-IHaptics* haptics = NULL;// NVNT haptics system interface singleton
 
 //=============================================================================
 // HPE_BEGIN
@@ -792,12 +780,7 @@ CHLClient::CHLClient()
 	g_bLevelInitialized = false;
 }
 
-
 extern IGameSystem *ViewportClientSystem();
-
-
-//-----------------------------------------------------------------------------
-ISourceVirtualReality *g_pSourceVR = NULL;
 
 // Purpose: Called when the DLL is first loaded.
 // Input  : engineFactory - 
@@ -807,11 +790,6 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 {
 	InitCRTMemDebug();
 	MathLib_Init( 2.2f, 2.2f, 0.0f, 2.0f );
-
-
-#ifdef SIXENSE
-	g_pSixenseInput = new SixenseInput;
-#endif
 
 	// Hook up global variables
 	gpGlobals = pGlobals;
@@ -892,9 +870,6 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 		return false;
 	InitFbx();
 #endif
-
-	// it's ok if this is NULL. That just means the headtrack.dll wasn't found
-	g_pSourceVR = (ISourceVirtualReality *)appSystemFactory(SOURCE_VIRTUAL_REALITY_INTERFACE_VERSION, NULL);
 
 	factorylist_t factories;
 	factories.appSystemFactory = appSystemFactory;
@@ -1010,19 +985,8 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetViewEffectsRestoreBlockHandler() );
 
 	ClientWorldFactoryInit();
-
 	C_BaseAnimating::InitBoneSetupThreadPool();
-
-#if defined( WIN32 ) && !defined( _X360 )
-	// NVNT connect haptics sytem
-	ConnectHaptics(appSystemFactory);
-#endif
-#ifndef _X360
-	HookHapticMessages(); // Always hook the messages
-#endif
-
 	engine->ClientCmd( "progress_enable" );
-
 	return true;
 }
 
@@ -1067,14 +1031,6 @@ bool CHLClient::ReplayPostInit()
 void CHLClient::PostInit()
 {
 	IGameSystem::PostInitAllSystems();
-
-#ifdef SIXENSE
-	// allow sixnese input to perform post-init operations
-	g_pSixenseInput->PostInit();
-#endif
-
-    g_ClientVirtualReality.StartupComplete();
-
 	GameBaseClient->Initialize();
 }
 
@@ -1083,12 +1039,6 @@ void CHLClient::PostInit()
 //-----------------------------------------------------------------------------
 void CHLClient::Shutdown( void )
 {
-#ifdef SIXENSE
-	g_pSixenseInput->Shutdown();
-	delete g_pSixenseInput;
-	g_pSixenseInput = NULL;
-#endif
-
 	C_BaseAnimating::ShutdownBoneSetupThreadPool();
 	ClientWorldFactoryShutdown();
 
@@ -1138,11 +1088,6 @@ void CHLClient::Shutdown( void )
 	DisconnectTier1Libraries( );
 
 	gameeventmanager = NULL;
-
-#if defined( WIN32 ) && !defined( _X360 )
-	// NVNT Disconnect haptics system
-	DisconnectHaptics();
-#endif
 }
 
 
@@ -1197,14 +1142,6 @@ void CHLClient::HudUpdate( bool bActive )
 	// I don't think this is necessary any longer, but I will leave it until
 	// I can check into this further.
 	C_BaseTempEntity::CheckDynamicTempEnts();
-
-#ifdef SIXENSE
-	// If we're not connected, update sixense so we can move the mouse cursor when in the menus
-	if( !engine->IsConnected() || engine->IsPaused() )
-	{
-		g_pSixenseInput->SixenseFrame( 0, NULL ); 
-	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1344,11 +1281,8 @@ void CHLClient::IN_SetSampleTime( float frametime )
 {
 	input->Joystick_SetSampleTime( frametime );
 	input->IN_SetSampleTime( frametime );
-
-#ifdef SIXENSE
-	g_pSixenseInput->ResetFrameTime( frametime );
-#endif
 }
+
 //-----------------------------------------------------------------------------
 // Purpose: Fills in usercmd_s structure based on current view angles and key/controller inputs
 // Input  : frametime - timestamp for last frame
@@ -1513,14 +1447,6 @@ void CHLClient::LevelInitPreEntity( char const* pMapName )
 	ResetToneMapping(1.0);
 
 	IGameSystem::LevelInitPreEntityAllSystems(pMapName);
-
-#ifdef USES_ECON_ITEMS
-	GameItemSchema_t *pItemSchema = ItemSystem()->GetItemSchema();
-	if ( pItemSchema )
-	{
-		pItemSchema->BInitFromDelayedBuffer();
-	}
-#endif // USES_ECON_ITEMS
 
 	ResetWindspeed();
 

@@ -34,10 +34,6 @@
 #include "scripted.h"
 #include "env_debughistory.h"
 
-#ifdef HL2_EPISODIC
-#include "npc_alyx_episodic.h"
-#endif // HL2_EPISODIC
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 

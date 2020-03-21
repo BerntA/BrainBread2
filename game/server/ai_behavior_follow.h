@@ -13,14 +13,9 @@
 #include "ai_utils.h"
 #include "ai_moveshoot.h"
 
-#ifdef HL2_EPISODIC
-	#include "hl2_gamerules.h"
-#endif
-
 #if defined( _WIN32 )
 #pragma once
 #endif
-
 
 //-----------------------------------------------------------------------------
 // NOTE: these must correspond with the AI_FollowFormation_t array in AI_Behavior_Follow.cpp!!
@@ -62,9 +57,6 @@ public:
 
 	virtual void EnableGoal( CAI_BaseNPC *pAI );
 	virtual void DisableGoal( CAI_BaseNPC *pAI  );
-#ifdef HL2_EPISODIC
-	virtual void InputOutsideTransition( inputdata_t &inputdata );
-#endif
 
 	int m_iFormation;
 

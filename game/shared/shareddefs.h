@@ -152,14 +152,12 @@ public:
 #define HIDEHUD_MISCSTATUS			( 1<<5 )	// Hide miscellaneous status elements (trains, pickup history, death notices, etc)
 #define HIDEHUD_CHAT				( 1<<6 )	// Hide all communication elements (saytext, voice icon, etc)
 #define	HIDEHUD_CROSSHAIR			( 1<<7 )	// Hide crosshairs
-#define	HIDEHUD_VEHICLE_CROSSHAIR	( 1<<8 )	// Hide vehicle crosshair
-#define HIDEHUD_INVEHICLE			( 1<<9 )
-#define HIDEHUD_SCOREBOARD		    ( 1<<10 )	// Hide HUD when the scoreboard is visible.
-#define HIDEHUD_ZOMBIEMODE ( 1<<11 ) // Hide when we're a zombie...
-#define HIDEHUD_ROUNDSTARTING ( 1<<12 ) // Hide when we're waiting for round start / displaying scores.
-#define HIDEHUD_INWEPSELECTION ( 1<<13 ) // Hide when we're selecting weapons.
+#define HIDEHUD_SCOREBOARD		    ( 1<<8 )	// Hide HUD when the scoreboard is visible.
+#define HIDEHUD_ZOMBIEMODE			( 1<<9 ) // Hide when we're a zombie...
+#define HIDEHUD_ROUNDSTARTING		( 1<<10 ) // Hide when we're waiting for round start / displaying scores.
+#define HIDEHUD_INWEPSELECTION		( 1<<11 ) // Hide when we're selecting weapons.
 
-#define HIDEHUD_BITCOUNT			14
+#define HIDEHUD_BITCOUNT			12
 
 // BB2 
 #define MAX_TEAMMATE_DISTANCE 500.0f
@@ -300,7 +298,7 @@ enum
 #define DMG_BULLET			(1 << 1)	// shot
 #define DMG_SLASH			(1 << 2)	// cut, clawed, stabbed
 #define DMG_BURN			(1 << 3)	// heat burned
-#define DMG_VEHICLE			(1 << 4)	// hit by a vehicle
+//#define 			(1 << 4)	// FREE
 #define DMG_FALL			(1 << 5)	// fell too far
 #define DMG_BLAST			(1 << 6)	// explosive blast damage
 #define DMG_CLUB			(1 << 7)	// crowbar, punch, headbutt
@@ -437,19 +435,6 @@ enum
 	BLOOD_COLOR_YELLOW,
 	BLOOD_COLOR_GREEN,
 	BLOOD_COLOR_MECH,
-};
-
-//-----------------------------------------------------------------------------
-// Vehicles may have more than one passenger.
-// This enum may be expanded by derived classes
-//-----------------------------------------------------------------------------
-enum PassengerRole_t
-{
-	VEHICLE_ROLE_NONE = -1,
-
-	VEHICLE_ROLE_DRIVER = 0,	// Only one driver
-	
-	LAST_SHARED_VEHICLE_ROLE,
 };
 
 //-----------------------------------------------------------------------------

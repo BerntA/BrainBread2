@@ -237,15 +237,12 @@ protected:
 	int						m_iBulletDamage; // 0 means use Bullet type's default damage
 	int						m_iBulletDamageVsPlayer; // Damage vs player. 0 means use m_iBulletDamage
 
-//BB2_MISC_FIXES: We enable all ammo types so that we can have both the old style mounted guns (which players can use) and the new combine cannons (which players can't use, and rely on the new ammo code).
-//#ifdef HL2_EPISODIC
+// BB2_MISC_FIXES: We enable all ammo types so that we can have both the old style mounted guns (which players can use) and the new combine cannons (which players can't use, and rely on the new ammo code).
 	string_t				m_iszAmmoType;		// The name of the ammodef that we use when we fire. Bullet damage still comes from keyvalues.
 	int						m_iAmmoType;		// The cached index of the ammodef that we use when we fire.
-//#else
 	int						m_iSmallAmmoType;
 	int						m_iMediumAmmoType;
 	int						m_iLargeAmmoType;
-//#endif // HL2_EPISODIC
 
 	int						m_spread;		// firing spread
 

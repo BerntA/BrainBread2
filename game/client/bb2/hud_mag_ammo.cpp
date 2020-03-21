@@ -89,7 +89,7 @@ CHudBaseAmmo::CHudBaseAmmo(const char * pElementName) : CHudElement(pElementName
 {
 	vgui::Panel * pParent = g_pClientMode->GetViewport();
 	SetParent(pParent);
-	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_INVEHICLE | HIDEHUD_ZOMBIEMODE | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_ZOMBIEMODE | HIDEHUD_ROUNDSTARTING | HIDEHUD_SCOREBOARD);
 }
 
 //------------------------------------------------------------------------

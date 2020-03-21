@@ -1258,7 +1258,7 @@ inline int ShortestDirectionThroughPoints( const Vector &vecStart, int nStartPoi
 
 //-----------------------------------------------------------------------------
 // Purpose: Attempt to build an avoidance route around an object using its OBB
-//			Currently this function is meant for NPCs moving around a vehicle, 
+//			Currently this function is meant for NPCs moving around a, 
 //			and is very specialized as such
 //
 // Output : Returns a route if successful or NULL if no local route was possible

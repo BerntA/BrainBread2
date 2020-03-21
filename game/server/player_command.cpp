@@ -12,7 +12,6 @@
 #include "client.h"
 #include "player_command.h"
 #include "movehelper_server.h"
-#include "iservervehicle.h"
 #include "tier0/vprof.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -386,17 +385,10 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 		}
 	}
 
-	IServerVehicle *pVehicle = player->GetVehicle();
-
 	// Latch in impulse.
 	if ( ucmd->impulse )
 	{
-		// Discard impulse commands unless the vehicle allows them.
-		// FIXME: UsingStandardWeapons seems like a bad filter for this. The flashlight is an impulse command, for example.
-		if ( !pVehicle || player->UsingStandardWeaponsInVehicle() )
-		{
-			player->m_nImpulse = ucmd->impulse;
-		}
+		player->m_nImpulse = ucmd->impulse;
 	}
 
 	// Update player input button states
@@ -428,17 +420,9 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	SetupMove( player, ucmd, moveHelper, g_pMoveData );
 
 	// Let the game do the movement.
-	if ( !pVehicle )
-	{
-		VPROF( "g_pGameMovement->ProcessMovement()" );
-		Assert( g_pGameMovement );
-		g_pGameMovement->ProcessMovement( player, g_pMoveData );
-	}
-	else
-	{
-		VPROF( "pVehicle->ProcessMovement()" );
-		pVehicle->ProcessMovement( player, g_pMoveData );
-	}
+	VPROF("g_pGameMovement->ProcessMovement()");
+	Assert(g_pGameMovement);
+	g_pGameMovement->ProcessMovement(player, g_pMoveData);
 			
 	// Copy output
 	FinishMove( player, ucmd, g_pMoveData );

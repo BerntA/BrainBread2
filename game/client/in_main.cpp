@@ -26,15 +26,6 @@
 #include <voice_status.h>
 #include "cam_thirdperson.h"
 
-#ifdef SIXENSE
-#include "sixense/in_sixense.h"
-#endif
-
-#include "client_virtualreality.h"
-#include "sourcevr/isourcevirtualreality.h"
-
-// NVNT Include
-#include "haptics/haptic_utils.h"
 #include <vgui/ISurface.h>
 
 // BB2 Experimental
@@ -115,7 +106,7 @@ kbutton_t	in_moveleft;
 kbutton_t	in_moveright;
 // Display the netgraph
 kbutton_t	in_graph;  
-kbutton_t	in_joyspeed;		// auto-speed key from the joystick (only works for player movement, not vehicles)
+kbutton_t	in_joyspeed;		// auto-speed key from the joystick (only works for player movement)
 
 static	kbutton_t	in_klook;
 kbutton_t	in_left;
@@ -944,27 +935,6 @@ void CInput::ControllerMove( float frametime, CUserCmd *cmd )
 	}
 
 	JoyStickMove( frametime, cmd);
-
-	// NVNT if we have a haptic device..
-	if(haptics && haptics->HasDevice())
-	{
-		if(engine->IsPaused() || engine->IsLevelMainMenuBackground() || vgui::surface()->IsCursorVisible() || !engine->IsInGame())
-		{
-			// NVNT send a menu process to the haptics system.
-			haptics->MenuProcess();
-			return;
-		}
-		// NVNT calculate move with the navigation on the haptics system.
-		haptics->CalculateMove(cmd->forwardmove, cmd->sidemove, frametime);
-		// NVNT send a game process to the haptics system.
-		haptics->GameProcess();
-#if defined( WIN32 ) && !defined( _X360 )
-		// NVNT update our avatar effect.
-		UpdateAvatarEffect();
-#endif
-	}
-
-
 }
 
 //-----------------------------------------------------------------------------
@@ -1018,33 +988,13 @@ void CInput::ExtraMouseSample( float frametime, bool active )
 
 		// Allow mice and other controllers to add their inputs
 		ControllerMove( frametime, cmd );
-#ifdef SIXENSE
-		g_pSixenseInput->SixenseFrame( frametime, cmd ); 
-
-		if( g_pSixenseInput->IsEnabled() )
-		{
-			g_pSixenseInput->SetView( frametime, cmd );
-		}
-#endif
 	}
 
 	// Retreive view angles from engine ( could have been set in IN_AdjustAngles above )
 	engine->GetViewAngles( viewangles );
 
 	// Set button and flag bits, don't blow away state
-#ifdef SIXENSE
-	if( g_pSixenseInput->IsEnabled() )
-	{
-		// Some buttons were set in SixenseUpdateKeys, so or in any real keypresses
-		cmd->buttons |= GetButtonBits( 0 );
-	}
-	else
-	{
-		cmd->buttons = GetButtonBits( 0 );
-	}
-#else
-	cmd->buttons = GetButtonBits( 0 );
-#endif
+	cmd->buttons = GetButtonBits(0);
 
 	// Use new view angles if alive, otherwise user last angles we stored off.
 	if ( g_iAlive )
@@ -1064,33 +1014,6 @@ void CInput::ExtraMouseSample( float frametime, bool active )
 		engine->SetViewAngles( cmd->viewangles );
 		prediction->SetLocalViewAngles( cmd->viewangles );
 	}
-
-	// Let the headtracker override the view at the very end of the process so
-	// that vehicles and other stuff in g_pClientMode->CreateMove can override 
-	// first
-	if ( active && UseVR() )
-	{
-		C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-		if( pPlayer && !pPlayer->GetVehicle() )
-		{
-			QAngle curViewangles, newViewangles;
-			Vector curMotion, newMotion;
-			engine->GetViewAngles( curViewangles );
-			curMotion.Init ( 
-				cmd->forwardmove,
-				cmd->sidemove,
-				cmd->upmove );
-			g_ClientVirtualReality.OverridePlayerMotion ( frametime, originalViewangles, curViewangles, curMotion, &newViewangles, &newMotion );
-			engine->SetViewAngles( newViewangles );
-			cmd->forwardmove = newMotion[0];
-			cmd->sidemove = newMotion[1];
-			cmd->upmove = newMotion[2];
-
-			cmd->viewangles = newViewangles;
-			prediction->SetLocalViewAngles( cmd->viewangles );
-		}
-	}
-
 }
 
 void CInput::CreateMove ( int sequence_number, float input_sample_frametime, bool active )
@@ -1127,14 +1050,6 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 
 		// Allow mice and other controllers to add their inputs
 		ControllerMove( input_sample_frametime, cmd );
-#ifdef SIXENSE
-		g_pSixenseInput->SixenseFrame( input_sample_frametime, cmd ); 
-
-		if( g_pSixenseInput->IsEnabled() )
-		{
-			g_pSixenseInput->SetView( input_sample_frametime, cmd );
-		}
-#endif
 	}
 	else
 	{
@@ -1166,27 +1081,10 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 	}
 
 	// Set button and flag bits
-#ifdef SIXENSE
-	if( g_pSixenseInput->IsEnabled() )
-	{
-		// Some buttons were set in SixenseUpdateKeys, so or in any real keypresses
-		cmd->buttons |= GetButtonBits( 1 );
-	}
-	else
-	{
-		cmd->buttons = GetButtonBits( 1 );
-	}
-#else
-	// Set button and flag bits
 	cmd->buttons = GetButtonBits( 1 );
-#endif
 
 	// Using joystick?
-#ifdef SIXENSE
-	if ( in_joystick.GetInt() || g_pSixenseInput->IsEnabled() )
-#else
 	if ( in_joystick.GetInt() )
-#endif
 	{
 		if ( cmd->forwardmove > 0 )
 		{
@@ -1212,44 +1110,7 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 	// Let the move manager override anything it wants to.
 	if ( g_pClientMode->CreateMove( input_sample_frametime, cmd ) )
 	{
-		// Get current view angles after the client mode tweaks with it
-#ifdef SIXENSE
-		// Only set the engine angles if sixense is not enabled. It is done in SixenseInput::SetView otherwise.
-		if( !g_pSixenseInput->IsEnabled() )
-		{
-			engine->SetViewAngles( cmd->viewangles );
-		}
-#else
-		engine->SetViewAngles( cmd->viewangles );
-
-#endif
-
-		if ( UseVR() )
-		{
-			C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-			if( pPlayer && !pPlayer->GetVehicle() )
-			{
-				QAngle curViewangles, newViewangles;
-				Vector curMotion, newMotion;
-				engine->GetViewAngles( curViewangles );
-				curMotion.Init ( 
-					cmd->forwardmove,
-					cmd->sidemove,
-					cmd->upmove );
-				g_ClientVirtualReality.OverridePlayerMotion ( input_sample_frametime, originalViewangles, curViewangles, curMotion, &newViewangles, &newMotion );
-				engine->SetViewAngles( newViewangles );
-				cmd->forwardmove = newMotion[0];
-				cmd->sidemove = newMotion[1];
-				cmd->upmove = newMotion[2];
-				cmd->viewangles = newViewangles;
-			}
-			else
-			{
-				Vector vPos;
-				g_ClientVirtualReality.GetTorsoRelativeAim( &vPos, &cmd->viewangles );
-				engine->SetViewAngles( cmd->viewangles );
-			}
-		}
+		engine->SetViewAngles(cmd->viewangles);
 	}
 
 	m_flLastForwardMove = cmd->forwardmove;

@@ -61,8 +61,6 @@ public:
 	bool Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
 	void Drop(const Vector &vecVelocity);
 
-	const WeaponProficiencyInfo_t *GetProficiencyValues();	
-
 private:
 	CWeaponMinigun(const CWeaponMinigun &);
 
@@ -306,20 +304,4 @@ void CWeaponMinigun::PrimaryAttack(void)
 
 void CWeaponMinigun::SecondaryAttack(void)
 {
-}
-
-const WeaponProficiencyInfo_t *CWeaponMinigun::GetProficiencyValues()
-{
-	static WeaponProficiencyInfo_t proficiencyTable[] =
-	{
-		{ 7.0, 0.75 },
-		{ 5.00, 0.75 },
-		{ 3.0, 0.85 },
-		{ 5.0 / 3.0, 0.75 },
-		{ 1.00, 1.0 },
-	};
-
-	COMPILE_TIME_ASSERT(ARRAYSIZE(proficiencyTable) == WEAPON_PROFICIENCY_PERFECT + 1);
-
-	return proficiencyTable;
 }

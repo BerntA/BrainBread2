@@ -27,10 +27,6 @@
 // BB2
 #include "GameBase_Client.h"
 
-#ifdef SIXENSE
-#include "sixense/in_sixense.h"
-#endif
-
 using namespace vgui;
 
 #include <vgui/IInputInternal.h>
@@ -213,10 +209,6 @@ void VGui_CreateGlobalPanels( void )
 #endif
 	netgraphpanel->Create( toolParent );
 	debugoverlaypanel->Create( gameToolParent );
-
-#ifdef SIXENSE
-	g_pSixenseInput->CreateGUI( gameToolParent );
-#endif
 }
 
 void VGui_Shutdown()

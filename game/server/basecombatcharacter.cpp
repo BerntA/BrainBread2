@@ -23,7 +23,6 @@
 #include "EntityFlame.h"
 #include "CRagdollMagnet.h"
 #include "IEffects.h"
-#include "iservervehicle.h"
 #include "igamesystem.h"
 #include "globals.h"
 #include "physics_prop_ragdoll.h"
@@ -49,8 +48,6 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-extern ConVar weapon_showproficiency;
 
 ConVar ai_show_hull_attacks( "ai_show_hull_attacks", "0" );
 ConVar ai_force_serverside_ragdoll( "ai_force_serverside_ragdoll", "0" );
@@ -78,7 +75,6 @@ BEGIN_DATADESC( CBaseCombatCharacter )
 	DEFINE_FIELD( m_LastHitGroup, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flDamageAccumulator, FIELD_FLOAT ),
 	DEFINE_INPUT( m_impactEnergyScale, FIELD_FLOAT, "physdamagescale" ),
-	DEFINE_FIELD( m_CurrentWeaponProficiency, FIELD_INTEGER),
 
 	DEFINE_UTLVECTOR( m_Relationship,	FIELD_EMBEDDED),
 
@@ -140,23 +136,8 @@ void *SendProxy_SendBaseCombatCharacterLocalDataTable( const SendProp *pProp, co
 	CBaseCombatCharacter *pBCC = ( CBaseCombatCharacter * )pStruct;
 	if ( pBCC != NULL)
 	{
-		if ( pBCC->IsPlayer() )
-		{
-			pRecipients->SetOnly( pBCC->entindex() - 1 );
-		}
-		else
-		{
-			// If it's a vehicle, send to "driver" (e.g., operator of tf2 manned guns)
-			IServerVehicle *pVehicle = pBCC->GetServerVehicle();
-			if ( pVehicle != NULL )
-			{
-				CBaseCombatCharacter *pDriver = pVehicle->GetPassenger();
-				if ( pDriver != NULL )
-				{
-					pRecipients->SetOnly( pDriver->entindex() - 1 );
-				}
-			}
-		}
+		if (pBCC->IsPlayer())
+			pRecipients->SetOnly(pBCC->entindex() - 1);
 	}
 	return ( void * )pVarData;
 }
@@ -899,22 +880,8 @@ bool CTraceFilterMelee::ShouldHitEntity( IHandleEntity *pHandleEntity, int conte
 		if ( !g_pGameRules->ShouldCollide( m_collisionGroup, pEntity->GetCollisionGroup() ) )
 			return false;
 
-		if ( pEntity->m_takedamage == DAMAGE_NO )
+		if ((pEntity->m_takedamage == DAMAGE_NO) || pEntity->IsBaseCombatWeapon() || (pEntity->GetCollisionGroup() == COLLISION_GROUP_WEAPON))
 			return false;
-
-		// FIXME: Do not translate this to the driver because the driver only accepts damage from the vehicle
-		// Translate the vehicle into its driver for damage
-		/*
-		if ( pEntity->GetServerVehicle() != NULL )
-		{
-			CBaseEntity *pDriver = pEntity->GetServerVehicle()->GetPassenger();
-
-			if ( pDriver != NULL )
-			{
-				pEntity = pDriver;
-			}
-		}
-		*/
 
 		Vector	attackDir = pEntity->WorldSpaceCenter() - m_dmgInfo->GetAttacker()->WorldSpaceCenter();
 		VectorNormalize( attackDir );
@@ -985,8 +952,6 @@ CBaseEntity *CBaseCombatCharacter::CheckTraceHullAttack( const Vector &vStart, c
 		NDebugOverlay::BoxDirection(vStart, mins, maxs, direction, 255,0,0,20,1.0);
 	}
 
-#if 1
-
 	CTakeDamageInfo	dmgInfo( this, this, iDamage, iDmgType );
 	
 	// COLLISION_GROUP_PROJECTILE does some handy filtering that's very appropriate for this type of attack, as well. (sjb) 7/25/2007
@@ -1027,60 +992,6 @@ CBaseEntity *CBaseCombatCharacter::CheckTraceHullAttack( const Vector &vStart, c
 	}
 
 	return pEntity;
-
-#else
-
-	trace_t tr;
-	UTIL_TraceHull( vStart, vEnd, mins, maxs, MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, &tr );
-
-	CBaseEntity *pEntity = tr.m_pEnt;
-
-	if ( !pEntity )
-	{
-		// See if perhaps I'm trying to claw/bash someone who is standing on my head.
-		Vector vecTopCenter;
-		Vector vecEnd;
-		Vector vecMins, vecMaxs;
-
-		// Do a tracehull from the top center of my bounding box.
-		vecTopCenter = GetAbsOrigin();
-		CollisionProp()->WorldSpaceAABB( &vecMins, &vecMaxs );
-		vecTopCenter.z = vecMaxs.z + 1.0f;
-		vecEnd = vecTopCenter;
-		vecEnd.z += 2.0f;
-		UTIL_TraceHull( vecTopCenter, vecEnd, mins, maxs, MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, &tr );
-		pEntity = tr.m_pEnt;
-	}
-
-	if ( !pEntity || !pEntity->m_takedamage || !pEntity->IsAlive() )
-		return NULL;
-
-	// Translate the vehicle into its driver for damage
-	if ( pEntity->GetServerVehicle() != NULL )
-	{
-		CBaseEntity *pDriver = pEntity->GetServerVehicle()->GetPassenger();
-
-		if ( pDriver != NULL )
-		{
-			pEntity = pDriver;
-			//FIXME: Hook for damage scale in car here
-		}
-	}
-
-	// Must hate the hit entity
-	if ( IRelationType( pEntity ) == D_HT )
-	{
-		if ( iDamage > 0 )
-		{
-			CTakeDamageInfo info( this, this, iDamage, iDmgType );
-			CalculateMeleeDamageForce( &info, (vEnd - vStart), vStart, forceScale );
-			pEntity->TakeDamage( info );
-		}
-	}
-	return pEntity;
-
-#endif
-
 }
 
 
@@ -1257,45 +1168,9 @@ bool CBaseCombatCharacter::BecomeRagdollBoogie( CBaseEntity *pKiller, const Vect
 //-----------------------------------------------------------------------------
 bool CBaseCombatCharacter::BecomeRagdoll( const CTakeDamageInfo &info, const Vector &forceVector )
 {
-	if ( (info.GetDamageType() & DMG_VEHICLE) && !g_pGameRules->IsMultiplayer() )
-	{
-		CTakeDamageInfo info2 = info;
-		info2.SetDamageForce( forceVector );
-		Vector pos = info2.GetDamagePosition();
-		float flAbsMinsZ = GetAbsOrigin().z + WorldAlignMins().z;
-		if ( (pos.z - flAbsMinsZ) < 24 )
-		{
-			// HACKHACK: Make sure the vehicle impact is at least 2ft off the ground
-			pos.z = flAbsMinsZ + 24;
-			info2.SetDamagePosition( pos );
-		}
-
-// UNDONE: Put in a real sound cue here, don't do this bogus hack anymore
-#if 0
-		Vector soundOrigin = info.GetDamagePosition();
-		CPASAttenuationFilter filter( soundOrigin );
-
-		EmitSound_t ep;
-		ep.m_nChannel = CHAN_STATIC;
-		ep.m_pSoundName = "NPC_MetroPolice.HitByVehicle";
-		ep.m_flVolume = 1.0f;
-		ep.m_SoundLevel = SNDLVL_NORM;
-		ep.m_pOrigin = &soundOrigin;
-
-		EmitSound( filter, SOUND_FROM_WORLD, ep );
-#endif
-		// in single player create ragdolls on the server when the player hits someone
-		// with their vehicle - for more dramatic death/collisions
-		CBaseEntity *pRagdoll = CreateServerRagdoll( this, m_nForceBone, info2, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
-		FixupBurningServerRagdoll( pRagdoll );
-		RemoveDeferred();
-		return true;
-	}
-
 	//Fix up the force applied to server side ragdolls. This fixes magnets not affecting them.
 	CTakeDamageInfo newinfo = info;
 	newinfo.SetDamageForce( forceVector );
-
 	return BecomeRagdollOnClient( forceVector );
 }
 
@@ -1714,18 +1589,17 @@ void CBaseCombatCharacter::SetLightingOriginRelative( CBaseEntity *pLightingOrig
 void CBaseCombatCharacter::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 {
 	// Add the weapon to my weapon inventory
-	for (int i=0;i<MAX_WEAPONS;i++) 
+	for (int i = 0; i < MAX_WEAPONS; i++)
 	{
-		if (!m_hMyWeapons[i]) 
+		if (!m_hMyWeapons[i])
 		{
-			m_hMyWeapons.Set( i, pWeapon );
+			m_hMyWeapons.Set(i, pWeapon);
 			break;
 		}
 	}
 
 	// Weapon is now on my team
 	pWeapon->ChangeTeam( GetTeamNumber() );
-
 	pWeapon->Equip( this );
 
 	// Players don't automatically holster their current weapon
@@ -1747,16 +1621,6 @@ void CBaseCombatCharacter::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 			m_hActiveWeapon->m_fMaxRange2 = 999999999;
 		}
 	}
-
-	WeaponProficiency_t proficiency;
-	proficiency = CalcWeaponProficiency( pWeapon );
-	
-	if( weapon_showproficiency.GetBool() != 0 )
-	{
-		Msg("%s equipped with %s, proficiency is %s\n", GetClassname(), pWeapon->GetClassname(), GetWeaponProficiencyName( proficiency ) );
-	}
-
-	SetCurrentWeaponProficiency( proficiency );
 
 	// Pass the lighting origin over to the weapon if we have one
 	pWeapon->SetLightingOriginRelative( GetLightingOriginRelative() );
@@ -2759,7 +2623,6 @@ const impactdamagetable_t &CBaseCombatCharacter::GetPhysicsImpactDamageTable( vo
 // This is to account for the ragdolls responding differently than
 // the shadow objects.  Also this makes the impacts more dramatic.
 ConVar	phys_impactforcescale( "phys_impactforcescale", "1.0" ); 
-ConVar	phys_upimpactforcescale( "phys_upimpactforcescale", "0.375" ); 
 
 void CBaseCombatCharacter::VPhysicsShadowCollision( int index, gamevcollisionevent_t *pEvent )
 {
@@ -2801,35 +2664,6 @@ void CBaseCombatCharacter::VPhysicsShadowCollision( int index, gamevcollisioneve
 	// REVISIT: Maybe resolve this collision on death with a different (not approximately infinite like AABB tensor)
 	// inertia tensor to get torque?
 	Vector damageForce = pEvent->postVelocity[index] * pEvent->pObjects[index]->GetMass() * phys_impactforcescale.GetFloat();
-	
-	IServerVehicle *vehicleOther = pOther->GetServerVehicle();
-	if ( vehicleOther )
-	{
-		CBaseCombatCharacter *pPassenger = vehicleOther->GetPassenger();
-		if ( pPassenger != NULL )
-		{
-			// flag as vehicle damage
-			damageType |= DMG_VEHICLE;
-			// if hit by vehicle driven by player, add some upward velocity to force
-			float len = damageForce.Length();
-			damageForce.z += len*phys_upimpactforcescale.GetFloat();
-			//Msg("Force %.1f / %.1f\n", damageForce.Length(), damageForce.z );
-
-			if ( pPassenger->IsPlayer() )
-			{
-				CBasePlayer *pPlayer = assert_cast<CBasePlayer *>(pPassenger);
-				if( damage >= GetMaxHealth() )
-				{
-					pPlayer->RumbleEffect( RUMBLE_357, 0, RUMBLE_FLAG_RESTART );
-				}
-				else
-				{
-					pPlayer->RumbleEffect( RUMBLE_PISTOL, 0, RUMBLE_FLAG_RESTART );
-				}
-			}
-		}
-	}
-
 	Vector damagePos;
 	pEvent->pInternalData->GetContactPoint( damagePos );
 	CTakeDamageInfo dmgInfo( pOther, pOther, damageForce, damagePos, damage, damageType );
@@ -2894,25 +2728,13 @@ void CBaseCombatCharacter::SetActiveWeapon( CBaseCombatWeapon *pNewWeapon )
 //-----------------------------------------------------------------------------
 Vector CBaseCombatCharacter::GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget )
 {
-	if ( pWeapon )
-		return pWeapon->GetBulletSpread(GetCurrentWeaponProficiency());
-	return VECTOR_CONE_15DEGREES;
+	return (pWeapon ? pWeapon->GetBulletSpread() : VECTOR_CONE_5DEGREES);
 }
 
 //-----------------------------------------------------------------------------
 float CBaseCombatCharacter::GetSpreadBias( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget )
 {
-	if ( pWeapon )
-		return pWeapon->GetSpreadBias(GetCurrentWeaponProficiency());
 	return 1.0;
-}
-
-//-----------------------------------------------------------------------------
-// Assume everyone is average with every weapon. Override this to make exceptions.
-//-----------------------------------------------------------------------------
-WeaponProficiency_t CBaseCombatCharacter::CalcWeaponProficiency( CBaseCombatWeapon *pWeapon )
-{
-	return WEAPON_PROFICIENCY_AVERAGE;
 }
 
 //-----------------------------------------------------------------------------

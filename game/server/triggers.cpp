@@ -23,7 +23,6 @@
 #include "physics_saverestore.h"
 #include "te_effect_dispatch.h"
 #include "ammodef.h"
-#include "iservervehicle.h"
 #include "movevars_shared.h"
 #include "physics_prop_ragdoll.h"
 #include "props.h"
@@ -151,20 +150,10 @@ void CBaseTrigger::InputTouchTest( inputdata_t &inputdata )
 //------------------------------------------------------------------------------
 void CBaseTrigger::Spawn()
 {
-	if ( HasSpawnFlags( SF_TRIGGER_ONLY_PLAYER_ALLY_NPCS ) || HasSpawnFlags( SF_TRIGGER_ONLY_NPCS_IN_VEHICLES ) )
+	if ( HasSpawnFlags( SF_TRIGGER_ONLY_PLAYER_ALLY_NPCS ) )
 	{
 		// Automatically set this trigger to work with NPC's.
 		AddSpawnFlags( SF_TRIGGER_ALLOW_NPCS );
-	}
-
-	if ( HasSpawnFlags( SF_TRIGGER_ONLY_CLIENTS_IN_VEHICLES ) )
-	{
-		AddSpawnFlags( SF_TRIGGER_ALLOW_CLIENTS );
-	}
-
-	if ( HasSpawnFlags( SF_TRIGGER_ONLY_CLIENTS_OUT_OF_VEHICLES ) )
-	{
-		AddSpawnFlags( SF_TRIGGER_ALLOW_CLIENTS );
 	}
 
 	BaseClass::Spawn();
@@ -356,14 +345,6 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 		(HasSpawnFlags(SF_TRIGGER_ALLOW_NPCS) && (pOther->GetFlags() & FL_NPC)) ||
 		(HasSpawnFlags(SF_TRIGGER_ALLOW_PUSHABLES) && FClassnameIs(pOther, "func_pushable")) ||
 		(HasSpawnFlags(SF_TRIGGER_ALLOW_PHYSICS) && pOther->GetMoveType() == MOVETYPE_VPHYSICS) 
-#if defined( HL2_EPISODIC ) 		
-		||
-		(	HasSpawnFlags(SF_TRIG_TOUCH_DEBRIS) && 
-			(pOther->GetCollisionGroup() == COLLISION_GROUP_DEBRIS ||
-			pOther->GetCollisionGroup() == COLLISION_GROUP_DEBRIS_TRIGGER || 
-			pOther->GetCollisionGroup() == COLLISION_GROUP_INTERACTIVE_DEBRIS)
-		)
-#endif
 		)
 	{
 		if ( pOther->GetFlags() & FL_NPC )
@@ -377,12 +358,6 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 					return false;
 				}
 			}
-
-			if ( HasSpawnFlags( SF_TRIGGER_ONLY_NPCS_IN_VEHICLES ) )
-			{
-				if ( !pNPC || !pNPC->IsInAVehicle() )
-					return false;
-			}
 		}
 
 		bool bOtherIsPlayer = pOther->IsPlayer();
@@ -392,26 +367,6 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 			CBasePlayer *pPlayer = (CBasePlayer*)pOther;
 			if ( !pPlayer->IsAlive() )
 				return false;
-
-			if ( HasSpawnFlags(SF_TRIGGER_ONLY_CLIENTS_IN_VEHICLES) )
-			{
-				if ( !pPlayer->IsInAVehicle() )
-					return false;
-
-				// Make sure we're also not exiting the vehicle at the moment
-				IServerVehicle *pVehicleServer = pPlayer->GetVehicle();
-				if ( pVehicleServer == NULL )
-					return false;
-
-				if ( pVehicleServer->IsPassengerExiting() )
-					return false;
-			}
-
-			if ( HasSpawnFlags(SF_TRIGGER_ONLY_CLIENTS_OUT_OF_VEHICLES) )
-			{
-				if ( pPlayer->IsInAVehicle() )
-					return false;
-			}
 
 			if ( HasSpawnFlags( SF_TRIGGER_DISALLOW_BOTS ) )
 			{
@@ -1143,15 +1098,6 @@ void CTriggerLook::Touch(CBaseEntity *pOther)
 		if ( HasSpawnFlags( SF_TRIGGERLOOK_USEVELOCITY ) )
 		{
 			vLookDir = pOther->GetAbsVelocity();
-			if ( vLookDir == vec3_origin )
-			{
-				// See if they're in a vehicle
-				CBasePlayer *pPlayer = (CBasePlayer *)pOther;
-				if ( pPlayer->IsInAVehicle() )
-				{
-					vLookDir = pPlayer->GetVehicle()->GetVehicleEnt()->GetSmoothedVelocity();
-				}
-			}
 			VectorNormalize( vLookDir );
 		}
 		else
@@ -1748,26 +1694,12 @@ private:
 	int	  m_iAttachmentIndex;
 	bool  m_bSnapToGoal;
 
-#ifdef HL2_EPISODIC
-	bool  m_bInterpolatePosition;
-
-	// these are interpolation vars used for interpolating the camera over time
-	Vector m_vStartPos, m_vEndPos;
-	float m_flInterpStartTime;
-
-	const static float kflPosInterpTime; // seconds
-#endif
-
 	int   m_nPlayerButtons;
 	int m_nOldTakeDamage;
 
 private:
 	COutputEvent m_OnEndFollow;
 };
-
-#ifdef HL2_EPISODIC
-const float CTriggerCamera::kflPosInterpTime = 2.0f;
-#endif
 
 LINK_ENTITY_TO_CLASS( point_viewcontrol, CTriggerCamera );
 
@@ -1790,12 +1722,6 @@ BEGIN_DATADESC( CTriggerCamera )
 	DEFINE_KEYFIELD( m_iszTargetAttachment, FIELD_STRING, "targetattachment" ),
 	DEFINE_FIELD( m_iAttachmentIndex, FIELD_INTEGER ),
 	DEFINE_FIELD( m_bSnapToGoal, FIELD_BOOLEAN ),
-#ifdef HL2_EPISODIC
-	DEFINE_KEYFIELD( m_bInterpolatePosition, FIELD_BOOLEAN, "interpolatepositiontoplayer" ),
-	DEFINE_FIELD( m_vStartPos, FIELD_VECTOR ),
-	DEFINE_FIELD( m_vEndPos, FIELD_VECTOR ),
-	DEFINE_FIELD( m_flInterpStartTime, FIELD_TIME ),
-#endif
 	DEFINE_FIELD( m_nPlayerButtons, FIELD_INTEGER ),
 	DEFINE_FIELD( m_nOldTakeDamage, FIELD_INTEGER ),
 
@@ -2030,20 +1956,6 @@ void CTriggerCamera::Enable( void )
 
 	// copy over player information. If we're interpolating from
 	// the player position, do something more elaborate.
-#ifdef HL2_EPISODIC
-	if (m_bInterpolatePosition)
-	{
-		// initialize the values we'll spline between
-		m_vStartPos = m_hPlayer->EyePosition();
-		m_vEndPos = GetAbsOrigin();
-		m_flInterpStartTime = gpGlobals->curtime;
-		UTIL_SetOrigin( this, m_hPlayer->EyePosition() );
-		SetLocalAngles( QAngle( m_hPlayer->GetLocalAngles().x, m_hPlayer->GetLocalAngles().y, 0 ) );
-
-		SetAbsVelocity( vec3_origin );
-	}
-	else
-#endif
 	if (HasSpawnFlags(SF_CAMERA_PLAYER_POSITION ) )
 	{
 		UTIL_SetOrigin( this, m_hPlayer->EyePosition() );
@@ -2256,15 +2168,10 @@ void CTriggerCamera::Move()
 		}
 	}
 
-	// In vanilla HL2, the camera is either on a path, or doesn't move. In episodic
-	// we add the capacity for interpolation to the start point. 
-#ifdef HL2_EPISODIC
-	if (m_pPath)
-#else
 	// Not moving on a path, return
 	if (!m_pPath)
 		return;
-#endif
+
 	{
 		// Subtract movement from the previous frame
 		m_moveDistance -= m_flSpeed * gpGlobals->frametime;
@@ -2301,30 +2208,6 @@ void CTriggerCamera::Move()
 		float fraction = 2 * gpGlobals->frametime;
 		SetAbsVelocity( ((m_vecMoveDir * m_flSpeed) * fraction) + (GetAbsVelocity() * (1-fraction)) );
 	}
-#ifdef HL2_EPISODIC
-	else if (m_bInterpolatePosition)
-	{
-		// get the interpolation parameter [0..1]
-		float tt = (gpGlobals->curtime - m_flInterpStartTime) / kflPosInterpTime;
-		if (tt >= 1.0f)
-		{
-			// we're there, we're done
-			UTIL_SetOrigin( this, m_vEndPos );
-			SetAbsVelocity( vec3_origin );
-
-			m_bInterpolatePosition = false;
-		}
-		else
-		{
-			Assert(tt >= 0);
-
-			Vector nextPos = ( (m_vEndPos - m_vStartPos) * SimpleSpline(tt) ) + m_vStartPos;
-			// rather than stomping origin, set the velocity so that we get there in the proper time
-			Vector desiredVel = (nextPos - GetAbsOrigin()) * (1.0f / gpGlobals->frametime);
-			SetAbsVelocity( desiredVel );
-		}
-	}
-#endif
 }
 
 
@@ -3352,18 +3235,6 @@ bool CBaseVPhysicsTrigger::PassesTriggerFilters( CBaseEntity *pOther )
 			{
 				return false;
 			}
-		}
-
-		if ( HasSpawnFlags(SF_TRIGGER_ONLY_CLIENTS_IN_VEHICLES) && bOtherIsPlayer )
-		{
-			if ( !((CBasePlayer*)pOther)->IsInAVehicle() )
-				return false;
-		}
-
-		if ( HasSpawnFlags(SF_TRIGGER_ONLY_CLIENTS_OUT_OF_VEHICLES) && bOtherIsPlayer )
-		{
-			if ( ((CBasePlayer*)pOther)->IsInAVehicle() )
-				return false;
 		}
 
 		CBaseFilter *pFilter = m_hFilter.Get();

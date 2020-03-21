@@ -24,17 +24,12 @@
 #include "decals.h"
 #include "physics_fx.h"
 #include "vphysics_sound.h"
-#include "vphysics/vehicles.h"
-#include "vehicle_sounds.h"
 #include "movevars_shared.h"
 #include "physics_saverestore.h"
 #include "solidsetdefaults.h"
 #include "tier0/vprof.h"
 #include "engine/IStaticPropMgr.h"
 #include "physics_prop_ragdoll.h"
-#if HL2_EPISODIC
-#include "particle_parse.h"
-#endif
 #include "vphysics/object_hash.h"
 #include "vphysics/collision_set.h"
 #include "vphysics/friction.h"
@@ -89,14 +84,6 @@ IPhysicsCollisionSolver * const g_pCollisionSolver = &g_Collisions;
 IPhysicsCollisionEvent * const g_pCollisionEventHandler = &g_Collisions;
 IPhysicsObjectEvent * const g_pObjectEventHandler = &g_Collisions;
 
-
-struct vehiclescript_t
-{
-	string_t scriptName;
-	vehicleparams_t params;
-	vehiclesounds_t sounds;
-};
-
 class CPhysicsHook : public CBaseGameSystemPerFrame
 {
 public:
@@ -110,12 +97,6 @@ public:
 	virtual void FrameUpdatePostEntityThink();
 	virtual void PreClientUpdate();
 
-	bool FindOrAddVehicleScript( const char *pScriptName, vehicleparams_t *pVehicle, vehiclesounds_t *pSounds );
-	void FlushVehicleScripts()
-	{
-		m_vehicleScripts.RemoveAll();
-	}
-
 	bool ShouldSimulate()
 	{
 		return (physenv && !m_bPaused) ? true : false;
@@ -125,7 +106,6 @@ public:
 	CUtlVector<physicssound::breaksound_t> m_breakSounds;
 
 	CUtlVector<masscenteroverride_t>	m_massCenterOverrides;
-	CUtlVector<vehiclescript_t>			m_vehicleScripts;
 
 	float		m_impactSoundTime;
 	bool		m_bPaused;
@@ -167,7 +147,6 @@ bool CPhysicsHook::Init( void )
 
 	m_isFinalTick = true;
 	m_impactSoundTime = 0;
-	m_vehicleScripts.EnsureCapacity(4);
 	return true;
 }
 
@@ -276,76 +255,6 @@ void CPhysicsHook::LevelShutdownPostEntity()
 	m_impactSounds.RemoveAll();
 	m_breakSounds.RemoveAll();
 	m_massCenterOverrides.Purge();
-	FlushVehicleScripts();
-}
-
-
-bool CPhysicsHook::FindOrAddVehicleScript( const char *pScriptName, vehicleparams_t *pVehicle, vehiclesounds_t *pSounds )
-{
-	bool bLoadedSounds = false;
-	int index = -1;
-	for ( int i = 0; i < m_vehicleScripts.Count(); i++ )
-	{
-		if ( !Q_stricmp(m_vehicleScripts[i].scriptName.ToCStr(), pScriptName) )
-		{
-			index = i;
-			bLoadedSounds = true;
-			break;
-		}
-	}
-
-	if ( index < 0 )
-	{
-		byte *pFile = UTIL_LoadFileForMe( pScriptName, NULL );
-		if ( pFile )
-		{
-			// new script, parse it and write to the table
-			index = m_vehicleScripts.AddToTail();
-			m_vehicleScripts[index].scriptName = AllocPooledString(pScriptName);
-			m_vehicleScripts[index].sounds.Init();
-
-			IVPhysicsKeyParser *pParse = physcollision->VPhysicsKeyParserCreate( (char *)pFile );
-			while ( !pParse->Finished() )
-			{
-				const char *pBlock = pParse->GetCurrentBlockName();
-				if ( !strcmpi( pBlock, "vehicle" ) )
-				{
-					pParse->ParseVehicle( &m_vehicleScripts[index].params, NULL );
-				}
-				else if ( !Q_stricmp( pBlock, "vehicle_sounds" ) )
-				{
-					bLoadedSounds = true;
-					CVehicleSoundsParser soundParser;
-					pParse->ParseCustom( &m_vehicleScripts[index].sounds, &soundParser );
-				}
-				else
-				{
-					pParse->SkipBlock();
-				}
-			}
-			physcollision->VPhysicsKeyParserDestroy( pParse );
-			UTIL_FreeFile( pFile );
-		}
-	}
-
-	if ( index >= 0 )
-	{
-		if ( pVehicle )
-		{
-			*pVehicle = m_vehicleScripts[index].params;
-		}
-		if ( pSounds )
-		{
-			// We must pass back valid data here!
-			if ( bLoadedSounds == false )
-				return false;
-
-			*pSounds = m_vehicleScripts[index].sounds;
-		}
-		return true;
-	}
-
-	return false;
 }
 
 // called after entities think
@@ -389,22 +298,6 @@ IPhysicsObject *PhysCreateWorld( CBaseEntity *pWorld )
 {
 	staticpropmgr->CreateVPhysicsRepresentations( physenv, &g_SolidSetup, pWorld );
 	return PhysCreateWorld_Shared( pWorld, modelinfo->GetVCollide(1), g_PhysDefaultObjectParams );
-}
-
-
-// vehicle wheels can only collide with things that can't get stuck in them during game physics
-// because they aren't in the game physics world at present
-static bool WheelCollidesWith( IPhysicsObject *pObj, CBaseEntity *pEntity )
-{
-	// Cull against interactive debris
-	if ( pEntity->GetCollisionGroup() == COLLISION_GROUP_INTERACTIVE_DEBRIS )
-		return false;
-
-	// Hit physics ents
-	if ( pEntity->GetMoveType() == MOVETYPE_PUSH || pEntity->GetMoveType() == MOVETYPE_VPHYSICS || pObj->IsStatic() )
-		return true;
-
-	return false;
 }
 
 CCollisionEvent::CCollisionEvent()
@@ -453,22 +346,6 @@ int CCollisionEvent::ShouldCollide_2( IPhysicsObject *pObj0, IPhysicsObject *pOb
 	if ( (gameFlags0 & gameFlags1) & FVPHYSICS_CONSTRAINT_STATIC )
 	{
 		return 0;
-	}
-
-	// Special collision rules for vehicle wheels
-	// Their entity collides with stuff using the normal rules, but they
-	// have different rules than the vehicle body for various reasons.
-	// sort of a hack because we don't have spheres to represent them in the game
-	// world for speculative collisions.
-	if ( pObj0->GetCallbackFlags() & CALLBACK_IS_VEHICLE_WHEEL )
-	{
-		if ( !WheelCollidesWith( pObj1, pEntity1 ) )
-			return false;
-	}
-	if ( pObj1->GetCallbackFlags() & CALLBACK_IS_VEHICLE_WHEEL )
-	{
-		if ( !WheelCollidesWith( pObj0, pEntity0 ) )
-			return false;
 	}
 
 	if ( pEntity0->ForceVPhysicsCollide( pEntity1 ) || pEntity1->ForceVPhysicsCollide( pEntity0 ) )
@@ -629,11 +506,6 @@ bool CCollisionEvent::ShouldFreezeObject( IPhysicsObject *pObject )
 	if ( pEntity )
 	{
 		if (pEntity->GetMoveType() == MOVETYPE_PUSH )
-			return false;
-		
-		// don't limit vehicle collisions either, limit can make breaking through a pile of breakable
-		// props very hitchy
-		if (pEntity->GetServerVehicle() && !(pObject->GetCallbackFlags() & CALLBACK_IS_VEHICLE_WHEEL))
 			return false;
 	}
 
@@ -909,8 +781,6 @@ penetrateevent_t &CCollisionEvent::FindOrAddPenetrateEvent( CBaseEntity *pEntity
 	return event;
 }
 
-
-
 static ConVar phys_penetration_error_time( "phys_penetration_error_time", "10", 0, "Controls the duration of vphysics penetration error boxes." );
 
 static bool CanResolvePenetrationWithNPC( CBaseEntity *pEntity, IPhysicsObject *pObject )
@@ -920,7 +790,7 @@ static bool CanResolvePenetrationWithNPC( CBaseEntity *pEntity, IPhysicsObject *
 		// hinged objects won't be able to be pushed out anyway, so don't try the npc solver
 		if ( !pObject->IsHinged() && !pObject->IsAttachedToConstraint(true) )
 		{
-			if ( pObject->IsMoveable() || pEntity->GetServerVehicle() )
+			if ( pObject->IsMoveable() )
 				return true;
 		}
 	}
@@ -2558,25 +2428,6 @@ void PhysCollisionScreenShake( gamevcollisionevent_t *pEvent, int index )
 	}
 }
 
-#if HL2_EPISODIC
-// Uses DispatchParticleEffect because, so far as I know, that is the new means of kicking
-// off flinders for this kind of collision. Should this be in g_pEffects instead? 
-void PhysCollisionWarpEffect( gamevcollisionevent_t *pEvent, surfacedata_t *phit )
-{
-	Vector vecPos; 
-	QAngle vecAngles;
-
-	pEvent->pInternalData->GetContactPoint( vecPos );
-	{
-		Vector vecNormal;
-		pEvent->pInternalData->GetSurfaceNormal(vecNormal);
-		VectorAngles( vecNormal, vecAngles );
-	}
-
-	DispatchParticleEffect( "warp_shield_impact", vecPos, vecAngles );
-}
-#endif
-
 void PhysCollisionDust( gamevcollisionevent_t *pEvent, surfacedata_t *phit )
 {
 
@@ -2596,15 +2447,6 @@ void PhysCollisionDust( gamevcollisionevent_t *pEvent, surfacedata_t *phit )
 			return;
 
 		break;
-
-#if HL2_EPISODIC 
-		// this is probably redundant because BaseEntity::VHandleCollision should have already dispatched us elsewhere
-	case CHAR_TEX_WARPSHIELD:
-		PhysCollisionWarpEffect(pEvent,phit);
-		return;
-
-		break;
-#endif
 
 	default:
 		return;
@@ -2733,16 +2575,6 @@ void PhysSetEntityGameFlags( CBaseEntity *pEntity, unsigned short flags )
 	{
 		PhysSetGameFlags( pList[i], flags );
 	}
-}
-
-bool PhysFindOrAddVehicleScript( const char *pScriptName, vehicleparams_t *pParams, vehiclesounds_t *pSounds )
-{
-	return g_PhysicsHook.FindOrAddVehicleScript(pScriptName, pParams, pSounds);
-}
-
-void PhysFlushVehicleScripts()
-{
-	g_PhysicsHook.FlushVehicleScripts();
 }
 
 IPhysicsObject *FindPhysicsObjectByName( const char *pName, CBaseEntity *pErrorEntity )

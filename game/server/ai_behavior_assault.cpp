@@ -79,54 +79,12 @@ int CRallyPoint::DrawDebugTextOverlays()
 //---------------------------------------------------------
 bool CRallyPoint::IsExclusive()
 {
-#ifndef HL2_EPISODIC // IF NOT EPISODIC
 	// This 'exclusivity' concept is new to EP2. We're only willing to
 	// risk causing problems in EP1, so emulate the old behavior if 
 	// we are not EPISODIC. We must do this by setting m_sExclusivity
 	// so that ent_text will properly report the state.
 	m_sExclusivity = RALLY_EXCLUSIVE_NO;
-#else
-	if( m_sExclusivity == RALLY_EXCLUSIVE_NOT_EVALUATED )
-	{
-		// We need to evaluate! Walk the chain of assault points
-		// and if *ANY* assault points  on this assault chain
-		// are set to Never Time Out then set this rally point to 
-		// be exclusive to stop other NPC's walking down the chain
-		// and ending up clumped up at the infinite rally point.
-		CAssaultPoint *pAssaultEnt = (CAssaultPoint *)gEntList.FindEntityByName( NULL, m_AssaultPointName );
-
-		if( !pAssaultEnt )
-		{
-			// Well, this is awkward. Leave it up to other assault code to tattle on the missing assault point.
-			// We will just assume this assault is not exclusive.
-			m_sExclusivity = RALLY_EXCLUSIVE_NO;
-			return false;
-		}
-
-		// Otherwise, we start by assuming this assault chain is not exclusive.
-		m_sExclusivity = RALLY_EXCLUSIVE_NO;
-
-		if( pAssaultEnt )
-		{
-			CAssaultPoint *pFirstAssaultEnt = pAssaultEnt; //some assault chains are circularly linked
-
-			do
-			{
-				if( pAssaultEnt->m_bNeverTimeout )
-				{
-					// We found a never timeout assault point! That makes this whole chain exclusive.
-					m_sExclusivity = RALLY_EXCLUSIVE_YES;
-					break;
-				}
-
-				pAssaultEnt = (CAssaultPoint *)gEntList.FindEntityByName( NULL, pAssaultEnt->m_NextAssaultPointName );
-				
-			} while( (pAssaultEnt != NULL) && (pAssaultEnt != pFirstAssaultEnt) );
-
-		}
-	}
-#endif// HL2_EPISODIC 
-
+	// if volvo == True { puke() }
 	return (m_sExclusivity == RALLY_EXCLUSIVE_YES);
 }
 
@@ -399,33 +357,6 @@ void CAI_AssaultBehavior::OnHitAssaultPoint( void )
 void CAI_AssaultBehavior::GatherConditions( void )
 {
 	BaseClass::GatherConditions();
-
-	// If this NPC is moving towards an assault point which
-	//		a) Has a Next Assault Point, and 
-	//		b) Is flagged to Clear On Arrival,
-	// then hit and clear the assault point (fire all entity I/O) and move on to the next one without
-	// interrupting the NPC's schedule. This provides a more fluid movement from point to point.
-	if( IsCurSchedule( SCHED_MOVE_TO_ASSAULT_POINT ) && hl2_episodic.GetBool() )
-	{
-		if( m_hAssaultPoint && m_hAssaultPoint->HasSpawnFlags(SF_ASSAULTPOINT_CLEARONARRIVAL) && m_hAssaultPoint->m_NextAssaultPointName != NULL_STRING )
-		{
-			float flDist = GetAbsOrigin().DistTo( m_hAssaultPoint->GetAbsOrigin() );
-
-			if( flDist <= GetOuter()->GetMotor()->MinStoppingDist() )
-			{
-				OnHitAssaultPoint();
-				ClearAssaultPoint();
-
-				AI_NavGoal_t goal( m_hAssaultPoint->GetAbsOrigin() );
-				goal.pTarget = m_hAssaultPoint;
-				
-				if ( GetNavigator()->SetGoal( goal ) == false )
-				{
-					TaskFail( "Can't refresh assault path" );
-				}
-			}
-		}
-	}
 
 	if ( IsForcingCrouch() && GetOuter()->IsCrouching() )
 	{
@@ -1205,16 +1136,13 @@ void CAI_AssaultBehavior::EndScheduleSelection()
 		if( !m_hRallyPoint->IsExclusive() )
 			m_bHitRallyPoint = false;
 
-		if( !hl2_episodic.GetBool() || !m_hRallyPoint->IsExclusive() || !GetOuter()->IsAlive() )
-		{
-			// Here we unlock the rally point if it is NOT EXCLUSIVE
-			// -OR- the Outer is DEAD. (This gives us a head-start on 
-			// preparing the point to take new NPCs right away. Otherwise
-			// we have to wait two seconds until the behavior is destroyed.)
-			// NOTICE that the legacy (non-episodic) support calls UnlockRallyPoint
-			// unconditionally on EndScheduleSelection()
-			UnlockRallyPoint();
-		}
+		// Here we unlock the rally point if it is NOT EXCLUSIVE
+		// -OR- the Outer is DEAD. (This gives us a head-start on 
+		// preparing the point to take new NPCs right away. Otherwise
+		// we have to wait two seconds until the behavior is destroyed.)
+		// NOTICE that the legacy (non-episodic) support calls UnlockRallyPoint
+		// unconditionally on EndScheduleSelection()
+		UnlockRallyPoint();
 	}
 
 	GetOuter()->ClearForceCrouch();
@@ -1297,10 +1225,6 @@ void CAI_AssaultBehavior::ClearSchedule( const char *szReason )
 	// behavior isn't actually in charge of the NPC. Fix after ship. For now, hacking
 	// a fix to Grigori failing to make it over the fence of the graveyard in d1_town_02a
 	if ( GetOuter()->ClassMatches( "npc_monk" ) && GetOuter()->GetState() == NPC_STATE_SCRIPT )
-		return;
-
-	// Don't allow it if we're in a vehicle
-	if ( GetOuter()->IsInAVehicle() )
 		return;
 
 	GetOuter()->ClearSchedule( szReason );
@@ -1494,23 +1418,6 @@ int CAI_AssaultBehavior::SelectSchedule()
 			return SCHED_WAIT_AND_CLEAR;
 		}
 	}
-
-#ifdef HL2_EPISODIC
-	// This ugly patch fixes a bug where Combine Soldiers on an assault would not shoot through glass, because of the way
-	// that shooting through glass is implemented in their AI. (sjb)
-	if( HasCondition(COND_SEE_ENEMY) && HasCondition(COND_WEAPON_SIGHT_OCCLUDED) && !HasCondition(COND_LOW_PRIMARY_AMMO) )
-	{	
-		// If they are hiding behind something that we can destroy, start shooting at it.
-		CBaseEntity *pBlocker = GetOuter()->GetEnemyOccluder();
-		if ( pBlocker && pBlocker->GetHealth() > 0 )
-		{
-			if( GetOuter()->Classify() == CLASS_COMBINE && FClassnameIs(GetOuter(), "npc_combine_s") )
-			{
-				return SCHED_SHOOT_ENEMY_COVER;
-			}
-		}
-	}
-#endif//HL2_EPISODIC
 	
 	return BaseClass::SelectSchedule();
 }
@@ -1676,31 +1583,6 @@ AI_BEGIN_CUSTOM_SCHEDULE_PROVIDER(CAI_AssaultBehavior)
 		"		COND_CAN_MELEE_ATTACK1"
 	)
 
-
-#ifdef HL2_EPISODIC
-	//=========================================================
-	//=========================================================
-	DEFINE_SCHEDULE 
-	(
-		SCHED_HOLD_RALLY_POINT,
-
-		"	Tasks"
-		"		TASK_FACE_RALLY_POINT					0"
-		"		TASK_AWAIT_CUE							0"
-		"		TASK_WAIT_ASSAULT_DELAY					0"
-		"	"
-		"	Interrupts"
-		//"		COND_NEW_ENEMY"
-		"		COND_CAN_RANGE_ATTACK1"
-		"		COND_CAN_MELEE_ATTACK1"
-		"		COND_LIGHT_DAMAGE"
-		"		COND_HEAVY_DAMAGE"
-		"		COND_PLAYER_PUSHING"
-		"		COND_HEAR_DANGER"
-		"		COND_HEAR_BULLET_IMPACT"
-		"		COND_NO_PRIMARY_AMMO"
-	)
-#else
 	//=========================================================
 	//=========================================================
 	DEFINE_SCHEDULE 
@@ -1724,7 +1606,6 @@ AI_BEGIN_CUSTOM_SCHEDULE_PROVIDER(CAI_AssaultBehavior)
 	"		COND_NO_PRIMARY_AMMO"
 	"		COND_TOO_CLOSE_TO_ATTACK"
 	)
-#endif//HL2_EPISODIC
 
 	//=========================================================
 	//=========================================================

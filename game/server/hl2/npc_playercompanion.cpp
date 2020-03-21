@@ -83,17 +83,6 @@ BEGIN_DATADESC( CNPC_PlayerCompanion )
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SetReadinessHigh",		InputSetReadinessHigh ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT,	"LockReadiness",		InputLockReadiness ),
 
-//------------------------------------------------------------------------------
-#ifdef HL2_EPISODIC
-	DEFINE_FIELD( m_hFlare, FIELD_EHANDLE ),
-
-	DEFINE_INPUTFUNC( FIELD_STRING,	"EnterVehicle",				InputEnterVehicle ),
-	DEFINE_INPUTFUNC( FIELD_STRING, "EnterVehicleImmediately",	InputEnterVehicleImmediately ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"ExitVehicle",				InputExitVehicle ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"CancelEnterVehicle",		InputCancelEnterVehicle ),
-#endif	// HL2_EPISODIC
-//------------------------------------------------------------------------------
-
 	DEFINE_INPUTFUNC( FIELD_STRING, "GiveWeapon",			InputGiveWeapon ),
 
 	DEFINE_FIELD( m_flReadiness,			FIELD_FLOAT ),
@@ -120,11 +109,6 @@ BEGIN_DATADESC( CNPC_PlayerCompanion )
 	DEFINE_INPUTFUNC( FIELD_VOID, "EnableWeaponPickup", InputEnableWeaponPickup ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "DisableWeaponPickup", InputDisableWeaponPickup ),
 
-
-#ifdef HL2_EPISODIC
-	DEFINE_INPUTFUNC( FIELD_VOID, "ClearAllOutputs", InputClearAllOuputs ),
-#endif
-
 	DEFINE_OUTPUT( m_OnWeaponPickup, "OnWeaponPickup" ),
 
 END_DATADESC()
@@ -145,26 +129,11 @@ string_t CNPC_PlayerCompanion::gm_iszRollerMineClassname;
 
 bool CNPC_PlayerCompanion::CreateBehaviors()
 {
-#ifdef HL2_EPISODIC
-	AddBehavior( &m_FearBehavior );
-	AddBehavior( &m_PassengerBehavior );
-#endif // HL2_EPISODIC	
-
 	AddBehavior( &m_ActBusyBehavior );
-
-#ifdef HL2_EPISODIC
-	AddBehavior( &m_OperatorBehavior );
-	AddBehavior( &m_StandoffBehavior );
-	AddBehavior( &m_AssaultBehavior );
-	AddBehavior( &m_FollowBehavior );
-	AddBehavior( &m_LeadBehavior );
-#else
 	AddBehavior( &m_AssaultBehavior );
 	AddBehavior( &m_StandoffBehavior );
 	AddBehavior( &m_FollowBehavior );
 	AddBehavior( &m_LeadBehavior );
-#endif//HL2_EPISODIC
-	
 	return BaseClass::CreateBehaviors();
 }
 
@@ -180,11 +149,6 @@ void CNPC_PlayerCompanion::Precache()
 
 	PrecacheModel( STRING( GetModelName() ) );
 	
-#ifdef HL2_EPISODIC
-	// The flare we're able to pull out
-	PrecacheModel( "models/props_junk/flare.mdl" );
-#endif // HL2_EPISODIC
-
 	BaseClass::Precache();
 }
 
@@ -231,17 +195,6 @@ void CNPC_PlayerCompanion::Spawn()
 
 	m_AnnounceAttackTimer.Set( 10, 30 );
 
-#ifdef HL2_EPISODIC
-	// We strip this flag because it's been made obsolete by the StartScripting behavior
-	if ( HasSpawnFlags( SF_NPC_ALTCOLLISION ) )
-	{
-		Warning( "NPC %s using alternate collision! -- DISABLED\n", STRING( GetEntityName() ) );
-		RemoveSpawnFlags( SF_NPC_ALTCOLLISION );
-	}
-
-	m_hFlare = NULL;
-#endif // HL2_EPISODIC
-
 	BaseClass::Spawn();
 }
 
@@ -256,15 +209,6 @@ int CNPC_PlayerCompanion::Restore( IRestore &restore )
 	{
 		m_StandoffBehavior.SetActive( false );
 	}
-
-#ifdef HL2_EPISODIC
-	// We strip this flag because it's been made obsolete by the StartScripting behavior
-	if ( HasSpawnFlags( SF_NPC_ALTCOLLISION ) )
-	{
-		Warning( "NPC %s using alternate collision! -- DISABLED\n", STRING( GetEntityName() ) );
-		RemoveSpawnFlags( SF_NPC_ALTCOLLISION );
-	}
-#endif // HL2_EPISODIC
 
 	return baseResult;
 }
@@ -301,7 +245,7 @@ Disposition_t CNPC_PlayerCompanion::IRelationType( CBaseEntity *pTarget )
 			// is active... that is, not classifying itself as CLASS_NONE
 			if( pTarget->Classify() != CLASS_NONE )
 			{
-				if( !hl2_episodic.GetBool() && IsSafeFromFloorTurret(GetAbsOrigin(), pTarget) )
+				if( IsSafeFromFloorTurret(GetAbsOrigin(), pTarget) )
 				{
 					return D_NU;
 				}
@@ -362,18 +306,7 @@ void CNPC_PlayerCompanion::GatherConditions()
 			{
 				if ( HasCondition( COND_SEE_PLAYER ) && (GetAbsOrigin() - pPlayer->GetAbsOrigin()).LengthSqr() < Square(25 * 12) )
 				{
-					if ( hl2_episodic.GetBool() )
-					{
-						// Don't stomp our squad if we're in one
-						if ( GetSquad() == NULL )
-						{
-							AddToSquad( GetPlayerSquadName() );
-						}
-					}
-					else
-					{
-						AddToSquad( GetPlayerSquadName() );
-					}
+					AddToSquad(GetPlayerSquadName());
 				}
 			}
 		}
@@ -491,18 +424,6 @@ void CNPC_PlayerCompanion::GatherConditions()
 	{
 		DoCustomSpeechAI();
 	}
-
-	if (pPlayer && hl2_episodic.GetBool() && !GetEnemy() && HasCondition(COND_HEAR_PLAYER))
-	{
-		Vector los = (pPlayer->EyePosition() - EyePosition());
-		los.z = 0;
-		VectorNormalize( los );
-
-		if ( DotProduct( los, EyeDirection2D() ) > DOT_45DEGREE )
-		{
-			ClearCondition( COND_HEAR_PLAYER );
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -515,16 +436,9 @@ void CNPC_PlayerCompanion::DoCustomSpeechAI( void )
 	#else
 		CBasePlayer *pPlayer = AI_GetSinglePlayer();
 	#endif //BB2_AI
-		
-	// Don't allow this when we're getting in the car
-#ifdef HL2_EPISODIC
-	bool bPassengerInTransition = ( IsInAVehicle() && ( m_PassengerBehavior.GetPassengerState() == PASSENGER_STATE_ENTERING || m_PassengerBehavior.GetPassengerState() == PASSENGER_STATE_EXITING ) );
-#else
-	bool bPassengerInTransition = false;
-#endif
 
 	Vector vecEyePosition = EyePosition();
-	if ( bPassengerInTransition == false && pPlayer && pPlayer->FInViewCone( vecEyePosition ) && pPlayer->FVisible( vecEyePosition ) )
+	if ( pPlayer && pPlayer->FInViewCone( vecEyePosition ) && pPlayer->FVisible( vecEyePosition ) )
 	{
 		if ( m_SpeechWatch_PlayerLooking.Expired() )
 		{
@@ -670,16 +584,6 @@ bool CNPC_PlayerCompanion::ShouldIgnoreSound( CSound *pSound )
 	{
 		if ( pSound->IsSoundType( SOUND_DANGER ) && !SoundIsVisible(pSound) )
 			return true;
-
-#ifdef HL2_EPISODIC
-		// Ignore vehicle sounds when we're driving in them
-		if ( pSound->m_hOwner && pSound->m_hOwner->GetServerVehicle() != NULL )
-		{
-			if ( m_PassengerBehavior.GetPassengerState() == PASSENGER_STATE_INSIDE && 
-				m_PassengerBehavior.GetTargetVehicle() == pSound->m_hOwner->GetServerVehicle()->GetVehicleEnt() )
-				return true;
-		}
-#endif // HL2_EPISODIC
 	}
 
 	return false;
@@ -690,15 +594,6 @@ bool CNPC_PlayerCompanion::ShouldIgnoreSound( CSound *pSound )
 int CNPC_PlayerCompanion::SelectSchedule()
 {
 	m_bMovingAwayFromPlayer = false;
-
-#ifdef HL2_EPISODIC
-	// Always defer to passenger if it's running
-	if ( ShouldDeferToPassengerBehavior() )
-	{
-		DeferSchedulingToBehavior( &m_PassengerBehavior );
-		return BaseClass::SelectSchedule();
-	}
-#endif // HL2_EPISODIC
 
 	if ( m_ActBusyBehavior.IsRunning() && m_ActBusyBehavior.NeedsToPlayExitAnim() )
 	{
@@ -858,15 +753,6 @@ int CNPC_PlayerCompanion::SelectSchedulePlayerPush()
 //-----------------------------------------------------------------------------
 bool CNPC_PlayerCompanion::IgnorePlayerPushing( void )
 {
-	if ( hl2_episodic.GetBool() )
-	{
-		// Ignore player pushes if we're leading him
-		if ( m_LeadBehavior.IsRunning() && m_LeadBehavior.HasGoal() )
-			return true;
-		if ( m_AssaultBehavior.IsRunning() && m_AssaultBehavior.OnStrictAssault() )
-			return true;
-	}
-
 	return false;
 }
 
@@ -909,22 +795,6 @@ bool CNPC_PlayerCompanion::ShouldDeferToFollowBehavior()
 		return false;
 	}
 
-	// Even though assault and act busy are placed ahead of the follow behavior in precedence, the below
-	// code is necessary because we call ShouldDeferToFollowBehavior BEFORE we call the generic
-	// BehaviorSelectSchedule, which tries the behaviors in priority order.
-	if ( m_AssaultBehavior.CanSelectSchedule() && hl2_episodic.GetBool() )
-	{
-		return false;
-	}
-
-	if ( hl2_episodic.GetBool() )
-	{
-		if ( m_ActBusyBehavior.CanSelectSchedule() && m_ActBusyBehavior.IsCombatActBusy() )
-		{
-			return false;
-		}
-	}
-	
 	return true;
 }
 
@@ -1348,19 +1218,6 @@ void CNPC_PlayerCompanion::PrepareReadinessRemap( void )
 						ActRemap.m_bWeaponRequired = false;
 					}
 				}
-				else if ( !stricmp( pKeyName, "invehicle" ) )
-				{
-					ActRemap.m_fUsageBits |= bits_REMAP_IN_VEHICLE;
-
-					if ( !stricmp( pKeyValue, "TRUE" ) )
-					{
-						ActRemap.m_bInVehicle = true;
-					}
-					else if ( !stricmp( pKeyValue, "FALSE" ) )
-					{
-						ActRemap.m_bInVehicle = false;
-					}
-				}
 
 				pKey = pKey->GetNextKey();
 			}
@@ -1433,17 +1290,6 @@ Activity CNPC_PlayerCompanion::TranslateActivityReadiness( Activity activity )
 				}
 			}
 
-			// Must care about vehicle status
-			if ( actremap.m_fUsageBits & bits_REMAP_IN_VEHICLE )
-			{
-				// Deal with the two vehicle states
-				if ( actremap.m_bInVehicle && IsInAVehicle() == false )
-					continue;
-
-				if ( actremap.m_bInVehicle == false && IsInAVehicle() )
-					continue;
-			}
-
 			// We've successfully passed all criteria for remapping this 
 			return actremap.mappedActivity;
 		}
@@ -1485,66 +1331,6 @@ Activity CNPC_PlayerCompanion::NPC_TranslateActivity( Activity activity )
 //------------------------------------------------------------------------------
 void CNPC_PlayerCompanion::HandleAnimEvent( animevent_t *pEvent )
 {
-#ifdef HL2_EPISODIC
-	// Create a flare and parent to our hand
-	if ( pEvent->event == AE_COMPANION_PRODUCE_FLARE )
-	{
-		m_hFlare = static_cast<CPhysicsProp *>(CreateEntityByName( "prop_physics" ));
-		if ( m_hFlare != NULL )
-		{
-			// Set the model
-			m_hFlare->SetModel( "models/props_junk/flare.mdl" );
-			
-			// Set the parent attachment
-			m_hFlare->SetParent( this );
-			m_hFlare->SetParentAttachment( "SetParentAttachment", pEvent->options, false );
-		}
-
-		return;
-	}
-
-	// Start the flare up with proper fanfare
-	if ( pEvent->event == AE_COMPANION_LIGHT_FLARE )
-	{
-		if ( m_hFlare != NULL )
-		{
-			m_hFlare->CreateFlare( 5*60.0f );
-		}
-		
-		return;
-	}
-
-	// Drop the flare to the ground
-	if ( pEvent->event == AE_COMPANION_RELEASE_FLARE )
-	{
-		// Detach
-		m_hFlare->SetParent( NULL );
-		m_hFlare->Spawn();
-		m_hFlare->RemoveInteraction( PROPINTER_PHYSGUN_CREATE_FLARE );
-
-		// Disable collisions between the NPC and the flare
-		PhysDisableEntityCollisions( this, m_hFlare );
-
-		// TODO: Find the velocity of the attachment point, at this time, in the animation cycle
-
-		// Construct a toss velocity
-		Vector vecToss;
-		AngleVectors( GetAbsAngles(), &vecToss );
-		VectorNormalize( vecToss );
-		vecToss *= random->RandomFloat( 64.0f, 72.0f );
-		vecToss[2] += 64.0f;
-
-		// Throw it
-		IPhysicsObject *pObj = m_hFlare->VPhysicsGetObject();
-		pObj->ApplyForceCenter( vecToss );
-
-		// Forget about the flare at this point
-		m_hFlare = NULL;
-
-		return;
-	}
-#endif // HL2_EPISODIC
-
 	switch( pEvent->event )
 	{
 	case EVENT_WEAPON_RELOAD:
@@ -1665,12 +1451,8 @@ void CNPC_PlayerCompanion::ModifyOrAppendCriteria( AI_CriteriaSet& set )
 //-----------------------------------------------------------------------------
 bool CNPC_PlayerCompanion::IsReadinessCapable()
 {
-#ifndef HL2_EPISODIC
-	// Allow episodic companions to use readiness even if unarmed. This allows for the panicked 
-	// citizens in ep1_c17_05 (sjb)
-	if( !GetActiveWeapon() )
+	if (!GetActiveWeapon())
 		return false;
-#endif
 
 	if( GetActiveWeapon() && LookupActivity("ACT_IDLE_AIM_RIFLE_STIMULATED") == ACT_INVALID )
 		return false;
@@ -1991,26 +1773,7 @@ bool CNPC_PlayerCompanion::PickTacticalLookTarget( AILookTargetArgs_t *pArgs )
 	}
 
 	flMaxLookTime = flMinLookTime + random->RandomFloat( 0.0f, 0.5f );
-#ifdef BB2_AI
-	pArgs->flDuration = random->RandomFloat( flMinLookTime, flMaxLookTime ); 
-#else
-pArgs->flDuration = random->RandomFloat( flMinLookTime, flMaxLookTime );
-#endif //BB2_AI
-
-	if( HasCondition(COND_SEE_PLAYER) && hl2_episodic.GetBool() )
-	{
-		// 1/3rd chance to authoritatively look at player
-		if( random->RandomInt( 0, 2 ) == 0 )
-		{
-#ifdef BB2_AI
-			pArgs->hTarget = UTIL_GetNearestVisiblePlayer(this);
-#else
-			pArgs->hTarget = AI_GetSinglePlayer();
-#endif //BB2_AI
-
-			return true;
-		}
-	}
+	pArgs->flDuration = random->RandomFloat(flMinLookTime, flMaxLookTime);
 
 	// Use hint nodes
 	CAI_Hint *pHint;
@@ -2375,23 +2138,10 @@ void CNPC_PlayerCompanion::OnUpdateShotRegulator()
 	{
 		if( GetAbsOrigin().DistTo( GetEnemy()->GetAbsOrigin() ) <= PC_LARGER_BURST_RANGE )
 		{
-			if( hl2_episodic.GetBool() )
-			{
-				// Longer burst
-				int longBurst = random->RandomInt( 10, 15 );
-				GetShotRegulator()->SetBurstShotsRemaining( longBurst );
-				GetShotRegulator()->SetRestInterval( 0.1, 0.2 );
-			}
-			else
-			{
-				// Longer burst
-				GetShotRegulator()->SetBurstShotsRemaining( GetShotRegulator()->GetBurstShotsRemaining() * 2 );
-
-				// Shorter Rest interval
-				float flMinInterval, flMaxInterval;
-				GetShotRegulator()->GetRestInterval( &flMinInterval, &flMaxInterval );
-				GetShotRegulator()->SetRestInterval( flMinInterval * 0.6f, flMaxInterval * 0.6f );
-			}
+			// Longer burst
+			int longBurst = random->RandomInt(10, 15);
+			GetShotRegulator()->SetBurstShotsRemaining(longBurst);
+			GetShotRegulator()->SetRestInterval(0.1, 0.2);
 		}
 	}
 }
@@ -2433,13 +2183,6 @@ Vector CNPC_PlayerCompanion::GetActualShootPosition( const Vector &shootOrigin )
 	}
 
 	return BaseClass::GetActualShootPosition( shootOrigin );
-}
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-WeaponProficiency_t CNPC_PlayerCompanion::CalcWeaponProficiency( CBaseCombatWeapon *pWeapon )
-{
-	return WEAPON_PROFICIENCY_PERFECT;
 }
 
 //-----------------------------------------------------------------------------
@@ -2991,11 +2734,6 @@ bool CNPC_PlayerCompanion::OverrideMove( float flInterval )
 	{
 		string_t iszEnvFire = AllocPooledString( "env_fire" );
 
-#ifdef HL2_EPISODIC			
-		string_t iszNPCTurretFloor = AllocPooledString( "npc_turret_floor" );
-		string_t iszEntityFlame = AllocPooledString( "entityflame" );
-#endif // HL2_EPISODIC
-
 		if ( IsCurSchedule( SCHED_TAKE_COVER_FROM_BEST_SOUND ) )
 		{
 			CSound *pSound = GetBestSound( SOUND_DANGER );
@@ -3025,32 +2763,6 @@ bool CNPC_PlayerCompanion::OverrideMove( float flInterval )
 					}
 				}
 			}
-#ifdef HL2_EPISODIC			
-			else if ( pEntity->m_iClassname == iszNPCTurretFloor )
-			{
-				UTIL_TraceLine( WorldSpaceCenter(), pEntity->WorldSpaceCenter(), MASK_BLOCKLOS, pEntity, COLLISION_GROUP_NONE, &tr );
-				if (tr.fraction == 1.0 && !tr.startsolid)
-				{
-					float radius = 1.4 * pEntity->CollisionProp()->BoundingRadius2D(); 
-					GetLocalNavigator()->AddObstacle( pEntity->WorldSpaceCenter(), radius, AIMST_AVOID_OBJECT );
-				}
-			}
-			else if( pEntity->m_iClassname == iszEntityFlame && pEntity->GetParent() && !pEntity->GetParent()->IsNPC() )
-			{
-				float flDist = pEntity->WorldSpaceCenter().DistTo( WorldSpaceCenter() );
-
-				if( flDist > COMPANION_EPISODIC_AVOID_ENTITY_FLAME_RADIUS )
-				{
-					// If I'm not in the flame, prevent me from getting close to it.
-					// If I AM in the flame, avoid placing an obstacle until the flame frightens me away from itself.
-					UTIL_TraceLine( WorldSpaceCenter(), pEntity->WorldSpaceCenter(), MASK_BLOCKLOS, pEntity, COLLISION_GROUP_NONE, &tr );
-					if (tr.fraction == 1.0 && !tr.startsolid)
-					{
-						GetLocalNavigator()->AddObstacle( pEntity->WorldSpaceCenter(), COMPANION_EPISODIC_AVOID_ENTITY_FLAME_RADIUS, AIMST_AVOID_OBJECT );
-					}
-				}
-			}
-#endif // HL2_EPISODIC
 		}
 	}
 
@@ -3187,10 +2899,6 @@ void CNPC_PlayerCompanion::InputOutsideTransition( inputdata_t &inputdata )
 
 	// Must want to do this
 	if ( ShouldAlwaysTransition() == false )
-		return;
-
-	// If we're in a vehicle, that vehicle will transition with us still inside (which is preferable)
-	if ( IsInAVehicle() )
 		return;
 
 #ifdef BB2_AI
@@ -3359,218 +3067,6 @@ void CNPC_PlayerCompanion::UnlockReadiness( void )
 	m_flReadinessLockedUntil = gpGlobals->curtime - 0.1f;
 }
 
-//------------------------------------------------------------------------------
-#ifdef HL2_EPISODIC
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CNPC_PlayerCompanion::ShouldDeferToPassengerBehavior( void )
-{
-	if ( m_PassengerBehavior.CanSelectSchedule() )
-		return true;
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Determines if this player companion is capable of entering a vehicle
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CNPC_PlayerCompanion::CanEnterVehicle( void )
-{
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CNPC_PlayerCompanion::CanExitVehicle( void )
-{
-	// See if we can exit our vehicle
-	CPropJeepEpisodic *pVehicle = dynamic_cast<CPropJeepEpisodic *>(m_PassengerBehavior.GetTargetVehicle());
-	if ( pVehicle != NULL && pVehicle->NPC_CanExitVehicle( this, true ) == false )
-		return false;
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *lpszVehicleName - 
-//-----------------------------------------------------------------------------
-void CNPC_PlayerCompanion::EnterVehicle( CBaseEntity *pEntityVehicle, bool bImmediately )
-{
-	// Must be allowed to do this
-	if ( CanEnterVehicle() == false )
-		return;
-
-	// Find the target vehicle
-	CPropJeepEpisodic *pVehicle = dynamic_cast<CPropJeepEpisodic *>(pEntityVehicle);
-
-	// Get in the car if it's valid
-	if ( pVehicle != NULL && pVehicle->NPC_CanEnterVehicle( this, true ) )
-	{
-		// Set her into a "passenger" behavior
-		m_PassengerBehavior.Enable( pVehicle, bImmediately );
-		m_PassengerBehavior.EnterVehicle();
-
-		// Only do this if we're outside the vehicle
-		if ( m_PassengerBehavior.GetPassengerState() == PASSENGER_STATE_OUTSIDE )
-		{
-			SetCondition( COND_PC_BECOMING_PASSENGER );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Get into the requested vehicle
-// Input  : &inputdata - contains the entity name of the vehicle to enter
-//-----------------------------------------------------------------------------
-void CNPC_PlayerCompanion::InputEnterVehicle( inputdata_t &inputdata )
-{
-	CBaseEntity *pEntity = FindNamedEntity( inputdata.value.String() );
-	EnterVehicle( pEntity, false );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Get into the requested vehicle immediately (no animation, pop)
-// Input  : &inputdata - contains the entity name of the vehicle to enter
-//-----------------------------------------------------------------------------
-void CNPC_PlayerCompanion::InputEnterVehicleImmediately( inputdata_t &inputdata )
-{
-	CBaseEntity *pEntity = FindNamedEntity( inputdata.value.String() );
-	EnterVehicle( pEntity, true );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CNPC_PlayerCompanion::InputExitVehicle( inputdata_t &inputdata )
-{
-	// See if we're allowed to exit the vehicle
-	if ( CanExitVehicle() == false )
-		return;
-
-	m_PassengerBehavior.ExitVehicle();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : &inputdata - 
-//-----------------------------------------------------------------------------
-void CNPC_PlayerCompanion::InputCancelEnterVehicle( inputdata_t &inputdata )
-{
-	m_PassengerBehavior.CancelEnterVehicle();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Forces the NPC out of the vehicle they're riding in
-// Input  : bImmediate - If we need to exit immediately, teleport to any exit location
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CNPC_PlayerCompanion::ExitVehicle( void )
-{
-	// For now just get out
-	m_PassengerBehavior.ExitVehicle();
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CNPC_PlayerCompanion::IsInAVehicle( void ) const
-{
-	// Must be active and getting in/out of vehicle
-	if ( m_PassengerBehavior.IsEnabled() && m_PassengerBehavior.GetPassengerState() != PASSENGER_STATE_OUTSIDE )
-		return true;
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Output : IServerVehicle - 
-//-----------------------------------------------------------------------------
-IServerVehicle *CNPC_PlayerCompanion::GetVehicle( void )
-{
-	if ( IsInAVehicle() )
-	{
-		CPropVehicleDriveable *pDriveableVehicle = m_PassengerBehavior.GetTargetVehicle();
-		if ( pDriveableVehicle != NULL )
-			return pDriveableVehicle->GetServerVehicle();
-	}
-
-	return NULL;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Output : CBaseEntity
-//-----------------------------------------------------------------------------
-CBaseEntity *CNPC_PlayerCompanion::GetVehicleEntity( void )
-{
-	if ( IsInAVehicle() )
-	{
-		CPropVehicleDriveable *pDriveableVehicle = m_PassengerBehavior.GetTargetVehicle();
-			return pDriveableVehicle;
-	}
-
-	return NULL;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Override our efficiency so that we don't jitter when we're in the middle
-//			of our enter/exit animations.
-// Input  : bInPVS - Whether we're in the PVS or not
-//-----------------------------------------------------------------------------
-void CNPC_PlayerCompanion::UpdateEfficiency( CBasePlayer *pPVSTarget )
-{ 
-	// If we're transitioning and in the PVS, we override our efficiency
-	if ( IsInAVehicle() && pPVSTarget )
-	{
-		PassengerState_e nState = m_PassengerBehavior.GetPassengerState();
-		if ( nState == PASSENGER_STATE_ENTERING || nState == PASSENGER_STATE_EXITING )
-		{
-			SetEfficiency( AIE_NORMAL );
-			return;
-		}
-	}
-
-	// Do the default behavior
-	BaseClass::UpdateEfficiency( pPVSTarget );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Whether or not we can dynamically interact with another NPC
-//-----------------------------------------------------------------------------
-bool CNPC_PlayerCompanion::CanRunAScriptedNPCInteraction( bool bForced /*= false*/ )
-{
-	// TODO: Allow this but only for interactions who stem from being in a vehicle?
-	if ( IsInAVehicle() )
-		return false;
-
-	return BaseClass::CanRunAScriptedNPCInteraction( bForced );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CNPC_PlayerCompanion::IsAllowedToDodge( void )
-{
-	// TODO: Allow this but only for interactions who stem from being in a vehicle?
-	if ( IsInAVehicle() )
-		return false;
-
-	return BaseClass::IsAllowedToDodge();
-}
-
-#endif	//HL2_EPISODIC
-//------------------------------------------------------------------------------
-
 //-----------------------------------------------------------------------------
 // Purpose: Always transition along with the player
 //-----------------------------------------------------------------------------
@@ -3622,38 +3118,6 @@ void CNPC_PlayerCompanion::InputGiveWeapon( inputdata_t &inputdata )
 		}
 	}
 }
-
-#ifdef HL2_EPISODIC
-//------------------------------------------------------------------------------
-// Purpose: Delete all outputs from this NPC.
-//------------------------------------------------------------------------------
-void CNPC_PlayerCompanion::InputClearAllOuputs( inputdata_t &inputdata )
-{
-	datamap_t *dmap = GetDataDescMap();
-	while ( dmap )
-	{
-		int fields = dmap->dataNumFields;
-		for ( int i = 0; i < fields; i++ )
-		{
-			typedescription_t *dataDesc = &dmap->dataDesc[i];
-			if ( ( dataDesc->fieldType == FIELD_CUSTOM ) && ( dataDesc->flags & FTYPEDESC_OUTPUT ) )
-			{
-				CBaseEntityOutput *pOutput = (CBaseEntityOutput *)((int)this + (int)dataDesc->fieldOffset[0]);
-				pOutput->DeleteAllElements();
-				/*
-				int nConnections = pOutput->NumberOfElements();
-				for ( int j = 0; j < nConnections; j++ )
-				{
-
-				}
-				*/
-			}
-		}
-
-		dmap = dmap->baseMap;
-	}
-}
-#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Player in our squad killed something

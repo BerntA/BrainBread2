@@ -25,12 +25,6 @@
 #include "igameevents.h"
 #include "GameEventListener.h"
 
-#if defined USES_ECON_ITEMS
-#include "econ_item.h"
-#include "game_item_schema.h"
-#include "econ_item_view.h"
-#endif
-
 class C_BaseCombatWeapon;
 class C_BaseViewModel;
 class C_FuncLadder;
@@ -165,7 +159,6 @@ public:
 	
 	// Returns eye vectors
 	void			EyeVectors( Vector *pForward, Vector *pRight = NULL, Vector *pUp = NULL );
-	void			CacheVehicleView( void );	// Calculate and cache the position of the player in the vehicle
 
 	// Team handlers
 	virtual void	TeamChange( int iNewTeam );
@@ -215,7 +208,6 @@ public:
 	virtual int					GetVisionFilterFlags( bool bWeaponsCheck = false ) { return 0x00; }
 	bool						HasVisionFilterFlags( int nFlags, bool bWeaponsCheck = false ) { return ( GetVisionFilterFlags( bWeaponsCheck ) & nFlags ) == nFlags; }
 	virtual void				CalculateVisionUsingCurrentFlags( void ) {}
-	void						BuildFirstPersonMeathookTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed, const char *pchHeadBoneName );
 
 	// Specific queries about this player.
 	bool						InFirstPersonView();
@@ -303,15 +295,6 @@ public:
 
 	C_BaseEntity				*GetUseEntity();
 
-	// Vehicles...
-	IClientVehicle			*GetVehicle();
-
-	bool			IsInAVehicle() const	{ return ( NULL != m_hVehicle.Get() ) ? true : false; }
-	virtual void	SetVehicleRole( int nRole );
-	void					LeaveVehicle( void );
-
-	bool					UsingStandardWeaponsInVehicle( void );
-
 	float					GetTimeBase( void ) const;
 	float					GetFinalPredictedTime() const;
 
@@ -375,13 +358,6 @@ public:
 	void					UpdateFogBlend( void );
 	float					GetFOVTime( void ){ return m_flFOVTime; }
 
-#if defined USES_ECON_ITEMS
-	// Wearables
-	virtual void			UpdateWearables();
-	C_EconWearable			*GetWearable( int i ) { return m_hMyWearables[i]; }
-	int						GetNumWearables( void ) { return m_hMyWearables.Count(); }
-#endif
-
 	virtual bool			CanUseFirstPersonCommand( void ){ return true; }
 	
 protected:
@@ -393,10 +369,6 @@ public:
 	
 	// Data for only the local player
 	CNetworkVarEmbedded( CPlayerLocalData, m_Local );
-
-#if defined USES_ECON_ITEMS
-	CNetworkVarEmbedded( CAttributeList, m_AttributeList );
-#endif
 
 	// Data common to all other players, too
 	CPlayerState			pl;
@@ -425,8 +397,6 @@ public:
 protected:
 
 	void				CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-	void				CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles,
-							float& zNear, float& zFar, float& fov );
 	virtual void		CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	virtual Vector		GetChaseCamViewOffset( CBaseEntity *target );
 	void				CalcChaseCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
@@ -451,8 +421,6 @@ protected:
 	virtual void	FireGameEvent( IGameEvent *event );
 
 protected:
-	// Did we just enter a vehicle this frame?
-	bool			JustEnteredVehicle();
 
 // DATA
 	int				m_iObserverMode;	// if in spectator mode != 0
@@ -472,9 +440,6 @@ private:
 	C_BasePlayer& operator=( const C_BasePlayer& src );
 	C_BasePlayer( const C_BasePlayer & ); // not defined, not accessible
 
-	// Vehicle stuff.
-	EHANDLE			m_hVehicle;
-	EHANDLE			m_hOldVehicle;
 	EHANDLE			m_hUseEntity;
 	
 	float			m_flMaxspeed;
@@ -516,11 +481,6 @@ private:
 	
 	float					m_flOldPlayerZ;
 	float					m_flOldPlayerViewOffsetZ;
-	
-	Vector	m_vecVehicleViewOrigin;		// Used to store the calculated view of the player while riding in a vehicle
-	QAngle	m_vecVehicleViewAngles;		// Vehicle angles
-	float	m_flVehicleViewFOV;
-	int		m_nVehicleViewSavedFrame;	// Used to mark which frame was the last one the view was calculated for
 
 	C_CommandContext		m_CommandContext;
 
@@ -577,11 +537,6 @@ protected:
 	int				m_nForceVisionFilterFlags; // Force our vision filter to a specific setting
 	int				m_nLocalPlayerVisionFlags;
 
-#if defined USES_ECON_ITEMS
-	// Wearables
-	CUtlVector<CHandle<C_EconWearable > >	m_hMyWearables;
-#endif
-
 private:
 
 	struct StepSoundCache_t
@@ -621,13 +576,6 @@ inline C_BasePlayer *ToBasePlayer( C_BaseEntity *pEntity )
 inline C_BaseEntity *C_BasePlayer::GetUseEntity() 
 { 
 	return m_hUseEntity;
-}
-
-
-inline IClientVehicle *C_BasePlayer::GetVehicle() 
-{ 
-	C_BaseEntity *pVehicleEnt = m_hVehicle.Get();
-	return pVehicleEnt ? pVehicleEnt->GetClientVehicle() : NULL;
 }
 
 inline bool C_BasePlayer::IsObserver() const 

@@ -17,7 +17,6 @@
 #include "c_te_legacytempents.h"
 #include "cl_mat_stub.h"
 #include "tier0/vprof.h"
-#include "iclientvehicle.h"
 #include "engine/IEngineTrace.h"
 #include "mathlib/vmatrix.h"
 #include "rendertexture.h"
@@ -43,8 +42,6 @@
 #include <vgui_controls/Controls.h>
 #include <vgui/ISurface.h>
 #include "ScreenSpaceEffects.h"
-#include "sourcevr/isourcevirtualreality.h"
-#include "client_virtualreality.h"
 
 #if defined( REPLAY_ENABLED )
 #include "replay/ireplaysystem.h"
@@ -120,7 +117,7 @@ static ConVar cl_demoviewoverride( "cl_demoviewoverride", "0", 0, "Override view
 void SoftwareCursorChangedCB( IConVar *pVar, const char *pOldValue, float fOldValue )
 {
 	ConVar *pConVar = (ConVar *)pVar;
-	vgui::surface()->SetSoftwareCursor( pConVar->GetBool() || UseVR() );
+	vgui::surface()->SetSoftwareCursor(pConVar->GetBool());
 }
 static ConVar cl_software_cursor ( "cl_software_cursor", "0", FCVAR_ARCHIVE, "Switches the game to use a larger software cursor instead of the normal OS cursor", SoftwareCursorChangedCB );
 
@@ -466,26 +463,15 @@ void CViewRender::DriftPitch (void)
 	}
 }
 
-
-
 StereoEye_t		CViewRender::GetFirstEye() const
 {
-	if( UseVR() )
-		return STEREO_EYE_LEFT;
-	else
-		return STEREO_EYE_MONO;
+	return STEREO_EYE_MONO;
 }
 
 StereoEye_t		CViewRender::GetLastEye() const
 {
-	if( UseVR() )
-		return STEREO_EYE_RIGHT;
-	else
-		return STEREO_EYE_MONO;
+	return STEREO_EYE_MONO;
 }
-
-
-
 
 // This is called by cdll_client_int to setup view model origins. This has to be done before
 // simulation so entities can access attachment points on view models during simulation.
@@ -721,38 +707,11 @@ void CViewRender::SetUpViews()
 	//Adjust the viewmodel's FOV to move with any FOV offsets on the viewer's end
 	view.fovViewmodel = abs(g_pClientMode->GetViewModelFOV() - flFOVOffset);
 
-	if ( UseVR() )
-	{
-		// Let the headtracking read the status of the HMD, etc.
-		// This call can go almost anywhere, but it needs to know the player FOV for sniper weapon zoom, etc
-		if ( flFOVOffset == 0.0f )
-		{
-			g_ClientVirtualReality.ProcessCurrentTrackingState ( 0.0f );
-		}
-		else
-		{
-			g_ClientVirtualReality.ProcessCurrentTrackingState ( view.fov );
-		}
-
-		HeadtrackMovementMode_t hmmOverrideMode = g_pClientMode->ShouldOverrideHeadtrackControl();
-		g_ClientVirtualReality.OverrideView( &m_View, &ViewModelOrigin, &ViewModelAngles, hmmOverrideMode );
-
-		// left and right stereo views should default to being the same as the mono/middle view
-		m_ViewLeft = m_View;
-		m_ViewRight = m_View;
-		m_ViewLeft.m_eStereoEye = STEREO_EYE_LEFT;
-		m_ViewRight.m_eStereoEye = STEREO_EYE_RIGHT;
-
-		g_ClientVirtualReality.OverrideStereoView( &m_View, &m_ViewLeft, &m_ViewRight );
-	}
-	else
-	{
-		// left and right stereo views should default to being the same as the mono/middle view
-		m_ViewLeft = m_View;
-		m_ViewRight = m_View;
-		m_ViewLeft.m_eStereoEye = STEREO_EYE_LEFT;
-		m_ViewRight.m_eStereoEye = STEREO_EYE_RIGHT;
-	}
+	// left and right stereo views should default to being the same as the mono/middle view
+	m_ViewLeft = m_View;
+	m_ViewRight = m_View;
+	m_ViewLeft.m_eStereoEye = STEREO_EYE_LEFT;
+	m_ViewRight.m_eStereoEye = STEREO_EYE_RIGHT;
 
 	if ( bCalcViewModelView )
 	{
@@ -1113,11 +1072,7 @@ void CViewRender::Render( vrect_t *rect )
 			case STEREO_EYE_RIGHT:
 			case STEREO_EYE_LEFT:
 			{
-				g_pSourceVR->GetViewportBounds( (ISourceVirtualReality::VREye)(eEye - 1 ), &view.x, &view.y, &view.width, &view.height );
-				view.m_nUnscaledWidth = view.width;
-				view.m_nUnscaledHeight = view.height;
-				view.m_nUnscaledX = view.x;
-				view.m_nUnscaledY = view.y;
+				// VR
 			}
 			break;
 
@@ -1179,7 +1134,7 @@ void CViewRender::Render( vrect_t *rect )
 	    }
 
 	    int flags = 0;
-		if( eEye == STEREO_EYE_MONO || eEye == STEREO_EYE_LEFT || ( g_ClientVirtualReality.ShouldRenderHUDInWorld() ) )
+		if( eEye == STEREO_EYE_MONO || eEye == STEREO_EYE_LEFT )
 		{
 			flags = RENDERVIEW_DRAWHUD;
 		}
@@ -1194,31 +1149,7 @@ void CViewRender::Render( vrect_t *rect )
 		}
 
 	    RenderView( view, nClearFlags, flags );
-
-		if ( UseVR() )
-		{
-			bool bDoUndistort = ! engine->IsTakingScreenshot();
-
-			if ( bDoUndistort )
-			{
-				g_ClientVirtualReality.PostProcessFrame( eEye );
-			}
-
-			// logic here all cloned from code in viewrender.cpp around RenderHUDQuad:
-
-			// figure out if we really want to draw the HUD based on freeze cam
-			bool bInFreezeCam = ( pPlayer && pPlayer->GetObserverMode() == OBS_MODE_FREEZECAM );
-
-			// draw the HUD after the view model so its "I'm closer" depth queues work right.
-			if( !bInFreezeCam && g_ClientVirtualReality.ShouldRenderHUDInWorld() )
-			{
-				// TODO - a bit of a shonky test - basically trying to catch the main menu, the briefing screen, the loadout screen, etc.
-				bool bTranslucent = !g_pMatSystemSurface->IsCursorVisible();
-				g_ClientVirtualReality.OverlayHUDQuadWithUndistort( view, bDoUndistort, g_pClientMode->ShouldBlackoutAroundHUD(), bTranslucent );
-			}
-		}
     }
-
 
 	// TODO: should these be inside or outside the stereo eye stuff?
 	g_pClientMode->PostRender();
@@ -1229,24 +1160,18 @@ void CViewRender::Render( vrect_t *rect )
 	matStub.End();
 #endif
 
-
 	// Draw all of the UI stuff "fullscreen"
     // (this is not health, ammo, etc. Nor is it pre-game briefing interface stuff - this is the stuff that appears when you hit Esc in-game)
 	// In stereo mode this is rendered inside of RenderView so it goes into the render target
-	if( !g_ClientVirtualReality.ShouldRenderHUDInWorld() )
-	{
-		CViewSetup view2d;
-		view2d.x				= rect->x;
-		view2d.y				= rect->y;
-		view2d.width			= rect->width;
-		view2d.height			= rect->height;
+	CViewSetup view2d;
+	view2d.x = rect->x;
+	view2d.y = rect->y;
+	view2d.width = rect->width;
+	view2d.height = rect->height;
 
-		render->Push2DView( view2d, 0, NULL, GetFrustum() );
-		render->VGui_Paint( PAINT_UIPANELS | PAINT_CURSOR );
-		render->PopView( GetFrustum() );
-	}
-
-
+	render->Push2DView(view2d, 0, NULL, GetFrustum());
+	render->VGui_Paint(PAINT_UIPANELS | PAINT_CURSOR);
+	render->PopView(GetFrustum());
 }
 
 

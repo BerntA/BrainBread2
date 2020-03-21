@@ -50,7 +50,7 @@ $Configuration
 
 	$Compiler
 	{
-		$AdditionalIncludeDirectories	".\;$BASE;$SRCDIR\vgui2\include;$SRCDIR\vgui2\controls;$SRCDIR\game\shared;.\game_controls;$SRCDIR\thirdparty\sixensesdk\include;$SRCDIR\thirdparty\fmod;$SRCDIR\game\client\bb2;$SRCDIR\game\shared\bb2"
+		$AdditionalIncludeDirectories	".\;$BASE;$SRCDIR\vgui2\include;$SRCDIR\vgui2\controls;$SRCDIR\game\shared;.\game_controls;$SRCDIR\thirdparty\fmod;$SRCDIR\game\client\bb2;$SRCDIR\game\shared\bb2"
 		$PreprocessorDefinitions		"$BASE;NO_STRING_T;CLIENT_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead" 
 		$PreprocessorDefinitions		"$BASE;fopen=dont_use_fopen" [$WIN32]
 		$PreprocessorDefinitions		"$BASE;USE_WEBM_FOR_REPLAY;" [$LINUXALL]
@@ -514,8 +514,6 @@ $Project
 		$File	"c_tesla.cpp"
 		$File	"c_test_proxytoggle.cpp"
 		$File	"c_user_message_register.cpp"
-		$File	"c_vehicle_choreo_generic.cpp"
-		$File	"c_vehicle_jeep.cpp"
 		$File	"c_vguiscreen.cpp"
 		$File	"hl2\c_waterbullet.cpp"
 		$File	"C_WaterLODControl.cpp"
@@ -531,8 +529,6 @@ $Project
 		$File	"classmap.cpp"
 		$File	"client_factorylist.cpp"
 		$File	"client_thinklist.cpp"
-		$File	"client_virtualreality.cpp"
-		$File	"client_virtualreality.h"
 		$File	"clienteffectprecachesystem.cpp"
 		$File	"cliententitylist.cpp"
 		$File	"clientleafsystem.cpp"
@@ -597,7 +593,6 @@ $Project
 		$File	"hud_numericdisplay.cpp"
 		$File	"hud_pdump.cpp"
 		$File	"hud_redraw.cpp"
-		$File	"hud_vehicle.cpp"
 		$File	"$SRCDIR\game\shared\igamesystem.cpp"
 		$File	"in_camera.cpp"
 		$File	"in_joystick.cpp"
@@ -683,7 +678,6 @@ $Project
 		$File	"$SRCDIR\game\shared\usercmd.cpp"
 		$File	"$SRCDIR\game\shared\usermessages.cpp"
 		$File	"$SRCDIR\game\shared\util_shared.cpp"
-		$File	"$SRCDIR\game\shared\vehicle_viewblend_shared.cpp"
 		$File	"vgui_avatarimage.cpp"
 		$File	"vgui_avatarimage.h"
 		$File	"vgui_basepanel.cpp"
@@ -722,19 +716,6 @@ $Project
 		$File	"WorldDimsProxy.cpp"
 		$File	"vgui_video.cpp"
 		$File   "vgui_video_player.cpp"
-		//Haptics
-		$File	"$SRCDIR\public\haptics\haptic_msgs.cpp"	[!$X360]
-		$File	"$SRCDIR\public\haptics\haptic_utils.cpp"	[$WIN32&&!$X360]
-
-		$Folder	"Sixense"
-		{
-			$File	"sixense\in_sixense.cpp"
-			$File	"sixense\in_sixense.h"
-			$File	"sixense\in_sixense_gesture_bindings.cpp"
-			$File	"sixense\in_sixense_gesture_bindings.h"
-			$File	"$SRCDIR\game\shared\sixense\sixense_convars.cpp"
-			$File	"$SRCDIR\game\shared\sixense\sixense_convars_extern.h"
-		}
 		
 		// Files not using precompiled header cbase.h
 
@@ -801,7 +782,6 @@ $Project
 			$File	"c_movie_explosion.cpp"
 			$File	"c_particle_fire.cpp"
 			$File	"c_particle_smokegrenade.cpp"
-			$File	"c_prop_vehicle.cpp"
 			$File	"c_recipientfilter.cpp"
 			$File	"c_smoke_trail.cpp"
 			$File	"c_smokestack.cpp"
@@ -917,7 +897,6 @@ $Project
 		$File	"c_playerlocaldata.h"
 		$File	"c_playerresource.h"
 		$File	"c_point_camera.h"
-		$File	"c_prop_vehicle.h"
 		$File	"c_recipientfilter.h"
 		$File	"c_rope.h"
 		$File	"c_rumble.h"
@@ -933,7 +912,6 @@ $Project
 		$File	"c_team.h"
 		$File	"c_tesla.h"
 		$File	"c_tracer.h"
-		$File	"c_vehicle_jeep.h"
 		$File	"c_user_message_register.h"
 		$File	"c_vguiscreen.h"
 		$File	"c_weapon__stubs.h"
@@ -989,14 +967,12 @@ $Project
 		$File	"hud_numericdisplay.h"
 		$File	"hud_pdump.h"
 		$File	"basepresence.h"
-		$File	"hud_vehicle.h"
 		$File	"hudelement.h"
 		$File	"hudtexturehandle.h"
 		$File	"iclassmap.h"
 		$File	"icliententityinternal.h"
 		$File	"iclientmode.h"
 		$File	"iclientshadowmgr.h"
-		$File	"iclientvehicle.h"
 		$File	"iconsole.h"
 		$File	"idebugoverlaypanel.h"
 		$File	"ifpspanel.h"
@@ -1301,9 +1277,6 @@ $Project
 		$File	"$SRCDIR\public\vgui_controls\WizardSubPanel.h"
 		$File	"$SRCDIR\public\worldsize.h"
 		$File	"$SRCDIR\public\zip_uncompressed.h"
-		//Haptics
-		$File   "$SRCDIR\public\haptics\ihaptics.h"	[$WIN32]
-		$File   "$SRCDIR\public\haptics\haptic_utils.h"	[$WIN32]
 	}
 
 	$Folder	"Game Shared Header Files"
@@ -1358,7 +1331,6 @@ $Project
 		$File	"$SRCDIR\game\shared\iplayeranimstate.h"
 		$File	"$SRCDIR\game\shared\ipredictionsystem.h"
 		$File	"$SRCDIR\game\shared\itempents.h"
-		$File	"$SRCDIR\game\shared\IVehicle.h"
 		$File	"$SRCDIR\game\shared\mapdata_shared.h"
 		$File	"$SRCDIR\game\shared\mapentities_shared.h"
 		$File	"$SRCDIR\game\shared\movevars_shared.h"
@@ -1404,8 +1376,6 @@ $Project
 		$File	"$SRCDIR\game\shared\usercmd.h"
 		$File	"$SRCDIR\game\shared\usermessages.h"
 		$File	"$SRCDIR\game\shared\util_shared.h"
-		$File	"$SRCDIR\game\shared\vehicle_choreo_generic_shared.h"
-		$File	"$SRCDIR\game\shared\vehicle_viewblend_shared.h"
 		$File	"$SRCDIR\game\shared\vgui_defaultinputsignal.h"
 		$File	"$SRCDIR\game\shared\viewport_panel_names.h"
 		$File	"$SRCDIR\game\shared\voice_banmgr.h"
@@ -1414,7 +1384,6 @@ $Project
 		$File	"$SRCDIR\game\shared\voice_status.h"
 		$File	"$SRCDIR\game\shared\vphysics_sound.h"
 		$File	"$SRCDIR\game\shared\weapon_parse.h"
-		$File	"$SRCDIR\game\shared\weapon_proficiency.h"
 	}
 
 	$Folder	"game_controls Header Files"

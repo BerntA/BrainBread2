@@ -20,7 +20,6 @@
 #include "c_soundscape.h"
 #include "usercmd.h"
 #include "c_playerresource.h"
-#include "iclientvehicle.h"
 #include "view_shared.h"
 #include "movevars_shared.h"
 #include "prediction.h"
@@ -48,15 +47,6 @@
 #include "replay/ienginereplay.h"
 #endif
 #include "steam/steam_api.h"
-#include "sourcevr/isourcevirtualreality.h"
-#include "client_virtualreality.h"
-
-#if defined USES_ECON_ITEMS
-#include "econ_wearable.h"
-#endif
-
-// NVNT haptics system interface
-#include "haptics/ihaptics.h"
 
 #include "GameBase_Client.h"
 
@@ -234,18 +224,10 @@ END_RECV_TABLE()
 // DT_BasePlayer datatable.
 // -------------------------------------------------------------------------------- //
 
-#if defined USES_ECON_ITEMS
-	EXTERN_RECV_TABLE(DT_AttributeList);
-#endif
-
 	IMPLEMENT_CLIENTCLASS_DT(C_BasePlayer, DT_BasePlayer, CBasePlayer)
 		// We have both the local and nonlocal data in here, but the server proxies
 		// only send one.
 		RecvPropDataTable( "localdata", 0, 0, &REFERENCE_RECV_TABLE(DT_LocalPlayerExclusive) ),
-
-#if defined USES_ECON_ITEMS
-		RecvPropDataTable(RECVINFO_DT(m_AttributeList),0, &REFERENCE_RECV_TABLE(DT_AttributeList) ),
-#endif
 
 		RecvPropDataTable(RECVINFO_DT(pl), 0, &REFERENCE_RECV_TABLE(DT_PlayerState), DataTableRecvProxy_StaticDataTable),
 
@@ -254,7 +236,6 @@ END_RECV_TABLE()
 		RecvPropFloat	(RECVINFO(m_flFOVTime)),
 		RecvPropInt		(RECVINFO(m_iDefaultFOV)),
 
-		RecvPropEHandle( RECVINFO(m_hVehicle) ),
 		RecvPropEHandle( RECVINFO(m_hUseEntity) ),
 
 		RecvPropInt		(RECVINFO(m_iHealth)),
@@ -273,10 +254,6 @@ END_RECV_TABLE()
 		RecvPropArray	( RecvPropEHandle( RECVINFO( m_hViewModel[0] ) ), m_hViewModel ),	
 
 		RecvPropString( RECVINFO(m_szLastPlaceName) ),
-
-#if defined USES_ECON_ITEMS
-		RecvPropUtlVector( RECVINFO_UTLVECTOR( m_hMyWearables ), MAX_WEARABLES_SENT_FROM_SERVER,	RecvPropEHandle(NULL, 0, 0) ),
-#endif
 
 	END_RECV_TABLE()
 
@@ -332,7 +309,6 @@ BEGIN_PREDICTION_DATA( C_BasePlayer )
 	DEFINE_PRED_FIELD( m_flFOVTime, FIELD_FLOAT, 0 ),
 	DEFINE_PRED_FIELD( m_iFOVStart, FIELD_INTEGER, 0 ),
 
-	DEFINE_PRED_FIELD( m_hVehicle, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD_TOL( m_flMaxspeed, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, 0.5f ),
 	DEFINE_PRED_FIELD_TOL(m_flMaxAirSpeed, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, 0.5f),
 	DEFINE_PRED_FIELD( m_iHealth, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
@@ -354,7 +330,6 @@ BEGIN_PREDICTION_DATA( C_BasePlayer )
 	DEFINE_FIELD( m_afButtonPressed, FIELD_INTEGER ),
 	DEFINE_FIELD( m_afButtonReleased, FIELD_INTEGER ),
 	// DEFINE_FIELD( m_vecOldViewAngles, FIELD_VECTOR ),
-	//DEFINE_FIELD( m_hOldVehicle, FIELD_EHANDLE ),
 	// DEFINE_FIELD( m_pModelLight, dlight_t* ),
 	// DEFINE_FIELD( m_pEnvironmentLight, dlight_t* ),
 	// DEFINE_FIELD( m_pBrightLight, dlight_t* ),
@@ -494,7 +469,7 @@ bool C_BasePlayer::IsReplay() const
 CBaseEntity	*C_BasePlayer::GetObserverTarget() const	// returns players target or NULL
 {
 #ifndef _XBOX
-	if ( IsHLTV() )
+	if (IsHLTV())
 	{
 		return HLTVCamera()->GetPrimaryTarget();
 	}
@@ -505,38 +480,11 @@ CBaseEntity	*C_BasePlayer::GetObserverTarget() const	// returns players target o
 	}
 #endif
 #endif
-	
-	if ( GetObserverMode() == OBS_MODE_ROAMING )
-	{
-		return NULL;	// no target in roaming mode
-	}
-	else
-	{
-		if ( IsLocalPlayer() && UseVR() )
-		{
-			// In VR mode, certain views cause disorientation and nausea. So let's not.
-			switch ( m_iObserverMode )
-			{
-			case OBS_MODE_NONE:			// not in spectator mode
-			case OBS_MODE_FIXED:		// view from a fixed camera position
-			case OBS_MODE_IN_EYE:		// follow a player in first person view
-			case OBS_MODE_CHASE:		// follow a player in third person view
-			case OBS_MODE_ROAMING:		// free roaming
-				return m_hObserverTarget;
-				break;
-			case OBS_MODE_DEATHCAM:		// special mode for death cam animation
-			case OBS_MODE_FREEZECAM:	// zooms to a target, and freeze-frames on them
-				// These are both terrible - they get overriden to chase, but here we change it to "chase" your own body (which will be ragdolled).
-				return (const_cast<C_BasePlayer*>(this))->GetBaseEntity();
-				break;
-			default:
-				assert ( false );
-				break;
-			}
-		}
 
-		return m_hObserverTarget;
-	}
+	if (GetObserverMode() == OBS_MODE_ROAMING)
+		return NULL;	// no target in roaming mode	
+
+	return m_hObserverTarget;
 }
 
 // Called from Recv Proxy, mainly to reset tone map scale
@@ -564,15 +512,6 @@ void C_BasePlayer::SetObserverTarget( EHANDLE hObserverTarget )
 		{
 			ResetToneMapping(1.0);
 		}
-		// NVNT notify haptics of changed player
-		if ( haptics )
-			haptics->OnPlayerChanged();
-
-		if ( IsLocalPlayer() )
-		{
-			// On a change of viewing mode or target, we may want to reset both head and torso to point at the new target.
-			g_ClientVirtualReality.AlignTorsoAndViewToWeapon();
-		}
 	}
 }
 
@@ -581,11 +520,6 @@ void C_BasePlayer::SetObserverMode ( int iNewMode )
 	if ( m_iObserverMode != iNewMode )
 	{
 		m_iObserverMode = iNewMode;
-		if ( IsLocalPlayer() )
-		{
-			// On a change of viewing mode or target, we may want to reset both head and torso to point at the new target.
-			g_ClientVirtualReality.AlignTorsoAndViewToWeapon();
-		}
 	}
 }
 
@@ -603,29 +537,6 @@ int C_BasePlayer::GetObserverMode() const
 	}
 #endif
 #endif
-
-	if ( IsLocalPlayer() && UseVR() )
-	{
-		// IN VR mode, certain views cause disorientation and nausea. So let's not.
-		switch ( m_iObserverMode )
-		{
-		case OBS_MODE_NONE:			// not in spectator mode
-		case OBS_MODE_FIXED:		// view from a fixed camera position
-		case OBS_MODE_IN_EYE:		// follow a player in first person view
-		case OBS_MODE_CHASE:		// follow a player in third person view
-		case OBS_MODE_ROAMING:		// free roaming
-			return m_iObserverMode;
-			break;
-		case OBS_MODE_DEATHCAM:		// special mode for death cam animation
-		case OBS_MODE_FREEZECAM:	// zooms to a target, and freeze-frames on them
-			// These are both terrible - just do chase of your ragdoll.
-			return OBS_MODE_CHASE;
-			break;
-		default:
-			assert ( false );
-			break;
-		}
-	}
 
 	return m_iObserverMode; 
 }
@@ -689,13 +600,8 @@ void C_BasePlayer::FireGameEvent( IGameEvent *event )
 {
 	if ( FStrEq( event->GetName(), "base_player_teleported" ) )
 	{
-		const int index = event->GetInt( "entindex" );
-		if ( index == entindex() && IsLocalPlayer() )
-		{
-			// In VR, we want to make sure our head and body
-			// are aligned after we teleport.
-			g_ClientVirtualReality.AlignTorsoAndViewToWeapon();
-		}
+		//const int index = event->GetInt( "entindex" );
+		// ?
 	}
 
 }
@@ -714,23 +620,6 @@ const char * C_BasePlayer::GetPlayerName()
 bool C_BasePlayer::IsPlayerDead()
 {
 	return pl.deadflag == true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void C_BasePlayer::SetVehicleRole( int nRole )
-{
-	if ( !IsInAVehicle() )
-		return;
-
-	// HL2 has only a player in a vehicle.
-	if ( nRole > VEHICLE_ROLE_DRIVER )
-		return;
-
-	char szCmd[64];
-	Q_snprintf( szCmd, sizeof( szCmd ), "vehicleRole %i\n", nRole );
-	engine->ServerCmd( szCmd );
 }
 
 //-----------------------------------------------------------------------------
@@ -806,16 +695,7 @@ void C_BasePlayer::PostDataUpdate( DataUpdateType_t updateType )
 		if ( updateType == DATA_UPDATE_CREATED )
 		{
 			SetLocalViewAngles( angles );
-			m_flOldPlayerZ = GetLocalOrigin().z;
-			// NVNT the local player has just been created.
-			//   set in the "on_foot" navigation.
-			if ( haptics )
-			{
-				haptics->LocalPlayerReset();
-				haptics->SetNavigationClass("on_foot");
-				haptics->ProcessHapticEvent(2,"Movement","BasePlayer");
-			}
-		
+			m_flOldPlayerZ = GetLocalOrigin().z;		
 		}
 		SetLocalAngles( angles );
 
@@ -949,18 +829,6 @@ void C_BasePlayer::OnDataChanged( DataUpdateType_t updateType )
 	}
 }
 
-
-//-----------------------------------------------------------------------------
-// Did we just enter a vehicle this frame?
-//-----------------------------------------------------------------------------
-bool C_BasePlayer::JustEnteredVehicle()
-{
-	if ( !IsInAVehicle() )
-		return false;
-
-	return ( m_hOldVehicle == m_hVehicle );
-}
-
 //-----------------------------------------------------------------------------
 // Are we in VGUI input mode?.
 //-----------------------------------------------------------------------------
@@ -1020,9 +888,8 @@ void C_BasePlayer::DetermineVguiInputMode( CUserCmd *pCmd )
 	}
 
 	// Not in vgui mode if we're pushing any movement key at all
-	// Not in vgui mode if we're in a vehicle...
 	// ROBIN: Disabled movement preventing VGUI screen usage
-	if ( bAttacking || IsInAVehicle() )
+	if ( bAttacking )
 	{ 
 		DeactivateVguiScreen( m_pCurrentVguiScreen.Get() );
 		m_pCurrentVguiScreen.Set( NULL );
@@ -1062,24 +929,9 @@ void C_BasePlayer::DetermineVguiInputMode( CUserCmd *pCmd )
 //-----------------------------------------------------------------------------
 bool C_BasePlayer::CreateMove(float flInputSampleTime, CUserCmd *pCmd, bool bFakeInput)
 {
-	// Allow the vehicle to clamp the view angles
-	if ( IsInAVehicle() )
-	{
-		IClientVehicle *pVehicle = m_hVehicle.Get()->GetClientVehicle();
-		if ( pVehicle )
-		{
-			pVehicle->UpdateViewAngles( this, pCmd );
-			engine->SetViewAngles( pCmd->viewangles );
-		}
-	}
-	else 
-	{
-		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
-		if ( pWeapon )
-		{
-			pWeapon->CreateMove( flInputSampleTime, pCmd, m_vecOldViewAngles );
-		}
-	}
+	CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+	if (pWeapon)
+		pWeapon->CreateMove(flInputSampleTime, pCmd, m_vecOldViewAngles);
 
 	// If the frozen flag is set, prevent view movement (server prevents the rest of the movement)
 	if ( GetFlags() & FL_FROZEN )
@@ -1399,12 +1251,6 @@ void C_BasePlayer::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 	else if ( IsLocalPlayer() )
 	{
 		engine->GetViewAngles( viewangles );
-		if ( UseVR() )
-		{
-			// Don't let people play with the pitch - they drive it into the ground or into the air and 
-			// it's distracting at best, nauseating at worst (e.g. when it clips through the ground plane).
-			viewangles[PITCH] = 20.0f;
-		}
 	}
 	else
 	{
@@ -2207,19 +2053,7 @@ float C_BasePlayer::GetFOV( void )
 		}
 	}
 
-	// Allow our vehicle to override our FOV if it's currently at the default FOV.
-	float flDefaultFOV;
-	IClientVehicle *pVehicle = GetVehicle();
-	if ( pVehicle )
-	{
-		CacheVehicleView();
-		flDefaultFOV = ( m_flVehicleViewFOV == 0 ) ? GetDefaultFOV() : m_flVehicleViewFOV;
-	}
-	else
-	{
-		flDefaultFOV = GetDefaultFOV();
-	}
-	
+	float flDefaultFOV = GetDefaultFOV();	
 	float fFOV = ( m_iFOV == 0 ) ? flDefaultFOV : m_iFOV;
 
 	// Don't do lerping during prediction. It's only necessary when actually rendering,
@@ -2328,49 +2162,6 @@ void RecvProxy_ObserverMode( const CRecvProxyData *pData, void *pStruct, void *p
 
 	pPlayer->SetObserverMode ( pData->m_Value.m_Int );
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: Remove this player from a vehicle
-//-----------------------------------------------------------------------------
-void C_BasePlayer::LeaveVehicle( void )
-{
-	if ( NULL == m_hVehicle.Get() )
-		return;
-
-// Let server do this for now
-#if 0
-	IClientVehicle *pVehicle = GetVehicle();
-	Assert( pVehicle );
-
-	int nRole = pVehicle->GetPassengerRole( this );
-	Assert( nRole != VEHICLE_ROLE_NONE );
-
-	SetParent( NULL );
-
-	// Find the first non-blocked exit point:
-	Vector vNewPos = GetAbsOrigin();
-	QAngle qAngles = GetAbsAngles();
-	pVehicle->GetPassengerExitPoint( nRole, &vNewPos, &qAngles );
-	OnVehicleEnd( vNewPos );
-	SetAbsOrigin( vNewPos );
-	SetAbsAngles( qAngles );
-
-	m_Local.m_iHideHUD &= ~HIDEHUD_WEAPONSELECTION;
-	RemoveEffects( EF_NODRAW );
-
-	SetMoveType( MOVETYPE_WALK );
-	SetCollisionGroup( COLLISION_GROUP_PLAYER );
-
-	qAngles[ROLL] = 0;
-	SnapEyeAngles( qAngles );
-
-	m_hVehicle = NULL;
-	pVehicle->SetPassenger(nRole, NULL);
-
-	Weapon_Switch( m_hLastWeapon );
-#endif
-}
-
 
 float C_BasePlayer::GetMinFOV()	const
 {
@@ -2650,143 +2441,6 @@ bool C_BasePlayer::GetSteamID( CSteamID *pID )
 		}
 	}
 	return false;
-}
-
-#if defined USES_ECON_ITEMS
-//-----------------------------------------------------------------------------
-// Purpose: Update the visibility of our worn items.
-//-----------------------------------------------------------------------------
-void C_BasePlayer::UpdateWearables( void )
-{
-	for ( int i=0; i<m_hMyWearables.Count(); ++i )
-	{
-		CEconWearable* pItem = m_hMyWearables[i];
-		if ( pItem )
-		{
-			pItem->ValidateModelIndex();
-			pItem->UpdateVisibility();
-			pItem->CreateShadow();
-		}
-	}
-}
-#endif // USES_ECON_ITEMS
-
-
-//-----------------------------------------------------------------------------
-// Purpose: In meathook mode, fix the bone transforms to hang the user's own
-//			avatar under the camera.
-//-----------------------------------------------------------------------------
-void C_BasePlayer::BuildFirstPersonMeathookTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed, const char *pchHeadBoneName )
-{
-	// Handle meathook mode. If we aren't rendering, just use last frame's transforms
-	if ( !InFirstPersonView() )
-		return;
-
-	// If we're in third-person view, don't do anything special.
-	// If we're in first-person view rendering the main view and using the viewmodel, we shouldn't have even got here!
-	// If we're in first-person view rendering the main view(s), meathook and headless.
-	// If we're in first-person view rendering shadowbuffers/reflections, don't do anything special either (we could do meathook but with a head?)
-	if ( IsAboutToRagdoll() )
-	{
-		// We're re-animating specifically to set up the ragdoll.
-		// Meathook can push the player through the floor, which makes the ragdoll fall through the world, which is no good.
-		// So do nothing.
-		return;
-	}
-
-	if ( !DrawingMainView() )
-	{
-		return;
-	}
-
-	// If we aren't drawing the player anyway, don't mess with the bones. This can happen in Portal.
-	if( !ShouldDrawThisPlayer() )
-	{
-		return;
-	}
-
-	m_BoneAccessor.SetWritableBones( BONE_USED_BY_ANYTHING );
-
-	int iHead = LookupBone( pchHeadBoneName );
-	if ( iHead == -1 )
-	{
-		return;
-	}
-
-	matrix3x4_t &mHeadTransform = GetBoneForWrite( iHead );
-
-	// "up" on the head bone is along the negative Y axis - not sure why.
-	//Vector vHeadTransformUp ( -mHeadTransform[0][1], -mHeadTransform[1][1], -mHeadTransform[2][1] );
-	//Vector vHeadTransformFwd ( mHeadTransform[0][1], mHeadTransform[1][1], mHeadTransform[2][1] );
-	Vector vHeadTransformTranslation ( mHeadTransform[0][3], mHeadTransform[1][3], mHeadTransform[2][3] );
-
-
-	// Find out where the player's head (driven by the HMD) is in the world.
-	// We can't move this with animations or effects without causing nausea, so we need to move
-	// the whole body so that the animated head is in the right place to match the player-controlled head.
-	Vector vHeadUp;
-	Vector vRealPivotPoint;
-	if( UseVR() )
-	{
-		VMatrix mWorldFromMideye = g_ClientVirtualReality.GetWorldFromMidEye();
-
-		// What we do here is:
-		// * Take the required eye pos+orn - the actual pose the player is controlling with the HMD.
-		// * Go downwards in that space by cl_meathook_neck_pivot_ingame_* - this is now the neck-pivot in the game world of where the player is actually looking.
-		// * Now place the body of the animated character so that the head bone is at that position.
-		// The head bone is the neck pivot point of the in-game character.
-
-		Vector vRealMidEyePos = mWorldFromMideye.GetTranslation();
-		vRealPivotPoint = vRealMidEyePos - ( mWorldFromMideye.GetUp() * cl_meathook_neck_pivot_ingame_up.GetFloat() ) - ( mWorldFromMideye.GetForward() * cl_meathook_neck_pivot_ingame_fwd.GetFloat() );
-	}
-	else
-	{
-		// figure out where to put the body from the aim angles
-		Vector vForward, vRight, vUp;
-		AngleVectors( MainViewAngles(), &vForward, &vRight, &vUp );
-		
-		vRealPivotPoint = MainViewOrigin() - ( vUp * cl_meathook_neck_pivot_ingame_up.GetFloat() ) - ( vForward * cl_meathook_neck_pivot_ingame_fwd.GetFloat() );		
-	}
-
-	Vector vDeltaToAdd = vRealPivotPoint - vHeadTransformTranslation;
-
-
-	// Now add this offset to the entire skeleton.
-	for (int i = 0; i < hdr->numbones(); i++)
-	{
-		// Only update bones reference by the bone mask.
-		if ( !( hdr->boneFlags( i ) & boneMask ) )
-		{
-			continue;
-		}
-		matrix3x4_t& bone = GetBoneForWrite( i );
-		Vector vBonePos;
-		MatrixGetTranslation ( bone, vBonePos );
-		vBonePos += vDeltaToAdd;
-		MatrixSetTranslation ( vBonePos, bone );
-	}
-
-	// Then scale the head to zero, but leave its position - forms a "neck stub".
-	// This prevents us rendering junk all over the screen, e.g. inside of mouth, etc.
-	MatrixScaleByZero( mHeadTransform );
-
-	// TODO: right now we nuke the hats by shrinking them to nothing,
-	// but it feels like we should do something more sensible.
-	// For example, for one sniper taunt he takes his hat off and waves it - would be nice to see it then.
-	int iHelm = LookupBone( "prp_helmet" );
-	if ( iHelm != -1 )
-	{
-		// Scale the helmet.
-		matrix3x4_t  &transformhelmet = GetBoneForWrite( iHelm );
-		MatrixScaleByZero( transformhelmet );
-	}
-
-	iHelm = LookupBone( "prp_hat" );
-	if ( iHelm != -1 )
-	{
-		matrix3x4_t  &transformhelmet = GetBoneForWrite( iHelm );
-		MatrixScaleByZero( transformhelmet );
-	}
 }
 
 void CC_DumpClientSoundscapeData( const CCommand& args )

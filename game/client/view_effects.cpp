@@ -15,8 +15,6 @@
 #include "con_nprint.h"
 #include "saverestoretypes.h"
 #include "c_rumble.h"
-// NVNT haptics interface system
-#include "haptics/ihaptics.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -221,9 +219,6 @@ void CViewEffects::CalcShake( void )
 	m_flShakeAppliedAngle = 0;
 	float flRumbleAngle = 0;
 
-	// NVNT - haptic shake effect amplitude
-	float hapticShakeAmp = 0;
-
 	bool bShow = shake_show.GetBool();
 
 	int nShakeCount = m_ShakeList.Count();
@@ -320,12 +315,7 @@ void CViewEffects::CalcShake( void )
 
 		// Drop amplitude a bit, less for higher frequency shakes
 		pShake->amplitude -= pShake->amplitude * ( gpGlobals->frametime / (pShake->duration * pShake->frequency) );
-		// NVNT - update our amplitude.
-		hapticShakeAmp += pShake->amplitude*fraction;
 	}
-	// NVNT - apply our screen shake update
-	if ( haptics )
-		haptics->SetShake(hapticShakeAmp,1);
 
 	// Feed this to the rumble system!
 	UpdateScreenShakeRumble( flRumbleAngle );

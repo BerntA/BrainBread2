@@ -253,13 +253,7 @@ void CGrenadeFrag::SetTimer( float detonateDelay, float warnDelay )
 void CGrenadeFrag::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )
 {
 	SetThrower( pPhysGunUser );
-
 	m_bHasWarnedAI = true;
-
-#ifdef HL2_EPISODIC
-	SetPunted( true );
-#endif
-
 	BaseClass::OnPhysGunPickup( pPhysGunUser, reason );
 }
 

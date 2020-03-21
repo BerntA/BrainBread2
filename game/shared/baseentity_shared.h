@@ -11,9 +11,6 @@
 #pragma once
 #endif
 
-
-extern ConVar hl2_episodic;
-
 // Simple shared header file for common base entities
 
 // entity capabilities
@@ -36,7 +33,6 @@ extern ConVar hl2_episodic;
 #define		FCAP_MASTER					0x10000000		// Can be used to "master" other entities (like multisource)
 #define		FCAP_WCEDIT_POSITION		0x40000000		// Can change position and update Hammer in edit mode
 #define		FCAP_DONT_SAVE				0x80000000		// Don't save this
-
 
 // How many bits are used to transmit parent attachment indices?
 #define NUM_PARENTATTACHMENT_BITS	6
@@ -194,19 +190,6 @@ inline int CBaseEntity::GetEffects( void ) const
 
 inline void CBaseEntity::RemoveEffects( int nEffects ) 
 { 
-#if !defined( CLIENT_DLL )
-#ifdef HL2_EPISODIC
-	if ( nEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT) )
-	{
-		// Hack for now, to avoid player emitting radius with his flashlight
-		if ( !IsPlayer() )
-		{
-			RemoveEntityFromDarknessCheck( this );
-		}
-	}
-#endif // HL2_EPISODIC
-#endif // !CLIENT_DLL
-
 	m_fEffects &= ~nEffects;
 	if ( nEffects & EF_NODRAW )
 	{
@@ -221,19 +204,6 @@ inline void CBaseEntity::RemoveEffects( int nEffects )
 
 inline void CBaseEntity::ClearEffects( void ) 
 { 
-#if !defined( CLIENT_DLL )
-#ifdef HL2_EPISODIC
-	if ( m_fEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT) )
-	{
-		// Hack for now, to avoid player emitting radius with his flashlight
-		if ( !IsPlayer() )
-		{
-			RemoveEntityFromDarknessCheck( this );
-		}
-	}
-#endif // HL2_EPISODIC
-#endif // !CLIENT_DLL
-
 	m_fEffects = 0;
 #ifndef CLIENT_DLL
 		DispatchUpdateTransmitState();

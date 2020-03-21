@@ -17,9 +17,6 @@
 #pragma once
 #endif
 
-//Combine
-extern int	g_interactionCombineBash;
-
 //ScriptedTarget
 extern int  g_interactionScriptedTarget;
 

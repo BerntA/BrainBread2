@@ -58,7 +58,6 @@ public:
 
 	// from cbasecombatcharacter
 	void				InitVCollision( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity );
-	WeaponProficiency_t CalcWeaponProficiency( CBaseCombatWeapon *pWeapon );
 
 	virtual Class_T				Classify ( void );
 

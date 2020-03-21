@@ -101,23 +101,6 @@
 #define TLK_DANGER_ZOMBINE_GRENADE			"TLK_DANGER_ZOMBINE_GRENADE"
 #define TLK_BALLSOCKETED					"TLK_BALLSOCKETED"
 
-// Vehicle passenger
-#define	TLK_PASSENGER_WARN_COLLISION	"TLK_PASSENGER_WARN_COLLISION"	// About to collide with something
-#define	TLK_PASSENGER_IMPACT			"TLK_PASSENGER_IMPACT"			// Just hit something
-#define	TLK_PASSENGER_OVERTURNED		"TLK_PASSENGER_OVERTURNED"		// Vehicle has just overturned
-#define	TLK_PASSENGER_REQUEST_UPRIGHT	"TLK_PASSENGER_REQUEST_UPRIGHT" // Vehicle needs to be put upright
-#define TLK_PASSENGER_ERRATIC_DRIVING	"TLK_PASSENGER_ERRATIC_DRIVING"	// Vehicle is moving erratically
-#define TLK_PASSENGER_VEHICLE_STARTED	"TLK_PASSENGER_VEHICLE_STARTED" // Vehicle has started moving
-#define	TLK_PASSENGER_VEHICLE_STOPPED	"TLK_PASSENGER_VEHICLE_STOPPED"	// Vehicle has stopped moving
-#define TLK_PASSENGER_BEGIN_ENTRANCE	"TLK_PASSENGER_BEGIN_ENTRANCE"	// Passenger started entering
-#define TLK_PASSENGER_FINISH_ENTRANCE	"TLK_PASSENGER_FINISH_ENTRANCE" // Passenger finished entering (is in seat)
-#define TLK_PASSENGER_BEGIN_EXIT		"TLK_PASSENGER_BEGIN_EXIT"		// Passenger started exiting
-#define TLK_PASSENGER_FINISH_EXIT		"TLK_PASSENGER_FINISH_EXIT"		// Passenger finished exiting (seat is vacated)
-#define TLK_PASSENGER_PLAYER_ENTERED	"TLK_PASSENGER_PLAYER_ENTERED"	// Player entered the vehicle
-#define TLK_PASSENGER_PLAYER_EXITED		"TLK_PASSENGER_PLAYER_EXITED"	// Player exited the vehicle
-#define TLK_PASSENGER_NEW_RADAR_CONTACT	"TLK_PASSENGER_NEW_RADAR_CONTACT"	// Noticed a brand new contact on the radar
-#define TLK_PASSENGER_PUNTED			"TLK_PASSENGER_PUNTED"			// The player has punted us while we're sitting in the vehicle
-
 // Vortigaunt
 #define TLK_VORTIGAUNT_DISPEL	"TLK_VORTIGAUNT_DISPEL"	// Dispel attack starting
 

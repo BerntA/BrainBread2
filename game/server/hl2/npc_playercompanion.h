@@ -17,11 +17,6 @@
 #include "ai_behavior_actbusy.h"
 #include "ai_behavior_fear.h"
 
-#ifdef HL2_EPISODIC
-#include "ai_behavior_operator.h"
-#include "ai_behavior_passenger_companion.h"
-#endif
-
 #if defined( _WIN32 )
 #pragma once
 #endif
@@ -50,8 +45,9 @@ public:
 	  m_fUsageBits( 0 ),
 	  m_readiness( AIRL_RELAXED ),
 	  m_bAiming( false ),
-	  m_bWeaponRequired( false ),
-	  m_bInVehicle( false ) {} 
+	  m_bWeaponRequired( false )
+	{
+	} 
 
 	// This bitfield maps which bits of data are being utilized by this data structure, since not all criteria
 	// in the parsed file are essential.  You must add corresponding bits to the definitions below and maintain
@@ -64,14 +60,12 @@ public:
 	AIReadiness_t	m_readiness;
 	bool			m_bAiming;
 	bool			m_bWeaponRequired;
-	bool			m_bInVehicle;		// For future expansion, this needs to speak more to the exact seat, role, and vehicle
 };
 
 // Usage bits for remap "extra" parsing - if these bits are set, the associated data has changed
 #define bits_REMAP_READINESS		(1<<0)
 #define bits_REMAP_AIMING			(1<<1)
 #define bits_REMAP_WEAPON_REQUIRED	(1<<2)
-#define bits_REMAP_IN_VEHICLE		(1<<3)
 
 // Readiness modes that only change due to mapmaker scripts
 #define READINESS_MIN_VALUE			-2
@@ -191,29 +185,6 @@ public:
 
 	void			InputGiveWeapon( inputdata_t &inputdata );
 
-#ifdef HL2_EPISODIC
-	//---------------------------------
-	// Vehicle passenger
-	//---------------------------------
-	void			InputEnterVehicle( inputdata_t &inputdata );
-	void			InputEnterVehicleImmediately( inputdata_t &inputdata );
-	void			InputCancelEnterVehicle( inputdata_t &inputdata );
-	void			InputExitVehicle( inputdata_t &inputdata );
-	bool			CanEnterVehicle( void );
-	bool			CanExitVehicle( void );
-	void			EnterVehicle( CBaseEntity *pEntityVehicle, bool bImmediately );
-	virtual bool	ExitVehicle( void );
-
-	virtual void	UpdateEfficiency( CBasePlayer *pPVSTarget );
-	virtual bool	IsInAVehicle( void ) const;
-	virtual	IServerVehicle *GetVehicle( void );
-	virtual CBaseEntity *GetVehicleEntity( void );
-
-	virtual bool CanRunAScriptedNPCInteraction( bool bForced = false );
-	virtual bool IsAllowedToDodge( void );
-
-#endif // HL2_EPISODIC
-
 public:
 
 	virtual void	OnPlayerKilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &info );
@@ -251,7 +222,6 @@ public:
 	void			DecalTrace( trace_t *pTrace, char const *decalName );
 	bool 			FCanCheckAttacks();
 	Vector 			GetActualShootPosition( const Vector &shootOrigin );
-	WeaponProficiency_t CalcWeaponProficiency( CBaseCombatWeapon *pWeapon );
 	bool			ShouldLookForBetterWeapon();
 	bool			Weapon_CanUse( CBaseCombatWeapon *pWeapon );
 	void			Weapon_Equip( CBaseCombatWeapon *pWeapon );
@@ -302,9 +272,6 @@ public:
 	void			InputSetReadinessMedium( inputdata_t &inputdata );
 	void			InputSetReadinessHigh( inputdata_t &inputdata );
 	void			InputLockReadiness( inputdata_t &inputdata );
-#if HL2_EPISODIC
-	void			InputClearAllOuputs( inputdata_t &inputdata ); ///< annihilate every output on this npc
-#endif
 
 	bool			AllowReadinessValueChange( void );
 
@@ -367,11 +334,7 @@ protected:
 	CAI_StandoffBehavior			m_StandoffBehavior;
 	CAI_LeadBehavior				m_LeadBehavior;
 	CAI_ActBusyBehavior				m_ActBusyBehavior;
-#ifdef HL2_EPISODIC
-	CAI_OperatorBehavior			m_OperatorBehavior;
-	CAI_PassengerBehaviorCompanion	m_PassengerBehavior;
-	CAI_FearBehavior				m_FearBehavior;
-#endif
+
 	//-----------------------------------------------------
 
 	bool	ShouldAlwaysTransition( void );
@@ -399,10 +362,6 @@ protected:
 	//-----------------------------------------------------
 
 	EHANDLE m_hAimTarget;
-
-#ifdef HL2_EPISODIC
-	CHandle<CPhysicsProp>	m_hFlare;
-#endif // HL2_EPISODIC
 
 	//-----------------------------------------------------
 

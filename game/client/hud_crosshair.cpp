@@ -13,15 +13,9 @@
 #include "ivrenderview.h"
 #include "materialsystem/imaterialsystem.h"
 #include "VGuiMatSurface/IMatSystemSurface.h"
-#include "client_virtualreality.h"
-#include "sourcevr/isourcevirtualreality.h"
 #include "hl2mp_gamerules.h"
 #include "GameBase_Shared.h"
 #include "in_buttons.h"
-
-#ifdef SIXENSE
-#include "sixense/in_sixense.h"
-#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -164,54 +158,6 @@ void CHudCrosshair::GetDrawPosition ( float *pX, float *pY, bool *pbBehindCamera
 	float y = screenHeight / 2;
 
 	bool bBehindCamera = false;
-
-	C_BasePlayer* pPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( ( pPlayer != NULL ) && ( pPlayer->GetObserverMode()==OBS_MODE_NONE ) )
-	{
-		bool bUseOffset = false;
-		
-		Vector vecStart;
-		Vector vecEnd;
-
-		if ( UseVR() )
-		{
-			// These are the correct values to use, but they lag the high-speed view data...
-			vecStart = pPlayer->Weapon_ShootPosition();
-			Vector vecAimDirection = pPlayer->GetAutoaimVector();
-			// ...so in some aim modes, they get zapped by something completely up-to-date.
-			g_ClientVirtualReality.OverrideWeaponHudAimVectors ( &vecStart, &vecAimDirection );
-			vecEnd = vecStart + vecAimDirection * MAX_TRACE_LENGTH;
-
-			bUseOffset = true;
-		}
-
-#ifdef SIXENSE
-		// TODO: actually test this Sixsense code interaction with things like HMDs & stereo.
-        if ( g_pSixenseInput->IsEnabled() && !UseVR() )
-		{
-			// Never autoaim a predicted weapon (for now)
-			vecStart = pPlayer->Weapon_ShootPosition();
-			Vector aimVector;
-			AngleVectors( CurrentViewAngles() - g_pSixenseInput->GetViewAngleOffset(), &aimVector );
-			// calculate where the bullet would go so we can draw the cross appropriately
-			vecEnd = vecStart + aimVector * MAX_TRACE_LENGTH;
-			bUseOffset = true;
-		}
-#endif
-
-		if ( bUseOffset )
-		{
-			trace_t tr;
-			UTIL_TraceLine( vecStart, vecEnd, MASK_SHOT, pPlayer, COLLISION_GROUP_NONE, &tr );
-
-			Vector screen;
-			screen.Init();
-			bBehindCamera = ScreenTransform(tr.endpos, screen) != 0;
-
-			x = 0.5f * ( 1.0f + screen[0] ) * screenWidth + 0.5f;
-			y = 0.5f * ( 1.0f - screen[1] ) * screenHeight + 0.5f;
-		}
-	}
 
 	// MattB - angleCrosshairOffset is the autoaim angle.
 	// if we're not using autoaim, just draw in the middle of the 

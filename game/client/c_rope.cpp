@@ -639,16 +639,14 @@ bool CRopeManager::IsHolidayLightMode( void )
 
 	bool bDrawHolidayLights = false;
 
-#ifdef USES_ECON_ITEMS
-	if ( !m_bHolidayInitialized && GameRules() )
-	{
-		m_bHolidayInitialized = true;
-		m_bDrawHolidayLights = GameRules()->IsHolidayActive( kHoliday_Christmas );
-	}
-
-	bDrawHolidayLights = m_bDrawHolidayLights;
-	m_nHolidayLightsStyle = 0;
-#endif // USES_ECON_ITEMS
+	// HOLIDAY
+	//if ( !m_bHolidayInitialized && GameRules() )
+	//{
+	//	m_bHolidayInitialized = true;
+	//	m_bDrawHolidayLights = GameRules()->IsHolidayActive( kHoliday_Christmas );
+	//}
+	//bDrawHolidayLights = m_bDrawHolidayLights;
+	//m_nHolidayLightsStyle = 0;
 
 	return bDrawHolidayLights;
 }

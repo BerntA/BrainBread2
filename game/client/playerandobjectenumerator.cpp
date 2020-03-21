@@ -60,10 +60,6 @@ IterationRetval_t CPlayerAndObjectEnumerator::EnumElement( IHandleEntity *pHandl
 			 return ITERATION_CONTINUE;
 	}
 
-	// Ignore vehicles, since they have vcollide collisions that's push me away
-	if ( pEnt->GetCollisionGroup() == COLLISION_GROUP_VEHICLE )
-		return ITERATION_CONTINUE;
-
 	Vector	deltaPos = pEnt->GetAbsOrigin() - m_pLocal->GetAbsOrigin();
 	if ( deltaPos.LengthSqr() > m_flRadiusSquared )
 		return ITERATION_CONTINUE;

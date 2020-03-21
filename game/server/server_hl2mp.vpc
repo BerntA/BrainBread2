@@ -96,7 +96,6 @@ $Project "Server (HL2MP)"
 			$File	"$SRCDIR\game\shared\hl2\hl2_shared_misc.cpp"
 			$File	"$SRCDIR\game\shared\hl2\hl2_shared_misc.h"			
 			$File	"$SRCDIR\game\shared\script_intro_shared.cpp"
-			$File	"hl2\vehicle_viewcontroller.cpp"
 			$File	"weapon_cubemap.cpp"
 		}
 

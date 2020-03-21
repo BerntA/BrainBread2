@@ -1293,9 +1293,9 @@ CBaseAnimating *CreateServerRagdollSubmodel( CBaseAnimating *pOwner, const char 
 
 CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, const CTakeDamageInfo &info, int collisionGroup, bool bUseLRURetirement )
 {
-	if ( info.GetDamageType() & (DMG_VEHICLE|DMG_CRUSH) )
+	if ( info.GetDamageType() & DMG_CRUSH )
 	{
-		// if the entity was killed by physics or a vehicle, move to the vphysics shadow position before creating the ragdoll.
+		// if the entity was killed by physics, move to the vphysics shadow position before creating the ragdoll.
 		SyncAnimatingWithPhysics( pAnimating );
 	}
 	CRagdollProp *pRagdoll = (CRagdollProp *)CBaseEntity::CreateNoSpawn( "prop_ragdoll", pAnimating->GetAbsOrigin(), vec3_angle, NULL );
@@ -1389,37 +1389,8 @@ CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, con
 	pAnimating->DrawRawSkeleton( pBoneToWorld, BONE_USED_BY_ANYTHING, true, 20, false );
 	pAnimating->DrawRawSkeleton( pBoneToWorldNext, BONE_USED_BY_ANYTHING, true, 20, true );
 #endif
-	// Is this a vehicle / NPC collision?
-	if ( (info.GetDamageType() & DMG_VEHICLE) && pAnimating->MyNPCPointer() )
-	{
-		// init the ragdoll with no forces
-		pRagdoll->InitRagdoll( vec3_origin, -1, vec3_origin, pBoneToWorld, pBoneToWorldNext, dt, collisionGroup, true );
 
-		// apply vehicle forces
-		// Get a list of bones with hitboxes below the plane of impact
-		int boxList[128];
-		Vector normal(0,0,-1);
-		int count = pAnimating->GetHitboxesFrontside( boxList, ARRAYSIZE(boxList), normal, DotProduct( normal, info.GetDamagePosition() ) );
-		
-		// distribute force over mass of entire character
-		float massScale = Studio_GetMass(pAnimating->GetModelPtr());
-		massScale = clamp( massScale, 1.f, 1.e4f );
-		massScale = 1.f / massScale;
-
-		// distribute the force
-		// BUGBUG: This will hit the same bone twice if it has two hitboxes!!!!
-		ragdoll_t *pRagInfo = pRagdoll->GetRagdoll();
-		for ( int i = 0; i < count; i++ )
-		{
-			int physBone = pAnimating->GetPhysicsBone( pAnimating->GetHitboxBone( boxList[i] ) );
-			IPhysicsObject *pPhysics = pRagInfo->list[physBone].pObject;
-			pPhysics->ApplyForceCenter( info.GetDamageForce() * pPhysics->GetMass() * massScale );
-		}
-	}
-	else
-	{
-		pRagdoll->InitRagdoll( info.GetDamageForce(), forceBone, info.GetDamagePosition(), pBoneToWorld, pBoneToWorldNext, dt, collisionGroup, true );
-	}
+	pRagdoll->InitRagdoll(info.GetDamageForce(), forceBone, info.GetDamagePosition(), pBoneToWorld, pBoneToWorldNext, dt, collisionGroup, true);
 
 	// Are we dissolving?
 	if ( pAnimating->IsDissolving() )

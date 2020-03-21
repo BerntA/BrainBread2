@@ -42,10 +42,7 @@ void PrecacheFootStepSounds(void)
 //-----------------------------------------------------------------------------
 Vector CHL2MP_Player::GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget )
 {
-	if ( pWeapon )
-		return pWeapon->GetBulletSpread();
-	
-	return VECTOR_CONE_5DEGREES;
+	return (pWeapon ? pWeapon->GetBulletSpread() : VECTOR_CONE_5DEGREES);
 }
 
 //-----------------------------------------------------------------------------

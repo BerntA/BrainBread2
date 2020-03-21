@@ -39,11 +39,9 @@
 #include "movehelper_server.h"
 #include "igamemovement.h"
 #include "saverestoretypes.h"
-#include "iservervehicle.h"
 #include "movevars_shared.h"
 #include "vcollide_parse.h"
 #include "player_command.h"
-#include "vehicle_base.h"
 #include "AI_Criteria.h"
 #include "globals.h"
 #include "usermessages.h"
@@ -70,13 +68,6 @@
 #include "GameBase_Shared.h"
 #include "GameBase_Server.h"
 #include "random_extended.h"
-
-#if defined USES_ECON_ITEMS
-#include "econ_wearable.h"
-#endif
-
-// NVNT haptic utils
-#include "haptics/haptic_utils.h"
 
 #ifdef HL2_DLL
 #include "hl2_shared_misc.h"
@@ -208,9 +199,6 @@ END_DATADESC()
 BEGIN_DATADESC( CBasePlayer )
 
 	DEFINE_EMBEDDED( m_Local ),
-#if defined USES_ECON_ITEMS
-	DEFINE_EMBEDDED( m_AttributeList ),
-#endif
 	DEFINE_UTLVECTOR( m_hTriggerSoundscapeList, FIELD_EHANDLE ),
 	DEFINE_EMBEDDED( pl ),
 
@@ -227,7 +215,6 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_iFOVStart,	FIELD_INTEGER ),
 	DEFINE_FIELD( m_flFOVTime,	FIELD_TIME ),
 	DEFINE_FIELD( m_iDefaultFOV,FIELD_INTEGER ),
-	DEFINE_FIELD( m_flVehicleViewFOV, FIELD_FLOAT ),
 
 	DEFINE_FIELD( m_iObserverMode, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iObserverLastMode, FIELD_INTEGER ),
@@ -241,7 +228,6 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_hUseEntity, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_iTrain, FIELD_INTEGER ),
 	DEFINE_FIELD( m_afPhysicsFlags, FIELD_INTEGER ),
-	DEFINE_FIELD( m_hVehicle, FIELD_EHANDLE ),
 
 	// recreate, don't restore
 	// DEFINE_FIELD( m_CommandContext, CUtlVector < CCommandContext > ),
@@ -321,12 +307,6 @@ BEGIN_DATADESC( CBasePlayer )
 	//DEFINE_FIELD( m_LastCmd, FIELD_ ),
 	// DEFINE_FIELD( m_pCurrentCommand, CUserCmd ),
 	//DEFINE_FIELD( m_bGamePaused, FIELD_BOOLEAN ),
-	//	DEFINE_FIELD( m_iVehicleAnalogBias, FIELD_INTEGER ),
-
-	// m_flVehicleViewFOV
-	// m_vecVehicleViewOrigin
-	// m_vecVehicleViewAngles
-	// m_nVehicleViewSavedFrame
 
 	DEFINE_FIELD( m_bitsDamageType, FIELD_INTEGER ),
 	DEFINE_AUTO_ARRAY( m_rgbTimeBasedDamage, FIELD_CHARACTER ),
@@ -506,7 +486,6 @@ CBasePlayer::CBasePlayer( )
 	m_bitsDamageType = 0;
 
 	m_bForceOrigin = false;
-	m_hVehicle = NULL;
 	m_pCurrentCommand = NULL;
 	m_iLockViewanglesTickNumber = 0;
 	m_qangLockViewangles.Init();
@@ -548,9 +527,6 @@ CBasePlayer::CBasePlayer( )
 	m_nBodyPitchPoseParam = -1;
 	m_flForwardMove = 0;
 	m_flSideMove = 0;
-
-	// NVNT default to no haptics
-	m_bhasHaptics = false;
 
 	m_vecConstraintCenter = vec3_origin;
 
@@ -731,7 +707,7 @@ int TrainSpeed(int iSpeed, int iMax)
 
 void CBasePlayer::DeathSound( const CTakeDamageInfo &info )
 {
-	HL2MPRules()->EmitSoundToClient(this, ((m_bitsDamageType & (DMG_FALL | DMG_CRUSH | DMG_VEHICLE)) != 0) ? "FallGib" : "Death", GetSoundType(), GetSoundsetGender());
+	HL2MPRules()->EmitSoundToClient(this, ((m_bitsDamageType & (DMG_FALL | DMG_CRUSH)) != 0) ? "FallGib" : "Death", GetSoundType(), GetSoundsetGender());
 }
 
 // override takehealth
@@ -957,14 +933,6 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	CHL2MP_Player *pClient = ToHL2MPPlayer(this);
 	CBaseEntity *pAttacker = info.GetAttacker();
 
-	IServerVehicle *pVehicle = GetVehicle();
-	if ( pVehicle )
-	{
-		// Let the vehicle decide if we should take this damage or not
-		if ( pVehicle->PassengerShouldReceiveDamage( info ) == false )
-			return 0;
-	}
-
  	if ( IsInCommentaryMode() )
 	{
 		if( !ShouldTakeDamageInCommentaryMode( info ) )
@@ -1140,12 +1108,6 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			}
 		}
 	}
-
-#if defined( WIN32 ) && !defined( _X360 )
-	// NVNT if player's client has a haptic device send them a user message with the damage.
-	if(HasHaptics())
-		HapticsDamage(this,info);
-#endif
 
 	// this cast to INT is critical!!! If a player ends up with 0.5 health, the engine will get that
 	// as an int (zero) and think the player is dead! (this will incite a clientside screentilt, etc)
@@ -1501,11 +1463,6 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 	g_pGameRules->PlayerKilled( this, info );
 
 	RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
-
-#if defined( WIN32 ) && !defined( _X360 )
-	// NVNT set the drag to zero in the case of underwater death.
-	HapticSetDrag(this,0);
-#endif
 	ClearUseEntity();
 	
 	// this client isn't going to be thinking for a while, so reset the sound until they respawn
@@ -1566,12 +1523,6 @@ void CBasePlayer::Event_Dying( const CTakeDamageInfo& info )
 	// NOT GIBBED, RUN THIS CODE
 
 	DeathSound( info );
-
-	// The dead body rolls out of the vehicle.
-	if ( IsInAVehicle() )
-	{
-		LeaveVehicle();
-	}
 
 	QAngle angles = GetLocalAngles();
 
@@ -4035,10 +3986,6 @@ void CBasePlayer::UpdatePhysicsShadowToPosition( const Vector &vecAbsOrigin )
 
 Vector CBasePlayer::GetSmoothedVelocity( void )
 { 
-	if ( IsInAVehicle() )
-	{
-		return GetVehicle()->GetVehicleEnt()->GetSmoothedVelocity();
-	}
 	return m_vecSmoothedVelocity;
 }
 
@@ -4182,9 +4129,6 @@ void CBasePlayer::Spawn( void )
 
 	RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
 
-	// Calculate this immediately
-	m_nVehicleViewSavedFrame = 0;
-
 	// track where we are in the nav mesh
 	UpdateLastKnownArea();
 
@@ -4201,10 +4145,6 @@ void CBasePlayer::Activate( void )
 	AimTarget_ForceRepopulateList();
 
 	RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
-
-	// Reset the analog bias. If the player is in a vehicle when the game
-	// reloads, it will autosense and apply the correct bias.
-	m_iVehicleAnalogBias = VEHICLE_ANALOG_BIAS_NONE;
 }
 
 void CBasePlayer::Precache( void )
@@ -4347,12 +4287,8 @@ void CBasePlayer::OnRestore( void )
 {
 	BaseClass::OnRestore();
 
-
 	SetViewEntity( m_hViewEntity );
 	SetDefaultFOV(m_iDefaultFOV);		// force this to reset if zero
-
-	// Calculate this immediately
-	m_nVehicleViewSavedFrame = 0;
 
 	m_nBodyPitchPoseParam = LookupPoseParameter( "body_pitch" );
 }
@@ -4461,200 +4397,6 @@ void CBasePlayer::VelocityPunch( const Vector &vecForce )
 	// Clear onground and add velocity.
 	SetGroundEntity( NULL );
 	ApplyAbsVelocityImpulse(vecForce );
-}
-
-
-//--------------------------------------------------------------------------------------------------------------
-// VEHICLES
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-// Purpose: Whether or not the player is currently able to enter the vehicle
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CBasePlayer::CanEnterVehicle( IServerVehicle *pVehicle, int nRole )
-{
-	// Must not have a passenger there already
-	if ( pVehicle->GetPassenger( nRole ) )
-		return false;
-
-	// Must be able to holster our current weapon (ie. grav gun!)
-	if ( pVehicle->IsPassengerUsingStandardWeapons( nRole ) == false )
-	{
-		//Must be able to stow our weapon
-		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
-		if ( ( pWeapon != NULL ) && ( pWeapon->CanHolster() == false ) )
-			return false;
-	}
-
-	// Must be alive
-	if ( IsAlive() == false )
-		return false;
-
-	// Can't be pulled by a barnacle
-	if ( IsEFlagSet( EFL_IS_BEING_LIFTED_BY_BARNACLE ) )
-		return false;
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Put this player in a vehicle 
-//-----------------------------------------------------------------------------
-bool CBasePlayer::GetInVehicle( IServerVehicle *pVehicle, int nRole )
-{
-	Assert( NULL == m_hVehicle.Get() );
-	Assert( nRole >= 0 );
-	
-	// Make sure we can enter the vehicle
-	if ( CanEnterVehicle( pVehicle, nRole ) == false )
-		return false;
-
-	CBaseEntity *pEnt = pVehicle->GetVehicleEnt();
-	Assert( pEnt );
-
-	// Try to stow weapons
-	if ( pVehicle->IsPassengerUsingStandardWeapons( nRole ) == false )
-	{
-		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
-		if ( pWeapon != NULL )
-		{
-			pWeapon->FullHolster();
-		}
-
-#ifndef HL2_DLL
-		m_Local.m_iHideHUD |= HIDEHUD_WEAPONSELECTION;
-#endif
-		m_Local.m_iHideHUD |= HIDEHUD_INVEHICLE;
-	}
-
-	if ( !pVehicle->IsPassengerVisible( nRole ) )
-	{
-		// Invisible thirdperson models in vehicles.
-		AddEffects( EF_NODRAW ); 
-	}
-
-	// Put us in the vehicle
-	pVehicle->SetPassenger( nRole, this );
-
-	ViewPunchReset();
-
-	// Setting the velocity to 0 will cause the IDLE animation to play
-	SetAbsVelocity( vec3_origin );
-	SetMoveType( MOVETYPE_NOCLIP );
-
-	// Get the seat position we'll be at in this vehicle
-	Vector vSeatOrigin;
-	QAngle qSeatAngles;
-	pVehicle->GetPassengerSeatPoint( nRole, &vSeatOrigin, &qSeatAngles );
-	
-	// Set us to that position
-	SetAbsOrigin( vSeatOrigin );
-	SetAbsAngles( qSeatAngles );
-	
-	// Parent to the vehicle
-	SetParent( pEnt );
-
-	SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE );
-	
-	// We cannot be ducking -- do all this before SetPassenger because it
-	// saves our view offset for restoration when we exit the vehicle.
-	RemoveFlag( FL_DUCKING );
-	SetViewOffset( VEC_VIEW_SCALED( this ) );
-	m_Local.m_bDucked = false;
-	m_Local.m_bDucking  = false;
-	m_Local.m_flDucktime = 0.0f;
-	m_Local.m_flDuckJumpTime = 0.0f;
-	m_Local.m_flJumpTime = 0.0f;
-
-	// Turn our toggled duck off
-	if ( GetToggledDuckState() )
-	{
-		ToggleDuck();
-	}
-
-	m_hVehicle = pEnt;
-
-	// Throw an event indicating that the player entered the vehicle.
-	g_pNotify->ReportNamedEvent( this, "PlayerEnteredVehicle" );
-
-	m_iVehicleAnalogBias = VEHICLE_ANALOG_BIAS_NONE;
-
-	OnVehicleStart();
-
-	return true;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Remove this player from a vehicle
-//-----------------------------------------------------------------------------
-void CBasePlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles )
-{
-	if ( NULL == m_hVehicle.Get() )
-		return;
-
-	IServerVehicle *pVehicle = GetVehicle();
-	Assert( pVehicle );
-
-	int nRole = pVehicle->GetPassengerRole( this );
-	Assert( nRole >= 0 );
-
-	SetParent( NULL );
-
-	// Find the first non-blocked exit point:
-	Vector vNewPos = GetAbsOrigin();
-	QAngle qAngles = GetAbsAngles();
-	if ( vecExitPoint == vec3_origin )
-	{
-		// FIXME: this might fail to find a safe exit point!!
-		pVehicle->GetPassengerExitPoint( nRole, &vNewPos, &qAngles );
-	}
-	else
-	{
-		vNewPos = vecExitPoint;
-		qAngles = vecExitAngles;
-	}
-	OnVehicleEnd( vNewPos );
-	SetAbsOrigin( vNewPos );
-	SetAbsAngles( qAngles );
-	// Clear out any leftover velocity
-	SetAbsVelocity( vec3_origin );
-
-	qAngles[ROLL] = 0;
-	SnapEyeAngles( qAngles );
-
-#ifndef HL2_DLL
-	m_Local.m_iHideHUD &= ~HIDEHUD_WEAPONSELECTION;
-#endif
-
-	m_Local.m_iHideHUD &= ~HIDEHUD_INVEHICLE;
-
-	RemoveEffects( EF_NODRAW );
-
-	SetMoveType( MOVETYPE_WALK );
-	SetCollisionGroup( ((GetTeamNumber() == TEAM_HUMANS) ? COLLISION_GROUP_PLAYER : COLLISION_GROUP_PLAYER_ZOMBIE) );
-
-	if ( VPhysicsGetObject() )
-	{
-		VPhysicsGetObject()->SetPosition( vNewPos, vec3_angle, true );
-	}
-
-	m_hVehicle = NULL;
-	pVehicle->SetPassenger(nRole, NULL);
-
-	// Re-deploy our weapon
-	if ( IsAlive() )
-	{
-		if ( GetActiveWeapon() && GetActiveWeapon()->IsWeaponVisible() == false )
-		{
-			GetActiveWeapon()->Deploy();
-			ShowCrosshair( true );
-		}
-	}
-
-	// Just cut all of the rumble effects. 
-	RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
 }
 
 //-----------------------------------------------------------------------------
@@ -5211,17 +4953,13 @@ QAngle CBasePlayer::BodyAngles()
 //------------------------------------------------------------------------------
 Vector CBasePlayer::BodyTarget( const Vector &posSrc, bool bNoisy ) 
 { 
-	if ( IsInAVehicle() )
-	{
-		return GetVehicle()->GetVehicleEnt()->BodyTarget( posSrc, bNoisy );
-	}
 	if (bNoisy)
 	{
-		return GetAbsOrigin() + (GetViewOffset() * random->RandomFloat( 0.7, 1.0 )); 
+		return GetAbsOrigin() + (GetViewOffset() * random->RandomFloat(0.7, 1.0));
 	}
 	else
 	{
-		return EyePosition(); 
+		return EyePosition();
 	}
 };		
 
@@ -5440,84 +5178,6 @@ CBaseEntity *CBasePlayer::HasNamedPlayerItem( const char *pszItemName )
 
 	return NULL;
 }
-
-#if defined USES_ECON_ITEMS
-//-----------------------------------------------------------------------------
-// Purpose: Add this wearable to the players' equipment list.
-//-----------------------------------------------------------------------------
-void CBasePlayer::EquipWearable( CEconWearable *pItem )
-{
-	Assert( pItem );
-
-	if ( pItem )
-	{
-		m_hMyWearables.AddToHead( pItem );
-		pItem->Equip( this );
-	}
-
-#ifdef DBGFLAG_ASSERT
-	// Double check list integrity.
-	for ( int i = m_hMyWearables.Count()-1; i >= 0; --i )
-	{
-		Assert( m_hMyWearables[i] != NULL );
-	}
-	// Networked Vector has a max size of MAX_WEARABLES_SENT_FROM_SERVER, should never have more then 7 wearables
-	// in public
-	// Search for : RecvPropUtlVector( RECVINFO_UTLVECTOR( m_hMyWearables ), MAX_WEARABLES_SENT_FROM_SERVER,	RecvPropEHandle(NULL, 0, 0) ),
-	Assert( m_hMyWearables.Count() <= MAX_WEARABLES_SENT_FROM_SERVER );
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Remove this wearable from the player's equipment list.
-//-----------------------------------------------------------------------------
-void CBasePlayer::RemoveWearable( CEconWearable *pItem )
-{
-	Assert( pItem );
-
-	for ( int i = m_hMyWearables.Count()-1; i >= 0; --i )
-	{
-		CEconWearable *pWearable = m_hMyWearables[i];
-		if ( pWearable == pItem )
-		{
-			pItem->UnEquip( this );
-			UTIL_Remove( pWearable );
-			m_hMyWearables.Remove( i );
-			break;
-		}
-
-		// Integrety is failing, remove NULLs
-		if ( !pWearable )
-		{
-			m_hMyWearables.Remove( i );
-			break;
-		}
-	}
-
-#ifdef DBGFLAG_ASSERT
-	// Double check list integrity.
-	for ( int i = m_hMyWearables.Count()-1; i >= 0; --i )
-	{
-		Assert( m_hMyWearables[i] != NULL );
-	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CBasePlayer::PlayWearableAnimsForPlaybackEvent( wearableanimplayback_t iPlayback )
-{
-	// Tell all our wearables to play their animations
-	FOR_EACH_VEC( m_hMyWearables, i )
-	{
-		if ( m_hMyWearables[i] )
-		{
-			m_hMyWearables[i]->PlayAnimForPlaybackEvent( iPlayback );
-		}
-	}
-}
-#endif // USES_ECON_ITEMS
 
 //================================================================================
 // TEAM HANDLING
@@ -5884,19 +5544,10 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 // DT_BasePlayer sendtable.
 // -------------------------------------------------------------------------------- //
 	
-#if defined USES_ECON_ITEMS
-	EXTERN_SEND_TABLE(DT_AttributeList);
-#endif
-
 	IMPLEMENT_SERVERCLASS_ST( CBasePlayer, DT_BasePlayer )
-
-#if defined USES_ECON_ITEMS
-		SendPropDataTable(SENDINFO_DT(m_AttributeList), &REFERENCE_SEND_TABLE(DT_AttributeList)),
-#endif
 
 		SendPropDataTable(SENDINFO_DT(pl), &REFERENCE_SEND_TABLE(DT_PlayerState), SendProxy_DataTableToDataTable),
 
-		SendPropEHandle(SENDINFO(m_hVehicle)),
 		SendPropEHandle(SENDINFO(m_hUseEntity)),
 		SendPropInt		(SENDINFO(m_iHealth), -1, SPROP_VARINT | SPROP_CHANGES_OFTEN ),
 		SendPropInt(SENDINFO(m_iMaxHealth), -1, SPROP_VARINT | SPROP_CHANGES_OFTEN),
@@ -5914,10 +5565,6 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropInt		(SENDINFO(m_iDefaultFOV), 8, SPROP_UNSIGNED ),
 		SendPropArray	( SendPropEHandle( SENDINFO_ARRAY( m_hViewModel ) ), m_hViewModel ),
 		SendPropString	(SENDINFO(m_szLastPlaceName) ),
-
-#if defined USES_ECON_ITEMS
-		SendPropUtlVector( SENDINFO_UTLVECTOR( m_hMyWearables ), MAX_WEARABLES_SENT_FROM_SERVER, SendPropEHandle( NULL, 0 ) ),
-#endif // USES_ECON_ITEMS
 
 		// Data that only gets sent to the local player.
 		SendPropDataTable( "localdata", 0, &REFERENCE_SEND_TABLE(DT_LocalPlayerExclusive), SendProxy_SendLocalDataTable ),
@@ -6315,19 +5962,7 @@ void CBasePlayer::SetVCollisionState( const Vector &vecAbsOrigin, const Vector &
 //-----------------------------------------------------------------------------
 int CBasePlayer::GetFOV( void )
 {
-	int nDefaultFOV;
-
-	// The vehicle's FOV wins if we're asking for a default value
-	if ( GetVehicle() )
-	{
-		CacheVehicleView();
-		nDefaultFOV = ( m_flVehicleViewFOV == 0 ) ? GetDefaultFOV() : (int) m_flVehicleViewFOV;
-	}
-	else
-	{
-		nDefaultFOV = GetDefaultFOV();
-	}
-	
+	int nDefaultFOV = GetDefaultFOV();	
 	int fFOV = ( m_iFOV == 0 ) ? nDefaultFOV : m_iFOV;
 
 	// If it's immediate, just do it
@@ -6356,19 +5991,7 @@ int CBasePlayer::GetFOV( void )
 //-----------------------------------------------------------------------------
 int CBasePlayer::GetFOVForNetworking( void )
 {
-	int nDefaultFOV;
-
-	// The vehicle's FOV wins if we're asking for a default value
-	if ( GetVehicle() )
-	{
-		CacheVehicleView();
-		nDefaultFOV = ( m_flVehicleViewFOV == 0 ) ? GetDefaultFOV() : (int) m_flVehicleViewFOV;
-	}
-	else
-	{
-		nDefaultFOV = GetDefaultFOV();
-	}
-
+	int nDefaultFOV = GetDefaultFOV();
 	int fFOV = ( m_iFOV == 0 ) ? nDefaultFOV : m_iFOV;
 
 	// If it's immediate, just do it
@@ -6884,12 +6507,6 @@ bool CPlayerInfo::IsDead()
 { 
 	Assert( m_pParent );
 	return m_pParent->IsDead(); 
-}
-
-bool CPlayerInfo::IsInAVehicle() 
-{ 
-	Assert( m_pParent );
-	return m_pParent->IsInAVehicle(); 
 }
 
 bool CPlayerInfo::IsObserver() 

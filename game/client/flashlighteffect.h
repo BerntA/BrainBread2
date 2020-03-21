@@ -41,7 +41,6 @@ protected:
 	int m_nEntIndex;
 	ClientShadowHandle_t m_FlashlightHandle;
 
-	// Vehicle headlight dynamic light pointer
 	dlight_t *m_pPointLight;
 	float m_flDistMod;
 
