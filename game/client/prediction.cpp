@@ -601,6 +601,7 @@ void CPrediction::PostNetworkDataReceived( int commands_acknowledged )
 void CPrediction::SetupMove( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper *pHelper, CMoveData *move ) 
 {
 #if !defined( NO_ENTITY_PREDICTION )
+
 	VPROF( "CPrediction::SetupMove" );
 
 	move->m_bFirstRunOfFunctions = IsFirstTimePredicted();
@@ -661,12 +662,6 @@ void CPrediction::SetupMove( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper *
 	move->m_flConstraintWidth = player->m_flConstraintWidth;
 	move->m_flConstraintSpeedFactor = player->m_flConstraintSpeedFactor;
 
-#ifdef HL2_CLIENT_DLL
-	CHLMoveData *pHLMove = static_cast<CHLMoveData*>( move );
-	Assert( pHLMove );
-
-	pHLMove->m_bIsSprinting = false;
-#endif
 #endif
 }
 

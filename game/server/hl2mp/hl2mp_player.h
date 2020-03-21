@@ -191,7 +191,7 @@ public:
 	float GetExtraPerkData(int type);
 
 	Vector GetAttackSpread(CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget = NULL);
-	virtual Vector GetAutoaimVector(float flDelta);
+	virtual Vector GetAutoaimVector(void);
 
 	void CheatImpulseCommands(int iImpulse);
 	void CreateRagdollEntity(void);

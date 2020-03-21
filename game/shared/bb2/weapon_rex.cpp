@@ -112,7 +112,7 @@ void CWeaponREX::PrimaryAttack(void)
 	m_iClip1--;
 
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
-	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);
+	Vector vecAiming = pPlayer->GetAutoaimVector();
 
 	FireBulletsInfo_t info(1, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
 	info.m_pAttacker = pPlayer;

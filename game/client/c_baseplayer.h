@@ -120,7 +120,7 @@ public:
 	virtual Vector			Weapon_ShootPosition();
 	virtual void			Weapon_DropPrimary( void ) {}
 
-	virtual Vector			GetAutoaimVector( float flScale );
+	virtual Vector			GetAutoaimVector(void);
 
 	// Input handling
 	virtual bool	CreateMove(float flInputSampleTime, CUserCmd *pCmd, bool bFakeInput);

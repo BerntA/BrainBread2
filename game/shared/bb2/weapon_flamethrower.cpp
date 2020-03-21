@@ -352,7 +352,7 @@ void CWeaponFlamethrower::PrimaryAttack(CBasePlayer *pOwner, CBaseViewModel *pVM
 
 #ifndef CLIENT_DLL
 		Vector vecStart = pOwner->Weapon_ShootPosition();
-		Vector vecForward = pOwner->GetAutoaimVector(1.0f), vecHull = Vector(5, 5, 5);
+		Vector vecForward = pOwner->GetAutoaimVector(), vecHull = Vector(5, 5, 5);
 		VectorNormalize(vecForward);
 
 		trace_t traceHit;

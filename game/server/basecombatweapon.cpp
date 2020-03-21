@@ -216,7 +216,7 @@ CBaseEntity* CBaseCombatWeapon::Respawn( void )
 
 		// not a typo! We want to know when the weapon the player just picked up should respawn! This new entity we created is the replacement,
 		// but when it should respawn is based on conditions belonging to the weapon that was taken.
-		pNewWeapon->SetNextThink( gpGlobals->curtime + g_pGameRules->FlWeaponRespawnTime( this ) );
+		pNewWeapon->SetNextThink(gpGlobals->curtime);
 	}
 	else
 	{
@@ -570,14 +570,7 @@ void CBaseCombatWeapon::Materialize( void )
 //-----------------------------------------------------------------------------
 void CBaseCombatWeapon::AttemptToMaterialize( void )
 {
-	float time = g_pGameRules->FlWeaponTryRespawn( this );
-	if ( time == 0 )
-	{
-		Materialize();
-		return;
-	}
-
-	SetNextThink( gpGlobals->curtime + time );
+	Materialize();
 }
 
 //-----------------------------------------------------------------------------

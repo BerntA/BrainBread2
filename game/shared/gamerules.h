@@ -45,9 +45,6 @@ enum
 	GR_WEAPON_RESPAWN_YES,
 	GR_WEAPON_RESPAWN_NO,
 	
-	GR_AMMO_RESPAWN_YES,
-	GR_AMMO_RESPAWN_NO,
-	
 	GR_ITEM_RESPAWN_YES,
 	GR_ITEM_RESPAWN_NO,
 };
@@ -142,8 +139,8 @@ public:
 
 	virtual bool InRoundRestart( void ) { return false; }
 
-	//Allow thirdperson camera.
-	virtual bool AllowThirdPersonCamera( void ) { return false; }
+	// Allow thirdperson camera.
+	virtual bool AllowThirdPersonCamera( void ) { return true; }
 
 	virtual void ClientCommandKeyValues( edict_t *pEntity, KeyValues *pKeyValues ) {} 
 
@@ -167,16 +164,11 @@ public:
 	virtual bool IsLocalPlayer( int nEntIndex );
 
 	virtual void ModifySentChat( char *pBuf, int iBufSize ) { return; }
-
-	virtual bool ShouldWarnOfAbandonOnQuit() { return false; }
 	
 #else
 
     virtual void Status( void (*print) (const char *fmt, ...) ) {}	
 	virtual void GetTaggedConVarList( KeyValues *pCvarTagList ) {}
-
-	// NVNT see if the client of the player entered is using a haptic device.
-	virtual void CheckHaptics(CBasePlayer* pPlayer);
 
 // CBaseEntity overrides.
 public:
@@ -188,7 +180,7 @@ public:
 
 	virtual void Precache( void ) { return; };
 
-	virtual void RefreshSkillData( bool forceUpdate );// fill skill data struct with proper values
+	virtual void RefreshSkillData( void ); // fill skill data struct with proper values
 	
 	// Called each frame. This just forwards the call to Think().
 	virtual void FrameUpdatePostEntityThink();
@@ -199,34 +191,9 @@ public:
 	// Called at the end of GameFrame (i.e. after all game logic has run this frame)
 	virtual void EndGameFrame( void );
 
-	virtual bool IsSkillLevel( int iLevel ) { return GetSkillLevel() == iLevel; }
-	virtual int	GetSkillLevel() { return g_iSkillLevel; }
-	virtual void OnSkillLevelChanged( int iNewLevel ) {};
-	virtual void SetSkillLevel( int iLevel )
-	{
-		int oldLevel = g_iSkillLevel; 
-
-		if ( iLevel < 1 )
-		{
-			iLevel = 1;
-		}
-		else if ( iLevel > 3 )
-		{
-			iLevel = 3; 
-		}
-
-		g_iSkillLevel = iLevel;
-
-		if( g_iSkillLevel != oldLevel )
-		{
-			OnSkillLevelChanged( g_iSkillLevel );
-		}
-	}
-
-	virtual bool FAllowFlashlight( void ) = 0;// Are players allowed to switch on their flashlight?
+	virtual bool FAllowFlashlight( void ) = 0; // Are players allowed to switch on their flashlight?
 
 // Functions to verify the single/multiplayer status of a game
-	virtual bool IsDeathmatch( void ) = 0;//is this a deathmatch game?
 	virtual bool IsTeamplay( void ) { return FALSE; };// is this deathmatch game being played with team rules?
 	virtual const char *GetGameDescription( void ) { return "BrainBread 2"; }  // this is the game name that gets seen in the server browser
 	
@@ -260,20 +227,14 @@ public:
 	virtual int IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled ) = 0;// how many points do I award whoever kills this player?
 	virtual void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info ) = 0;// Called each time a player dies
 	virtual void DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info) { } // Call this from within a GameRules class to report an obituary.
-	virtual const char *GetDamageCustomString( const CTakeDamageInfo &info ) { return NULL; }
 
 // Weapon Damage
-	// Determines how much damage Player's attacks inflict, based on skill level.
+	// Determines how much damage Player's attacks inflict
 	virtual float AdjustPlayerDamageInflicted( float damage ) { return damage; }
 	virtual void  AdjustPlayerDamageTaken( CTakeDamageInfo *pInfo ) {}; // Base class does nothing.
 
-// Weapon retrieval
-	virtual bool CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon );// The player is touching an CBaseCombatWeapon, do I give it to him?
-
 // Weapon spawn/respawn control
 	virtual int WeaponShouldRespawn(CBaseCombatWeapon *pWeapon) { return TRUE; } // should this weapon respawn?
-	virtual float FlWeaponRespawnTime(CBaseCombatWeapon *pWeapon) { return 0.0f; } // when may this weapon respawn?
-	virtual float FlWeaponTryRespawn(CBaseCombatWeapon *pWeapon) { return 0.0f; } // can i respawn now,  and if not, when should i try again?
 	virtual Vector VecWeaponRespawnSpot(CBaseCombatWeapon *pWeapon) { return vec3_origin; } // where in the world should this weapon respawn?
 
 // Item retrieval
@@ -292,7 +253,6 @@ public:
 
 // AI Definitions
 	virtual void			InitDefaultAIRelationships( void ) { return; }
-	virtual const char*		AIClassText(int classType) { return NULL; }
 
 // Teamplay stuff	
 	virtual int PlayerRelationship(CBaseEntity *pPlayer, CBaseEntity *pTarget) { return GR_NOTTEAMMATE; } // What is the player's relationship with this entity?

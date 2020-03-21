@@ -1725,7 +1725,7 @@ void CFuncTank::CalcPlayerCrosshairTarget( Vector *pVecTarget )
 	else
 	{
 		// Use autoaim as the eye dir.
-		vecDir = pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );
+		vecDir = pPlayer->GetAutoaimVector();
 	}
 	
 	// Make sure to start the trace outside of the player's bbox!

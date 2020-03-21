@@ -1021,10 +1021,7 @@ void CNPCBaseSoldierStatic::HandleAnimEvent(animevent_t *pEvent)
 			pGrenade->KeyValue("velocity", m_vecTossVelocity);
 			pGrenade->Spawn();
 
-			if (g_pGameRules->IsSkillLevel(SKILL_HARD))
-				m_flNextGrenadeCheck = gpGlobals->curtime + random->RandomFloat(2, 5);// wait a random amount of time before shooting again
-			else
-				m_flNextGrenadeCheck = gpGlobals->curtime + 6;// wait six seconds before even looking again to see if a grenade can be thrown.
+			m_flNextGrenadeCheck = gpGlobals->curtime + random->RandomFloat(2, 5); // wait a random amount of time before shooting again
 		}
 		handledEvent = true;
 		break;

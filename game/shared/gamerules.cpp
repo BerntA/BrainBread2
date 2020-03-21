@@ -21,7 +21,6 @@
 	#include "voice_gamemgr.h"
 	#include "globalstate.h"
 	#include "player_resource.h"
-	#include "gamestats.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -220,49 +219,15 @@ bool CGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer  )
 }
 
 //=========================================================
-//=========================================================
-bool CGameRules::CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon )
-{
-	return TRUE;
-}
-
-//=========================================================
 // load the SkillData struct with the proper values based on the skill level.
 //=========================================================
-void CGameRules::RefreshSkillData ( bool forceUpdate )
+void CGameRules::RefreshSkillData ( void )
 {
 #ifndef CLIENT_DLL
-
-	if ( !forceUpdate )
-	{
-		if ( GlobalEntity_IsInTable( "skill.cfg" ) )
-			return;
-	}
-	GlobalEntity_Add( "skill.cfg", STRING(gpGlobals->mapname), GLOBAL_ON );
-
-	char szExec[256];
-
-	ConVarRef skill( "skill" );
-
-	SetSkillLevel( skill.IsValid() ? skill.GetInt() : 1 );
-
-#ifdef HL2_DLL
-	// HL2 current only uses one skill config file that represents MEDIUM skill level and
-	// synthesizes EASY and HARD. (sjb)
-	Q_snprintf( szExec,sizeof(szExec), "exec skill_manifest.cfg\n" );
-
-	engine->ServerCommand( szExec );
+	engine->ServerCommand("exec skill_manifest.cfg\n");
 	engine->ServerExecute();
-#else
-	Q_snprintf( szExec,sizeof(szExec), "exec skill%d.cfg\n", GetSkillLevel() );
-
-	engine->ServerCommand( szExec );
-	engine->ServerExecute();
-#endif // HL2_DLL
-
 #endif // CLIENT_DLL
 }
-
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -513,15 +478,7 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 		}
 
 		// Now hit all triggers along the way that respond to damage... 
-		pEntity->TraceAttackToTriggers( adjustedInfo, vecSrc, tr.endpos, dir );
-
-#if defined( GAME_DLL )
-		if ( info.GetAttacker() && info.GetAttacker()->IsPlayer() && ToBaseCombatCharacter( tr.m_pEnt ) )
-		{
-			CBasePlayer *player = ToBasePlayer( info.GetAttacker() );
-			gamestats->Event_WeaponHit(player, false, (player->GetActiveWeapon() != NULL) ? player->GetActiveWeapon()->GetClassname() : "NULL", info);
-		}
-#endif
+		pEntity->TraceAttackToTriggers(adjustedInfo, vecSrc, tr.endpos, dir);
 	}
 }
 
@@ -544,14 +501,9 @@ void CGameRules::FrameUpdatePostEntityThink()
 	Think();
 }
 
-// Hook into the convar from the engine
-ConVar skill( "skill", "1" );
-
 void CGameRules::Think()
 {
 	GetVoiceGameMgr()->Update( gpGlobals->frametime );
-	SetSkillLevel( skill.GetInt() );
-
 	if ( log_verbose_enable.GetBool() )
 	{
 		if ( m_flNextVerboseLogOutput < gpGlobals->curtime )
@@ -753,42 +705,25 @@ const char *CGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
 	return "";
 }
 
-void CGameRules::CheckHaptics(CBasePlayer* pPlayer)
-{
-	// NVNT see if the client of pPlayer is using a haptic device.
-	const char *pszHH = engine->GetClientConVarValue( pPlayer->entindex(), "hap_HasDevice" );
-	if( pszHH )
-	{
-		int iHH = atoi( pszHH );
-		pPlayer->SetHaptics( iHH != 0 );
-	}
-}
-
 void CGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 {
-	const char *pszName = engine->GetClientConVarValue( pPlayer->entindex(), "name" );
-
+	const char *pszName = engine->GetClientConVarValue(pPlayer->entindex(), "name");
 	const char *pszOldName = pPlayer->GetPlayerName();
 
 	// msg everyone if someone changes their name,  and it isn't the first time (changing no name to current name)
 	// Note, not using FStrEq so that this is case sensitive
-	if ( pszOldName[0] != 0 && Q_strcmp( pszOldName, pszName ) )
+
+	if (pszOldName[0] != 0 && Q_strcmp(pszOldName, pszName))
 	{
-		char text[256];
-		Q_snprintf( text,sizeof(text), "%s changed name to %s\n", pszOldName, pszName );
-
-		UTIL_ClientPrintAll( HUD_PRINTTALK, text );
-
-		IGameEvent * event = gameeventmanager->CreateEvent( "player_changename" );
-		if ( event )
+		IGameEvent * event = gameeventmanager->CreateEvent("player_changename");
+		if (event)
 		{
-			event->SetInt( "userid", pPlayer->GetUserID() );
-			event->SetString( "oldname", pszOldName );
-			event->SetString( "newname", pszName );
-			gameeventmanager->FireEvent( event );
+			event->SetInt("userid", pPlayer->GetUserID());
+			event->SetString("oldname", pszOldName);
+			event->SetString("newname", pszName);
+			gameeventmanager->FireEvent(event);
 		}
-		
-		pPlayer->SetPlayerName( pszName );
+		pPlayer->SetPlayerName(pszName);
 	}
 
 	const char *pszFov = engine->GetClientConVarValue( pPlayer->entindex(), "fov_desired" );
@@ -797,14 +732,6 @@ void CGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 		int iFov = atoi(pszFov);
 		iFov = clamp( iFov, 75, 90 );
 		pPlayer->SetDefaultFOV( iFov );
-	}
-
-	// NVNT see if this user is still or has began using a haptic device
-	const char *pszHH = engine->GetClientConVarValue( pPlayer->entindex(), "hap_HasDevice" );
-	if( pszHH )
-	{
-		int iHH = atoi( pszHH );
-		pPlayer->SetHaptics( iHH != 0 );
 	}
 }
 

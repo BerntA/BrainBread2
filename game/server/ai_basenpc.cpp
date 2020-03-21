@@ -99,7 +99,6 @@
 #include "ai_waypoint.h"
 
 #include "utlbuffer.h"
-#include "gamestats.h"
 
 // BB2 Breakable Logic
 #include "BasePropDoor.h"

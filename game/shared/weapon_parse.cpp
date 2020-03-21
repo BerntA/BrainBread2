@@ -381,7 +381,7 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 	
 	// LAME old way to specify item flags.
 	// Weapon scripts should use the flag names.
-	iFlags = pKeyValuesData->GetInt( "item_flags", ITEM_FLAG_LIMITINWORLD );
+	iFlags = pKeyValuesData->GetInt("item_flags");
 
 	for ( int i=0; i < ARRAYSIZE( g_ItemFlags ); i++ )
 	{

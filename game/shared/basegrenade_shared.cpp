@@ -22,7 +22,6 @@
 
 #include "soundent.h"
 #include "entitylist.h"
-#include "gamestats.h"
 
 #endif
 
@@ -203,22 +202,6 @@ void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
 	// hear explosion sounds when the grenade is removed and the SoundEnt thinks (and removes the sound)
 	// before the env_microphone thinks and hears the sound.
 	SetNextThink(gpGlobals->curtime + 0.1);
-
-#if defined( HL2_DLL )
-	CBasePlayer *pPlayer = ToBasePlayer( m_hThrower.Get() );
-	if ( pPlayer )
-	{
-		switch (m_iExplosiveType)
-		{
-		case EXPLOSIVE_TYPE_GRENADE:
-			gamestats->Event_WeaponHit(pPlayer, true, "weapon_frag", info);
-			break;
-		case EXPLOSIVE_TYPE_PROPANE:
-			gamestats->Event_WeaponHit(pPlayer, true, "weapon_propane", info);
-			break;
-		}	 
-	}
-#endif
 
 #endif
 }

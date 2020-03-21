@@ -19,7 +19,6 @@
 #include "weapon_hl2mpbase.h"
 #include "npcevent.h"
 #include "eventqueue.h"
-#include "gamestats.h"
 #include "tier0/vprof.h"
 #include "bone_setup.h"
 #include "npc_BaseZombie.h"
@@ -2544,8 +2543,6 @@ int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 
 	m_vecTotalBulletForce += damageCopy.GetDamageForce();
 
-	gamestats->Event_PlayerDamage(this, damageCopy);
-
 	int ret = BaseClass::OnTakeDamage(damageCopy);
 	if (ret)
 	{
@@ -2898,9 +2895,8 @@ bool CHL2MP_Player::CanHearAndReadChatFrom(CBasePlayer *pPlayer)
 //-----------------------------------------------------------------------------
 // Purpose: multiplayer does not do autoaiming.
 //-----------------------------------------------------------------------------
-Vector CHL2MP_Player::GetAutoaimVector(float flScale)
+Vector CHL2MP_Player::GetAutoaimVector(void)
 {
-	//No Autoaim
 	Vector forward;
 	AngleVectors(EyeAngles() + m_Local.m_vecPunchAngle, &forward);
 	return forward;

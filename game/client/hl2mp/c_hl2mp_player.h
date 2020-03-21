@@ -56,7 +56,7 @@ public:
 	virtual void ItemPreFrame( void );
 	virtual void ItemPostFrame( void );
 	virtual float GetMinFOV()	const { return 5.0f; }
-	virtual Vector GetAutoaimVector( float flDelta );
+	virtual Vector GetAutoaimVector(void);
 	virtual void NotifyShouldTransmit( ShouldTransmitState_t state );
 	virtual void CreateLightEffects( void ) {}
 	virtual bool ShouldReceiveProjectedTextures( int flags );

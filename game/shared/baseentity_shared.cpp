@@ -33,7 +33,6 @@
 	#include "func_break.h"
     #include "hl2mp_player.h"
     #include "te_bullet_shot.h"
-	#include "gamestats.h"
 	#include "ilagcompensationmanager.h"
 #endif
 
@@ -1898,13 +1897,6 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 
 #ifdef GAME_DLL
 	ApplyMultiDamage();
-	if (pPlayerFirer && (flCumulativeDamage > 0.0f))
-	{
-		CTakeDamageInfo dmgInfo(this, pAttacker, flCumulativeDamage, nDamageType);
-		CBaseCombatWeapon* pActiveWeapon = pPlayerFirer->GetActiveWeapon();
-		if (pActiveWeapon)
-			gamestats->Event_WeaponHit(pPlayerFirer, info.m_bPrimaryAttack, pActiveWeapon->GetClassname(), dmgInfo);
-	}
 #endif
 }
 

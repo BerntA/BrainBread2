@@ -119,12 +119,6 @@ enum PlayerPhysFlag_e
 
 #define TEAM_NAME_LENGTH	16
 
-#define AUTOAIM_2DEGREES  0.0348994967025
-#define AUTOAIM_5DEGREES  0.08715574274766
-#define AUTOAIM_8DEGREES  0.1391731009601
-#define AUTOAIM_10DEGREES 0.1736481776669
-#define AUTOAIM_20DEGREES 0.3490658503989
-
 // useful cosines
 #define DOT_1DEGREE   0.9998476951564
 #define DOT_2DEGREE   0.9993908270191
@@ -141,13 +135,13 @@ enum PlayerPhysFlag_e
 #define DOT_25DEGREE  0.9063077870367
 #define DOT_30DEGREE  0.866025403784
 #define DOT_45DEGREE  0.707106781187
+
 enum
 {
 	VPHYS_WALK = 0,
 	VPHYS_CROUCH,
 	VPHYS_NOCLIP,
 };
-
 
 enum PlayerConnectedState
 {
@@ -539,7 +533,7 @@ public:
 
 	void					CheckTimeBasedDamage( void );
 	
-	virtual Vector			GetAutoaimVector( float flScale );
+	virtual Vector			GetAutoaimVector(void);
 	virtual void			GetAimVectors(Vector& forward, Vector& right, Vector& up);
 
 	void					SetViewEntity( CBaseEntity *pEntity );

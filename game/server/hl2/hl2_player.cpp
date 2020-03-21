@@ -38,7 +38,6 @@
 #include "entitylist.h"
 #include "datacache/imdlcache.h"
 #include "eventqueue.h"
-#include "gamestats.h"
 #include "filters.h"
 #include "hl2mp_gamerules.h"
 #include "hl2mp_player.h"
@@ -328,7 +327,7 @@ void CHL2_Player::PostThink( void )
 
 		if (m_nButtons & IN_USE)
 		{
-			Vector vecAim = BaseClass::GetAutoaimVector(AUTOAIM_SCALE_DIRECT_ONLY);
+			Vector vecAim = BaseClass::GetAutoaimVector();
 			trace_t	tr;
 			CTraceFilterNoNPCsOrPlayer traceFilter(this, COLLISION_GROUP_NONE);
 			UTIL_TraceLine(EyePosition(), EyePosition() + vecAim * 300.0f, MASK_SHOT, &traceFilter, &tr);
@@ -742,12 +741,8 @@ int	CHL2_Player::OnTakeDamage( const CTakeDamageInfo &info )
 		bAdjustForSkillLevel = false;
 	}
 
-	if( bAdjustForSkillLevel )
-	{
+	if (bAdjustForSkillLevel)
 		playerDamage.AdjustPlayerDamageTakenForSkillLevel();
-	}
-
-	gamestats->Event_PlayerDamage( this, info );
 
 	return BaseClass::OnTakeDamage( playerDamage );
 }

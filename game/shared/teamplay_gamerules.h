@@ -40,7 +40,6 @@ public:
 
 	virtual void Precache( void );
 	virtual bool ClientCommand( CBaseEntity *pEdict, const CCommand &args );
-	virtual void ClientSettingsChanged( CBasePlayer *pPlayer );
 	virtual bool IsTeamplay( void );
 	virtual bool FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker, const CTakeDamageInfo &info );	
 	virtual bool PlayerCanHearChat( CBasePlayer *pListener, CBasePlayer *pSpeaker );

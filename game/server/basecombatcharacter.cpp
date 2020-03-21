@@ -1895,10 +1895,6 @@ bitsDamageType indicates the type of damage sustained, ie: DMG_SHOCK
 
 Time-based damage: only occurs while the NPC is within the trigger_hurt.
 When a NPC is poisoned via an arrow etc it takes all the poison damage at once.
-
-
-
-GLOBALS ASSUMED SET:  g_iSkillLevel
 ============
 */
 int CBaseCombatCharacter::OnTakeDamage(const CTakeDamageInfo &info)

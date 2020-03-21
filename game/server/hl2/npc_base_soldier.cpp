@@ -1690,16 +1690,14 @@ int CNPC_BaseSoldier::TranslateSchedule( int scheduleType )
 			if ( m_pSquad )
 			{
 				// Have to explicitly check innate range attack condition as may have weapon with range attack 2
-				if (	g_pGameRules->IsSkillLevel( SKILL_HARD )	&& 
-					HasCondition(COND_CAN_RANGE_ATTACK2)		&&
-					OccupyStrategySlot( SQUAD_SLOT_GRENADE1 ) )
+				if (HasCondition(COND_CAN_RANGE_ATTACK2) && OccupyStrategySlot(SQUAD_SLOT_GRENADE1))
 				{
 					HL2MPRules()->EmitSoundToClient(this, "Grenade", GetNPCType(), GetGender()); // throw frag
 					return SCHED_SOLDIER_TOSS_GRENADE_COVER1;
 				}
 				else
 				{
-					if ( ShouldChargePlayer() && !IsUnreachable( GetEnemy() ) )
+					if (ShouldChargePlayer() && !IsUnreachable(GetEnemy()))
 						return SCHED_SOLDIER_CHARGE_PLAYER;
 
 					return SCHED_SOLDIER_TAKE_COVER1;

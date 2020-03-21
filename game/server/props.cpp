@@ -39,7 +39,6 @@
 #include "datacache/imdlcache.h"
 #include "doors.h"
 #include "physics_collisionevent.h"
-#include "gamestats.h"
 #include "vehicle_base.h"
 #include "GameBase_Shared.h"
 #include "gibs_shared.h"
@@ -1571,35 +1570,7 @@ IPhysicsObject *CBreakableProp::GetRootPhysicsObjectForBreak()
 
 void CBreakableProp::Break( CBaseEntity *pBreaker, const CTakeDamageInfo &info )
 {
-	const char *pModelName = STRING( GetModelName() );
-	if ( pModelName && Q_stristr( pModelName, "crate" ) )
-	{
-		bool bSmashed = false;
-		if ( pBreaker && pBreaker->IsPlayer() )
-		{
-			bSmashed = true;
-		}
-		else if ( m_hPhysicsAttacker.Get() && m_hPhysicsAttacker->IsPlayer() )
-		{
-			bSmashed = true;
-		}
-		else if ( pBreaker && dynamic_cast< CPropVehicleDriveable * >( pBreaker ) )
-		{
-			CPropVehicleDriveable *veh = static_cast< CPropVehicleDriveable * >( pBreaker );
-			CBaseEntity *driver = veh->GetDriver();
-			if ( driver && driver->IsPlayer() )
-			{
-				bSmashed = true;
-			}
-		}
-		if ( bSmashed )
-		{
-			gamestats->Event_CrateSmashed();
-		}
-	}
-
-	IGameEvent * event = gameeventmanager->CreateEvent( "break_prop" );
-
+	IGameEvent * event = gameeventmanager->CreateEvent("break_prop");
 	if ( event )
 	{
 		if ( pBreaker && pBreaker->IsPlayer() )

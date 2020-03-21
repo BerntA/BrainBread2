@@ -177,7 +177,7 @@ void CHudCrosshair::GetDrawPosition ( float *pX, float *pY, bool *pbBehindCamera
 		{
 			// These are the correct values to use, but they lag the high-speed view data...
 			vecStart = pPlayer->Weapon_ShootPosition();
-			Vector vecAimDirection = pPlayer->GetAutoaimVector( 1.0f );
+			Vector vecAimDirection = pPlayer->GetAutoaimVector();
 			// ...so in some aim modes, they get zapped by something completely up-to-date.
 			g_ClientVirtualReality.OverrideWeaponHudAimVectors ( &vecStart, &vecAimDirection );
 			vecEnd = vecStart + vecAimDirection * MAX_TRACE_LENGTH;

@@ -14,12 +14,9 @@
 
 #include "igamemovement.h"
 
-
 // This class contains HL2-specific prediction data.
 class CHLMoveData : public CMoveData
 {
-public:
-	bool		m_bIsSprinting;
 };
 
 class CFuncLadder;

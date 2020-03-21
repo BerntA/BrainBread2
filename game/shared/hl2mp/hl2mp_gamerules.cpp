@@ -769,26 +769,6 @@ void CHL2MPRules::CreateStandardEntities( void )
 #endif
 }
 
-//=========================================================
-// FlWeaponRespawnTime - what is the time in the future
-// at which this weapon may spawn?
-//=========================================================
-float CHL2MPRules::FlWeaponRespawnTime( CBaseCombatWeapon *pWeapon )
-{
-#ifndef CLIENT_DLL
-	if ( weaponstay.GetInt() > 0 )
-	{
-		// make sure it's only certain weapons
-		if ( !(pWeapon->GetWeaponFlags() & ITEM_FLAG_LIMITINWORLD) )
-		{
-			return 0;
-		}
-	}
-#endif
-
-	return 10;
-}
-
 bool CHL2MPRules::IsIntermission( void )
 {
 #ifndef CLIENT_DLL
@@ -1794,30 +1774,6 @@ bool CHL2MPRules::CheckGameOver()
 	return false;
 }
 
-// when we are within this close to running out of entities,  items 
-// marked with the ITEM_FLAG_LIMITINWORLD will delay their respawn
-#define ENTITY_INTOLERANCE	100
-
-//=========================================================
-// FlWeaponRespawnTime - Returns 0 if the weapon can respawn 
-// now,  otherwise it returns the time at which it can try
-// to spawn again.
-//=========================================================
-float CHL2MPRules::FlWeaponTryRespawn( CBaseCombatWeapon *pWeapon )
-{
-#ifndef CLIENT_DLL
-	if ( pWeapon && (pWeapon->GetWeaponFlags() & ITEM_FLAG_LIMITINWORLD) )
-	{
-		if ( gEntList.NumberOfEntities() < (gpGlobals->maxEntities - ENTITY_INTOLERANCE) )
-			return 1;
-
-		// we're past the entity tolerance level,  so delay the respawn
-		return FlWeaponRespawnTime( pWeapon );
-	}
-#endif
-	return 0;
-}
-
 //=========================================================
 // VecWeaponRespawnSpot - where should this weapon spawn?
 // Some game variations may choose to randomize spawn locations
@@ -1857,21 +1813,6 @@ QAngle CHL2MPRules::VecItemRespawnAngles( CItem *pItem )
 float CHL2MPRules::FlItemRespawnTime( CItem *pItem )
 {
 	return 1;
-}
-
-//=========================================================
-// CanHaveWeapon - returns false if the player is not allowed
-// to pick up this weapon
-//=========================================================
-bool CHL2MPRules::CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pItem )
-{
-	if ( weaponstay.GetInt() > 0 )
-	{
-		if ( pPlayer->Weapon_OwnsThisType( pItem->GetClassname(), pItem->GetSubType() ) )
-			return false;
-	}
-
-	return BaseClass::CanHavePlayerItem( pPlayer, pItem );
 }
 
 #endif
@@ -2118,18 +2059,17 @@ void CHL2MPRules::DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info)
 #endif
 }
 
-void CHL2MPRules::ClientSettingsChanged( CBasePlayer *pPlayer )
+void CHL2MPRules::ClientSettingsChanged(CBasePlayer *pPlayer)
 {
 #ifndef CLIENT_DLL
-
-	CHL2MP_Player *pHL2Player = ToHL2MPPlayer( pPlayer );
-	if ( pHL2Player == NULL )
+	CHL2MP_Player *pHL2Player = ToHL2MPPlayer(pPlayer);
+	if (pHL2Player == NULL)
 		return;
 
-	if ( sv_report_client_settings.GetInt() == 1 )
-		UTIL_LogPrintf( "\"%s\" cl_cmdrate = \"%s\"\n", pHL2Player->GetPlayerName(), engine->GetClientConVarValue( pHL2Player->entindex(), "cl_cmdrate" ));
+	if (sv_report_client_settings.GetInt() == 1)
+		UTIL_LogPrintf("\"%s\" cl_cmdrate = \"%s\"\n", pHL2Player->GetPlayerName(), engine->GetClientConVarValue(pHL2Player->entindex(), "cl_cmdrate"));
 
-	BaseClass::ClientSettingsChanged( pPlayer );
+	BaseClass::ClientSettingsChanged(pPlayer);
 #endif
 }
 

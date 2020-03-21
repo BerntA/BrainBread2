@@ -109,39 +109,6 @@ void CTeamplayRules::ClientDisconnected( edict_t *pClient )
 }
 
 //=========================================================
-// ClientUserInfoChanged
-//=========================================================
-void CTeamplayRules::ClientSettingsChanged( CBasePlayer *pPlayer )
-{
-	const char *pszName = engine->GetClientConVarValue( pPlayer->entindex(), "name" );
-	const char *pszOldName = pPlayer->GetPlayerName();
-
-	// msg everyone if someone changes their name,  and it isn't the first time (changing no name to current name)
-	// Note, not using FStrEq so that this is case sensitive
-	if ( pszOldName[0] != 0 && Q_strcmp( pszOldName, pszName ) )
-	{
-		IGameEvent * event = gameeventmanager->CreateEvent( "player_changename" );
-		if ( event )
-		{
-			event->SetInt( "userid", pPlayer->GetUserID() );
-			event->SetString( "oldname", pszOldName );
-			event->SetString( "newname", pszName );
-			gameeventmanager->FireEvent( event );
-		}
-		
-		pPlayer->SetPlayerName( pszName );
-	}
-
-	// NVNT see if this user is still or has began using a haptic device
-	const char *pszHH = engine->GetClientConVarValue( pPlayer->entindex(), "hap_HasDevice" );
-	if(pszHH)
-	{
-		int iHH = atoi(pszHH);
-		pPlayer->SetHaptics(iHH!=0);
-	}
-}
-
-//=========================================================
 // Deathnotice. 
 //=========================================================
 void CTeamplayRules::DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info)

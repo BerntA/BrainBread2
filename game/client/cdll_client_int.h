@@ -102,7 +102,6 @@ extern ISceneFileCache *scenefilecache;
 extern IXboxSystem *xboxsystem;	// Xbox 360 only
 extern IMatchmaking *matchmaking;
 extern IVideoServices *g_pVideo;
-extern IUploadGameStats *gamestatsuploader;
 extern CSteamAPIContext *steamapicontext;
 extern IReplaySystem *g_pReplay;
 extern IClientReplayContext *g_pClientReplayContext;

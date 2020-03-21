@@ -13,7 +13,6 @@
 
 #define TICK_INTERVAL			(gpGlobals->interval_per_tick)
 
-
 #define TIME_TO_TICKS( dt )		( (int)( 0.5f + (float)(dt) / TICK_INTERVAL ) )
 #define TICKS_TO_TIME( t )		( TICK_INTERVAL *( t ) )
 #define ROUND_TO_TICKS( t )		( TICK_INTERVAL * TIME_TO_TICKS( t ) )
@@ -128,66 +127,13 @@ public:
 
 #define WEAPON_NOCLIP			-1	// clip sizes set to this tell the weapon it doesn't use a clip
 
-#define	MAX_AMMO_TYPES	32		// ???
-#define MAX_AMMO_SLOTS  32		// not really slots
+#define	MAX_AMMO_TYPES	20		// ???
+#define MAX_AMMO_SLOTS  20		// not really slots
 
 #define HUD_PRINTNOTIFY		1
 #define HUD_PRINTCONSOLE	2
 #define HUD_PRINTTALK		3
 #define HUD_PRINTCENTER		4
-
-// Vote creation or processing failure codes
-typedef enum
-{
-	VOTE_FAILED_GENERIC = 0,
-	VOTE_FAILED_TRANSITIONING_PLAYERS,
-	VOTE_FAILED_RATE_EXCEEDED,
-	VOTE_FAILED_YES_MUST_EXCEED_NO,
-	VOTE_FAILED_QUORUM_FAILURE,
-	VOTE_FAILED_ISSUE_DISABLED,
-	VOTE_FAILED_MAP_NOT_FOUND,
-	VOTE_FAILED_MAP_NAME_REQUIRED,
-	VOTE_FAILED_ON_COOLDOWN,
-	VOTE_FAILED_TEAM_CANT_CALL,
-	VOTE_FAILED_WAITINGFORPLAYERS,
-	VOTE_FAILED_PLAYERNOTFOUND,
-	VOTE_FAILED_CANNOT_KICK_ADMIN,
-	VOTE_FAILED_SCRAMBLE_IN_PROGRESS,
-	VOTE_FAILED_SPECTATOR,
-	VOTE_FAILED_NEXTLEVEL_SET,
-	VOTE_FAILED_MAP_NOT_VALID,
-	VOTE_FAILED_CANNOT_KICK_FOR_TIME,
-	VOTE_FAILED_CANNOT_KICK_DURING_ROUND,
-	VOTE_FAILED_VOTE_IN_PROGRESS,
-	VOTE_FAILED_KICK_LIMIT_REACHED,
-
-	// TF-specific?
-	VOTE_FAILED_MODIFICATION_ALREADY_ACTIVE,
-} vote_create_failed_t;
-
-enum
-{
-#ifdef STAGING_ONLY
-	SERVER_MODIFICATION_ITEM_DURATION_IN_MINUTES = 2
-#else
-	SERVER_MODIFICATION_ITEM_DURATION_IN_MINUTES = 120
-#endif
-};
-
-#define MAX_VOTE_DETAILS_LENGTH 64
-#define INVALID_ISSUE			-1
-#define MAX_VOTE_OPTIONS		5
-#define DEDICATED_SERVER		99
-
-enum CastVote
-{
-	VOTE_OPTION1,  // Use this for Yes
-	VOTE_OPTION2,  // Use this for No
-	VOTE_OPTION3,
-	VOTE_OPTION4,
-	VOTE_OPTION5,
-	VOTE_UNCAST
-};
 
 //===================================================================================================================
 // Close caption flags
@@ -256,14 +202,6 @@ enum CastVote
 #define WEAPON_IS_CARRIED_BY_PLAYER		1	// This client is carrying this weapon.
 #define WEAPON_IS_ACTIVE				2	// This client is carrying this weapon and it's the currently held weapon
 
-// -----------------------------------------
-// Skill Level
-// -----------------------------------------
-#define SKILL_EASY		1
-#define SKILL_MEDIUM	2
-#define SKILL_HARD		3
-
-
 // Weapon flags
 // -----------------------------------------
 //	Flags - NOTE: KEEP g_ItemFlags IN WEAPON_PARSE.CPP UPDATED WITH THESE
@@ -277,7 +215,6 @@ enum CastVote
 #define ITEM_FLAG_NOAMMOPICKUPS		(1<<6)	// Don't draw ammo pickup sprites/sounds when ammo is received
 #define ITEM_FLAG_NOITEMPICKUP		(1<<7)	// Don't draw weapon pickup when this weapon is picked up by the player
 // NOTE: KEEP g_ItemFlags IN WEAPON_PARSE.CPP UPDATED WITH THESE
-
 
 // Humans only have left and right hands, though we might have aliens with more
 //  than two, sigh
@@ -342,26 +279,6 @@ enum
 #define HITGROUP_RIGHTLEG	7
 #define HITGROUP_GEAR		10			// alerts NPC, but doesn't do damage or bleed (1/100th damage)
 
-//
-// Enumerations for setting player animation.
-//
-enum PLAYER_ANIM
-{
-	PLAYER_IDLE,
-	PLAYER_WALK,
-	PLAYER_JUMP,
-	PLAYER_SUPERJUMP,
-	PLAYER_DIE,
-	PLAYER_ATTACK1,
-	PLAYER_IN_VEHICLE,
-
-	// TF Player animations
-	PLAYER_RELOAD,
-	PLAYER_START_AIMING,
-	PLAYER_LEAVE_AIMING,
-};
-
-#ifdef HL2_DLL
 // HL2 has 600 gravity by default
 // NOTE: The discrete ticks can have quantization error, so these numbers are biased a little to
 // make the heights more exact
@@ -370,24 +287,7 @@ enum PLAYER_ANIM
 #define PLAYER_LAND_ON_FLOATING_OBJECT	173 // Can fall another 173 in/sec without getting hurt
 #define PLAYER_MIN_BOUNCE_SPEED		173
 #define PLAYER_FALL_PUNCH_THRESHOLD 303.0f // won't punch player's screen/make scrape noise unless player falling at least this fast - at least a 76" fall (sqrt( 2 * g * 76))
-#else
-#define PLAYER_FATAL_FALL_SPEED		1024 // approx 60 feet
-#define PLAYER_MAX_SAFE_FALL_SPEED	580 // approx 20 feet
-#define PLAYER_LAND_ON_FLOATING_OBJECT	200 // Can go another 200 units without getting hurt
-#define PLAYER_MIN_BOUNCE_SPEED		200
-#define PLAYER_FALL_PUNCH_THRESHOLD (float)350 // won't punch player's screen/make scrape noise unless player falling at least this fast.
-#endif
 #define DAMAGE_FOR_FALL_SPEED		100.0f / ( PLAYER_FATAL_FALL_SPEED - PLAYER_MAX_SAFE_FALL_SPEED ) // damage per unit per second.
-
-
-#define AUTOAIM_2DEGREES  0.0348994967025
-#define AUTOAIM_5DEGREES  0.08715574274766
-#define AUTOAIM_8DEGREES  0.1391731009601
-#define AUTOAIM_10DEGREES 0.1736481776669
-#define AUTOAIM_20DEGREES 0.3490658503989
-
-#define AUTOAIM_SCALE_DEFAULT		1.0f
-#define AUTOAIM_SCALE_DIRECT_ONLY	0.0f
 
 // instant damage
 
@@ -533,17 +433,10 @@ typedef enum
 enum
 {
 	DONT_BLEED = -1,
-
 	BLOOD_COLOR_RED = 0,
 	BLOOD_COLOR_YELLOW,
 	BLOOD_COLOR_GREEN,
 	BLOOD_COLOR_MECH,
-
-#if defined( HL2_EPISODIC )
-	BLOOD_COLOR_ANTLION,		// FIXME: Move to Base HL2
-	BLOOD_COLOR_ZOMBIE,			// FIXME: Move to Base HL2
-	BLOOD_COLOR_ANTLION_WORKER,
-#endif // HL2_EPISODIC
 };
 
 //-----------------------------------------------------------------------------
@@ -566,7 +459,6 @@ enum
 {
 	FX_WATER_IN_SLIME = 0x1,
 };
-
 
 // Shared think context stuff
 #define	MAX_CONTEXT_LENGTH		32
@@ -889,7 +781,6 @@ enum
 #define BB2_MISC_FIXES
 #define GLOWS_ENABLE
 #define BB2_GLOWS
-#define BB2_SIMPLE_LADDERS
 #define BB2_USE_NAVMESH
 #define BB2_LAGCOMP_HIT_MAX 4 // When figuring out which entities to hit, this is the max amount for now! During 1 comp. tick.
 

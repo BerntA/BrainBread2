@@ -20,15 +20,6 @@
 #include "physics_impact_damage.h"
 #include "te_effect_dispatch.h"
 
-//=============================================================================
-// HPE_BEGIN
-// [dwenger] Necessary for stats tracking
-//=============================================================================
-#include "gamestats.h"
-//=============================================================================
-// HPE_END
-//=============================================================================
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -358,18 +349,6 @@ int CBreakableSurface::OnTakeDamage( const CTakeDamageInfo &info )
 //------------------------------------------------------------------------------
 void CBreakableSurface::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
-    //=============================================================================
-    // HPE_BEGIN:
-    // [dwenger] Window break stat tracking
-    //=============================================================================
-
-    // Make sure this pane has not already been shattered
-    bool bWasBroken = m_bIsBroken;
-
-    //=============================================================================
-    // HPE_END
-    //=============================================================================
-
 	// Decrease health
 	m_iHealth -= info.GetDamage();
 	m_OnHealthChanged.Set( m_iHealth, info.GetAttacker(), this );
@@ -391,21 +370,6 @@ void CBreakableSurface::TraceAttack( const CTakeDamageInfo &info, const Vector &
 		
 		if ( ShatterPane(nWidth, nHeight,vecDir*500,ptr->endpos) )
 		{
-            //=============================================================================
-            // HPE_BEGIN:
-            // [dwenger] Window break stat tracking
-            //=============================================================================
-
-            CBasePlayer* pAttacker = ToBasePlayer(info.GetAttacker());
-            if ( ( pAttacker ) && ( !bWasBroken ) )
-            {
-                gamestats->Event_WindowShattered( pAttacker );
-            }
-
-            //=============================================================================
-            // HPE_END
-            //=============================================================================
-
 			// Do an impact hit
 			CEffectData	data;
 
@@ -492,21 +456,6 @@ void CBreakableSurface::TraceAttack( const CTakeDamageInfo &info, const Vector &
 		// ----------------------------------------
 		else
 		{
-            //=============================================================================
-            // HPE_BEGIN:
-            // [pfreese] Window break stat tracking
-            //=============================================================================
-
-            CBasePlayer* pAttacker = ToBasePlayer(info.GetAttacker());
-            if ( ( pAttacker ) && ( !bWasBroken ) )
-            {
-                gamestats->Event_WindowShattered( pAttacker );
-            }
-
-            //=============================================================================
-            // HPE_END
-            //=============================================================================
-
 			float flDot = DotProduct(m_vNormal,vecDir);
 			float damageMultiplier = 1.0f;
 

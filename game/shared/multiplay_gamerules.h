@@ -132,15 +132,11 @@ public:
 
 // GR_Think
 	virtual void Think( void );
-	virtual void RefreshSkillData( bool forceUpdate );
 	virtual bool IsAllowedToSpawn( CBaseEntity *pEntity );
 	virtual bool FAllowFlashlight( void );
 
 	virtual CBaseCombatWeapon *GetNextBestWeapon( CBaseCombatCharacter *pPlayer, CBaseCombatWeapon *pCurrentWeapon );
 	virtual bool SwitchToNextBestWeapon( CBaseCombatCharacter *pPlayer, CBaseCombatWeapon *pCurrentWeapon );
-
-// Functions to verify the single/multiplayer status of a game
-	virtual bool IsDeathmatch( void );
 
 // Client connection/disconnection
 	// If ClientConnected returns FALSE, the connection is rejected and the user is provided the reason specified in
@@ -165,9 +161,6 @@ public:
 	virtual void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );
 	CBasePlayer *GetDeathScorer( CBaseEntity *pKiller, CBaseEntity *pInflictor );									// old version of method - kept for backward compat
 	virtual CBasePlayer *GetDeathScorer( CBaseEntity *pKiller, CBaseEntity *pInflictor, CBaseEntity *pVictim );		// new version of method
-
-// Weapon retrieval
-	virtual bool CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon );// The player is touching an CBaseCombatWeapon, do I give it to him?
 
 // Item retrieval
 	virtual bool CanHaveItem( CBasePlayer *pPlayer, CItem *pItem );
@@ -200,12 +193,8 @@ public:
 
 	void SkipNextMapInCycle();
 
-	virtual void	ClientCommandKeyValues( edict_t *pEntity, KeyValues *pKeyValues );
-
 public:
 
-	// NVNT virtual to check for haptic device 
-	virtual void ClientSettingsChanged( CBasePlayer *pPlayer );
 	virtual void GetNextLevelName( char *szNextMap, int bufsize, bool bRandom = false );
 
 	static void DetermineMapCycleFilename( char *pszResult, int nSizeResult, bool bForceSpew );

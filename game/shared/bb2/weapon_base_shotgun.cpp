@@ -92,7 +92,7 @@ void CHL2MPBaseShotgun::PrimaryAttack(Activity fireActivity, WeaponSound_t sound
 	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, fireActivity);
 
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
-	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
+	Vector vecAiming = pPlayer->GetAutoaimVector();
 
 	FireBulletsInfo_t info(GetWpnData().m_iPellets, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, bPrimary);
 	info.m_pAttacker = pPlayer;

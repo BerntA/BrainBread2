@@ -18,13 +18,6 @@
 #endif
 
 struct LadderMove_t;
-class CInfoLadderDismount;
-
-struct NearbyDismount_t
-{
-	CInfoLadderDismount		*dismount;
-	float					distSqr;
-};
 
 //-----------------------------------------------------------------------------
 // Purpose: HL2 specific movement code
@@ -43,38 +36,9 @@ public:
 	virtual int GetCheckInterval( IntervalType_t type );
 	virtual void	SetGroundEntity( trace_t *pm );
 	virtual bool CanAccelerate( void );
-
-#ifdef BB2_SIMPLE_LADDERS
 	virtual unsigned int PlayerSolidMask(bool brushOnly = false);
-#endif // BB2_SIMPLE_LADDERS
 
 private:
-
-	// See if we are pressing use near a ladder "mount" point and if so, latch us onto the ladder
-	bool		CheckLadderAutoMount( CFuncLadder *ladder, const Vector& bestOrigin );
-
-	bool		CheckLadderAutoMountCone( CFuncLadder *ladder, const Vector& bestOrigin, float maxAngleDelta, float maxDistToLadder );
-	bool		CheckLadderAutoMountEndPoint(CFuncLadder *ladder, const Vector& bestOrigin );
-
-
-	bool		LookingAtLadder( CFuncLadder *ladder );
-
-	// Are we forcing the user's position to a new spot
-	bool		IsForceMoveActive();
-	// Start forcing player position
-	void		StartForcedMove( bool mounting, float transit_speed, const Vector& goalpos, CFuncLadder *ladder );
-	// Returns false when finished
-	bool		ContinueForcedMove();
-
-	// Given a list of nearby ladders, find the best ladder and the "mount" origin
-	void		Findladder( float maxdist, CFuncLadder **ppLadder, Vector& ladderOrigin, const CFuncLadder *skipLadder );
-
-	// Debounce the +USE key
-	void		SwallowUseKey();
-
-	// Returns true if the player will auto-exit the ladder via a dismount node
-	bool		ExitLadderViaDismountNode( CFuncLadder *ladder, bool strict, bool useAlternate = false );
-	void		GetSortedDismountNodeList( const Vector &org, float radius, CFuncLadder *ladder, CUtlRBTree< NearbyDismount_t, int >& list );
 
 	LadderMove_t *GetLadderMove();
 	CHL2_Player	*GetHL2Player();
@@ -82,7 +46,6 @@ private:
 	void		SetLadder( CFuncLadder *ladder );
 	CFuncLadder *GetLadder();
 };
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 

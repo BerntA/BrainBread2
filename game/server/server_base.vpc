@@ -572,8 +572,6 @@ $Project
 		$File	"$SRCDIR\game\shared\gamerules.cpp"
 		$File	"$SRCDIR\game\shared\gamerules.h"
 		$File	"$SRCDIR\game\shared\gamerules_register.cpp"
-		$File	"$SRCDIR\game\shared\GameStats.cpp"
-		$File	"$SRCDIR\game\shared\gamestats.h"
 		$File	"$SRCDIR\game\shared\gamestringpool.cpp"
 		$File	"$SRCDIR\game\shared\gamestringpool.h"
 		$File	"gametrace_dll.cpp"
@@ -861,8 +859,7 @@ $Project
 		"$SRCDIR\game\shared\sheetsimulator.cpp"			\
 		"$SRCDIR\public\simple_physics.cpp"					\
 		"$SRCDIR\public\stringregistry.cpp"					\
-		"$SRCDIR\public\studio.cpp"							\
-		"GameStats_BasicStatsFunctions.cpp"
+		"$SRCDIR\public\studio.cpp"
 		{
 			$Configuration
 			{

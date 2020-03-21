@@ -132,7 +132,7 @@ void CHL2MPBaseAkimbo::PerformAttack(void)
 	SendWeaponAnim(shootAct);
 
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
-	Vector vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);
+	Vector vecAiming = pPlayer->GetAutoaimVector();
 
 	FireBulletsInfo_t info(GetWpnData().m_iPellets, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, bPrimary ? m_iPrimaryAmmoType.Get() : m_iSecondaryAmmoType.Get());
 	info.m_pAttacker = pPlayer;

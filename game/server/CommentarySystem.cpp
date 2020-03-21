@@ -19,7 +19,6 @@
 #include "isaverestore.h"
 #include "eventqueue.h"
 #include "saverestore_utlvector.h"
-#include "gamestats.h"
 #include "ai_basenpc.h"
 #include "Sprite.h"
 
@@ -368,7 +367,7 @@ public:
 		// See if the player's looking at a commentary node
 		trace_t tr;
 		Vector vecSrc = pPlayer->EyePosition();
-		Vector vecForward = pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DIRECT_ONLY );	
+		Vector vecForward = pPlayer->GetAutoaimVector();	
 
 		g_bTracingVsCommentaryNodes = true;
 		UTIL_TraceLine( vecSrc, vecSrc + vecForward * MAX_TRACE_LENGTH, MASK_SOLID, pPlayer, COLLISION_GROUP_NONE, &tr );
@@ -1026,8 +1025,6 @@ void CPointCommentaryNode::SpinThink( void )
 //------------------------------------------------------------------------------
 void CPointCommentaryNode::PlayerActivated( void )
 {
-	gamestats->Event_Commentary();
-
 	if ( m_bActive )
 	{
 		StopPlaying();

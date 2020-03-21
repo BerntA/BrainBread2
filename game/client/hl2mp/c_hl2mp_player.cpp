@@ -504,7 +504,7 @@ float C_HL2MP_Player::GetFOV( void )
 // Autoaim
 // set crosshair position to point to enemey
 //=========================================================
-Vector C_HL2MP_Player::GetAutoaimVector( float flDelta )
+Vector C_HL2MP_Player::GetAutoaimVector(void)
 {
 	// Never autoaim a predicted weapon (for now)
 	Vector	forward;

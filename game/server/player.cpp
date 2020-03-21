@@ -57,7 +57,6 @@
 #include "hltvdirector.h"
 #include "nav_mesh.h"
 #include "rumble_shared.h"
-#include "gamestats.h"
 #include "npcevent.h"
 #include "datacache/imdlcache.h"
 #include "env_debughistory.h"
@@ -1500,8 +1499,6 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 	CSound *pSound;
 
 	g_pGameRules->PlayerKilled( this, info );
-
-	gamestats->Event_PlayerKilled( this, info );
 
 	RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
 
@@ -4062,7 +4059,6 @@ CBaseEntity *CBasePlayer::EntSelectSpawnPoint()
 void CBasePlayer::InitialSpawn( void )
 {
 	m_iConnected = PlayerConnected;
-	gamestats->Event_PlayerConnected( this );
 }
 
 //-----------------------------------------------------------------------------
@@ -4546,9 +4542,6 @@ bool CBasePlayer::GetInVehicle( IServerVehicle *pVehicle, int nRole )
 	// Setting the velocity to 0 will cause the IDLE animation to play
 	SetAbsVelocity( vec3_origin );
 	SetMoveType( MOVETYPE_NOCLIP );
-
-	// This is a hack to fixup the player's stats since they really didn't "cheat" and enter noclip from the console
-	gamestats->Event_DecrementPlayerEnteredNoClip( this );
 
 	// Get the seat position we'll be at in this vehicle
 	Vector vSeatOrigin;
@@ -5342,7 +5335,7 @@ void CBasePlayer::CheckTrainUpdate( void )
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-Vector CBasePlayer::GetAutoaimVector( float flScale )
+Vector CBasePlayer::GetAutoaimVector( void )
 {
 	Vector forward;
 	AngleVectors(EyeAngles() + m_Local.m_vecPunchAngle, &forward);
@@ -7150,15 +7143,7 @@ CBotCmd CPlayerInfo::GetLastUserCommand()
 // Notify that I've killed some other entity. (called from Victim's Event_Killed).
 void CBasePlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &info )
 {
-	BaseClass::Event_KilledOther( pVictim, info );
-	if ( pVictim != this )
-	{
-		gamestats->Event_PlayerKilledOther( this, pVictim, info );
-	}
-	else
-	{
-		gamestats->Event_PlayerSuicide( this );
-	}
+	BaseClass::Event_KilledOther(pVictim, info);
 }
 
 void CBasePlayer::SetModel( const char *szModelName )

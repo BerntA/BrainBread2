@@ -292,7 +292,7 @@ bool CMultiplayRules::Damage_ShouldNotBleed( int iDmgType )
 CMultiplayRules::CMultiplayRules()
 {
 #ifndef CLIENT_DLL
-	RefreshSkillData( true );
+	RefreshSkillData();
 
 	// 11/8/98
 	// Modified by YWB:  Server .cfg file is now a cvar, so that 
@@ -348,18 +348,6 @@ bool CMultiplayRules::Init()
 #else 
 	extern bool			g_fGameOver;
 
-	#define ITEM_RESPAWN_TIME	30
-	#define WEAPON_RESPAWN_TIME	20
-
-	//=========================================================
-	//=========================================================
-	void CMultiplayRules::RefreshSkillData(bool forceUpdate)
-	{
-		// load all default values
-		BaseClass::RefreshSkillData(forceUpdate);
-	}
-
-
 	//=========================================================
 	//=========================================================
 	void CMultiplayRules::Think ( void )
@@ -372,14 +360,6 @@ bool CMultiplayRules::Init()
 	void CMultiplayRules::FrameUpdatePostEntityThink()
 	{
 		BaseClass::FrameUpdatePostEntityThink();
-	}
-
-
-	//=========================================================
-	//=========================================================
-	bool CMultiplayRules::IsDeathmatch( void )
-	{
-		return true;
 	}
 
 	//-----------------------------------------------------------------------------
@@ -636,30 +616,6 @@ bool CMultiplayRules::Init()
 		{  
 			// NO loss on death!!! BB2
 		}
-	}
-
-	//=========================================================
-	// CanHaveWeapon - returns false if the player is not allowed
-	// to pick up this weapon
-	//=========================================================
-	bool CMultiplayRules::CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pItem )
-	{
-		if ( weaponstay.GetInt() > 0 )
-		{
-			if ( pItem->GetWeaponFlags() & ITEM_FLAG_LIMITINWORLD )
-				return BaseClass::CanHavePlayerItem( pPlayer, pItem );
-
-			// check if the player already has this weapon
-			for ( int i = 0 ; i < pPlayer->WeaponCount() ; i++ )
-			{
-				if ( pPlayer->GetWeapon(i) == pItem )
-				{
-					return false;
-				}
-			}
-		}
-
-		return BaseClass::CanHavePlayerItem( pPlayer, pItem );
 	}
 
 	//=========================================================
@@ -1074,29 +1030,6 @@ bool CMultiplayRules::Init()
 		return BaseClass::ClientCommand( pEdict, args );
 	}
 
-	void CMultiplayRules::ClientCommandKeyValues( edict_t *pEntity, KeyValues *pKeyValues )
-	{
-		//CBasePlayer *pPlayer = dynamic_cast< CBasePlayer * >( CBaseEntity::Instance( pEntity ) );
-		//if ( !pPlayer )
-		//	return;
-
-		//char const *pszCommand = pKeyValues->GetName();
-		//if ( pszCommand && pszCommand[0] )
-		//{
-		//}
-	}
-
-	void CMultiplayRules::ClientSettingsChanged( CBasePlayer *pPlayer )
-	{
-		// NVNT see if this user is still or has began using a haptic device
-		const char *pszHH = engine->GetClientConVarValue( pPlayer->entindex(), "hap_HasDevice" );
-		if( pszHH )
-		{
-			int iHH = atoi( pszHH );
-			pPlayer->SetHaptics( iHH != 0 );
-		}
-
-	}
 	void CMultiplayRules::GetTaggedConVarList( KeyValues *pCvarTagList )
 	{
 		BaseClass::GetTaggedConVarList( pCvarTagList );

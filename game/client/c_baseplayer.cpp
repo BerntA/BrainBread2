@@ -2067,7 +2067,7 @@ C_BaseCombatWeapon	*C_BasePlayer::GetActiveWeapon( void ) const
 // Autoaim
 // set crosshair position to point to enemey
 //=========================================================
-Vector C_BasePlayer::GetAutoaimVector( float flScale )
+Vector C_BasePlayer::GetAutoaimVector(void)
 {
 	// Never autoaim a predicted weapon (for now)
 	Vector	forward;
