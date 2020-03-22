@@ -170,7 +170,7 @@ void CBaseHelicopter::Spawn( void )
 	//******
 	// All of this stuff is specific to the individual type of aircraft. Handle it yourself.
 	//******
-	//	m_iAmmoType = g_pGameRules->GetAmmoDef()->Index("AR2"); 
+	//	m_iAmmoType = g_pGameRules->GetAmmoDef()->Index("Rifle"); 
 	//	SetModel( "models/attack_helicopter.mdl" );
 	//	UTIL_SetSize( this, Vector( -32, -32, -64 ), Vector( 32, 32, 0 ) );
 	//	UTIL_SetOrigin( this, GetLocalOrigin() );

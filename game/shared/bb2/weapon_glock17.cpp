@@ -29,6 +29,7 @@ public:
 	int GetUniqueWeaponID() { return WEAPON_ID_GLOCK17; }
 	bool AllowBurst(void) { return true; }
 	float GetBurstFireRate(void) { return GetWpnData().m_flBurstFireRate; }
+	int GetAmmoMaxCarry(void) { return 153; }
 
 private:
 	CWeaponGlock17(const CWeaponGlock17 &);

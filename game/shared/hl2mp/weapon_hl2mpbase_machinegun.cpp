@@ -68,7 +68,7 @@ void CHL2MPMachineGun::PrimaryAttack( void )
 		return;
 	
 	// Abort here to handle burst and auto fire modes
-	if ( (UsesClipsForAmmo1() && m_iClip1 == 0) || ( !UsesClipsForAmmo1() && !pPlayer->GetAmmoCount(m_iPrimaryAmmoType) ) )
+	if ( (UsesClipsForAmmo1() && m_iClip1 == 0) || ( !UsesClipsForAmmo1() && !GetAmmoCount() ) )
 		return;
 
 	// To make the firing framerate independent, we may have to fire more than one bullet here on low-framerate systems, 
@@ -99,7 +99,7 @@ void CHL2MPMachineGun::PrimaryAttack( void )
 	info.m_vecDirShooting = pPlayer->GetAutoaimVector();
 	info.m_vecSpread = pPlayer->GetAttackSpread(this);
 	info.m_flDistance = MAX_TRACE_LENGTH;
-	info.m_iAmmoType = m_iPrimaryAmmoType;
+	info.m_iAmmoType = GetAmmoTypeID();
 	info.m_iTracerFreq = 2;
 	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
 	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
@@ -251,7 +251,7 @@ void CHL2MPMachineGun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, Vec
 	WeaponSoundRealtime(SINGLE_NPC);
 	CSoundEnt::InsertSound(SOUND_COMBAT | SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_MACHINEGUN, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy());
 	pOperator->FireBullets(GetWpnData().m_iPellets, vecShootOrigin, vecShootDir, GetBulletSpread(),
-		MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2, entindex(), 0);
+		MAX_TRACE_LENGTH, GetAmmoTypeID(), 2, entindex(), 0);
 
 	m_iClip1 = m_iClip1 - 1;
 }

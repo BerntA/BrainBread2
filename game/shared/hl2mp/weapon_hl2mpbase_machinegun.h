@@ -53,6 +53,8 @@ public:
 #endif //BB2_AI
 #endif
 
+	virtual const char		*GetAmmoTypeName(void) { return "Rifle"; }
+
 private:	
 	CHL2MPMachineGun( const CHL2MPMachineGun & );
 

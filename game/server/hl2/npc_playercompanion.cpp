@@ -799,8 +799,8 @@ int CNPC_PlayerCompanion::TranslateSchedule( int scheduleType )
 				{
 					pWeapon = pPlayer->GetActiveWeapon();
 					if (pWeapon && pWeapon->UsesClipsForAmmo1() &&
-						(pWeapon->Clip1() < (pWeapon->GetMaxClip1() * .75)) &&
-						pPlayer->GetAmmoCount(pWeapon->GetPrimaryAmmoType()))
+						(pWeapon->Clip1() < (pWeapon->GetMaxClip1() * 0.75f)) &&
+						pWeapon->GetAmmoCount())
 					{
 						SpeakIfAllowed(TLK_PLRELOAD);
 					}
@@ -893,7 +893,7 @@ int CNPC_PlayerCompanion::TranslateSchedule( int scheduleType )
 					pWeapon = pPlayer->GetActiveWeapon();
 					if( pWeapon && pWeapon->UsesClipsForAmmo1() && 
 						pWeapon->Clip1() < ( pWeapon->GetMaxClip1() * .75 ) &&
-						pPlayer->GetAmmoCount( pWeapon->GetPrimaryAmmoType() ) )
+						pWeapon->GetAmmoCount( ) )
 					{
 						SpeakIfAllowed( TLK_PLRELOAD );
 					}

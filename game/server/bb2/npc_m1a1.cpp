@@ -245,7 +245,7 @@ void CNPCM1A1::Precache(void)
 	PrecacheScriptSound("M1A1.Turning");
 	PrecacheScriptSound("M1A1.Idle");
 
-	m_iAmmoType = GetAmmoDef()->Index("AK47");
+	m_iAmmoType = GetAmmoDef()->Index("Rifle");
 }
 
 Class_T CNPCM1A1::Classify(void)

@@ -21,7 +21,7 @@ int GetAmmoCountMultiplier(int wepType)
 }
 
 // Replenish ammo for non special weapons:
-bool CanReplenishAmmo(const char *ammoClassname, CBasePlayer *pPlayer, int amountOverride, bool bSecondaryType = false, bool bSuppressSound = false)
+bool CanReplenishAmmo(const char *ammoClassname, CBasePlayer *pPlayer, int amountOverride, bool bSuppressSound = false)
 {
 	if (!pPlayer)
 		return false;
@@ -30,29 +30,13 @@ bool CanReplenishAmmo(const char *ammoClassname, CBasePlayer *pPlayer, int amoun
 	for (int i = 0; i < MAX_WEAPONS; i++)
 	{
 		CBaseCombatWeapon *pWeapon = pPlayer->GetWeapon(i);
-		if (!pWeapon)
-			continue;
-
-		if (pWeapon->IsMeleeWeapon() || !(pWeapon->UsesPrimaryAmmo() || pWeapon->UsesSecondaryAmmo()))
-			continue;
-
-		if (strcmp(pWeapon->GetAmmoEntityLink(), ammoClassname))
+		if (!pWeapon || pWeapon->IsMeleeWeapon() || (pWeapon->GetAmmoTypeID() == -1) || strcmp(pWeapon->GetAmmoEntityLink(), ammoClassname))
 			continue;
 
 		int wepType = pWeapon->GetWeaponType();
-		int ammoCount = 0;
-		if (bSecondaryType)
-		{
-			ammoCount = ((amountOverride > 0) ? amountOverride : (pWeapon->GetMaxClip2() * GetAmmoCountMultiplier(wepType)));
-			if (pPlayer->GiveAmmo(ammoCount, pWeapon->GetSecondaryAmmoType(), bSuppressSound))
-				bReceived = true;
-		}
-		else
-		{
-			ammoCount = ((amountOverride > 0) ? amountOverride : (pWeapon->GetMaxClip1() * GetAmmoCountMultiplier(wepType)));
-			if (pPlayer->GiveAmmo(ammoCount, pWeapon->GetPrimaryAmmoType(), bSuppressSound))
-				bReceived = true;
-		}
+		int ammoCount = ((amountOverride > 0) ? amountOverride : (pWeapon->GetMaxClip1() * GetAmmoCountMultiplier(wepType)));
+		if (pWeapon->GiveAmmo(ammoCount, bSuppressSound))
+			bReceived = true;
 	}
 
 	return bReceived;
@@ -74,7 +58,7 @@ bool CanReplenishAmmo(const char *ammoClassname, CBasePlayer *pPlayer, bool bSup
 		if (pWeapon->IsMeleeWeapon() || (pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL))
 			continue;
 
-		int nAmmoIndex = pWeapon->GetPrimaryAmmoType();
+		int nAmmoIndex = pWeapon->GetAmmoTypeID();
 		if (nAmmoIndex == -1)
 			continue;
 
@@ -361,20 +345,14 @@ void CAmmoCannister::Precache(void)
 CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
 {
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pPlayer)
-		return;
-
-	if (!pPlayer->IsHuman() || !pPlayer->IsAlive() || !HL2MPRules()->IsTeamplay() || HL2MPRules()->IsGameoverOrScoresVisible())
+	if (!pPlayer || !pPlayer->IsHuman() || !pPlayer->IsAlive() || !HL2MPRules()->IsTeamplay() || HL2MPRules()->IsGameoverOrScoresVisible())
 		return;
 
 	CBaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
-	if (!pWeapon)
+	if (!pWeapon || pWeapon->IsMeleeWeapon() || !pWeapon->UsesClipsForAmmo1() || (pWeapon->GetAmmoTypeID() == -1) || (pWeapon->GetWeaponType() == WEAPON_TYPE_SPECIAL))
 		return;
 
-	if (pWeapon->IsMeleeWeapon() || !pWeapon->UsesClipsForAmmo1() || !pWeapon->UsesPrimaryAmmo() || (pWeapon->GetWeaponType() == WEAPON_TYPE_SPECIAL))
-		return;
-
-	int ammoCount = pPlayer->GetAmmoCount(pWeapon->m_iPrimaryAmmoType);
+	int ammoCount = pWeapon->GetAmmoCount();
 	if (ammoCount <= 0)
 		return;
 
@@ -382,10 +360,7 @@ CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
 	if (!classNew || !classNew[0])
 		return;
 
-	int ammoForItem = pWeapon->GetMaxClip1();
-	if (ammoForItem > ammoCount)
-		ammoForItem = ammoCount;
-
+	int ammoForItem = MIN(pWeapon->GetMaxClip1(), ammoCount);
 	float timeSinceLastDrop = gpGlobals->curtime - pPlayer->GetLastTimeDroppedAmmo();
 	if (timeSinceLastDrop < AMMO_DROP_WAIT_TIME)
 	{
@@ -396,7 +371,7 @@ CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
 	}
 
 	pPlayer->OnDroppedAmmoNow();
-	pPlayer->RemoveAmmo(ammoForItem, pWeapon->m_iPrimaryAmmoType);
+	pWeapon->RemoveAmmo(ammoForItem);
 	CAmmoItemBase *pEntity = (CAmmoItemBase*)CreateEntityByName(classNew);
 	if (pEntity)
 	{

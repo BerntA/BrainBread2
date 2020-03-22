@@ -34,6 +34,9 @@ public:
 	int		GetMinBurst() { return 2; }
 	int		GetMaxBurst() { return 4; }	
 
+	const char		*GetAmmoTypeName(void) { return "SMG"; }
+	int				GetAmmoMaxCarry(void) { return 192; }
+
 private:
 	CWeaponMicroUZI(const CWeaponMicroUZI &);
 };

@@ -154,25 +154,15 @@ CWeaponRemington::CWeaponRemington(void)
 //-----------------------------------------------------------------------------
 bool CWeaponRemington::StartReload(void)
 {
-	CBaseCombatCharacter *pOwner = GetOwner();
-	if (pOwner == NULL)
+	if ((GetAmmoCount() <= 0) || (m_iClip1 >= GetMaxClip1()))
 		return false;
 
-	if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
-		return false;
-
-	if (m_iClip1 >= GetMaxClip1())
-		return false;
-
-	int j = MIN(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
-
+	int j = MIN(1, GetAmmoCount());
 	if (j <= 0)
 		return false;
 
 	SendWeaponAnim(ACT_SHOTGUN_RELOAD_START);
-
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-
 	m_bInReload = true;
 	return true;
 }
@@ -188,18 +178,10 @@ bool CWeaponRemington::Reload(void)
 		Warning("ERROR: Shotgun Reload called incorrectly!\n");
 	}
 
-	CBaseCombatCharacter *pOwner = GetOwner();
-	if (pOwner == NULL)
+	if ((GetAmmoCount() <= 0) || (m_iClip1 >= GetMaxClip1()))
 		return false;
 
-	if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
-		return false;
-
-	if (m_iClip1 >= GetMaxClip1())
-		return false;
-
-	int j = MIN(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
-
+	int j = MIN(1, GetAmmoCount());
 	if (j <= 0)
 		return false;
 
@@ -272,7 +254,7 @@ void CWeaponRemington::ItemPostFrame(void)
 
 		if (m_flNextPrimaryAttack <= gpGlobals->curtime)
 		{
-			if ((pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0) || (m_iClip1 >= GetMaxClip1()))
+			if ((GetAmmoCount() <= 0) || (m_iClip1 >= GetMaxClip1()))
 			{
 				FinishReload();
 				return;
@@ -287,7 +269,7 @@ void CWeaponRemington::ItemPostFrame(void)
 
 	if ((pOwner->m_nButtons & IN_ATTACK) && m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
-		if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !pOwner->GetAmmoCount(m_iPrimaryAmmoType)))
+		if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !GetAmmoCount()))
 		{
 			DryFire();
 			return;

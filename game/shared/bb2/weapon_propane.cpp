@@ -144,12 +144,8 @@ void CPropaneExplosive::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_T
 	CBaseCombatWeapon *pPropane = pPlayer->Weapon_OwnsThisType("weapon_propane");
 	if (pPropane)
 	{
-		int iAmmoType = GetAmmoDef()->Index("Propane");
-		if (iAmmoType == -1)
-			return;
-
-		pPlayer->GiveAmmo(1, iAmmoType, false);
-		UTIL_Remove(this);
+		if (pPropane->GiveAmmo(1))
+			UTIL_Remove(this);
 		return;
 	}
 
@@ -259,6 +255,8 @@ public:
 	bool CanPerformMeleeAttacks() { return false; }
 
 	int GetUniqueWeaponID() { return WEAPON_ID_PROPANE; }
+	const char		*GetAmmoTypeName(void) { return "Propane"; }
+	int				GetAmmoMaxCarry(void) { return 1; }
 
 private:
 	CWeaponPropane(const CWeaponPropane &);
@@ -433,7 +431,7 @@ void CWeaponPropane::PrimaryAttack(void)
 //-----------------------------------------------------------------------------
 void CWeaponPropane::DecrementAmmo(CBaseCombatCharacter *pOwner)
 {
-	pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
+	RemoveAmmo(1);
 }
 
 //-----------------------------------------------------------------------------

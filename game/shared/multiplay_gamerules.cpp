@@ -378,7 +378,7 @@ bool CMultiplayRules::Init()
 		// If I have a weapon, make sure I'm allowed to holster it
 		if ( pCurrentWeapon )
 		{
-			if ( !pCurrentWeapon->AllowsAutoSwitchFrom() || !pCurrentWeapon->CanHolster() )
+			if (!pCurrentWeapon->CanHolster())
 			{
 				// Either this weapon doesn't allow autoswitching away from it or I
 				// can't put this weapon away right now, so I can't switch.
@@ -392,11 +392,6 @@ bool CMultiplayRules::Init()
 		{
 			pCheck = pPlayer->GetWeapon( i );
 			if ( !pCheck )
-				continue;
-
-			// If we have an active weapon and this weapon doesn't allow autoswitching away
-			// from another weapon, skip it.
-			if ( pCurrentWeapon && !pCheck->AllowsAutoSwitchTo() )
 				continue;
 
 			if ( pCheck->GetWeight() > -1 && pCheck->GetWeight() == iCurrentWeight && pCheck != pCurrentWeapon )

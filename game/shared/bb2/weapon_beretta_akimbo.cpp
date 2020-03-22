@@ -24,6 +24,9 @@ public:
 	CWeaponBerettaAkimbo(void);
 	int GetUniqueWeaponID() { return WEAPON_ID_BERETTA_AKIMBO; }	
 
+	const char		*GetAmmoTypeName(void) { return "Pistol"; }
+	int				GetAmmoMaxCarry(void) { return 144; }
+
 private:
 	CWeaponBerettaAkimbo(const CWeaponBerettaAkimbo &);
 };

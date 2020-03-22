@@ -384,8 +384,6 @@ public:
 	CBaseCombatWeapon		*Weapon_GetLast( void ) { return m_hLastWeapon.Get(); }
 	CBaseCombatWeapon       *Weapon_GetNext( void ) { return m_hNextWeapon.Get(); }
 
-	bool					HasAnyAmmoOfType( int nAmmoIndex );
-
 	// JOHN:  sends custom messages if player HUD data has changed  (eg health, ammo)
 	virtual void			UpdateClientData( void );
 	void					RumbleEffect( unsigned char index, unsigned char rumbleData, unsigned char rumbleFlags );
@@ -454,10 +452,10 @@ public:
 	CBaseEntity				*HasNamedPlayerItem( const char *pszItemName );
 	bool 					HasWeapons( void );// do I have ANY weapons?
 	virtual void			SelectLastItem(void);
-	virtual void 			SelectItem( const char *pstr, int iSubType = 0 );
+	virtual void 			SelectItem(const char *pstr);
 	void					ItemPreFrame( void );
 	virtual void			ItemPostFrame( void );
-	virtual CBaseEntity		*GiveNamedItem( const char *szName, int iSubType = 0 );
+	virtual CBaseEntity		*GiveNamedItem(const char *szName);
 
 	void					EnableControl(bool fControl);
 	virtual void			CheckTrainUpdate( void );

@@ -732,8 +732,8 @@ void CFuncTank::Spawn( void )
 
 // BB2_MISC_FIXES: We enable all ammo types so that we can have both the old style mounted guns (which players can use) and the new combine cannons (which players can't use, and rely on the new ammo code).
 	m_iAmmoType = GetAmmoDef()->Index( STRING( m_iszAmmoType ) );
-	m_iSmallAmmoType	= GetAmmoDef()->Index("Beretta");	
-	m_iMediumAmmoType	= GetAmmoDef()->Index("AK47");
+	m_iSmallAmmoType	= GetAmmoDef()->Index("Pistol");	
+	m_iMediumAmmoType	= GetAmmoDef()->Index("Rifle");
 	m_iLargeAmmoType	= GetAmmoDef()->Index("AR2");
 
 	SetMoveType( MOVETYPE_PUSH );  // so it doesn't get pushed by anything

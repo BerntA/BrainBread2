@@ -2525,48 +2525,6 @@ CBaseEntity *CBaseCombatCharacter::Weapon_FindUsable( const Vector &range )
 	return pBestWeapon;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Give the player some ammo.
-// Input  : iCount - Amount of ammo to give.
-//			iAmmoIndex - Index of the ammo into the AmmoInfoArray
-//			iMax - Max carrying capability of the player
-// Output : Amount of ammo actually given
-//-----------------------------------------------------------------------------
-int CBaseCombatCharacter::GiveAmmo(int iCount, int iAmmoIndex, bool bSuppressSound)
-{
-	if (iCount <= 0)
-		return 0;
-
-	if ( !g_pGameRules->CanHaveAmmo( this, iAmmoIndex ) )
-	{
-		// game rules say I can't have any more of this ammo type.
-		return 0;
-	}
-
-	if ( iAmmoIndex < 0 || iAmmoIndex >= MAX_AMMO_SLOTS )
-		return 0;
-
-	bool bSecondary = IsAmmoIndexSecondaryAmmo(iAmmoIndex);
-	CBaseCombatWeapon *pWeapon = Weapon_GetWpnForAmmo(iAmmoIndex);
-	if (!pWeapon)
-		return 0;
-
-	int iMax = GetAmmoDef()->MaxCarry(iAmmoIndex);
-	int iCurrent = bSecondary ? pWeapon->GetSecondaryAmmoCount() : pWeapon->GetPrimaryAmmoCount();
-
-	int iAdd = MIN(iCount, iMax - iCurrent);
-	if ( iAdd < 1 )
-		return 0;
-
-	// Ammo pickup sound
-	if ( !bSuppressSound )
-		EmitSound( "BaseCombatCharacter.AmmoPickup" );
-
-	SetAmmoCount((iCurrent + iAdd), iAmmoIndex);
-
-	return iAdd;
-}
-
 ConVar	phys_stressbodyweights( "phys_stressbodyweights", "5.0" );
 void CBaseCombatCharacter::VPhysicsUpdate( IPhysicsObject *pPhysics )
 {

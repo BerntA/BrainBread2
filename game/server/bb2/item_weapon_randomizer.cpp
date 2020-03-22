@@ -75,8 +75,8 @@ bool CanSpawnWeapon(const char *weapon, int listType, const char *list)
 {
 	if (listType > SPAWN_LIST_TYPE_NONE)
 	{
-		char pchWeapon[MAX_WEAPON_AMMO_NAME];
-		Q_snprintf(pchWeapon, MAX_WEAPON_AMMO_NAME, "%s,", weapon);
+		char pchWeapon[MAX_WEAPON_STRING];
+		Q_snprintf(pchWeapon, MAX_WEAPON_STRING, "%s,", weapon);
 
 		if ((listType == SPAWN_LIST_TYPE_EXCLUDE) && Q_strstr(list, pchWeapon))
 			return false;

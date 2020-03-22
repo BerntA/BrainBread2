@@ -99,7 +99,6 @@ void WeaponsResource::LoadWeaponSprites( WEAPON_FILE_INFO_HANDLE hWeaponFileInfo
 	pWeaponInfo->iconActive = NULL;
 	pWeaponInfo->iconInactive = NULL;
 	pWeaponInfo->iconAmmo = NULL;
-	pWeaponInfo->iconAmmo2 = NULL;
 
 	char sz[128];
 	Q_snprintf(sz, sizeof( sz ), "scripts/%s", pWeaponInfo->szClassName);
@@ -152,17 +151,6 @@ void WeaponsResource::LoadWeaponSprites( WEAPON_FILE_INFO_HANDLE hWeaponFileInfo
 				pHudHR->SetHistoryGap( pWeaponInfo->iconAmmo->Height() );
 			}
 		}
-
-		p = FindHudTextureInDict( tempList, "ammo2" );
-		if ( p )
-		{
-			pWeaponInfo->iconAmmo2 = gHUD.AddUnsearchableHudIconToList( *p );
-			if ( pWeaponInfo->iconAmmo2 )
-			{
-				pWeaponInfo->iconAmmo2->Precache();
-				pHudHR->SetHistoryGap( pWeaponInfo->iconAmmo2->Height() );
-			}
-		}
 	}
 
 	FreeHudTextureList( tempList );
@@ -183,13 +171,9 @@ CHudTexture *WeaponsResource::GetAmmoIconFromWeapon( int iAmmoId )
 		if ( !weapon )
 			continue;
 
-		if ( weapon->GetPrimaryAmmoType() == iAmmoId )
+		if ( weapon->GetAmmoTypeID() == iAmmoId )
 		{
 			return weapon->GetWpnData().iconAmmo;
-		}
-		else if ( weapon->GetSecondaryAmmoType() == iAmmoId )
-		{
-			return weapon->GetWpnData().iconAmmo2;
 		}
 	}
 
@@ -211,11 +195,7 @@ const FileWeaponInfo_t *WeaponsResource::GetWeaponFromAmmo( int iAmmoId )
 		if ( !weapon )
 			continue;
 
-		if ( weapon->GetPrimaryAmmoType() == iAmmoId )
-		{
-			return &weapon->GetWpnData();
-		}
-		else if ( weapon->GetSecondaryAmmoType() == iAmmoId )
+		if ( weapon->GetAmmoTypeID() == iAmmoId )
 		{
 			return &weapon->GetWpnData();
 		}

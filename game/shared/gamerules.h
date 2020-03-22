@@ -247,10 +247,6 @@ public:
 	virtual Vector VecItemRespawnSpot(CItem *pItem) { return vec3_origin; } // where in the world should this item respawn?
 	virtual QAngle VecItemRespawnAngles(CItem *pItem) { return vec3_angle; } // what angles should this item use when respawing?
 
-// Ammo retrieval
-	virtual bool CanHaveAmmo( CBaseCombatCharacter *pPlayer, int iAmmoIndex ); // can this player take more of this ammo?
-	virtual bool CanHaveAmmo( CBaseCombatCharacter *pPlayer, const char *szName );
-
 // AI Definitions
 	virtual void			InitDefaultAIRelationships( void ) { return; }
 

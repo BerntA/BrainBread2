@@ -156,25 +156,15 @@ CWeaponBenelliM4::CWeaponBenelliM4(void)
 //-----------------------------------------------------------------------------
 bool CWeaponBenelliM4::StartReload(void)
 {
-	CBaseCombatCharacter *pOwner = GetOwner();
-	if (pOwner == NULL)
+	if ((GetAmmoCount() <= 0) || (m_iClip1 >= GetMaxClip1()))
 		return false;
 
-	if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
-		return false;
-
-	if (m_iClip1 >= GetMaxClip1())
-		return false;
-
-	int j = MIN(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
-
+	int j = MIN(1, GetAmmoCount());
 	if (j <= 0)
 		return false;
 
 	SendWeaponAnim(m_bShouldReloadEmpty ? ACT_SHOTGUN_RELOAD_START_EMPTY : ACT_SHOTGUN_RELOAD_START);
-
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-
 	m_bInReload = true;
 	return true;
 }
@@ -190,18 +180,10 @@ bool CWeaponBenelliM4::Reload(void)
 		Warning("ERROR: Shotgun Reload called incorrectly!\n");
 	}
 
-	CBaseCombatCharacter *pOwner = GetOwner();
-	if (pOwner == NULL)
+	if ((GetAmmoCount() <= 0) || (m_iClip1 >= GetMaxClip1()))
 		return false;
 
-	if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
-		return false;
-
-	if (m_iClip1 >= GetMaxClip1())
-		return false;
-
-	int j = MIN(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
-
+	int j = MIN(1, GetAmmoCount());
 	if (j <= 0)
 		return false;
 
@@ -267,7 +249,7 @@ void CWeaponBenelliM4::ItemPostFrame(void)
 
 		if (m_flNextPrimaryAttack <= gpGlobals->curtime)
 		{
-			if ((pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0) || (m_iClip1 >= GetMaxClip1()))
+			if ((GetAmmoCount() <= 0) || (m_iClip1 >= GetMaxClip1()))
 			{
 				FinishReload();
 				return;
@@ -282,7 +264,7 @@ void CWeaponBenelliM4::ItemPostFrame(void)
 
 	if ((pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 	{
-		if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !pOwner->GetAmmoCount(m_iPrimaryAmmoType)))
+		if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !GetAmmoCount()))
 		{
 			DryFire();
 			return;

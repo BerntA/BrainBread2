@@ -25,20 +25,20 @@ using namespace vgui;
 struct AmmoBaseData_t
 {
 	const char *prefix;
-	int capacity;
+	float capacity;
 };
 
 static AmmoBaseData_t ammoBaseDataList[MAX_AMMO_HUD_TYPES] =
 {
-	{ "mag_beretta_", 9 },
-	{ "mag_ak47_", 15 },
-	{ "mag_trapper_", 8 },
-	{ "mag_remington_", 8 },
-	{ "mag_sawedoff_", 2 },
-	{ "mag_mac11_", 16 },
-	{ "mag_sniper_", 5 },
-	{ "mag_revolver_6_", 6 },
-	{ "mag_revolver_5_", 5 },
+	{ "mag_beretta_", 9.0f },
+	{ "mag_ak47_", 15.0f },
+	{ "mag_trapper_", 8.0f },
+	{ "mag_remington_", 8.0f },
+	{ "mag_sawedoff_", 2.0f },
+	{ "mag_mac11_", 16.0f },
+	{ "mag_sniper_", 5.0f },
+	{ "mag_revolver_6_", 6.0f },
+	{ "mag_revolver_5_", 5.0f },
 };
 
 static CHudTexture* ammoDefinitions[MAX_AMMO_HUD_TYPES][MAX_AMMO_HUD_TEX_COUNT];
@@ -48,7 +48,7 @@ CHudTexture *GetAmmoTextureForAmmo(int type, float bulletsLeft, float clipCapaci
 	type = clamp(type, 0, (MAX_AMMO_HUD_TYPES - 1));
 	AmmoBaseData_t *ammoBase = &ammoBaseDataList[type];
 	float flIndex = clamp((bulletsLeft / clipCapacity), 0.0f, 1.0f) * ammoBase->capacity;
-	int wantedIndex = ((int)ceil(flIndex));
+	int wantedIndex = ((int)roundf(flIndex));
 	wantedIndex = clamp(wantedIndex, 0, (MAX_AMMO_HUD_TEX_COUNT - 1));
 	return ammoDefinitions[type][wantedIndex];
 }
@@ -230,7 +230,7 @@ void CHudBaseAmmo::Paint()
 	// Draw Mags Left
 	if (ammoIconPrimary || ammoIconSecondary)
 	{
-		int iAmmoCount = (pPlayer->GetAmmoCount(pLocalWeapon->m_iPrimaryAmmoType));
+		int iAmmoCount = pLocalWeapon->GetAmmoCount();
 		int m_iMagsLeft = iAmmoCount;
 		if (pLocalWeapon->GetWpnData().m_bShowAsMagsLeft)
 		{

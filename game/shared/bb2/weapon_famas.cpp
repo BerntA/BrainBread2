@@ -27,6 +27,7 @@ public:
 	CWeaponFamas();
 
 	int GetUniqueWeaponID() { return WEAPON_ID_FAMAS; }
+	int GetAmmoMaxCarry(void) { return 200; }
 	int     GetOverloadCapacity() { return 10; }
 	bool    AllowBurst(void) { return true; }
 	const char *GetAmmoEntityLink(void) { return "ammo_rifle"; }

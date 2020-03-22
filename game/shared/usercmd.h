@@ -49,7 +49,6 @@ public:
 		buttons = 0;
 		impulse = 0;
 		weaponselect = 0;
-		weaponsubtype = 0;
 		random_seed = 0;
 #ifdef GAME_DLL
 		server_random_seed = 0;
@@ -77,7 +76,6 @@ public:
 		buttons				= src.buttons;
 		impulse				= src.impulse;
 		weaponselect		= src.weaponselect;
-		weaponsubtype		= src.weaponsubtype;
 		random_seed			= src.random_seed;
 #ifdef GAME_DLL
 		server_random_seed = src.server_random_seed;
@@ -113,7 +111,6 @@ public:
 		CRC32_ProcessBuffer( &crc, &buttons, sizeof( buttons ) );		
 		CRC32_ProcessBuffer( &crc, &impulse, sizeof( impulse ) );        
 		CRC32_ProcessBuffer( &crc, &weaponselect, sizeof( weaponselect ) );	
-		CRC32_ProcessBuffer( &crc, &weaponsubtype, sizeof( weaponsubtype ) );
 		CRC32_ProcessBuffer( &crc, &random_seed, sizeof( random_seed ) );
 		CRC32_ProcessBuffer( &crc, &mousedx, sizeof( mousedx ) );
 		CRC32_ProcessBuffer( &crc, &mousedy, sizeof( mousedy ) );
@@ -153,8 +150,7 @@ public:
 	// Impulse command issued.
 	byte    impulse;        
 	// Current weapon id
-	int		weaponselect;	
-	int		weaponsubtype;
+	int		weaponselect;
 
 	int		random_seed;	// For shared random functions
 #ifdef GAME_DLL

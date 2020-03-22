@@ -21,14 +21,10 @@ struct Ammo_t
 	char 				*pName;
 	int					nDamageType;
 	int					eTracerType;
-	int					iMaxCarry; // Will be removed soon!
 	float				physicsForceImpulse;
 	int					nMinSplashSize;
 	int					nMaxSplashSize;
 };
-
-// Ammo is infinite
-#define		INFINITE_AMMO	-2
 
 enum AmmoTracer_t
 {
@@ -54,14 +50,13 @@ public:
 
 	Ammo_t				*GetAmmoOfIndex(int nAmmoIndex);
 	int					Index(const char *psz);
-	int					MaxCarry(int nAmmoIndex);
 	int					DamageType(int nAmmoIndex);
 	int					TracerType(int nAmmoIndex);
 	float				DamageForce(int nAmmoIndex);
 	int					MinSplashSize(int nAmmoIndex);
 	int					MaxSplashSize(int nAmmoIndex);
 
-	void				AddAmmoType(char const* name, int damageType, int tracerType, int carry, float physicsForceImpulse, int minSplashSize = 4, int maxSplashSize = 8);
+	void				AddAmmoType(char const* name, int damageType, int tracerType, float physicsForceImpulse, int minSplashSize = 4, int maxSplashSize = 8);
 
 	CAmmoDef(void);
 	virtual ~CAmmoDef(void);

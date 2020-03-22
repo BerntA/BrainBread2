@@ -55,6 +55,8 @@ public:
 #endif
 #endif //BB2_AI
 
+	virtual const char		*GetAmmoTypeName(void) { return "Pistol"; }
+
 protected:
 	CNetworkVar(bool, m_bHasFiredGun);
 

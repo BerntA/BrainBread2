@@ -24,6 +24,9 @@ public:
 	CWeaponGlock17Akimbo(void);
 	int GetUniqueWeaponID() { return WEAPON_ID_GLOCK17_AKIMBO; }
 
+	const char		*GetAmmoTypeName(void) { return "Pistol"; }
+	int				GetAmmoMaxCarry(void) { return 170; }
+
 private:
 	CWeaponGlock17Akimbo(const CWeaponGlock17Akimbo &);
 };

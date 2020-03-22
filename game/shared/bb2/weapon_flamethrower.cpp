@@ -69,6 +69,9 @@ public:
 	void Drop(const Vector &vecVelocity);
 	void UpdateOnRemove(void);
 
+	const char		*GetAmmoTypeName(void) { return "Cannister"; }
+	int				GetAmmoMaxCarry(void) { return 0; }
+
 	const char *GetAmmoEntityLink(void) { return "ammo_cannister"; }
 
 #ifdef CLIENT_DLL

@@ -56,17 +56,10 @@ void CHL2MPBaseShotgun::AffectedByPlayerSkill(int skill)
 
 void CHL2MPBaseShotgun::FillClip(int iAmount)
 {
-	CBaseCombatCharacter *pOwner = GetOwner();
-	if (pOwner == NULL)
-		return;
-
-	if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) > 0)
+	if ((GetAmmoCount() > 0) && (Clip1() < GetMaxClip1()))
 	{
-		if (Clip1() < GetMaxClip1())
-		{
-			m_iClip1 += iAmount;
-			pOwner->RemoveAmmo(iAmount, m_iPrimaryAmmoType);
-		}
+		m_iClip1 += iAmount;
+		RemoveAmmo(iAmount);
 	}
 }
 
@@ -94,7 +87,7 @@ void CHL2MPBaseShotgun::PrimaryAttack(Activity fireActivity, WeaponSound_t sound
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
 	Vector vecAiming = pPlayer->GetAutoaimVector();
 
-	FireBulletsInfo_t info(GetWpnData().m_iPellets, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, bPrimary);
+	FireBulletsInfo_t info(GetWpnData().m_iPellets, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, GetAmmoTypeID(), bPrimary);
 	info.m_pAttacker = pPlayer;
 	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
 	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
@@ -168,7 +161,7 @@ void CHL2MPBaseShotgun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bo
 		vecShootDir = npc->GetActualShootTrajectory(vecShootOrigin);
 	}
 
-	pOperator->FireBullets(GetWpnData().m_iPellets, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0);
+	pOperator->FireBullets(GetWpnData().m_iPellets, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, GetAmmoTypeID(), 0);
 }
 
 void CHL2MPBaseShotgun::Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary)

@@ -161,7 +161,6 @@ public:
 	virtual void FireBullets(const FireBulletsInfo_t &info);
 	virtual bool Weapon_Switch(CBaseCombatWeapon *pWeapon, bool bWantDraw = false, int viewmodelindex = 0);
 	virtual bool BumpWeapon(CBaseCombatWeapon *pWeapon);
-	virtual bool EquipAmmoFromWeapon(CBaseCombatWeapon *pWeapon);
 	virtual CBaseCombatWeapon *GetBestWeapon();
 	virtual void Weapon_Equip(CBaseCombatWeapon *pWeapon);
 	virtual void ChangeTeam(int iTeam, bool bInfection = false);

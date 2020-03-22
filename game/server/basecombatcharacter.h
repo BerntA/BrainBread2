@@ -188,15 +188,6 @@ public:
 	virtual bool IsLineOfSightClear( CBaseEntity *entity, LineOfSightCheckType checkType = IGNORE_NOTHING ) const;// strictly LOS check with no other considerations
 	virtual bool IsLineOfSightClear( const Vector &pos, LineOfSightCheckType checkType = IGNORE_NOTHING, CBaseEntity *entityToIgnore = NULL ) const;
 
-	// -----------------------
-	// Ammo
-	// -----------------------
-	virtual void				RemoveAmmo(int iCount, int iAmmoIndex);
-	virtual void				SetAmmoCount(int iCount, int iAmmoIndex);
-	virtual int					GetAmmoCount(int iAmmoIndex);
-	virtual int			        GiveAmmo(int iCount, int iAmmoIndex, bool bSuppressSound = false);
-	virtual bool                IsAmmoIndexSecondaryAmmo(int iAmmoIndex);
-
 	virtual Activity	NPC_TranslateActivity( Activity baseAct );
 
 	// -----------------------
@@ -207,7 +198,7 @@ public:
 	void				Weapon_SetActivity( Activity newActivity, float duration );
 	virtual void		Weapon_FrameUpdate( void );
 	virtual void		Weapon_HandleAnimEvent( animevent_t *pEvent );
-	CBaseCombatWeapon*	Weapon_OwnsThisType( const char *pszWeapon, int iSubType = 0 ) const;  // True if already owns a weapon of this class
+	CBaseCombatWeapon*	Weapon_OwnsThisType( const char *pszWeapon ) const;  // True if already owns a weapon of this class
 	CBaseCombatWeapon*	Weapon_GetBySlot(int slot) const;
 	virtual bool		Weapon_CanUse( CBaseCombatWeapon *pWeapon );		// True is allowed to use this class of weapon
 	virtual void		Weapon_Equip( CBaseCombatWeapon *pWeapon );			// Adds weapon to player
@@ -220,7 +211,6 @@ public:
 	virtual	bool		Weapon_CanSwitchTo(CBaseCombatWeapon *pWeapon);
 	virtual bool		Weapon_SlotOccupied( CBaseCombatWeapon *pWeapon );
 	virtual CBaseCombatWeapon *Weapon_GetSlot( int slot ) const;
-	CBaseCombatWeapon	*Weapon_GetWpnForAmmo(int iAmmoIndex);
 
 	// For weapon strip
 	void				Weapon_DropAll( bool bDisallowWeaponPickup = false );

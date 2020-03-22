@@ -726,16 +726,13 @@ bool CBasePlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, bool bWantDraw, int
 
 void CBasePlayer::SelectLastItem(void)
 {
-	if ( m_hLastWeapon.Get() == NULL )
+	if (m_hLastWeapon.Get() == NULL)
 		return;
 
-	if ( GetActiveWeapon() )
-	{
-		if ( !GetActiveWeapon()->CanHolster() )
-			return;
-	}
+	if (GetActiveWeapon() && !GetActiveWeapon()->CanHolster())
+		return;
 
-	SelectItem( m_hLastWeapon.Get()->GetClassname(), m_hLastWeapon.Get()->GetSubType() );
+	SelectItem(m_hLastWeapon.Get()->GetClassname());
 }
 
 //-----------------------------------------------------------------------------
@@ -874,36 +871,30 @@ void CBasePlayer::ClearPlayerSimulationList( void )
 //-----------------------------------------------------------------------------
 bool CBasePlayer::Weapon_ShouldSelectItem( CBaseCombatWeapon *pWeapon )
 {
-	return ( pWeapon != GetActiveWeapon() );
+	return (pWeapon != GetActiveWeapon());
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CBasePlayer::SelectItem( const char *pstr, int iSubType )
+void CBasePlayer::SelectItem(const char *pstr)
 {
-	if (!pstr)
+	if (!pstr || (GetObserverMode() != OBS_MODE_NONE))
 		return;
 
-	CBaseCombatWeapon *pItem = Weapon_OwnsThisType( pstr, iSubType );
+	CBaseCombatWeapon *pItem = Weapon_OwnsThisType(pstr);
 	if (!pItem)
 		return;
 
-	if( GetObserverMode() != OBS_MODE_NONE )
-		return;// Observers can't select things.
-
-	if ( !Weapon_ShouldSelectItem( pItem ) )
+	if (!Weapon_ShouldSelectItem(pItem))
 		return;
 
 	// FIX, this needs to queue them up and delay
 	// Make sure the current weapon can be holstered
-	if ( GetActiveWeapon() )
-	{
-		if ( !GetActiveWeapon()->CanHolster() )
-			return;
-	}
+	if (GetActiveWeapon() && !GetActiveWeapon()->CanHolster())
+		return;
 
-	Weapon_Switch( pItem );
+	Weapon_Switch(pItem);
 }
 
 //-----------------------------------------------------------------------------

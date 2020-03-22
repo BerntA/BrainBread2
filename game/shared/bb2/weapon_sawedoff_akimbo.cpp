@@ -30,6 +30,9 @@ public:
 	int GetMaxBurst() { return 1; }
 	bool UsesEmptyAnimation() { return false; }
 
+	const char		*GetAmmoTypeName(void) { return "Buckshot"; }
+	int				GetAmmoMaxCarry(void) { return 32; }
+
 	float GetFireRate(void) 
 	{ 
 		return ((GetViewModelSequenceDuration() / 2.0f) + GetWpnData().m_flFireRate);

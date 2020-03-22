@@ -32,6 +32,9 @@ public:
 	int GetWeaponType(void) { return WEAPON_TYPE_REVOLVER; }
 	const char *GetAmmoEntityLink(void) { return "ammo_revolver"; }
 
+	const char		*GetAmmoTypeName(void) { return "Magnum"; }
+	int				GetAmmoMaxCarry(void) { return 36; }
+
 private:
 
 	CWeaponREX(const CWeaponREX &);
@@ -114,7 +117,7 @@ void CWeaponREX::PrimaryAttack(void)
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
 	Vector vecAiming = pPlayer->GetAutoaimVector();
 
-	FireBulletsInfo_t info(1, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
+	FireBulletsInfo_t info(1, vecSrc, vecAiming, vec3_origin, MAX_TRACE_LENGTH, GetAmmoTypeID());
 	info.m_pAttacker = pPlayer;
 	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
 	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;

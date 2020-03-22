@@ -55,6 +55,9 @@ public:
 		return false;
 	}
 
+	const char		*GetAmmoTypeName(void) { return "SMG"; }
+	int				GetAmmoMaxCarry(void) { return 180; }
+
 private:
 	CWeaponMP5(const CWeaponMP5 &);
 };

@@ -37,6 +37,9 @@ public:
 		return "right_muzzle";
 	}
 
+	const char		*GetAmmoTypeName(void) { return "Magnum"; }
+	int				GetAmmoMaxCarry(void) { return 36; }
+
 private:
 	CWeaponREXAkimbo(const CWeaponREXAkimbo &);
 };

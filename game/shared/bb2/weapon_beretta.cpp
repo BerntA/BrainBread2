@@ -21,6 +21,7 @@ public:
 
 	CWeaponBeretta(void);
 	int GetUniqueWeaponID() { return WEAPON_ID_BERETTA; }
+	int GetAmmoMaxCarry(void) { return 144; }
 
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();

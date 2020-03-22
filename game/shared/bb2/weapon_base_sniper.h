@@ -58,6 +58,9 @@ public:
 	int	GetMinBurst() { return 1; }
 	int	GetMaxBurst() { return 1; }
 
+	virtual const char		*GetAmmoTypeName(void) { return "Sniper"; }
+	virtual int				GetAmmoMaxCarry(void) { return 40; }
+
 #ifdef BB2_AI
 #ifndef CLIENT_DLL
 	virtual int CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; }

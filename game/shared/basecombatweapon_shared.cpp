@@ -90,8 +90,7 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 	m_iState = m_iOldState = WEAPON_NOT_CARRIED;
 	m_iClip1 = -1;
 	m_iClip2 = -1;
-	m_iPrimaryAmmoType = -1;
-	m_iSecondaryAmmoType = -1;
+	m_iAmmoType = -1;
 #else
 	OnBaseCombatWeaponCreated( this );
 	m_iDefaultAmmoCount = -1;
@@ -133,45 +132,86 @@ void CBaseCombatWeapon::Activate( void )
 #endif
 
 }
-void CBaseCombatWeapon::GiveDefaultAmmo( void )
+
+void CBaseCombatWeapon::GiveDefaultAmmo(void)
 {
-	// If I use clips, set my clips to the default
-	if ( UsesClipsForAmmo1() )
-	{
-		m_iClip1 = AutoFiresFullClip() ? 0 : GetDefaultClip1();
+	m_iClip1 = UsesClipsForAmmo1() ? (AutoFiresFullClip() ? 0 : GetDefaultClip1()) : WEAPON_NOCLIP;
+	m_iClip2 = UsesClipsForAmmo2() ? GetDefaultClip2() : WEAPON_NOCLIP;
 
 #ifndef CLIENT_DLL
-		// Give the actual ammo:
-		int iMaxCarry = GetAmmoDef()->MaxCarry(GetPrimaryAmmoType());
-		if (m_iDefaultAmmoCount == -1 || (m_iDefaultAmmoCount > iMaxCarry))
-			SetPrimaryAmmoCount(iMaxCarry);
-		else
-			SetPrimaryAmmoCount(m_iDefaultAmmoCount);
-#endif
+	if (m_iClip1 == WEAPON_NOCLIP)
+	{
+		SetAmmoCount(GetDefaultClip1());
+		return;
 	}
+
+	if (GetAmmoTypeID() == -1)
+		return;
+
+	// Give the actual ammo:
+	int iMaxCarry = GetAmmoMaxCarry();
+	if (m_iDefaultAmmoCount == -1 || (m_iDefaultAmmoCount > iMaxCarry))
+		SetAmmoCount(iMaxCarry);
 	else
-	{
-		SetPrimaryAmmoCount( GetDefaultClip1() );
-		m_iClip1 = WEAPON_NOCLIP;
-	}
-	if ( UsesClipsForAmmo2() )
-	{
-		m_iClip2 = GetDefaultClip2();
+		SetAmmoCount(m_iDefaultAmmoCount);
+#endif
+}
+
+void CBaseCombatWeapon::RemoveAmmo(int count)
+{
+	if ((count <= 0) || (GetAmmoTypeID() == -1))
+		return;
+	SetAmmoCount(MAX(GetAmmoCount() - count, 0));
+}
+
+int CBaseCombatWeapon::GiveAmmo(int count, bool bSuppressSound)
+{
+	if ((GetAmmoTypeID() == -1) || (count <= 0))
+		return 0;
+
+	int iAdd = 0;
 
 #ifndef CLIENT_DLL
-		// Give the actual ammo:
-		int iMaxCarry = GetAmmoDef()->MaxCarry(GetSecondaryAmmoType());
-		if (m_iDefaultAmmoCount == -1 || (m_iDefaultAmmoCount > iMaxCarry))
-			SetSecondaryAmmoCount(iMaxCarry);
-		else
-			SetSecondaryAmmoCount(m_iDefaultAmmoCount);
-#endif
-	}
-	else
+	int iMaxCarry = GetAmmoMaxCarry();
+	int iCurrent = GetAmmoCount();
+
+	if (iCurrent < iMaxCarry)
 	{
-		SetSecondaryAmmoCount( GetDefaultClip2() );
-		m_iClip2 = WEAPON_NOCLIP;
+		iAdd = MIN(count, iMaxCarry - iCurrent);
+		if (iAdd > 0)
+			SetAmmoCount(iCurrent + iAdd);
 	}
+
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+	if (pPlayer)
+	{
+		if (iAdd <= 0)
+		{
+			// we've been denied the pickup, display a hud icon to show that
+			CSingleUserRecipientFilter user(pPlayer);
+			user.MakeReliable();
+			UserMessageBegin(user, "AmmoDenied");
+			WRITE_SHORT(GetAmmoTypeID());
+			MessageEnd();
+		}
+		else
+		{
+			// Ammo pickup sound
+			if (!bSuppressSound)
+				pPlayer->EmitSound("BaseCombatCharacter.AmmoPickup");
+
+			// Show the pickup icon:
+			CSingleUserRecipientFilter user(pPlayer);
+			user.MakeReliable();
+			UserMessageBegin(user, "ItemPickup");
+			WRITE_STRING("AMMO");
+			WRITE_SHORT(GetAmmoTypeID());
+			MessageEnd();
+		}
+	}
+#endif
+
+	return iAdd;
 }
 
 //-----------------------------------------------------------------------------
@@ -227,48 +267,43 @@ void CBaseCombatWeapon::Spawn( void )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CBaseCombatWeapon::Precache( void )
+void CBaseCombatWeapon::Precache(void)
 {
 #if defined( CLIENT_DLL )
 	Assert( Q_strlen( GetClassname() ) > 0 );
 #endif
-	m_iPrimaryAmmoType = m_iSecondaryAmmoType = -1;
+
+	SetAmmoTypeID(-1);
 
 	// Add this weapon to the weapon registry, and get our index into it
 	// Get weapon data from script file
 	if (ReadWeaponDataFromFileForSlot(filesystem, GetClassname(), &m_hWeaponFileInfo, GameBaseShared()->GetEncryptionKey()))
 	{
 		// Get the ammo indexes for the ammo's specified in the data file
-		if ( GetWpnData().szAmmo1[0] )
+		const char *ammoTypeName = GetAmmoTypeName();
+		if (ammoTypeName && ammoTypeName[0])
 		{
-			m_iPrimaryAmmoType = GetAmmoDef()->Index( GetWpnData().szAmmo1 );
-			if (m_iPrimaryAmmoType == -1)
-			{
-				Msg("ERROR: Weapon (%s) using undefined primary ammo type (%s)\n",GetClassname(), GetWpnData().szAmmo1);
-			}
+			SetAmmoTypeID(GetAmmoDef()->Index(ammoTypeName));
+			if (GetAmmoTypeID() == -1)
+				Msg("ERROR: Weapon (%s) using undefined ammo type (%s)\n", GetClassname(), ammoTypeName);
 		}
-		if ( GetWpnData().szAmmo2[0] )
-		{
-			m_iSecondaryAmmoType = GetAmmoDef()->Index( GetWpnData().szAmmo2 );
-			if (m_iSecondaryAmmoType == -1)
-			{
-				Msg("ERROR: Weapon (%s) using undefined secondary ammo type (%s)\n",GetClassname(),GetWpnData().szAmmo2);
-			}
 
-		}
 #if defined( CLIENT_DLL )
 		gWR.LoadWeaponSprites( GetWeaponFileInfoHandle() );
 #endif
+
 		// Precache models (preload to avoid hitch)
 		m_iViewModelIndex = 0;
 		m_iWorldModelIndex = 0;
-		if ( GetViewModel() && GetViewModel()[0] )
+
+		if (GetViewModel() && GetViewModel()[0])
 		{
-			m_iViewModelIndex = CBaseEntity::PrecacheModel( GetViewModel() );
+			m_iViewModelIndex = CBaseEntity::PrecacheModel(GetViewModel());
 		}
-		if ( GetWorldModel() && GetWorldModel()[0] )
+
+		if (GetWorldModel() && GetWorldModel()[0])
 		{
-			m_iWorldModelIndex = CBaseEntity::PrecacheModel( GetWorldModel() );
+			m_iWorldModelIndex = CBaseEntity::PrecacheModel(GetWorldModel());
 		}
 
 		// Precache Particle Links
@@ -291,19 +326,19 @@ void CBaseCombatWeapon::Precache( void )
 		}
 
 		// Precache sounds, too
-		for ( int i = 0; i < NUM_SHOOT_SOUND_TYPES; ++i )
+		for (int i = 0; i < NUM_SHOOT_SOUND_TYPES; ++i)
 		{
-			const char *shootsound = GetShootSound( i );
-			if ( shootsound && shootsound[0] )
+			const char *shootsound = GetShootSound(i);
+			if (shootsound && shootsound[0])
 			{
-				CBaseEntity::PrecacheScriptSound( shootsound );
+				CBaseEntity::PrecacheScriptSound(shootsound);
 			}
 		}
 	}
 	else
 	{
 		// Couldn't read data file, remove myself
-		Warning( "Error reading weapon data file for: %s\n", GetClassname() );
+		Warning("Error reading weapon data file for: %s\n", GetClassname());
 		//	Remove( );	//don't remove, this gets released soon!
 	}
 }
@@ -429,24 +464,6 @@ int CBaseCombatWeapon::GetWeight( void ) const
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Whether this weapon can be autoswitched to when the player runs out
-//			of ammo in their current weapon or they pick this weapon up.
-//-----------------------------------------------------------------------------
-bool CBaseCombatWeapon::AllowsAutoSwitchTo( void ) const
-{
-	return GetWpnData().bAutoSwitchTo;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Whether this weapon can be autoswitched away from when the player
-//			runs out of ammo in this weapon or picks up another weapon or ammo.
-//-----------------------------------------------------------------------------
-bool CBaseCombatWeapon::AllowsAutoSwitchFrom( void ) const
-{
-	return GetWpnData().bAutoSwitchFrom;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 int CBaseCombatWeapon::GetWeaponFlags( void ) const
@@ -492,14 +509,6 @@ CHudTexture const *CBaseCombatWeapon::GetSpriteInactive( void ) const
 CHudTexture const *CBaseCombatWeapon::GetSpriteAmmo( void ) const
 {
 	return GetWpnData().iconAmmo;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-CHudTexture const *CBaseCombatWeapon::GetSpriteAmmo2( void ) const
-{
-	return GetWpnData().iconAmmo2;
 }
 
 //-----------------------------------------------------------------------------
@@ -580,15 +589,13 @@ bool CBaseCombatWeapon::CanBeSelected( void )
 bool CBaseCombatWeapon::HasAmmo( void )
 {
 	// Weapons with no ammo types can always be selected
-	if ( m_iPrimaryAmmoType == -1 && m_iSecondaryAmmoType == -1  )
-		return true;
-	if ( GetWeaponFlags() & ITEM_FLAG_SELECTONEMPTY )
+	if (GetAmmoTypeID() == -1)
 		return true;
 
-	CBasePlayer *player = ToBasePlayer( GetOwner() );
-	if ( !player )
-		return false;
-	return ( m_iClip1 > 0 || player->GetAmmoCount( m_iPrimaryAmmoType ) || m_iClip2 > 0 || player->GetAmmoCount( m_iSecondaryAmmoType ) );
+	if (GetWeaponFlags() & ITEM_FLAG_SELECTONEMPTY)
+		return true;
+
+	return (m_iClip1 > 0 || m_iClip2 > 0 || GetAmmoCount() > 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -598,7 +605,6 @@ bool CBaseCombatWeapon::VisibleInWeaponSelection( void )
 {
 	return true;
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1062,88 +1068,19 @@ bool CBaseCombatWeapon::SendWeaponAnim( int iActivity )
 // Purpose: Returns true if the weapon currently has ammo or doesn't need ammo
 // Output :
 //-----------------------------------------------------------------------------
-bool CBaseCombatWeapon::HasAnyAmmo( void )
+bool CBaseCombatWeapon::HasAnyAmmo(void)
 {
 	// If I don't use ammo of any kind, I can always fire
-	if ( !UsesPrimaryAmmo() && !UsesSecondaryAmmo() )
+	if (GetAmmoTypeID() == -1)
 		return true;
 
-	// Otherwise, I need ammo of either type
-	return ( HasPrimaryAmmo() || HasSecondaryAmmo() );
-}
+	if (UsesClipsForAmmo1() && (m_iClip1 > 0))
+		return true;
 
-//-----------------------------------------------------------------------------
-// Purpose: Returns true if the weapon currently has ammo or doesn't need ammo
-// Output :
-//-----------------------------------------------------------------------------
-bool CBaseCombatWeapon::HasPrimaryAmmo( void )
-{
-	// If I use a clip, and have some ammo in it, then I have ammo
-	if ( UsesClipsForAmmo1() )
-	{
-		if ( m_iClip1 > 0 )
-			return true;
-	}
+	if (UsesClipsForAmmo2() && (m_iClip2 > 0))
+		return true;
 
-	// Otherwise, I have ammo if I have some in my ammo counts
-	CBaseCombatCharacter		*pOwner = GetOwner();
-	if ( pOwner )
-	{
-		if ( pOwner->GetAmmoCount( m_iPrimaryAmmoType ) > 0 ) 
-			return true;
-	}
-	else
-	{
-		// No owner, so return how much primary ammo I have along with me.
-		if( GetPrimaryAmmoCount() > 0 )
-			return true;
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Returns true if the weapon currently has ammo or doesn't need ammo
-// Output :
-//-----------------------------------------------------------------------------
-bool CBaseCombatWeapon::HasSecondaryAmmo( void )
-{
-	// If I use a clip, and have some ammo in it, then I have ammo
-	if ( UsesClipsForAmmo2() )
-	{
-		if ( m_iClip2 > 0 )
-			return true;
-	}
-
-	// Otherwise, I have ammo if I have some in my ammo counts
-	CBaseCombatCharacter		*pOwner = GetOwner();
-	if ( pOwner )
-	{
-		if ( pOwner->GetAmmoCount( m_iSecondaryAmmoType ) > 0 ) 
-			return true;
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: returns true if the weapon actually uses primary ammo
-//-----------------------------------------------------------------------------
-bool CBaseCombatWeapon::UsesPrimaryAmmo( void )
-{
-	if ( m_iPrimaryAmmoType < 0 )
-		return false;
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: returns true if the weapon actually uses secondary ammo
-//-----------------------------------------------------------------------------
-bool CBaseCombatWeapon::UsesSecondaryAmmo( void )
-{
-	if ( m_iSecondaryAmmoType < 0 )
-		return false;
-	return true;
+	return (GetAmmoCount() > 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -1638,9 +1575,9 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 
 	if ((pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 	{
-		bool bHasEmptyClipOrAmmo = (UsesClipsForAmmo1() && (m_iClip1 <= 0)) || (!UsesClipsForAmmo1() && (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0));
+		bool bHasEmptyClipOrAmmo = (UsesClipsForAmmo1() && (m_iClip1 <= 0)) || (!UsesClipsForAmmo1() && (GetAmmoCount() <= 0));
 		if (IsAkimboWeapon())
-			bHasEmptyClipOrAmmo = bHasEmptyClipOrAmmo && ((UsesClipsForAmmo2() && (m_iClip2 <= 0)) || (!UsesClipsForAmmo2() && (pOwner->GetAmmoCount(m_iSecondaryAmmoType) <= 0)));
+			bHasEmptyClipOrAmmo = bHasEmptyClipOrAmmo && ((UsesClipsForAmmo2() && (m_iClip2 <= 0)) || (!UsesClipsForAmmo2() && (GetAmmoCount() <= 0)));
 
 		if (!IsMeleeWeapon() && bHasEmptyClipOrAmmo)		
 			HandleFireOnEmpty();
@@ -1972,35 +1909,14 @@ bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActi
 	CBaseCombatCharacter *pOwner = GetOwner();
 	if (!pOwner)
 		return false;
-
-	// If I don't have any spare ammo, I can't reload
-	if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
+	
+	if (GetAmmoCount() <= 0) // If I don't have any spare ammo, I can't reload
 		return false;
 
-	bool bReload = false;
+	int ammo1 = UsesClipsForAmmo1() ? MIN(iClipSize1 - m_iClip1, GetAmmoCount()) : 0;
+	int ammo2 = UsesClipsForAmmo2() ? MIN(iClipSize2 - m_iClip2, GetAmmoCount()) : 0;
 
-	// If you don't have clips, then don't try to reload them.
-	if ( UsesClipsForAmmo1() )
-	{
-		// need to reload primary clip?
-		int primary	= MIN(iClipSize1 - m_iClip1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
-		if ( primary != 0 )
-		{
-			bReload = true;
-		}
-	}
-
-	if ( UsesClipsForAmmo2() )
-	{
-		// need to reload secondary clip?
-		int secondary = MIN(iClipSize2 - m_iClip2, pOwner->GetAmmoCount(m_iSecondaryAmmoType));
-		if ( secondary != 0 )
-		{
-			bReload = true;
-		}
-	}
-
-	if ( !bReload )
+	if ((ammo1 <= 0) && (ammo2 <= 0))
 		return false;
 
 	m_iMeleeAttackType = 0;
@@ -2015,7 +1931,6 @@ bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActi
 	float flSequenceEndTime = gpGlobals->curtime + SequenceDuration();
 	pOwner->SetNextAttack( flSequenceEndTime );
 	m_flNextPrimaryAttack = m_flNextSecondaryAttack = flSequenceEndTime;
-
 	m_bInReload = true;
 
 	return true;
@@ -2098,7 +2013,7 @@ void CBaseCombatWeapon::CheckReload( void )
 			}
 
 			// If out of ammo end reload
-			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <=0)
+			if (GetAmmoCount() <= 0)
 			{
 				FinishReload();
 				return;
@@ -2108,8 +2023,7 @@ void CBaseCombatWeapon::CheckReload( void )
 			{
 				// Add them to the clip
 				m_iClip1 += 1;
-				pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
-
+				RemoveAmmo(1);
 				Reload();
 				return;
 			}
@@ -2138,32 +2052,23 @@ void CBaseCombatWeapon::CheckReload( void )
 //-----------------------------------------------------------------------------
 // Purpose: Reload has finished.
 //-----------------------------------------------------------------------------
-void CBaseCombatWeapon::FinishReload( void )
+void CBaseCombatWeapon::FinishReload(void)
 {
-	CBaseCombatCharacter *pOwner = GetOwner();
-	if (pOwner)
-	{
-		// If I use primary clips, reload primary
-		if ( UsesClipsForAmmo1() )
-		{
-			int primary	= MIN( GetMaxClip1() - m_iClip1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));	
-			m_iClip1 += primary;
-			pOwner->RemoveAmmo( primary, m_iPrimaryAmmoType);
-		}
+	int ammo1 = UsesClipsForAmmo1() ? MIN(GetMaxClip1() - m_iClip1, GetAmmoCount()) : 0;
+	int ammo2 = UsesClipsForAmmo2() ? MIN(GetMaxClip2() - m_iClip2, GetAmmoCount()) : 0;
 
-		// If I use secondary clips, reload secondary
-		if ( UsesClipsForAmmo2() )
-		{
-			int secondary = MIN( GetMaxClip2() - m_iClip2, pOwner->GetAmmoCount(m_iSecondaryAmmoType));
-			m_iClip2 += secondary;
-			pOwner->RemoveAmmo( secondary, m_iSecondaryAmmoType );
-		}
+	// If I use primary clips, reload primary
+	if (UsesClipsForAmmo1())
+		m_iClip1 += ammo1;
 
-		if ( m_bReloadsSingly )
-		{
-			m_bInReload = false;
-		}
-	}
+	// If I use secondary clips, reload secondary for akimbos.
+	if (UsesClipsForAmmo2())
+		m_iClip2 += ammo2;
+
+	RemoveAmmo((ammo1 + ammo2));
+
+	if (m_bReloadsSingly)
+		m_bInReload = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -2235,7 +2140,7 @@ void CBaseCombatWeapon::PrimaryAttack( void )
 		return;
 
 	// Abort here to handle burst and auto fire modes
-	if ((UsesClipsForAmmo1() && m_iClip1 <= 0) || (!UsesClipsForAmmo1() && !pPlayer->GetAmmoCount(m_iPrimaryAmmoType)))
+	if ((UsesClipsForAmmo1() && m_iClip1 <= 0) || (!UsesClipsForAmmo1() && !GetAmmoCount()))
 		return;
 
 	FireBulletsInfo_t info;
@@ -2267,12 +2172,12 @@ void CBaseCombatWeapon::PrimaryAttack( void )
 	}
 	else
 	{
-		info.m_iShots = MIN( info.m_iShots, pPlayer->GetAmmoCount( m_iPrimaryAmmoType ) );
-		pPlayer->RemoveAmmo( info.m_iShots, m_iPrimaryAmmoType );
+		info.m_iShots = MIN(info.m_iShots, GetAmmoCount());
+		RemoveAmmo(info.m_iShots);
 	}
 
 	info.m_flDistance = MAX_TRACE_LENGTH;
-	info.m_iAmmoType = m_iPrimaryAmmoType;
+	info.m_iAmmoType = GetAmmoTypeID();
 	info.m_iTracerFreq = 2;
 	info.m_vecSpread = pPlayer->GetAttackSpread( this );
 
@@ -2714,13 +2619,11 @@ BEGIN_PREDICTION_DATA( CBaseCombatWeapon )
 	DEFINE_PRED_FIELD(m_bWantsHolster, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD(m_bIsBloody, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE),
 
-	DEFINE_PRED_FIELD( m_iPrimaryAmmoType, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_iSecondaryAmmoType, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_iAmmoType, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_iClip1, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),			
 	DEFINE_PRED_FIELD( m_iClip2, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),			
 
-	DEFINE_PRED_FIELD( m_iPrimaryAmmoCount, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),	
-	DEFINE_PRED_FIELD( m_iSecondaryAmmoCount, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),	
+	DEFINE_PRED_FIELD( m_iAmmoCount, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),	
 
 	DEFINE_PRED_FIELD( m_nViewModelIndex, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 
@@ -2738,14 +2641,12 @@ BEGIN_PREDICTION_DATA( CBaseCombatWeapon )
 	DEFINE_FIELD( m_fFireDuration, FIELD_FLOAT ),
 	DEFINE_FIELD( m_iszName, FIELD_INTEGER ),		
 	DEFINE_FIELD( m_bFiresUnderwater, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bAltFiresUnderwater, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_fMinRange1, FIELD_FLOAT ),		
 	DEFINE_FIELD( m_fMinRange2, FIELD_FLOAT ),		
 	DEFINE_FIELD( m_fMaxRange1, FIELD_FLOAT ),		
 	DEFINE_FIELD( m_fMaxRange2, FIELD_FLOAT ),		
 	DEFINE_FIELD( m_bReloadsSingly, FIELD_BOOLEAN ),	
-	DEFINE_FIELD( m_iPrimaryAmmoCount, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iSecondaryAmmoCount, FIELD_INTEGER ),
+	DEFINE_FIELD( m_iAmmoCount, FIELD_INTEGER ),
 
 	//DEFINE_PHYSPTR( m_pConstraint ),
 
@@ -2779,19 +2680,16 @@ BEGIN_DATADESC( CBaseCombatWeapon )
 
 	DEFINE_FIELD( m_iState, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iszName, FIELD_STRING ),
-	DEFINE_FIELD( m_iPrimaryAmmoType, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iSecondaryAmmoType, FIELD_INTEGER ),
+	DEFINE_FIELD(m_iAmmoType, FIELD_INTEGER),
 	DEFINE_FIELD( m_iClip1, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iClip2, FIELD_INTEGER ),
 	DEFINE_FIELD( m_bFiresUnderwater, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bAltFiresUnderwater, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_fMinRange1, FIELD_FLOAT ),
 	DEFINE_FIELD( m_fMinRange2, FIELD_FLOAT ),
 	DEFINE_FIELD( m_fMaxRange1, FIELD_FLOAT ),
 	DEFINE_FIELD( m_fMaxRange2, FIELD_FLOAT ),
 
-	DEFINE_FIELD( m_iPrimaryAmmoCount, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iSecondaryAmmoCount, FIELD_INTEGER ),
+	DEFINE_FIELD(m_iAmmoCount, FIELD_INTEGER),
 
 	DEFINE_FIELD( m_nViewModelIndex, FIELD_INTEGER ),
 
@@ -2804,7 +2702,6 @@ BEGIN_DATADESC( CBaseCombatWeapon )
 	DEFINE_FIELD( m_fFireDuration, FIELD_FLOAT ),
 
 	DEFINE_FIELD( m_bReloadsSingly, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_iSubType, FIELD_INTEGER ),
 
 	DEFINE_FIELD( m_flUnlockTime,		FIELD_TIME ),
 	DEFINE_FIELD( m_hLocker,			FIELD_EHANDLE ),
@@ -2897,8 +2794,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CBaseCombatWeapon, DT_LocalWeaponData )
 #if !defined( CLIENT_DLL )
 	SendPropIntWithMinusOneFlag(SENDINFO(m_iClip1), 10),
 	SendPropIntWithMinusOneFlag(SENDINFO(m_iClip2), 10),
-	SendPropInt(SENDINFO(m_iPrimaryAmmoType), 6),
-	SendPropInt(SENDINFO(m_iSecondaryAmmoType), 6),
+	SendPropInt(SENDINFO(m_iAmmoType), 6),
 	SendPropInt(SENDINFO(m_nViewModelIndex), VIEWMODEL_INDEX_BITS, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_iShotsFired), 7, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN),
 	SendPropTime(SENDINFO(m_flNextPrimaryAttack)),
@@ -2914,8 +2810,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CBaseCombatWeapon, DT_LocalWeaponData )
 #else
 	RecvPropIntWithMinusOneFlag(RECVINFO(m_iClip1)),
 	RecvPropIntWithMinusOneFlag(RECVINFO(m_iClip2)),
-	RecvPropInt(RECVINFO(m_iPrimaryAmmoType)),
-	RecvPropInt(RECVINFO(m_iSecondaryAmmoType)),
+	RecvPropInt(RECVINFO(m_iAmmoType)),
 	RecvPropInt(RECVINFO(m_nViewModelIndex)),
 	RecvPropInt(RECVINFO(m_iShotsFired)),
 	RecvPropTime(RECVINFO(m_flNextPrimaryAttack)),
@@ -2939,8 +2834,7 @@ BEGIN_NETWORK_TABLE(CBaseCombatWeapon, DT_BaseCombatWeapon)
 	SendPropInt(SENDINFO(m_iState), 3, SPROP_UNSIGNED),
 	SendPropEHandle(SENDINFO(m_hOwner)),
 	SendPropBool(SENDINFO(m_bIsBloody)),
-	SendPropInt(SENDINFO(m_iPrimaryAmmoCount), 12, SPROP_UNSIGNED),
-	SendPropInt(SENDINFO(m_iSecondaryAmmoCount), 12, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_iAmmoCount), 13, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_iMeleeAttackType), 3, SPROP_UNSIGNED),
 #else
 	RecvPropDataTable("LocalWeaponData", 0, 0, &REFERENCE_RECV_TABLE(DT_LocalWeaponData)),
@@ -2949,8 +2843,7 @@ BEGIN_NETWORK_TABLE(CBaseCombatWeapon, DT_BaseCombatWeapon)
 	RecvPropInt(RECVINFO(m_iState)),
 	RecvPropEHandle(RECVINFO(m_hOwner)),
 	RecvPropBool(RECVINFO(m_bIsBloody)),
-	RecvPropInt(RECVINFO(m_iPrimaryAmmoCount)),
-	RecvPropInt(RECVINFO(m_iSecondaryAmmoCount)),
+	RecvPropInt(RECVINFO(m_iAmmoCount)),
 	RecvPropInt(RECVINFO(m_iMeleeAttackType)),
 #endif
 END_NETWORK_TABLE()

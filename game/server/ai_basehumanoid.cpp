@@ -34,28 +34,27 @@ bool CAI_BaseHumanoid::HandleInteraction(int interactionType, void *data, CBaseC
 	return BaseClass::HandleInteraction( interactionType, data, sourceEnt);
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: check ammo
 //-----------------------------------------------------------------------------
-void CAI_BaseHumanoid::CheckAmmo( void )
+void CAI_BaseHumanoid::CheckAmmo(void)
 {
 	BaseClass::CheckAmmo();
 
 	// FIXME: put into GatherConditions()?
 	// FIXME: why isn't this a baseclass function?
-	if (!GetActiveWeapon())
-		return;
-
 	// Don't do this while holstering / unholstering
-	if ( IsWeaponStateChanging() )
+	if (!GetActiveWeapon() || IsWeaponStateChanging())
 		return;
 
-	if (GetActiveWeapon()->UsesPrimaryAmmo())
+	if (GetActiveWeapon()->GetAmmoTypeID() != -1)
 	{
-		if (!GetActiveWeapon()->HasPrimaryAmmo() )
+		if (!GetActiveWeapon()->HasAnyAmmo())
 		{
 			SetCondition(COND_NO_PRIMARY_AMMO);
+
+			if (GetActiveWeapon()->UsesClipsForAmmo2())
+				SetCondition(COND_NO_SECONDARY_AMMO);
 		}
 		else if (GetActiveWeapon()->UsesClipsForAmmo1() && GetActiveWeapon()->Clip1() < (GetActiveWeapon()->GetMaxClip1() / 4 + 1))
 		{
@@ -63,16 +62,7 @@ void CAI_BaseHumanoid::CheckAmmo( void )
 			SetCondition(COND_LOW_PRIMARY_AMMO);
 		}
 	}
-
-	if (!GetActiveWeapon()->HasSecondaryAmmo() )
-	{
-		if ( GetActiveWeapon()->UsesClipsForAmmo2() )
-		{
-			SetCondition(COND_NO_SECONDARY_AMMO);
-		}
-	}
 }
-
 
 //-----------------------------------------------------------------------------
 // TASK_RANGE_ATTACK1

@@ -70,6 +70,9 @@ public:
 	bool CanPerformMeleeAttacks() { return false; }
 
 	int GetUniqueWeaponID() { return WEAPON_ID_FRAG; }
+
+	const char		*GetAmmoTypeName(void) { return "Grenade"; }
+	int				GetAmmoMaxCarry(void) { return 3; }
 	
 private:
 
@@ -197,7 +200,7 @@ void CWeaponFrag::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatChar
 
 	case EVENT_WEAPON_SEQUENCE_FINISHED:
 	{
-		if (GetPrimaryAmmoCount() <= 0)
+		if (GetAmmoCount() <= 0)
 		{
 			m_bRemoveWeapon = true;
 			pPlayer->Weapon_DropSlot(GetSlot()); // throw this weapon away!
@@ -257,7 +260,7 @@ bool CWeaponFrag::Holster( CBaseCombatWeapon *pSwitchingTo )
 //-----------------------------------------------------------------------------
 bool CWeaponFrag::Reload( void )
 {
-	if ( !HasPrimaryAmmo() )
+	if (GetAmmoCount() <= 0)
 		return false;
 
 	if ( ( m_bRedraw ) && ( m_flNextPrimaryAttack <= gpGlobals->curtime ) && ( m_flNextSecondaryAttack <= gpGlobals->curtime ) )
@@ -323,7 +326,7 @@ void CWeaponFrag::SecondaryAttack(void)
 //-----------------------------------------------------------------------------
 void CWeaponFrag::DecrementAmmo( CBaseCombatCharacter *pOwner )
 {
-	pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
+	RemoveAmmo(1);
 }
 
 #ifndef CLIENT_DLL
@@ -352,7 +355,7 @@ void CWeaponFrag::OnThrewGrenade(bool bCheckRemove)
 	}
 #endif //BB2_AI
 
-	if (bCheckRemove && GetPrimaryAmmoCount() <= 0)
+	if (bCheckRemove && GetAmmoCount() <= 0)
 	{
 		m_bRemoveWeapon = true;
 		pPlayer->Weapon_DropSlot(GetSlot()); // throw this weapon away!
@@ -428,8 +431,8 @@ void CWeaponFrag::Drop(const Vector &vecVelocity)
 	if (pPuller)
 	{
 		Fraggrenade_Create(pPuller->GetAbsOrigin(), vec3_angle, pPuller->GetAbsVelocity(), AngularImpulse(300, random->RandomInt(-600, 600), 0), pPuller, MAX((m_flLongestHoldTime - gpGlobals->curtime), 0), false);
-		SetPrimaryAmmoCount(MAX(GetPrimaryAmmoCount() - 1, 0));
-		if (GetPrimaryAmmoCount() <= 0)
+		SetAmmoCount(MAX(GetAmmoCount() - 1, 0));
+		if (GetAmmoCount() <= 0)
 		{
 			UTIL_Remove(this);
 			return;

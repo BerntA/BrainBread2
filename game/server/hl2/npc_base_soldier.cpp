@@ -2586,10 +2586,9 @@ bool CNPC_BaseSoldier::IsHeavyDamage(const CTakeDamageInfo &info)
 	int ammoType = info.GetAmmoType();
 	static int heavyDamageTypes[] = {
 		GetAmmoDef()->Index("Minigun"),
-		GetAmmoDef()->Index("Remington700"),
-		GetAmmoDef()->Index("G36C"),
-		GetAmmoDef()->Index("Trapper"),
-		GetAmmoDef()->Index("Rex")
+		GetAmmoDef()->Index("Sniper"),
+		GetAmmoDef()->Index("Buckshot"),
+		GetAmmoDef()->Index("Magnum")
 	};
 
 	for (int i = 0; i < _ARRAYSIZE(heavyDamageTypes); i++)

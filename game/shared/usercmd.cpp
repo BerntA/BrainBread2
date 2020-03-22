@@ -13,9 +13,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-// TF2 specific, need enough space for OBJ_LAST items from tf_shareddefs.h
-#define WEAPON_SUBTYPE_BITS	6
-
 //-----------------------------------------------------------------------------
 // Purpose: Write a delta compressed user command.
 // Input  : *buf - 
@@ -131,16 +128,6 @@ void WriteUsercmd( bf_write *buf, const CUserCmd *to, const CUserCmd *from )
 	{
 		buf->WriteOneBit( 1 );
 		buf->WriteUBitLong( to->weaponselect, MAX_EDICT_BITS );
-
-		if ( to->weaponsubtype != from->weaponsubtype )
-		{
-			buf->WriteOneBit( 1 );
-			buf->WriteUBitLong( to->weaponsubtype, WEAPON_SUBTYPE_BITS );
-		}
-		else
-		{
-			buf->WriteOneBit( 0 );
-		}
 	}
 	else
 	{
@@ -270,12 +257,7 @@ void ReadUsercmd( bf_read *buf, CUserCmd *move, CUserCmd *from )
 	if ( buf->ReadOneBit() )
 	{
 		move->weaponselect = buf->ReadUBitLong( MAX_EDICT_BITS );
-		if ( buf->ReadOneBit() )
-		{
-			move->weaponsubtype = buf->ReadUBitLong( WEAPON_SUBTYPE_BITS );
-		}
 	}
-
 
 	move->random_seed = MD5_PseudoRandom( move->command_number ) & 0x7fffffff;
 

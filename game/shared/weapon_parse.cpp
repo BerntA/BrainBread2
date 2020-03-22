@@ -307,21 +307,12 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 	iDefaultClip2 = 0;
 	iWeight = 0;
 	iRumbleEffect = -1;
-	bAutoSwitchTo = false;
-	bAutoSwitchFrom = false;
 	iFlags = 0;
-	szAmmo1[0] = 0;
-	szAmmo2[0] = 0;
-	memset( aShootSounds, 0, sizeof( aShootSounds ) );
-	iAmmoType = 0;
-	iAmmo2Type = 0;
+	memset(aShootSounds, 0, sizeof(aShootSounds));
 	m_bMeleeWeapon = false;
 	iconActive = 0;
 	iconInactive = 0;
 	iconAmmo = 0;
-	iconAmmo2 = 0;
-	m_bAllowFlipping = true;
-	m_bBuiltRightHanded = true;
 
 	// BB2 Skills:
 	m_flSpecialDamage = 0.0f;
@@ -396,30 +387,10 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 		}
 	}
 
-	bAutoSwitchTo = ( pKeyValuesData->GetInt( "autoswitchto", 1 ) != 0 ) ? true : false;
-	bAutoSwitchFrom = ( pKeyValuesData->GetInt( "autoswitchfrom", 1 ) != 0 ) ? true : false;
-	m_bBuiltRightHanded = ( pKeyValuesData->GetInt( "BuiltRightHanded", 1 ) != 0 ) ? true : false;
-	m_bAllowFlipping = ( pKeyValuesData->GetInt( "AllowFlipping", 1 ) != 0 ) ? true : false;
 	m_bMeleeWeapon = ( pKeyValuesData->GetInt( "MeleeWeapon", 0 ) != 0 ) ? true : false;
 
 	m_flSpecialDamage = pKeyValuesData->GetFloat("damage_special", 0.0f);
 	m_flSpecialDamage2 = pKeyValuesData->GetFloat("damage_special2", 0.0f);
-
-	// Primary ammo used
-	const char *pAmmo = pKeyValuesData->GetString( "primary_ammo", "None" );
-	if ( strcmp("None", pAmmo) == 0 )
-		Q_strncpy( szAmmo1, "", sizeof( szAmmo1 ) );
-	else
-		Q_strncpy( szAmmo1, pAmmo, sizeof( szAmmo1 )  );
-	iAmmoType = GetAmmoDef()->Index( szAmmo1 );
-	
-	// Secondary ammo used
-	pAmmo = pKeyValuesData->GetString( "secondary_ammo", "None" );
-	if ( strcmp("None", pAmmo) == 0)
-		Q_strncpy( szAmmo2, "", sizeof( szAmmo2 ) );
-	else
-		Q_strncpy( szAmmo2, pAmmo, sizeof( szAmmo2 )  );
-	iAmmo2Type = GetAmmoDef()->Index( szAmmo2 );
 
 	// BB2 Wep Properties:
 	KeyValues *pPropertiesField = pKeyValuesData->FindKey( "Properties" );

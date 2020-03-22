@@ -147,38 +147,17 @@ ConVar  sv_player_display_usercommand_errors( "sv_player_display_usercommand_err
 
 ConVar  player_debug_print_damage( "player_debug_print_damage", "0", FCVAR_CHEAT, "When true, print amount and type of all damage received by player to console." );
 
-void CC_GiveCurrentAmmo( void )
+void CC_GiveCurrentAmmo(void)
 {
 	CBasePlayer *pPlayer = UTIL_GetCommandClient();
-	if( pPlayer )
+	if (pPlayer)
 	{
 		CBaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
-		if( pWeapon )
-		{
-			if( pWeapon->UsesPrimaryAmmo() )
-			{
-				int ammoIndex = pWeapon->GetPrimaryAmmoType();
-				if( ammoIndex != -1 )
-				{
-					int giveAmount;
-					giveAmount = GetAmmoDef()->MaxCarry(ammoIndex);
-					pPlayer->GiveAmmo(giveAmount, ammoIndex);
-				}
-			}
-			if( pWeapon->UsesSecondaryAmmo() )
-			{
-				int ammoIndex = pWeapon->GetSecondaryAmmoType();
-				if( ammoIndex != -1 )
-				{
-					int giveAmount;
-					giveAmount = GetAmmoDef()->MaxCarry(ammoIndex);
-					pPlayer->GiveAmmo(giveAmount, ammoIndex);
-				}
-			}
-		}
+		if (pWeapon && (pWeapon->GetAmmoTypeID() != -1))
+			pWeapon->GiveAmmo(pWeapon->GetAmmoMaxCarry(), true);
 	}
 }
-static ConCommand givecurrentammo("givecurrentammo", CC_GiveCurrentAmmo, "Give a supply of ammo for current weapon..\n", FCVAR_CHEAT );
+static ConCommand givecurrentammo("givecurrentammo", CC_GiveCurrentAmmo, "Give a supply of ammo for current weapon..\n", FCVAR_CHEAT);
 
 // pl
 BEGIN_SIMPLE_DATADESC( CPlayerState )
@@ -4402,13 +4381,13 @@ void CBasePlayer::VelocityPunch( const Vector &vecForce )
 //-----------------------------------------------------------------------------
 // Purpose: Create and give the named item to the player. Then return it.
 //-----------------------------------------------------------------------------
-CBaseEntity	*CBasePlayer::GiveNamedItem( const char *pszName, int iSubType )
+CBaseEntity	*CBasePlayer::GiveNamedItem(const char *pszName)
 {
 	EHANDLE pent;
 	pent = CreateEntityByName(pszName);
-	if ( pent == NULL )
+	if (pent == NULL)
 	{
-		Msg( "NULL Ent in GiveNamedItem!\n" );
+		Msg("NULL Ent in GiveNamedItem!\n");
 		return NULL;
 	}
 
@@ -4416,16 +4395,11 @@ CBaseEntity	*CBasePlayer::GiveNamedItem( const char *pszName, int iSubType )
 	vecOrigin.z += 40;
 
 	pent->SetLocalOrigin(vecOrigin);
-	pent->AddSpawnFlags( SF_NORESPAWN );
+	pent->AddSpawnFlags(SF_NORESPAWN);
+	DispatchSpawn(pent);
 
-	CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon*>( (CBaseEntity*)pent );
-	if ( pWeapon )
-		pWeapon->SetSubType( iSubType );
-
-	DispatchSpawn( pent );
-
-	if ( pent != NULL && !(pent->IsMarkedForDeletion()) ) 
-		pent->Touch( this );
+	if (pent != NULL && !(pent->IsMarkedForDeletion()))
+		pent->Touch(this);
 
 	return pent;
 }
@@ -6266,47 +6240,6 @@ void CBasePlayer::SetViewEntity( CBaseEntity *pEntity )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Looks at the player's reserve ammo and also all his weapons for any ammo
-//			of the specified type
-// Input  : nAmmoIndex - ammo to look for
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CBasePlayer::HasAnyAmmoOfType( int nAmmoIndex )
-{
-	// Must be a valid index
-	if ( nAmmoIndex < 0 )
-		return false;
-
-	CBaseCombatWeapon *pWeapon;
-
-	// Check all held weapons
-	for ( int i= 0; i < MAX_WEAPONS; i++ )
-	{
-		pWeapon = GetWeapon( i );
-		if ( !pWeapon )
-			continue;
-
-		// We must use clips and use this sort of ammo
-		if ( pWeapon->UsesClipsForAmmo1() && pWeapon->GetPrimaryAmmoType() == nAmmoIndex )
-		{
-			// If we have any ammo, we're done
-			if ( pWeapon->HasPrimaryAmmo() )
-				return true;
-		}
-		
-		// We'll check both clips for the same ammo type, just in case
-		if ( pWeapon->UsesClipsForAmmo2() && pWeapon->GetSecondaryAmmoType() == nAmmoIndex )
-		{
-			if ( pWeapon->HasSecondaryAmmo() )
-				return true;
-		}
-	}	
-
-	// We're completely without this type of ammo
-	return false;
-}
-
-//-----------------------------------------------------------------------------
 //  return a string version of the players network (i.e steam) ID.
 //
 //-----------------------------------------------------------------------------
@@ -6683,7 +6616,6 @@ void CPlayerInfo::RunPlayerMove( CBotCmd *ucmd )
 		cmd.upmove = ucmd->upmove;
 		cmd.viewangles = ucmd->viewangles;
 		cmd.weaponselect = ucmd->weaponselect;
-		cmd.weaponsubtype = ucmd->weaponsubtype;
 
 		// Store off the globals.. they're gonna get whacked
 		float flOldFrametime = gpGlobals->frametime;
@@ -6726,7 +6658,6 @@ void CPlayerInfo::SetLastUserCommand( const CBotCmd &ucmd )
 		cmd.upmove = ucmd.upmove;
 		cmd.viewangles = ucmd.viewangles;
 		cmd.weaponselect = ucmd.weaponselect;
-		cmd.weaponsubtype = ucmd.weaponsubtype;
 
 		m_pParent->SetLastUserCommand(cmd); 
 	}
@@ -6752,7 +6683,6 @@ CBotCmd CPlayerInfo::GetLastUserCommand()
 		cmd.upmove = ucmd->upmove;
 		cmd.viewangles = ucmd->viewangles;
 		cmd.weaponselect = ucmd->weaponselect;
-		cmd.weaponsubtype = ucmd->weaponsubtype;
 	}
 	return cmd;
 }

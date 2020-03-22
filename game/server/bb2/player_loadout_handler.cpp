@@ -53,8 +53,7 @@ void CPlayerLoadoutHandler::SaveLoadoutData()
 			{
 				weaponClassname = pWeapon->GetClassname();
 
-				item.iPrimaryAmmo[wep] = pWeapon->GetPrimaryAmmoCount();
-				item.iSecondaryAmmo[wep] = pWeapon->GetSecondaryAmmoCount();
+				item.iAmmo[wep] = pWeapon->GetAmmoCount();
 
 				item.iPrimaryClip[wep] = pWeapon->m_iClip1;
 				item.iSecondaryClip[wep] = pWeapon->m_iClip2;
@@ -63,8 +62,7 @@ void CPlayerLoadoutHandler::SaveLoadoutData()
 			}
 			else
 			{
-				item.iPrimaryAmmo[wep] = 0;
-				item.iSecondaryAmmo[wep] = 0;
+				item.iAmmo[wep] = 0;
 				item.iPrimaryClip[wep] = 0;
 				item.iSecondaryClip[wep] = 0;
 				item.bIsBloody[wep] = false;
@@ -115,8 +113,7 @@ bool CPlayerLoadoutHandler::LoadDataForPlayer(CHL2MP_Player *pPlayer)
 							CBaseCombatWeapon *pWeapon = pPlayer->Weapon_OwnsThisType(m_pLoadoutList[i].pchWeapon[wep]);
 							if (pWeapon)
 							{
-								pWeapon->SetPrimaryAmmoCount(m_pLoadoutList[i].iPrimaryAmmo[wep]);
-								pWeapon->SetSecondaryAmmoCount(m_pLoadoutList[i].iSecondaryAmmo[wep]);
+								pWeapon->SetAmmoCount(m_pLoadoutList[i].iAmmo[wep]);
 
 								pWeapon->m_iClip1 = m_pLoadoutList[i].iPrimaryClip[wep];
 								pWeapon->m_iClip2 = m_pLoadoutList[i].iSecondaryClip[wep];

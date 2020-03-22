@@ -329,7 +329,7 @@ bool CBaseCombatWeapon::WeaponLOSCondition( const Vector &ownerPos, const Vector
 //-----------------------------------------------------------------------------
 int CBaseCombatWeapon::WeaponRangeAttack1Condition( float flDot, float flDist )
 {
- 	if ( UsesPrimaryAmmo() && !HasPrimaryAmmo() )
+	if ((GetAmmoTypeID() != -1) && !HasAnyAmmo())
  	{
  		return COND_NO_PRIMARY_AMMO;
  	}

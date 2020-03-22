@@ -200,11 +200,8 @@ bool CWeaponSawedOff::Reload(void)
 	if (!pOwner)
 		return false;
 
-	int iAmmo = pOwner->GetAmmoCount(m_iPrimaryAmmoType);
-	if (iAmmo <= 0)
-		return false;
-
-	if (m_iClip1 >= GetMaxClip1())
+	int iAmmo = GetAmmoCount();
+	if ((iAmmo <= 0) || (m_iClip1 >= GetMaxClip1()))
 		return false;
 
 	int j = MIN(1, iAmmo);
@@ -255,7 +252,7 @@ void CWeaponSawedOff::ItemPostFrame(void)
 
 	if (m_bInReload && IsViewModelSequenceFinished() && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 	{
-		int iAmmo = pOwner->GetAmmoCount(m_iPrimaryAmmoType);
+		int iAmmo = GetAmmoCount();
 		if (m_iClip1 <= 0 && iAmmo > 1)
 			FillClip(2);
 		else
@@ -272,7 +269,7 @@ void CWeaponSawedOff::ItemPostFrame(void)
 	{
 		if (pOwner->m_nButtons & (IN_ATTACK | IN_ATTACK2))
 		{
-			if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !pOwner->GetAmmoCount(m_iPrimaryAmmoType)))
+			if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !GetAmmoCount()))
 			{
 				DryFire();
 				return;
@@ -326,7 +323,7 @@ void CWeaponSawedOff::ItemPostFrame(void)
 
 	if ((pOwner->m_nButtons & IN_RELOAD) && UsesClipsForAmmo1() && !m_bInReload)
 	{
-		if ((m_iClip1 < GetMaxClip1()) && (pOwner->GetAmmoCount(m_iPrimaryAmmoType) >= 1))
+		if ((m_iClip1 < GetMaxClip1()) && (GetAmmoCount() >= 1))
 			Reload();
 	}
 }

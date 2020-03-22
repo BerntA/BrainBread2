@@ -28,6 +28,7 @@ public:
 
 	int GetOverloadCapacity() { return 10; }
 	int GetUniqueWeaponID() { return WEAPON_ID_AK74; }
+	int GetAmmoMaxCarry(void) { return 180; }
 	const char *GetAmmoEntityLink(void) { return "ammo_rifle"; }	
 
 private:

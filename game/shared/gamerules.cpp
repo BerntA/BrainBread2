@@ -143,47 +143,6 @@ CGameRules::CGameRules() : CAutoGameSystemPerFrame( "CGameRules" )
 	m_flNextVerboseLogOutput = 0.0f;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Return true if the specified player can carry any more of the ammo type
-//-----------------------------------------------------------------------------
-bool CGameRules::CanHaveAmmo( CBaseCombatCharacter *pPlayer, int iAmmoIndex )
-{
-	if ( iAmmoIndex > -1 )
-	{
-		// Get the max carrying capacity for this ammo
-		int iMaxCarry = GetAmmoDef()->MaxCarry( iAmmoIndex );
-
-		// Check if we have the ammo type we're trying to pickup.
-		bool bCanPickup = false;
-		for (int i = 0; i < MAX_WEAPONS; i++)
-		{
-			CBaseCombatWeapon *pWeapon = pPlayer->GetWeapon(i);
-			if (pWeapon)
-			{
-				if (pWeapon->GetPrimaryAmmoType() == iAmmoIndex)
-				{
-					bCanPickup = true;
-					break;
-				}
-			}
-		}
-
-		// Does the player have room for more of this type of ammo?
-		if (bCanPickup && (pPlayer->GetAmmoCount(iAmmoIndex) < iMaxCarry))
-			return true;
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Return true if the specified player can carry any more of the ammo type
-//-----------------------------------------------------------------------------
-bool CGameRules::CanHaveAmmo( CBaseCombatCharacter *pPlayer, const char *szName )
-{
-	return CanHaveAmmo( pPlayer, GetAmmoDef()->Index(szName) );
-}
-
 //=========================================================
 //=========================================================
 CBaseEntity *CGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )

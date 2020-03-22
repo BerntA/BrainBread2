@@ -61,6 +61,9 @@ public:
 	bool Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
 	void Drop(const Vector &vecVelocity);
 
+	const char		*GetAmmoTypeName(void) { return "Minigun"; }
+	int				GetAmmoMaxCarry(void) { return 0; }
+
 private:
 	CWeaponMinigun(const CWeaponMinigun &);
 

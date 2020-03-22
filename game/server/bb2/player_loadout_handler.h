@@ -23,8 +23,7 @@ struct PlayerLoadoutItem_t
 	char pchLastWeapon[MAX_WEAPON_STRING];
 
 	char pchWeapon[PLAYER_MAX_CARRY_WEPS][MAX_WEAPON_STRING];
-	int iPrimaryAmmo[PLAYER_MAX_CARRY_WEPS];
-	int iSecondaryAmmo[PLAYER_MAX_CARRY_WEPS];
+	int iAmmo[PLAYER_MAX_CARRY_WEPS];
 	int iPrimaryClip[PLAYER_MAX_CARRY_WEPS];
 	int iSecondaryClip[PLAYER_MAX_CARRY_WEPS];
 	bool bIsBloody[PLAYER_MAX_CARRY_WEPS];

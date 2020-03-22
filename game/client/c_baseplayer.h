@@ -256,7 +256,7 @@ public:
 	virtual	bool				Weapon_Switch( C_BaseCombatWeapon *pWeapon, bool bWantDraw = false, int viewmodelindex = 0 );		// Switch to given weapon if has ammo (false if failed)
 	virtual C_BaseCombatWeapon *GetLastWeapon( void ) { return m_hLastWeapon.Get(); }
 	virtual C_BaseCombatWeapon *GetNextWeapon( void ) { return m_hNextWeapon.Get(); }
-	virtual void 				SelectItem( const char *pstr, int iSubType = 0 );
+	virtual void 				SelectItem(const char *pstr);
 
 	virtual void				UpdateClientData( void );
 

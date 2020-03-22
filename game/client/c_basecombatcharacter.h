@@ -56,19 +56,10 @@ public:
 	virtual bool IsLineOfSightClear( CBaseEntity *entity, LineOfSightCheckType checkType = IGNORE_NOTHING ) const;// strictly LOS check with no other considerations
 	virtual bool IsLineOfSightClear( const Vector &pos, LineOfSightCheckType checkType = IGNORE_NOTHING, CBaseEntity *entityToIgnore = NULL ) const;
 
-	// -----------------------
-	// Ammo
-	// -----------------------
-	virtual void				RemoveAmmo(int iCount, int iAmmoIndex);
-	virtual void				SetAmmoCount(int iCount, int iAmmoIndex);
-	virtual int					GetAmmoCount(int iAmmoIndex);
-	virtual bool                IsAmmoIndexSecondaryAmmo(int iAmmoIndex);
-
-	C_BaseCombatWeapon*	Weapon_OwnsThisType( const char *pszWeapon, int iSubType = 0 ) const;  // True if already owns a weapon of this class
+	C_BaseCombatWeapon*	Weapon_OwnsThisType( const char *pszWeapon ) const;  // True if already owns a weapon of this class
 	C_BaseCombatWeapon* Weapon_GetBySlot(int slot) const;
 	virtual	bool		Weapon_Switch( C_BaseCombatWeapon *pWeapon, bool bWantDraw = false, int viewmodelindex = 0 );
 	virtual bool		Weapon_CanSwitchTo(C_BaseCombatWeapon *pWeapon);
-	C_BaseCombatWeapon	*Weapon_GetWpnForAmmo(int iAmmoIndex);
 	
 	// I can't use my current weapon anymore. Switch me to the next best weapon.
 	bool SwitchToNextBestWeapon(C_BaseCombatWeapon *pCurrent);

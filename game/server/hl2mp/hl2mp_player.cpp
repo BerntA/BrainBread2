@@ -1225,20 +1225,6 @@ void CHL2MP_Player::Weapon_Equip(CBaseCombatWeapon *pWeapon)
 	GameBaseShared()->ComputePlayerWeight(this);
 }
 
-bool CHL2MP_Player::EquipAmmoFromWeapon(CBaseCombatWeapon *pWeapon)
-{
-	if (!pWeapon)
-		return false;
-
-	if (!pWeapon->CanPickupWeaponAsAmmo())
-		return false;
-
-	int primaryAmmo = GiveAmmo(pWeapon->GetDefaultClip1(), pWeapon->m_iPrimaryAmmoType, false);
-	int secondaryAmmo = GiveAmmo(pWeapon->GetDefaultClip2(), pWeapon->m_iSecondaryAmmoType, false);
-
-	return (primaryAmmo != 0 || secondaryAmmo != 0);
-}
-
 CBaseCombatWeapon *CHL2MP_Player::GetBestWeapon()
 {
 	int iWeight = 0;
@@ -1329,13 +1315,13 @@ bool CHL2MP_Player::BumpWeapon(CBaseCombatWeapon *pWeapon)
 
 	if (bHasWeapon)
 	{
-		if (EquipAmmoFromWeapon(pWeapon))
+		// Consume it if possible!
+		if (pWeapon->CanPickupWeaponAsAmmo() && (pIdenticalWep->GiveAmmo(pWeapon->GetDefaultClip1()) > 0))
 		{
 			pWeapon->CheckRespawn();
 			UTIL_Remove(pWeapon);
 			return true;
 		}
-
 		return false;
 	}
 

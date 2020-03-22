@@ -29,7 +29,10 @@ public:
 	int GetOverloadCapacity() { return 12; }
 	int GetUniqueWeaponID() { return WEAPON_ID_MP7; }
 	int GetWeaponType(void) { return WEAPON_TYPE_SMG; }
-	const char *GetAmmoEntityLink(void) { return "ammo_smg"; }	
+	const char *GetAmmoEntityLink(void) { return "ammo_smg"; }
+
+	const char		*GetAmmoTypeName(void) { return "SMG"; }
+	int				GetAmmoMaxCarry(void) { return 240; }
 
 private:
 	CWeaponMP7(const CWeaponMP7 &);

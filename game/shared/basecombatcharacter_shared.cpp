@@ -81,132 +81,18 @@ CBaseCombatWeapon *CBaseCombatCharacter::GetActiveWeapon() const
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : iCount - 
-//			iAmmoIndex - 
-//-----------------------------------------------------------------------------
-void CBaseCombatCharacter::RemoveAmmo(int iCount, int iAmmoIndex)
-{
-	if (iCount <= 0 || (iAmmoIndex < 0))
-		return;
-
-	CBaseCombatWeapon *pActiveWeapon = Weapon_GetWpnForAmmo(iAmmoIndex);
-	if (!pActiveWeapon)
-		return;
-
-	// Infinite ammo?
-	if ( GetAmmoDef()->MaxCarry( iAmmoIndex ) == INFINITE_AMMO )
-		return;
-
-	if (IsAmmoIndexSecondaryAmmo(iAmmoIndex))
-		pActiveWeapon->SetSecondaryAmmoCount(MAX(pActiveWeapon->GetSecondaryAmmoCount() - iCount, 0));
-	else
-		pActiveWeapon->SetPrimaryAmmoCount(MAX(pActiveWeapon->GetPrimaryAmmoCount() - iCount, 0));
-}
-
-//-----------------------------------------------------------------------------
-// Set the count manually
-//-----------------------------------------------------------------------------
-void CBaseCombatCharacter::SetAmmoCount(int iCount, int iAmmoIndex)
-{
-	if (iCount <= 0 || (iAmmoIndex < 0))
-		return;
-
-	CBaseCombatWeapon *pActiveWeapon = Weapon_GetWpnForAmmo(iAmmoIndex);
-	if (!pActiveWeapon)
-		return;
-
-	// Infinite ammo?
-	if (GetAmmoDef()->MaxCarry(iAmmoIndex) == INFINITE_AMMO)
-		return;
-
-	if (IsAmmoIndexSecondaryAmmo(iAmmoIndex))
-		pActiveWeapon->SetSecondaryAmmoCount(iCount);
-	else
-		pActiveWeapon->SetPrimaryAmmoCount(iCount);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Returns the amount of ammunition of a particular type owned
-//			owned by the character
-// Input  :	Ammo Index
-// Output :	The amount of ammo
-//-----------------------------------------------------------------------------
-int CBaseCombatCharacter::GetAmmoCount(int iAmmoIndex)
-{
-	if ((iAmmoIndex < 0))
-		return 0;
-
-	CBaseCombatWeapon *pActiveWeapon = Weapon_GetWpnForAmmo(iAmmoIndex);
-	if (!pActiveWeapon)
-		return 0;
-
-	// Infinite ammo?
-	if ( GetAmmoDef()->MaxCarry( iAmmoIndex ) == INFINITE_AMMO )
-		return 999;
-
-	if (IsAmmoIndexSecondaryAmmo(iAmmoIndex))
-		return pActiveWeapon->GetSecondaryAmmoCount();
-	else
-		return pActiveWeapon->GetPrimaryAmmoCount();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Is this ammo type a secondary ammo type?
-//-----------------------------------------------------------------------------
-bool CBaseCombatCharacter::IsAmmoIndexSecondaryAmmo(int iAmmoIndex)
-{
-	for (int i = 0; i < MAX_WEAPONS; i++)
-	{
-		CBaseCombatWeapon *weapon = GetWeapon(i);
-		if (!weapon)
-			continue;
-
-		if (weapon->GetSecondaryAmmoType() == iAmmoIndex)
-			return true;
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Get a pointer to a weapon this character has that uses the specified ammo
-//-----------------------------------------------------------------------------
-CBaseCombatWeapon *CBaseCombatCharacter::Weapon_GetWpnForAmmo(int iAmmoIndex)
-{
-	for (int i = 0; i < MAX_WEAPONS; i++)
-	{
-		CBaseCombatWeapon *weapon = GetWeapon(i);
-		if (!weapon)
-			continue;
-
-		if (weapon->GetPrimaryAmmoType() == iAmmoIndex)
-			return weapon;
-		if (weapon->GetSecondaryAmmoType() == iAmmoIndex)
-			return weapon;
-	}
-
-	return NULL;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Returns weapon if already owns a weapon of this class
 //-----------------------------------------------------------------------------
-CBaseCombatWeapon* CBaseCombatCharacter::Weapon_OwnsThisType( const char *pszWeapon, int iSubType ) const
+CBaseCombatWeapon* CBaseCombatCharacter::Weapon_OwnsThisType( const char *pszWeapon ) const
 {
 	// Check for duplicates
 	for (int i = 0; i < MAX_WEAPONS; i++)
 	{
 		if (m_hMyWeapons[i].Get() && FClassnameIs(m_hMyWeapons[i], pszWeapon))
-		{
-			// Make sure it matches the subtype
-			if (m_hMyWeapons[i]->GetSubType() == iSubType)
-				return m_hMyWeapons[i];
-		}
+			return m_hMyWeapons[i];
 	}
 	return NULL;
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Returns weapons with the appropriate weapon slot.
@@ -225,12 +111,10 @@ CBaseCombatWeapon *CBaseCombatCharacter::Weapon_GetBySlot(int slot) const
 	return NULL;
 }
 
-
 int CBaseCombatCharacter::BloodColor()
 {
 	return m_bloodColor;
 }
-
 
 //-----------------------------------------------------------------------------
 // Blood color (see BLOOD_COLOR_* macros in baseentity.h)

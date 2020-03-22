@@ -159,10 +159,6 @@ public:
 
 	virtual void			MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType );
 
-	// Subtypes are used to manage multiple weapons of the same type on the player.
-	virtual int				GetSubType( void ) { return m_iSubType; }
-	virtual void			SetSubType( int iType ) { m_iSubType = iType; }
-
 	virtual void			Equip( CBaseCombatCharacter *pOwner );
 	virtual void			Drop( const Vector &vecVelocity );
 	virtual void            ResetAllParticles(void);
@@ -197,10 +193,6 @@ public:
 
 	// Weapon selection
 	virtual bool			HasAnyAmmo( void );							// Returns true is weapon has ammo
-	virtual bool			HasPrimaryAmmo( void );						// Returns true is weapon has ammo
-	virtual bool			HasSecondaryAmmo( void );					// Returns true is weapon has ammo
-	bool					UsesPrimaryAmmo( void );					// returns true if the weapon actually uses primary ammo
-	bool					UsesSecondaryAmmo( void );					// returns true if the weapon actually uses secondary ammo
 	void					GiveDefaultAmmo( void );
 	
 	virtual bool			CanHolster( void );		// returns true if the weapon can be holstered
@@ -350,8 +342,6 @@ public:
 	virtual int				GetDefaultClip1( void ) const;
 	virtual int				GetDefaultClip2( void ) const;
 	virtual int				GetWeight( void ) const;
-	virtual bool			AllowsAutoSwitchTo( void ) const;
-	virtual bool			AllowsAutoSwitchFrom( void ) const;
 	virtual int				GetWeaponFlags( void ) const;
 	virtual int				GetSlot( void ) const;
 	virtual char const		*GetName( void ) const;
@@ -363,12 +353,16 @@ public:
 	bool					IsMeleeWeapon() const;
 	float                   GetSpecialDamage() const;
 
+	virtual const char		*GetAmmoTypeName(void) { return NULL; }
+	virtual int				GetAmmoMaxCarry(void) { return 0; }
+
+	int				GetAmmoTypeID(void) { return m_iAmmoType.Get(); }
+	void			SetAmmoTypeID(int id) { m_iAmmoType.Set(id); }
+
 	char const		*GetAttachmentLink( void ) const;
 	const Vector &GetAttachmentPositionOffset( void ) const;
 	const QAngle &GetAttachmentAngleOffset( void ) const;
 
-	virtual int				GetPrimaryAmmoType( void )  const { return m_iPrimaryAmmoType; }
-	virtual int				GetSecondaryAmmoType( void )  const { return m_iSecondaryAmmoType; }
 	virtual int				Clip1() { return m_iClip1; }
 	virtual int				Clip2() { return m_iClip2; }
 
@@ -380,11 +374,10 @@ public:
 	// Ammo quantity queries for weapons that do not use clips. These are only
 	// used to determine how much ammo is in a weapon that does not have an owner.
 	// That is, a weapon that's on the ground for the player to get ammo out of.
-	int GetPrimaryAmmoCount() { return m_iPrimaryAmmoCount; }
-	void SetPrimaryAmmoCount( int count ) { m_iPrimaryAmmoCount = count; }
-
-	int GetSecondaryAmmoCount() { return m_iSecondaryAmmoCount; }
-	void SetSecondaryAmmoCount( int count ) { m_iSecondaryAmmoCount = count; }
+	int GetAmmoCount() { return m_iAmmoCount.Get(); }
+	void SetAmmoCount(int count) { m_iAmmoCount.Set(count); }
+	void RemoveAmmo(int count);
+	int GiveAmmo(int count, bool bSuppressSound = false);
 
 #ifndef CLIENT_DLL
 	void SetWeaponStartAmmo(int count) { m_iDefaultAmmoCount = count; GiveDefaultAmmo(); }
@@ -394,7 +387,6 @@ public:
 	virtual CHudTexture const	*GetSpriteActive( void ) const;
 	virtual CHudTexture const	*GetSpriteInactive( void ) const;
 	virtual CHudTexture const	*GetSpriteAmmo( void ) const;
-	virtual CHudTexture const	*GetSpriteAmmo2( void ) const;
 
 	virtual Activity		ActivityOverride( Activity baseAct, bool *pRequired );
 	virtual	acttable_t*		ActivityList( void ) { return NULL; }
@@ -574,8 +566,7 @@ private:
 	int						m_nIdealSequence;
 	Activity				m_IdealActivity;
 
-	CNetworkVar(int, m_iPrimaryAmmoCount);
-	CNetworkVar(int, m_iSecondaryAmmoCount);
+	CNetworkVar(int, m_iAmmoCount);
 
 #ifndef CLIENT_DLL
 	bool m_bCanRemoveWeapon;
@@ -590,19 +581,16 @@ public:
 	// Weapon data
 	CNetworkVar( int, m_iState );				// See WEAPON_* definition
 	string_t				m_iszName;				// Classname of this weapon.
-	CNetworkVar( int, m_iPrimaryAmmoType );		// "primary" ammo index into the ammo info array 
-	CNetworkVar( int, m_iSecondaryAmmoType );	// "secondary" ammo index into the ammo info array
+	CNetworkVar( int, m_iAmmoType );		// "primary" ammo index into the ammo info array 
 	CNetworkVar( int, m_iClip1 );				// number of shots left in the primary weapon clip, -1 it not used
 	CNetworkVar( int, m_iClip2 );				// number of shots left in the secondary weapon clip, -1 it not used
 	bool					m_bFiresUnderwater;		// true if this weapon can fire underwater
-	bool					m_bAltFiresUnderwater;		// true if this weapon can fire underwater
 	float					m_fMinRange1;			// What's the closest this weapon can be used?
 	float					m_fMinRange2;			// What's the closest this weapon can be used?
 	float					m_fMaxRange1;			// What's the furthest this weapon can be used?
 	float					m_fMaxRange2;			// What's the furthest this weapon can be used?
 	bool					m_bReloadsSingly;		// True if this weapon reloads 1 round at a time
 	float					m_fFireDuration;		// The amount of time that the weapon has sustained firing
-	int						m_iSubType;
 
 	float					m_flUnlockTime;
 	EHANDLE					m_hLocker;				// Who locked this weapon.

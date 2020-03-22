@@ -49,7 +49,7 @@ public:
 	void DryFire(void);
 	float GetFireRate(void) { return GetWpnData().m_flFireRate; }
 
-	void AffectedByPlayerSkill(int skill);		
+	void AffectedByPlayerSkill(int skill);
 
 private:
 	CWeaponWinchester1894(const CWeaponWinchester1894 &);
@@ -188,18 +188,10 @@ void CWeaponWinchester1894::AffectedByPlayerSkill(int skill)
 //-----------------------------------------------------------------------------
 bool CWeaponWinchester1894::StartReload(void)
 {
-	CBaseCombatCharacter *pOwner = GetOwner();
-	if (pOwner == NULL)
+	if ((GetAmmoCount() <= 0) || (m_iClip1 >= GetMaxClip1()))
 		return false;
 
-	if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
-		return false;
-
-	if (m_iClip1 >= GetMaxClip1())
-		return false;
-
-	int j = MIN(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
-
+	int j = MIN(1, GetAmmoCount());
 	if (j <= 0)
 		return false;
 
@@ -224,18 +216,10 @@ bool CWeaponWinchester1894::Reload(void)
 		Warning("ERROR: Shotgun Reload called incorrectly!\n");
 	}
 
-	CBaseCombatCharacter *pOwner = GetOwner();
-	if (pOwner == NULL)
+	if ((GetAmmoCount() <= 0) || (m_iClip1 >= GetMaxClip1()))
 		return false;
 
-	if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
-		return false;
-
-	if (m_iClip1 >= GetMaxClip1())
-		return false;
-
-	int j = MIN(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
-
+	int j = MIN(1, GetAmmoCount());
 	if (j <= 0)
 		return false;
 
@@ -290,18 +274,10 @@ void CWeaponWinchester1894::FinishReload(void)
 //-----------------------------------------------------------------------------
 void CWeaponWinchester1894::FillClip(void)
 {
-	CBaseCombatCharacter *pOwner = GetOwner();
-	if (pOwner == NULL)
-		return;
-
-	// Add them to the clip
-	if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) > 0)
+	if ((GetAmmoCount() > 0) && (Clip1() < GetMaxClip1()))
 	{
-		if (Clip1() < GetMaxClip1())
-		{
-			m_iClip1++;
-			pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
-		}
+		m_iClip1++;
+		RemoveAmmo(1);
 	}
 }
 
@@ -344,7 +320,7 @@ void CWeaponWinchester1894::PrimaryAttack(void)
 	Vector	vecSrc = pPlayer->Weapon_ShootPosition();
 	Vector	vecAiming = pPlayer->GetAutoaimVector();
 
-	FireBulletsInfo_t info(GetWpnData().m_iPellets, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
+	FireBulletsInfo_t info(GetWpnData().m_iPellets, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, GetAmmoTypeID());
 	info.m_pAttacker = pPlayer;
 	info.m_vecFirstStartPos = pPlayer->GetLocalOrigin();
 	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
@@ -384,7 +360,7 @@ void CWeaponWinchester1894::ItemPostFrame(void)
 
 		if (m_flNextPrimaryAttack <= gpGlobals->curtime)
 		{
-			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+			if (GetAmmoCount() <= 0)
 			{
 				FinishReload();
 				return;
@@ -413,7 +389,7 @@ void CWeaponWinchester1894::ItemPostFrame(void)
 
 	if ((pOwner->m_nButtons & IN_ATTACK) && m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
-		if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !pOwner->GetAmmoCount(m_iPrimaryAmmoType)))
+		if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !GetAmmoCount()))
 			DryFire();
 		// Fire underwater?
 		else if (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false)

@@ -28,6 +28,7 @@ public:
 
 	int GetOverloadCapacity() { return 7; }
 	int GetUniqueWeaponID() { return WEAPON_ID_G36C; }
+	int GetAmmoMaxCarry(void) { return 180; }
 	const char *GetAmmoEntityLink(void) { return "ammo_rifle"; }
 	bool UsesEmptyAnimation() { return true; }
 

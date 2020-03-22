@@ -60,6 +60,9 @@ public:
 #endif
 #endif //BB2_AI
 
+	virtual const char		*GetAmmoTypeName(void) { return "Buckshot"; }
+	virtual int				GetAmmoMaxCarry(void) { return 32; }
+
 protected:
 	CNetworkVar(bool, m_bInReload);
 	CNetworkVar(bool, m_bShouldReloadEmpty);

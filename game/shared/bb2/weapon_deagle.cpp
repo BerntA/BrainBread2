@@ -38,6 +38,9 @@ public:
 	int GetMinBurst() { return 1; }
 	int GetMaxBurst() { return 1; }
 
+	const char		*GetAmmoTypeName(void) { return "Magnum"; }
+	int				GetAmmoMaxCarry(void) { return 35; }
+
 	void ResetToTwoHands(void);
 	void ItemPostFrame(void);
 	void SecondaryAttack(void);

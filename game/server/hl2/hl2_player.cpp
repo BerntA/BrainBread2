@@ -324,21 +324,10 @@ void CHL2_Player::PostThink( void )
 					for (int i = 0; i < MAX_WEAPONS; i++)
 					{
 						CBaseCombatWeapon* pWeapon = GetWeapon(i);
-						if ((pWeapon != NULL) && (pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL))
+						if ((pWeapon != NULL) && (pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL) && (pWeapon->GetAmmoTypeID() != -1))
 						{
-							bool bCanCheckSecondary = (pWeapon->GetPrimaryAmmoType() != pWeapon->GetSecondaryAmmoType());
-
-							if (pWeapon->UsesPrimaryAmmo())
-							{
-								if (GiveAmmo(pWeapon->GetMaxClip1(), pWeapon->GetPrimaryAmmoType(), false))
-									bDidReplenish = true;
-							}
-
-							if (bCanCheckSecondary && pWeapon->UsesSecondaryAmmo())
-							{
-								if (GiveAmmo(pWeapon->GetMaxClip2(), pWeapon->GetSecondaryAmmoType(), false))
-									bDidReplenish = true;
-							}
+							if (pWeapon->GiveAmmo(pWeapon->GetMaxClip1()))
+								bDidReplenish = true;
 						}
 					}
 
@@ -751,45 +740,6 @@ bool CHL2_Player::ShouldShootMissTarget( CBaseCombatCharacter *pAttacker )
 	}
 
 	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : iCount - 
-//			iAmmoIndex - 
-//			bSuppressSound - 
-// Output : int
-//-----------------------------------------------------------------------------
-int CHL2_Player::GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound)
-{
-	// Don't try to give the player invalid ammo indices.
-	if (nAmmoIndex < 0)
-		return 0;
-
-	int nAdd = BaseClass::GiveAmmo(nCount, nAmmoIndex, bSuppressSound);
-
-	if ( nCount > 0 && nAdd == 0 )
-	{
-		// we've been denied the pickup, display a hud icon to show that
-		CSingleUserRecipientFilter user( this );
-		user.MakeReliable();
-		UserMessageBegin( user, "AmmoDenied" );
-		WRITE_SHORT( nAmmoIndex );
-		MessageEnd();
-	}
-
-	if (nAdd > 0)
-	{
-		// Show the pickup icon:
-		CSingleUserRecipientFilter user(this);
-		user.MakeReliable();
-		UserMessageBegin(user, "ItemPickup");
-		WRITE_STRING("AMMO");
-		WRITE_SHORT(nAmmoIndex);
-		MessageEnd();
-	}
-
-	return nAdd;
 }
 
 //-----------------------------------------------------------------------------

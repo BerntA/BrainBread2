@@ -30,6 +30,8 @@ public:
 	int GetUniqueWeaponID() { return WEAPON_ID_MAC11; }
 	int GetWeaponType(void) { return WEAPON_TYPE_SMG; }
 	const char *GetAmmoEntityLink(void) { return "ammo_smg"; }	
+	const char		*GetAmmoTypeName(void) { return "SMG"; }
+	int				GetAmmoMaxCarry(void) { return 192; }
 
 private:
 	CWeaponMAC11(const CWeaponMAC11 &);

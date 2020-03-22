@@ -50,19 +50,6 @@ int CAmmoDef::Index(const char *psz)
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-int	CAmmoDef::MaxCarry(int nAmmoIndex)
-{
-	if (nAmmoIndex < 1 || nAmmoIndex >= m_nAmmoIndex)
-		return 0;
-
-	return m_AmmoType[nAmmoIndex].iMaxCarry;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
 int	CAmmoDef::DamageType(int nAmmoIndex)
 {
 	if (nAmmoIndex < 1 || nAmmoIndex >= m_nAmmoIndex)
@@ -140,18 +127,14 @@ bool CAmmoDef::AddAmmoTypeInternal(char const* name, int damageType, int tracerT
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Add an ammo type with it's damage & carrying capability specified via integers
+// Purpose: Add an ammo type with it's damage capability specified via integers
 //-----------------------------------------------------------------------------
-void CAmmoDef::AddAmmoType(char const* name, int damageType, int tracerType,
-	int carry, float physicsForceImpulse,
-	int minSplashSize, int maxSplashSize)
+void CAmmoDef::AddAmmoType(char const* name, int damageType, int tracerType, float physicsForceImpulse, int minSplashSize, int maxSplashSize)
 {
 	if (AddAmmoTypeInternal(name, damageType, tracerType, minSplashSize, maxSplashSize) == false)
 		return;
 
-	m_AmmoType[m_nAmmoIndex].iMaxCarry = carry;
 	m_AmmoType[m_nAmmoIndex].physicsForceImpulse = physicsForceImpulse;
-
 	m_nAmmoIndex++;
 }
 
