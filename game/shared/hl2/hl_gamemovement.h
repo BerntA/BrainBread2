@@ -5,7 +5,6 @@
 //=============================================================================//
 
 #include "gamemovement.h"
-#include "func_ladder.h"
 
 #if defined( CLIENT_DLL )
 
@@ -16,8 +15,6 @@
 #include "hl2_player.h"
 
 #endif
-
-struct LadderMove_t;
 
 //-----------------------------------------------------------------------------
 // Purpose: HL2 specific movement code
@@ -40,11 +37,7 @@ public:
 
 private:
 
-	LadderMove_t *GetLadderMove();
 	CHL2_Player	*GetHL2Player();
-
-	void		SetLadder( CFuncLadder *ladder );
-	CFuncLadder *GetLadder();
 };
 
 //-----------------------------------------------------------------------------
@@ -53,44 +46,4 @@ private:
 inline CHL2_Player	*CHL2GameMovement::GetHL2Player()
 {
 	return static_cast< CHL2_Player * >( player );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Output : inline LadderMove*
-//-----------------------------------------------------------------------------
-inline LadderMove_t *CHL2GameMovement::GetLadderMove()
-{
-	CHL2_Player *p = GetHL2Player();
-	if ( !p )
-	{
-		return NULL;
-	}
-	return p->GetLadderMove();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *ladder - 
-//-----------------------------------------------------------------------------
-inline void CHL2GameMovement::SetLadder( CFuncLadder *ladder )
-{
-	CFuncLadder* oldLadder = GetLadder();
-
-	if ( !ladder && oldLadder )
-	{
-		oldLadder->PlayerGotOff( GetHL2Player() );
-	}
-
-
-	GetHL2Player()->m_HL2Local.m_hLadder.Set( ladder );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Output : CFuncLadder
-//-----------------------------------------------------------------------------
-inline CFuncLadder *CHL2GameMovement::GetLadder()
-{
-	return static_cast<CFuncLadder*>( static_cast<CBaseEntity *>( GetHL2Player()->m_HL2Local.m_hLadder.Get() ) );
 }

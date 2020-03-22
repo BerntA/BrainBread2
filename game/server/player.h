@@ -76,7 +76,6 @@ class CBaseViewModel;
 class CTeam;
 class IPhysicsPlayerController;
 class CUserCmd;
-class CFuncLadder;
 class CNavArea;
 class CHintSystem;
 class CAI_Expresser;
@@ -671,7 +670,6 @@ public:
 	void	InputSetHUDVisibility( inputdata_t &inputdata );
 
 	surfacedata_t *GetSurfaceData( void ) { return m_pSurfaceData; }
-	void SetLadderNormal( Vector vecLadderNormal ) { m_vecLadderNormal = vecLadderNormal; }
 
 	// Here so that derived classes can use the expresser
 	virtual CAI_Expresser *GetExpresser() { return NULL; };

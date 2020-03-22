@@ -10,7 +10,6 @@
 #pragma once
 
 #include "player.h"
-#include "hl2_playerlocaldata.h"
 #include "simtimer.h"
 #include "soundenvelope.h"
 
@@ -115,9 +114,7 @@ public:
 	// override the test for getting hit
 	virtual bool		TestHitboxes( const Ray_t &ray, unsigned int fContentsMask, trace_t& tr );
 
-	LadderMove_t		*GetLadderMove() { return &m_HL2Local.m_LadderMove; }
 	virtual void		ExitLadder();
-	virtual surfacedata_t *GetLadderSurface( const Vector &origin );
 	
 	void  HandleSpeedChanges( void );
 
@@ -128,10 +125,6 @@ public:
 
 	CSoundPatch *m_sndLeeches;
 	CSoundPatch *m_sndWaterSplashes;
-
-	// This player's HL2 specific data that should only be replicated to 
-	//  the player and not to other players.
-	CNetworkVarEmbedded( CHL2PlayerLocalData, m_HL2Local ); // moved from private.
 
 protected:
 	virtual void		PreThink( void );

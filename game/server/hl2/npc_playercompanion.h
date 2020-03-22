@@ -130,7 +130,6 @@ public:
 	virtual bool	CanReload( void );
 
 	virtual bool	ShouldDeferToFollowBehavior();
-	bool			ShouldDeferToPassengerBehavior( void );
 
 	bool			IsValidReasonableFacing( const Vector &vecSightDir, float sightDist );
 	
@@ -212,10 +211,6 @@ public:
 	//---------------------------------
 	virtual void 	LocateEnemySound() {};
 
-	bool			IsValidEnemy( CBaseEntity *pEnemy );
-
-	bool 			IsSafeFromFloorTurret( const Vector &vecLocation, CBaseEntity *pTurret );
-
 	bool			ShouldMoveAndShoot( void );
 	void			OnUpdateShotRegulator();
 
@@ -223,7 +218,6 @@ public:
 	bool 			FCanCheckAttacks();
 	Vector 			GetActualShootPosition( const Vector &shootOrigin );
 	bool			ShouldLookForBetterWeapon();
-	bool			Weapon_CanUse( CBaseCombatWeapon *pWeapon );
 	void			Weapon_Equip( CBaseCombatWeapon *pWeapon );
 	void			PickupWeapon( CBaseCombatWeapon *pWeapon );
 	
@@ -232,13 +226,8 @@ public:
 	bool			FindCoverPos( CSound *pSound, Vector *pResult );
 	bool			FindMortarCoverPos( CSound *pSound, Vector *pResult );
 	bool 			IsCoverPosition( const Vector &vecThreat, const Vector &vecPosition );
-
-	bool			IsEnemyTurret() { return ( GetEnemy() && IsTurret(GetEnemy()) ); }
 	
 	static bool		IsMortar( CBaseEntity *pEntity );
-	static bool		IsSniper( CBaseEntity *pEntity );
-	static bool		IsTurret(  CBaseEntity *pEntity );
-	static bool		IsGunship( CBaseEntity *pEntity );
 	
 	//---------------------------------
 	// Damage handling
@@ -283,7 +272,6 @@ protected:
 	{
 		COND_PC_HURTBYFIRE = BaseClass::NEXT_CONDITION,
 		COND_PC_SAFE_FROM_MORTAR,
-		COND_PC_BECOMING_PASSENGER,
 		NEXT_CONDITION,
 
 		SCHED_PC_COWER = BaseClass::NEXT_SCHEDULE,
@@ -312,7 +300,6 @@ private:
 	enum eCoverType
 	{
 		CT_NORMAL,
-		CT_TURRET,
 		CT_MORTAR
 	};
 
@@ -366,10 +353,6 @@ protected:
 	//-----------------------------------------------------
 
 	static string_t gm_iszMortarClassname;
-	static string_t gm_iszFloorTurretClassname;
-	static string_t gm_iszGroundTurretClassname;
-	static string_t gm_iszShotgunClassname;
-	static string_t	gm_iszRollerMineClassname;
 
 	//-----------------------------------------------------
 

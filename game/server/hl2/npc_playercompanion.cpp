@@ -70,9 +70,7 @@ BEGIN_DATADESC( CNPC_PlayerCompanion )
 //	DEFINE_FIELD( m_FollowBehavior,		CAI_FollowBehavior ),
 //	DEFINE_FIELD( m_StandoffBehavior,	CAI_StandoffBehavior ),
 //	DEFINE_FIELD( m_LeadBehavior,		CAI_LeadBehavior ),
-//  DEFINE_FIELD( m_OperatorBehavior,	FIELD_EMBEDDED ),
 //					m_ActBusyBehavior
-//					m_PassengerBehavior
 //					m_FearBehavior
 
 	DEFINE_INPUTFUNC( FIELD_VOID,	"OutsideTransition",	InputOutsideTransition ),
@@ -119,10 +117,6 @@ END_DATADESC()
 CNPC_PlayerCompanion::eCoverType CNPC_PlayerCompanion::gm_fCoverSearchType;
 bool CNPC_PlayerCompanion::gm_bFindingCoverFromAllEnemies;
 string_t CNPC_PlayerCompanion::gm_iszMortarClassname;
-string_t CNPC_PlayerCompanion::gm_iszFloorTurretClassname;
-string_t CNPC_PlayerCompanion::gm_iszGroundTurretClassname;
-string_t CNPC_PlayerCompanion::gm_iszShotgunClassname;
-string_t CNPC_PlayerCompanion::gm_iszRollerMineClassname;
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -141,14 +135,8 @@ bool CNPC_PlayerCompanion::CreateBehaviors()
 //-----------------------------------------------------------------------------
 void CNPC_PlayerCompanion::Precache()
 {
-	gm_iszMortarClassname = AllocPooledString( "func_tankmortar" );
-	gm_iszFloorTurretClassname = AllocPooledString( "npc_turret_floor" );
-	gm_iszGroundTurretClassname = AllocPooledString( "npc_turret_ground" );
-	gm_iszShotgunClassname = AllocPooledString( "weapon_shotgun" );
-	gm_iszRollerMineClassname = AllocPooledString( "npc_rollermine" );
-
-	PrecacheModel( STRING( GetModelName() ) );
-	
+	gm_iszMortarClassname = AllocPooledString("func_tankmortar");
+	PrecacheModel(STRING(GetModelName()));
 	BaseClass::Precache();
 }
 
@@ -235,40 +223,7 @@ Disposition_t CNPC_PlayerCompanion::IRelationType( CBaseEntity *pTarget )
 	if ( !pTarget )
 		return D_NU;
 
-	Disposition_t baseRelationship = BaseClass::IRelationType( pTarget );
-
-	if ( baseRelationship != D_LI )
-	{
-		if ( IsTurret( pTarget ) )
-		{
-			// Citizens are afeared of turrets, so long as the turret
-			// is active... that is, not classifying itself as CLASS_NONE
-			if( pTarget->Classify() != CLASS_NONE )
-			{
-				if( IsSafeFromFloorTurret(GetAbsOrigin(), pTarget) )
-				{
-					return D_NU;
-				}
-
-				return D_FR;
-			}
-		}
-		else if ( baseRelationship == D_HT && 
-				  pTarget->IsNPC() && 
-				  ((CAI_BaseNPC *)pTarget)->GetActiveWeapon() && 
-				  ((CAI_BaseNPC *)pTarget)->GetActiveWeapon()->ClassMatches( gm_iszShotgunClassname ) &&
-				  ( !GetActiveWeapon() || !GetActiveWeapon()->ClassMatches( gm_iszShotgunClassname ) ) )
-		{
-			if ( (pTarget->GetAbsOrigin() - GetAbsOrigin()).LengthSqr() < Square( 25 * 12 ) )
-			{
-				// Ignore enemies on the floor above us
-				if ( fabs(pTarget->GetAbsOrigin().z - GetAbsOrigin().z) < 100 )
-					return D_FR;
-			}
-		}
-	}
-
-	return baseRelationship;
+	return BaseClass::IRelationType(pTarget);
 }
 
 //-----------------------------------------------------------------------------
@@ -382,7 +337,7 @@ void CNPC_PlayerCompanion::GatherConditions()
 	AIEnemiesIter_t	iter;
 	for( AI_EnemyInfo_t *pMemory = GetEnemies()->GetFirst(&iter); pMemory != NULL; pMemory = GetEnemies()->GetNext(&iter) )
 	{
-		if ( IsMortar( pMemory->hEnemy ) || IsSniper( pMemory->hEnemy ) )
+		if ( IsMortar( pMemory->hEnemy ) )
 		{
 			pMemory->bUnforgettable = ( IRelationType( pMemory->hEnemy ) < D_LI );
 			pMemory->bEludedMe = false;
@@ -399,7 +354,7 @@ void CNPC_PlayerCompanion::GatherConditions()
 	m_bWeightPathsInCover = false;
 	if ( pEnemy )
 	{
-		if ( IsMortar( pEnemy ) || IsSniper( pEnemy ) )
+		if ( IsMortar( pEnemy ) )
 		{
 			m_bWeightPathsInCover = true;
 		}
@@ -483,9 +438,6 @@ void CNPC_PlayerCompanion::PredictPlayerPush()
 void CNPC_PlayerCompanion::BuildScheduleTestBits()
 {
 	BaseClass::BuildScheduleTestBits();
-	
-	// Always interrupt to get into the car
-	SetCustomInterruptCondition( COND_PC_BECOMING_PASSENGER );
 
 	if ( IsCurSchedule(SCHED_RANGE_ATTACK1) )
 	{
@@ -890,14 +842,9 @@ int CNPC_PlayerCompanion::TranslateSchedule( int scheduleType )
 	case SCHED_CHASE_ENEMY:
 		if ( IsMortar( GetEnemy() ) )
 			return SCHED_TAKE_COVER_FROM_ENEMY;
-		if ( GetEnemy() && FClassnameIs( GetEnemy(), "npc_combinegunship" ) )
-			return SCHED_ESTABLISH_LINE_OF_FIRE;
 		break;
 
 	case SCHED_ESTABLISH_LINE_OF_FIRE_FALLBACK:
-		// If we're fighting a gunship, try again
-		if ( GetEnemy() && FClassnameIs( GetEnemy(), "npc_combinegunship" ) )
-			return SCHED_ESTABLISH_LINE_OF_FIRE;
 		break;
 
 	case SCHED_RANGE_ATTACK1:
@@ -912,11 +859,8 @@ int CNPC_PlayerCompanion::TranslateSchedule( int scheduleType )
 		break;
 
 	case SCHED_FAIL_TAKE_COVER:
-		if ( IsEnemyTurret() )
-		{
-			return SCHED_PC_FAIL_TAKE_COVER_TURRET;
-		}
 		break;
+
 	case SCHED_RUN_FROM_ENEMY_FALLBACK:
 		{
 			if ( HasCondition( COND_CAN_RANGE_ATTACK1 ) )
@@ -990,14 +934,9 @@ int CNPC_PlayerCompanion::TranslateSchedule( int scheduleType )
 	case SCHED_CHASE_ENEMY:
 		if ( IsMortar( GetEnemy() ) )
 			return SCHED_TAKE_COVER_FROM_ENEMY;
-		if ( GetEnemy() && FClassnameIs( GetEnemy(), "npc_combinegunship" ) )
-			return SCHED_ESTABLISH_LINE_OF_FIRE;
 		break;
 
 	case SCHED_ESTABLISH_LINE_OF_FIRE_FALLBACK:
-		// If we're fighting a gunship, try again
-		if ( GetEnemy() && FClassnameIs( GetEnemy(), "npc_combinegunship" ) )
-			return SCHED_ESTABLISH_LINE_OF_FIRE;
 		break;
 
 	case SCHED_RANGE_ATTACK1:
@@ -1012,11 +951,8 @@ int CNPC_PlayerCompanion::TranslateSchedule( int scheduleType )
 		break;
 
 	case SCHED_FAIL_TAKE_COVER:
-		if ( IsEnemyTurret() )
-		{
-			return SCHED_PC_FAIL_TAKE_COVER_TURRET;
-		}
 		break;
+
 	case SCHED_RUN_FROM_ENEMY_FALLBACK:
 		{
 			if ( HasCondition( COND_CAN_RANGE_ATTACK1 ) )
@@ -2077,49 +2013,6 @@ CBaseEntity *CNPC_PlayerCompanion::GetAlternateMoveShootTarget()
 	return BaseClass::GetAlternateMoveShootTarget();
 }
 
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-bool CNPC_PlayerCompanion::IsValidEnemy( CBaseEntity *pEnemy )
-{
-	if ( GetFollowBehavior().GetFollowTarget() && GetFollowBehavior().GetFollowTarget()->IsPlayer() && IsSniper( pEnemy ) )
-	{
-		AI_EnemyInfo_t *pInfo = GetEnemies()->Find( pEnemy );
-		if ( pInfo )
-		{
-			if ( gpGlobals->curtime - pInfo->timeLastSeen > 10 )
-			{
-				if ( !((CAI_BaseNPC*)pEnemy)->HasCondition( COND_IN_PVS ) )
-					return false;
-			}
-		}
-	}
-
-	return BaseClass::IsValidEnemy( pEnemy );
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-bool CNPC_PlayerCompanion::IsSafeFromFloorTurret( const Vector &vecLocation, CBaseEntity *pTurret )
-{
-	float dist = ( vecLocation - pTurret->EyePosition() ).LengthSqr();
-
-	if ( dist > Square( 4.0*12.0 ) )
-	{
-		if ( !pTurret->MyNPCPointer()->FInViewCone( vecLocation ) )
-		{
-#if 0 // Draws a green line to turrets I'm safe from
-			NDebugOverlay::Line( vecLocation, pTurret->WorldSpaceCenter(), 0, 255, 0, false, 0.1 );
-#endif 
-			return true;
-		}
-	}
-
-#if 0 // Draws a red lines to ones I'm not safe from.
-	NDebugOverlay::Line( vecLocation, pTurret->WorldSpaceCenter(), 255, 0, 0, false, 0.1 );
-#endif
-	return false;
-}
-
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 bool CNPC_PlayerCompanion::ShouldMoveAndShoot( void )
@@ -2161,7 +2054,7 @@ void CNPC_PlayerCompanion::DecalTrace( trace_t *pTrace, char const *decalName )
 //------------------------------------------------------------------------------
 bool CNPC_PlayerCompanion::FCanCheckAttacks()
 {
-	if( GetEnemy() && ( IsSniper(GetEnemy()) || IsMortar(GetEnemy()) || IsTurret(GetEnemy()) ) )
+	if (GetEnemy() && IsMortar(GetEnemy()))
 	{
 		// Don't attack the sniper or the mortar.
 		return false;
@@ -2183,28 +2076,6 @@ Vector CNPC_PlayerCompanion::GetActualShootPosition( const Vector &shootOrigin )
 	}
 
 	return BaseClass::GetActualShootPosition( shootOrigin );
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-bool CNPC_PlayerCompanion::Weapon_CanUse( CBaseCombatWeapon *pWeapon )
-{
-	if( BaseClass::Weapon_CanUse( pWeapon ) )
-	{
-		// If this weapon is a shotgun, take measures to control how many
-		// are being used in this squad. Don't allow a companion to pick up
-		// a shotgun if a squadmate already has one.
-		if( pWeapon->ClassMatches( gm_iszShotgunClassname ) )
-		{
-			return (NumWeaponsInSquad("weapon_shotgun") < 1 );
-		}
-		else
-		{
-			return true;
-		}
-	}
-
-	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -2264,8 +2135,8 @@ int __cdecl MultiCoverCompare( AI_EnemyInfo_t * const *ppLeft, AI_EnemyInfo_t * 
 	if ( pRight->hEnemy == g_pMultiCoverSearcher->GetEnemy() )
 		return 1;
 
-	bool bLeftIsSpecial = ( CNPC_PlayerCompanion::IsMortar( pLeft->hEnemy ) || CNPC_PlayerCompanion::IsSniper( pLeft->hEnemy ) );
-	bool bRightIsSpecial = ( CNPC_PlayerCompanion::IsMortar( pLeft->hEnemy ) || CNPC_PlayerCompanion::IsSniper( pLeft->hEnemy ) );
+	bool bLeftIsSpecial = ( CNPC_PlayerCompanion::IsMortar( pLeft->hEnemy ) );
+	bool bRightIsSpecial = ( CNPC_PlayerCompanion::IsMortar( pLeft->hEnemy ) );
 
 	if ( !bLeftIsSpecial && bRightIsSpecial )
 		return 1;
@@ -2302,10 +2173,7 @@ int __cdecl MultiCoverCompare( AI_EnemyInfo_t * const *ppLeft, AI_EnemyInfo_t * 
 //-------------------------------------
 
 void CNPC_PlayerCompanion::SetupCoverSearch( CBaseEntity *pEntity )
-{
-	if ( IsTurret( pEntity ) )
-		gm_fCoverSearchType = CT_TURRET;
-	
+{	
 	gm_bFindingCoverFromAllEnemies = false;
 	g_pMultiCoverSearcher = this;
 
@@ -2479,7 +2347,7 @@ bool CNPC_PlayerCompanion::IsCoverPosition( const Vector &vecThreat, const Vecto
 			if ( !pEnemy )
 				continue;
 
-			if ( pEnemy == GetEnemy() || IsMortar( pEnemy ) || IsSniper( pEnemy ) || i < MAX_NON_SPECIAL_MULTICOVER )
+			if ( pEnemy == GetEnemy() || IsMortar( pEnemy ) || i < MAX_NON_SPECIAL_MULTICOVER )
 			{
 				testPos = pEnemyInfo->vLastKnownLocation + pEnemy->GetViewOffset();
 			}
@@ -2498,11 +2366,6 @@ bool CNPC_PlayerCompanion::IsCoverPosition( const Vector &vecThreat, const Vecto
 			return true;
 
 		// else fall through
-	}
-
-	if ( gm_fCoverSearchType == CT_TURRET && GetEnemy() && IsSafeFromFloorTurret( vecPosition, GetEnemy() ) )
-	{
-		return true;
 	}
 
 	if ( gm_fCoverSearchType == CT_MORTAR )
@@ -2541,36 +2404,6 @@ bool CNPC_PlayerCompanion::IsMortar( CBaseEntity *pEntity )
 		return false;
 	CBaseEntity *pEntityParent = pEntity->GetParent();
 	return ( pEntityParent && pEntityParent->GetClassname() == STRING(gm_iszMortarClassname) );
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-bool CNPC_PlayerCompanion::IsSniper( CBaseEntity *pEntity )
-{
-	if ( !pEntity )
-		return false;
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-bool CNPC_PlayerCompanion::IsTurret( CBaseEntity *pEntity )
-{
-	if ( !pEntity )
-		return false;
-	const char *pszClassname = pEntity->GetClassname();
-	return ( pszClassname == STRING(gm_iszFloorTurretClassname) || pszClassname == STRING(gm_iszGroundTurretClassname) );
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-bool CNPC_PlayerCompanion::IsGunship( CBaseEntity *pEntity )
-{
-	if( !pEntity )
-		return false;
-
-	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -2710,13 +2543,7 @@ bool CNPC_PlayerCompanion::FValidateHintType( CAI_Hint *pHint )
 //-----------------------------------------------------------------------------
 bool CNPC_PlayerCompanion::ValidateNavGoal()
 {
-	bool result;
-	if ( GetNavigator()->GetGoalType() == GOALTYPE_COVER )
-	{
-		if ( IsEnemyTurret() )
-			gm_fCoverSearchType = CT_TURRET;
-	}
-	result = BaseClass::ValidateNavGoal();
+	bool result = BaseClass::ValidateNavGoal();
 	gm_fCoverSearchType = CT_NORMAL;
 	return result;
 }
@@ -2725,7 +2552,7 @@ const float AVOID_TEST_DIST = 18.0f*12.0f;
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-#define COMPANION_EPISODIC_AVOID_ENTITY_FLAME_RADIUS	18.0f
+
 bool CNPC_PlayerCompanion::OverrideMove( float flInterval )
 {
 	bool overrode = BaseClass::OverrideMove( flInterval );
@@ -2768,7 +2595,6 @@ bool CNPC_PlayerCompanion::OverrideMove( float flInterval )
 
 	return overrode;
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -3284,7 +3110,6 @@ AI_BEGIN_CUSTOM_NPC( player_companion_base, CNPC_PlayerCompanion )
 
 	DECLARE_CONDITION( COND_PC_HURTBYFIRE )
 	DECLARE_CONDITION( COND_PC_SAFE_FROM_MORTAR )
-	DECLARE_CONDITION( COND_PC_BECOMING_PASSENGER )
 
 	DECLARE_TASK( TASK_PC_WAITOUT_MORTAR )
 	DECLARE_TASK( TASK_PC_GET_PATH_OFF_COMPANION )
@@ -3428,7 +3253,7 @@ AI_END_CUSTOM_NPC()
 // Special movement overrides for player companions
 //
 
-#define NUM_OVERRIDE_MOVE_CLASSNAMES	4
+#define NUM_OVERRIDE_MOVE_CLASSNAMES	2
 
 class COverrideMoveCache : public IEntityListener
 {
@@ -3538,9 +3363,7 @@ private:
 	inline void CacheClassnames( void )
 	{
 		m_Classname[0] = AllocPooledString( "env_fire" );
-		m_Classname[1] = AllocPooledString( "combine_mine" );
-		m_Classname[2] = AllocPooledString( "npc_turret_floor" );
-		m_Classname[3] = AllocPooledString( "entityflame" );
+		m_Classname[1] = AllocPooledString( "entityflame" );
 	}
 
 	CUtlLinkedList<EHANDLE>	m_Cache;
@@ -3570,4 +3393,3 @@ void OverrideMoveCache_LevelShutdownPostEntity( void )
 {
 	g_OverrideMoveCache.LevelShutdownPostEntity();
 }
-

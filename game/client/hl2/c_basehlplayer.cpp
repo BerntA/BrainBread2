@@ -24,11 +24,9 @@ extern ConVar cl_sidespeed;
 extern ConVar default_fov;
 
 IMPLEMENT_CLIENTCLASS_DT(C_BaseHLPlayer, DT_HL2_Player, CHL2_Player)
-	RecvPropDataTable( RECVINFO_DT(m_HL2Local),0, &REFERENCE_RECV_TABLE(DT_HL2Local) ),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_BaseHLPlayer )
-	DEFINE_PRED_TYPEDESCRIPTION( m_HL2Local, C_HL2PlayerLocalData ),
 END_PREDICTION_DATA()
 
 //-----------------------------------------------------------------------------
@@ -168,8 +166,6 @@ void C_BaseHLPlayer::ExitLadder()
 	
 	SetMoveType( MOVETYPE_WALK );
 	SetMoveCollide( MOVECOLLIDE_DEFAULT );
-	// Remove from ladder
-	m_HL2Local.m_hLadder = NULL;
 }
 
 //-----------------------------------------------------------------------------

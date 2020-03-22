@@ -12,9 +12,7 @@
 #pragma once
 #endif
 
-
 #include "c_baseplayer.h"
-#include "c_hl2_playerlocaldata.h"
 
 class C_BaseHLPlayer : public C_BasePlayer
 {
@@ -36,15 +34,11 @@ public:
 	virtual int			DrawModel( int flags );
 	virtual	void		BuildTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed );
 
-	LadderMove_t		*GetLadderMove() { return &m_HL2Local.m_LadderMove; }
 	virtual void		ExitLadder();
 	
 	// Input handling
 	virtual bool	CreateMove(float flInputSampleTime, CUserCmd *pCmd, bool bFakeInput);
 	void			PerformClientSideObstacleAvoidance( float flFrameTime, CUserCmd *pCmd );
-
-public:
-	C_HL2PlayerLocalData		m_HL2Local;
 
 private:
 	C_BaseHLPlayer( const C_BaseHLPlayer & ); // not defined, not accessible

@@ -998,12 +998,12 @@ void CNPCBaseSoldierStatic::HandleAnimEvent(animevent_t *pEvent)
 
 				GetVectors(&forward, NULL, &up);
 				vecThrow = forward * 750 + up * 175;
-				Fraggrenade_Create(vecStart, vec3_angle, vecThrow, vecSpin, this, SOLDIER_GRENADE_TIMER, true);
+				Fraggrenade_Create(vecStart, vec3_angle, vecThrow, vecSpin, this, SOLDIER_GRENADE_TIMER, (Classify() == CLASS_MILITARY));
 			}
 			else
 			{
 				// Use the Velocity that AI gave us.
-				Fraggrenade_Create(vecStart, vec3_angle, m_vecTossVelocity, vecSpin, this, SOLDIER_GRENADE_TIMER, true);
+				Fraggrenade_Create(vecStart, vec3_angle, m_vecTossVelocity, vecSpin, this, SOLDIER_GRENADE_TIMER, (Classify() == CLASS_MILITARY));
 				m_iNumGrenades--;
 			}
 
@@ -1031,7 +1031,7 @@ void CNPCBaseSoldierStatic::HandleAnimEvent(animevent_t *pEvent)
 			Vector vecStart;
 			GetAttachment("lefthand", vecStart);
 
-			Fraggrenade_Create(vecStart, vec3_angle, m_vecTossVelocity, vec3_origin, this, SOLDIER_GRENADE_TIMER, true);
+			Fraggrenade_Create(vecStart, vec3_angle, m_vecTossVelocity, vec3_origin, this, SOLDIER_GRENADE_TIMER, (Classify() == CLASS_MILITARY));
 			m_iNumGrenades--;
 		}
 		handledEvent = true;

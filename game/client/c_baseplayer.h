@@ -27,7 +27,6 @@
 
 class C_BaseCombatWeapon;
 class C_BaseViewModel;
-class C_FuncLadder;
 class CFlashlightEffect;
 class C_EconWearable;
 
@@ -346,8 +345,6 @@ public:
 	surfacedata_t *GetLadderSurface( const Vector &origin );
 
 	surfacedata_t *GetSurfaceData( void ) { return m_pSurfaceData; }
-
-	void SetLadderNormal( Vector vecLadderNormal ) { m_vecLadderNormal = vecLadderNormal; }
 
 	virtual	IMaterial *GetHeadLabelMaterial( void );
 

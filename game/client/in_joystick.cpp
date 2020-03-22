@@ -759,9 +759,6 @@ void CInput::JoyStickMove( float frametime, CUserCmd *cmd )
 	float	joySideMove = 0.f;
 	float	joyForwardMove = 0.f;
 	float   aspeed = frametime * gHUD.GetFOVSensitivityAdjust();
-
-	// apply forward and side control
-	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
 	
 	int iResponseCurve = joy_response_move.GetInt();	
 	float val = ResponseCurve( iResponseCurve, m_flPreviousJoystickForward, PITCH, joy_forwardsensitivity.GetFloat() );

@@ -709,13 +709,13 @@ void CGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 		pPlayer->SetPlayerName(pszName);
 	}
 
-	const char *pszFov = engine->GetClientConVarValue( pPlayer->entindex(), "fov_desired" );
-	if ( pszFov )
-	{
-		int iFov = atoi(pszFov);
-		iFov = clamp( iFov, 75, 90 );
-		pPlayer->SetDefaultFOV( iFov );
-	}
+	//const char *pszFov = engine->GetClientConVarValue( pPlayer->entindex(), "fov_desired" );
+	//if ( pszFov )
+	//{
+	//	int iFov = atoi(pszFov);
+	//	iFov = clamp( iFov, 75, 90 );
+	//	pPlayer->SetDefaultFOV( iFov );
+	//}
 }
 
 #endif

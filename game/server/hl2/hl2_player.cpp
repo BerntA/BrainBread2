@@ -62,22 +62,10 @@ ConVar player_showpredictedposition_timestep( "player_showpredictedposition_time
 
 PRECACHE_REGISTER(player);
 
-BEGIN_SIMPLE_DATADESC( LadderMove_t )
-	DEFINE_FIELD( m_bForceLadderMove, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bForceMount, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flStartTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flArrivalTime, FIELD_TIME ),
-	DEFINE_FIELD( m_vecGoalPosition, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_vecStartPosition, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_hForceLadder, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hReservedSpot, FIELD_EHANDLE ),
-END_DATADESC()
-
 	// Global Savedata for HL2 player
 BEGIN_DATADESC( CHL2_Player )
 
 	DEFINE_FIELD( m_nControlClass, FIELD_INTEGER ),
-	DEFINE_EMBEDDED( m_HL2Local ),
 
 	DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
 
@@ -111,7 +99,6 @@ CHL2_Player::CHL2_Player()
 }
 
 IMPLEMENT_SERVERCLASS_ST(CHL2_Player, DT_HL2_Player)
-	SendPropDataTable(SENDINFO_DT(m_HL2Local), &REFERENCE_SEND_TABLE(DT_HL2Local), SendProxy_SendLocalDataTable),
 END_SEND_TABLE()
 
 void CHL2_Player::Precache( void )
@@ -1310,23 +1297,6 @@ void CHL2_Player::ExitLadder()
 
 	SetMoveType( MOVETYPE_WALK );
 	SetMoveCollide( MOVECOLLIDE_DEFAULT );
-	// Remove from ladder
-	m_HL2Local.m_hLadder.Set( NULL );
-}
-
-surfacedata_t *CHL2_Player::GetLadderSurface( const Vector &origin )
-{
-	extern const char *FuncLadder_GetSurfaceprops(CBaseEntity *pLadderEntity);
-
-	CBaseEntity *pLadder = m_HL2Local.m_hLadder.Get();
-	if ( pLadder )
-	{
-		const char *pSurfaceprops = FuncLadder_GetSurfaceprops(pLadder);
-		// get ladder material from func_ladder
-		return physprops->GetSurfaceData( physprops->GetSurfaceIndex( pSurfaceprops ) );
-
-	}
-	return BaseClass::GetLadderSurface(origin);
 }
 
 //-----------------------------------------------------------------------------
