@@ -76,7 +76,6 @@
 #include "waterbullet.h"
 #include "in_buttons.h"
 #include "eventlist.h"
-#include "globalstate.h"
 #include "physics_prop_ragdoll.h"
 #include "vphysics/friction.h"
 #include "physics_npc_solver.h"

@@ -27,7 +27,6 @@
 
 #if !defined( CLIENT_DLL )
 
-#include "globalstate.h"
 #include "entitylist.h"
 
 #else
@@ -2267,7 +2266,6 @@ BEGIN_SIMPLE_DATADESC(entitytable_t)
 	DEFINE_FIELD( size, FIELD_INTEGER ),
 	DEFINE_FIELD( flags, FIELD_INTEGER ),
 	DEFINE_FIELD( classname, FIELD_STRING ),
-	DEFINE_FIELD( globalname, FIELD_STRING ),
 	DEFINE_FIELD( landmarkModelSpace, FIELD_VECTOR ),
 	DEFINE_FIELD( modelname, FIELD_STRING ),
 END_DATADESC()
@@ -2366,18 +2364,9 @@ private:
 	Vector ModelSpaceLandmark( int modelIndex );
 	int RestoreEntity( CBaseEntity *pEntity, IRestore *pRestore, entitytable_t *pEntInfo );
 
-#if !defined( CLIENT_DLL )	
-	// Find the matching global entity.  Spit out an error if the designer made entities of
-	// different classes with the same global name
-	CBaseEntity *FindGlobalEntity( string_t classname, string_t globalname );
-
-	int RestoreGlobalEntity( CBaseEntity *pEntity, CSaveRestoreData *pSaveData, entitytable_t *pEntInfo );
-#endif
-
 private:
 	CEntitySaveUtils	m_EntitySaveUtils;
 };
-
 
 //-----------------------------------------------------------------------------
 
@@ -2488,7 +2477,6 @@ void CEntitySaveRestoreBlockHandler::Save( ISave *pSave )
 			pEntInfo->classname = pEnt->m_iClassname;	// Remember entity class for respawn
 
 #if !defined( CLIENT_DLL )
-			pEntInfo->globalname = pEnt->m_iGlobalname; // remember global name
 			pEntInfo->landmarkModelSpace = ModelSpaceLandmark( pEnt->GetModelIndex() );
 			int nEntIndex = pEnt->edict() ? ENTINDEX(pEnt->edict()) : -1;
 			bool bIsPlayer = ( ( nEntIndex >= 1 ) && ( nEntIndex <= gpGlobals->maxClients ) ) ? true : false;
@@ -2829,38 +2817,6 @@ bool CEntitySaveRestoreBlockHandler::SaveInitEntities( CSaveRestoreData *pSaveDa
 	return ( i == pSaveData->NumEntities() );
 }
 
-//---------------------------------
-
-#if !defined( CLIENT_DLL )
-
-// Find the matching global entity.  Spit out an error if the designer made entities of
-// different classes with the same global name
-CBaseEntity *CEntitySaveRestoreBlockHandler::FindGlobalEntity( string_t classname, string_t globalname )
-{
-	CBaseEntity *pReturn = NULL;
-
-	while ( (pReturn = gEntList.NextEnt( pReturn )) != NULL )
-	{
-		if ( FStrEq( STRING(pReturn->m_iGlobalname), STRING(globalname)) )
-			break;
-	}
-		
-	if ( pReturn )
-	{
-		if ( !FClassnameIs( pReturn, STRING(classname) ) )
-		{
-			Warning( "Global entity found %s, wrong class %s [expects class %s]\n", STRING(globalname), STRING(pReturn->m_iClassname), STRING(classname) );
-			pReturn = NULL;
-		}
-	}
-
-	return pReturn;
-}
-
-#endif	// !defined( CLIENT_DLL )
-
-//---------------------------------
-
 bool CEntitySaveRestoreBlockHandler::DoRestoreEntity( CBaseEntity *pEntity, IRestore *pRestore )
 {
 	MDLCACHE_CRITICAL_SECTION();
@@ -2906,111 +2862,13 @@ Vector CEntitySaveRestoreBlockHandler::ModelSpaceLandmark( int modelIndex )
 	return mins;
 }
 
-
 int CEntitySaveRestoreBlockHandler::RestoreEntity( CBaseEntity *pEntity, IRestore *pRestore, entitytable_t *pEntInfo )
 {
 	if ( !DoRestoreEntity( pEntity, pRestore ) )
 		return 0;
 
-#if !defined( CLIENT_DLL )		
-	if ( pEntity->m_iGlobalname != NULL_STRING ) 
-	{
-		int globalIndex = GlobalEntity_GetIndex( pEntity->m_iGlobalname );
-		if ( globalIndex >= 0 )
-		{
-			// Already dead? delete
-			if ( GlobalEntity_GetState( globalIndex ) == GLOBAL_DEAD )
-				return -1;
-			else if ( !FStrEq( STRING(gpGlobals->mapname), GlobalEntity_GetMap(globalIndex) ) )
-			{
-				pEntity->MakeDormant();	// Hasn't been moved to this level yet, wait but stay alive
-			}
-			// In this level & not dead, continue on as normal
-		}
-		else
-		{
-			Warning( "Global Entity %s (%s) not in table!!!\n", STRING(pEntity->m_iGlobalname), STRING(pEntity->m_iClassname) );
-			// Spawned entities default to 'On'
-			GlobalEntity_Add( pEntity->m_iGlobalname, gpGlobals->mapname, GLOBAL_ON );
-		}
-	}
-#endif
-
 	return 0;
 }
-
-//---------------------------------
-
-#if !defined( CLIENT_DLL )
-	
-int CEntitySaveRestoreBlockHandler::RestoreGlobalEntity( CBaseEntity *pEntity, CSaveRestoreData *pSaveData, entitytable_t *pEntInfo )
-{
-	Vector oldOffset;
-	EHANDLE hEntitySafeHandle;
-	hEntitySafeHandle = pEntity;
-
-	oldOffset.Init();
-	CRestore restoreHelper( pSaveData );
-	
-	string_t globalName = pEntInfo->globalname, className = pEntInfo->classname;
-
-	// -------------------
-
-	int globalIndex = GlobalEntity_GetIndex( globalName );
-	
-	// Don't overlay any instance of the global that isn't the latest
-	// pSaveData->szCurrentMapName is the level this entity is coming from
-	// pGlobal->levelName is the last level the global entity was active in.
-	// If they aren't the same, then this global update is out of date.
-	if ( !FStrEq( pSaveData->levelInfo.szCurrentMapName, GlobalEntity_GetMap(globalIndex) ) )
-	{
-		return 0;
-	}
-
-	// Compute the new global offset
-	CBaseEntity *pNewEntity = FindGlobalEntity( className, globalName );
-	if ( pNewEntity )
-	{
-//				Msg( "Overlay %s with %s\n", pNewEntity->GetClassname(), STRING(tmpEnt->classname) );
-		// Tell the restore code we're overlaying a global entity from another level
-		restoreHelper.SetGlobalMode( 1 );	// Don't overwrite global fields
-
-		pSaveData->modelSpaceOffset = pEntInfo->landmarkModelSpace - ModelSpaceLandmark( pNewEntity->GetModelIndex() );
-
-		UTIL_Remove( pEntity );
-		pEntity = pNewEntity;// we're going to restore this data OVER the old entity
-		pEntInfo->hEnt = pEntity;
-		// HACKHACK: Do we need system-wide support for removing non-global spawn allocated resources?
-		pEntity->VPhysicsDestroyObject();
-		Assert( pEntInfo->edictindex == -1 );
-		// Update the global table to say that the global definition of this entity should come from this level
-		GlobalEntity_SetMap( globalIndex, gpGlobals->mapname );
-	}
-	else
-	{
-		// This entity will be freed automatically by the engine->  If we don't do a restore on a matching entity (below)
-		// or call EntityUpdate() to move it to this level, we haven't changed global state at all.
-		DevMsg( "Warning: No match for global entity %s found in destination level\n", STRING(globalName) );
-		return 0;
-	}
-	
-	if ( !DoRestoreEntity( pEntity, &restoreHelper ) )
-	{
-		pEntity = NULL;
-	}
-
-	// Is this an overriding global entity (coming over the transition)
-	pSaveData->modelSpaceOffset.Init();
-	if ( pEntity )
-		return 1;
-	return 0;
-}
-
-#endif	// !defined( CLIENT_DLL )
-
-
-
-//-----------------------------------------------------------------------------
 
 CSaveRestoreData *SaveInit( int size )
 {
@@ -3378,38 +3236,16 @@ int CreateEntityTransitionList( CSaveRestoreData *pSaveData, int levelMask )
 
 		if ( pent && (pEntInfo->flags & levelMask) )		// Screen out the player if he's not to be spawned
 		{
-			if ( pEntInfo->flags & FENTTABLE_GLOBAL )
+			DevMsg(2, "Transferring %s (%d)\n", STRING(pEntInfo->classname), pent->edict() ? ENTINDEX(pent->edict()) : -1);
+			CRestore restoreHelper(pSaveData);
+			if (g_EntitySaveRestoreBlockHandler.RestoreEntity(pent, &restoreHelper, pEntInfo) < 0)
 			{
-				DevMsg( 2, "Merging changes for global: %s\n", STRING(pEntInfo->classname) );
-			
-				// -------------------------------------------------------------------------
-				// Pass the "global" flag to the DLL to indicate this entity should only override
-				// a matching entity, not be spawned
-				if ( g_EntitySaveRestoreBlockHandler.RestoreGlobalEntity( pent, pSaveData, pEntInfo ) > 0 )
-				{
-					movedCount++;
-					pEntInfo->restoreentityindex = pEntInfo->hEnt.Get()->entindex();
-					AddRestoredEntity( pEntInfo->hEnt.Get() );
-				}
-				else
-				{
-					UTIL_RemoveImmediate( pEntInfo->hEnt.Get() );
-				}
-				// -------------------------------------------------------------------------
+				UTIL_RemoveImmediate(pent);
 			}
-			else 
+			else
 			{
-				DevMsg( 2, "Transferring %s (%d)\n", STRING(pEntInfo->classname), pent->edict() ? ENTINDEX(pent->edict()) : -1 );
-				CRestore restoreHelper( pSaveData );
-				if ( g_EntitySaveRestoreBlockHandler.RestoreEntity( pent, &restoreHelper, pEntInfo ) < 0 )
-				{
-					UTIL_RemoveImmediate( pent );
-				}
-				else
-				{
-					// needs to be checked.  Do this in a separate pass so that pointers & hierarchy can be traversed
-					checkList.AddToTail(i);
-				}
+				// needs to be checked.  Do this in a separate pass so that pointers & hierarchy can be traversed
+				checkList.AddToTail(i);
 			}
 
 			// Remove any entities that were removed using UTIL_Remove() as a result of the above calls to UTIL_RemoveImmediate()

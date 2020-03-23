@@ -122,7 +122,6 @@ struct entitytable_t
 		size = 0;
 		flags = 0;
 		classname = NULL_STRING;
-		globalname = NULL_STRING;
 		landmarkModelSpace.Init();
 		modelname = NULL_STRING;
 	}
@@ -143,7 +142,6 @@ struct entitytable_t
 	int			size;			// Byte size of this entity's data
 	int			flags;			// This could be a short -- bit mask of transitions that this entity is in the PVS of
 	string_t	classname;		// entity class name
-	string_t	globalname;		// entity global name
 	Vector		landmarkModelSpace;	// a fixed position in model space for comparison
 									// NOTE: Brush models can be built in different coordiante systems
 									//		in different levels, so this fixes up local quantities to match

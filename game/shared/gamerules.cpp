@@ -19,14 +19,11 @@
 	#include "entitylist.h"
 	#include "basecombatweapon.h"
 	#include "voice_gamemgr.h"
-	#include "globalstate.h"
 	#include "player_resource.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-ConVar g_Language( "g_Language", "0", FCVAR_REPLICATED );
 
 #ifndef CLIENT_DLL
 ConVar log_verbose_enable( "log_verbose_enable", "0", FCVAR_GAMEDLL, "Set to 1 to enable verbose server log on the server." );

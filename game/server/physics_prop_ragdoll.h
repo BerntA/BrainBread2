@@ -149,7 +149,7 @@ private:
 	Vector				m_ragdollMaxs[RAGDOLL_MAX_ELEMENTS];
 };
 
-CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, const CTakeDamageInfo &info, int collisionGroup, bool bUseLRURetirement = false );
+CBaseEntity *CreateServerRagdoll(CBaseAnimating *pAnimating, int forceBone, const CTakeDamageInfo &info, int collisionGroup);
 CRagdollProp *CreateServerRagdollAttached( CBaseAnimating *pAnimating, const Vector &vecForce, int forceBone, int collisionGroup, IPhysicsObject *pAttached, CBaseAnimating *pParentEntity, int boneAttach, const Vector &originAttached, int parentBoneAttach, const Vector &boneOrigin );
 void DetachAttachedRagdoll( CBaseEntity *pRagdollIn );
 void DetachAttachedRagdollsForEntity( CBaseEntity *pRagdollParent );

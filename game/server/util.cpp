@@ -7,7 +7,6 @@
 
 #include "cbase.h"
 #include "saverestore.h"
-#include "globalstate.h"
 #include <stdarg.h>
 #include "shake.h"
 #include "decals.h"
@@ -1548,9 +1547,6 @@ void UTIL_BloodStream( const Vector &origin, const Vector &direction, int color,
 	if ( !UTIL_ShouldShowBlood( color ) )
 		return;
 
-	if ( g_Language.GetInt() == LANGUAGE_GERMAN && color == BLOOD_COLOR_RED )
-		color = 0;
-
 	CPVSFilter filter( origin );
 	te->BloodStream( filter, 0.0, &origin, &direction, 247, 63, 14, 255, MIN( amount, 255 ) );
 }				
@@ -2061,32 +2057,6 @@ int DispatchSpawn( CBaseEntity *pEntity )
 
 		if ( pEntSafe == NULL || pEntity->IsMarkedForDeletion() )
 			return -1;
-
-		if ( pEntity->m_iGlobalname != NULL_STRING ) 
-		{
-			// Handle global stuff here
-			int globalIndex = GlobalEntity_GetIndex( pEntity->m_iGlobalname );
-			if ( globalIndex >= 0 )
-			{
-				// Already dead? delete
-				if ( GlobalEntity_GetState(globalIndex) == GLOBAL_DEAD )
-				{
-					pEntity->Remove();
-					return -1;
-				}
-				else if ( !FStrEq(STRING(gpGlobals->mapname), GlobalEntity_GetMap(globalIndex)) )
-				{
-					pEntity->MakeDormant();	// Hasn't been moved to this level yet, wait but stay alive
-				}
-				// In this level & not dead, continue on as normal
-			}
-			else
-			{
-				// Spawned entities default to 'On'
-				GlobalEntity_Add( pEntity->m_iGlobalname, gpGlobals->mapname, GLOBAL_ON );
-//					Msg( "Added global entity %s (%s)\n", pEntity->GetClassname(), STRING(pEntity->m_iGlobalname) );
-			}
-		}
 
 		gEntList.NotifySpawn( pEntity );
 	}

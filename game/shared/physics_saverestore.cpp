@@ -324,19 +324,7 @@ public:
 			
 			if ( header.modelName != NULL_STRING )
 			{
-				CBaseEntity *pGlobalEntity = header.hEntity;
-#if !defined( CLIENT_DLL )
-				if ( NULL_STRING != pGlobalEntity->m_iGlobalname )
-				{
-					modelIndex = pGlobalEntity->GetModelIndex();
-				}
-				else
-#endif
-				{
-					modelIndex = modelinfo->GetModelIndex( STRING( header.modelName ) );
-					pGlobalEntity = NULL;
-				}
-
+				modelIndex = modelinfo->GetModelIndex(STRING(header.modelName));
 				if ( modelIndex != -1 )
 				{
 					vcollide_t *pCollide = modelinfo->GetVCollide( modelIndex );

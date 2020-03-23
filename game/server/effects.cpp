@@ -396,26 +396,16 @@ END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( gibshooter, CGibShooter );
 
-
 void CGibShooter::Precache ( void )
 {
-	if ( g_Language.GetInt() == LANGUAGE_GERMAN )
-	{
-		m_iGibModelIndex = PrecacheModel ("models/germanygibs.mdl");
-	}
-	else
-	{
-		m_iGibModelIndex = PrecacheModel ("models/gibs/hgibs.mdl");
-	}
+	m_iGibModelIndex = PrecacheModel("models/gibs/hgibs.mdl");
 }
-
 
 void CGibShooter::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	SetThink( &CGibShooter::ShootThink );
 	SetNextThink( gpGlobals->curtime );
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Input handler for shooting gibs.
@@ -425,7 +415,6 @@ void CGibShooter::InputShoot( inputdata_t &inputdata )
 	SetThink( &CGibShooter::ShootThink );
 	SetNextThink( gpGlobals->curtime );
 }
-
 
 void CGibShooter::Spawn( void )
 {
@@ -451,10 +440,6 @@ void CGibShooter::Spawn( void )
 
 CGib *CGibShooter::CreateGib ( void )
 {
-	ConVarRef violence_hgibs( "violence_hgibs" );
-	if ( violence_hgibs.IsValid() && !violence_hgibs.GetInt() )
-		return NULL;
-
 	CGib *pGib = CREATE_ENTITY( CGib, "gib" );
 	pGib->Spawn( "models/gibs/hgibs.mdl" );
 	pGib->SetBloodColor( BLOOD_COLOR_RED );
@@ -474,7 +459,6 @@ CGib *CGibShooter::CreateGib ( void )
 
 	return pGib;
 }
-
 
 void CGibShooter::InitPointGib( CGib *pGib, const Vector &vecShootDir, float flSpeed )
 {
@@ -1792,46 +1776,6 @@ class CPhysBallSocket;
 //-----------------------------------------------------------------------------
 bool CPhysicsWire::SetupPhysics( void )
 {
-/*
-	CPointEntity	*anchorEnt, *freeEnt;
-	CPhysBallSocket *socket;
-
-	char	anchorName[256];
-	char	freeName[256];
-
-	int		iAnchorName, iFreeName;
-
-	anchorEnt = (CPointEntity *) CreateEntityByName( "info_target" );
-
-	if ( anchorEnt == NULL )
-		return false;
-
-	//Create and connect all segments
-	for ( int i = 0; i < m_nDensity; i++ )
-	{
-		// Create other end of our link
-		freeEnt = (CPointEntity *) CreateEntityByName( "info_target" );
-
-		// Create a ballsocket and attach the two
-		//socket = (CPhysBallSocket *) CreateEntityByName( "phys_ballsocket" );
-
-		Q_snprintf( anchorName,sizeof(anchorName), "__PWIREANCHOR%d", i );
-		Q_snprintf( freeName,sizeof(freeName), "__PWIREFREE%d", i+1 );
-
-		iAnchorName = MAKE_STRING( anchorName );
-		iFreeName	= MAKE_STRING( freeName );
-
-		//Fake the names
-		//socket->m_nameAttach1 = anchorEnt->m_iGlobalname	= iAnchorName;
-		//socket->m_nameAttach2 = freeEnt->m_iGlobalname	= iFreeName
-
-		//socket->Activate();
-
-		//The free ent is now the anchor for the next link
-		anchorEnt = freeEnt;
-	}
-*/
-
 	return true;
 }
 

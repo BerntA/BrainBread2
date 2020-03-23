@@ -316,17 +316,12 @@ private:
 #endif // CLIENT_DLL
 };
 
-
 #ifndef CLIENT_DLL
 	void InstallGameRules();
 	
 	// Create user messages for game here, calls into static player class creation functions
 	void RegisterUserMessages( void );
 #endif
-
-
-extern ConVar g_Language;
-
 
 //-----------------------------------------------------------------------------
 // Gets us at the game rules

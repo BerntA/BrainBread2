@@ -11,7 +11,6 @@
 #include "entityoutput.h"
 #include "eventqueue.h"
 #include "mathlib/mathlib.h"
-#include "globalstate.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -44,16 +43,12 @@ private:
 	COutputEvent m_OnBackgroundMap;
 	COutputEvent m_OnMultiNewMap;
 	COutputEvent m_OnMultiNewRound;
-
-	string_t m_globalstate;
 };
 
 LINK_ENTITY_TO_CLASS(logic_auto, CLogicAuto);
 
 
 BEGIN_DATADESC( CLogicAuto )
-
-	DEFINE_KEYFIELD(m_globalstate, FIELD_STRING, "globalstate"),
 
 	// Outputs
 	DEFINE_OUTPUT(m_OnMapSpawn, "OnMapSpawn"),
@@ -84,44 +79,38 @@ void CLogicAuto::Activate(void)
 //-----------------------------------------------------------------------------
 void CLogicAuto::Think(void)
 {
-	if (!m_globalstate || GlobalEntity_GetState(m_globalstate) == GLOBAL_ON)
+	if (gpGlobals->eLoadType == MapLoad_Transition)
 	{
-		if (gpGlobals->eLoadType == MapLoad_Transition)
-		{
-			m_OnMapTransition.FireOutput(NULL, this);
-		}
-		else if (gpGlobals->eLoadType == MapLoad_NewGame)
-		{
-			m_OnNewGame.FireOutput(NULL, this);
-		}
-		else if (gpGlobals->eLoadType == MapLoad_LoadGame)
-		{
-			m_OnLoadGame.FireOutput(NULL, this);
-		}
-		else if (gpGlobals->eLoadType == MapLoad_Background)
-		{
-			m_OnBackgroundMap.FireOutput(NULL, this);
-		}
+		m_OnMapTransition.FireOutput(NULL, this);
+	}
+	else if (gpGlobals->eLoadType == MapLoad_NewGame)
+	{
+		m_OnNewGame.FireOutput(NULL, this);
+	}
+	else if (gpGlobals->eLoadType == MapLoad_LoadGame)
+	{
+		m_OnLoadGame.FireOutput(NULL, this);
+	}
+	else if (gpGlobals->eLoadType == MapLoad_Background)
+	{
+		m_OnBackgroundMap.FireOutput(NULL, this);
+	}
 
-		m_OnMapSpawn.FireOutput(NULL, this);
+	m_OnMapSpawn.FireOutput(NULL, this);
 
-		if ( g_pGameRules->IsMultiplayer() )
+	if (g_pGameRules->IsMultiplayer())
+	{
+		// In multiplayer, fire the new map / round events.
+		if (g_pGameRules->InRoundRestart())
 		{
-			// In multiplayer, fire the new map / round events.
-			if ( g_pGameRules->InRoundRestart() )
-			{
-				m_OnMultiNewRound.FireOutput(NULL, this);
-			}
-			else
-			{
-				m_OnMultiNewMap.FireOutput(NULL, this);
-			}
+			m_OnMultiNewRound.FireOutput(NULL, this);
 		}
-
-		if (m_spawnflags & SF_AUTO_FIREONCE)
+		else
 		{
-			UTIL_Remove(this);
+			m_OnMultiNewMap.FireOutput(NULL, this);
 		}
 	}
-}
 
+	if (m_spawnflags & SF_AUTO_FIREONCE)
+		UTIL_Remove(this);
+}

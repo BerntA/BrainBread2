@@ -47,7 +47,6 @@
 #include "npc_BaseZombie.h"
 #include "objective_icon.h"
 #include "GameBase_Server.h"
-#include "globalstate.h"
 #include "filesystem.h"
 #include "hl2mp_bot_temp.h"
 #include "game_announcer.h"

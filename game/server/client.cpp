@@ -22,7 +22,6 @@
 #include "physics.h"
 #include "entitylist.h"
 #include "shake.h"
-#include "globalstate.h"
 #include "event_tempentity_tester.h"
 #include "ndebugoverlay.h"
 #include "engine/IEngineSound.h"

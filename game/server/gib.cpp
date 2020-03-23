@@ -65,13 +65,6 @@ void CGib::LimitVelocity( void )
 void CGib::SpawnStickyGibs( CBaseEntity *pVictim, Vector vecOrigin, int cGibs )
 {
 	int i;
-
-	if ( g_Language.GetInt() == LANGUAGE_GERMAN )
-	{
-		// no sticky gibs in germany right now!
-		return; 
-	}
-
 	for ( i = 0 ; i < cGibs ; i++ )
 	{
 		CGib *pGib = (CGib *)CreateEntityByName( "gib" );
@@ -118,17 +111,8 @@ void CGib::SpawnStickyGibs( CBaseEntity *pVictim, Vector vecOrigin, int cGibs )
 void CGib::SpawnHeadGib( CBaseEntity *pVictim )
 {
 	CGib *pGib = CREATE_ENTITY( CGib, "gib" );
-
-	if ( g_Language.GetInt() == LANGUAGE_GERMAN )
-	{
-		pGib->Spawn( "models/germangibs.mdl" );// throw one head
-		pGib->m_nBody = 0;
-	}
-	else
-	{
-		pGib->Spawn( "models/gibs/hgibs.mdl" );// throw one head
-		pGib->m_nBody = 0;
-	}
+	pGib->Spawn("models/gibs/hgibs.mdl");// throw one head
+	pGib->m_nBody = 0;
 
 	if ( pVictim )
 	{
@@ -296,27 +280,20 @@ void CGib::SpawnRandomGibs( CBaseEntity *pVictim, int cGibs, GibType_e eGibType 
 	{
 		CGib *pGib = CREATE_ENTITY( CGib, "gib" );
 
-		if ( g_Language.GetInt() == LANGUAGE_GERMAN )
+		switch (eGibType)
 		{
-			pGib->Spawn( "models/germangibs.mdl" );
-			pGib->m_nBody = random->RandomInt(0,GERMAN_GIB_COUNT-1);
+		case GIB_HUMAN:
+			// human pieces
+			pGib->Spawn("models/gibs/hgibs.mdl");
+			pGib->m_nBody = random->RandomInt(1, HUMAN_GIB_COUNT - 1);// start at one to avoid throwing random amounts of skulls (0th gib)
+			break;
+		case GIB_ALIEN:
+			// alien pieces
+			pGib->Spawn("models/gibs/agibs.mdl");
+			pGib->m_nBody = random->RandomInt(0, ALIEN_GIB_COUNT - 1);
+			break;
 		}
-		else
-		{
-			switch (eGibType)
-			{
-			case GIB_HUMAN:
-				// human pieces
-				pGib->Spawn( "models/gibs/hgibs.mdl" );
-				pGib->m_nBody = random->RandomInt(1,HUMAN_GIB_COUNT-1);// start at one to avoid throwing random amounts of skulls (0th gib)
-				break;
-			case GIB_ALIEN:
-				// alien pieces
-				pGib->Spawn( "models/gibs/agibs.mdl" );
-				pGib->m_nBody = random->RandomInt(0,ALIEN_GIB_COUNT-1);
-				break;
-			}
-		}
+
 		pGib->InitGib( pVictim, 300, 400);
 	}
 }
@@ -523,7 +500,7 @@ void CGib::BounceGibTouch ( CBaseEntity *pOther )
 	}
 	else
 	{
-		if ( g_Language.GetInt() != LANGUAGE_GERMAN && m_cBloodDecals > 0 && m_bloodColor != DONT_BLEED )
+		if ( m_cBloodDecals > 0 && m_bloodColor != DONT_BLEED )
 		{
 			vecSpot = GetAbsOrigin() + Vector ( 0 , 0 , 8 );//move up a bit, and trace down.
 			UTIL_TraceLine ( vecSpot, vecSpot + Vector ( 0, 0, -24 ),  MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr);

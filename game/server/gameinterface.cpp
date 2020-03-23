@@ -173,7 +173,6 @@ extern ConVar sv_noclipduringpause;
 ConVar sv_massreport( "sv_massreport", "0" );
 ConVar sv_force_transmit_ents( "sv_force_transmit_ents", "0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Will transmit all entities to client, regardless of PVS conditions (will still skip based on transmit flags, however)." );
 
-ConVar sv_autosave( "sv_autosave", "1", 0, "Set to 1 to autosave game on level transition. Does not affect autosave triggers." );
 ConVar *sv_maxreplay = NULL;
 static ConVar  *g_pcv_commentary = NULL;
 static ConVar *g_pcv_ThreadMode = NULL;
@@ -792,7 +791,6 @@ bool CServerGameDLL::GameInit( void )
 	GameBaseServer()->Init();
 	GameBaseShared()->Init();
 
-	ResetGlobalState();
 	engine->ServerCommand( "exec game.cfg\n" );
 	engine->ServerExecute( );
 
@@ -815,7 +813,6 @@ void CServerGameDLL::GameShutdown( void )
 {
 	GameBaseServer()->Release();
 	GameBaseShared()->Release();
-	ResetGlobalState();
 }
 
 static bool g_OneWayTransition = false;
@@ -955,18 +952,6 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 		{
 			engine->ClearSaveDirAfterClientLoad();
 		}
-
-		if ( pOldLevel && sv_autosave.GetBool() == true )
-		{
-			// This is a single-player style level transition.
-			// Queue up an autosave one second into the level
-			CBaseEntity *pAutosave = CBaseEntity::Create( "logic_autosave", vec3_origin, vec3_angle, NULL );
-			if ( pAutosave )
-			{
-				g_EventQueue.AddEvent( pAutosave, "Save", 1.0, NULL, NULL );
-				g_EventQueue.AddEvent( pAutosave, "Kill", 1.1, NULL, NULL );
-			}
-		}
 	}
 	else
 	{
@@ -987,9 +972,6 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 		// Now call the mod specific parse
 		LevelInit_ParseAllEntities( pMapEntities );
 	}
-
-	// Check low violence settings for this map
-	g_RagdollLVManager.SetLowViolence( pMapName );
 
 	// Now that all of the active entities have been loaded in, precache any entities who need point_template parameters
 	//  to be parsed (the above code has loaded all point_template entities)
@@ -1402,12 +1384,10 @@ void CServerGameDLL::SaveReadFields( CSaveRestoreData *pSaveData, const char *pn
 
 void CServerGameDLL::SaveGlobalState( CSaveRestoreData *s )
 {
-	::SaveGlobalState(s);
 }
 
 void CServerGameDLL::RestoreGlobalState(CSaveRestoreData *s)
 {
-	::RestoreGlobalState(s);
 }
 
 void CServerGameDLL::Save( CSaveRestoreData *s )

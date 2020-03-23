@@ -31,16 +31,6 @@ typedef CGameTrace trace_t;
 
 extern ConVar developer;	// developer mode
 
-
-//-----------------------------------------------------------------------------
-// Language IDs.
-//-----------------------------------------------------------------------------
-#define LANGUAGE_ENGLISH				0
-#define LANGUAGE_GERMAN					1
-#define LANGUAGE_FRENCH					2
-#define LANGUAGE_BRITISH				3
-
-
 //-----------------------------------------------------------------------------
 // Pitch + yaw
 //-----------------------------------------------------------------------------
@@ -68,7 +58,6 @@ QAngle	SharedRandomAngle( const char *sharedname, float minVal, float maxVal, in
 //-----------------------------------------------------------------------------
 bool PassServerEntityFilter( const IHandleEntity *pTouch, const IHandleEntity *pPass );
 bool StandardFilterRules( IHandleEntity *pHandleEntity, int fContentsMask );
-
 
 //-----------------------------------------------------------------------------
 // Converts an IHandleEntity to an CBaseEntity

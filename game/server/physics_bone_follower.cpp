@@ -396,19 +396,9 @@ CBoneFollower *CBoneFollower::Create( CBaseEntity *pOwner, const char *pModelNam
 //-----------------------------------------------------------------------------
 int CBoneFollower::ObjectCaps() 
 { 
-	CBaseEntity *pOwner = GetOwnerEntity();
-	if ( pOwner )
-	{
-		if( pOwner->m_iGlobalname != NULL_STRING )
-		{
-			int caps = BaseClass::ObjectCaps() | pOwner->ObjectCaps();
-			caps &= ~FCAP_ACROSS_TRANSITION;
-			return caps;
-		}
-	}
-
 	return BaseClass::ObjectCaps();
 }
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

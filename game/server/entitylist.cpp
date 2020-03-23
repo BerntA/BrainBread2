@@ -15,7 +15,6 @@
 #include "mapentities.h"
 #include "client.h"
 #include "ai_initutils.h"
-#include "globalstate.h"
 #include "datacache/imdlcache.h"
 
 #ifdef HL2_DLL
@@ -1448,9 +1447,6 @@ public:
 		{
 			m_bRespawnAllEntities = false;
 
-			// Don't change globalstate owing to deletion here
-			GlobalEntity_EnableStateUpdates( false );
-
 			// Remove all entities
 			int nPlayerIndex = -1;
 			CBaseEntity *pEnt = gEntList.FirstEnt();
@@ -1469,8 +1465,6 @@ public:
 			}
 			
 			gEntList.CleanupDeleteList();
-
-			GlobalEntity_EnableStateUpdates( true );
 
 			// Allows us to immediately re-use the edict indices we just freed to avoid edict overflow
 			engine->AllowImmediateEdictReuse();

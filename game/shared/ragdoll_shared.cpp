@@ -32,22 +32,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-CRagdollLowViolenceManager g_RagdollLVManager;
-
-void CRagdollLowViolenceManager::SetLowViolence( const char *pMapName )
-{
-	// set the value using the engine's low violence settings
-	m_bLowViolence = UTIL_IsLowViolence();
-
-#if !defined( CLIENT_DLL )
-	// the server doesn't worry about low violence during multiplayer games
-	if ( g_pGameRules && g_pGameRules->IsMultiplayer() )
-	{
-		m_bLowViolence = false;
-	}
-#endif
-}
-
 class CRagdollCollisionRules : public IVPhysicsKeyHandler
 {
 public:
@@ -239,7 +223,6 @@ static void RagdollAddConstraint( IPhysicsEnvironment *pPhysEnv, ragdoll_t &ragd
 	}
 }
 
-
 static void RagdollCreateObjects( IPhysicsEnvironment *pPhysEnv, ragdoll_t &ragdoll, const ragdollparams_t &params )
 {
 	ragdoll.listCount = 0;
@@ -381,7 +364,6 @@ void RagdollActivate( ragdoll_t &ragdoll, vcollide_t *pCollide, int modelIndex, 
 	}
 }
 
-
 bool RagdollCreate( ragdoll_t &ragdoll, const ragdollparams_t &params, IPhysicsEnvironment *pPhysEnv )
 {
 	RagdollCreateObjects( pPhysEnv, ragdoll, params );
@@ -433,7 +415,6 @@ bool RagdollCreate( ragdoll_t &ragdoll, const ragdollparams_t &params, IPhysicsE
 	return true;
 }
 
-
 void RagdollApplyAnimationAsVelocity( ragdoll_t &ragdoll, const matrix3x4_t *pPrevBones, const matrix3x4_t *pCurrentBones, float dt )
 {
 	for ( int i = 0; i < ragdoll.listCount; i++ )
@@ -478,7 +459,6 @@ void RagdollApplyAnimationAsVelocity( ragdoll_t &ragdoll, const matrix3x4_t *pBo
 		ragdoll.list[i].pObject->AddVelocity( &velocity, &localAngVelocity );
 	}
 }
-
 
 void RagdollDestroy( ragdoll_t &ragdoll )
 {
@@ -680,227 +660,6 @@ void RagdollSolveSeparation( ragdoll_t &ragdoll, CBaseEntity *pEntity )
 	}
 }
 
-//-----------------------------------------------------------------------------
-// LRU
-//-----------------------------------------------------------------------------
-#ifdef _XBOX
-// xbox defaults to 4 ragdolls max
-ConVar g_ragdoll_maxcount("g_ragdoll_maxcount", "4", FCVAR_REPLICATED );
-#else
-ConVar g_ragdoll_maxcount("g_ragdoll_maxcount", "8", FCVAR_REPLICATED );
-#endif
-ConVar g_debug_ragdoll_removal("g_debug_ragdoll_removal", "0", FCVAR_REPLICATED |FCVAR_CHEAT );
-
-CRagdollLRURetirement s_RagdollLRU( "CRagdollLRURetirement" );
-
-void CRagdollLRURetirement::LevelInitPreEntity( void )
-{
-	m_iMaxRagdolls = -1;
-	m_LRUImportantRagdolls.RemoveAll();
-	m_LRU.RemoveAll();
-}
-
-bool ShouldRemoveThisRagdoll( CBaseAnimating *pRagdoll )
-{
-	if ( g_RagdollLVManager.IsLowViolence() )
-	{
-		return true;
-	}
-
-#ifdef CLIENT_DLL
-
-	/* we no longer ignore enemies just because they are on fire -- a ragdoll in front of me
-	   is always a higher priority for retention than a flaming zombie behind me. At the 
-	   time I put this in, the ragdolls do clean up their own effects if culled via SUB_Remove().
-	   If you're encountering trouble with ragdolls leaving effects behind, try renabling the code below.
-    /////////////////////
-	//Just ignore it until we're done burning/dissolving.
-	if ( pRagdoll->GetEffectEntity() )
-		return false;
-	*/
-	
-	// Bail if we have a null ragdoll pointer.
-	if ( !pRagdoll->m_pRagdoll )
-		return true;	
-
-	Vector vMins, vMaxs;
-		
-	Vector origin = pRagdoll->m_pRagdoll->GetRagdollOrigin();
-	pRagdoll->m_pRagdoll->GetRagdollBounds( vMins, vMaxs );
-
-	if( engine->IsBoxInViewCluster( vMins + origin, vMaxs + origin) == false )
-	{
-		if ( g_debug_ragdoll_removal.GetBool() )
-		{
-			debugoverlay->AddBoxOverlay( origin, vMins, vMaxs, QAngle( 0, 0, 0 ), 0, 255, 0, 16, 5 );
-			debugoverlay->AddLineOverlay( origin, origin + Vector( 0, 0, 64 ), 0, 255, 0, true, 5 );
-		}
-
-		return true;
-	}
-	else if( engine->CullBox( vMins + origin, vMaxs + origin ) == true )
-	{
-		if ( g_debug_ragdoll_removal.GetBool() )
-		{
-			debugoverlay->AddBoxOverlay( origin, vMins, vMaxs, QAngle( 0, 0, 0 ), 0, 0, 255, 16, 5 );
-			debugoverlay->AddLineOverlay( origin, origin + Vector( 0, 0, 64 ), 0, 0, 255, true, 5 );
-		}
-
-		return true;
-	}
-
-#else
-	if (!UTIL_FindPlayerWithinRange(pRagdoll))
-	{
-		if ( g_debug_ragdoll_removal.GetBool() )
-			NDebugOverlay::Line(pRagdoll->GetAbsOrigin(), pRagdoll->GetAbsOrigin() + Vector(0, 0, 64), 0, 255, 0, true, 5);
-
-		return true;
-	}
-#endif
-
-	return false;
-}
-
-
-
-
-//-----------------------------------------------------------------------------
-// Cull stale ragdolls. There is an ifdef here: one version for episodic, 
-// one for everything else.
-//-----------------------------------------------------------------------------
-
-void CRagdollLRURetirement::Update( float frametime ) // Non-episodic version
-{
-	VPROF( "CRagdollLRURetirement::Update" );
-	// Compress out dead items
-	int i, next;
-
-	int iMaxRagdollCount = m_iMaxRagdolls;
-
-	if ( iMaxRagdollCount == -1 )
-	{
-		iMaxRagdollCount = g_ragdoll_maxcount.GetInt();
-	}
-
-	// fade them all for the low violence version
-	if ( g_RagdollLVManager.IsLowViolence() )
-	{
-		iMaxRagdollCount = 0;
-	}
-	m_iRagdollCount = 0;
-	m_iSimulatedRagdollCount = 0;
-
-	for ( i = m_LRU.Head(); i < m_LRU.InvalidIndex(); i = next )
-	{
-		next = m_LRU.Next(i);
-		CBaseAnimating *pRagdoll = m_LRU[i].Get();
-		if ( pRagdoll )
-		{
-			m_iRagdollCount++;
-			IPhysicsObject *pObject = pRagdoll->VPhysicsGetObject();
-			if (pObject && !pObject->IsAsleep())
-			{
-				m_iSimulatedRagdollCount++;
-			}
-			if ( m_LRU.Count() > iMaxRagdollCount )
-			{
-				//Found one, we're done.
-				if ( ShouldRemoveThisRagdoll( m_LRU[i] ) == true )
-				{
-#ifdef CLIENT_DLL
-					m_LRU[ i ]->SUB_Remove();
-#else
-					m_LRU[ i ]->SUB_StartFadeOut( 0 );
-#endif
-
-					m_LRU.Remove(i);
-					return;
-				}
-			}
-		}
-		else 
-		{
-			m_LRU.Remove(i);
-		}
-	}
-
-
-	//////////////////////////////
-	///   ORIGINAL ALGORITHM   ///
-	//////////////////////////////
-	// not episodic -- this is the original mechanism
-
-	for ( i = m_LRU.Head(); i < m_LRU.InvalidIndex(); i = next )
-	{
-		if ( m_LRU.Count() <=  iMaxRagdollCount )
-			break;
-
-		next = m_LRU.Next(i);
-
-		CBaseAnimating *pRagdoll = m_LRU[i].Get();
-
-		//Just ignore it until we're done burning/dissolving.
-		if ( pRagdoll && pRagdoll->GetEffectEntity() )
-			continue;
-
-#ifdef CLIENT_DLL
-		m_LRU[ i ]->SUB_Remove();
-#else
-		m_LRU[ i ]->SUB_StartFadeOut( 0 );
-#endif
-		m_LRU.Remove(i);
-	}
-}
-
-//This is pretty hacky, it's only called on the server so it just calls the update method.
-void CRagdollLRURetirement::FrameUpdatePostEntityThink( void )
-{
-	Update( 0 );
-}
-
-ConVar g_ragdoll_important_maxcount( "g_ragdoll_important_maxcount", "2", FCVAR_REPLICATED );
-
-//-----------------------------------------------------------------------------
-// Move it to the top of the LRU
-//-----------------------------------------------------------------------------
-void CRagdollLRURetirement::MoveToTopOfLRU( CBaseAnimating *pRagdoll, bool bImportant )
-{
-	if ( bImportant )
-	{
-		m_LRUImportantRagdolls.AddToTail( pRagdoll );
-
-		if ( m_LRUImportantRagdolls.Count() > g_ragdoll_important_maxcount.GetInt() )
-		{
-			int iIndex = m_LRUImportantRagdolls.Head();
-
-			CBaseAnimating *pRagdoll = m_LRUImportantRagdolls[iIndex].Get();
-
-			if ( pRagdoll )
-			{
-#ifdef CLIENT_DLL
-				pRagdoll->SUB_Remove();
-#else
-				pRagdoll->SUB_StartFadeOut( 0 );
-#endif
-				m_LRUImportantRagdolls.Remove(iIndex);
-			}
-
-		}
-		return;
-	}
-	for ( int i = m_LRU.Head(); i < m_LRU.InvalidIndex(); i = m_LRU.Next(i) )
-	{
-		if ( m_LRU[i].Get() == pRagdoll )
-		{
-			m_LRU.Remove(i);
-			break;
-		}
-	}
-
-	m_LRU.AddToTail( pRagdoll );
-}
-
 //EFFECT/ENTITY TRANSFERS
 //CLIENT
 
@@ -910,8 +669,6 @@ void CRagdollLRURetirement::MoveToTopOfLRU( CBaseAnimating *pRagdoll, bool bImpo
 #define DEFAULT_MODEL_FADE_START 1.9f
 #define DEFAULT_MODEL_FADE_LENGTH 0.1f
 #define DEFAULT_FADEIN_LENGTH 1.0f
-
-
 
 C_EntityDissolve *DissolveEffect( C_BaseEntity *pTarget, float flTime )
 {
@@ -1012,8 +769,6 @@ void C_BaseAnimating::IgniteRagdoll( C_BaseAnimating *pSource )
 		}
 	}
 }
-
-
 
 void C_BaseAnimating::TransferDissolveFrom( C_BaseAnimating *pSource )
 {

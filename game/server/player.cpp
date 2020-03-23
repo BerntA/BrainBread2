@@ -19,7 +19,6 @@
 #include "eventqueue.h"
 #include "worldsize.h"
 #include "isaverestore.h"
-#include "globalstate.h"
 #include "basecombatweapon.h"
 #include "ai_basenpc.h"
 #include "ai_network.h"
@@ -4653,8 +4652,6 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 				Msg("Parent: %s\n", STRING(pEntity->m_iParent));
 
 			Msg("Model: %s\n", STRING(pEntity->GetModelName()));
-			if (pEntity->m_iGlobalname != NULL_STRING)
-				Msg("Globalname: %s\n", STRING(pEntity->m_iGlobalname));
 		}
 		break;
 

@@ -772,7 +772,6 @@ void UTIL_Tracer( const Vector &vecStart, const Vector &vecEnd, int iEntIndex,
 	}
 }
 
-
 void UTIL_BloodDrips(const Vector &origin, const Vector &direction, int color, int amount, int hitbox)
 {
 #ifdef BB2_AI
@@ -803,41 +802,15 @@ void UTIL_BloodDrips(const Vector &origin, const Vector &direction, int color, i
 	}
 }	
 
-//-----------------------------------------------------------------------------
-// Purpose: Returns low violence settings
-//-----------------------------------------------------------------------------
-static ConVar	violence_hblood( "violence_hblood","1", 0, "Draw human blood" );
-static ConVar	violence_hgibs( "violence_hgibs","1", 0, "Show human gib entities" );
-static ConVar	violence_ablood( "violence_ablood","1", 0, "Draw alien blood" );
-static ConVar	violence_agibs( "violence_agibs","1", 0, "Show alien gib entities" );
-
 bool UTIL_IsLowViolence( void )
 {
-	// These convars are no longer necessary -- the engine is the final arbiter of
-	// violence settings -- but they're here for legacy support and for testing low
-	// violence when the engine is in normal violence mode.
-	if ( !violence_hblood.GetBool() || !violence_ablood.GetBool() || !violence_hgibs.GetBool() || !violence_agibs.GetBool() )
-		return true;
-
 	return engine->IsLowViolence();
 }
 
 bool UTIL_ShouldShowBlood( int color )
 {
-	if ( color != DONT_BLEED )
-	{
-		if ( color == BLOOD_COLOR_RED )
-		{
-			return violence_hblood.GetBool();
-		}
-		else
-		{
-			return violence_ablood.GetBool();
-		}
-	}
-	return false;
+	return (color != DONT_BLEED);
 }
-
 
 //------------------------------------------------------------------------------
 // Purpose : Use trace to pass a specific decal type to the entity being decaled

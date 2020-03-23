@@ -7,7 +7,6 @@
 #include "cbase.h"
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
 #include "hl2mp_player.h"
-#include "globalstate.h"
 #include "game.h"
 #include "gamerules.h"
 #include "hl2mp_player_shared.h"

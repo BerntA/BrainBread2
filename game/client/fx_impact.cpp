@@ -63,15 +63,11 @@ IterationRetval_t CRagdollEnumerator::EnumElement( IHandleEntity *pHandleEntity 
 	return ITERATION_CONTINUE;
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 bool FX_AffectRagdolls( Vector vecOrigin, Vector vecStart, int iDamageType )
 {
-	// don't do this when lots of ragdolls are simulating
-	if ( s_RagdollLRU.CountRagdolls(true) > 1 )
-		return false;
 	Ray_t shotRay;
 	shotRay.Init( vecStart, vecOrigin );
 

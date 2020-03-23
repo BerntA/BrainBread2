@@ -30,7 +30,6 @@
 #include "globals.h"
 #include "engine/IStaticPropMgr.h"
 #include "particle_parse.h"
-#include "globalstate.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -532,9 +531,7 @@ void CWorld::Spawn( void )
 	AddFlag( FL_WORLDBRUSH );
 
 	g_EventQueue.Init();
-	Precache( );
-	GlobalEntity_Add( "is_console", STRING(gpGlobals->mapname), ( IsConsole() ) ? GLOBAL_ON : GLOBAL_OFF );
-	GlobalEntity_Add( "is_pc", STRING(gpGlobals->mapname), ( !IsConsole() ) ? GLOBAL_ON : GLOBAL_OFF );
+	Precache();
 
 	if (m_iArenaReinforcements)
 		bb2_arena_reinforcement_count.SetValue(m_iArenaReinforcements);
@@ -654,16 +651,7 @@ void CWorld::Precache( void )
 	// precache all temp ent stuff
 	CBaseTempEntity::PrecacheTempEnts();
 
-	g_Language.SetValue( LANGUAGE_ENGLISH );	// TODO use VGUI to get current language
-
-	if ( g_Language.GetInt() == LANGUAGE_GERMAN )
-	{
-		PrecacheModel( "models/germangibs.mdl" );
-	}
-	else
-	{
-		PrecacheModel( "models/gibs/hgibs.mdl" );
-	}
+	PrecacheModel("models/gibs/hgibs.mdl");
 
 	PrecacheScriptSound( "BaseEntity.EnterWater" );
 	PrecacheScriptSound( "BaseEntity.ExitWater" );

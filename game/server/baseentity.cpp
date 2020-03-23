@@ -5,7 +5,6 @@
 //===========================================================================//
 
 #include "cbase.h"
-#include "globalstate.h"
 #include "isaverestore.h"
 #include "client.h"
 #include "decals.h"
@@ -945,13 +944,6 @@ int CBaseEntity::DrawDebugTextOverlays(void)
 		EntityText(offset,tempstr, 0);
 		offset++;
 
-		if( m_iGlobalname != NULL_STRING )
-		{
-			Q_snprintf( tempstr, sizeof(tempstr), "GLOBALNAME: %s", STRING(m_iGlobalname) );
-			EntityText(offset,tempstr, 0);
-			offset++;
-		}
-
 		Vector vecOrigin = GetAbsOrigin();
 		Q_snprintf( tempstr, sizeof(tempstr), "Position: %0.1f, %0.1f, %0.1f\n", vecOrigin.x, vecOrigin.y, vecOrigin.z );
 		EntityText( offset, tempstr, 0 );
@@ -1732,7 +1724,6 @@ END_DATADESC()
 BEGIN_DATADESC_NO_BASE( CBaseEntity )
 
 	DEFINE_KEYFIELD( m_iClassname, FIELD_STRING, "classname" ),
-	DEFINE_GLOBAL_KEYFIELD( m_iGlobalname, FIELD_STRING, "globalname" ),
 	DEFINE_KEYFIELD( m_iParent, FIELD_STRING, "parentname" ),
 
 	DEFINE_KEYFIELD( m_iHammerID, FIELD_INTEGER, "hammerid" ), // save ID numbers so that entities can be tracked between save/restore and vmf
@@ -1991,14 +1982,6 @@ void CBaseEntity::UpdateOnRemove( void )
 			}
 			*/
 		}
-	}
-
-	if ( m_iGlobalname != NULL_STRING )
-	{
-		// NOTE: During level shutdown the global list will suppress this
-		// it assumes your changing levels or the game will end
-		// causing the whole list to be flushed
-		GlobalEntity_SetState( m_iGlobalname, GLOBAL_DEAD );
 	}
 
 	VPhysicsDestroyObject();
@@ -6271,15 +6254,6 @@ void CBaseEntity::ModifyOrAppendCriteria( AI_CriteriaSet& set )
 	}
 
 	set.AppendCriteria( "healthfrac", UTIL_VarArgs( "%.3f", healthfrac ) );
-
-	// Go through all the global states and append them
-
-	for ( int i = 0; i < GlobalEntity_GetNumGlobals(); i++ ) 
-	{
-		const char *szGlobalName = GlobalEntity_GetName(i);
-		int iGlobalState = (int)GlobalEntity_GetStateByIndex(i);
-		set.AppendCriteria( szGlobalName, UTIL_VarArgs( "%i", iGlobalState ) );
-	}
 
 	// Append anything from I/O or keyvalues pairs
 	AppendContextToCriteria( set );

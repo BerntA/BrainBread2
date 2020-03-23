@@ -12,7 +12,6 @@
 #include "entityapi.h"
 #include "entitylist.h"
 #include "ndebugoverlay.h"
-#include "globalstate.h"
 #include "filters.h"
 #include "vstdlib/random.h"
 #include "triggers.h"

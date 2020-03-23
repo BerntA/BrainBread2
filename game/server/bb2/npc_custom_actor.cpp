@@ -7,7 +7,6 @@
 #include "cbase.h"
 #include "npc_custom_actor.h"
 #include "ammodef.h"
-#include "globalstate.h"
 #include "soundent.h"
 #include "BasePropDoor.h"
 #include "hl2_shared_misc.h"

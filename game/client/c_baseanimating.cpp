@@ -254,8 +254,6 @@ END_PREDICTION_DATA()
 LINK_ENTITY_TO_CLASS( client_ragdoll, C_ClientRagdoll );
 
 BEGIN_DATADESC( C_ClientRagdoll )
-	DEFINE_FIELD( m_bFadeOut, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bImportant, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_iCurrentFriction, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iMinFriction, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iMaxFriction, FIELD_INTEGER ),
@@ -283,9 +281,7 @@ C_ClientRagdoll::C_ClientRagdoll( bool bRestoring )
 	m_iCurrentFriction = 0;
 	m_iFrictionAnimState = RAGDOLL_FRICTION_NONE;
 	m_bReleaseRagdoll = false;
-	m_bFadeOut = false;
 	m_bFadingOut = false;
-	m_bImportant = false;
 	m_bNoModelParticles = false;
 
 	SetClassname("client_ragdoll");
@@ -363,16 +359,9 @@ void C_ClientRagdoll::OnRestore( void )
  	CreateShadow();
 
 	SetNextClientThink( CLIENT_THINK_ALWAYS );
-	
-	if ( m_bFadeOut == true )
-	{
-		s_RagdollLRU.MoveToTopOfLRU( this, m_bImportant );
-	}
-
 	NoteRagdollCreationTick( this );
 	
 	BaseClass::OnRestore();
-
 	RagdollMoved();
 }
 

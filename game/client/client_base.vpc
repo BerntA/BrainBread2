@@ -498,7 +498,6 @@ $Project
 		$File	"c_point_commentary_node.cpp"
 		$File	"c_props.cpp"
 		$File	"c_props.h"
-		$File	"c_ragdoll_manager.cpp"
 		$File	"c_rope.cpp"
 		$File	"c_rumble.cpp"
 		$File	"c_sceneentity.cpp"

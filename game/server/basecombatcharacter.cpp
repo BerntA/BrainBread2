@@ -30,7 +30,6 @@
 #include "saverestore_utlvector.h"
 #include "eventqueue.h"
 #include "world.h"
-#include "globalstate.h"
 #include "items.h"
 #include "movevars_shared.h"
 #include "RagdollBoogie.h"
@@ -198,7 +197,6 @@ bool CBaseCombatCharacter::HasHumanGibs( void )
 	return false;
 }
 
-
 bool CBaseCombatCharacter::HasAlienGibs( void )
 {
 #if defined( HL2_DLL )
@@ -209,7 +207,6 @@ bool CBaseCombatCharacter::HasAlienGibs( void )
 
 	return false;
 }
-
 
 void CBaseCombatCharacter::CorpseFade( void )
 {
@@ -600,7 +597,6 @@ void CBaseCombatCharacter::UpdateOnRemove( void )
 	// Chain at end to mimic destructor unwind order
 	BaseClass::UpdateOnRemove();
 }
-
 
 //=========================================================
 // CorpseGib - create some gore and get rid of a character's
@@ -997,39 +993,11 @@ CBaseEntity *CBaseCombatCharacter::CheckTraceHullAttack( const Vector &vStart, c
 
 bool  CBaseCombatCharacter::Event_Gibbed( const CTakeDamageInfo &info )
 {
-	bool fade = false;
-
-	if ( HasHumanGibs() )
-	{
-		ConVarRef violence_hgibs( "violence_hgibs" );
-		if ( violence_hgibs.IsValid() && violence_hgibs.GetInt() == 0 )
-		{
-			fade = true;
-		}
-	}
-	else if ( HasAlienGibs() )
-	{
-		ConVarRef violence_agibs( "violence_agibs" );
-		if ( violence_agibs.IsValid() && violence_agibs.GetInt() == 0 )
-		{
-			fade = true;
-		}
-	}
-
 	m_takedamage	= DAMAGE_NO;
 	AddSolidFlags( FSOLID_NOT_SOLID );
 	m_lifeState		= LIFE_DEAD;
-
-	if ( fade )
-	{
-		CorpseFade();
-		return false;
-	}
-	else
-	{
-		AddEffects( EF_NODRAW ); // make the model invisible.
-		return CorpseGib( info );
-	}
+	AddEffects(EF_NODRAW); // make the model invisible.
+	return CorpseGib(info);
 }
 
 
@@ -1146,13 +1114,10 @@ bool CBaseCombatCharacter::BecomeRagdollBoogie( CBaseEntity *pKiller, const Vect
 	Assert( CanBecomeRagdoll() );
 
 	CTakeDamageInfo info( pKiller, pKiller, 1.0f, DMG_GENERIC );
-
 	info.SetDamageForce( forceVector );
 
-	CBaseEntity *pRagdoll = CreateServerRagdoll( this, 0, info, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
-
+	CBaseEntity *pRagdoll = CreateServerRagdoll(this, 0, info, COLLISION_GROUP_INTERACTIVE_DEBRIS);
 	pRagdoll->SetCollisionBounds( CollisionProp()->OBBMins(), CollisionProp()->OBBMaxs() );
-
 	CRagdollBoogie::Create( pRagdoll, 200, gpGlobals->curtime, duration, flags );
 
 	CTakeDamageInfo ragdollInfo( pKiller, pKiller, 10000.0, DMG_GENERIC | DMG_REMOVENORAGDOLL );

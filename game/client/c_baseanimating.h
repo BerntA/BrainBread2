@@ -677,8 +677,6 @@ public:
 	void	FadeOut( void );
 	virtual float LastBoneChangedTime();
 
-	bool m_bFadeOut;
-	bool m_bImportant;
 	float m_flEffectTime;
 
 private:

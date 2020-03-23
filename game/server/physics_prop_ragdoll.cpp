@@ -43,7 +43,6 @@ const float ATTACHED_DAMPING_SCALE = 50.0f;
 // Spawnflags
 //-----------------------------------------------------------------------------
 #define	SF_RAGDOLLPROP_DEBRIS		0x0004
-#define SF_RAGDOLLPROP_USE_LRU_RETIREMENT	0x1000
 #define	SF_RAGDOLLPROP_ALLOW_DISSOLVE		0x2000	// Allow this prop to be dissolved
 #define	SF_RAGDOLLPROP_MOTIONDISABLED		0x4000
 #define	SF_RAGDOLLPROP_ALLOW_STRETCH		0x8000
@@ -371,11 +370,6 @@ void CRagdollProp::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t r
 		}
 	}
 
-	if ( HasSpawnFlags( SF_RAGDOLLPROP_USE_LRU_RETIREMENT ) )
-	{
-		s_RagdollLRU.MoveToTopOfLRU( this );
-	}
-
 	if ( !HasSpawnFlags( SF_PHYSPROP_ENABLE_ON_PHYSCANNON ) )
 		return;
 
@@ -400,11 +394,6 @@ void CRagdollProp::OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t Reaso
 	if( HasPhysgunInteraction( "onpickup", "boogie" ) )
 	{
 		CRagdollBoogie::Create( this, 150, gpGlobals->curtime, 3.0f, SF_RAGDOLL_BOOGIE_ELECTRICAL );
-	}
-
-	if ( HasSpawnFlags( SF_RAGDOLLPROP_USE_LRU_RETIREMENT ) )
-	{
-		s_RagdollLRU.MoveToTopOfLRU( this );
 	}
 
 	// Make sure it's interactive debris for at most 5 seconds
@@ -1087,10 +1076,10 @@ void CRagdollProp::UpdateNetworkDataFromVPhysics( IPhysicsObject *pPhysics, int 
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Fade out due 
+//-----------------------------------------------------------------------------
 
-//-----------------------------------------------------------------------------
-// Fade out due to the LRU telling it do
-//-----------------------------------------------------------------------------
 #define FADE_OUT_LENGTH 0.5f
 
 void CRagdollProp::FadeOut( float flDelay, float fadeTime ) 
@@ -1291,7 +1280,7 @@ CBaseAnimating *CreateServerRagdollSubmodel( CBaseAnimating *pOwner, const char 
 }
 
 
-CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, const CTakeDamageInfo &info, int collisionGroup, bool bUseLRURetirement )
+CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, const CTakeDamageInfo &info, int collisionGroup )
 {
 	if ( info.GetDamageType() & DMG_CRUSH )
 	{
@@ -1396,11 +1385,6 @@ CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, con
 	if ( pAnimating->IsDissolving() )
 	{
 		pRagdoll->TransferDissolveFrom( pAnimating );
-	}
-	else if ( bUseLRURetirement )
-	{
-		pRagdoll->AddSpawnFlags( SF_RAGDOLLPROP_USE_LRU_RETIREMENT );
-		s_RagdollLRU.MoveToTopOfLRU( pRagdoll );
 	}
 
 	// Tracker 22598:  If we don't set the OBB mins/maxs to something valid here, then the client will have a zero sized hull

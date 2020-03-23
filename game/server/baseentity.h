@@ -703,7 +703,6 @@ private:
 public:
 	// members
 	string_t m_iClassname;  // identifier for entity creation and save/restore
-	string_t m_iGlobalname; // identifier for carrying entity across level transitions
 	string_t m_iParent;	// the name of the entities parent; linked into m_pParent during Activate()
 
 	int		m_iHammerID; // Hammer unique edit id number
