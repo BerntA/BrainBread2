@@ -121,6 +121,8 @@ private:
 
 	CLeaderboardHandler *pLeaderboardHandler;
 
+	STEAM_CALLBACK(CGameBaseClient, Steam_OnUserStatsReceived, UserStatsReceived_t, m_CallbackUserStatsReceived);
+
 public:
 
 	CGameBaseClient(void);
@@ -204,7 +206,7 @@ static CGameBaseClient g_GameBaseClient;
 IGameBaseClient *GameBaseClient = (IGameBaseClient *)&g_GameBaseClient;
 
 // Constructor
-CGameBaseClient::CGameBaseClient(void)
+CGameBaseClient::CGameBaseClient(void) : m_CallbackUserStatsReceived(this, &CGameBaseClient::Steam_OnUserStatsReceived)
 {
 	LoadingPanel = NULL;
 	ClientWorkshopInstallerPanel = NULL;
@@ -704,6 +706,9 @@ void CGameBaseClient::PostInit(void)
 	GlobalRenderEffects->Initialize();
 	BB2PlayerGlobals->Initialize();
 
+	if (steamapicontext && steamapicontext->SteamUserStats())
+		steamapicontext->SteamUserStats()->RequestCurrentStats();
+
 	// Bernt: If we want to connect to a server then let's interrupt it, get the IP:PORT and find the server first and get its map name so we can show off a proper loading screen.
 	if (CommandLine()->FindParm("+connect"))
 	{
@@ -886,6 +891,28 @@ void CGameBaseClient::MutePlayerGameVoice(int playerIndex, bool value)
 		return;
 
 	GetClientVoiceMgr()->SetPlayerBlockedState(playerIndex, value);
+}
+
+void CGameBaseClient::Steam_OnUserStatsReceived(UserStatsReceived_t *pUserStatsReceived)
+{
+	if (!steamapicontext || !steamapicontext->SteamUserStats())
+		return;
+
+	DevMsg("Load SteamStats: EResult %d\n", pUserStatsReceived->m_eResult);
+
+	if (pUserStatsReceived->m_eResult != k_EResultOK)
+		return;
+
+	IGameEvent *event = gameeventmanager->CreateEvent("user_data_downloaded");
+	if (event)
+		gameeventmanager->FireEventClientSide(event);
+
+	// Update achievement panel!
+	if (MainMenu && MainMenu->GetContextHandler() && MainMenu->GetContextHandler()->m_pAchievementPanel)
+	{
+		MainMenu->GetContextHandler()->m_pAchievementPanel->Cleanup();
+		MainMenu->GetContextHandler()->m_pAchievementPanel->SetupLayout();
+	}
 }
 
 // Toggle Console On or Off.

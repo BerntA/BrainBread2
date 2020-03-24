@@ -238,6 +238,7 @@ void CNPCM1A1::Precache(void)
 {
 	BaseClass::Precache();
 	PrecacheModel(TANK_MODEL);
+	PrecacheModel("models/weapons/w_panzerschreck_rocket.mdl");
 	PrecacheParticleSystem("dust_bombdrop");
 	PrecacheParticleSystem("door_explosion_smoke");
 	PrecacheScriptSound("M1A1.Fire");
