@@ -244,14 +244,13 @@ int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flDist)
 		return COND_TOO_FAR_TO_ATTACK;
 
 	trace_t	tr;
-
 	CTraceFilterWorldAndPropsOnly worldCheckFilter;
-	AI_TraceHull(vecStart, vecStart + vecAttackDir * GetClawAttackRange(), -Vector(4, 4, 4), Vector(4, 4, 4), MASK_SOLID_BRUSHONLY, &worldCheckFilter, &tr);
+	AI_TraceHull(vecStart, vecStart + vecAttackDir * MIN(GetClawAttackRange(), flDistToEnemy2D), -Vector(4, 4, 4), Vector(4, 4, 4), MASK_SOLID_BRUSHONLY, &worldCheckFilter, &tr);
 	if (tr.DidHit()) // Behind a wall!
 		return COND_TOO_FAR_TO_ATTACK;
 
-	CTraceFilterNav traceFilter(this, true, this, GetCollisionGroup());
-	AI_TraceHull(vecStart, vecStart + vecAttackDir * GetClawAttackRange(), -vecBounds, vecBounds, MASK_SOLID_BRUSHONLY, &traceFilter, &tr);
+	CTraceFilterNav traceFilter(this, false, this, GetCollisionGroup(), false);
+	AI_TraceHull(vecStart, vecStart + vecAttackDir * GetClawAttackRange(), -Vector(12, 12, 12), Vector(12, 12, 12), MASK_SOLID, &traceFilter, &tr);
 
 	if (tr.m_pEnt && !tr.m_pEnt->MyCombatCharacterPointer())
 	{

@@ -91,7 +91,7 @@ ConVar bb2_profile_system_status("bb2_profile_system_status", "0", FCVAR_REPLICA
 
 ConVar bb2_enable_scaling("bb2_enable_scaling", "1", FCVAR_REPLICATED, "Should NPCs scale to the amount of players in the game? Disabling this will enable the 'Noob Mode'. Scaling will increase the npcs health and damage for every player in the game.", true, 0, true, 1);
 
-ConVar bb2_spawn_protection("bb2_spawn_protection", "5", FCVAR_REPLICATED, "Player Spawn Protection Time(sec) On Spawn!", true, 0.0f, true, 10.0f);
+ConVar bb2_spawn_protection("bb2_spawn_protection", "5", FCVAR_REPLICATED, "Player Spawn Protection Time(sec) On Spawn!", true, 0.0f, true, 5.0f);
 
 ConVar bb2_zombie_lifespan_max("bb2_zombie_lifespan_max", "1.2", FCVAR_REPLICATED, "The max amount of minutes a regular zombie will last before automatically dying.", true, 0.1f, true, 4.0f);
 ConVar bb2_zombie_lifespan_min("bb2_zombie_lifespan_min", "0.8", FCVAR_REPLICATED, "The min amount of minutes a regular zombie will last before automatically dying.", true, 0.1f, true, 4.0f);

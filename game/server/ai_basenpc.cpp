@@ -10520,10 +10520,10 @@ IMPLEMENT_SERVERCLASS_ST(CAI_BaseNPC, DT_AI_BaseNPC)
 
 	SendPropExclude("DT_BCCLocalPlayerExclusive", "m_flNextAttack"),
 	SendPropExclude("DT_BaseEntity", "m_vecOrigin"),
-	SendPropExclude("DT_BaseEntity", "m_angRotation"),
+	//SendPropExclude("DT_BaseEntity", "m_angRotation"),
 
 	SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_COORD_MP_LOWPRECISION | SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin),
-	SendPropAngle(SENDINFO_VECTORELEM(m_angRotation, 1), 10, SPROP_CHANGES_OFTEN), // Only send YAW.
+	//SendPropAngle(SENDINFO_VECTORELEM(m_angRotation, 1), 10, SPROP_CHANGES_OFTEN), // Only send YAW.
 
 END_SEND_TABLE()
 

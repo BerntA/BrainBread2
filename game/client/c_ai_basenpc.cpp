@@ -27,7 +27,7 @@ RecvPropBool(RECVINFO(m_bIsBoss)),
 RecvPropBool(RECVINFO(m_bHasFadedIn)),
 
 RecvPropVector(RECVINFO_NAME(m_vecNetworkOrigin, m_vecOrigin)),
-RecvPropFloat(RECVINFO_NAME(m_angNetworkAngles[1], m_angRotation[1])),
+//RecvPropFloat(RECVINFO_NAME(m_angNetworkAngles[1], m_angRotation[1])),
 END_RECV_TABLE()
 
 C_AI_BaseNPC::C_AI_BaseNPC()

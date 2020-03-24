@@ -256,7 +256,7 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 			continue;
 
 		// Entity relationship extended check:
-		if ((info.GetRelationshipLink() != CLASS_NONE) && pEntity->MyCombatCharacterPointer() && IsTeamplay()) // Prevent accidental FF...
+		if ((info.GetRelationshipLink() != CLASS_NONE) && pEntity->MyCombatCharacterPointer() && IsTeamplay() && (info.GetAttacker() != pEntity)) // Prevent accidental FF...
 		{
 			if (((info.GetAttacker() == NULL) || info.IsMiscFlagActive(TAKEDMGINFO_FORCE_RELATIONSHIP_CHECK)) && (pEntity->MyCombatCharacterPointer()->IRelationType(NULL, info.GetRelationshipLink()) != D_HT))
 				continue;
