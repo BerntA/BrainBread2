@@ -3268,12 +3268,10 @@ int C_BaseAnimating::InternalDrawModel( int flags )
 	if ( !GetModelPtr() )
 		return 0;
 
-	UpdateBoneAttachments( );
+	UpdateBoneAttachments();
 
-	if ( IsEffectActive( EF_ITEM_BLINK ) )
-	{
+	if (IsEffectActive(EF_ITEM_BLINK))
 		flags |= STUDIO_ITEM_BLINK;
-	}
 
 	ClientModelRenderInfo_t info;
 	ClientModelRenderInfo_t *pInfo;

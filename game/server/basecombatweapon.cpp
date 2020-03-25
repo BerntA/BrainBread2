@@ -359,7 +359,7 @@ int CBaseCombatWeapon::WeaponRangeAttack2Condition( float flDot, float flDist )
 
 	if ( m_bReloadsSingly )
 	{
-		if (m_iClip2 <=0)
+		if (GetAmmoCount() <= 0) // TODO
 		{
 			return COND_NO_SECONDARY_AMMO;
 		}

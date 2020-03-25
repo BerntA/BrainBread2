@@ -103,30 +103,16 @@ bool CHL2MPBaseAkimbo::Deploy(void)
 void CHL2MPBaseAkimbo::PerformAttack(void)
 {
 	CHL2MP_Player* pPlayer = ToHL2MPPlayer(GetOwner());
-	if (!pPlayer || ((m_iClip1 <= 0) && (m_iClip2 <= 0)))
+	if (!pPlayer || (m_iClip <= 0))
 		return;
 
-	if (m_iClip1 <= 0)
-		m_bFireNext.Set(false);
-	else if (m_iClip2 <= 0)
-		m_bFireNext.Set(true);
-	else
-		m_bFireNext.Set(!m_bFireNext.Get());
-
+	m_bFireNext.Set(!m_bFireNext.Get());
 	bool bPrimary = m_bFireNext.Get();
-	if (bPrimary)
-		m_iClip1--;
-	else
-		m_iClip2--;
+	m_iClip--;
 
 	int shootAct = (bPrimary ? ACT_VM_SHOOT_LEFT : ACT_VM_SHOOT_RIGHT);
-	if (UsesEmptyAnimation())
-	{
-		if (bPrimary && (m_iClip1 <= 0))
-			shootAct = ACT_VM_SHOOT_LEFT_LAST;
-		else if (!bPrimary && (m_iClip2 <= 0))
-			shootAct = ACT_VM_SHOOT_RIGHT_LAST;
-	}
+	if (UsesEmptyAnimation() && (m_iClip <= 0))
+		shootAct = bPrimary ? ACT_VM_SHOOT_LEFT_LAST : ACT_VM_SHOOT_RIGHT_LAST;
 
 	WeaponSound(SINGLE);
 	SendWeaponAnim(shootAct);

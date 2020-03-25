@@ -34,7 +34,7 @@ bool CanReplenishAmmo(const char *ammoClassname, CBasePlayer *pPlayer, int amoun
 			continue;
 
 		int wepType = pWeapon->GetWeaponType();
-		int ammoCount = ((amountOverride > 0) ? amountOverride : (pWeapon->GetMaxClip1() * GetAmmoCountMultiplier(wepType)));
+		int ammoCount = ((amountOverride > 0) ? amountOverride : (pWeapon->GetMaxClip() * GetAmmoCountMultiplier(wepType)));
 		if (pWeapon->GiveAmmo(ammoCount, bSuppressSound))
 			bReceived = true;
 	}
@@ -68,7 +68,7 @@ bool CanReplenishAmmo(const char *ammoClassname, CBasePlayer *pPlayer, bool bSup
 		CSingleUserRecipientFilter user(pPlayer);
 		user.MakeReliable();
 
-		if (pWeapon->m_iClip1 >= pWeapon->GetMaxClip1())
+		if (pWeapon->m_iClip >= pWeapon->GetMaxClip())
 		{
 			UserMessageBegin(user, "AmmoDenied");
 			WRITE_SHORT(nAmmoIndex);
@@ -88,7 +88,7 @@ bool CanReplenishAmmo(const char *ammoClassname, CBasePlayer *pPlayer, bool bSup
 			bReceived = true;
 		}
 
-		pWeapon->m_iClip1 = pWeapon->GetMaxClip1();
+		pWeapon->m_iClip = pWeapon->GetMaxClip();
 	}
 
 	return bReceived;
@@ -349,7 +349,7 @@ CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
 		return;
 
 	CBaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
-	if (!pWeapon || pWeapon->IsMeleeWeapon() || !pWeapon->UsesClipsForAmmo1() || (pWeapon->GetAmmoTypeID() == -1) || (pWeapon->GetWeaponType() == WEAPON_TYPE_SPECIAL))
+	if (!pWeapon || pWeapon->IsMeleeWeapon() || !pWeapon->UsesClipsForAmmo() || (pWeapon->GetAmmoTypeID() == -1) || (pWeapon->GetWeaponType() == WEAPON_TYPE_SPECIAL))
 		return;
 
 	int ammoCount = pWeapon->GetAmmoCount();
@@ -360,7 +360,7 @@ CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
 	if (!classNew || !classNew[0])
 		return;
 
-	int ammoForItem = MIN(pWeapon->GetMaxClip1(), ammoCount);
+	int ammoForItem = MIN(pWeapon->GetMaxClip(), ammoCount);
 	float timeSinceLastDrop = gpGlobals->curtime - pPlayer->GetLastTimeDroppedAmmo();
 	if (timeSinceLastDrop < AMMO_DROP_WAIT_TIME)
 	{

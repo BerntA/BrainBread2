@@ -241,7 +241,7 @@ public:
 	virtual void			FinishReload( void );
 	virtual void			AbortReload( void );
 	virtual bool			Reload( void );
-	bool					DefaultReload( int iClipSize1, int iClipSize2, int iActivity );
+	bool					DefaultReload(int iClipSize, int iActivity);
 	bool					ReloadsSingly( void ) const;
 
 	virtual bool			AutoFiresFullClip( void ) { return false; }
@@ -337,10 +337,8 @@ public:
 	const FileWeaponInfo_t	&GetWpnData( void ) const;
 	virtual const char		*GetViewModel( int viewmodelindex = 0 ) const;
 	virtual const char		*GetWorldModel( void ) const;
-	virtual int				GetMaxClip1( void ) const;
-	virtual int				GetMaxClip2( void ) const;
-	virtual int				GetDefaultClip1( void ) const;
-	virtual int				GetDefaultClip2( void ) const;
+	virtual int				GetMaxClip( void ) const;
+	virtual int				GetDefaultClip( void ) const;
 	virtual int				GetWeight( void ) const;
 	virtual int				GetWeaponFlags( void ) const;
 	virtual int				GetSlot( void ) const;
@@ -348,8 +346,7 @@ public:
 	virtual char const		*GetPrintName( void ) const;
 	virtual char const		*GetShootSound( int iIndex ) const;
 	virtual int				GetRumbleEffect() const;
-	virtual bool			UsesClipsForAmmo1( void ) const;
-	virtual bool			UsesClipsForAmmo2( void ) const;
+	virtual bool			UsesClipsForAmmo( void ) const;
 	bool					IsMeleeWeapon() const;
 	float                   GetSpecialDamage() const;
 
@@ -363,8 +360,7 @@ public:
 	const Vector &GetAttachmentPositionOffset( void ) const;
 	const QAngle &GetAttachmentAngleOffset( void ) const;
 
-	virtual int				Clip1() { return m_iClip1; }
-	virtual int				Clip2() { return m_iClip2; }
+	virtual int				Clip() { return m_iClip; }
 
 	virtual bool			DidFirePrimary(void) { return true; }
 
@@ -582,8 +578,8 @@ public:
 	CNetworkVar( int, m_iState );				// See WEAPON_* definition
 	string_t				m_iszName;				// Classname of this weapon.
 	CNetworkVar( int, m_iAmmoType );		// "primary" ammo index into the ammo info array 
-	CNetworkVar( int, m_iClip1 );				// number of shots left in the primary weapon clip, -1 it not used
-	CNetworkVar( int, m_iClip2 );				// number of shots left in the secondary weapon clip, -1 it not used
+	CNetworkVar(int, m_iClip);				// number of shots left in the primary weapon clip, -1 it not used
+
 	bool					m_bFiresUnderwater;		// true if this weapon can fire underwater
 	float					m_fMinRange1;			// What's the closest this weapon can be used?
 	float					m_fMinRange2;			// What's the closest this weapon can be used?

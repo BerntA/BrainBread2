@@ -791,14 +791,14 @@ int CNPC_PlayerCompanion::TranslateSchedule( int scheduleType )
 		if (pWeapon)
 		{
 			// Everyone with less than half a clip takes turns reloading when not fighting.		
-			if (CanReload() && pWeapon->UsesClipsForAmmo1() && (pWeapon->Clip1() < (pWeapon->GetMaxClip1() * .5)) && OccupyStrategySlot(SQUAD_SLOT_EXCLUSIVE_RELOAD))
+			if (CanReload() && pWeapon->UsesClipsForAmmo() && (pWeapon->Clip() < (pWeapon->GetMaxClip() * .5)) && OccupyStrategySlot(SQUAD_SLOT_EXCLUSIVE_RELOAD))
 			{
 				CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
 				if (pPlayer)
 				{
 					pWeapon = pPlayer->GetActiveWeapon();
-					if (pWeapon && pWeapon->UsesClipsForAmmo1() &&
-						(pWeapon->Clip1() < (pWeapon->GetMaxClip1() * 0.75f)) &&
+					if (pWeapon && pWeapon->UsesClipsForAmmo() &&
+						(pWeapon->Clip() < (pWeapon->GetMaxClip() * 0.75f)) &&
 						pWeapon->GetAmmoCount())
 					{
 						SpeakIfAllowed(TLK_PLRELOAD);
@@ -884,14 +884,14 @@ int CNPC_PlayerCompanion::TranslateSchedule( int scheduleType )
 			// Everyone with less than half a clip takes turns reloading when not fighting.
 			CBaseCombatWeapon *pWeapon = GetActiveWeapon();
 
-			if( CanReload() && pWeapon->UsesClipsForAmmo1() && pWeapon->Clip1() < ( pWeapon->GetMaxClip1() * .5 ) && OccupyStrategySlot( SQUAD_SLOT_EXCLUSIVE_RELOAD ) )
+			if( CanReload() && pWeapon->UsesClipsForAmmo() && pWeapon->Clip() < ( pWeapon->GetMaxClip() * .5 ) && OccupyStrategySlot( SQUAD_SLOT_EXCLUSIVE_RELOAD ) )
 			{
 				if ( AI_IsSinglePlayer() )
 				{
 					CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 					pWeapon = pPlayer->GetActiveWeapon();
-					if( pWeapon && pWeapon->UsesClipsForAmmo1() && 
-						pWeapon->Clip1() < ( pWeapon->GetMaxClip1() * .75 ) &&
+					if( pWeapon && pWeapon->UsesClipsForAmmo() && 
+						pWeapon->Clip() < ( pWeapon->GetMaxClip() * .75 ) &&
 						pWeapon->GetAmmoCount( ) )
 					{
 						SpeakIfAllowed( TLK_PLRELOAD );
@@ -1272,7 +1272,7 @@ void CNPC_PlayerCompanion::HandleAnimEvent( animevent_t *pEvent )
 		if ( GetActiveWeapon() )
 		{
 			GetActiveWeapon()->WeaponSound( RELOAD_NPC );
-			GetActiveWeapon()->m_iClip1 = GetActiveWeapon()->GetMaxClip1(); 
+			GetActiveWeapon()->m_iClip = GetActiveWeapon()->GetMaxClip(); 
 			ClearCondition(COND_LOW_PRIMARY_AMMO);
 			ClearCondition(COND_NO_PRIMARY_AMMO);
 			ClearCondition(COND_NO_SECONDARY_AMMO);

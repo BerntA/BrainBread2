@@ -982,24 +982,10 @@ void CHL2MP_Player::PostThink(void)
 			CBaseCombatWeapon *pWeapon = GetActiveWeapon();
 			if (pWeapon)
 			{
-				if ((pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL) && !pWeapon->IsMeleeWeapon())
+				if ((pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL) && !pWeapon->IsMeleeWeapon() && pWeapon->UsesClipsForAmmo())
 				{
-					bool bAffectedBySkill = false;
-
-					if (pWeapon->UsesClipsForAmmo1())
-					{
-						pWeapon->m_iClip1 = pWeapon->GetMaxClip1();
-						bAffectedBySkill = true;
-					}
-
-					if (pWeapon->UsesClipsForAmmo2())
-					{
-						pWeapon->m_iClip2 = pWeapon->GetMaxClip2();
-						bAffectedBySkill = true;
-					}
-
-					if (bAffectedBySkill)
-						pWeapon->AffectedByPlayerSkill(PLAYER_SKILL_HUMAN_GUNSLINGER);
+					pWeapon->m_iClip = pWeapon->GetMaxClip();
+					pWeapon->AffectedByPlayerSkill(PLAYER_SKILL_HUMAN_GUNSLINGER);
 				}
 			}
 			break;
@@ -1058,24 +1044,10 @@ void CHL2MP_Player::PostThink(void)
 				CBaseCombatWeapon *pWeapon = GetActiveWeapon();
 				if (pWeapon)
 				{
-					if ((pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL) && !pWeapon->IsMeleeWeapon())
+					if ((pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL) && !pWeapon->IsMeleeWeapon() && pWeapon->UsesClipsForAmmo())
 					{
-						bool bAffectedBySkill = false;
-
-						if (pWeapon->UsesClipsForAmmo1())
-						{
-							pWeapon->m_iClip1 = pWeapon->GetMaxClip1();
-							bAffectedBySkill = true;
-						}
-
-						if (pWeapon->UsesClipsForAmmo2())
-						{
-							pWeapon->m_iClip2 = pWeapon->GetMaxClip2();
-							bAffectedBySkill = true;
-						}
-
-						if (bAffectedBySkill)
-							pWeapon->AffectedByPlayerSkill(PLAYER_SKILL_HUMAN_GUNSLINGER);
+						pWeapon->m_iClip = pWeapon->GetMaxClip();
+						pWeapon->AffectedByPlayerSkill(PLAYER_SKILL_HUMAN_GUNSLINGER);
 					}
 				}
 			}
@@ -1315,7 +1287,7 @@ bool CHL2MP_Player::BumpWeapon(CBaseCombatWeapon *pWeapon)
 	if (bHasWeapon)
 	{
 		// Consume it if possible!
-		if (pWeapon->CanPickupWeaponAsAmmo() && (pIdenticalWep->GiveAmmo(pWeapon->GetDefaultClip1()) > 0))
+		if (pWeapon->CanPickupWeaponAsAmmo() && (pIdenticalWep->GiveAmmo(pWeapon->GetDefaultClip()) > 0))
 		{
 			pWeapon->CheckRespawn();
 			UTIL_Remove(pWeapon);
@@ -1535,27 +1507,11 @@ bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 				CBaseCombatWeapon *pMyWeapon = GetActiveWeapon();
 				if (pMyWeapon)
 				{
-					if ((pMyWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL) && !pMyWeapon->IsMeleeWeapon())
+					if ((pMyWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL) && !pMyWeapon->IsMeleeWeapon() && pMyWeapon->UsesClipsForAmmo())
 					{
-						bool bAffectedBySkill = false;
-
-						if (pMyWeapon->UsesClipsForAmmo1())
-						{
-							pMyWeapon->m_iClip1 = pMyWeapon->GetMaxClip1();
-							bAffectedBySkill = true;
-						}
-
-						if (pMyWeapon->UsesClipsForAmmo2())
-						{
-							pMyWeapon->m_iClip2 = pMyWeapon->GetMaxClip2();
-							bAffectedBySkill = true;
-						}
-
-						if (bAffectedBySkill)
-						{
-							pMyWeapon->AffectedByPlayerSkill(PLAYER_SKILL_HUMAN_MAGAZINE_REFILL);
-							PlaySkillSoundCue(SKILL_SOUND_CUE_AMMO_REFILL);
-						}
+						pMyWeapon->m_iClip = pMyWeapon->GetMaxClip();
+						pMyWeapon->AffectedByPlayerSkill(PLAYER_SKILL_HUMAN_MAGAZINE_REFILL);
+						PlaySkillSoundCue(SKILL_SOUND_CUE_AMMO_REFILL);
 					}
 				}
 			}

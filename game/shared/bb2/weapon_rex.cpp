@@ -111,8 +111,7 @@ void CWeaponREX::PrimaryAttack(void)
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
 	m_flNextSecondaryAttack = gpGlobals->curtime + GetFireRate();
-
-	m_iClip1--;
+	m_iClip--;
 
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
 	Vector vecAiming = pPlayer->GetAutoaimVector();

@@ -56,9 +56,9 @@ void CHL2MPBaseShotgun::AffectedByPlayerSkill(int skill)
 
 void CHL2MPBaseShotgun::FillClip(int iAmount)
 {
-	if ((GetAmmoCount() > 0) && (Clip1() < GetMaxClip1()))
+	if ((GetAmmoCount() > 0) && (Clip() < GetMaxClip()))
 	{
-		m_iClip1 += iAmount;
+		m_iClip += iAmount;
 		RemoveAmmo(iAmount);
 	}
 }
@@ -80,7 +80,7 @@ void CHL2MPBaseShotgun::PrimaryAttack(Activity fireActivity, WeaponSound_t sound
 	SendWeaponAnim(fireActivity);
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-	m_iClip1 -= 1;
+	m_iClip -= 1;
 
 	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, fireActivity);
 
@@ -147,7 +147,7 @@ void CHL2MPBaseShotgun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bo
 	CAI_BaseNPC *npc = pOperator->MyNPCPointer();
 	Assert(npc != NULL);
 	WeaponSound(SINGLE_NPC);
-	m_iClip1 = m_iClip1 - 1;
+	m_iClip--;
 
 	if (bUseWeaponAngles)
 	{
@@ -166,7 +166,7 @@ void CHL2MPBaseShotgun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bo
 
 void CHL2MPBaseShotgun::Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary)
 {
-	m_iClip1++;
+	m_iClip++;
 	FireNPCPrimaryAttack(pOperator, true);
 }
 

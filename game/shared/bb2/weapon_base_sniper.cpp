@@ -104,7 +104,7 @@ void CHL2MPSniperRifle::PrimaryAttack(void)
 		{
 			BaseClass::PrimaryAttack();
 			m_flNextPrimaryAttack = gpGlobals->curtime + GetViewModelSequenceDuration();
-			int iZoomLevel = (m_iClip1 > 0) ? m_iCurrentZoomLevel : 0;
+			int iZoomLevel = (m_iClip > 0) ? m_iCurrentZoomLevel : 0;
 			SetZoomLevel(0);
 			m_iOldZoomLevel = iZoomLevel;
 		}
@@ -205,7 +205,7 @@ void CHL2MPSniperRifle::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseComba
 
 		WeaponSound(SINGLE_NPC);
 		pOperator->FireBullets(1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, GetAmmoTypeID(), 2);
-		m_iClip1 = m_iClip1 - 1;
+		m_iClip--;
 
 		break;
 	}

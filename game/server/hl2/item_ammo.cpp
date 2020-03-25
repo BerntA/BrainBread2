@@ -211,14 +211,11 @@ void CItem_AmmoCrate::HandleAnimEvent(animevent_t *pEvent)
 			for (int i = 0; i < MAX_WEAPONS; i++)
 			{
 				CBaseCombatWeapon *pWeapon = pActivator->GetWeapon(i);
-				if ((pWeapon == NULL) || (pWeapon->GetWeaponType() == WEAPON_TYPE_SPECIAL) || (pWeapon->GetAmmoTypeID() == -1))
+				if ((pWeapon == NULL) || (pWeapon->GetWeaponType() == WEAPON_TYPE_SPECIAL) || (pWeapon->GetAmmoTypeID() == -1) || !pWeapon->UsesClipsForAmmo())
 					continue;
 
-				if (pWeapon->UsesClipsForAmmo1() || pWeapon->UsesClipsForAmmo2())
-				{
-					if (pWeapon->GiveAmmo(pWeapon->GetAmmoMaxCarry()))
-						bUsed = true;
-				}
+				if (pWeapon->GiveAmmo(pWeapon->GetAmmoMaxCarry()))
+					bUsed = true;
 			}
 
 			if (bUsed)

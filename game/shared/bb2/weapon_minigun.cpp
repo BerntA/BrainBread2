@@ -49,8 +49,8 @@ public:
 	int GetWeaponType(void) { return WEAPON_TYPE_SPECIAL; }
 	float GetFireRate(void) { return GetWpnData().m_flFireRate; }
 
-	int GetMaxClip1(void) const;
-	int GetDefaultClip1(void) const;
+	int GetMaxClip(void) const;
+	int GetDefaultClip(void) const;
 
 	bool Reload(void);
 	void PrimaryAttack(void);
@@ -177,20 +177,20 @@ bool CWeaponMinigun::Reload(void)
 	return false;
 }
 
-int CWeaponMinigun::GetMaxClip1(void) const
+int CWeaponMinigun::GetMaxClip(void) const
 {
 	if (HL2MPRules() && ((HL2MPRules()->GetCurrentGamemode() == MODE_DEATHMATCH) || (HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION)))
 		return MINIGUN_AMMO_DEATHMATCH;
 
-	return BaseClass::GetMaxClip1();
+	return BaseClass::GetMaxClip();
 }
 
-int CWeaponMinigun::GetDefaultClip1(void) const
+int CWeaponMinigun::GetDefaultClip(void) const
 {
 	if (HL2MPRules() && ((HL2MPRules()->GetCurrentGamemode() == MODE_DEATHMATCH) || (HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION)))
 		return MINIGUN_AMMO_DEATHMATCH;
 
-	return BaseClass::GetDefaultClip1();
+	return BaseClass::GetDefaultClip();
 }
 
 void CWeaponMinigun::ItemPostFrame(void)
@@ -207,7 +207,7 @@ void CWeaponMinigun::ItemPostFrame(void)
 	{
 		if (m_flSoonestAttackTime < gpGlobals->curtime)
 		{
-			if ((!(pOwner->m_nButtons & IN_ATTACK) && !(pOwner->m_nButtons & IN_ATTACK2)) || m_iClip1 <= 0)
+			if ((!(pOwner->m_nButtons & IN_ATTACK) && !(pOwner->m_nButtons & IN_ATTACK2)) || m_iClip <= 0)
 			{
 				StopWeaponSound(SPECIAL3);
 				SendWeaponAnim(ACT_VM_SPIN_TO_IDLE);
@@ -238,7 +238,7 @@ void CWeaponMinigun::ItemPostFrame(void)
 		{
 			if ((pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 			{
-				if (m_iClip1 <= 0 || (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false))
+				if (m_iClip <= 0 || (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false))
 				{
 					WeaponSound(EMPTY);
 					m_flNextPrimaryAttack = gpGlobals->curtime + 0.1f;
@@ -263,7 +263,7 @@ void CWeaponMinigun::ItemPostFrame(void)
 
 		if ((pOwner->m_afButtonPressed & IN_ATTACK) || (pOwner->m_afButtonPressed & IN_ATTACK2))
 		{
-			if (m_iClip1 <= 0)
+			if (m_iClip <= 0)
 				WeaponSound(EMPTY);
 		}
 
@@ -296,7 +296,7 @@ void CWeaponMinigun::Drop(const Vector &vecVelocity)
 
 void CWeaponMinigun::PrimaryAttack(void)
 {
-	if ((m_iWeaponState != MINIGUN_STATE_IDLE) || (m_flSoonestAttackTime > gpGlobals->curtime) || (m_iClip1 <= 0))
+	if ((m_iWeaponState != MINIGUN_STATE_IDLE) || (m_flSoonestAttackTime > gpGlobals->curtime) || (m_iClip <= 0))
 		return;
 
 	SendWeaponAnim(ACT_VM_IDLE_TO_SPIN);

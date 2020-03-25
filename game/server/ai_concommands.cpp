@@ -829,19 +829,17 @@ CON_COMMAND( npc_heal, "Heals the target back to full health" )
 	}
 }
 
-CON_COMMAND( npc_ammo_deplete, "Subtracts half of the target's ammo" )
+CON_COMMAND(npc_ammo_deplete, "Subtracts half of the target's ammo")
 {
-	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+	if (!UTIL_IsCommandIssuedByServerAdmin())
 		return;
 
-	CBaseEntity *pEntity = FindPickerEntity( UTIL_GetCommandClient() );
-	if ( pEntity )
+	CBaseEntity *pEntity = FindPickerEntity(UTIL_GetCommandClient());
+	if (pEntity)
 	{
 		CAI_BaseNPC *pNPC = pEntity->MyNPCPointer();
 		if (pNPC && pNPC->GetActiveWeapon())
-		{
-			pNPC->GetActiveWeapon()->m_iClip1 *= 0.5;
-		}
+			pNPC->GetActiveWeapon()->m_iClip *= 0.5;
 	}
 }
 

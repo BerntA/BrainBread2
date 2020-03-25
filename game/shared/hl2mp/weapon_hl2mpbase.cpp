@@ -307,7 +307,7 @@ bool CWeaponHL2MPBase::Reload(void)
 	if (pClient)
 	{
 		int reloadAct = GetReloadActivity(UsesEmptyAnimation());
-		if (DefaultReload(GetMaxClip1(), GetMaxClip2(), reloadAct))
+		if (DefaultReload(GetMaxClip(), reloadAct))
 		{
 			pClient->DoAnimationEvent(PLAYERANIMEVENT_RELOAD, reloadAct);
 			WeaponSound(RELOAD);

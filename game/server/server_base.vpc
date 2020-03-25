@@ -582,7 +582,6 @@ $Project
 		$File	"h_ai.cpp"
 		$File	"hierarchy.cpp"
 		$File	"hierarchy.h"
-		$file	"$SRCDIR\common\hl2orange.spa.h"
 		$File	"hltvdirector.cpp"
 		$File	"hltvdirector.h"
 		$File	"$SRCDIR\game\shared\ichoreoeventcallback.h"

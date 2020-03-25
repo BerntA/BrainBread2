@@ -188,7 +188,7 @@ void CWeaponWinchester1894::AffectedByPlayerSkill(int skill)
 //-----------------------------------------------------------------------------
 bool CWeaponWinchester1894::StartReload(void)
 {
-	if ((GetAmmoCount() <= 0) || (m_iClip1 >= GetMaxClip1()))
+	if ((GetAmmoCount() <= 0) || (Clip() >= GetMaxClip()))
 		return false;
 
 	int j = MIN(1, GetAmmoCount());
@@ -216,7 +216,7 @@ bool CWeaponWinchester1894::Reload(void)
 		Warning("ERROR: Shotgun Reload called incorrectly!\n");
 	}
 
-	if ((GetAmmoCount() <= 0) || (m_iClip1 >= GetMaxClip1()))
+	if ((GetAmmoCount() <= 0) || (Clip() >= GetMaxClip()))
 		return false;
 
 	int j = MIN(1, GetAmmoCount());
@@ -254,7 +254,7 @@ void CWeaponWinchester1894::FinishReload(void)
 	int reloadAct = ACT_SHOTGUN_RELOAD_FINISH;
 
 	// Finish reload animation
-	if (m_bShouldReloadEmpty && (m_iClip1 > 0))
+	if (m_bShouldReloadEmpty && (m_iClip > 0))
 		reloadAct = ACT_VM_RELOAD_EMPTY0;
 
 	SendWeaponAnim(reloadAct);
@@ -274,9 +274,9 @@ void CWeaponWinchester1894::FinishReload(void)
 //-----------------------------------------------------------------------------
 void CWeaponWinchester1894::FillClip(void)
 {
-	if ((GetAmmoCount() > 0) && (Clip1() < GetMaxClip1()))
+	if ((GetAmmoCount() > 0) && (Clip() < GetMaxClip()))
 	{
-		m_iClip1++;
+		m_iClip++;
 		RemoveAmmo(1);
 	}
 }
@@ -312,7 +312,7 @@ void CWeaponWinchester1894::PrimaryAttack(void)
 
 	// Don't fire again until fire animation has completed
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-	m_iClip1 -= 1;
+	m_iClip--;
 
 	// player "shoot" animation
 	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, ACT_VM_PRIMARYATTACK);
@@ -367,7 +367,7 @@ void CWeaponWinchester1894::ItemPostFrame(void)
 			}
 
 			// If clip not full reload again
-			if (m_iClip1 < GetMaxClip1())
+			if (Clip() < GetMaxClip())
 			{
 				Reload();
 				return;
@@ -389,7 +389,7 @@ void CWeaponWinchester1894::ItemPostFrame(void)
 
 	if ((pOwner->m_nButtons & IN_ATTACK) && m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
-		if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !GetAmmoCount()))
+		if ((Clip() <= 0 && UsesClipsForAmmo()) || (!UsesClipsForAmmo() && !GetAmmoCount()))
 			DryFire();
 		// Fire underwater?
 		else if (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
@@ -411,9 +411,9 @@ void CWeaponWinchester1894::ItemPostFrame(void)
 	if ((pOwner->m_afButtonPressed & IN_ATTACK2) && m_flNextPrimaryAttack <= gpGlobals->curtime)
 		SecondaryAttack();
 
-	if ((pOwner->m_nButtons & IN_RELOAD) && UsesClipsForAmmo1() && !m_bInReload && HasAnyAmmo() && m_flNextPrimaryAttack <= gpGlobals->curtime)
+	if ((pOwner->m_nButtons & IN_RELOAD) && UsesClipsForAmmo() && !m_bInReload && HasAnyAmmo() && m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
-		m_bShouldReloadEmpty = (m_iClip1 <= 0);
+		m_bShouldReloadEmpty = (m_iClip <= 0);
 		StartReload();
 	}
 }

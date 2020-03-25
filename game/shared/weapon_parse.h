@@ -97,10 +97,8 @@ public:
 	char					szViewModel[MAX_WEAPON_STRING];			// View model of this weapon
 	char					szWorldModel[MAX_WEAPON_STRING];		// Model of this weapon seen carried by the player
 	int						iSlot;									// inventory slot.
-	int						iMaxClip1;								// max primary clip size (-1 if no clip)
-	int						iMaxClip2;								// max secondary clip size (-1 if no clip)
-	int						iDefaultClip1;							// amount of primary ammo in the gun when it's created
-	int						iDefaultClip2;							// amount of secondary ammo in the gun when it's created
+	int						iMaxClip;								// max clip size (-1 if no clip)
+	int						iDefaultClip;							// amount of ammo in the gun when it's created
 	int						iWeight;								// this value used to determine this weapon's importance in autoselection.
 	int						iRumbleEffect;							// Which rumble effect to use when fired? (xbox)
 	int						iFlags;									// miscellaneous weapon flags

@@ -247,7 +247,7 @@ void CWeaponFlamethrower::ItemPostFrame(void)
 		WeaponSound(SPECIAL1);
 	}
 
-	bool bCanFire = !(m_iClip1 <= 0 || (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false));
+	bool bCanFire = !(m_iClip <= 0 || (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false));
 
 	if ((!(pOwner->m_nButtons & IN_ATTACK) || !bCanFire) && (m_nEffectState & FLAMETHROWER_RENDER_LARGE_FLAME))
 	{
@@ -385,9 +385,9 @@ void CWeaponFlamethrower::PrimaryAttack(CBasePlayer *pOwner, CBaseViewModel *pVM
 #endif
 
 		float ammoToLose = MAX(round(GetWpnData().m_flDepletionFactor * fraction), 1.0f);
-		m_iClip1 -= ((int)ammoToLose);
-		if (m_iClip1 < 0)
-			m_iClip1 = 0;
+		m_iClip -= ((int)ammoToLose);
+		if (m_iClip < 0)
+			m_iClip = 0;
 	}
 }
 

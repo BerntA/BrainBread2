@@ -43,7 +43,7 @@ public:
 		if (pClient)
 		{
 			int reloadAct = GetReloadActivity();
-			if (DefaultReload(GetMaxClip1(), GetMaxClip2(), reloadAct))
+			if (DefaultReload(GetMaxClip(), reloadAct))
 			{
 				pClient->DoAnimationEvent(PLAYERANIMEVENT_RELOAD, reloadAct);
 				WeaponSound(RELOAD);

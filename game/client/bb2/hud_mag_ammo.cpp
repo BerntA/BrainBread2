@@ -139,17 +139,11 @@ void CHudBaseAmmo::Reset(void)
 bool CHudBaseAmmo::ShouldDraw(void)
 {
 	C_HL2MP_Player *pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
-	if (!pPlayer || !CHudElement::ShouldDraw())
-		return false;
-
-	if (pPlayer->GetTeamNumber() != TEAM_HUMANS)
+	if (!pPlayer || (pPlayer->GetTeamNumber() != TEAM_HUMANS) || !CHudElement::ShouldDraw())
 		return false;
 
 	C_BaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
-	if (!pWeapon)
-		return false;
-
-	if (pWeapon->IsMeleeWeapon() || !pWeapon->UsesClipsForAmmo1() || !pWeapon->VisibleInWeaponSelection())
+	if (!pWeapon || pWeapon->IsMeleeWeapon() || !pWeapon->UsesClipsForAmmo() || !pWeapon->VisibleInWeaponSelection())
 		return false;
 
 	return true;
@@ -175,7 +169,7 @@ void CHudBaseAmmo::Paint()
 	// Special BAR for special weapons:
 	if (pLocalWeapon->GetWeaponType() == WEAPON_TYPE_SPECIAL)
 	{
-		float ammoLeft = (float)pLocalWeapon->m_iClip1, maxAmmo = (float)pLocalWeapon->GetMaxClip1();
+		float ammoLeft = (float)pLocalWeapon->m_iClip, maxAmmo = (float)pLocalWeapon->GetMaxClip();
 		float percentOfWidth = (ammoLeft / maxAmmo);
 		percentOfWidth = clamp(percentOfWidth, 0.0f, 1.0f);
 		float barWide = (percentOfWidth * special_wide);
@@ -188,31 +182,8 @@ void CHudBaseAmmo::Paint()
 		return;
 	}
 
-	CHudTexture *ammoIconPrimary = NULL, *ammoIconSecondary = NULL;
-
-	bool bIsDual = pLocalWeapon->IsAkimboWeapon();
-	if (bIsDual)
-	{
-		iconColor = Color(fgColor.r(), fgColor.g(), fgColor.b(), 110);
-		ammoIconSecondary = GetAmmoTextureForAmmo(pLocalWeapon->GetWpnData().m_iAmmoHUDIndex,
-			((float)pLocalWeapon->m_iClip2), ((float)pLocalWeapon->GetMaxClip2()));
-	}
-
-	ammoIconPrimary = GetAmmoTextureForAmmo(pLocalWeapon->GetWpnData().m_iAmmoHUDIndex,
-		((float)pLocalWeapon->m_iClip1), ((float)pLocalWeapon->GetMaxClip1()));
-
-	if (ammoIconSecondary)
-	{
-		surface()->DrawSetColor(GetFgColor());
-		surface()->DrawSetTexture(ammoIconSecondary->textureId);
-
-		wide = ammoIconSecondary->GetOrigWide();
-		tall = ammoIconSecondary->GetOrigTall();
-		xpos = ammoIconSecondary->GetOrigPosX();
-		ypos = ammoIconSecondary->GetOrigPosY();
-
-		surface()->DrawTexturedRect(xpos, ypos, xpos + wide, ypos + tall);
-	}
+	CHudTexture *ammoIconPrimary = GetAmmoTextureForAmmo(pLocalWeapon->GetWpnData().m_iAmmoHUDIndex,
+		((float)pLocalWeapon->m_iClip), ((float)pLocalWeapon->GetMaxClip()));
 
 	if (ammoIconPrimary)
 	{
@@ -228,7 +199,7 @@ void CHudBaseAmmo::Paint()
 	}
 
 	// Draw Mags Left
-	if (ammoIconPrimary || ammoIconSecondary)
+	if (ammoIconPrimary)
 	{
 		int iAmmoCount = pLocalWeapon->GetAmmoCount();
 		int m_iMagsLeft = iAmmoCount;
@@ -236,7 +207,7 @@ void CHudBaseAmmo::Paint()
 		{
 			int iMags = 0;
 			if (iAmmoCount > 0)
-				iMags = ((iAmmoCount <= pLocalWeapon->GetDefaultClip1() && iAmmoCount > 0) ? 1 : (iAmmoCount / (pLocalWeapon->GetDefaultClip1() * (pLocalWeapon->IsAkimboWeapon() ? 2 : 1))));
+				iMags = ((iAmmoCount <= pLocalWeapon->GetDefaultClip() && iAmmoCount > 0) ? 1 : (iAmmoCount / (pLocalWeapon->GetDefaultClip() * (pLocalWeapon->IsAkimboWeapon() ? 2 : 1))));
 
 			m_iMagsLeft = iMags;
 		}

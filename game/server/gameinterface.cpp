@@ -80,7 +80,6 @@
 #include "particles/particles.h"
 #include "ixboxsystem.h"
 #include "engine/imatchmaking.h"
-#include "hl2orange.spa.h"
 #include "particle_parse.h"
 #ifndef NO_STEAM
 #include "steam/steam_gameserver.h"
@@ -194,9 +193,6 @@ CGlobalVars *gpGlobals;
 edict_t *g_pDebugEdictBase = 0;
 static int		g_nCommandClientIndex = 0;
 
-// The chapter number of the current
-static int		g_nCurrentChapterIndex = -1;
-
 #ifdef _DEBUG
 static ConVar sv_showhitboxes( "sv_showhitboxes", "-1", FCVAR_CHEAT, "Send server-side hitboxes for specified entity to client (NOTE:  this uses lots of bandwidth, use on listen server only)." );
 #endif
@@ -204,14 +200,9 @@ static ConVar sv_showhitboxes( "sv_showhitboxes", "-1", FCVAR_CHEAT, "Send serve
 void PrecachePointTemplates();
 
 static ClientPutInServerOverrideFn g_pClientPutInServerOverride = NULL;
-static void UpdateChapterRestrictions( const char *mapname );
-
-static void UpdateRichPresence ( void );
-
 
 #if !defined( _XBOX ) // Don't doubly define this symbol.
 CSharedEdictChangeInfo *g_pSharedChangeInfo = NULL;
-
 #endif
 
 IChangeInfoAccessor *CBaseEdict::GetChangeAccessor()
@@ -303,7 +294,6 @@ void			DrawMessageEntities();
 
 // For now just using one big AI network
 extern ConVar think_limit;
-
 
 #if 0
 //-----------------------------------------------------------------------------
@@ -905,13 +895,6 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 		GameBaseShared()->GetSharedMapData()->ParseDataForMap(pMapName);
 	
 	ResetWindspeed();
-	UpdateChapterRestrictions( pMapName );
-
-	if ( IsX360() && !background && (gpGlobals->maxClients == 1) && (g_nCurrentChapterIndex >= 0) )
-	{
-		// Single player games tell xbox live what game & chapter the user is playing
-		UpdateRichPresence();
-	}
 
 	//Tony; parse custom manifest if exists!
 	ParseParticleEffectsMap( pMapName, false );
@@ -1276,8 +1259,6 @@ void CServerGameDLL::LevelShutdown( void )
 	// In case we quit out during initial load
 	CBaseEntity::SetAllowPrecache( false );
 
-	g_nCurrentChapterIndex = -1;
-
 #ifndef _XBOX
 #ifdef USE_NAV_MESH
 	// reset the Navigation Mesh
@@ -1450,99 +1431,17 @@ void CServerGameDLL::PreSave( CSaveRestoreData *s )
 	g_pGameSaveRestoreBlockSet->PreSave( s );
 }
 
-#include "client_textmessage.h"
-
-// This little hack lets me marry BSP names to messages in titles.txt
-typedef struct
-{
-	const char *pBSPName;
-	const char *pTitleName;
-} TITLECOMMENT;
-
-// this list gets searched for the first partial match, so some are out of order
-static TITLECOMMENT gTitleComments[] =
-{
-	{ "intro", "#HL2_Chapter1_Title" },
-};
+//#include "client_textmessage.h"
 
 #ifdef _XBOX
 void CServerGameDLL::GetTitleName( const char *pMapName, char* pTitleBuff, int titleBuffSize )
 {
-	// Try to find a matching title comment for this mapname
-	for ( int i = 0; i < ARRAYSIZE(gTitleComments); i++ )
-	{
-		if ( !Q_strnicmp( pMapName, gTitleComments[i].pBSPName, strlen(gTitleComments[i].pBSPName) ) )
-		{
-			Q_strncpy( pTitleBuff, gTitleComments[i].pTitleName, titleBuffSize );
-			return;
-		}
-	}
-	Q_strncpy( pTitleBuff, pMapName, titleBuffSize );
 }
 #endif
 
 void CServerGameDLL::GetSaveComment( char *text, int maxlength, float flMinutes, float flSeconds, bool bNoTime )
 {
-	char comment[64];
-	const char	*pName;
-	int		i;
-
-	char const *mapname = STRING( gpGlobals->mapname );
-
-	pName = NULL;
-
-	// Try to find a matching title comment for this mapname
-	for ( i = 0; i < ARRAYSIZE(gTitleComments) && !pName; i++ )
-	{
-		if ( !Q_strnicmp( mapname, gTitleComments[i].pBSPName, strlen(gTitleComments[i].pBSPName) ) )
-		{
-			// found one
-			int j;
-
-			// Got a message, post-process it to be save name friendly
-			Q_strncpy( comment, gTitleComments[i].pTitleName, sizeof( comment ) );
-			pName = comment;
-			j = 0;
-			// Strip out CRs
-			while ( j < 64 && comment[j] )
-			{
-				if ( comment[j] == '\n' || comment[j] == '\r' )
-					comment[j] = 0;
-				else
-					j++;
-			}
-			break;
-		}
-	}
-	
-	// If we didn't get one, use the designer's map name, or the BSP name itself
-	if ( !pName )
-	{
-		pName = mapname;
-	}
-
-	if ( bNoTime )
-	{
-		Q_snprintf( text, maxlength, "%-64.64s", pName );
-	}
-	else
-	{
-		int minutes = flMinutes;
-		int seconds = flSeconds;
-
-		// Wow, this guy/gal must suck...!
-		if ( minutes >= 1000 )
-		{
-			minutes = 999;
-			seconds = 59;
-		}
-
-		int minutesAdd = ( seconds / 60 );
-		seconds %= 60;
-
-		// add the elapsed time at the end of the comment, for the ui to parse out
-		Q_snprintf( text, maxlength, "%-64.64s %03d:%02d", pName, (minutes + minutesAdd), seconds );
-	}
+	Q_snprintf(text, maxlength, "HAHAHAHAHA");
 }
 
 void CServerGameDLL::WriteSaveHeaders( CSaveRestoreData *s )
@@ -1772,196 +1671,6 @@ void CServerGameDLL::LoadSpecificMOTDMsg( const ConVar &convar, const char *pszS
 #endif
 }
 
-// keeps track of which chapters the user has unlocked
-ConVar sv_unlockedchapters( "sv_unlockedchapters", "1", FCVAR_ARCHIVE | FCVAR_ARCHIVE_XBOX );
-
-//-----------------------------------------------------------------------------
-// Purpose: Updates which chapters are unlocked
-//-----------------------------------------------------------------------------
-void UpdateChapterRestrictions( const char *mapname )
-{
-	// look at the chapter for this map
-	char chapterTitle[64];
-	chapterTitle[0] = 0;
-	for ( int i = 0; i < ARRAYSIZE(gTitleComments); i++ )
-	{
-		if ( !Q_strnicmp( mapname, gTitleComments[i].pBSPName, strlen(gTitleComments[i].pBSPName) ) )
-		{
-			// found
-			Q_strncpy( chapterTitle, gTitleComments[i].pTitleName, sizeof( chapterTitle ) );
-			int j = 0;
-			while ( j < 64 && chapterTitle[j] )
-			{
-				if ( chapterTitle[j] == '\n' || chapterTitle[j] == '\r' )
-					chapterTitle[j] = 0;
-				else
-					j++;
-			}
-
-			break;
-		}
-	}
-
-	if ( !chapterTitle[0] )
-		return;
-
-	// make sure the specified chapter title is unlocked
-	strlwr( chapterTitle );
-	
-	// Get our active mod directory name
-	char modDir[MAX_PATH];
-	if ( UTIL_GetModDir( modDir, sizeof(modDir) ) == false )
-		return;
-
-	char chapterNumberPrefix[64];
-	Q_snprintf(chapterNumberPrefix, sizeof(chapterNumberPrefix), "#%s_chapter", modDir);
-
-	const char *newChapterNumber = strstr( chapterTitle, chapterNumberPrefix );
-	if ( newChapterNumber )
-	{
-		// cut off the front
-		newChapterNumber += strlen( chapterNumberPrefix );
-		char newChapter[32];
-		Q_strncpy( newChapter, newChapterNumber, sizeof(newChapter) );
-
-		// cut off the end
-		char *end = strstr( newChapter, "_title" );
-		if ( end )
-		{
-			*end = 0;
-		}
-
-		int nNewChapter = atoi( newChapter );
-
-		// HACK: HL2 added a zany chapter "9a" which wreaks
-		//       havoc in this stupid atoi-based chapter code.
-		if ( !Q_stricmp( modDir, "hl2" ) )
-		{
-			if ( !Q_stricmp( newChapter, "9a" ) )
-			{
-				nNewChapter = 10;
-			}
-			else if ( nNewChapter > 9 )
-			{
-				nNewChapter++;
-			}
-		}
-
-		// ok we have the string, see if it's newer
-		const char *unlockedChapter = sv_unlockedchapters.GetString();
-		int nUnlockedChapter = atoi( unlockedChapter );
-
-		if ( nUnlockedChapter < nNewChapter )
-		{
-			// ok we're at a higher chapter, unlock
-			sv_unlockedchapters.SetValue( nNewChapter );
-
-			// HACK: Call up through a better function than this? 7/23/07 - jdw
-			if ( IsX360() )
-			{
-				engine->ServerCommand( "host_writeconfig\n" );
-			}
-		}
-
-		g_nCurrentChapterIndex = nNewChapter;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Update xbox live data for the user's presence
-//-----------------------------------------------------------------------------
-void UpdateRichPresence ( void )
-{
-	// This assumes we're playing a single player game
-	Assert ( gpGlobals->maxClients == 1 );
-
-	// Shouldn't get here unless we're playing a map and we've updated sv_unlockedchapters
-	Assert ( g_nCurrentChapterIndex >= 0 );
-
-	// Get our active mod directory name
-	char modDir[MAX_PATH];
-	if ( UTIL_GetModDir( modDir, sizeof(modDir) ) == false )
-		return;
-
-	// Get presence data based on the game we're playing
-	uint iGameID, iChapterIndex, iChapterID, iGamePresenceID;
-	iGameID = iChapterIndex = iChapterID = iGamePresenceID = 0;
-	if ( Q_stristr( modDir, "hl2" ) )
-	{
-		iGameID			= CONTEXT_GAME_GAME_HALF_LIFE_2;
-		iChapterID		= CONTEXT_CHAPTER_HL2;
-		iChapterIndex	= g_nCurrentChapterIndex - 1;
-		iGamePresenceID = CONTEXT_PRESENCE_HL2_INGAME;
-	}
-	else if ( Q_stristr( modDir, "episodic" ) )
-	{
-		iGameID			= CONTEXT_GAME_GAME_EPISODE_ONE;
-		iChapterID		= CONTEXT_CHAPTER_EP1;
-		iChapterIndex	= g_nCurrentChapterIndex - 1;
-		iGamePresenceID = CONTEXT_PRESENCE_EP1_INGAME;
-	}
-	else if ( Q_stristr( modDir, "ep2" ) )
-	{
-		iGameID			= CONTEXT_GAME_GAME_EPISODE_TWO;
-		iChapterID		= CONTEXT_CHAPTER_EP2;
-		iChapterIndex	= g_nCurrentChapterIndex - 1;
-		iGamePresenceID = CONTEXT_PRESENCE_EP2_INGAME;
-	}
-	else if ( Q_stristr( modDir, "portal" ) )
-	{
-		iGameID			= CONTEXT_GAME_GAME_PORTAL;
-		iChapterID		= CONTEXT_CHAPTER_PORTAL;
-		iChapterIndex	= g_nCurrentChapterIndex - 1;
-		iGamePresenceID = CONTEXT_PRESENCE_PORTAL_INGAME;
-	}
-	else
-	{
-		Warning( "UpdateRichPresence failed in GameInterface. Didn't recognize -game parameter." );
-	}
-
-#if defined( _X360 )
-
-	// Set chapter context based on mapname
-	if ( !xboxsystem->UserSetContext( XBX_GetPrimaryUserId(), iChapterID, iChapterIndex, true ) )
-	{
-		Warning( "GameInterface: UserSetContext failed.\n" );
-	}
-
-	if ( commentary.GetBool() )
-	{
-		// Set presence to show the user is playing developer commentary
-		if ( !xboxsystem->UserSetContext( XBX_GetPrimaryUserId(), X_CONTEXT_PRESENCE, CONTEXT_PRESENCE_COMMENTARY, true ) )
-		{
-			Warning( "GameInterface: UserSetContext failed.\n" );
-		}
-	}
-	else
-	{
-		// Set presence to show the user is in-game
-		if ( !xboxsystem->UserSetContext( XBX_GetPrimaryUserId(), X_CONTEXT_PRESENCE, iGamePresenceID, true ) )
-		{
-			Warning( "GameInterface: UserSetContext failed.\n" );
-		}
-	}
-	
-	// Set which game the user is playing
-	if ( !xboxsystem->UserSetContext( XBX_GetPrimaryUserId(), CONTEXT_GAME, iGameID, true ) )
-	{
-		Warning( "GameInterface: UserSetContext failed.\n" );
-	}
-
-	if ( !xboxsystem->UserSetContext( XBX_GetPrimaryUserId(), X_CONTEXT_GAME_TYPE, X_CONTEXT_GAME_TYPE_STANDARD, true ) )
-	{
-		Warning( "GameInterface: UserSetContext failed.\n" );
-	}
-
-	if ( !xboxsystem->UserSetContext( XBX_GetPrimaryUserId(), X_CONTEXT_GAME_MODE, CONTEXT_GAME_MODE_SINGLEPLAYER, true ) )
-	{
-		Warning( "GameInterface: UserSetContext failed.\n" );
-	}
-#endif
-}
-
 //-----------------------------------------------------------------------------
 // Precaches a vgui screen overlay material
 //-----------------------------------------------------------------------------
@@ -1970,7 +1679,6 @@ void PrecacheMaterial( const char *pMaterialName )
 	Assert( pMaterialName && pMaterialName[0] );
 	g_pStringTableMaterials->AddString( CBaseEntity::IsServer(), pMaterialName );
 }
-
 
 //-----------------------------------------------------------------------------
 // Converts a previously precached material into an index
@@ -2627,9 +2335,6 @@ void CServerGameClients::ClientSetupVisibility( edict_t *pViewEntity, edict_t *p
 	}
 }
 
-
-
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *player - 
@@ -3070,8 +2775,6 @@ void CServerGameTags::GetTaggedConVarList( KeyValues *pCvarTagList )
 		g_pGameRules->GetTaggedConVarList( pCvarTagList );
 	}
 }
-
-
 
 #ifndef NO_STEAM
 

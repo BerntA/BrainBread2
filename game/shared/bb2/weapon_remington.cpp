@@ -154,7 +154,7 @@ CWeaponRemington::CWeaponRemington(void)
 //-----------------------------------------------------------------------------
 bool CWeaponRemington::StartReload(void)
 {
-	if ((GetAmmoCount() <= 0) || (m_iClip1 >= GetMaxClip1()))
+	if ((GetAmmoCount() <= 0) || (Clip() >= GetMaxClip()))
 		return false;
 
 	int j = MIN(1, GetAmmoCount());
@@ -178,7 +178,7 @@ bool CWeaponRemington::Reload(void)
 		Warning("ERROR: Shotgun Reload called incorrectly!\n");
 	}
 
-	if ((GetAmmoCount() <= 0) || (m_iClip1 >= GetMaxClip1()))
+	if ((GetAmmoCount() <= 0) || (Clip() >= GetMaxClip()))
 		return false;
 
 	int j = MIN(1, GetAmmoCount());
@@ -214,7 +214,7 @@ void CWeaponRemington::FinishReload(void)
 	int reloadAct = ACT_SHOTGUN_RELOAD_FINISH;
 
 	// Finish reload animation
-	if (m_bShouldReloadEmpty && (m_iClip1 > 0))
+	if (m_bShouldReloadEmpty && (Clip() > 0))
 		reloadAct = ACT_VM_RELOAD_EMPTY0;
 
 	SendWeaponAnim(reloadAct);
@@ -254,7 +254,7 @@ void CWeaponRemington::ItemPostFrame(void)
 
 		if (m_flNextPrimaryAttack <= gpGlobals->curtime)
 		{
-			if ((GetAmmoCount() <= 0) || (m_iClip1 >= GetMaxClip1()))
+			if ((GetAmmoCount() <= 0) || (Clip() >= GetMaxClip()))
 			{
 				FinishReload();
 				return;
@@ -269,7 +269,7 @@ void CWeaponRemington::ItemPostFrame(void)
 
 	if ((pOwner->m_nButtons & IN_ATTACK) && m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
-		if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !GetAmmoCount()))
+		if ((Clip() <= 0 && UsesClipsForAmmo()) || (!UsesClipsForAmmo() && !GetAmmoCount()))
 		{
 			DryFire();
 			return;
@@ -290,9 +290,9 @@ void CWeaponRemington::ItemPostFrame(void)
 		}
 	}
 
-	if ((pOwner->m_nButtons & IN_RELOAD) && UsesClipsForAmmo1() && !m_bInReload && HasAnyAmmo() && m_flNextPrimaryAttack <= gpGlobals->curtime)
+	if ((pOwner->m_nButtons & IN_RELOAD) && UsesClipsForAmmo() && !m_bInReload && HasAnyAmmo() && m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
-		m_bShouldReloadEmpty = (m_iClip1 <= 0);
+		m_bShouldReloadEmpty = (m_iClip <= 0);
 		StartReload();
 	}
 }

@@ -323,11 +323,8 @@ void CHL2_Player::PostThink( void )
 					for (int i = 0; i < MAX_WEAPONS; i++)
 					{
 						CBaseCombatWeapon* pWeapon = GetWeapon(i);
-						if ((pWeapon != NULL) && (pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL) && (pWeapon->GetAmmoTypeID() != -1))
-						{
-							if (pWeapon->GiveAmmo(pWeapon->GetMaxClip1()))
-								bDidReplenish = true;
-						}
+						if ((pWeapon != NULL) && (pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL) && (pWeapon->GetAmmoTypeID() != -1) && pWeapon->GiveAmmo(pWeapon->GetMaxClip()))
+							bDidReplenish = true;
 					}
 
 					// We received some ammo, check if we should be punished:

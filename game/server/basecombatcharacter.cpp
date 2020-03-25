@@ -1400,21 +1400,10 @@ void CBaseCombatCharacter::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector
 		return;
 
 	// If I'm an NPC, fill the weapon with ammo before I drop it.
-	if ( GetFlags() & FL_NPC )
+	if (GetFlags() & FL_NPC)
 	{
-		if ( pWeapon->UsesClipsForAmmo1() )
-		{
-			pWeapon->m_iClip1 = pWeapon->GetDefaultClip1();
-		}
-		if ( pWeapon->UsesClipsForAmmo2() )
-		{
-			pWeapon->m_iClip2 = pWeapon->GetDefaultClip2();
-		}
-
-		if ( IsXbox() )
-		{
-			pWeapon->AddEffects( EF_ITEM_BLINK );
-		}
+		if (pWeapon->UsesClipsForAmmo())
+			pWeapon->m_iClip = pWeapon->GetDefaultClip();
 	}
 
 	if ( IsPlayer() )

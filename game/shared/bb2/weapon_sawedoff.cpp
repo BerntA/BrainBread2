@@ -201,7 +201,7 @@ bool CWeaponSawedOff::Reload(void)
 		return false;
 
 	int iAmmo = GetAmmoCount();
-	if ((iAmmo <= 0) || (m_iClip1 >= GetMaxClip1()))
+	if ((iAmmo <= 0) || (Clip() >= GetMaxClip()))
 		return false;
 
 	int j = MIN(1, iAmmo);
@@ -211,13 +211,13 @@ bool CWeaponSawedOff::Reload(void)
 	m_bInReload = true;
 
 	int iReloadActivity = ACT_VM_RELOAD0;
-	if (m_iClip1 <= 0 && iAmmo > 1)
+	if (m_iClip <= 0 && iAmmo > 1)
 		iReloadActivity = ACT_VM_RELOAD_EMPTY0;
 
 	iReloadActivity += pOwner->GetSkillValue(PLAYER_SKILL_HUMAN_SHOTGUN_MASTER);
 	if (HL2MPRules() && HL2MPRules()->IsFastPacedGameplay())
 	{
-		if (m_iClip1 <= 0 && iAmmo > 1)
+		if (m_iClip <= 0 && iAmmo > 1)
 			iReloadActivity = ACT_VM_RELOAD_EMPTY10;
 		else
 			iReloadActivity = ACT_VM_RELOAD10;
@@ -253,7 +253,7 @@ void CWeaponSawedOff::ItemPostFrame(void)
 	if (m_bInReload && IsViewModelSequenceFinished() && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 	{
 		int iAmmo = GetAmmoCount();
-		if (m_iClip1 <= 0 && iAmmo > 1)
+		if (m_iClip <= 0 && iAmmo > 1)
 			FillClip(2);
 		else
 			FillClip(1);
@@ -269,7 +269,7 @@ void CWeaponSawedOff::ItemPostFrame(void)
 	{
 		if (pOwner->m_nButtons & (IN_ATTACK | IN_ATTACK2))
 		{
-			if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !GetAmmoCount()))
+			if ((Clip() <= 0 && UsesClipsForAmmo()) || (!UsesClipsForAmmo() && !GetAmmoCount()))
 			{
 				DryFire();
 				return;
@@ -321,9 +321,9 @@ void CWeaponSawedOff::ItemPostFrame(void)
 		}
 	}
 
-	if ((pOwner->m_nButtons & IN_RELOAD) && UsesClipsForAmmo1() && !m_bInReload)
+	if ((pOwner->m_nButtons & IN_RELOAD) && UsesClipsForAmmo() && !m_bInReload)
 	{
-		if ((m_iClip1 < GetMaxClip1()) && (GetAmmoCount() >= 1))
+		if ((Clip() < GetMaxClip()) && (GetAmmoCount() >= 1))
 			Reload();
 	}
 }

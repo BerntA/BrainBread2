@@ -68,7 +68,7 @@ void CHL2MPMachineGun::PrimaryAttack( void )
 		return;
 	
 	// Abort here to handle burst and auto fire modes
-	if ( (UsesClipsForAmmo1() && m_iClip1 == 0) || ( !UsesClipsForAmmo1() && !GetAmmoCount() ) )
+	if ((UsesClipsForAmmo() && m_iClip == 0) || (!UsesClipsForAmmo() && !GetAmmoCount()))
 		return;
 
 	// To make the firing framerate independent, we may have to fire more than one bullet here on low-framerate systems, 
@@ -85,11 +85,11 @@ void CHL2MPMachineGun::PrimaryAttack( void )
 	}
 
 	// Make sure we don't fire more than the amount in the clip, if this weapon uses clips
-	if ( UsesClipsForAmmo1() )
+	if (UsesClipsForAmmo())
 	{
-		if ( iBulletsToFire > m_iClip1 )
-			iBulletsToFire = m_iClip1;
-		m_iClip1 -= iBulletsToFire;
+		if (iBulletsToFire > m_iClip)
+			iBulletsToFire = m_iClip;
+		m_iClip -= iBulletsToFire;
 	}
 
 	// Fire the bullets
@@ -207,7 +207,7 @@ bool CHL2MPMachineGun::Reload(void)
 	if (pClient)
 	{
 		int reloadAct = GetReloadActivity();
-		if (DefaultReload(GetMaxClip1(), GetMaxClip2(), reloadAct))
+		if (DefaultReload(GetMaxClip(), reloadAct))
 		{
 			pClient->DoAnimationEvent(PLAYERANIMEVENT_RELOAD, reloadAct);
 			m_bIsFiringBurst = false;
@@ -253,12 +253,12 @@ void CHL2MPMachineGun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, Vec
 	pOperator->FireBullets(GetWpnData().m_iPellets, vecShootOrigin, vecShootDir, GetBulletSpread(),
 		MAX_TRACE_LENGTH, GetAmmoTypeID(), 2, entindex(), 0);
 
-	m_iClip1 = m_iClip1 - 1;
+	m_iClip--;
 }
 
 void CHL2MPMachineGun::Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary)
 {
-	m_iClip1++;
+	m_iClip++;
 
 	Vector vecShootOrigin, vecShootDir;
 	QAngle	angShootDir;

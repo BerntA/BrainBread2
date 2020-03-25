@@ -88,8 +88,7 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 
 #if defined( CLIENT_DLL )
 	m_iState = m_iOldState = WEAPON_NOT_CARRIED;
-	m_iClip1 = -1;
-	m_iClip2 = -1;
+	m_iClip = -1;
 	m_iAmmoType = -1;
 #else
 	OnBaseCombatWeaponCreated( this );
@@ -135,13 +134,12 @@ void CBaseCombatWeapon::Activate( void )
 
 void CBaseCombatWeapon::GiveDefaultAmmo(void)
 {
-	m_iClip1 = UsesClipsForAmmo1() ? (AutoFiresFullClip() ? 0 : GetDefaultClip1()) : WEAPON_NOCLIP;
-	m_iClip2 = UsesClipsForAmmo2() ? GetDefaultClip2() : WEAPON_NOCLIP;
+	m_iClip = UsesClipsForAmmo() ? (AutoFiresFullClip() ? 0 : GetDefaultClip()) : WEAPON_NOCLIP;
 
 #ifndef CLIENT_DLL
-	if (m_iClip1 == WEAPON_NOCLIP)
+	if (m_iClip == WEAPON_NOCLIP)
 	{
-		SetAmmoCount(GetDefaultClip1());
+		SetAmmoCount(GetDefaultClip());
 		return;
 	}
 
@@ -241,11 +239,6 @@ void CBaseCombatWeapon::Spawn( void )
 	}
 
 #if !defined( CLIENT_DLL )
-	if( IsX360() )
-	{
-		AddEffects( EF_ITEM_BLINK );
-	}
-
 	FallInit();
 	SetCollisionGroup( COLLISION_GROUP_WEAPON );
 	m_takedamage = DAMAGE_EVENTS_ONLY;
@@ -400,41 +393,25 @@ const char *CBaseCombatWeapon::GetPrintName( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int CBaseCombatWeapon::GetMaxClip1( void ) const
+int CBaseCombatWeapon::GetMaxClip(void) const
 {
-	return GetWpnData().iMaxClip1;
+	return GetWpnData().iMaxClip;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int CBaseCombatWeapon::GetMaxClip2( void ) const
+int CBaseCombatWeapon::GetDefaultClip(void) const
 {
-	return GetWpnData().iMaxClip2;
+	return GetWpnData().iDefaultClip;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int CBaseCombatWeapon::GetDefaultClip1( void ) const
+bool CBaseCombatWeapon::UsesClipsForAmmo(void) const
 {
-	return GetWpnData().iDefaultClip1;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int CBaseCombatWeapon::GetDefaultClip2( void ) const
-{
-	return GetWpnData().iDefaultClip2;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CBaseCombatWeapon::UsesClipsForAmmo1( void ) const
-{
-	return ( GetMaxClip1() != WEAPON_NOCLIP );
+	return (GetMaxClip() != WEAPON_NOCLIP);
 }
 
 bool CBaseCombatWeapon::IsMeleeWeapon() const
@@ -445,14 +422,6 @@ bool CBaseCombatWeapon::IsMeleeWeapon() const
 float CBaseCombatWeapon::GetSpecialDamage() const
 {
 	return GetWpnData().m_flSpecialDamage;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CBaseCombatWeapon::UsesClipsForAmmo2( void ) const
-{
-	return ( GetMaxClip2() != WEAPON_NOCLIP );
 }
 
 //-----------------------------------------------------------------------------
@@ -595,7 +564,7 @@ bool CBaseCombatWeapon::HasAmmo( void )
 	if (GetWeaponFlags() & ITEM_FLAG_SELECTONEMPTY)
 		return true;
 
-	return (m_iClip1 > 0 || m_iClip2 > 0 || GetAmmoCount() > 0);
+	return (m_iClip > 0 || GetAmmoCount() > 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -1074,10 +1043,7 @@ bool CBaseCombatWeapon::HasAnyAmmo(void)
 	if (GetAmmoTypeID() == -1)
 		return true;
 
-	if (UsesClipsForAmmo1() && (m_iClip1 > 0))
-		return true;
-
-	if (UsesClipsForAmmo2() && (m_iClip2 > 0))
+	if (UsesClipsForAmmo() && (m_iClip > 0))
 		return true;
 
 	return (GetAmmoCount() > 0);
@@ -1213,32 +1179,16 @@ bool CBaseCombatWeapon::Deploy( )
 
 Activity CBaseCombatWeapon::GetDrawActivity(void)
 {
-	if (UsesEmptyAnimation())
-	{
-		if (IsAkimboWeapon())
-		{
-			if ((m_iClip1 <= 0) && (m_iClip2 <= 0))
-				return ACT_VM_DRAW_EMPTY;
-		}
-		else if (m_iClip1 <= 0)
-			return ACT_VM_DRAW_EMPTY;
-	}
+	if (UsesEmptyAnimation() && (m_iClip <= 0))
+		return ACT_VM_DRAW_EMPTY;
 
 	return ACT_VM_DRAW;
 }
 
 Activity CBaseCombatWeapon::GetHolsterActivity(void)
 {
-	if (UsesEmptyAnimation())
-	{
-		if (IsAkimboWeapon())
-		{
-			if ((m_iClip1 <= 0) && (m_iClip2 <= 0))
-				return ACT_VM_HOLSTER_EMPTY;
-		}
-		else if (m_iClip1 <= 0)
-			return ACT_VM_HOLSTER_EMPTY;
-	}
+	if (UsesEmptyAnimation() && (m_iClip <= 0))
+		return ACT_VM_HOLSTER_EMPTY;
 
 	return ACT_VM_HOLSTER;
 }
@@ -1392,7 +1342,7 @@ void CBaseCombatWeapon::GenericBB2Animations( void )
 
 		int bashAct = ACT_VM_MELEE;
 		// Send the anim
-		if (UsesEmptyAnimation() && m_iClip1 <= 0)
+		if (UsesEmptyAnimation() && (m_iClip <= 0))
 			bashAct = ACT_VM_MELEE_EMPTY;
 
 		PlayAnimation(bashAct);
@@ -1570,14 +1520,12 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 	//FIXME: What if we're calling ItemBusyFrame?
 	m_fFireDuration = ( pOwner->m_nButtons & IN_ATTACK ) ? ( m_fFireDuration + gpGlobals->frametime ) : 0.0f;
 
-	if ( UsesClipsForAmmo1() )
+	if (UsesClipsForAmmo())
 		CheckReload();
 
 	if ((pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 	{
-		bool bHasEmptyClipOrAmmo = (UsesClipsForAmmo1() && (m_iClip1 <= 0)) || (!UsesClipsForAmmo1() && (GetAmmoCount() <= 0));
-		if (IsAkimboWeapon())
-			bHasEmptyClipOrAmmo = bHasEmptyClipOrAmmo && ((UsesClipsForAmmo2() && (m_iClip2 <= 0)) || (!UsesClipsForAmmo2() && (GetAmmoCount() <= 0)));
+		bool bHasEmptyClipOrAmmo = (UsesClipsForAmmo() && (m_iClip <= 0)) || (!UsesClipsForAmmo() && (GetAmmoCount() <= 0));
 
 		if (!IsMeleeWeapon() && bHasEmptyClipOrAmmo)		
 			HandleFireOnEmpty();
@@ -1601,7 +1549,7 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 	// -----------------------
 	//  Reload pressed / Clip Empty
 	// -----------------------
-	if ( ( pOwner->m_nButtons & IN_RELOAD ) && UsesClipsForAmmo1() && !m_bInReload ) 
+	if ( ( pOwner->m_nButtons & IN_RELOAD ) && UsesClipsForAmmo() && !m_bInReload ) 
 	{
 		// reload when reload is pressed
 		Reload();
@@ -1658,7 +1606,7 @@ int CBaseCombatWeapon::GetReloadActivity(bool bCanDoEmpty)
 		break;
 	}
 
-	bool bDontDoEmpty = (m_iClip1 > 0) || !bCanDoEmpty;
+	bool bDontDoEmpty = (m_iClip > 0) || !bCanDoEmpty;
 	activity = (bDontDoEmpty ? ACT_VM_RELOAD0 : ACT_VM_RELOAD_EMPTY0) + pOwner->GetSkillValue(skillType);
 	if (HL2MPRules() && HL2MPRules()->IsFastPacedGameplay())
 		activity = bDontDoEmpty ? ACT_VM_RELOAD10 : ACT_VM_RELOAD_EMPTY10;
@@ -1904,7 +1852,7 @@ void CBaseCombatWeapon::StopWeaponSound( WeaponSound_t sound_type )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActivity )
+bool CBaseCombatWeapon::DefaultReload(int iClipSize, int iActivity)
 {
 	CBaseCombatCharacter *pOwner = GetOwner();
 	if (!pOwner)
@@ -1913,10 +1861,8 @@ bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActi
 	if (GetAmmoCount() <= 0) // If I don't have any spare ammo, I can't reload
 		return false;
 
-	int ammo1 = UsesClipsForAmmo1() ? MIN(iClipSize1 - m_iClip1, GetAmmoCount()) : 0;
-	int ammo2 = UsesClipsForAmmo2() ? MIN(iClipSize2 - m_iClip2, GetAmmoCount()) : 0;
-
-	if ((ammo1 <= 0) && (ammo2 <= 0))
+	int ammo = UsesClipsForAmmo() ? MIN((iClipSize - m_iClip), GetAmmoCount()) : 0;
+	if (ammo <= 0)
 		return false;
 
 	m_iMeleeAttackType = 0;
@@ -1946,7 +1892,7 @@ bool CBaseCombatWeapon::ReloadsSingly( void ) const
 //-----------------------------------------------------------------------------
 bool CBaseCombatWeapon::Reload( void )
 {
-	return DefaultReload( GetMaxClip1(), GetMaxClip2(), ACT_VM_RELOAD );
+	return DefaultReload(GetMaxClip(), ACT_VM_RELOAD);
 }
 
 //=========================================================
@@ -1955,16 +1901,8 @@ void CBaseCombatWeapon::WeaponIdle( void )
 	if (HasWeaponIdleTimeElapsed())
 	{
 		Activity idle = ACT_VM_IDLE;
-		if (UsesEmptyAnimation())
-		{
-			if (IsAkimboWeapon())
-			{
-				if ((m_iClip1 <= 0) && (m_iClip2 <= 0))
-					idle = ACT_VM_IDLE_EMPTY;
-			}
-			else if (m_iClip1 <= 0)
-				idle = ACT_VM_IDLE_EMPTY;
-		}
+		if (UsesEmptyAnimation() && (m_iClip <= 0))
+			idle = ACT_VM_IDLE_EMPTY;
 
 		SendWeaponAnim(idle);
 	}
@@ -1973,7 +1911,7 @@ void CBaseCombatWeapon::WeaponIdle( void )
 //=========================================================
 Activity CBaseCombatWeapon::GetPrimaryAttackActivity(void)
 {
-	if (UsesEmptyAnimation() && m_iClip1 <= 0)
+	if (UsesEmptyAnimation() && (m_iClip <= 0))
 		return ACT_VM_LASTBULLET;
 
 	return ACT_VM_PRIMARYATTACK;
@@ -2006,7 +1944,7 @@ void CBaseCombatWeapon::CheckReload( void )
 
 		if ((m_bInReload) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 		{
-			if ( pOwner->m_nButtons & (IN_ATTACK | IN_ATTACK2) && m_iClip1 > 0 )
+			if (pOwner->m_nButtons & (IN_ATTACK | IN_ATTACK2) && (m_iClip > 0))
 			{
 				m_bInReload = false;
 				return;
@@ -2019,10 +1957,10 @@ void CBaseCombatWeapon::CheckReload( void )
 				return;
 			}
 			// If clip not full reload again
-			else if (m_iClip1 < GetMaxClip1())
+			else if (m_iClip < GetMaxClip())
 			{
 				// Add them to the clip
-				m_iClip1 += 1;
+				m_iClip += 1;
 				RemoveAmmo(1);
 				Reload();
 				return;
@@ -2054,19 +1992,9 @@ void CBaseCombatWeapon::CheckReload( void )
 //-----------------------------------------------------------------------------
 void CBaseCombatWeapon::FinishReload(void)
 {
-	int ammo1 = UsesClipsForAmmo1() ? MIN(GetMaxClip1() - m_iClip1, GetAmmoCount()) : 0;
-	int ammo2 = UsesClipsForAmmo2() ? MIN(GetMaxClip2() - m_iClip2, GetAmmoCount()) : 0;
-
-	// If I use primary clips, reload primary
-	if (UsesClipsForAmmo1())
-		m_iClip1 += ammo1;
-
-	// If I use secondary clips, reload secondary for akimbos.
-	if (UsesClipsForAmmo2())
-		m_iClip2 += ammo2;
-
-	RemoveAmmo((ammo1 + ammo2));
-
+	int ammo = UsesClipsForAmmo() ? MIN((GetMaxClip() - m_iClip), GetAmmoCount()) : 0;
+	m_iClip += ammo;
+	RemoveAmmo(ammo);
 	if (m_bReloadsSingly)
 		m_bInReload = false;
 }
@@ -2091,7 +2019,7 @@ void CBaseCombatWeapon::UpdateAutoFire( void )
 	if ( !pOwner )
 		return;
 
-	if ( m_iClip1 == 0 )
+	if (m_iClip == 0)
 	{
 		// Ready to reload again
 		m_bFiringWholeClip = false;
@@ -2110,8 +2038,7 @@ void CBaseCombatWeapon::UpdateAutoFire( void )
 	}
 
 	// Try to fire if there's ammo in the clip and we're not holding the button
-	bool bReleaseClip = m_iClip1 > 0 && !( pOwner->m_nButtons & IN_ATTACK );
-
+	bool bReleaseClip = m_iClip > 0 && !(pOwner->m_nButtons & IN_ATTACK);
 	if ( !bReleaseClip )
 	{
 		if ( CanReload() && ( pOwner->m_nButtons & IN_ATTACK ) )
@@ -2140,7 +2067,7 @@ void CBaseCombatWeapon::PrimaryAttack( void )
 		return;
 
 	// Abort here to handle burst and auto fire modes
-	if ((UsesClipsForAmmo1() && m_iClip1 <= 0) || (!UsesClipsForAmmo1() && !GetAmmoCount()))
+	if ((UsesClipsForAmmo() && m_iClip <= 0) || (!UsesClipsForAmmo() && !GetAmmoCount()))
 		return;
 
 	FireBulletsInfo_t info;
@@ -2165,10 +2092,10 @@ void CBaseCombatWeapon::PrimaryAttack( void )
 	}
 
 	// Make sure we don't fire more than the amount in the clip
-	if ( UsesClipsForAmmo1() )
+	if ( UsesClipsForAmmo() )
 	{
-		info.m_iShots = MIN( info.m_iShots, m_iClip1 );
-		m_iClip1 -= info.m_iShots;
+		info.m_iShots = MIN(info.m_iShots, m_iClip);
+		m_iClip -= info.m_iShots;
 	}
 	else
 	{
@@ -2620,8 +2547,7 @@ BEGIN_PREDICTION_DATA( CBaseCombatWeapon )
 	DEFINE_PRED_FIELD(m_bIsBloody, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE),
 
 	DEFINE_PRED_FIELD( m_iAmmoType, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_iClip1, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),			
-	DEFINE_PRED_FIELD( m_iClip2, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),			
+	DEFINE_PRED_FIELD( m_iClip, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),			
 
 	DEFINE_PRED_FIELD( m_iAmmoCount, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),	
 
@@ -2681,8 +2607,7 @@ BEGIN_DATADESC( CBaseCombatWeapon )
 	DEFINE_FIELD( m_iState, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iszName, FIELD_STRING ),
 	DEFINE_FIELD(m_iAmmoType, FIELD_INTEGER),
-	DEFINE_FIELD( m_iClip1, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iClip2, FIELD_INTEGER ),
+	DEFINE_FIELD(m_iClip, FIELD_INTEGER),
 	DEFINE_FIELD( m_bFiresUnderwater, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_fMinRange1, FIELD_FLOAT ),
 	DEFINE_FIELD( m_fMinRange2, FIELD_FLOAT ),
@@ -2792,8 +2717,7 @@ REGISTER_SEND_PROXY_NON_MODIFIED_POINTER( SendProxy_SendNonLocalWeaponDataTable 
 //-----------------------------------------------------------------------------
 BEGIN_NETWORK_TABLE_NOBASE( CBaseCombatWeapon, DT_LocalWeaponData )
 #if !defined( CLIENT_DLL )
-	SendPropIntWithMinusOneFlag(SENDINFO(m_iClip1), 10),
-	SendPropIntWithMinusOneFlag(SENDINFO(m_iClip2), 10),
+	SendPropIntWithMinusOneFlag(SENDINFO(m_iClip), 10),
 	SendPropInt(SENDINFO(m_iAmmoType), 6),
 	SendPropInt(SENDINFO(m_nViewModelIndex), VIEWMODEL_INDEX_BITS, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_iShotsFired), 7, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN),
@@ -2808,8 +2732,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CBaseCombatWeapon, DT_LocalWeaponData )
 	SendPropInt(SENDINFO(m_nNextThinkTick)),
 	SendPropBool(SENDINFO(m_bWantsHolster)),
 #else
-	RecvPropIntWithMinusOneFlag(RECVINFO(m_iClip1)),
-	RecvPropIntWithMinusOneFlag(RECVINFO(m_iClip2)),
+	RecvPropIntWithMinusOneFlag(RECVINFO(m_iClip)),
 	RecvPropInt(RECVINFO(m_iAmmoType)),
 	RecvPropInt(RECVINFO(m_nViewModelIndex)),
 	RecvPropInt(RECVINFO(m_iShotsFired)),

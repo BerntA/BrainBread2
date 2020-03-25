@@ -204,8 +204,6 @@ static void CreditsDone_f( void )
 
 static ConCommand creditsdone("creditsdone", CreditsDone_f );
 
-extern ConVar sv_unlockedchapters;
-
 void CCredits::OnRestore()
 {
 	BaseClass::OnRestore();
@@ -220,8 +218,6 @@ void CCredits::OnRestore()
 
 void CCredits::RollOutroCredits()
 {
-	sv_unlockedchapters.SetValue( "15" );
-
 #ifdef BB2_AI
 	CRecipientFilter filter; 
 	filter.AddAllPlayers(); 
@@ -229,10 +225,8 @@ void CCredits::RollOutroCredits()
 	UserMessageBegin( filter, "CreditsMsg" ); 
 #else
 	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-
 	CSingleUserRecipientFilter user( pPlayer );
 	user.MakeReliable();
-
 	UserMessageBegin( user, "CreditsMsg" );
 #endif //BB2_AI
 	WRITE_BYTE( 3 );

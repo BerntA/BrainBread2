@@ -59,7 +59,6 @@
 #include "env_debughistory.h"
 #include "fogcontroller.h"
 #include "gameinterface.h"
-#include "hl2orange.spa.h"
 #include "dt_utlvector_send.h"
 #include "ai_speech.h"
 #include "hl2mp_gamerules.h"

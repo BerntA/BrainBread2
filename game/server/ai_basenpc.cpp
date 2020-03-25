@@ -6813,10 +6813,8 @@ int CAI_BaseNPC::UnholsterWeapon( void )
 			}
 
 			// Refill the clip
-			if ( GetActiveWeapon()->UsesClipsForAmmo1() )
-			{
-				GetActiveWeapon()->m_iClip1 = GetActiveWeapon()->GetMaxClip1(); 
-			}
+			if (GetActiveWeapon()->UsesClipsForAmmo())
+				GetActiveWeapon()->m_iClip = GetActiveWeapon()->GetMaxClip();
 
 			// Make sure we don't try to reload while we're unholstering
 			ClearCondition(COND_LOW_PRIMARY_AMMO);
@@ -8151,7 +8149,7 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
   			if ( GetActiveWeapon() )
   			{
   				GetActiveWeapon()->WeaponSound( RELOAD_NPC );
-  				GetActiveWeapon()->m_iClip1 = GetActiveWeapon()->GetMaxClip1(); 
+  				GetActiveWeapon()->m_iClip = GetActiveWeapon()->GetMaxClip(); 
   				ClearCondition(COND_LOW_PRIMARY_AMMO);
   				ClearCondition(COND_NO_PRIMARY_AMMO);
   				ClearCondition(COND_NO_SECONDARY_AMMO);
@@ -8172,7 +8170,7 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
 		{
   			if ( GetActiveWeapon() )
   			{
-  				GetActiveWeapon()->m_iClip1 = GetActiveWeapon()->GetMaxClip1(); 
+  				GetActiveWeapon()->m_iClip = GetActiveWeapon()->GetMaxClip(); 
   				ClearCondition(COND_LOW_PRIMARY_AMMO);
   				ClearCondition(COND_NO_PRIMARY_AMMO);
   				ClearCondition(COND_NO_SECONDARY_AMMO);

@@ -50,17 +50,9 @@ void CAI_BaseHumanoid::CheckAmmo(void)
 	if (GetActiveWeapon()->GetAmmoTypeID() != -1)
 	{
 		if (!GetActiveWeapon()->HasAnyAmmo())
-		{
 			SetCondition(COND_NO_PRIMARY_AMMO);
-
-			if (GetActiveWeapon()->UsesClipsForAmmo2())
-				SetCondition(COND_NO_SECONDARY_AMMO);
-		}
-		else if (GetActiveWeapon()->UsesClipsForAmmo1() && GetActiveWeapon()->Clip1() < (GetActiveWeapon()->GetMaxClip1() / 4 + 1))
-		{
-			// don't check for low ammo if you're near the max range of the weapon
+		else if (GetActiveWeapon()->UsesClipsForAmmo() && GetActiveWeapon()->Clip() < (GetActiveWeapon()->GetMaxClip() / 4 + 1)) // don't check for low ammo if you're near the max range of the weapon			
 			SetCondition(COND_LOW_PRIMARY_AMMO);
-		}
 	}
 }
 

@@ -57,7 +57,7 @@ void CHL2MPBasePistol::ItemPostFrame(void)
 	if (m_bInReload || (m_flNextBashAttack > gpGlobals->curtime))
 		return;
 
-	if ((pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack < gpGlobals->curtime) && (m_iClip1 <= 0))
+	if ((pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack < gpGlobals->curtime) && (m_iClip <= 0))
 		DryFire();
 }
 
@@ -85,7 +85,7 @@ void CHL2MPBasePistol::PrimaryAttack(void)
 
 void CHL2MPBasePistol::SecondaryAttack(void)
 {
-	if (m_iClip1 <= 0)
+	if (m_iClip <= 0)
 	{
 		DryFire();
 		return;
@@ -140,7 +140,7 @@ void CHL2MPBasePistol::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombat
 
 		WeaponSound(SINGLE_NPC);
 		pOperator->FireBullets(1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, GetAmmoTypeID(), 2);
-		m_iClip1 = m_iClip1 - 1;
+		m_iClip--;
 
 		break;
 	}

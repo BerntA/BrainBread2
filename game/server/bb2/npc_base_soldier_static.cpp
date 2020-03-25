@@ -971,8 +971,7 @@ void CNPCBaseSoldierStatic::HandleAnimEvent(animevent_t *pEvent)
 			if (GetActiveWeapon())
 			{
 				GetActiveWeapon()->WeaponSound(RELOAD_NPC);
-				GetActiveWeapon()->m_iClip1 = GetActiveWeapon()->GetMaxClip1();
-				GetActiveWeapon()->m_iClip2 = GetActiveWeapon()->GetMaxClip2();
+				GetActiveWeapon()->m_iClip = GetActiveWeapon()->GetMaxClip();
 			}
 			ClearCondition(COND_LOW_PRIMARY_AMMO);
 			ClearCondition(COND_NO_PRIMARY_AMMO);
@@ -1413,13 +1412,10 @@ bool CNPCBaseSoldierStatic::HasShotgun()
 bool CNPCBaseSoldierStatic::ActiveWeaponIsFullyLoaded()
 {
 	CBaseCombatWeapon *pWeapon = GetActiveWeapon();
-	if (!pWeapon)
+	if (!pWeapon || !pWeapon->UsesClipsForAmmo())
 		return false;
 
-	if (!pWeapon->UsesClipsForAmmo1())
-		return false;
-
-	return (pWeapon->Clip1() >= pWeapon->GetMaxClip1());
+	return (pWeapon->Clip() >= pWeapon->GetMaxClip());
 }
 
 AI_BEGIN_CUSTOM_NPC(npc_soldier_base, CNPCBaseSoldierStatic)
