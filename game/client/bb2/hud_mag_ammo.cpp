@@ -212,8 +212,7 @@ void CHudBaseAmmo::Paint()
 		{
 			int iMags = 0;
 			if (iAmmoCount > 0)
-				iMags = ((iAmmoCount <= pLocalWeapon->GetDefaultClip() && iAmmoCount > 0) ? 1 : (iAmmoCount / (pLocalWeapon->GetDefaultClip() * (pLocalWeapon->IsAkimboWeapon() ? 2 : 1))));
-
+				iMags = ((iAmmoCount <= pLocalWeapon->GetDefaultClip() && iAmmoCount > 0) ? 1 : (iAmmoCount / pLocalWeapon->GetDefaultClip()));
 			m_iMagsLeft = iMags;
 		}
 
