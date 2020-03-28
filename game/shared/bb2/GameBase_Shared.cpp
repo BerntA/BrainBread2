@@ -903,6 +903,9 @@ void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pV
 		case WEAPON_ID_GLOCK17_AKIMBO:
 			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_GLOCK17");
 			break;
+		case WEAPON_ID_DEAGLE:
+			GetAchievementManager()->WriteToStat(pClient, "BBX_KI_DEAGLE");
+			break;
 
 		case WEAPON_ID_REXMP412:
 		case WEAPON_ID_REXMP412_AKIMBO:

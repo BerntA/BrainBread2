@@ -44,6 +44,7 @@ public:
 	void ResetToTwoHands(void);
 	void ItemPostFrame(void);
 	void SecondaryAttack(void);
+	float GetFireRate(void);
 
 	void StartHolsterSequence();
 	bool Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
@@ -202,6 +203,16 @@ void CWeaponDeagle::SecondaryAttack(void)
 		m_iSwitchState = DEAGLE_STATE_SWITCH_ONE_HAND;
 	else
 		m_iSwitchState = DEAGLE_STATE_SWITCH_TWO_HAND;
+}
+
+float CWeaponDeagle::GetFireRate(void)
+{
+	float rate = BaseClass::GetFireRate();
+
+	if (m_iSwitchState.Get() == DEAGLE_STATE_ONE_HAND) // Reduce fire rate slightly, = more inaccurate.
+		rate *= 0.90f; // X% reduction.
+
+	return rate;
 }
 
 void CWeaponDeagle::StartHolsterSequence()
