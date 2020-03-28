@@ -49,6 +49,11 @@ CHudTexture *GetAmmoTextureForAmmo(int type, float bulletsLeft, float clipCapaci
 	AmmoBaseData_t *ammoBase = &ammoBaseDataList[type];
 	float flIndex = clamp((bulletsLeft / clipCapacity), 0.0f, 1.0f) * ammoBase->capacity;
 	int wantedIndex = ((int)roundf(flIndex));
+
+	// Sanity check, the rounding might not always do a good enuff job...
+	if ((bulletsLeft > 0.0f) && (wantedIndex <= 0))
+		wantedIndex = 1;
+
 	wantedIndex = clamp(wantedIndex, 0, (MAX_AMMO_HUD_TEX_COUNT - 1));
 	return ammoDefinitions[type][wantedIndex];
 }

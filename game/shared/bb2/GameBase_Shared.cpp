@@ -171,7 +171,7 @@ void CGameBaseShared::Release()
 
 void CGameBaseShared::CheckGameVersion(void)
 {
-	KeyValues *pkvData = ReadEncryptedKVFile(filesystem, "Version", GetEncryptionKey(), true);
+	KeyValues *pkvData = ReadEncryptedKVFile(filesystem, "version", GetEncryptionKey());
 	if (pkvData)
 	{
 		Q_strncpy(pszGameVersion, pkvData->GetString("Game", "Invalid"), 32);
