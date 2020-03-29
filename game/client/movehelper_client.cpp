@@ -34,7 +34,6 @@ public:
 	virtual void	Con_NPrintf( int idx, char const* fmt, ... );
 		
 	virtual bool	PlayerFallingDamage(void);
-	virtual void	PlayerSetAnimation( PLAYER_ANIM eAnim );
 
 	// These have separate server vs client impementations
 	virtual void	StartSound( const Vector& origin, int channel, char const* sample, float volume, soundlevel_t soundlevel, int fFlags, int pitch );
@@ -259,16 +258,6 @@ bool CMoveHelperClient::PlayerFallingDamage(void)
 {
 	// Do nothing; falling damage is applied in MoveHelper_Server::PlayerFallingDamage.
 	return(true);
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Sets an animation in the player.
-// Input  : eAnim - Animation to set.
-//-----------------------------------------------------------------------------
-void CMoveHelperClient::PlayerSetAnimation( PLAYER_ANIM eAnim )
-{
-	 // Do nothing on the client. Animations are set on the server.
 }
 
 bool CMoveHelperClient::IsWorldEntity( const CBaseHandle &handle )

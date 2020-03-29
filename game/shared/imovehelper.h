@@ -17,7 +17,6 @@
 // Forward declarations
 //-----------------------------------------------------------------------------
 
-enum PLAYER_ANIM;
 class IPhysicsSurfaceProps;
 class Vector;
 struct model_t;
@@ -76,9 +75,6 @@ public:
 
 	// Apply falling damage to m_pHostPlayer based on m_pHostPlayer->m_flFallVelocity.
 	virtual bool	PlayerFallingDamage( void ) = 0;
-
-	// Apply falling damage to m_pHostPlayer based on m_pHostPlayer->m_flFallVelocity.
-	virtual void	PlayerSetAnimation( PLAYER_ANIM playerAnim ) = 0;
 
 	virtual IPhysicsSurfaceProps *GetSurfaceProps( void ) = 0;
 

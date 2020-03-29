@@ -38,7 +38,6 @@ public:
  	virtual void	ProcessImpacts( void );
 
 	virtual bool	PlayerFallingDamage( void );
-	virtual void	PlayerSetAnimation( PLAYER_ANIM eAnim );
 
 	// Numbered line printf
 	virtual void	Con_NPrintf( int idx, char const* fmt, ... );
@@ -362,15 +361,6 @@ bool CMoveHelperServer::PlayerFallingDamage( void )
 	}
 
 	return(true);
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Sets an animation in the player.
-// Input  : eAnim - Animation to set.
-//-----------------------------------------------------------------------------
-void CMoveHelperServer::PlayerSetAnimation( PLAYER_ANIM eAnim )
-{
 }
 
 bool CMoveHelperServer::IsWorldEntity( const CBaseHandle &handle )
