@@ -365,8 +365,7 @@ enum Collision_Group_t
 	COLLISION_GROUP_INTERACTIVE,	// Collides with everything except interactive debris or debris
 	COLLISION_GROUP_PLAYER,
 	COLLISION_GROUP_BREAKABLE_GLASS,
-	COLLISION_GROUP_PLAYER_MOVEMENT,  // For HL2, same as Collision_Group_Player, for
-										// TF2, this filters out other players and CBaseObjects
+
 	COLLISION_GROUP_NPC,			// Generic NPC group
 	COLLISION_GROUP_WEAPON,			// for any weapons that need collision detection
 	COLLISION_GROUP_PROJECTILE,		// Projectiles!

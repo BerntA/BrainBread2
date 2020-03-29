@@ -532,27 +532,3 @@ bool CBaseCombatCharacter::IsLineOfSightClear( const Vector &pos, LineOfSightChe
 		return trace.fraction == 1.0f;
 	}
 }
-
-
-/*
-//---------------------------------------------------------------------------------------------------------------------------
-surfacedata_t * CBaseCombatCharacter::GetGroundSurface( void ) const
-{
-	Vector start( vec3_origin );
-	Vector end( 0, 0, -64 );
-
-	Vector vecMins, vecMaxs;
-	CollisionProp()->WorldSpaceAABB( &vecMins, &vecMaxs );
-
-	Ray_t ray;
-	ray.Init( start, end, vecMins, vecMaxs );
-
-	trace_t	trace;
-	UTIL_TraceRay( ray, MASK_SOLID, this, COLLISION_GROUP_PLAYER_MOVEMENT, &trace );
-
-	if ( trace.fraction == 1.0f )
-		return NULL;	// no ground
-
-	return physprops->GetSurfaceData( trace.surface.surfaceProps );
-}
-*/

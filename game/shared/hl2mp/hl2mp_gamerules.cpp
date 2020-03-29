@@ -2128,7 +2128,6 @@ bool CHL2MPRules::ShouldCollide(int collisionGroup0, int collisionGroup1)
 
 		if (
 			collisionGroup0 == COLLISION_GROUP_PLAYER ||
-			collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ||
 			collisionGroup0 == COLLISION_GROUP_NPC
 			)
 			return false;
@@ -2173,10 +2172,10 @@ bool CHL2MPRules::ShouldCollide(int collisionGroup0, int collisionGroup1)
 		return false;
 
 	// HL2 treats movement and tracing against players the same, so just remap here
-	if (collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE || collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE)
+	if (collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE || collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE)
 		collisionGroup0 = COLLISION_GROUP_PLAYER;
 
-	if (collisionGroup1 == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup1 == COLLISION_GROUP_PLAYER_ZOMBIE || collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE)
+	if (collisionGroup1 == COLLISION_GROUP_PLAYER_ZOMBIE || collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE)
 		collisionGroup1 = COLLISION_GROUP_PLAYER;
 
 	// If collisionGroup0 is not a player then NPC_ACTOR behaves just like an NPC.

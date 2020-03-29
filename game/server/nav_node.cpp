@@ -277,7 +277,7 @@ float CNavNode::GetGroundHeightAboveNode( NavCornerType cornerType ) const
  */
 bool CNavNode::TestForCrouchArea( NavCornerType cornerNum, const Vector& mins, const Vector& maxs, float *groundHeightAboveNode )
 {
-	CTraceFilterWalkableEntities filter( NULL, COLLISION_GROUP_PLAYER_MOVEMENT, WALK_THRU_EVERYTHING );
+	CTraceFilterWalkableEntities filter(NULL, COLLISION_GROUP_PLAYER, WALK_THRU_EVERYTHING);
 	trace_t tr;
 
 	Vector start( m_pos );

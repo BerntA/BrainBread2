@@ -2144,9 +2144,8 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 		ray.Init( start, end, VEC_DUCK_HULL_MIN	, VEC_DUCK_HULL_MAX );
 
 		trace_t	tr;
-		UTIL_TraceRay( ray, MASK_PLAYERSOLID, target, COLLISION_GROUP_PLAYER_MOVEMENT, &tr );
-
-		JumptoPosition( tr.endpos, ang );
+		UTIL_TraceRay(ray, MASK_PLAYERSOLID, target, COLLISION_GROUP_PLAYER, &tr);
+		JumptoPosition(tr.endpos, ang);
 	}
 	
 	return true;

@@ -4752,7 +4752,7 @@ void CNavArea::UpdateBlocked( bool force, int teamID )
 	bool wasBlocked = IsBlocked( TEAM_ANY );
 
 	// See if spot is valid
-	CTraceFilterWalkableEntities filter(NULL, COLLISION_GROUP_PLAYER_MOVEMENT, WALK_THRU_DOORS | WALK_THRU_BREAKABLES);
+	CTraceFilterWalkableEntities filter(NULL, COLLISION_GROUP_PLAYER, WALK_THRU_DOORS | WALK_THRU_BREAKABLES);
 	trace_t tr;
 	{
 	VPROF( "CNavArea::UpdateBlocked-Trace" );
@@ -4860,7 +4860,7 @@ void CNavArea::CheckFloor( CBaseEntity *ignore )
 		maxs,
 		MASK_NPCSOLID_BRUSHONLY,
 		ignore,
-		COLLISION_GROUP_PLAYER_MOVEMENT,
+		COLLISION_GROUP_PLAYER,
 		&tr );
 
 	// If the center is open space, we're effectively blocked

@@ -1249,7 +1249,7 @@ StairTestType IsStairs( const Vector &start, const Vector &end, StairTestType re
 	float length = start.AsVector2D().DistTo( end.AsVector2D() );
 
 	trace_t trace;
-	CTraceFilterNoNPCsOrPlayer filter( NULL, COLLISION_GROUP_PLAYER_MOVEMENT );
+	CTraceFilterNoNPCsOrPlayer filter(NULL, COLLISION_GROUP_PLAYER);
 	Vector hullMins( -inc/2, -inc/2, 0 );
 	Vector hullMaxs( inc/2, inc/2, 0 );
 	hullMaxs.z = 1; // don't care about vertical clearance
@@ -2666,7 +2666,7 @@ bool TestForValidCrouchArea( CNavNode *node )
 	// must make sure we don't have a bogus crouch area.  check up to JumpCrouchHeight above
 	// the node for a HumanCrouchHeight space.
 
-	CTraceFilterWalkableEntities filter( NULL, COLLISION_GROUP_PLAYER_MOVEMENT, WALK_THRU_EVERYTHING );
+	CTraceFilterWalkableEntities filter(NULL, COLLISION_GROUP_PLAYER, WALK_THRU_EVERYTHING);
 	trace_t tr;
 	Vector start( *node->GetPosition() );
 	Vector end( *node->GetPosition() );
@@ -4104,7 +4104,7 @@ inline CNavNode *LadderEndSearch( const Vector *pos, NavDirType mountDir )
 //--------------------------------------------------------------------------------------------------------------
 bool CNavMesh::FindGroundForNode( Vector *pos, Vector *normal )
 {
-	CTraceFilterWalkableEntities filter( NULL, COLLISION_GROUP_PLAYER_MOVEMENT, WALK_THRU_EVERYTHING );
+	CTraceFilterWalkableEntities filter(NULL, COLLISION_GROUP_PLAYER, WALK_THRU_EVERYTHING);
 	trace_t tr;
 	Vector start( pos->x, pos->y, pos->z + VEC_DUCK_HULL_MAX.z - 0.1f );
 	Vector end( *pos );
