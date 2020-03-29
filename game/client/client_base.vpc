@@ -134,6 +134,7 @@ $Project
 			$File "bb2/c_client_attachment.h"
 			$File "bb2/c_playermodel.cpp"
 			$File "bb2/c_playermodel.h"
+			$File "$SRCDIR\game\shared\bb2\func_entity_block.cpp"
 		}
 		
 		$Folder "TempEnts"

@@ -5,39 +5,115 @@
 //========================================================================================//
 
 #include "cbase.h"
-#include "baseplayer_shared.h"
-#include "trigger_player_block.h"
-#include "hl2mp_gamerules.h"
+#ifdef GAME_DLL
 #include "baseentity.h"
+#else
+#include "c_baseentity.h"
+#define CFuncEntityBlock C_FuncEntityBlock
+#endif
+#include "hl2mp_gamerules.h"
 
-BEGIN_DATADESC(CTriggerPlayerBlock)
+enum DynamicBlockerStates
+{
+	DYN_BLOCK_ALL = 0, // By default the brush blocks all entities when disabled.
+	DYN_BLOCK_NOTHING, // Block nothing when brush is disabled.
+};
+
+class CFuncEntityBlock : public CBaseEntity
+{
+public:
+
+	DECLARE_CLASS(CFuncEntityBlock, CBaseEntity);
+	DECLARE_NETWORKCLASS();
+
+#ifdef GAME_DLL
+	DECLARE_DATADESC();
+	void Spawn();
+	void InputEnable(inputdata_t &inputdata);
+	void InputDisable(inputdata_t &inputdata);
+	void InputSetState(inputdata_t &inputdata);
+#endif
+
+	CFuncEntityBlock();
+	bool ShouldCollide(int collisionGroup, int contentsMask) const;
+
+private:
+
+	CNetworkVar(int, m_iCollisionGroup);
+	CNetworkVar(int, m_iBlockState);
+	CNetworkVar(bool, m_bDisabled);
+};
+
+IMPLEMENT_NETWORKCLASS_ALIASED(FuncEntityBlock, DT_FuncEntityBlock)
+
+BEGIN_NETWORK_TABLE(CFuncEntityBlock, DT_FuncEntityBlock)
+#if !defined( CLIENT_DLL )
+SendPropInt(SENDINFO(m_iCollisionGroup), 6, SPROP_UNSIGNED),
+SendPropInt(SENDINFO(m_iBlockState), 2, SPROP_UNSIGNED),
+SendPropBool(SENDINFO(m_bDisabled)),
+#else
+RecvPropInt(RECVINFO(m_iCollisionGroup)),
+RecvPropInt(RECVINFO(m_iBlockState)),
+RecvPropBool(RECVINFO(m_bDisabled)),
+#endif
+END_NETWORK_TABLE()
+
+#ifdef GAME_DLL
+BEGIN_DATADESC(CFuncEntityBlock)
 DEFINE_KEYFIELD(m_iCollisionGroup, FIELD_INTEGER, "CollisionGroup"),
+DEFINE_KEYFIELD(m_iBlockState, FIELD_INTEGER, "BlockState"),
+DEFINE_KEYFIELD(m_bDisabled, FIELD_BOOLEAN, "StartDisabled"),
+
+DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
+DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
+DEFINE_INPUTFUNC(FIELD_INTEGER, "SetState", InputSetState),
 END_DATADESC()
+#endif
 
-LINK_ENTITY_TO_CLASS(trigger_player_block, CTriggerPlayerBlock)
+LINK_ENTITY_TO_CLASS(trigger_player_block, CFuncEntityBlock)
 
-CTriggerPlayerBlock::CTriggerPlayerBlock()
+CFuncEntityBlock::CFuncEntityBlock()
 {
 	m_iCollisionGroup = 0;
+	m_iBlockState = 0;
+	m_bDisabled = false;
 }
 
-void CTriggerPlayerBlock::Spawn()
+#ifdef GAME_DLL
+void CFuncEntityBlock::Spawn()
 {
 	BaseClass::Spawn();
 	SetSolid(SOLID_VPHYSICS);
+	SetMoveType(MOVETYPE_NONE);
 	SetModel(STRING(GetModelName()));
 	VPhysicsInitShadow(false, false);
+	SetBlocksLOS(false);
 }
 
+void CFuncEntityBlock::InputEnable(inputdata_t &inputdata)
+{
+	m_bDisabled.Set(false);
+}
+
+void CFuncEntityBlock::InputDisable(inputdata_t &inputdata)
+{
+	m_bDisabled.Set(true);
+}
+
+void CFuncEntityBlock::InputSetState(inputdata_t &inputdata)
+{
+	m_iBlockState.Set(inputdata.value.Int());
+}
+#endif
+
 //-----------------------------------------------------------------------------
-// Purpose: We check if the desired collision group or player team is within this trigger, if so we let them pass. 
+// Purpose: We check if the desired collision group or player team is within this brush, if so we let them pass. 
 // Notice: We now use unique collision groups for the players & npcs.
 //-----------------------------------------------------------------------------
-bool CTriggerPlayerBlock::ShouldCollide(int collisionGroup, int contentsMask) const
+bool CFuncEntityBlock::ShouldCollide(int collisionGroup, int contentsMask) const
 {
-	// If this trigger is disabled we're always solid!
-	if (m_bDisabled)
-		return true;
+	if (m_bDisabled.Get()) // We're disabled, by default block all ents, block nothing otherwise.
+		return (m_iBlockState.Get() == DYN_BLOCK_ALL);
 
 	if ((m_iCollisionGroup == 30) && (collisionGroup == COLLISION_GROUP_PLAYER || collisionGroup == COLLISION_GROUP_PLAYER_REALITY_PHASE || collisionGroup == COLLISION_GROUP_NPC || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_BOSS || collisionGroup == COLLISION_GROUP_NPC_MILITARY || collisionGroup == COLLISION_GROUP_NPC_MERCENARY))
 		return false;

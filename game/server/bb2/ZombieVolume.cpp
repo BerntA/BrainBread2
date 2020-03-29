@@ -142,6 +142,7 @@ void CZombieVolume::Spawn()
 	SetSolid(SOLID_NONE);
 	SetMoveType(MOVETYPE_NONE);
 	SetModel(STRING(GetModelName()));
+	SetBlocksLOS(false);
 	m_nRenderMode = kRenderEnvironmental;
 
 	if (m_iZombiesToSpawn > 50)

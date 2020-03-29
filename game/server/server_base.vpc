@@ -212,8 +212,7 @@ $Project
 			$File "bb2\ZombieVolume.cpp"
 			$File "bb2\ZombieVolume.h"
 			$File "bb2\trigger_inventory_check.cpp"
-			$File "bb2\trigger_player_block.cpp"
-			$File "bb2\trigger_player_block.h"
+			$File "$SRCDIR\game\shared\bb2\func_entity_block.cpp"
 			$File "bb2\trigger_capturepoint.cpp"
 			$File "bb2\trigger_changelevel.cpp"			
 		}
