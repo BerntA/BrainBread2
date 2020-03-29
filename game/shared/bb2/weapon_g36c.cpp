@@ -32,8 +32,6 @@ public:
 	const char *GetAmmoEntityLink(void) { return "ammo_rifle"; }
 	bool UsesEmptyAnimation() { return true; }
 
-	int	GetMinBurst() { return 1; }
-	int	GetMaxBurst() { return 1; }
 	float GetMinRestTime() { return 0; }
 	float GetMaxRestTime() { return 0; }
 

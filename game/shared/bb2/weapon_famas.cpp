@@ -32,6 +32,12 @@ public:
 	bool    AllowBurst(void) { return true; }
 	const char *GetAmmoEntityLink(void) { return "ammo_rifle"; }
 
+	float GetMinRestTime() { return 0.1; }
+	float GetMaxRestTime() { return 0.3; }
+
+	int		GetMinBurst() { return 3; }
+	int		GetMaxBurst() { return 6; }
+
 private:
 	CWeaponFamas(const CWeaponFamas &);
 };

@@ -41,8 +41,9 @@ public:
 	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
 	virtual void Drop(const Vector &vecVelocity);
 
-	virtual int GetMinBurst() { return 1; }
-	virtual int GetMaxBurst() { return 3; }
+	virtual int GetMinBurst() { return 2; }
+	virtual int GetMaxBurst() { return 4; }
+	virtual int GetBurstValue() { return 3; } // For players!
 
 #ifndef CLIENT_DLL
 #ifdef BB2_AI // NPC Firing

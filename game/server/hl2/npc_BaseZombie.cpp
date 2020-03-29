@@ -244,15 +244,9 @@ int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flDist)
 		return COND_TOO_FAR_TO_ATTACK;
 
 	trace_t	tr;
-	CTraceFilterWorldAndPropsOnly worldCheckFilter;
+	CTraceFilterNoNPCsOrPlayer worldCheckFilter(this, GetCollisionGroup());
 	AI_TraceHull(vecStart, vecStart + vecAttackDir * MIN(GetClawAttackRange(), flDistToEnemy2D), -Vector(4, 4, 4), Vector(4, 4, 4), MASK_SOLID_BRUSHONLY, &worldCheckFilter, &tr);
-	if (tr.DidHit()) // Behind a wall!
-		return COND_TOO_FAR_TO_ATTACK;
-
-	CTraceFilterNav traceFilter(this, false, this, GetCollisionGroup(), false);
-	AI_TraceHull(vecStart, vecStart + vecAttackDir * GetClawAttackRange(), -Vector(12, 12, 12), Vector(12, 12, 12), MASK_SOLID, &traceFilter, &tr);
-
-	if (tr.m_pEnt && !tr.m_pEnt->MyCombatCharacterPointer())
+	if (tr.DidHit()) // Behind a wall or object?
 	{
 		CBasePropDoor *pDoor = dynamic_cast<CBasePropDoor*> (tr.m_pEnt);
 		if (pDoor && HL2MPRules()->IsBreakableDoor(tr.m_pEnt))
@@ -260,6 +254,8 @@ int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flDist)
 			m_hBlockingEntity = pDoor;
 			return COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT;
 		}
+
+		return COND_TOO_FAR_TO_ATTACK;
 	}
 
 	return COND_CAN_MELEE_ATTACK1;
@@ -1295,7 +1291,6 @@ SCHED_ZOMBIE_BASH_DOOR,
 "		COND_NEW_ENEMY"
 "		COND_ENEMY_DEAD"
 "		COND_HEAVY_DAMAGE"
-"		COND_LIGHT_DAMAGE"
 "		COND_TASK_FAILED"
 )
 

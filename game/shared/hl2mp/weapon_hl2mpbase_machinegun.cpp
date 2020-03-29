@@ -181,7 +181,7 @@ void CHL2MPMachineGun::ItemPostFrame(void)
 
 	if (m_bIsFiringBurst)
 	{
-		if (m_iBurstBullet >= GetMaxBurst())
+		if (m_iBurstBullet >= GetBurstValue())
 		{
 			m_bIsFiringBurst = false;
 			return;

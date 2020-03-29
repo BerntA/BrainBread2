@@ -31,8 +31,8 @@ public:
 	int GetWeaponType(void) { return WEAPON_TYPE_SMG; }
 	const char *GetAmmoEntityLink(void) { return "ammo_smg"; }
 
-	int		GetMinBurst() { return 2; }
-	int		GetMaxBurst() { return 4; }	
+	int		GetMinBurst() { return 3; }
+	int		GetMaxBurst() { return 6; }
 
 	const char		*GetAmmoTypeName(void) { return "SMG"; }
 	int				GetAmmoMaxCarry(void) { return 192; }

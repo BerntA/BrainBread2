@@ -118,7 +118,7 @@ CNPC_CustomActor::CNPC_CustomActor()
 	m_bBossState = false;
 	m_iszNPCName = NULL_STRING;
 	m_iTotalHP = 100;
-	
+
 	m_flDamageScaleValue = m_flHealthScaleValue = 0.0f;
 	m_flDamageScaleFactor = m_flHealthScaleFactor = 1.0f;
 
@@ -187,11 +187,7 @@ void CNPC_CustomActor::Spawn()
 	m_flDistTooFar = 512.0;
 	GetSenses()->SetDistLook(1024.0);
 
-	if (m_bIsAlly)
-		SetCollisionGroup(COLLISION_GROUP_NPC_MILITARY);
-	else
-		SetCollisionGroup(COLLISION_GROUP_NPC_MERCENARY);
-
+	SetCollisionGroup(m_bIsAlly ? COLLISION_GROUP_NPC_MILITARY : COLLISION_GROUP_NPC_MERCENARY);
 	UpdateScaling();
 }
 
@@ -228,10 +224,7 @@ void CNPC_CustomActor::Event_Killed(const CTakeDamageInfo &info)
 //
 Class_T	CNPC_CustomActor::Classify()
 {
-	if (m_bIsAlly)
-		return CLASS_COMBINE;
-
-	return CLASS_MILITARY;
+	return (m_bIsAlly ? CLASS_COMBINE : CLASS_MILITARY);
 }
 
 //-----------------------------------------------------------------------------
@@ -625,7 +618,7 @@ Activity CNPC_CustomActor::NPC_TranslateActivity(Activity activity)
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 void CNPC_CustomActor::HandleAnimEvent(animevent_t *pEvent)
-{	
+{
 	switch (pEvent->event)
 	{
 	case AE_NPC_LEFTFOOT:
@@ -831,7 +824,7 @@ bool CNPC_CustomActor::ShouldLookForBetterWeapon()
 				Assert(m_flNextWeaponSearchTime != flOldWeaponSearchTime);
 				return false;
 			}
-		}
+	}
 
 		return true;
 	}
@@ -881,7 +874,7 @@ bool CNPC_CustomActor::IsFollowingTarget()
 //-----------------------------------------------------------------------------
 bool CNPC_CustomActor::CanFollowTarget()
 {
-	if (m_NPCState == NPC_STATE_SCRIPT || m_NPCState == NPC_STATE_PRONE)
+	if (!m_bIsAlly || (m_NPCState == NPC_STATE_SCRIPT) || (m_NPCState == NPC_STATE_PRONE))
 		return false;
 
 	if (HasSpawnFlags(SF_CUSTOM_ACTOR_NOT_COMMANDABLE))
@@ -892,9 +885,6 @@ bool CNPC_CustomActor::CanFollowTarget()
 
 	// Don't bother people who don't want to be bothered
 	if (!CanBeUsedAsAFriend())
-		return false;
-
-	if (!m_bIsAlly)
 		return false;
 
 	if (GetNearestMatchingPlayer(this) == NULL)

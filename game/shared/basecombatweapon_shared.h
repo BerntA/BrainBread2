@@ -299,9 +299,9 @@ public:
 	virtual const Vector&	GetBulletSpread(void);
 	virtual float			GetFireRate( void );
 	virtual int				GetMinBurst() { return 1; }
-	virtual int				GetMaxBurst() { return 1; }
-	virtual float			GetMinRestTime() { return 0.3; }
-	virtual float			GetMaxRestTime() { return 0.6; }
+	virtual int				GetMaxBurst() { return 3; }
+	virtual float			GetMinRestTime() { return 0.2; }
+	virtual float			GetMaxRestTime() { return 0.4; }
 	virtual int				GetRandomBurst() { return random->RandomInt( GetMinBurst(), GetMaxBurst() ); }
 	virtual void			WeaponSound( WeaponSound_t sound_type, float soundtime = 0.0f );
 	virtual void			StopWeaponSound( WeaponSound_t sound_type );

@@ -529,94 +529,58 @@ CBaseCombatWeapon *CGameRules::GetNextBestWeapon( CBaseCombatCharacter *pPlayer,
 	return NULL;
 }
 
-bool CGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
+bool CGameRules::ShouldCollide(int collisionGroup0, int collisionGroup1)
 {
-	if ( collisionGroup0 > collisionGroup1 )
+	if (collisionGroup0 > collisionGroup1)
 	{
 		// swap so that lowest is always first
-		::V_swap(collisionGroup0,collisionGroup1);
+		::V_swap(collisionGroup0, collisionGroup1);
 	}
 
-#ifndef HL2MP
-	if ( (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT) &&
-		collisionGroup1 == COLLISION_GROUP_PUSHAWAY )
-	{
-		return false;
-	}
-#endif
-
-	if ( collisionGroup0 == COLLISION_GROUP_DEBRIS && collisionGroup1 == COLLISION_GROUP_PUSHAWAY )
-	{
-		// let debris and multiplayer objects collide
+	// let debris and multiplayer objects collide
+	if (collisionGroup0 == COLLISION_GROUP_DEBRIS && collisionGroup1 == COLLISION_GROUP_PUSHAWAY)
 		return true;
-	}
-	
-	// --------------------------------------------------------------------------
-	// NOTE: All of this code assumes the collision groups have been sorted!!!!
-	// NOTE: Don't change their order without rewriting this code !!!
-	// --------------------------------------------------------------------------
 
-	if ((collisionGroup1 == COLLISION_GROUP_DOOR_BLOCKER) && ((collisionGroup0 != COLLISION_GROUP_NPC) && (collisionGroup0 != COLLISION_GROUP_NPC_ZOMBIE) && (collisionGroup0 != COLLISION_GROUP_NPC_ZOMBIE_BOSS) && (collisionGroup0 != COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) && (collisionGroup0 != COLLISION_GROUP_NPC_MILITARY) && (collisionGroup0 != COLLISION_GROUP_NPC_MERCENARY)))
+	if ((collisionGroup1 == COLLISION_GROUP_DOOR_BLOCKER) && (collisionGroup0 != COLLISION_GROUP_NPC))
 		return false;
 
-	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER ) && ( collisionGroup1 == COLLISION_GROUP_PASSABLE_DOOR ) )
+	if ((collisionGroup0 == COLLISION_GROUP_DOOR_BLOCKER) && ((collisionGroup1 != COLLISION_GROUP_NPC_ZOMBIE) && (collisionGroup1 != COLLISION_GROUP_NPC_ZOMBIE_BOSS) && (collisionGroup1 != COLLISION_GROUP_NPC_MILITARY) && (collisionGroup1 != COLLISION_GROUP_NPC_MERCENARY)))
 		return false;
 
-	if ( collisionGroup0 == COLLISION_GROUP_DEBRIS || collisionGroup0 == COLLISION_GROUP_DEBRIS_TRIGGER )
+	if ((collisionGroup0 == COLLISION_GROUP_PLAYER) && (collisionGroup1 == COLLISION_GROUP_PASSABLE_DOOR))
+		return false;
+
+	if (collisionGroup0 == COLLISION_GROUP_DEBRIS || collisionGroup0 == COLLISION_GROUP_DEBRIS_TRIGGER)
 	{
 		// put exceptions here, right now this will only collide with COLLISION_GROUP_NONE
 		return false;
 	}
 
 	// Dissolving guys only collide with COLLISION_GROUP_NONE
-	if ( (collisionGroup0 == COLLISION_GROUP_DISSOLVING) || (collisionGroup1 == COLLISION_GROUP_DISSOLVING) )
+	if ((collisionGroup0 == COLLISION_GROUP_DISSOLVING) || (collisionGroup1 == COLLISION_GROUP_DISSOLVING))
 	{
-		if ( collisionGroup0 != COLLISION_GROUP_NONE )
+		if (collisionGroup0 != COLLISION_GROUP_NONE)
 			return false;
 	}
 
 	// doesn't collide with other members of this group
 	// or debris, but that's handled above
-	if ( collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS && collisionGroup1 == COLLISION_GROUP_INTERACTIVE_DEBRIS )
+	if (collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS && collisionGroup1 == COLLISION_GROUP_INTERACTIVE_DEBRIS)
 		return false;
 
-#ifndef HL2MP
-	// This change was breaking HL2DM
-	// Adrian: TEST! Interactive Debris doesn't collide with the player.
-	if ( collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS && ( collisionGroup1 == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup1 == COLLISION_GROUP_PLAYER ) )
-		 return false;
-#endif
-
-	if ( collisionGroup0 == COLLISION_GROUP_BREAKABLE_GLASS && collisionGroup1 == COLLISION_GROUP_BREAKABLE_GLASS )
+	if (collisionGroup0 == COLLISION_GROUP_BREAKABLE_GLASS && collisionGroup1 == COLLISION_GROUP_BREAKABLE_GLASS)
 		return false;
 
 	// interactive objects collide with everything except debris & interactive debris
-	if ( collisionGroup1 == COLLISION_GROUP_INTERACTIVE && collisionGroup0 != COLLISION_GROUP_NONE )
+	if (collisionGroup1 == COLLISION_GROUP_INTERACTIVE && collisionGroup0 != COLLISION_GROUP_NONE)
 		return false;
 
 	// Projectiles hit everything but debris, weapons, + other projectiles
-	if ( collisionGroup1 == COLLISION_GROUP_PROJECTILE )
+	if (collisionGroup1 == COLLISION_GROUP_PROJECTILE)
 	{
-		if ( collisionGroup0 == COLLISION_GROUP_DEBRIS || 
+		if (collisionGroup0 == COLLISION_GROUP_DEBRIS ||
 			collisionGroup0 == COLLISION_GROUP_WEAPON ||
-			collisionGroup0 == COLLISION_GROUP_PROJECTILE )
-		{
-			return false;
-		}
-	}
-
-	// Don't let players collide with weapons...
-	// Don't let NPCs collide with weapons
-	// Weapons are triggers, too, so they should still touch because of that
-	if (collisionGroup1 == COLLISION_GROUP_WEAPON)
-	{
-		if (collisionGroup0 == COLLISION_GROUP_PLAYER ||
-			collisionGroup0 == COLLISION_GROUP_NPC ||
-			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE ||
-			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_BOSS ||
-			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING ||
-			collisionGroup0 == COLLISION_GROUP_NPC_MILITARY ||
-			collisionGroup0 == COLLISION_GROUP_NPC_MERCENARY)
+			collisionGroup0 == COLLISION_GROUP_PROJECTILE)
 		{
 			return false;
 		}

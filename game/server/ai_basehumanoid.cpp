@@ -222,20 +222,21 @@ void CAI_BaseHumanoid::RunTaskRangeAttack1( const Task_t *pTask )
 		}
 	}
 
-	if ( IsActivityFinished() )
+	//if ( IsActivityFinished() ) <- dont wait for the anim! wait for fire rate!
+	if (gpGlobals->curtime >= GetNextAttack())
 	{
-		if ( !GetEnemy() || !GetEnemy()->IsAlive() )
+		if (!GetEnemy() || !GetEnemy()->IsAlive())
 		{
 			TaskComplete();
 			return;
 		}
 
-		if ( !GetShotRegulator()->IsInRestInterval() )
+		if (!GetShotRegulator()->IsInRestInterval())
 		{
-			if ( GetShotRegulator()->ShouldShoot() )
+			if (GetShotRegulator()->ShouldShoot())
 			{
 				OnRangeAttack1();
-				ResetIdealActivity( ACT_RANGE_ATTACK1 );
+				ResetIdealActivity(ACT_RANGE_ATTACK1);
 			}
 			return;
 		}

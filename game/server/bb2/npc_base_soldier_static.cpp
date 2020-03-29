@@ -447,8 +447,8 @@ void CNPCBaseSoldierStatic::RunTask(const Task_t *pTask)
 
 		if (gpGlobals->curtime >= m_flNextAttack)
 		{
-			if (IsActivityFinished())
-			{
+			//if (IsActivityFinished())
+			//{
 				if (--m_nShots > 0)
 				{
 					// DevMsg("ACT_RANGE_ATTACK1\n");
@@ -461,7 +461,7 @@ void CNPCBaseSoldierStatic::RunTask(const Task_t *pTask)
 					// DevMsg("TASK_RANGE_ATTACK1 complete\n");
 					TaskComplete();
 				}
-			}
+			//}
 		}
 		else
 		{

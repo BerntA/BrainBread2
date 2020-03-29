@@ -2111,50 +2111,57 @@ void CHL2MPRules::Precache( void )
 {
 }
 
-bool CHL2MPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
+bool CHL2MPRules::ShouldCollide(int collisionGroup0, int collisionGroup1)
 {
-	if ( collisionGroup0 > collisionGroup1 )
-	{
-		// swap so that lowest is always first
-		V_swap(collisionGroup0,collisionGroup1);
-	}
+	if (collisionGroup0 > collisionGroup1) // swap so that lowest is always first
+		V_swap(collisionGroup0, collisionGroup1);
 
-	if ((collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE || collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE) &&
-		collisionGroup1 == COLLISION_GROUP_WEAPON)
-	{
+	// Nothing collides with spawning zombos!
+	if ((collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) || (collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING))
 		return false;
+
+	// NPC & Players don't collide with weps. And neither with reality phasers.
+	if ((collisionGroup0 == COLLISION_GROUP_WEAPON) || (collisionGroup1 == COLLISION_GROUP_WEAPON) || (collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE) || (collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE))
+	{
+		if ((collisionGroup0 >= COLLISION_GROUP_NPC_ACTOR) || (collisionGroup1 >= COLLISION_GROUP_NPC_ACTOR)) // Any NPCs + PLRS will not collide with weps.
+			return false;
+
+		if (
+			collisionGroup0 == COLLISION_GROUP_PLAYER ||
+			collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ||
+			collisionGroup0 == COLLISION_GROUP_NPC
+			)
+			return false;
 	}
 
-	// BB2 NoCollide Rules:
+	if ((collisionGroup0 == COLLISION_GROUP_WEAPON) && (collisionGroup1 == COLLISION_GROUP_WEAPON))
+		return false;
+
+	if ((collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE) && (collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE))
+		return false;
 
 	// Military NPCS
-	if (collisionGroup0 == COLLISION_GROUP_NPC_MILITARY && (collisionGroup1 == COLLISION_GROUP_PLAYER || collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE))
-		return false;
-
-	if (collisionGroup1 == COLLISION_GROUP_NPC_MILITARY && (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE))
-		return false;
-
-	// Military npcs should collide...
-	//if (collisionGroup0 == COLLISION_GROUP_NPC_MILITARY && collisionGroup1 == COLLISION_GROUP_NPC_MILITARY)
-	//	return false;
+	if ((collisionGroup0 == COLLISION_GROUP_NPC_MILITARY) || (collisionGroup1 == COLLISION_GROUP_NPC_MILITARY))
+	{
+		if (
+			collisionGroup0 == COLLISION_GROUP_PLAYER ||
+			collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE
+			)
+			return false;
+	}
 
 	// Zombie NPCS
-	if ((collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE && collisionGroup1 == COLLISION_GROUP_PLAYER_ZOMBIE) ||
-		(collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE && collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE))
+	if (collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE && collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE)
 		return false;
 
-	if ((collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_BOSS && collisionGroup1 == COLLISION_GROUP_PLAYER_ZOMBIE) ||
-		(collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_BOSS && collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE))
+	if (collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE && collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_BOSS)
 		return false;
 
-	if ((collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_BOSS && collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE) ||
-		(collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_BOSS && collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE))
+	if (collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE && collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_BOSS)
 		return false;
 
-	if (collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING && (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE || collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE))
-		return false;
-
-	if (collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING && (collisionGroup1 == COLLISION_GROUP_PLAYER || collisionGroup1 == COLLISION_GROUP_PLAYER_ZOMBIE || collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE))
+	// Zombo Bosses won't be blocked by human NPCs.
+	if (collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_BOSS && ((collisionGroup1 == COLLISION_GROUP_NPC_MERCENARY) || (collisionGroup1 == COLLISION_GROUP_NPC_MILITARY)))
 		return false;
 
 	// Zombie Players
@@ -2165,97 +2172,45 @@ bool CHL2MPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	if ((collisionGroup0 == COLLISION_GROUP_PLAYER && collisionGroup1 == COLLISION_GROUP_PLAYER) && IsTeamplay())
 		return false;
 
-	// Reality Phase
-	if (collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE && collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE)
-		return false;
-
-	if (collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE && collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING)
-		return false;
-
-	if (collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE && collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE)
-		return false;
-
-	if (collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE && collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING)
-		return false;
-
-	if (collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE && collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE)
-		return false;
-
-	if (collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE && (collisionGroup1 == COLLISION_GROUP_PLAYER || collisionGroup1 == COLLISION_GROUP_PLAYER_ZOMBIE))
-		return false;
-
-	if (collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE && (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE))
-		return false;
-
-// Uncommenting this will create huge chunks of OP zombies, mutated beasts I tell ya!
-//	if (collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE && collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE)
-//		return false;
-
-	//if (collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_BOSS && collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_BOSS)
-	//	return false;
-
-	// END COLLIDE RULES BB2
-
-	//The below is added from hl2_gamerules.cpp and is required.
-#ifdef BB2_AI
-	// Prevent the player movement from colliding with spit globs (caused the player to jump on top of globs while in water)
-	if ((collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE || collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE) && collisionGroup1 == HL2COLLISION_GROUP_SPIT)
-		return false;
-
 	// HL2 treats movement and tracing against players the same, so just remap here
 	if (collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE || collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE)
-	{
 		collisionGroup0 = COLLISION_GROUP_PLAYER;
-	}
 
 	if (collisionGroup1 == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup1 == COLLISION_GROUP_PLAYER_ZOMBIE || collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE)
-	{
 		collisionGroup1 = COLLISION_GROUP_PLAYER;
-	}
 
-	//If collisionGroup0 is not a player then NPC_ACTOR behaves just like an NPC.
-	if ( collisionGroup1 == COLLISION_GROUP_NPC_ACTOR && collisionGroup0 != COLLISION_GROUP_PLAYER )
-	{
+	// If collisionGroup0 is not a player then NPC_ACTOR behaves just like an NPC.
+	if (collisionGroup1 == COLLISION_GROUP_NPC_ACTOR && collisionGroup0 != COLLISION_GROUP_PLAYER)
 		collisionGroup1 = COLLISION_GROUP_NPC;
-	}
 
-	if ( collisionGroup1 == HL2COLLISION_GROUP_CROW )
+	if (collisionGroup1 == HL2COLLISION_GROUP_CROW)
 	{
-		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_NPC ||
+		if (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_NPC ||
 			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE ||
 			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_BOSS ||
 			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING ||
 			collisionGroup0 == COLLISION_GROUP_NPC_MILITARY ||
 			collisionGroup0 == COLLISION_GROUP_NPC_MERCENARY ||
-			collisionGroup0 == HL2COLLISION_GROUP_CROW )
+			collisionGroup0 == HL2COLLISION_GROUP_CROW)
 			return false;
 	}
 
 	// gunships don't collide with other gunships
-	if ( collisionGroup0 == HL2COLLISION_GROUP_GUNSHIP && collisionGroup1 == HL2COLLISION_GROUP_GUNSHIP )
+	if (collisionGroup0 == HL2COLLISION_GROUP_GUNSHIP && collisionGroup1 == HL2COLLISION_GROUP_GUNSHIP)
 		return false;
 
-	// weapons and NPCs don't collide
-	if (collisionGroup0 == COLLISION_GROUP_WEAPON && ((collisionGroup1 >= HL2COLLISION_GROUP_FIRST_NPC && collisionGroup1 <= HL2COLLISION_GROUP_LAST_NPC) || (collisionGroup1 >= COLLISION_GROUP_NPC_ZOMBIE && collisionGroup1 <= COLLISION_GROUP_NPC_ZOMBIE_SPAWNING)))
-		return false;
-
-	//players don't collide against NPC Actors.
-	//I could've done this up where I check if collisionGroup0 is NOT a player but I decided to just
-	//do what the other checks are doing in this function for consistency sake.
-	if ( collisionGroup1 == COLLISION_GROUP_NPC_ACTOR && collisionGroup0 == COLLISION_GROUP_PLAYER )
+	// players don't collide against NPC Actors.
+	// I could've done this up where I check if collisionGroup0 is NOT a player but I decided to just
+	// do what the other checks are doing in this function for consistency sake.
+	if (collisionGroup1 == COLLISION_GROUP_NPC_ACTOR && collisionGroup0 == COLLISION_GROUP_PLAYER)
 		return false;
 
 	// In cases where NPCs are playing a script which causes them to interpenetrate while riding on another entity,
 	// such as a train or elevator, you need to disable collisions between the actors so the mover can move them.
-	if ( collisionGroup0 == COLLISION_GROUP_NPC_SCRIPTED && collisionGroup1 == COLLISION_GROUP_NPC_SCRIPTED )
+	if (collisionGroup0 == COLLISION_GROUP_NPC_SCRIPTED && collisionGroup1 == COLLISION_GROUP_NPC_SCRIPTED)
 		return false;
 
-	// Spit doesn't touch other spit
-	if ( collisionGroup0 == HL2COLLISION_GROUP_SPIT && collisionGroup1 == HL2COLLISION_GROUP_SPIT )
-		return false;
-#endif //BB2_AI
-
-	return BaseClass::ShouldCollide( collisionGroup0, collisionGroup1 ); 
+	return BaseClass::ShouldCollide(collisionGroup0, collisionGroup1);
 }
 
 bool CHL2MPRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
