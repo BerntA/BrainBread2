@@ -679,8 +679,8 @@ void CBasePlayer::Weapon_DeployNextWeapon( void )
 	Assert( GetActiveWeapon() );
 
 	CBaseCombatWeapon *pNextWeapon = m_hNextWeapon.Get();
-	if ( pNextWeapon )
-		Weapon_Switch( pNextWeapon, true );
+	if (pNextWeapon)
+		Weapon_Switch(pNextWeapon, true);
 #endif
 }
 
@@ -689,34 +689,34 @@ void CBasePlayer::Weapon_DeployNextWeapon( void )
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-bool CBasePlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, bool bWantDraw, int viewmodelindex ) 
+bool CBasePlayer::Weapon_Switch(CBaseCombatWeapon *pWeapon, bool bWantDraw)
 {
 	CBaseCombatWeapon *pLastWeapon = GetActiveWeapon();
 
-	if ( !bWantDraw )
+	if (!bWantDraw)
 	{
-		if ( (pLastWeapon) )
+		if ((pLastWeapon))
 		{
-			if ( (m_hNextWeapon.Get() != pWeapon) && (pLastWeapon != m_hNextWeapon.Get()) )
+			if ((m_hNextWeapon.Get() != pWeapon) && (pLastWeapon != m_hNextWeapon.Get()))
 			{
-				Weapon_SetNext( pWeapon );
+				Weapon_SetNext(pWeapon);
 				pLastWeapon->StartHolsterSequence();
 				return false;
 			}
 		}
 	}
 
-	Weapon_SetNext( NULL );
+	Weapon_SetNext(NULL);
 
-	if ( BaseClass::Weapon_Switch( pWeapon, bWantDraw, viewmodelindex ))
+	if (BaseClass::Weapon_Switch(pWeapon, bWantDraw))
 	{
 		if (pLastWeapon)
 			Weapon_SetLast(pLastWeapon);
 
-		CBaseViewModel *pViewModel = GetViewModel( viewmodelindex );
-		Assert( pViewModel );
-		if ( pViewModel )
-			pViewModel->RemoveEffects( EF_NODRAW );
+		CBaseViewModel *pViewModel = GetViewModel();
+		Assert(pViewModel != NULL);
+		if (pViewModel)
+			pViewModel->RemoveEffects(EF_NODRAW);
 
 		return true;
 	}
@@ -1457,14 +1457,9 @@ void CBasePlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, 
 
 void CBasePlayer::CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles)
 {
-	for ( int i = 0; i < MAX_VIEWMODELS; i++ )
-	{
-		CBaseViewModel *vm = GetViewModel( i );
-		if ( !vm )
-			continue;
-	
-		vm->CalcViewModelView( this, eyeOrigin, eyeAngles );
-	}
+	CBaseViewModel *vm = GetViewModel();
+	if (vm)
+		vm->CalcViewModelView(this, eyeOrigin, eyeAngles);
 }
 
 void CBasePlayer::CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov )
@@ -1670,7 +1665,6 @@ void CBasePlayer::SharedSpawn()
 	// m_iHealth = 100;
 	m_takedamage		= DAMAGE_YES;
 
-	m_Local.m_bDrawViewmodel = true;
 	m_Local.m_flStepSize = sv_stepsize.GetFloat();
 	m_Local.m_bAllowAutoMovement = true;
 

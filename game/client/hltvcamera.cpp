@@ -340,8 +340,7 @@ void C_HLTVCamera::CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float
 
 	pPlayer->CalcViewModelView( eyeOrigin, eyeAngles);
 
-	C_BaseViewModel *pViewModel = pPlayer->GetViewModel( 0 );
-
+	C_BaseViewModel *pViewModel = pPlayer->GetViewModel();
 	if ( pViewModel )
 	{
 		Assert( pViewModel->GetOwner() == pPlayer );

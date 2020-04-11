@@ -1487,8 +1487,7 @@ void CAPCMissile::DoExplosion(void)
 	}
 	else
 	{
-		ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(),
-			APC_MISSILE_DAMAGE, 100, true, 20000);
+		ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), APC_MISSILE_DAMAGE, 100, true, 20000);
 	}
 }
 

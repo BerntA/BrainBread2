@@ -111,7 +111,9 @@ void CPlayerResource::UpdatePlayerData(void)
 			m_bAlive.Set(i, pPlayer->IsAlive() ? 1 : 0);
 			m_bAdmin.Set(i, pPlayer->IsAdminOnServer() ? 1 : 0);
 			m_iHealth.Set(i, MAX(0, pPlayer->GetHealth()));
-			m_vecPosition.Set(i, pPlayer->GetLocalOrigin());
+
+			if ((m_nUpdateCounter % 4) == 0)
+				m_vecPosition.Set(i, pPlayer->GetLocalOrigin());
 
 			// Don't update ping / packetloss everytime
 			if (!(m_nUpdateCounter % 20))

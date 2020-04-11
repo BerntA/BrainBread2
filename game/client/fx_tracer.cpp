@@ -52,7 +52,7 @@ Vector GetTracerOrigin( const CEffectData &data )
 			C_BasePlayer *player = ToBasePlayer( pWpn->GetOwner() );
 
 			// Use GetRenderedWeaponModel() instead?
-			pViewModel = player ? player->GetViewModel( 0 ) : NULL;
+			pViewModel = player ? player->GetViewModel() : NULL;
 			if ( pViewModel )
 			{
 				// Get the viewmodel and use it instead

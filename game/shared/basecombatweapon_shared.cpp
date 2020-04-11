@@ -66,9 +66,6 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 
 	m_bReloadsSingly	= false;
 
-	// Defaults to zero
-	m_nViewModelIndex	= 0;
-
 	// BB2
 	m_flHolsteredTime = 0.0f;
 
@@ -228,8 +225,6 @@ void CBaseCombatWeapon::Spawn( void )
 	RemoveEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
 
 	m_iState = WEAPON_NOT_CARRIED;
-	// Assume 
-	m_nViewModelIndex = 0;
 
 	GiveDefaultAmmo();
 
@@ -347,7 +342,7 @@ const FileWeaponInfo_t &CBaseCombatWeapon::GetWpnData( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-const char *CBaseCombatWeapon::GetViewModel(int viewmodelindex/*viewmodelindex = 0 -- this is ignored in the base class here*/) const
+const char *CBaseCombatWeapon::GetViewModel(void) const
 {
 	return GetWpnData().szViewModel;
 }
@@ -681,17 +676,6 @@ void CBaseCombatWeapon::Drop( const Vector &vecVelocity )
 
 void CBaseCombatWeapon::ResetAllParticles(void)
 {
-	// This doesn't actually do what it is supposed to do.
-//#if !defined( CLIENT_DLL )
-//	CBaseViewModel *vm = NULL;
-//	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
-//	if (pOwner)
-//		vm = pOwner->GetViewModel(m_nViewModelIndex);
-//
-//	StopParticleEffects(this);
-//	if (vm)
-//		StopParticleEffects(vm);
-//#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -923,16 +907,6 @@ int CBaseCombatWeapon::UpdateClientData( CBasePlayer *pPlayer )
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : index - 
-//-----------------------------------------------------------------------------
-void CBaseCombatWeapon::SetViewModelIndex( int index )
-{
-	Assert( index >= 0 && index < MAX_VIEWMODELS );
-	m_nViewModelIndex = index;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
 // Input  : iActivity - 
 //-----------------------------------------------------------------------------
 void CBaseCombatWeapon::SendViewModelAnim( int nSequence )
@@ -950,13 +924,12 @@ void CBaseCombatWeapon::SendViewModelAnim( int nSequence )
 	if ( pOwner == NULL )
 		return;
 
-	CBaseViewModel *vm = pOwner->GetViewModel( m_nViewModelIndex, false );
+	CBaseViewModel *vm = pOwner->GetViewModel(false);
 
 	if ( vm == NULL )
 		return;
 
 	SetViewModel();
-	Assert( vm->ViewModelIndex() == m_nViewModelIndex );
 	vm->SendViewModelMatchingSequence( nSequence );
 }
 
@@ -969,7 +942,7 @@ float CBaseCombatWeapon::GetViewModelSequenceDuration()
 		return 0;
 	}
 
-	CBaseViewModel *vm = pOwner->GetViewModel( m_nViewModelIndex );
+	CBaseViewModel *vm = pOwner->GetViewModel();
 	if ( vm == NULL )
 	{
 		Assert( false );
@@ -977,7 +950,6 @@ float CBaseCombatWeapon::GetViewModelSequenceDuration()
 	}
 
 	SetViewModel();
-	Assert( vm->ViewModelIndex() == m_nViewModelIndex );
 	return vm->SequenceDuration();
 }
 
@@ -994,7 +966,7 @@ bool CBaseCombatWeapon::IsViewModelSequenceFinished( void )
 		return false;
 	}
 
-	CBaseViewModel *vm = pOwner->GetViewModel( m_nViewModelIndex );
+	CBaseViewModel *vm = pOwner->GetViewModel();
 	if ( vm == NULL )
 	{
 		Assert( false );
@@ -1012,11 +984,11 @@ void CBaseCombatWeapon::SetViewModel()
 	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 	if ( pOwner == NULL )
 		return;
-	CBaseViewModel *vm = pOwner->GetViewModel( m_nViewModelIndex, false );
+	CBaseViewModel *vm = pOwner->GetViewModel(false);
 	if ( vm == NULL )
 		return;
-	Assert( vm->ViewModelIndex() == m_nViewModelIndex );
-	vm->SetWeaponModel( GetViewModel( m_nViewModelIndex ), this );
+
+	vm->SetWeaponModel(GetViewModel(), this);
 }
 
 //-----------------------------------------------------------------------------
@@ -1053,31 +1025,22 @@ bool CBaseCombatWeapon::HasAnyAmmo(void)
 // Purpose: Show/hide weapon and corresponding view model if any
 // Input  : visible - 
 //-----------------------------------------------------------------------------
-void CBaseCombatWeapon::SetWeaponVisible( bool visible )
+void CBaseCombatWeapon::SetWeaponVisible(bool visible)
 {
-	CBaseViewModel *vm = NULL;
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	CBaseViewModel *vm = (pOwner ? pOwner->GetViewModel() : NULL);
 
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-	if ( pOwner )
+	if (visible)
 	{
-		vm = pOwner->GetViewModel( m_nViewModelIndex );
-	}
-
-	if ( visible )
-	{
-		RemoveEffects( EF_NODRAW );
-		if ( vm )
-		{
-			vm->RemoveEffects( EF_NODRAW );
-		}
+		RemoveEffects(EF_NODRAW);
+		if (vm)
+			vm->RemoveEffects(EF_NODRAW);
 	}
 	else
 	{
-		AddEffects( EF_NODRAW );
-		if ( vm )
-		{
+		AddEffects(EF_NODRAW);
+		if (vm)
 			vm->AddEffects(EF_NODRAW);
-		}
 	}
 }
 
@@ -1086,16 +1049,9 @@ void CBaseCombatWeapon::SetWeaponVisible( bool visible )
 //-----------------------------------------------------------------------------
 bool CBaseCombatWeapon::IsWeaponVisible( void )
 {
-	CBaseViewModel *vm = NULL;
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-	if ( pOwner )
-	{
-		vm = pOwner->GetViewModel( m_nViewModelIndex );
-		if ( vm )
-			return ( !vm->IsEffectActive(EF_NODRAW) );
-	}
-
-	return false;
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	CBaseViewModel *vm = (pOwner ? pOwner->GetViewModel() : NULL);
+	return (vm ? !vm->IsEffectActive(EF_NODRAW) : false);
 }
 
 //-----------------------------------------------------------------------------
@@ -2549,9 +2505,7 @@ BEGIN_PREDICTION_DATA( CBaseCombatWeapon )
 	DEFINE_PRED_FIELD( m_iAmmoType, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_iClip, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),			
 
-	DEFINE_PRED_FIELD( m_iAmmoCount, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),	
-
-	DEFINE_PRED_FIELD( m_nViewModelIndex, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_iAmmoCount, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_PRED_FIELD_TOL(m_flViewKickTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE),
 	DEFINE_PRED_FIELD_TOL(m_flViewKickPenalty, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE),
@@ -2615,8 +2569,6 @@ BEGIN_DATADESC( CBaseCombatWeapon )
 	DEFINE_FIELD( m_fMaxRange2, FIELD_FLOAT ),
 
 	DEFINE_FIELD(m_iAmmoCount, FIELD_INTEGER),
-
-	DEFINE_FIELD( m_nViewModelIndex, FIELD_INTEGER ),
 
 	// don't save these, init to 0 and regenerate
 	//	DEFINE_FIELD( m_flNextEmptySoundTime, FIELD_TIME ),
@@ -2719,7 +2671,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CBaseCombatWeapon, DT_LocalWeaponData )
 #if !defined( CLIENT_DLL )
 	SendPropIntWithMinusOneFlag(SENDINFO(m_iClip), 10),
 	SendPropInt(SENDINFO(m_iAmmoType), 6),
-	SendPropInt(SENDINFO(m_nViewModelIndex), VIEWMODEL_INDEX_BITS, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_iShotsFired), 7, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN),
 	SendPropTime(SENDINFO(m_flNextPrimaryAttack)),
 	SendPropTime(SENDINFO(m_flNextSecondaryAttack)),
@@ -2734,7 +2685,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CBaseCombatWeapon, DT_LocalWeaponData )
 #else
 	RecvPropIntWithMinusOneFlag(RECVINFO(m_iClip)),
 	RecvPropInt(RECVINFO(m_iAmmoType)),
-	RecvPropInt(RECVINFO(m_nViewModelIndex)),
 	RecvPropInt(RECVINFO(m_iShotsFired)),
 	RecvPropTime(RECVINFO(m_flNextPrimaryAttack)),
 	RecvPropTime(RECVINFO(m_flNextSecondaryAttack)),

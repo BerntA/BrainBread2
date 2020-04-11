@@ -60,8 +60,6 @@ public:
 
 	CNetworkQAngle( m_vecPunchAngleVel );		// velocity of auto-decaying view angle adjustment
 	CInterpolatedVar< QAngle >	m_iv_vecPunchAngleVel;
-	bool					m_bDrawViewmodel;
-	bool					m_bPoisoned;
 	float					m_flStepSize;
 	bool					m_bAllowAutoMovement;
 

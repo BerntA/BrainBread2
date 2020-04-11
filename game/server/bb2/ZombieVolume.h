@@ -15,6 +15,7 @@
 #endif
 
 #include "baseentity.h"
+#include "GameEventListener.h"
 
 //
 // Spawnflags
@@ -24,16 +25,18 @@ enum
 	SF_STARTACTIVE = 0x01, // Start active
 	SF_FASTSPAWN = 0x02, // Skip fade phase
 	SF_NOVISCHECK = 0x04, // Don't care about FVisible, spawn regardless of PVS / vis state
+	SF_RESPAWN_ONLY_IF_DEAD = 0x08, // Don't spawn zombies blindly, only respawn the ones who died, keep track of live zombies.
 };
 
-class CZombieVolume : public CBaseEntity
+class CZombieVolume : public CBaseEntity, public CGameEventListener
 {
 public:
 
 	DECLARE_CLASS(CZombieVolume, CBaseEntity);
 	DECLARE_DATADESC();
 
-	CZombieVolume(void);
+	CZombieVolume();
+	virtual ~CZombieVolume();
 
 	void Spawn(void);
 	void VolumeThink();
@@ -75,6 +78,9 @@ protected:
 	void TraceZombieBBox(const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm, CBaseEntity *pEntity);
 	void SpawnWave();
 	const char *GetZombieClassnameToSpawn();
+	void FireGameEvent(IGameEvent *event);
+
+	CUtlVector<int> m_vZombieList;
 };
 
 #endif // ZOMBIE_VOLUME_H

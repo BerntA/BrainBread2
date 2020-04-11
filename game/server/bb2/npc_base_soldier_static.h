@@ -76,7 +76,6 @@ public:
 	int				SelectScheduleAttack();
 
 	// Combat
-	bool			HasShotgun();
 	bool			ActiveWeaponIsFullyLoaded();
 
 	// -------------

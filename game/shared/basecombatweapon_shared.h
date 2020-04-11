@@ -176,7 +176,6 @@ public:
 	virtual void			GiveTo( CBaseEntity *pOther ); 
 
 	// Weapon client handling
-	virtual void			SetViewModelIndex( int index = 0 );
 	virtual bool			SendWeaponAnim( int iActivity );
 	virtual void			SendViewModelAnim( int nSequence );
 	float					GetViewModelSequenceDuration();	// Return how long the current view model sequence is.
@@ -335,7 +334,7 @@ public:
 
 	// Weapon info accessors for data in the weapon's data file
 	const FileWeaponInfo_t	&GetWpnData( void ) const;
-	virtual const char		*GetViewModel( int viewmodelindex = 0 ) const;
+	virtual const char		*GetViewModel(void) const;
 	virtual const char		*GetWorldModel( void ) const;
 	virtual int				GetMaxClip( void ) const;
 	virtual int				GetDefaultClip( void ) const;
@@ -516,9 +515,6 @@ private:
 	CNetworkVar( CBaseCombatCharacterHandle, m_hOwner );				// Player carrying this weapon
 
 public:
-
-	// Networked fields
-	CNetworkVar( int, m_nViewModelIndex );
 
 	// Weapon firing
 	CNetworkVar( float, m_flNextPrimaryAttack );						// soonest time ItemPostFrame will call PrimaryAttack

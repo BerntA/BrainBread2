@@ -264,7 +264,7 @@ BEGIN_DATADESC( CBasePlayer )
 	
 	DEFINE_FIELD( m_iPlayerLocked, FIELD_INTEGER ),
 
-	DEFINE_AUTO_ARRAY( m_hViewModel, FIELD_EHANDLE ),
+	DEFINE_FIELD(m_hViewModel, FIELD_EHANDLE),
 	
 	DEFINE_FIELD( m_flMaxspeed, FIELD_FLOAT ),
 	DEFINE_FIELD(m_flMaxAirSpeed, FIELD_FLOAT),
@@ -312,8 +312,6 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_vNewVPhysicsPosition, FIELD_VECTOR ),
 	DEFINE_FIELD( m_vNewVPhysicsVelocity, FIELD_VECTOR ),
 
-	DEFINE_ARRAY( m_szLastPlaceName, FIELD_CHARACTER, MAX_PLACE_NAME_LENGTH ),
-
 	DEFINE_FIELD( m_autoKickDisabled, FIELD_BOOLEAN ),
 
 	// Function Pointers
@@ -349,36 +347,31 @@ inline bool ShouldRunCommandsInContext( const CCommandContext *ctx )
 #endif
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Output : CBaseViewModel
 //-----------------------------------------------------------------------------
-CBaseViewModel *CBasePlayer::GetViewModel( int index /*= 0*/, bool bObserverOK )
+CBaseViewModel *CBasePlayer::GetViewModel(bool bObserverOK)
 {
-	Assert( index >= 0 && index < MAX_VIEWMODELS );
-	return m_hViewModel[ index ].Get();
+	return m_hViewModel.Get();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CBasePlayer::CreateViewModel( int index /*=0*/ )
+void CBasePlayer::CreateViewModel(void)
 {
-	Assert( index >= 0 && index < MAX_VIEWMODELS );
-
-	if ( GetViewModel( index ) )
+	if (GetViewModel())
 		return;
 
-	CBaseViewModel *vm = ( CBaseViewModel * )CreateEntityByName( "viewmodel" );
-	if ( vm )
+	CBaseViewModel *vm = (CBaseViewModel *)CreateEntityByName("viewmodel");
+	if (vm)
 	{
-		vm->SetAbsOrigin( GetAbsOrigin() );
-		vm->SetOwner( this );
-		vm->SetIndex( index );
-		DispatchSpawn( vm );
-		vm->FollowEntity( this );
-		m_hViewModel.Set( index, vm );
+		vm->SetAbsOrigin(GetAbsOrigin());
+		vm->SetOwner(this);
+		DispatchSpawn(vm);
+		vm->FollowEntity(this);
+		m_hViewModel.Set(vm);
 	}
 }
 
@@ -387,16 +380,10 @@ void CBasePlayer::CreateViewModel( int index /*=0*/ )
 //-----------------------------------------------------------------------------
 void CBasePlayer::DestroyViewModels( void )
 {
-	int i;
-	for ( i = MAX_VIEWMODELS - 1; i >= 0; i-- )
-	{
-		CBaseViewModel *vm = GetViewModel( i );
-		if ( !vm )
-			continue;
-
-		UTIL_Remove( vm );
-		m_hViewModel.Set( i, NULL );
-	}
+	CBaseViewModel *vm = GetViewModel();
+	if (vm)
+		UTIL_Remove(vm);
+	m_hViewModel.Set(NULL);
 }
 
 //-----------------------------------------------------------------------------
@@ -4060,8 +4047,6 @@ void CBasePlayer::Spawn( void )
 
 	SetThink(NULL);
 	m_fInitHUD = true;
-
-	Q_strncpy( m_szLastPlaceName.GetForModify(), "", MAX_PLACE_NAME_LENGTH );
 	
 	CSingleUserRecipientFilter user( this );
 	enginesound->SetPlayerDSP( user, 0, false );
@@ -4876,17 +4861,6 @@ bool CBasePlayer::RemovePlayerItem( CBaseCombatWeapon *pItem )
 	return Weapon_Detach( pItem );
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: Hides or shows the player's view model. The "r_drawviewmodel" cvar
-//			can still hide the viewmodel even if this is set to true.
-// Input  : bShow - true to show, false to hide the view model.
-//-----------------------------------------------------------------------------
-void CBasePlayer::ShowViewModel(bool bShow)
-{
-	m_Local.m_bDrawViewmodel = bShow;
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : bDraw - 
@@ -4991,11 +4965,6 @@ void CBasePlayer::UpdateClientData( void )
 			GetWeapon(i)->UpdateClientData( this );
 	}
 
-	// update the client with our poison state
-	m_Local.m_bPoisoned = ( m_bitsDamageType & DMG_POISON ) 
-						&& ( m_nPoisonDmg > m_nPoisonRestored ) 
-						&& ( m_iHealth < 100 );
-
 	// Let any global rules update the HUD, too
 	g_pGameRules->UpdateClientData( this );
 }
@@ -5092,8 +5061,8 @@ void CBasePlayer::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTar
 		if (!SwitchToNextBestWeapon( NULL ))
 		{
 			CBaseViewModel *vm = GetViewModel();
-			if ( vm )
-				vm->AddEffects( EF_NODRAW );
+			if (vm)
+				vm->AddEffects(EF_NODRAW);
 		}
 	}
 }
@@ -5253,14 +5222,9 @@ bool CBasePlayer::ClearUseEntity()
 //-----------------------------------------------------------------------------
 void CBasePlayer::HideViewModels( void )
 {
-	for ( int i = 0 ; i < MAX_VIEWMODELS; i++ )
-	{
-		CBaseViewModel *vm = GetViewModel( i );
-		if ( !vm )
-			continue;
-
-		vm->SetWeaponModel( NULL, NULL );
-	}
+	CBaseViewModel *vm = GetViewModel();
+	if (vm)
+		vm->SetWeaponModel(NULL, NULL);
 }
 
 class CStripWeapons : public CPointEntity
@@ -5506,6 +5470,8 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropInt			( SENDINFO( m_nWaterLevel ), 2, SPROP_UNSIGNED ),
 		SendPropFloat		( SENDINFO( m_flLaggedMovementValue ), 0, SPROP_NOSCALE ),
 
+		SendPropInt			(SENDINFO(m_ArmorValue), 7, SPROP_UNSIGNED),
+
 	END_SEND_TABLE()
 
 
@@ -5522,8 +5488,7 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropInt(SENDINFO(m_iMaxHealth), -1, SPROP_VARINT | SPROP_CHANGES_OFTEN),
 		SendPropInt		(SENDINFO(m_lifeState), 3, SPROP_UNSIGNED ),
 		SendPropFloat	(SENDINFO(m_flMaxspeed), 12, SPROP_ROUNDDOWN, 0.0f, 2048.0f ),  // CL
-		SendPropFloat(SENDINFO(m_flMaxAirSpeed), 12, SPROP_ROUNDDOWN, 0.0f, 2048.0f),  // CL
-		SendPropInt(SENDINFO(m_ArmorValue), 7, SPROP_UNSIGNED),
+		SendPropFloat(SENDINFO(m_flMaxAirSpeed), 12, SPROP_ROUNDDOWN, 0.0f, 2048.0f),  // CL		
 
 		SendPropInt		(SENDINFO(m_fFlags), PLAYER_FLAG_BITS, SPROP_UNSIGNED|SPROP_CHANGES_OFTEN, SendProxy_CropFlagsToPlayerFlagBitsLength ),
 		SendPropInt		(SENDINFO(m_iObserverMode), 3, SPROP_UNSIGNED ),
@@ -5532,8 +5497,7 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropInt		(SENDINFO(m_iFOVStart), 8, SPROP_UNSIGNED ),
 		SendPropFloat	(SENDINFO(m_flFOVTime) ),
 		SendPropInt		(SENDINFO(m_iDefaultFOV), 8, SPROP_UNSIGNED ),
-		SendPropArray	( SendPropEHandle( SENDINFO_ARRAY( m_hViewModel ) ), m_hViewModel ),
-		SendPropString	(SENDINFO(m_szLastPlaceName) ),
+		SendPropEHandle(SENDINFO(m_hViewModel)),
 
 		// Data that only gets sent to the local player.
 		SendPropDataTable( "localdata", 0, &REFERENCE_SEND_TABLE(DT_LocalPlayerExclusive), SendProxy_SendLocalDataTable ),

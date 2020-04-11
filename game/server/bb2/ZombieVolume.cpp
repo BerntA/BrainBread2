@@ -115,7 +115,7 @@ END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(zombie_volume, CZombieVolume);
 
-CZombieVolume::CZombieVolume(void)
+CZombieVolume::CZombieVolume()
 {
 	m_flSpawnInterval = 10.0f;
 	m_flRandomSpawnPercent = 20.0f;
@@ -134,6 +134,14 @@ CZombieVolume::CZombieVolume(void)
 	m_flMaxDistance = bb2_zombie_spawner_distance.GetFloat();
 	m_flMaxZDifference = 0.0f;
 	m_flSpawnFrequency = 0.0f;
+
+	m_vZombieList.Purge();
+	ListenForGameEvent("entity_killed");
+}
+
+CZombieVolume::~CZombieVolume()
+{
+	m_vZombieList.Purge();
 }
 
 void CZombieVolume::Spawn()
@@ -167,7 +175,7 @@ void CZombieVolume::VolumeThink()
 		m_iSpawnNum = 0;
 	}
 
-	// If the round has started + we haven't  reached any limits, try to spawn!
+	// If the round has started + we haven't reached any limits, try to spawn!
 	if ((m_iSpawnNum < m_iZombiesToSpawn) && HL2MPRules()->m_bRoundStarted && !HL2MPRules()->IsGameoverOrScoresVisible())
 	{
 		if (HL2MPRules()->CanSpawnZombie())
@@ -225,6 +233,10 @@ void CZombieVolume::TraceZombieBBox(const Vector& start, const Vector& end, unsi
 
 void CZombieVolume::SpawnWave()
 {
+	// Do we only want to spawn new zombos if the old ones died?
+	if (HasSpawnFlags(SF_RESPAWN_ONLY_IF_DEAD) && (m_vZombieList.Count() >= m_iZombiesToSpawn))
+		return;
+
 	Vector vecBoundsMaxs = CollisionProp()->OBBMaxs(),
 		vecBoundsMins = CollisionProp()->OBBMins();
 
@@ -273,6 +285,9 @@ void CZombieVolume::SpawnWave()
 			if (pTarget)
 				npcZombie->SpawnRunSchedule(pTarget, ((Activity)goalActivity), (goalType >= 1), goalInterruptType);
 		}
+
+		if (HasSpawnFlags(SF_RESPAWN_ONLY_IF_DEAD))
+			m_vZombieList.AddToTail(npcZombie->entindex());
 	}
 
 	m_iSpawnNum++;
@@ -302,4 +317,14 @@ const char *CZombieVolume::GetZombieClassnameToSpawn()
 	default:
 		return "npc_walker";
 	}
+}
+
+void CZombieVolume::FireGameEvent(IGameEvent *event)
+{
+	if (!HasSpawnFlags(SF_RESPAWN_ONLY_IF_DEAD))
+		return;
+
+	const char * type = event->GetName();
+	if (!strcmp(type, "entity_killed"))
+		m_vZombieList.FindAndRemove(event->GetInt("entindex_killed", 0));
 }

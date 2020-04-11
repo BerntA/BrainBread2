@@ -56,6 +56,12 @@ void CAI_BaseHumanoid::CheckAmmo(void)
 	}
 }
 
+bool CAI_BaseHumanoid::IsWeaponShotgun(void)
+{
+	CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+	return (pWeapon && !pWeapon->IsMeleeWeapon() && (pWeapon->GetWeaponType() == WEAPON_TYPE_SHOTGUN));
+}
+
 //-----------------------------------------------------------------------------
 // TASK_RANGE_ATTACK1
 //-----------------------------------------------------------------------------
@@ -222,25 +228,28 @@ void CAI_BaseHumanoid::RunTaskRangeAttack1( const Task_t *pTask )
 		}
 	}
 
-	//if ( IsActivityFinished() ) <- dont wait for the anim! wait for fire rate!
-	if (gpGlobals->curtime >= GetNextAttack())
+	bool bIsUsingShotgun = IsWeaponShotgun();
+	if (!bIsUsingShotgun || (bIsUsingShotgun && IsActivityFinished())) // If the NPC is using a shotgun, wait for the fire anim to finish!
 	{
-		if (!GetEnemy() || !GetEnemy()->IsAlive())
+		if (gpGlobals->curtime >= GetNextAttack())
 		{
-			TaskComplete();
-			return;
-		}
-
-		if (!GetShotRegulator()->IsInRestInterval())
-		{
-			if (GetShotRegulator()->ShouldShoot())
+			if (!GetEnemy() || !GetEnemy()->IsAlive())
 			{
-				OnRangeAttack1();
-				ResetIdealActivity(ACT_RANGE_ATTACK1);
+				TaskComplete();
+				return;
 			}
-			return;
+
+			if (!GetShotRegulator()->IsInRestInterval())
+			{
+				if (GetShotRegulator()->ShouldShoot())
+				{
+					OnRangeAttack1();
+					ResetIdealActivity(ACT_RANGE_ATTACK1);
+				}
+				return;
+			}
+			TaskComplete();
 		}
-		TaskComplete();
 	}
 }
 

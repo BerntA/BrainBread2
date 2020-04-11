@@ -970,7 +970,7 @@ void CBeam::OnDataChanged( DataUpdateType_t updateType )
 				C_BasePlayer *player = ToBasePlayer( pWpn->GetOwner() );
 
 				// Use GetRenderedWeaponModel() instead?
-				C_BaseViewModel *pViewModel = player ? player->GetViewModel( 0 ) : NULL;
+				C_BaseViewModel *pViewModel = player ? player->GetViewModel() : NULL;
 				if ( pViewModel )
 				{
 					// Get the viewmodel and use it instead

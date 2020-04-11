@@ -1027,14 +1027,6 @@ Vector CHL2_Player::EyeDirection3D( void )
 	return vecForward;
 }
 
-//---------------------------------------------------------
-//---------------------------------------------------------
-bool CHL2_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, bool bWantDraw, int viewmodelindex )
-{
-	MDLCACHE_CRITICAL_SECTION();
-	return BaseClass::Weapon_Switch(pWeapon, bWantDraw, viewmodelindex);
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: override how single player rays hit the player
 //-----------------------------------------------------------------------------

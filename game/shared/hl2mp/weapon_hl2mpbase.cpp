@@ -193,7 +193,6 @@ float CWeaponHL2MPBase::CalcViewmodelBob(void)
 // Purpose: 
 // Input  : &origin - 
 //			&angles - 
-//			viewmodelindex - 
 //-----------------------------------------------------------------------------
 void CWeaponHL2MPBase::AddViewmodelBob(CBaseViewModel *viewmodel, Vector &origin, QAngle &angles)
 {
@@ -262,7 +261,6 @@ float CWeaponHL2MPBase::CalcViewmodelBob(void)
 // Purpose: 
 // Input  : &origin - 
 //			&angles - 
-//			viewmodelindex - 
 //-----------------------------------------------------------------------------
 void CWeaponHL2MPBase::AddViewmodelBob(CBaseViewModel *viewmodel, Vector &origin, QAngle &angles)
 {

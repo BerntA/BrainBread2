@@ -143,8 +143,6 @@ BEGIN_RECV_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 	RecvPropVector	(RECVINFO(m_vecPunchAngleVel)),
 #endif
 
-	RecvPropInt		(RECVINFO(m_bDrawViewmodel)),
-	RecvPropBool	(RECVINFO(m_bPoisoned)),
 	RecvPropFloat	(RECVINFO(m_flStepSize)),
 	RecvPropInt		(RECVINFO(m_bAllowAutoMovement)),
 
@@ -217,6 +215,8 @@ END_RECV_TABLE()
 		RecvPropInt			( RECVINFO( m_nWaterLevel ) ),
 		RecvPropFloat		( RECVINFO( m_flLaggedMovementValue )),
 
+		RecvPropInt			(RECVINFO(m_ArmorValue)),
+
 	END_RECV_TABLE()
 
 	
@@ -243,17 +243,13 @@ END_RECV_TABLE()
 		RecvPropInt		(RECVINFO(m_lifeState)),
 
 		RecvPropFloat	(RECVINFO(m_flMaxspeed)),
-		RecvPropFloat(RECVINFO(m_flMaxAirSpeed)),
-
-		RecvPropInt(RECVINFO(m_ArmorValue)),	 
+		RecvPropFloat(RECVINFO(m_flMaxAirSpeed)),		
 
 		RecvPropInt		(RECVINFO(m_fFlags)),
 
 		RecvPropInt		(RECVINFO(m_iObserverMode), 0, RecvProxy_ObserverMode ),
 		RecvPropEHandle	(RECVINFO(m_hObserverTarget), RecvProxy_ObserverTarget ),
-		RecvPropArray	( RecvPropEHandle( RECVINFO( m_hViewModel[0] ) ), m_hViewModel ),	
-
-		RecvPropString( RECVINFO(m_szLastPlaceName) ),
+		RecvPropEHandle	(RECVINFO(m_hViewModel)),
 
 	END_RECV_TABLE()
 
@@ -282,8 +278,6 @@ BEGIN_PREDICTION_DATA_NO_BASE( CPlayerLocalData )
 	DEFINE_PRED_FIELD_TOL( m_vecPunchAngle, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.125f ),
 	DEFINE_PRED_FIELD_TOL( m_vecPunchAngleVel, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.125f ),
 #endif
-	DEFINE_PRED_FIELD( m_bDrawViewmodel, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_bPoisoned, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bAllowAutoMovement, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_PRED_FIELD( m_bDucked, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
@@ -341,7 +335,7 @@ BEGIN_PREDICTION_DATA( C_BasePlayer )
 
 	DEFINE_PRED_FIELD( m_hGroundEntity, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
 
-	DEFINE_PRED_ARRAY( m_hViewModel, FIELD_EHANDLE, MAX_VIEWMODELS, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD(m_hViewModel, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE),
 
 	DEFINE_FIELD( m_surfaceFriction, FIELD_FLOAT ),
 
@@ -1871,20 +1865,16 @@ void C_BasePlayer::Simulate()
 //		Consider using GetRenderedWeaponModel() instead - it will get the
 //		viewmodel or the active weapon as appropriate.
 //-----------------------------------------------------------------------------
-C_BaseViewModel *C_BasePlayer::GetViewModel( int index /*= 0*/, bool bObserverOK )
+C_BaseViewModel *C_BasePlayer::GetViewModel(bool bObserverOK)
 {
-	Assert( index >= 0 && index < MAX_VIEWMODELS );
-
-	C_BaseViewModel *vm = m_hViewModel[ index ];
-	
+	C_BaseViewModel *vm = m_hViewModel.Get();
 	if ( bObserverOK && (GetObserverMode() == OBS_MODE_IN_EYE) )
 	{
-		C_BasePlayer *target =  ToBasePlayer( GetObserverTarget() );
-
+		C_BasePlayer *target = ToBasePlayer( GetObserverTarget() );
 		// get the targets viewmodel unless the target is an observer itself
 		if ( target && (target != this) && !target->IsObserver() && target->IsAlive() && (target->GetTeamNumber() >= TEAM_HUMANS) )
 		{
-			vm = target->GetViewModel(index);
+			vm = target->GetViewModel();
 		}
 	}
 

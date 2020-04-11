@@ -219,29 +219,15 @@ bool CNPC_BaseZombie::OverrideMoveFacing( const AILocalMoveGoal_t &move, float f
 //-----------------------------------------------------------------------------
 int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flDist)
 {
-	CBaseEntity *pEnemy = GetEnemy();
-	if (!pEnemy)
+	if (flDist > GetClawAttackRange())
 		return COND_TOO_FAR_TO_ATTACK;
 
 	if (flDot < 0.7)
 		return COND_NOT_FACING_ATTACK;
 
-	float range = GetClawAttackRange(), flDistToEnemy2D, flHeightDiff, flMaxHeight;
-	const Vector &vecTargetPos = pEnemy->GetAbsOrigin();
-	const Vector &vecNPCPos = GetAbsOrigin();
-	Vector vecAttackDir = (vecTargetPos - vecNPCPos);
-	const Vector &vecMins = GetHullMins();
-	const Vector &vecMaxs = GetHullMaxs();
-	Vector vecBounds = Vector((vecMaxs.x - vecMins.x) - 2.0f, (vecMaxs.y - vecMins.y) - 2.0f, ((vecMaxs.z - vecMins.z) - 4.0f));
-	vecBounds /= 2.0f;
-	Vector vecStart = vecNPCPos + Vector(0, 0, vecBounds.z);
-	flDistToEnemy2D = vecAttackDir.Length2D();
-	flHeightDiff = abs(vecTargetPos.z - vecNPCPos.z);
-	flMaxHeight = (vecMaxs.z - vecMins.z) + ((pEnemy->WorldAlignMaxs().z - pEnemy->WorldAlignMins().z) / 2.0f);
-	VectorNormalize(vecAttackDir);
-
-	if ((flDistToEnemy2D > range) || (flHeightDiff > flMaxHeight))
-		return COND_TOO_FAR_TO_ATTACK;
+	Vector vecAttackDir, vecStart = WorldSpaceCenter();
+	GetVectors(&vecAttackDir, NULL, NULL);
+	float flDistToEnemy2D = (GetEnemy() ? (GetEnemy()->WorldSpaceCenter() - vecStart).Length2D() : MAX_COORD_FLOAT);
 
 	trace_t	tr;
 	CTraceFilterNoNPCsOrPlayer worldCheckFilter(this, GetCollisionGroup());
@@ -450,11 +436,9 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack(float flDist, int iDamage, QAngle &qaVi
 	else
 	{
 		// LoS check, kinda redundant, similar to attack conditions check, we need this to prevent runners from wall hacking... if you trigger this attack in a run anim etc..
-		Vector vecAttackDir;
-		Vector vecStart = WorldSpaceCenter();
+		Vector vecAttackDir, vecStart = WorldSpaceCenter();
 		const Vector &vecPosEnemy = (GetEnemy() ? GetEnemy()->WorldSpaceCenter() : vec3_origin);
-		AngleVectors(EyeAngles(), &vecAttackDir);
-		VectorNormalize(vecAttackDir);
+		GetVectors(&vecAttackDir, NULL, NULL);
 		float flDistToEnemy2D = (GetEnemy() ? (vecPosEnemy - vecStart).Length2D() : MAX_COORD_FLOAT);
 
 		trace_t	tr;

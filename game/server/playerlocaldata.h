@@ -66,10 +66,7 @@ public:
 	// auto-decaying view angle adjustment
 	CNetworkQAngle( m_vecPunchAngle );		
 	CNetworkQAngle( m_vecPunchAngleVel );
-	// Draw view model for the player
-	CNetworkVar( bool, m_bDrawViewmodel );
 
-	CNetworkVar( bool, m_bPoisoned );
 	CNetworkVar( float, m_flStepSize );
 	CNetworkVar( bool, m_bAllowAutoMovement );
 

@@ -67,7 +67,6 @@ public:
 	void SetupBones(matrix3x4_t *pBoneToWorld, int boneMask);
 
 	// BB2 Weapon stuff
-	bool Weapon_SwitchBySlot(int iSlot, int viewmodelindex = 0);
 	void DropAllWeapons(void);
 
 	// BB2 Class Sys.
@@ -125,7 +124,7 @@ public:
 	virtual void PlayerDeathThink(void);
 	virtual bool HandleCommand_JoinTeam(int team, bool bInfection = false);
 	virtual bool ClientCommand(const CCommand &args);
-	virtual void CreateViewModel(int viewmodelindex = 0);
+	virtual void CreateViewModel(void);
 	virtual bool BecomeRagdollOnClient(const Vector &force);
 	virtual void Event_Killed(const CTakeDamageInfo &info);
 	virtual int OnTakeDamage(const CTakeDamageInfo &inputInfo);
@@ -159,7 +158,7 @@ public:
 	virtual bool WantsLagCompensationOnEntity(const CBaseEntity *pPlayer, const CUserCmd *pCmd) const;
 
 	virtual void FireBullets(const FireBulletsInfo_t &info);
-	virtual bool Weapon_Switch(CBaseCombatWeapon *pWeapon, bool bWantDraw = false, int viewmodelindex = 0);
+	virtual bool Weapon_Switch(CBaseCombatWeapon *pWeapon, bool bWantDraw = false);
 	virtual bool BumpWeapon(CBaseCombatWeapon *pWeapon);
 	virtual CBaseCombatWeapon *GetBestWeapon();
 	virtual void Weapon_Equip(CBaseCombatWeapon *pWeapon);

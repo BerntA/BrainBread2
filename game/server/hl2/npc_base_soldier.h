@@ -104,7 +104,6 @@ public:
 	void			OnEndMoveAndShoot();
 
 	// Combat
-	bool			HasShotgun();
 	bool			ActiveWeaponIsFullyLoaded();
 
 	bool			HandleInteraction(int interactionType, void *data, CBaseCombatCharacter *sourceEnt);

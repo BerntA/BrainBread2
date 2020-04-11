@@ -33,7 +33,6 @@ BEGIN_DATADESC( CBaseViewModel )
 //	DEFINE_FIELD( m_LagAnglesHistory, CInterpolatedVar < QAngle > ),
 //	DEFINE_FIELD( m_vLagAngles, FIELD_VECTOR ),
 
-	DEFINE_FIELD( m_nViewModelIndex, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flTimeWeaponIdle, FIELD_FLOAT ),
 	DEFINE_FIELD( m_nAnimationParity, FIELD_INTEGER ),
 

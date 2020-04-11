@@ -1012,9 +1012,6 @@ void CViewRender::Render( vrect_t *rect )
 	// Assume normal vis
 	m_bForceNoVis			= false;
 	
-	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-
-
     // Set for console commands, etc.
     render->SetMainView ( m_View.origin, m_View.angles );
 
@@ -1121,16 +1118,6 @@ void CViewRender::Render( vrect_t *rect )
 		    SetUpOverView();		
 		    nClearFlags |= VIEW_CLEAR_COLOR;
 		    drawViewModel = false;
-	    }
-
-	    // Apply any player specific overrides
-	    if ( pPlayer )
-	    {
-		    // Override view model if necessary
-		    if ( !pPlayer->m_Local.m_bDrawViewmodel )
-		    {
-			    drawViewModel = false;
-		    }
 	    }
 
 	    int flags = 0;

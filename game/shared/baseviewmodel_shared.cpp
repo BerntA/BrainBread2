@@ -39,8 +39,6 @@ CBaseViewModel::CBaseViewModel()
 	// Prefix of the animations that should be used by the player carrying this weapon
 	m_sAnimationPrefix	= NULL_STRING;
 
-	m_nViewModelIndex	= 0;
-
 	m_nAnimationParity	= 0;
 }
 
@@ -231,24 +229,6 @@ void CBaseViewModel::SetOwner( CBaseEntity *pEntity )
 	// Make sure we're linked into hierarchy
 	//SetParent( pEntity );
 #endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : nIndex - 
-//-----------------------------------------------------------------------------
-void CBaseViewModel::SetIndex( int nIndex )
-{
-	m_nViewModelIndex = nIndex;
-	Assert( m_nViewModelIndex < (1 << VIEWMODEL_INDEX_BITS) );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int CBaseViewModel::ViewModelIndex( ) const
-{
-	return m_nViewModelIndex;
 }
 
 //-----------------------------------------------------------------------------
@@ -496,7 +476,6 @@ BEGIN_NETWORK_TABLE_NOBASE(CBaseViewModel, DT_BaseViewModel)
 	SendPropInt		(SENDINFO(m_nBody), 8),
 	SendPropInt		(SENDINFO(m_nSkin), 10),
 	SendPropInt		(SENDINFO(m_nSequence),	8, SPROP_UNSIGNED),
-	SendPropInt		(SENDINFO(m_nViewModelIndex), VIEWMODEL_INDEX_BITS, SPROP_UNSIGNED),
 	SendPropFloat	(SENDINFO(m_flPlaybackRate),	8,	SPROP_ROUNDUP,	-4.0,	12.0f),
 	SendPropInt		(SENDINFO(m_fEffects),		10, SPROP_UNSIGNED),
 	SendPropInt		(SENDINFO(m_nAnimationParity), 3, SPROP_UNSIGNED ),
@@ -513,7 +492,6 @@ BEGIN_NETWORK_TABLE_NOBASE(CBaseViewModel, DT_BaseViewModel)
 	RecvPropInt		(RECVINFO(m_nSkin)),
 	RecvPropInt		(RECVINFO(m_nBody)),
 	RecvPropInt		(RECVINFO(m_nSequence), 0, RecvProxy_SequenceNum ),
-	RecvPropInt		(RECVINFO(m_nViewModelIndex)),
 	RecvPropFloat	(RECVINFO(m_flPlaybackRate)),
 	RecvPropInt		(RECVINFO(m_fEffects), 0, RecvProxy_EffectFlags ),
 	RecvPropInt		(RECVINFO(m_nAnimationParity)),
@@ -537,7 +515,6 @@ BEGIN_PREDICTION_DATA( CBaseViewModel )
 	DEFINE_PRED_FIELD( m_nSkin, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_nBody, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_nSequence, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_nViewModelIndex, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD_TOL( m_flPlaybackRate, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, 0.125f ),
 	DEFINE_PRED_FIELD( m_fEffects, FIELD_INTEGER, FTYPEDESC_INSENDTABLE | FTYPEDESC_OVERRIDE ),
 	DEFINE_PRED_FIELD( m_nAnimationParity, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),

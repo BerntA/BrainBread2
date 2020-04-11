@@ -43,6 +43,8 @@ public:
 
 	// Purpose: check ammo
 	virtual void CheckAmmo( void );
+
+	virtual bool IsWeaponShotgun(void);
 };
 
 //-----------------------------------------------------------------------------

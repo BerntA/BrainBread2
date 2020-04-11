@@ -84,6 +84,7 @@ public:
 	virtual void	OverrideView( CViewSetup *pSetup ) = 0;
 	virtual int		KeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding ) = 0;
 	virtual void	StartMessageMode( int iMessageModeType ) = 0;
+	virtual void	StopMessageMode(void) = 0;
 	virtual vgui::Panel *GetMessagePanel() = 0;
 	virtual void	OverrideMouseInput( float *x, float *y ) = 0;
 	virtual bool	CreateMove( float flInputSampleTime, CUserCmd *cmd ) = 0;

@@ -90,6 +90,7 @@ public:
 	virtual int		HudElementKeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding );
 	virtual void	OverrideMouseInput( float *x, float *y );
 	virtual void	StartMessageMode( int iMessageModeType );
+	virtual void	StopMessageMode(void);
 	virtual vgui::Panel *GetMessagePanel();
 
 	virtual void	ActivateInGameVGuiContext( vgui::Panel *pPanel );

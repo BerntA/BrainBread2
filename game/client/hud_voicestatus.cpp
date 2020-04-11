@@ -324,40 +324,7 @@ void CHudVoiceStatus::Paint()
 
 		const char *pName = g_PR ? g_PR->GetPlayerName(playerId) : "unknown";
 		wchar_t szconverted[ 64 ];
-
-		// Add the location, if any
-		bool usedLocation = false;
-		if ( sv_alltalk && !sv_alltalk->GetBool() )
-		{
-			C_BasePlayer *pPlayer = UTIL_PlayerByIndex( playerId );
-			if ( pPlayer )
-			{
-				const char *asciiLocation = pPlayer->GetLastKnownPlaceName();
-				if ( asciiLocation && *asciiLocation )
-				{
-					const wchar_t *unicodeLocation = g_pVGuiLocalize->Find( asciiLocation );
-					if ( unicodeLocation && *unicodeLocation )
-					{
-						wchar_t *formatStr = g_pVGuiLocalize->Find( "#Voice_UseLocation" );
-						if ( formatStr )
-						{
-							wchar_t unicodeName[ 64 ];
-							g_pVGuiLocalize->ConvertANSIToUnicode( pName, unicodeName, sizeof( unicodeName ) );
-
-							g_pVGuiLocalize->ConstructString( szconverted, sizeof( szconverted ),
-								formatStr, 2, unicodeName, unicodeLocation );
-
-							usedLocation = true;
-						}
-					}
-				}
-			}
-		}
-
-		if ( !usedLocation )
-		{
-			g_pVGuiLocalize->ConvertANSIToUnicode( pName, szconverted, sizeof(szconverted)  );
-		}
+		g_pVGuiLocalize->ConvertANSIToUnicode(pName, szconverted, sizeof(szconverted));
 
 		// Draw the item background
 		surface()->DrawSetColor( c );

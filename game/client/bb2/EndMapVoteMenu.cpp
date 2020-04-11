@@ -12,6 +12,7 @@
 #include <vgui_controls/ImagePanel.h>
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/AnimationController.h>
+#include "iclientmode.h"
 #include "c_hl2mp_player.h"
 #include "GameBase_Client.h"
 
@@ -143,6 +144,7 @@ void CEndMapVoteMenu::ShowPanel(bool bShow)
 
 	GameBaseClient->CloseGamePanels(true);
 	GameBaseClient->CloseConsole();
+	g_pClientMode->StopMessageMode();
 	if (gViewPortInterface)
 		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, false);
 

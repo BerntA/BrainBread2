@@ -59,6 +59,9 @@ CEndScoreMenu::CEndScoreMenu(IViewPort *pViewPort) : BaseClass(NULL, PANEL_ENDSC
 	PerformLayout();
 	InvalidateLayout(false, true);
 	SetupLayout(true);
+
+	SetKeyBoardInputEnabled(false);
+	SetMouseInputEnabled(false);
 }
 
 CEndScoreMenu::~CEndScoreMenu()

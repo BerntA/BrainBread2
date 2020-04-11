@@ -177,8 +177,6 @@ public:
 
 #define MAX_PLAYERS				13  // Absolute max players supported
 
-#define MAX_PLACE_NAME_LENGTH		18
-
 #define MAX_FOV						90
 
 //===================================================================================================================
@@ -213,10 +211,6 @@ public:
 #define ITEM_FLAG_NOAMMOPICKUPS		(1<<6)	// Don't draw ammo pickup sprites/sounds when ammo is received
 #define ITEM_FLAG_NOITEMPICKUP		(1<<7)	// Don't draw weapon pickup when this weapon is picked up by the player
 // NOTE: KEEP g_ItemFlags IN WEAPON_PARSE.CPP UPDATED WITH THESE
-
-// Humans only have left and right hands, though we might have aliens with more
-//  than two, sigh
-#define MAX_VIEWMODELS			2
 
 #define MAX_BEAM_ENTS			10
 

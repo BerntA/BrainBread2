@@ -94,13 +94,10 @@ CNPCBaseSoldierStatic::CNPCBaseSoldierStatic()
 void CNPCBaseSoldierStatic::Precache()
 {
 	PrecacheModel("models/weapons/explosives/frag/w_frag_thrown.mdl");
-	UTIL_PrecacheOther("npc_handgrenade");
-
 	PrecacheScriptSound("NPC_Combine.GrenadeLaunch");
 	PrecacheScriptSound("NPC_Combine.WeaponBash");
 	PrecacheScriptSound("BaseEnemyHumanoid.WeaponBash");
 	PrecacheScriptSound("Weapon_CombineGuard.Special1");
-
 	BaseClass::Precache();
 }
 
@@ -447,8 +444,9 @@ void CNPCBaseSoldierStatic::RunTask(const Task_t *pTask)
 
 		if (gpGlobals->curtime >= m_flNextAttack)
 		{
-			//if (IsActivityFinished())
-			//{
+			bool bIsUsingShotgun = IsWeaponShotgun();
+			if (!bIsUsingShotgun || (bIsUsingShotgun && IsActivityFinished())) // If the NPC is using a shotgun, wait for the fire anim to finish!
+			{
 				if (--m_nShots > 0)
 				{
 					// DevMsg("ACT_RANGE_ATTACK1\n");
@@ -461,7 +459,7 @@ void CNPCBaseSoldierStatic::RunTask(const Task_t *pTask)
 					// DevMsg("TASK_RANGE_ATTACK1 complete\n");
 					TaskComplete();
 				}
-			//}
+			}
 		}
 		else
 		{
@@ -1015,11 +1013,8 @@ void CNPCBaseSoldierStatic::HandleAnimEvent(animevent_t *pEvent)
 		case SOLDIER_AE_GREN_LAUNCH:
 		{
 			EmitSound("NPC_Combine.GrenadeLaunch");
-
-			CBaseEntity *pGrenade = CreateNoSpawn("npc_contactgrenade", Weapon_ShootPosition(), vec3_angle, this);
-			pGrenade->KeyValue("velocity", m_vecTossVelocity);
-			pGrenade->Spawn();
-
+			Fraggrenade_Create(Weapon_ShootPosition(), vec3_angle, m_vecTossVelocity, vec3_origin, this, SOLDIER_GRENADE_TIMER, (Classify() == CLASS_MILITARY));
+			m_iNumGrenades--;
 			m_flNextGrenadeCheck = gpGlobals->curtime + random->RandomFloat(2, 5); // wait a random amount of time before shooting again
 		}
 		handledEvent = true;
@@ -1088,7 +1083,7 @@ Vector CNPCBaseSoldierStatic::Weapon_ShootPosition()
 {
 	Vector right;
 	GetVectors(NULL, &right, NULL);
-	if (HasShotgun())
+	if (IsWeaponShotgun())
 	{
 		return GetAbsOrigin() + SOLDIER_SHOTGUN_STANDING_POSITION + right * 8;
 	}
@@ -1402,11 +1397,6 @@ NPC_STATE CNPCBaseSoldierStatic::SelectIdealState(void)
 	}
 
 	return GetIdealState();
-}
-
-bool CNPCBaseSoldierStatic::HasShotgun()
-{
-	return (GetActiveWeapon() && (GetActiveWeapon()->GetWeaponType() == WEAPON_TYPE_SHOTGUN));
 }
 
 bool CNPCBaseSoldierStatic::ActiveWeaponIsFullyLoaded()

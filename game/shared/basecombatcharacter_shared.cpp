@@ -24,7 +24,7 @@ bool CBaseCombatCharacter::SwitchToNextBestWeapon(CBaseCombatWeapon *pCurrent)
 	
 	if ( ( pNewWeapon != NULL ) && ( pNewWeapon != pCurrent ) )
 	{
-		return Weapon_Switch( pNewWeapon, true );
+		return Weapon_Switch(pNewWeapon, true);
 	}
 
 	return false;
@@ -35,7 +35,7 @@ bool CBaseCombatCharacter::SwitchToNextBestWeapon(CBaseCombatWeapon *pCurrent)
 // Input  :
 // Output : true is switch succeeded
 //-----------------------------------------------------------------------------
-bool CBaseCombatCharacter::Weapon_Switch( CBaseCombatWeapon *pWeapon, bool bWantDraw, int viewmodelindex ) 
+bool CBaseCombatCharacter::Weapon_Switch(CBaseCombatWeapon *pWeapon, bool bWantDraw)
 {
 	if ( pWeapon == NULL )
 		return false;

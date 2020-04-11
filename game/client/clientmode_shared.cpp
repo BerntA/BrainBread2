@@ -887,17 +887,24 @@ vgui::Panel *ClientModeShared::GetMessagePanel()
 //-----------------------------------------------------------------------------
 // Purpose: The player has started to type a message
 //-----------------------------------------------------------------------------
-void ClientModeShared::StartMessageMode( int iMessageModeType )
+void ClientModeShared::StartMessageMode(int iMessageModeType)
 {
 	// Can only show chat UI in multiplayer!!!
-	if ( gpGlobals->maxClients == 1 )
-	{
+	if (gpGlobals->maxClients == 1)
 		return;
-	}
-	if ( m_pChatElement )
-	{
-		m_pChatElement->StartMessageMode( iMessageModeType );
-	}
+
+	if (m_pChatElement)
+		m_pChatElement->StartMessageMode(iMessageModeType);
+}
+
+void ClientModeShared::StopMessageMode(void)
+{
+	// Can only show chat UI in multiplayer!!!
+	if (gpGlobals->maxClients == 1)
+		return;
+
+	if (m_pChatElement && m_pChatElement->GetMessageMode())
+		m_pChatElement->StopMessageMode();
 }
 
 //-----------------------------------------------------------------------------

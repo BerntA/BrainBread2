@@ -214,13 +214,10 @@ void CNPC_BaseSoldier::InputThrowGrenadeAtTarget( inputdata_t &inputdata )
 void CNPC_BaseSoldier::Precache()
 {
 	PrecacheModel("models/weapons/explosives/frag/w_frag_thrown.mdl");
-	UTIL_PrecacheOther( "npc_handgrenade" );
-
 	PrecacheScriptSound( "NPC_Combine.GrenadeLaunch" );
 	PrecacheScriptSound( "NPC_Combine.WeaponBash" );
 	PrecacheScriptSound( "BaseEnemyHumanoid.WeaponBash" );
 	PrecacheScriptSound( "Weapon_CombineGuard.Special1" );
-
 	BaseClass::Precache();
 }
 
@@ -956,12 +953,13 @@ void CNPC_BaseSoldier::RunTask( const Task_t *pTask )
 
 			if ( gpGlobals->curtime >= m_flNextAttack )
 			{
-				//if ( IsActivityFinished() )
-				//{
+				bool bIsUsingShotgun = IsWeaponShotgun();
+				if (!bIsUsingShotgun || (bIsUsingShotgun && IsActivityFinished())) // If the NPC is using a shotgun, wait for the fire anim to finish!
+				{
 					if (--m_nShots > 0)
 					{
 						// DevMsg("ACT_RANGE_ATTACK1\n");
-						ResetIdealActivity( ACT_RANGE_ATTACK1 );
+						ResetIdealActivity(ACT_RANGE_ATTACK1);
 						m_flLastAttackTime = gpGlobals->curtime;
 						m_flNextAttack = gpGlobals->curtime + m_flShotDelay - 0.1;
 					}
@@ -970,7 +968,7 @@ void CNPC_BaseSoldier::RunTask( const Task_t *pTask )
 						// DevMsg("TASK_RANGE_ATTACK1 complete\n");
 						TaskComplete();
 					}
-				//}
+				}
 			}
 			else
 			{
@@ -2021,7 +2019,7 @@ Vector CNPC_BaseSoldier::Weapon_ShootPosition( )
 
 	if  ( bStanding )
 	{
-		if( HasShotgun() )
+		if (IsWeaponShotgun())
 		{
 			return GetAbsOrigin() + SOLDIER_SHOTGUN_STANDING_POSITION + right * 8;
 		}
@@ -2032,7 +2030,7 @@ Vector CNPC_BaseSoldier::Weapon_ShootPosition( )
 	}
 	else
 	{
-		if( HasShotgun() )
+		if (IsWeaponShotgun())
 		{
 			return GetAbsOrigin() + SOLDIER_SHOTGUN_CROUCHING_POSITION + right * 8;
 		}
@@ -2483,13 +2481,6 @@ bool CNPC_BaseSoldier::OnBeginMoveAndShoot()
 void CNPC_BaseSoldier::OnEndMoveAndShoot()
 {
 	VacateStrategySlot();
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-bool CNPC_BaseSoldier::HasShotgun()
-{
-	return (GetActiveWeapon() && (GetActiveWeapon()->GetWeaponType() == WEAPON_TYPE_SHOTGUN));
 }
 
 //-----------------------------------------------------------------------------

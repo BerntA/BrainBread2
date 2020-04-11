@@ -88,7 +88,6 @@ public:
 	
 	virtual bool		Weapon_CanUse( CBaseCombatWeapon *pWeapon );
 	virtual void		Weapon_Equip( CBaseCombatWeapon *pWeapon );
-	virtual bool		Weapon_Switch( CBaseCombatWeapon *pWeapon, bool bWantDraw = false, int viewmodelindex = 0 );
 	virtual bool		Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon );
 
 	// Flashlight Device

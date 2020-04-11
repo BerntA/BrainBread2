@@ -19,6 +19,7 @@
 #include "npcevent.h"
 #include "eventqueue.h"
 #include "tier0/vprof.h"
+#include "datacache/imdlcache.h"
 #include "bone_setup.h"
 #include "npc_BaseZombie.h"
 #include "filesystem.h"
@@ -713,7 +714,6 @@ void CHL2MP_Player::DispatchDamageText(CBaseEntity *pVictim, int damage)
 
 void CHL2MP_Player::PickupObject(CBaseEntity *pObject, bool bLimitMassAndSize)
 {
-	//Weapon_SwitchBySlot( 3 ); // CHANGE TO HANDS!
 	BaseClass::PickupObject(pObject, bLimitMassAndSize);
 }
 
@@ -777,9 +777,11 @@ void CHL2MP_Player::SetupCustomization(void)
 	}
 }
 
-bool CHL2MP_Player::Weapon_Switch(CBaseCombatWeapon *pWeapon, bool bWantDraw, int viewmodelindex)
+bool CHL2MP_Player::Weapon_Switch(CBaseCombatWeapon *pWeapon, bool bWantDraw)
 {
-	bool bRet = BaseClass::Weapon_Switch(pWeapon, bWantDraw, viewmodelindex);
+	MDLCACHE_CRITICAL_SECTION();
+
+	bool bRet = BaseClass::Weapon_Switch(pWeapon, bWantDraw);
 	if (bRet == true)
 	{
 		if (bWantDraw && m_bEnableFlashlighOnSwitch)
@@ -2241,28 +2243,6 @@ void CHL2MP_Player::CheatImpulseCommands(int iImpulse)
 	}
 }
 
-// Switch to the given weapon bucket/slot.
-// Slot 0 = Melee
-// Slot 1 = Special
-// Slot 2 = Secondary Wep
-// Slot 3 = Primary Wep
-// Slot 7 = HANDS
-bool CHL2MP_Player::Weapon_SwitchBySlot(int iSlot, int viewmodelindex)
-{
-	CBaseCombatWeapon *pWeapon = Weapon_GetSlot(iSlot);
-	if (pWeapon != NULL)
-	{
-		if (GetActiveWeapon())
-			Weapon_Switch(pWeapon, false, viewmodelindex);
-		else
-			Weapon_Switch(pWeapon, true, viewmodelindex);
-
-		return true;
-	}
-
-	return false;
-}
-
 bool CHL2MP_Player::ShouldRunRateLimitedCommand(const CCommand &args)
 {
 	int i = m_RateLimitLastCommandTimes.Find(args[0]);
@@ -2283,11 +2263,9 @@ bool CHL2MP_Player::ShouldRunRateLimitedCommand(const CCommand &args)
 	}
 }
 
-void CHL2MP_Player::CreateViewModel(int index /*=0*/)
+void CHL2MP_Player::CreateViewModel(void)
 {
-	Assert(index >= 0 && index < MAX_VIEWMODELS);
-
-	if (GetViewModel(index))
+	if (GetViewModel())
 		return;
 
 	CPredictedViewModel *vm = (CPredictedViewModel *)CreateEntityByName("predicted_viewmodel");
@@ -2295,10 +2273,9 @@ void CHL2MP_Player::CreateViewModel(int index /*=0*/)
 	{
 		vm->SetAbsOrigin(GetAbsOrigin());
 		vm->SetOwner(this);
-		vm->SetIndex(index);
 		DispatchSpawn(vm);
 		vm->FollowEntity(this, false);
-		m_hViewModel.Set(index, vm);
+		m_hViewModel.Set(vm);
 	}
 }
 

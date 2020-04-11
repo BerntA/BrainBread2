@@ -230,8 +230,8 @@ public:
 
 	static CBasePlayer		*CreatePlayer( const char *className, edict_t *ed );
 
-	virtual void			CreateViewModel( int viewmodelindex = 0 );
-	CBaseViewModel			*GetViewModel( int viewmodelindex = 0, bool bObserverOK = true );
+	virtual void			CreateViewModel(void);
+	CBaseViewModel			*GetViewModel(bool bObserverOK = true);
 	void					HideViewModels( void );
 	void					DestroyViewModels( void );
 
@@ -349,7 +349,6 @@ public:
 	void					VelocityPunch( const Vector &vecForce );
 	void					ViewPunch( const QAngle &angleOffset );
 	void					ViewPunchReset( float tolerance = 0 );
-	void					ShowViewModel( bool bShow );
 	void					ShowCrosshair( bool bShow );
 
 	// View model prediction setup
@@ -374,7 +373,7 @@ public:
 	virtual bool			Weapon_CanUse( CBaseCombatWeapon *pWeapon );
 	virtual void			Weapon_Equip( CBaseCombatWeapon *pWeapon );
 	virtual	void			Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTarget /* = NULL */, const Vector *pVelocity /* = NULL */ );
-	virtual	bool			Weapon_Switch( CBaseCombatWeapon *pWeapon, bool bWantDraw = false, int viewmodelindex = 0 );		// Switch to given weapon if has ammo (false if failed)
+	virtual	bool			Weapon_Switch(CBaseCombatWeapon *pWeapon, bool bWantDraw = false);		// Switch to given weapon if has ammo (false if failed)
 	virtual void			Weapon_SetLast( CBaseCombatWeapon *pWeapon );
 	virtual void			Weapon_SetNext( CBaseCombatWeapon *pWeapon );
 	virtual void            Weapon_DeployNextWeapon(void); 
@@ -539,8 +538,6 @@ public:
 	void SetPunchAngle( const QAngle &punchAngle );
 
 	virtual void DoMuzzleFlash();
-
-	const char *GetLastKnownPlaceName( void ) const	{ return m_szLastPlaceName; }	// return the last nav place name the player occupied
 
 	virtual void			CheckChatText( char *p, int bufsize ) {}
 
@@ -894,9 +891,8 @@ private:
 	int						m_iPlayerLocked;
 		
 protected:
-	// the player's personal view model
 	typedef CHandle<CBaseViewModel> CBaseViewModelHandle;
-	CNetworkArray( CBaseViewModelHandle, m_hViewModel, MAX_VIEWMODELS );
+	CNetworkVar(CBaseViewModelHandle, m_hViewModel);
 
 	// Last received usercmd (in case we drop a lot of packets )
 	CUserCmd				m_LastCmd;
@@ -989,8 +985,6 @@ protected:
 
 	Vector m_vecPreviouslyPredictedOrigin; // Used to determine if non-gamemovement game code has teleported, or tweaked the player's origin
 	int		m_nBodyPitchPoseParam;
-
-	CNetworkString( m_szLastPlaceName, MAX_PLACE_NAME_LENGTH );
 
 	char m_szNetworkIDString[MAX_NETWORKID_LENGTH];
 	CPlayerInfo m_PlayerInfo;

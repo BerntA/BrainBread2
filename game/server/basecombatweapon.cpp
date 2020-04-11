@@ -127,8 +127,7 @@ void CBaseCombatWeapon::Operator_FrameUpdate( CBaseCombatCharacter *pOperator )
 	if ( pOwner == NULL )
 		return;
 
-	CBaseViewModel *vm = pOwner->GetViewModel( m_nViewModelIndex );
-	
+	CBaseViewModel *vm = pOwner->GetViewModel();	
 	if ( vm != NULL )
 	{
 		vm->StudioFrameAdvance();

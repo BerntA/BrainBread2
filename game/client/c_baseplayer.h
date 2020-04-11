@@ -92,7 +92,7 @@ public:
 
 	virtual float GetPlayerMaxSpeed();
 
-	C_BaseViewModel		*GetViewModel( int viewmodelindex = 0, bool bObserverOK=true );
+	C_BaseViewModel		*GetViewModel(bool bObserverOK = true);
 	C_BaseCombatWeapon	*GetActiveWeapon( void ) const;
 	const char			*GetTracerType( void );
 
@@ -253,7 +253,7 @@ public:
 	virtual void                Weapon_DeployNextWeapon(void);
 	virtual bool				Weapon_ShouldSetLast( C_BaseCombatWeapon *pOldWeapon, C_BaseCombatWeapon *pNewWeapon ) { return true; }
 	virtual bool				Weapon_ShouldSelectItem( C_BaseCombatWeapon *pWeapon );
-	virtual	bool				Weapon_Switch( C_BaseCombatWeapon *pWeapon, bool bWantDraw = false, int viewmodelindex = 0 );		// Switch to given weapon if has ammo (false if failed)
+	virtual	bool				Weapon_Switch(C_BaseCombatWeapon *pWeapon, bool bWantDraw = false);		// Switch to given weapon if has ammo (false if failed)
 	virtual C_BaseCombatWeapon *GetLastWeapon( void ) { return m_hLastWeapon.Get(); }
 	virtual C_BaseCombatWeapon *GetNextWeapon( void ) { return m_hNextWeapon.Get(); }
 	virtual void 				SelectItem(const char *pstr);
@@ -290,7 +290,6 @@ public:
 
 	// Is the player dead?
 	bool				IsPlayerDead();
-	bool				IsPoisoned( void ) { return m_Local.m_bPoisoned; }
 
 	C_BaseEntity				*GetUseEntity();
 
@@ -473,8 +472,7 @@ private:
 	CUtlVector< CHandle< C_BaseEntity > > m_SimulatedByThisPlayer;
 #endif
 
-	// players own view models, left & right hand
-	CHandle< C_BaseViewModel >	m_hViewModel[ MAX_VIEWMODELS ];		
+	CHandle<C_BaseViewModel> m_hViewModel;
 	
 	float					m_flOldPlayerZ;
 	float					m_flOldPlayerViewOffsetZ;
@@ -520,8 +518,6 @@ protected:
 	
 	Vector m_vecPreviouslyPredictedOrigin; // Used to determine if non-gamemovement game code has teleported, or tweaked the player's origin
 
-	char m_szLastPlaceName[MAX_PLACE_NAME_LENGTH];	// received from the server
-
 	// Texture names and surface data, used by CGameMovement
 	int				m_surfaceProps;
 	surfacedata_t*	m_pSurfaceData;
@@ -546,8 +542,6 @@ private:
 	StepSoundCache_t		m_StepSoundCache[ 2 ];
 
 public:
-
-	const char *GetLastKnownPlaceName( void ) const	{ return m_szLastPlaceName; }	// return the last nav place name the player occupied
 
 	float GetLaggedMovementValue(void) { return m_flLaggedMovementValue; }
 	void SetOldPlayerZ( float flOld ) { m_flOldPlayerZ = flOld;	}
