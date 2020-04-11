@@ -24,6 +24,7 @@ public:
 	virtual bool Initialize(int type);
 	virtual bool Initialize(int type, const model_t *model);
 	virtual bool LoadRagdoll();
+	virtual void LoadPhysics();
 	virtual void OnFullyInitialized(void);
 
 	virtual bool IsDormant(void) { return false; }

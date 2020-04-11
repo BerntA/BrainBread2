@@ -3000,12 +3000,6 @@ void CNPC_PlayerCompanion::OnPlayerKilledOther( CBaseEntity *pVictim, const CTak
 		return;
 	}
 
-	// check if the player killed an enemy by punting a grenade
-	if ( pInflictor && Fraggrenade_WasPunted( pInflictor ) && Fraggrenade_WasCreatedByCombine( pInflictor ) )
-	{
-		bPuntedGrenade = true;
-	}
-
 	// check if the victim was Alyx's enemy
 	if ( GetEnemy() == pVictim )
 	{

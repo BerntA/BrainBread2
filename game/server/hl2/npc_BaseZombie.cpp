@@ -255,7 +255,11 @@ int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flDist)
 			return COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT;
 		}
 
-		return COND_TOO_FAR_TO_ATTACK;
+		// I did not hit an obstruction I can break, can I see through this obstruction?
+		vecStart = EyePosition();
+		AI_TraceLine(vecStart, vecStart + vecAttackDir * MIN(GetClawAttackRange(), flDistToEnemy2D), MASK_SOLID_BRUSHONLY, &worldCheckFilter, &tr);
+		if (tr.DidHit()) // Yup, we're not able to see our enemy...
+			return COND_TOO_FAR_TO_ATTACK;
 	}
 
 	return COND_CAN_MELEE_ATTACK1;
@@ -445,16 +449,24 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack(float flDist, int iDamage, QAngle &qaVi
 	}
 	else
 	{
-		if (GetEnemy()) // If enemy is behind a wall, don't do attack dmg!
+		// LoS check, kinda redundant, similar to attack conditions check, we need this to prevent runners from wall hacking... if you trigger this attack in a run anim etc..
+		Vector vecAttackDir;
+		Vector vecStart = WorldSpaceCenter();
+		const Vector &vecPosEnemy = (GetEnemy() ? GetEnemy()->WorldSpaceCenter() : vec3_origin);
+		AngleVectors(EyeAngles(), &vecAttackDir);
+		VectorNormalize(vecAttackDir);
+		float flDistToEnemy2D = (GetEnemy() ? (vecPosEnemy - vecStart).Length2D() : MAX_COORD_FLOAT);
+
+		trace_t	tr;
+		CTraceFilterNoNPCsOrPlayer worldCheckFilter(this, GetCollisionGroup());
+		AI_TraceHull(vecStart, vecStart + vecAttackDir * MIN(GetClawAttackRange(), flDistToEnemy2D), -Vector(4, 4, 4), Vector(4, 4, 4), MASK_SOLID_BRUSHONLY, &worldCheckFilter, &tr);
+		if (tr.DidHit()) // We were obstructed, but can we see the enemy through it?
 		{
-			trace_t	tr;
-			AI_TraceHull(WorldSpaceCenter(), GetEnemy()->WorldSpaceCenter(), -Vector(8, 8, 8), Vector(8, 8, 8), MASK_SOLID_BRUSHONLY, this, GetCollisionGroup(), &tr);
-			if (tr.fraction < 1.0f)
+			vecStart = EyePosition();
+			AI_TraceLine(vecStart, vecStart + vecAttackDir * MIN(GetClawAttackRange(), flDistToEnemy2D), MASK_SOLID_BRUSHONLY, &worldCheckFilter, &tr);
+			if (tr.DidHit() && !HL2MPRules()->IsBreakableDoor(tr.m_pEnt)) // Yup, we're not able to see our enemy...
 				return NULL;
 		}
-
-		if (CanDoMeleeAttack() == false)
-			return NULL;
 
 		//
 		// Trace out a cubic section of our hull and see what we hit.

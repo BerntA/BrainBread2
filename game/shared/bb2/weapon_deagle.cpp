@@ -16,7 +16,7 @@
 #endif
 
 #define POSEPARAM_1HAND_SEQUENCE "1hand" // Between 0-1! (1.0 = use only one hand to hold the gun)
-#define HAND_SWITCH_TIME 0.525f // How many sec. should it take to switch hands.
+#define HAND_SWITCH_TIME 0.4f // How many sec. should it take to switch hands.
 
 enum DeagleWeaponState
 {
@@ -42,7 +42,7 @@ public:
 	int				GetAmmoMaxCarry(void) { return 35; }
 
 	void ResetToTwoHands(void);
-	void ItemPostFrame(void);
+	void ItemPreFrame(void);
 	void SecondaryAttack(void);
 	float GetFireRate(void);
 
@@ -154,9 +154,9 @@ void CWeaponDeagle::ResetToTwoHands(void)
 	pVM->SetPoseParameter(iPoseParam, 0.0f);
 }
 
-void CWeaponDeagle::ItemPostFrame(void)
+void CWeaponDeagle::ItemPreFrame(void)
 {
-	BaseClass::ItemPostFrame();
+	BaseClass::ItemPreFrame();
 
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (!pOwner)
@@ -166,7 +166,7 @@ void CWeaponDeagle::ItemPostFrame(void)
 	if (!pVM)
 		return;
 
-	if (pOwner->m_nButtons & IN_ATTACK2)
+	if (pOwner->m_afButtonPressed & IN_ATTACK2)
 		SecondaryAttack();
 
 	int state = m_iSwitchState.Get();

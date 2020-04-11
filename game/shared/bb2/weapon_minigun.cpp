@@ -41,8 +41,8 @@ public:
 
 	Activity GetHolsterActivity(void) { return ACT_INVALID; } // No holster atm!
 
-	int GetMinBurst() { return 3; }
-	int GetMaxBurst() { return 3; }
+	int GetMinBurst() { return 5; }
+	int GetMaxBurst() { return 5; }
 	float GetMinRestTime() { return 0; }
 	float GetMaxRestTime() { return 0; }
 

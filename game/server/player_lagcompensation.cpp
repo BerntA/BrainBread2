@@ -469,7 +469,7 @@ void CLagCompensationManager::BuildLagCompList(
 		CAI_BaseNPC* pNPC = ppAIs[i]; 		// Only compensate 'valid' npcs.
 		if ((pNPC == NULL) ||
 			(pNPC->Classify() == CLASS_NONE) ||
-			(pNPC->GetCollisionGroup() == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) ||
+			//(pNPC->GetCollisionGroup() == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) ||
 			!pNPC->IsAlive() ||
 			(pNPC->GetAIIndex() <= -1))
 			continue;

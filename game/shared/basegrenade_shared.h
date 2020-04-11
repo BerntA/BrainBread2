@@ -131,7 +131,8 @@ protected:
 	string_t m_iszBounceSound;	// The sound to make on bouncing.  If not NULL, overrides the BounceSound() function.
 
 private:
-	CNetworkHandle( CBaseEntity, m_hThrower );					// Who threw this grenade
+
+	CNetworkHandle(CBaseEntity, m_hThrower);					// Who threw this grenade
 	EHANDLE			m_hOriginalThrower;							// Who was the original thrower of this grenade
 
 	CBaseGrenade( const CBaseGrenade & ); // not defined, not accessible

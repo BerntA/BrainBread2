@@ -104,7 +104,6 @@ public:
 		OnTakeDamage(CTakeDamageInfo(this, this, m_iHealth * 2, DMG_GENERIC));
 	}
 
-	virtual bool CanDoMeleeAttack(void) { return true; }
 	int MeleeAttack1Conditions(float flDot, float flDist);
 	virtual float GetClawAttackRange() const { return m_flRange; }
 	virtual bool CanFlinch(void) { return false; }

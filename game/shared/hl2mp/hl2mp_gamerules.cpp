@@ -2116,12 +2116,8 @@ bool CHL2MPRules::ShouldCollide(int collisionGroup0, int collisionGroup1)
 	if (collisionGroup0 > collisionGroup1) // swap so that lowest is always first
 		V_swap(collisionGroup0, collisionGroup1);
 
-	// Nothing collides with spawning zombos!
-	if ((collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) || (collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING))
-		return false;
-
 	// NPC & Players don't collide with weps. And neither with reality phasers.
-	if ((collisionGroup0 == COLLISION_GROUP_WEAPON) || (collisionGroup1 == COLLISION_GROUP_WEAPON) || (collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE) || (collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE))
+	if ((collisionGroup0 == COLLISION_GROUP_WEAPON) || (collisionGroup1 == COLLISION_GROUP_WEAPON))
 	{
 		if ((collisionGroup0 >= COLLISION_GROUP_NPC_ACTOR) || (collisionGroup1 >= COLLISION_GROUP_NPC_ACTOR)) // Any NPCs + PLRS will not collide with weps.
 			return false;
@@ -2136,18 +2132,22 @@ bool CHL2MPRules::ShouldCollide(int collisionGroup0, int collisionGroup1)
 	if ((collisionGroup0 == COLLISION_GROUP_WEAPON) && (collisionGroup1 == COLLISION_GROUP_WEAPON))
 		return false;
 
+	// Reality Phase
 	if ((collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE) && (collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE))
 		return false;
 
+	if ((collisionGroup0 == COLLISION_GROUP_PLAYER_REALITY_PHASE) && (collisionGroup1 >= COLLISION_GROUP_NPC_ACTOR))
+		return false;
+
+	if ((collisionGroup0 >= COLLISION_GROUP_NPC_ACTOR) && (collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE))
+		return false;
+
+	if (((collisionGroup0 == COLLISION_GROUP_PLAYER) || (collisionGroup0 == COLLISION_GROUP_NPC)) && (collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE))
+		return false;
+
 	// Military NPCS
-	if ((collisionGroup0 == COLLISION_GROUP_NPC_MILITARY) || (collisionGroup1 == COLLISION_GROUP_NPC_MILITARY))
-	{
-		if (
-			collisionGroup0 == COLLISION_GROUP_PLAYER ||
-			collisionGroup1 == COLLISION_GROUP_PLAYER_REALITY_PHASE
-			)
-			return false;
-	}
+	if ((collisionGroup0 == COLLISION_GROUP_PLAYER) && (collisionGroup1 == COLLISION_GROUP_NPC_MILITARY))
+		return false;
 
 	// Zombie NPCS
 	if (collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE && collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE)
@@ -2157,6 +2157,19 @@ bool CHL2MPRules::ShouldCollide(int collisionGroup0, int collisionGroup1)
 		return false;
 
 	if (collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE && collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_BOSS)
+		return false;
+
+	// Spawning Zombos
+	if ((collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) && (collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING))
+		return false;
+
+	if ((collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) && (collisionGroup1 >= COLLISION_GROUP_NPC_ACTOR))
+		return false;
+
+	if ((collisionGroup0 >= COLLISION_GROUP_NPC_ACTOR) && (collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING))
+		return false;
+
+	if (((collisionGroup0 == COLLISION_GROUP_PLAYER) || (collisionGroup0 == COLLISION_GROUP_NPC)) && (collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING))
 		return false;
 
 	// Zombo Bosses won't be blocked by human NPCs.

@@ -11,6 +11,7 @@
 #include "fx_impact.h"
 #include "view.h"
 #include "engine/IStaticPropMgr.h"
+#include "GameBase_Client.h"
 #include "c_impact_effects.h"
 #include "tier0/vprof.h"
 
@@ -66,13 +67,17 @@ IterationRetval_t CRagdollEnumerator::EnumElement( IHandleEntity *pHandleEntity 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool FX_AffectRagdolls( Vector vecOrigin, Vector vecStart, int iDamageType )
+bool FX_AffectRagdolls(Vector vecOrigin, Vector vecStart, int iDamageType)
 {
-	Ray_t shotRay;
-	shotRay.Init( vecStart, vecOrigin );
+	// IF extreme gore is OFF, relax on the ragdoll/GIB impacts.
+	if (!GameBaseClient->IsExtremeGore() && (gpGlobals->framecount % 4) != 0)
+		return false;
 
-	CRagdollEnumerator ragdollEnum( shotRay, iDamageType );
-	partition->EnumerateElementsAlongRay( PARTITION_CLIENT_RESPONSIVE_EDICTS, shotRay, false, &ragdollEnum );
+	Ray_t shotRay;
+	shotRay.Init(vecStart, vecOrigin);
+
+	CRagdollEnumerator ragdollEnum(shotRay, iDamageType);
+	partition->EnumerateElementsAlongRay(PARTITION_CLIENT_RESPONSIVE_EDICTS, shotRay, false, &ragdollEnum);
 
 	return ragdollEnum.Hit();
 }

@@ -143,6 +143,26 @@ bool C_ClientSideGibBase::LoadRagdoll()
 	return InitAsClientRagdoll(boneDelta0, boneDelta1, currentBones, boneDt);
 }
 
+void C_ClientSideGibBase::LoadPhysics()
+{
+	SetMoveType(MOVETYPE_PUSH);
+	solid_t tmpSolid;
+	PhysModelParseSolid(tmpSolid, this, GetModelIndex());
+	VPhysicsInitNormal(SOLID_VPHYSICS, 0, false, &tmpSolid);
+	IPhysicsObject *pPhysicsObj = VPhysicsGetObject();
+	if (!pPhysicsObj)
+	{
+		SetSolid(SOLID_NONE);
+		SetMoveType(MOVETYPE_NONE);
+		Warning("ERROR!: Can't create physics object for %s\n", STRING(GetModelName()));
+		return;
+	}
+
+	// We want touch calls when we hit the world
+	unsigned int flags = pPhysicsObj->GetCallbackFlags();
+	pPhysicsObj->SetCallbackFlags(flags | CALLBACK_GLOBAL_TOUCH_STATIC);
+}
+
 void C_ClientSideGibBase::SetForceFade(bool value)
 {
 	m_bForceFade = value;
@@ -154,11 +174,8 @@ void C_ClientSideGibBase::SetForceFade(bool value)
 
 void C_ClientSideGibBase::OnBecomeRagdoll(void)
 {
-	if ((m_iGibType == CLIENT_RAGDOLL) && IsClientRagdoll())
-	{
-		if (bb2_gibs_spawn_blood_puddle.GetBool())
-			GameBaseShared()->DispatchBleedout(this);
-	}
+	if ((m_iGibType == CLIENT_RAGDOLL) && IsClientRagdoll() && bb2_gibs_spawn_blood_puddle.GetBool())
+		GameBaseShared()->DispatchBleedout(this);
 }
 
 IRagdoll* C_ClientSideGibBase::GetIRagdoll() const
@@ -402,7 +419,8 @@ void C_ClientRagdollGib::ImpactTrace(trace_t *pTrace, int iDamageType, const cha
 	DoBloodSpray(pTrace);
 	CanGibEntity(dir, pTrace->hitgroup, iDamageType);
 
-	m_pRagdoll->ResetRagdollSleepAfterTime();
+	if (m_pRagdoll)
+		m_pRagdoll->ResetRagdollSleepAfterTime();
 }
 
 void C_ClientRagdollGib::OnGibbedGroup(int hitgroup, bool bExploded)
@@ -445,6 +463,9 @@ void C_ClientRagdollGib::OnGibbedGroup(int hitgroup, bool bExploded)
 
 void C_ClientRagdollGib::OnBecomeRagdoll(void)
 {
+	if (GetIRagdoll() == NULL)
+		LoadPhysics(); // Fallback
+
 	BaseClass::OnBecomeRagdoll();
 
 	// Ragdolls have different indexes so we need to spawn blood here... 
@@ -495,17 +516,9 @@ bool C_ClientPhysicsGib::Initialize(int type, const model_t *model)
 void C_ClientPhysicsGib::LoadPhysics()
 {
 	SetMoveType(MOVETYPE_PUSH);
-
 	solid_t tmpSolid;
 	PhysModelParseSolid(tmpSolid, this, GetModelIndex());
-
-	IPhysicsObject *pPhysicsObject = VPhysicsInitNormal(SOLID_VPHYSICS, 0, false, &tmpSolid);
-	if (!pPhysicsObject)
-	{
-		SetSolid(SOLID_NONE);
-		SetMoveType(MOVETYPE_NONE);
-		Warning("ERROR!: Can't create physics object for %s\n", STRING(GetModelName()));
-	}
+	VPhysicsInitNormal(SOLID_VPHYSICS, 0, false, &tmpSolid);
 
 	IPhysicsObject *pPhysicsObj = VPhysicsGetObject();
 	if (pPhysicsObj)
@@ -513,6 +526,12 @@ void C_ClientPhysicsGib::LoadPhysics()
 		// We want touch calls when we hit the world
 		unsigned int flags = pPhysicsObj->GetCallbackFlags();
 		pPhysicsObj->SetCallbackFlags(flags | CALLBACK_GLOBAL_TOUCH_STATIC);
+	}
+	else
+	{
+		SetSolid(SOLID_NONE);
+		SetMoveType(MOVETYPE_NONE);
+		Warning("ERROR!: Can't create physics object for %s\n", STRING(GetModelName()));
 	}
 
 	// start fading out at 75% of r_propsmaxdist

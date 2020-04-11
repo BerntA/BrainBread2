@@ -33,10 +33,8 @@ class CGrenadeFrag : public CBaseGrenade
 
 public:
 	void	Spawn( void );
-	void	OnRestore( void );
 	void	Precache( void );
 	bool	CreateVPhysics( void );
-	void	CreateEffects( void );
 	void	SetTimer( float detonateDelay, float warnDelay );
 	void	SetVelocity( const Vector &velocity, const AngularImpulse &angVelocity );
 	int		OnTakeDamage( const CTakeDamageInfo &inputInfo );
@@ -45,18 +43,11 @@ public:
 	void	OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
 	void	SetCombineSpawned( bool combineSpawned ) { m_combineSpawned = combineSpawned; }
 	bool	IsCombineSpawned( void ) const { return m_combineSpawned; }
-	void	SetPunted( bool punt ) { m_punted = punt; }
-	bool	WasPunted( void ) const { return m_punted; }
-
 	void	InputSetTimer( inputdata_t &inputdata );
 
 protected:
-	CHandle<CSprite>		m_pMainGlow;
-	CHandle<CSpriteTrail>	m_pGlowTrail;
-
 	bool	m_inSolid;
 	bool	m_combineSpawned;
-	bool	m_punted;
 };
 
 LINK_ENTITY_TO_CLASS( npc_grenade_frag, CGrenadeFrag );
@@ -64,11 +55,8 @@ LINK_ENTITY_TO_CLASS( npc_grenade_frag, CGrenadeFrag );
 BEGIN_DATADESC( CGrenadeFrag )
 
 	// Fields
-	DEFINE_FIELD( m_pMainGlow, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_pGlowTrail, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_inSolid, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_combineSpawned, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_punted, FIELD_BOOLEAN ),
 	
 	// Function Pointers
 	DEFINE_THINKFUNC( DelayThink ),
@@ -89,17 +77,12 @@ CGrenadeFrag::~CGrenadeFrag( void )
 void CGrenadeFrag::Spawn( void )
 {
 	Precache( );
-
 	SetModel( GRENADE_MODEL );
 
 	const DataExplosiveItem_t *data = GameBaseShared()->GetSharedGameDetails()->GetExplosiveDataForType(EXPLOSIVE_TYPE_GRENADE);
 	if (data)
 	{
-		if (GetOwnerEntity() && GetOwnerEntity()->IsPlayer())
-			m_flDamage = data->flPlayerDamage;
-		else
-			m_flDamage = data->flNPCDamage;
-
+		m_flDamage = ((GetOwnerEntity() && GetOwnerEntity()->IsPlayer()) ? data->flPlayerDamage : data->flNPCDamage);
 		m_DmgRadius = data->flRadius;
 	}
 
@@ -113,30 +96,10 @@ void CGrenadeFrag::Spawn( void )
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
 
 	m_combineSpawned	= false;
-	m_punted			= false;
 
 	BaseClass::Spawn();
 
 	SetBlocksLOS(false);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CGrenadeFrag::OnRestore( void )
-{
-	// If we were primed and ready to detonate, put FX on us.
-	if (m_flDetonateTime > 0)
-		CreateEffects();
-
-	BaseClass::OnRestore();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CGrenadeFrag::CreateEffects( void )
-{
 }
 
 bool CGrenadeFrag::CreateVPhysics()
@@ -181,62 +144,74 @@ protected:
 	int		m_newCollisionGroup;
 };
 
-void CGrenadeFrag::VPhysicsUpdate( IPhysicsObject *pPhysics )
+static bool CanBounceGrenade(CBaseCombatCharacter *pThrower, CBaseCombatCharacter *pHit)
 {
-	BaseClass::VPhysicsUpdate( pPhysics );
+	if (pThrower && pHit && HL2MPRules() && HL2MPRules()->IsTeamplay())
+	{
+		// Players and friendly NPCs don't collide with nades / bounce!
+		if (pThrower->IsHuman(true) && !pThrower->IsMercenary() && pHit->IsHuman(true) && !pHit->IsMercenary())
+			return false;
+
+		// Bandidos don't hit each other with nades.
+		if (pThrower->IsMercenary() && pHit->IsMercenary())
+			return false;
+	}
+	return true;
+}
+
+void CGrenadeFrag::VPhysicsUpdate(IPhysicsObject *pPhysics)
+{
+	BaseClass::VPhysicsUpdate(pPhysics);
+
 	Vector vel;
 	AngularImpulse angVel;
-	pPhysics->GetVelocity( &vel, &angVel );
-	
-	Vector start = GetAbsOrigin();
-	// find all entities that my collision group wouldn't hit, but COLLISION_GROUP_NONE would and bounce off of them as a ray cast
-	CTraceFilterCollisionGroupDelta filter( this, GetCollisionGroup(), COLLISION_GROUP_NONE );
-	trace_t tr;
+	pPhysics->GetVelocity(&vel, &angVel);
+	const Vector &start = GetAbsOrigin();
 
-	// UNDONE: Hull won't work with hitboxes - hits outer hull.  But the whole point of this test is to hit hitboxes.
-#if 0
-	UTIL_TraceHull( start, start + vel * gpGlobals->frametime, CollisionProp()->OBBMins(), CollisionProp()->OBBMaxs(), CONTENTS_HITBOX|CONTENTS_MONSTER|CONTENTS_SOLID, &filter, &tr );
-#else
-	UTIL_TraceLine( start, start + vel * gpGlobals->frametime, CONTENTS_HITBOX|CONTENTS_MONSTER|CONTENTS_SOLID, &filter, &tr );
-#endif
-	if ( tr.startsolid )
+	// find all entities that my collision group wouldn't hit, but COLLISION_GROUP_NONE would and bounce off of them as a ray cast
+	CTraceFilterCollisionGroupDelta filter(this, GetCollisionGroup(), COLLISION_GROUP_NONE);
+	trace_t tr;
+	UTIL_TraceLine(start, start + vel * gpGlobals->frametime, CONTENTS_HITBOX | CONTENTS_MONSTER | CONTENTS_SOLID, &filter, &tr);
+
+	if (!CanBounceGrenade(GetThrower(), ToBaseCombatCharacter(tr.m_pEnt)))
+		return;
+
+	if (tr.startsolid)
 	{
-		if ( !m_inSolid )
+		if (!m_inSolid)
 		{
 			// UNDONE: Do a better contact solution that uses relative velocity?
 			vel *= -GRENADE_COEFFICIENT_OF_RESTITUTION; // bounce backwards
-			pPhysics->SetVelocity( &vel, NULL );
+			pPhysics->SetVelocity(&vel, NULL);
 		}
 		m_inSolid = true;
 		return;
 	}
 	m_inSolid = false;
-	if ( tr.DidHit() )
-	{
-		Vector dir = vel;
-		VectorNormalize(dir);
-		// send a tiny amount of damage so the character will react to getting bonked
-		CTakeDamageInfo info( this, GetThrower(), pPhysics->GetMass() * vel, GetAbsOrigin(), 0.1f, DMG_CRUSH );
-		tr.m_pEnt->TakeDamage( info );
 
-		// reflect velocity around normal
-		vel = -2.0f * tr.plane.normal * DotProduct(vel,tr.plane.normal) + vel;
-		
-		// absorb 80% in impact
-		vel *= GRENADE_COEFFICIENT_OF_RESTITUTION;
-		angVel *= -0.5f;
-		pPhysics->SetVelocity( &vel, &angVel );
-	}
+	if (!tr.DidHit())
+		return;
+
+	Vector dir = vel;
+	VectorNormalize(dir);
+	// send a tiny amount of damage so the character will react to getting bonked
+	CTakeDamageInfo info(this, GetThrower(), pPhysics->GetMass() * vel, GetAbsOrigin(), 0.1f, DMG_CRUSH);
+	tr.m_pEnt->TakeDamage(info);
+
+	// reflect velocity around normal
+	vel = -2.0f * tr.plane.normal * DotProduct(vel, tr.plane.normal) + vel;
+
+	// absorb 80% in impact
+	vel *= GRENADE_COEFFICIENT_OF_RESTITUTION;
+	angVel *= -0.5f;
+	pPhysics->SetVelocity(&vel, &angVel);
 }
-
 
 void CGrenadeFrag::Precache( void )
 {
 	PrecacheModel( GRENADE_MODEL );
-
 	PrecacheModel( "sprites/redglow1.vmt" );
 	PrecacheModel( "sprites/bluelaser1.vmt" );
-
 	BaseClass::Precache();
 }
 
@@ -246,8 +221,6 @@ void CGrenadeFrag::SetTimer( float detonateDelay, float warnDelay )
 	m_flWarnAITime = gpGlobals->curtime + warnDelay;
 	SetThink( &CGrenadeFrag::DelayThink );
 	SetNextThink( gpGlobals->curtime );
-
-	CreateEffects();
 }
 
 void CGrenadeFrag::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )
@@ -315,17 +288,6 @@ CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, 
 	pGrenade->SetCombineSpawned( combineSpawned );	
 
 	return pGrenade;
-}
-
-bool Fraggrenade_WasPunted( const CBaseEntity *pEntity )
-{
-	const CGrenadeFrag *pFrag = dynamic_cast<const CGrenadeFrag *>( pEntity );
-	if ( pFrag )
-	{
-		return pFrag->WasPunted();
-	}
-
-	return false;
 }
 
 bool Fraggrenade_WasCreatedByCombine( const CBaseEntity *pEntity )

@@ -101,6 +101,7 @@ static ConVar voice_threshold("voice_threshold", "1", FCVAR_CLIENTDLL | FCVAR_AR
 static ConVar voice_boost("voice_boost", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Voice Boost Gain", true, 0.0f, true, 1.0f, VoiceBoostChange);
 
 float m_flLastBloodParticleDispatchTime = 0.0f;
+static bool g_bHasLoadedSteamStats = false;
 
 // GameUI
 static CDllDemandLoader g_GameUIDLL("GameUI");
@@ -895,7 +896,7 @@ void CGameBaseClient::MutePlayerGameVoice(int playerIndex, bool value)
 
 void CGameBaseClient::Steam_OnUserStatsReceived(UserStatsReceived_t *pUserStatsReceived)
 {
-	if (!steamapicontext || !steamapicontext->SteamUserStats())
+	if (g_bHasLoadedSteamStats || !steamapicontext || !steamapicontext->SteamUserStats())
 		return;
 
 	DevMsg("Load SteamStats: EResult %d\n", pUserStatsReceived->m_eResult);
@@ -913,6 +914,8 @@ void CGameBaseClient::Steam_OnUserStatsReceived(UserStatsReceived_t *pUserStatsR
 		MainMenu->GetContextHandler()->m_pAchievementPanel->Cleanup();
 		MainMenu->GetContextHandler()->m_pAchievementPanel->SetupLayout();
 	}
+
+	g_bHasLoadedSteamStats = true;
 }
 
 // Toggle Console On or Off.

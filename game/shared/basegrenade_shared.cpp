@@ -206,7 +206,6 @@ void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
 #endif
 }
 
-
 void CBaseGrenade::Smoke( void )
 {
 	Vector vecAbsOrigin = GetAbsOrigin();
@@ -275,7 +274,6 @@ void CBaseGrenade::PreDetonate( void )
 	SetNextThink( gpGlobals->curtime + 1.5 );
 }
 
-
 void CBaseGrenade::Detonate( void )
 {
 	trace_t		tr;
@@ -302,7 +300,6 @@ void CBaseGrenade::Detonate( void )
 	}
 }
 
-
 //
 // Contact grenade, explode when it touches something
 // 
@@ -322,7 +319,6 @@ void CBaseGrenade::ExplodeTouch( CBaseEntity *pOther )
 
 	Explode( &tr, DMG_BLAST );
 }
-
 
 void CBaseGrenade::DangerSoundThink( void )
 {
@@ -415,8 +411,6 @@ void CBaseGrenade::BounceTouch( CBaseEntity *pOther )
 
 }
 
-
-
 void CBaseGrenade::SlideTouch( CBaseEntity *pOther )
 {
 	// don't hit the guy that launched this grenade
@@ -482,7 +476,6 @@ void CBaseGrenade ::TumbleThink( void )
 void CBaseGrenade::Precache( void )
 {
 	BaseClass::Precache( );
-
 	PrecacheScriptSound( "BaseGrenade.Explode" );
 }
 
@@ -542,18 +535,4 @@ CBaseGrenade::CBaseGrenade(void)
 #endif
 
 	SetSimulatedEveryTick( true );
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
