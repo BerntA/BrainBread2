@@ -200,7 +200,6 @@ void CWeaponMinigun::ItemPostFrame(void)
 		return;
 
 	DoWeaponFX();
-	UpdateAutoFire();
 	m_fFireDuration = (pOwner->m_nButtons & IN_ATTACK) ? (m_fFireDuration + gpGlobals->frametime) : 0.0f;
 
 	if (m_iWeaponState != MINIGUN_STATE_IDLE)
@@ -249,9 +248,6 @@ void CWeaponMinigun::ItemPostFrame(void)
 						m_flNextPrimaryAttack = gpGlobals->curtime;
 
 					BaseClass::PrimaryAttack();
-
-					if (AutoFiresFullClip())
-						m_bFiringWholeClip = true;
 				}
 			}
 		}

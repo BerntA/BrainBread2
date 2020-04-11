@@ -39,7 +39,7 @@ public:
 	int GetMaxBurst() { return 1; }
 
 	const char		*GetAmmoTypeName(void) { return "Magnum"; }
-	int				GetAmmoMaxCarry(void) { return 35; }
+	int				GetAmmoMaxCarry(void) { return 48; }
 
 	void ResetToTwoHands(void);
 	void ItemPreFrame(void);
@@ -50,6 +50,8 @@ public:
 	bool Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
 	void Drop(const Vector &vecVelocity);
 	bool Deploy(void);
+
+	QAngle GetViewKickAngle(void);
 
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
@@ -207,12 +209,14 @@ void CWeaponDeagle::SecondaryAttack(void)
 
 float CWeaponDeagle::GetFireRate(void)
 {
-	float rate = BaseClass::GetFireRate();
-
-	if (m_iSwitchState.Get() == DEAGLE_STATE_ONE_HAND) // Reduce fire rate slightly, = more inaccurate.
-		rate *= 0.90f; // X% reduction.
-
-	return rate;
+	float flFireRate = (m_iSwitchState.Get() == DEAGLE_STATE_ONE_HAND) ? GetWpnData().m_flFireRate2 : GetWpnData().m_flFireRate;
+	CHL2MP_Player *pOwner = ToHL2MPPlayer(GetOwner());
+	if (pOwner)
+	{
+		if (pOwner->GetSkillValue(PLAYER_SKILL_HUMAN_SHOUT_AND_SPRAY) > 0)
+			flFireRate -= ((flFireRate / 100.0f) * ((((float)pOwner->GetSkillValue(PLAYER_SKILL_HUMAN_SHOUT_AND_SPRAY)) * GetWpnData().m_flSkillFireRateFactor)));
+	}
+	return flFireRate;
 }
 
 void CWeaponDeagle::StartHolsterSequence()
@@ -237,4 +241,29 @@ bool CWeaponDeagle::Deploy(void)
 {
 	ResetToTwoHands();
 	return BaseClass::Deploy();
+}
+
+QAngle CWeaponDeagle::GetViewKickAngle(void)
+{
+	BaseClass::GetViewKickAngle();
+
+	QAngle viewkick = vec3_angle;
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
+	if (pPlayer)
+	{
+#ifndef CLIENT_DLL
+		QAngle angles = pPlayer->GetLocalAngles();
+		angles.x += random->RandomInt(-0.6f, 0.6f);
+		angles.y += random->RandomInt(-0.6f, 0.6f);
+		angles.z = 0;
+		pPlayer->SnapEyeAngles(angles);
+#endif
+
+		viewkick = QAngle(-random->RandomFloat(1.0f, 2.25f), random->RandomFloat(-0.5f, 0.5f), 0.0f);
+
+		if (m_iSwitchState.Get() == DEAGLE_STATE_ONE_HAND)
+			viewkick *= 1.55f;
+	}
+
+	return viewkick;
 }

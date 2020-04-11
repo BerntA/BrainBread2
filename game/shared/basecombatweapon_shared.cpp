@@ -131,7 +131,7 @@ void CBaseCombatWeapon::Activate( void )
 
 void CBaseCombatWeapon::GiveDefaultAmmo(void)
 {
-	m_iClip = UsesClipsForAmmo() ? (AutoFiresFullClip() ? 0 : GetDefaultClip()) : WEAPON_NOCLIP;
+	m_iClip = UsesClipsForAmmo() ? GetDefaultClip() : WEAPON_NOCLIP;
 
 #ifndef CLIENT_DLL
 	if (m_iClip == WEAPON_NOCLIP)
@@ -529,22 +529,11 @@ void CBaseCombatWeapon::SetOwner( CBaseCombatCharacter *owner )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Return false if this weapon won't let the player switch away from it
-//-----------------------------------------------------------------------------
-bool CBaseCombatWeapon::IsAllowedToSwitch( void )
-{
-	return true;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Return true if this weapon can be selected via the weapon selection
 //-----------------------------------------------------------------------------
 bool CBaseCombatWeapon::CanBeSelected( void )
 {
-	if ( !VisibleInWeaponSelection() )
-		return false;
-
-	return true;
+	return VisibleInWeaponSelection();
 }
 
 //-----------------------------------------------------------------------------
@@ -576,19 +565,16 @@ bool CBaseCombatWeapon::VisibleInWeaponSelection( void )
 //-----------------------------------------------------------------------------
 bool CBaseCombatWeapon::HasWeaponIdleTimeElapsed( void )
 {
-	if ( gpGlobals->curtime > m_flTimeWeaponIdle )
-		return true;
-
-	return false;
+	return (gpGlobals->curtime > m_flTimeWeaponIdle);
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : time - 
 //-----------------------------------------------------------------------------
-void CBaseCombatWeapon::SetWeaponIdleTime( float time )
+void CBaseCombatWeapon::SetWeaponIdleTime( float flTime )
 {
-	m_flTimeWeaponIdle = time;
+	m_flTimeWeaponIdle = flTime;
 }
 
 //-----------------------------------------------------------------------------
@@ -605,23 +591,20 @@ float CBaseCombatWeapon::GetWeaponIdleTime( void )
 //-----------------------------------------------------------------------------
 void CBaseCombatWeapon::Drop( const Vector &vecVelocity )
 {
-	m_bFiringWholeClip = false;
 	m_bInReload = false;
-
-#if !defined( CLIENT_DLL )
-	m_bCanRemoveWeapon = true;
 	m_bWantsHolster = false;
 	m_flViewKickPenalty = 1.0f;
 	m_flViewKickTime = 0.0f;
-
 	m_iMeleeAttackType = 0;
-	m_flLastTraceTime = 0.0f;
 	m_flMeleeCooldown = 0.0f;
+
+#if !defined( CLIENT_DLL )
+	m_bCanRemoveWeapon = true;
+	m_flLastTraceTime = 0.0f;	
 
 	//If it was dropped then there's no need to respawn it.
 	AddSpawnFlags( SF_NORESPAWN );
 	RemoveSpawnFlags(SF_WEAPON_NO_MOTION | SF_WEAPON_NO_PLAYER_PICKUP);
-	ResetAllParticles();
 	StopAnimation();
 	StopFollowingEntity( );
 	SetMoveType( MOVETYPE_FLYGRAVITY );
@@ -672,10 +655,6 @@ void CBaseCombatWeapon::Drop( const Vector &vecVelocity )
 		}
 	}
 #endif
-}
-
-void CBaseCombatWeapon::ResetAllParticles(void)
-{
 }
 
 //-----------------------------------------------------------------------------
@@ -758,11 +737,6 @@ void CBaseCombatWeapon::MakeTracer( const Vector &vecTracerSrc, const trace_t &t
 		UTIL_Tracer( vNewSrc, tr.endpos, iEntIndex, iAttachment, 0.0f, true, pszTracerName );
 		break;
 	}
-}
-
-void CBaseCombatWeapon::GiveTo( CBaseEntity *pOther )
-{
-	DefaultTouch( pOther );
 }
 
 //-----------------------------------------------------------------------------
@@ -1001,10 +975,6 @@ bool CBaseCombatWeapon::SendWeaponAnim( int iActivity )
 	return SetIdealActivity( (Activity) iActivity );
 }
 
-//====================================================================================
-// WEAPON SELECTION
-//====================================================================================
-
 //-----------------------------------------------------------------------------
 // Purpose: Returns true if the weapon currently has ammo or doesn't need ammo
 // Output :
@@ -1103,7 +1073,7 @@ bool CBaseCombatWeapon::DefaultDeploy( char *szViewModel, char *szWeaponModel, i
 //-----------------------------------------------------------------------------
 // Purpose: Check if you can holster or deploy!
 //-----------------------------------------------------------------------------
-bool CBaseCombatWeapon::CanHolster( void )
+bool CBaseCombatWeapon::CanHolster(void)
 {
 	CHL2MP_Player* pClient = ToHL2MPPlayer(GetOwner());
 	if (pClient && !pClient->IsAlive())
@@ -1112,14 +1082,11 @@ bool CBaseCombatWeapon::CanHolster( void )
 	return true;
 }
 
-bool CBaseCombatWeapon::CanDeploy( void )
+bool CBaseCombatWeapon::CanDeploy(void)
 {
-	CHL2MP_Player *pClient = ToHL2MPPlayer( GetOwner() );
-	if ( pClient ) 
-	{
-		if ( !pClient->IsAlive() )
-			return false;
-	}
+	CHL2MP_Player *pClient = ToHL2MPPlayer(GetOwner());
+	if (pClient && !pClient->IsAlive())
+		return false;
 
 	return true;
 }
@@ -1171,13 +1138,9 @@ bool CBaseCombatWeapon::Holster( CBaseCombatWeapon *pSwitchingTo )
 bool CBaseCombatWeapon::FullHolster(void)
 {
 	MDLCACHE_CRITICAL_SECTION();
-
 	m_bInReload = false;
-	m_bFiringWholeClip = false;
-	ResetAllParticles();
 	SetThink(NULL);
 	SetWeaponVisible(false);
-
 	return true;
 }
 
@@ -1220,16 +1183,6 @@ void CBaseCombatWeapon::HideThink( void )
 		SetWeaponVisible( false );
 }
 
-bool CBaseCombatWeapon::CanReload( void )
-{
-	if ( AutoFiresFullClip() && m_bFiringWholeClip )
-	{
-		return false;
-	}
-
-	return true;
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1263,10 +1216,6 @@ void CBaseCombatWeapon::PlayAnimation( int iActivity )
 //====================================================================================
 void CBaseCombatWeapon::HandleWeaponSelectionTime(void)
 {
-	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
-	if (!pOwner)
-		return;
-
 	if (m_bWantsHolster && (m_flHolsteredTime <= gpGlobals->curtime))
 	{
 		m_bWantsHolster = false;
@@ -1384,7 +1333,6 @@ void CBaseCombatWeapon::StartHolsterSequence()
 {
 	m_bWantsHolster = true;
 	m_bInReload = false;
-	m_bFiringWholeClip = false;
 
 	m_flViewKickPenalty = 1.0f;
 	m_flViewKickTime = 0.0f;
@@ -1402,8 +1350,6 @@ void CBaseCombatWeapon::StartHolsterSequence()
 	m_flNextPrimaryAttack = flHolsterTime + 0.05f;
 	m_flNextSecondaryAttack = flHolsterTime + 0.05f;
 	m_flMeleeCooldown = 0.0f;
-
-	ResetAllParticles();
 
 	// We will stay active in the pre frame until we're done so we don't override the visibility state or animation state as we change to the new active weapon.
 	CHL2MP_Player *pOwner = ToHL2MPPlayer(GetOwner());
@@ -1469,8 +1415,6 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 
 	GenericBB2Animations();
 
-	UpdateAutoFire();
-
 	//Track the duration of the fire
 	//FIXME: Check for IN_ATTACK2 as well?
 	//FIXME: What if we're calling ItemBusyFrame?
@@ -1497,8 +1441,6 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 				m_flNextPrimaryAttack = gpGlobals->curtime;
 
 			PrimaryAttack();
-			if (AutoFiresFullClip())
-				m_bFiringWholeClip = true;
 		}
 	}
 
@@ -1575,19 +1517,7 @@ int CBaseCombatWeapon::GetReloadActivity(bool bCanDoEmpty)
 //-----------------------------------------------------------------------------
 void CBaseCombatWeapon::ItemBusyFrame( void )
 {
-	UpdateAutoFire();
-
 	HandleWeaponSelectionTime();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Base class default for getting bullet type
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-int CBaseCombatWeapon::GetBulletType( void )
-{
-	return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -1662,15 +1592,9 @@ const Vector& CBaseCombatWeapon::GetBulletSpread(void)
 //-----------------------------------------------------------------------------
 QAngle CBaseCombatWeapon::GetViewKickAngle(void)
 {
-	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
-	if (!pPlayer)
-		return QAngle(0, 0, 0);
-
 	m_iShotsFired++;
 
-	QAngle viewKick;
 	float flAngX, flAngY, flAngZ;
-
 	flAngX = random->RandomFloat(viewpunch_x_min.GetFloat(), viewpunch_x_max.GetFloat()); // this is the direction we add to as you shoot.
 	flAngY = random->RandomFloat(viewpunch_y_min.GetFloat(), viewpunch_y_max.GetFloat());
 	flAngZ = random->RandomFloat(viewpunch_z_min.GetFloat(), viewpunch_z_max.GetFloat());
@@ -1679,9 +1603,7 @@ QAngle CBaseCombatWeapon::GetViewKickAngle(void)
 	if (flAngX > 0)
 		flAngX = 0;
 
-	viewKick = QAngle(flAngX, flAngY, flAngZ);
-
-	return viewKick;
+	return QAngle(flAngX, flAngY, flAngZ);
 }
 
 //-----------------------------------------------------------------------------
@@ -1966,53 +1888,6 @@ void CBaseCombatWeapon::AbortReload( void )
 	m_bInReload = false;
 }
 
-void CBaseCombatWeapon::UpdateAutoFire( void )
-{
-	if ( !AutoFiresFullClip() )
-		return;
-
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-	if ( !pOwner )
-		return;
-
-	if (m_iClip == 0)
-	{
-		// Ready to reload again
-		m_bFiringWholeClip = false;
-	}
-
-	if ( m_bFiringWholeClip )
-	{
-		// If it's firing the clip don't let them repress attack to reload
-		pOwner->m_nButtons &= ~IN_ATTACK;
-	}
-
-	// Don't use the regular reload key
-	if ( pOwner->m_nButtons & IN_RELOAD )
-	{
-		pOwner->m_nButtons &= ~IN_RELOAD;
-	}
-
-	// Try to fire if there's ammo in the clip and we're not holding the button
-	bool bReleaseClip = m_iClip > 0 && !(pOwner->m_nButtons & IN_ATTACK);
-	if ( !bReleaseClip )
-	{
-		if ( CanReload() && ( pOwner->m_nButtons & IN_ATTACK ) )
-		{
-			// Convert the attack key into the reload key
-			pOwner->m_nButtons |= IN_RELOAD;
-		}
-
-		// Don't allow attack button if we're not attacking
-		pOwner->m_nButtons &= ~IN_ATTACK;
-	}
-	else
-	{
-		// Fake the attack key
-		pOwner->m_nButtons |= IN_ATTACK;
-	}
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Primary fire button attack
 //-----------------------------------------------------------------------------
@@ -2068,9 +1943,7 @@ void CBaseCombatWeapon::PrimaryAttack( void )
 
 	// Do the viewkick
 	pPlayer->ViewPunch(GetViewKickAngle());
-
-	int shootAct = GetPrimaryAttackActivity();
-	SendWeaponAnim(shootAct);
+	SendWeaponAnim(GetPrimaryAttackActivity());
 	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY);
 }
 
@@ -2515,7 +2388,6 @@ BEGIN_PREDICTION_DATA( CBaseCombatWeapon )
 	// Not networked
 
 	DEFINE_FIELD( m_bInReload, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bFiringWholeClip, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_flNextEmptySoundTime, FIELD_FLOAT ),
 	DEFINE_FIELD( m_Activity, FIELD_INTEGER ),
 	DEFINE_FIELD( m_fFireDuration, FIELD_FLOAT ),

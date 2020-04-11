@@ -162,7 +162,6 @@ void CHL2MPMachineGun::ItemPostFrame(void)
 	if (m_bIsFiringBurst)
 	{
 		BaseClass::DoWeaponFX();
-		UpdateAutoFire();
 	}
 	else
 	{
@@ -194,9 +193,6 @@ void CHL2MPMachineGun::ItemPostFrame(void)
 			m_flNextSecondaryAttack = gpGlobals->curtime;
 			PrimaryAttack();
 			m_iBurstBullet++;
-
-			if (AutoFiresFullClip())
-				m_bFiringWholeClip = true;
 		}
 	}
 }

@@ -161,11 +161,9 @@ public:
 
 	virtual void			Equip( CBaseCombatCharacter *pOwner );
 	virtual void			Drop( const Vector &vecVelocity );
-	virtual void            ResetAllParticles(void);
 
 	virtual	int				UpdateClientData( CBasePlayer *pPlayer );
 
-	virtual bool			IsAllowedToSwitch( void );
 	virtual bool			CanBeSelected( void );
 	virtual bool			VisibleInWeaponSelection( void );
 	virtual bool			HasAmmo( void );
@@ -173,7 +171,6 @@ public:
 	// Weapon Pickup For Player
 	virtual void			SetPickupTouch( void );
 	virtual void 			DefaultTouch( CBaseEntity *pOther );	// default weapon touch
-	virtual void			GiveTo( CBaseEntity *pOther ); 
 
 	// Weapon client handling
 	virtual bool			SendWeaponAnim( int iActivity );
@@ -243,9 +240,6 @@ public:
 	bool					DefaultReload(int iClipSize, int iActivity);
 	bool					ReloadsSingly( void ) const;
 
-	virtual bool			AutoFiresFullClip( void ) { return false; }
-	virtual void			UpdateAutoFire( void );
-
 	// Weapon firing
 	virtual void			PrimaryAttack( void );						// do "+ATTACK"
 	virtual void			SecondaryAttack( void ) { return; }			// do "+ATTACK2"
@@ -294,7 +288,6 @@ public:
 	virtual float			GetDefaultAnimSpeed(void) { return 1.0; }
 
 	// Bullet launch information
-	virtual int				GetBulletType( void );
 	virtual const Vector&	GetBulletSpread(void);
 	virtual float			GetFireRate( void );
 	virtual int				GetMinBurst() { return 1; }
@@ -507,7 +500,6 @@ public:
 #endif // End client-only methods
 
 	virtual void			HideThink( void );
-	virtual bool			CanReload( void );
 
 private:
 	Vector GetBulletConeByAccLevel(void);
@@ -533,7 +525,7 @@ public:
 
 	// Weapon state
 	bool					m_bInReload;			// Are we in the middle of a reload;
-	bool					m_bFiringWholeClip;		// Are we in the middle of firing the whole clip;
+
 	// Weapon art
 	CNetworkVar( int, m_iViewModelIndex );
 	CNetworkVar( int, m_iWorldModelIndex );
@@ -547,7 +539,7 @@ public:
 	void					MaintainIdealActivity( void );
 
 	// Viewpunch / Viewkick logic:
-	QAngle GetViewKickAngle(void);
+	virtual QAngle GetViewKickAngle(void);
 
 	CNetworkVar(float, m_flViewKickTime); // Will be set everytime you do a viewkick, when this becomes less than curtime we reset a 'bullet' shooting counter, we will increase the X kick as we shoot to move up as we shoot.
 	CNetworkVar(float, m_flViewKickPenalty); // As you shoot this increases and adds to you kick view.
