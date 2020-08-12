@@ -63,6 +63,11 @@ AchievementItem::AchievementItem(vgui::Panel *parent, char const *panelName, con
 	m_pLabelDate->SetText("");
 	m_pLabelDate->SetContentAlignment(Label::Alignment::a_east);
 
+	m_pLabelEXP = vgui::SETUP_PANEL(new vgui::Label(this, "Experience", ""));
+	m_pLabelEXP->SetZPos(12);
+	m_pLabelEXP->SetText("");
+	m_pLabelEXP->SetContentAlignment(Label::Alignment::a_east);
+
 	Q_strncpy(pszAchievementStringID, pszAchievementID, 80);
 
 	InvalidateLayout();
@@ -132,6 +137,10 @@ void AchievementItem::OnUpdate(void)
 
 				m_pAchievementProgress->SetProgress(flProgress);
 				m_pLabelDate->SetText(GetUnlockDate());
+
+				char pchXPLabel[16];
+				Q_snprintf(pchXPLabel, 16, "%i XP", GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].rewardValue);
+				m_pLabelEXP->SetText(pchXPLabel);
 			}
 		}
 	}
@@ -197,6 +206,9 @@ void AchievementItem::ApplySchemeSettings(vgui::IScheme *pScheme)
 	m_pLabelDate->SetFont(pScheme->GetFont("SpecText"));
 	m_pLabelDate->SetFgColor(achTextColor);
 
+	m_pLabelEXP->SetFont(pScheme->GetFont("SpecText"));
+	m_pLabelEXP->SetFgColor(achTextColor);
+
 	SetBgColor(achBgColor);
 	SetFgColor(Color(0, 0, 0, 0));
 }
@@ -229,6 +241,10 @@ void AchievementItem::SetSize(int wide, int tall)
 	m_pLabelDate->SetSize(((float)wide) * 40.0f, (flSize * 0.20f));
 	m_pLabelDate->SetPos((wide - (((float)wide) * 40.0f)) - iOffset, iOffset);
 	m_pLabelDate->SetContentAlignment(Label::Alignment::a_east);
+
+	m_pLabelEXP->SetSize(((float)wide) * 40.0f, (flSize * 0.20f));
+	m_pLabelEXP->SetPos((wide - (((float)wide) * 40.0f)) - iOffset, iOffset + scheme()->GetProportionalScaledValue(10));
+	m_pLabelEXP->SetContentAlignment(Label::Alignment::a_east);
 }
 
 void AchievementItem::SetAchievementIcon(void)

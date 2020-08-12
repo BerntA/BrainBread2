@@ -17,7 +17,7 @@ BEGIN_SEND_TABLE_NOBASE(CBB2PlayerLocalData, DT_BB2Local)
 
 SendPropInt(SENDINFO(m_iSkill_XPCurrent), 16, SPROP_UNSIGNED),
 SendPropInt(SENDINFO(m_iSkill_XPLeft), 16, SPROP_UNSIGNED),
-SendPropInt(SENDINFO(m_iSkill_Talents), 7, SPROP_UNSIGNED),
+SendPropInt(SENDINFO(m_iSkill_Talents), 8, SPROP_UNSIGNED),
 
 SendPropInt(SENDINFO(m_iZombieCredits), 12, SPROP_UNSIGNED),
 SendPropFloat(SENDINFO(m_flZombieRageThresholdDamage)),

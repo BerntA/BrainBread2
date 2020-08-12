@@ -45,6 +45,7 @@ namespace vgui
 		vgui::Label *m_pLabelDescription;
 		vgui::Label *m_pLabelProgress;
 		vgui::Label *m_pLabelDate;
+		vgui::Label *m_pLabelEXP;
 		vgui::ImagePanel *m_pImageIcon;
 		ImageProgressBar *m_pAchievementProgress;
 

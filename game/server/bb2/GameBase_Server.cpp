@@ -94,16 +94,16 @@ void CGameBaseServer::LoadServerTags(void)
 {
 	int iProfileSavingType = CanStoreSkills();
 	char pszTagList[128], pszTagCommand[256], pszParam[32];
-	Q_snprintf(pszTagList, 128, "Version %s", GameBaseShared()->GetGameVersion());
+	pszTagList[0] = 0;
 
 	if (iProfileSavingType >= PROFILE_GLOBAL)
 	{
-		Q_snprintf(pszParam, 32, ", savedata %i", iProfileSavingType);
+		Q_snprintf(pszParam, 32, "savedata %i", iProfileSavingType);
 		Q_strncat(pszTagList, pszParam, sizeof(pszTagList), COPY_ALL_CHARACTERS);
 	}
 
 	if (bb2_enable_ban_list.GetBool() && engine->IsDedicatedServer())
-		Q_strncat(pszTagList, ", banlist", sizeof(pszTagList), COPY_ALL_CHARACTERS);
+		Q_strncat(pszTagList, ((pszTagList && pszTagList[0]) ? ", banlist" : "banlist"), sizeof(pszTagList), COPY_ALL_CHARACTERS);
 
 	Q_snprintf(pszTagCommand, 256, "sv_tags %s\n", pszTagList);
 	engine->ServerCommand(pszTagCommand);
@@ -580,7 +580,7 @@ void CGameBaseServer::OnUpdate(int iClientsInGame)
 		if (bIsServerBlacklisted)
 			Warning("This IP has been blacklisted, your servers will not be visible for the public nor will you be able to enable global profile saving.\n");
 
-		IterateAddonsPath("addons");
+		//IterateAddonsPath("addons"); <--- Plugins are allowed now, but if we notice that some plugins allow too much exploiting, uncomment this again...
 	}
 
 	// Check for map changes:

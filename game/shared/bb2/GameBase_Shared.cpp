@@ -98,8 +98,6 @@ void CGameBaseShared::Init()
 
 void CGameBaseShared::LoadBase()
 {
-	CheckGameVersion();
-
 	// Not NULL? Release.
 	if (m_pSharedGameDefinitions)
 		delete m_pSharedGameDefinitions;
@@ -167,19 +165,6 @@ void CGameBaseShared::Release()
 	if (m_pPlayerLoadoutHandler)
 		delete m_pPlayerLoadoutHandler;
 #endif
-}
-
-void CGameBaseShared::CheckGameVersion(void)
-{
-	KeyValues *pkvData = ReadEncryptedKVFile(filesystem, "version", GetEncryptionKey());
-	if (pkvData)
-	{
-		Q_strncpy(pszGameVersion, pkvData->GetString("Game", "Invalid"), 32);
-		pkvData->deleteThis();
-		return;
-	}
-
-	Q_strncpy(pszGameVersion, "Invalid", 32);
 }
 
 ////////////////////////////////////////////////
@@ -389,7 +374,7 @@ void CGameBaseShared::GetFileContent(const char *path, char *buf, int size)
 float CGameBaseShared::GetDropOffDamage(const Vector &vecStart, const Vector &vecEnd, float damage, float minDist)
 {
 	// If min dist is zero we don't want drop off!
-	if (minDist <= 0)
+	if (minDist <= 0.0f)
 		return damage;
 
 	// If the dist traveled is not longer than minDist we don't care...

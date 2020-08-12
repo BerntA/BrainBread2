@@ -84,10 +84,6 @@ struct DataGamemodeItem_Shared_t
 	int iMaxAmmoReplenishWithinInterval;
 	float flMaxAmmoReplensihInterval;
 	float flAmmoReplenishPenalty;
-
-	int iPointsForLvlHundred;
-	int iPointsForEveryHundredLvl;
-	int iPointsForLvlFiveHundred;
 };
 
 struct DataPlayerItem_Shared_t

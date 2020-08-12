@@ -284,17 +284,12 @@ int CGameDefinitionsMapData::GetMapIndex(const char *pszMap)
 //-----------------------------------------------------------------------------
 bool CGameDefinitionsMapData::IsMapWhiteListed(const char *pszMap)
 {
-	bool bWhitelisted = false;
 	for (int i = 0; i < pszGameMaps.Count(); i++)
 	{
 		if ((pszGameMaps[i].iMapVerification >= MAP_VERIFIED_WHITELISTED) && !strcmp(pszGameMaps[i].pszMapName, pszMap))
-		{
-			bWhitelisted = true;
-			break;
-		}
+			return true;
 	}
-
-	return bWhitelisted;
+	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -327,9 +322,9 @@ void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted
 			uint32 uAmountOfKeys = STEAM_API_INTERFACE->SteamUGC()->GetQueryUGCNumKeyValueTags(pCallback->m_handle, i);
 			for (uint32 items = 0; items < uAmountOfKeys; items += 2)
 			{
-				int iVerification = MAP_VERIFIED_UNKNOWN;
-				if (Q_strstr(WorkshopItem.m_rgchTags, "Whitelisted"))
-					iVerification = MAP_VERIFIED_WHITELISTED;
+				int iVerification = MAP_VERIFIED_WHITELISTED; // Every custom map is now whitelisted.
+				//if (Q_strstr(WorkshopItem.m_rgchTags, "Whitelisted"))
+				//	iVerification = MAP_VERIFIED_WHITELISTED;
 
 				char mapNameKey[32], mapNameValue[32], mapSizeKey[32], mapSizeValue[128];
 				STEAM_API_INTERFACE->SteamUGC()->GetQueryUGCKeyValueTag(pCallback->m_handle, i, items, mapNameKey, 32, mapNameValue, 32);

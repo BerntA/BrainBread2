@@ -237,8 +237,6 @@ public:
 	void Release();
 
 	const unsigned char *GetEncryptionKey(void) { return (unsigned char *)"F3QxBzK6"; }
-	void CheckGameVersion(void);
-	const char *GetGameVersion(void) { return pszGameVersion; }
 
 	// Game Base
 	KeyValues *ReadEncryptedKeyValueFile(IFileSystem *filesystem, const char *filePath);
@@ -302,8 +300,6 @@ public:
 #endif
 
 private:
-
-	char pszGameVersion[32];
 
 #ifdef CLIENT_DLL
 	CSteamServerLister *m_pSteamServers;

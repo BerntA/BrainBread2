@@ -1876,7 +1876,7 @@ int CBaseCombatCharacter::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 		pClient->DispatchDamageText(this, -info.GetDamage());
 
-		if (pClient->IsZombie() && (pClient->GetSkillValue(PLAYER_SKILL_ZOMBIE_LIFE_LEECH) > 0))
+		if ((pClient != this) && pClient->IsZombie() && (pClient->GetSkillValue(PLAYER_SKILL_ZOMBIE_LIFE_LEECH) > 0))
 		{
 			double perc = (pClient->GetSkillValue(PLAYER_SKILL_ZOMBIE_LIFE_LEECH, TEAM_DECEASED) / PERCENT_BASE);
 			if (TryTheLuck(perc))

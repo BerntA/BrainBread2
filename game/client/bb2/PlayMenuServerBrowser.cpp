@@ -750,7 +750,6 @@ void PlayMenuServerBrowser::AddServerToList(gameserveritem_t *pGameServerItem)
 	bool IsSecured = pGameServerItem->m_bPassword;
 	bool HasProfileSys = (Q_stristr(pGameServerItem->m_szGameTags, "savedata")) ? true : false;
 	bool HasBanListEnabled = (Q_stristr(pGameServerItem->m_szGameTags, "banlist")) ? true : false;
-	bool IsOutdated = (!Q_stristr(pGameServerItem->m_szGameTags, GameBaseShared()->GetGameVersion())) ? true : false;
 	bool VACEnabled = pGameServerItem->m_bSecure;
 
 	const char *pszGameDescription = "Story";
@@ -762,9 +761,6 @@ void PlayMenuServerBrowser::AddServerToList(gameserveritem_t *pGameServerItem)
 		pszGameDescription = "Deathmatch";
 	else if (Q_stristr(pGameServerItem->m_szMap, "bbc_"))
 		pszGameDescription = "Objective";
-
-	char pchHostname[128];
-	Q_snprintf(pchHostname, 128, "%s%s", (IsOutdated ? "[OUTDATED] " : ""), pGameServerItem->GetName());
 
 	int iconPasswordIndex = (IsSecured ? m_iImageListIndexes[0] : -1);
 
@@ -788,7 +784,7 @@ void PlayMenuServerBrowser::AddServerToList(gameserveritem_t *pGameServerItem)
 	serverData->SetInt("protected", iconPasswordIndex);
 	serverData->SetInt("profile", iconProfileIndex);
 	serverData->SetInt("banlist", iconBanListIndex);
-	serverData->SetString("hostname", pchHostname);
+	serverData->SetString("hostname", pGameServerItem->GetName());
 	serverData->SetString("ip", connectionAddress);
 	serverData->SetString("game", pszGameDescription);
 	serverData->SetString("players", VarArgs("%i/%i", pGameServerItem->m_nPlayers, pGameServerItem->m_nMaxPlayers));

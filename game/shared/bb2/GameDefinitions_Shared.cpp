@@ -456,10 +456,6 @@ bool CGameDefinitionsShared::LoadData(void)
 		pszGamemodeData.flMaxAmmoReplensihInterval = pkvParseData->GetFloat("ammo_replenish_interval", 60.0f);
 		pszGamemodeData.flAmmoReplenishPenalty = pkvParseData->GetFloat("ammo_replenish_penalty", 120.0f);
 
-		pszGamemodeData.iPointsForLvlHundred = pkvParseData->GetInt("points_lvl_100", 2);
-		pszGamemodeData.iPointsForEveryHundredLvl = pkvParseData->GetInt("points_every_100", 5);
-		pszGamemodeData.iPointsForLvlFiveHundred = pkvParseData->GetInt("points_lvl_500", 10);
-
 		pkvParseData->deleteThis();
 	}
 	else
@@ -874,17 +870,15 @@ int CGameDefinitionsShared::CalculatePointsForLevel(int lvl)
 	if (lvl <= 1)
 		return 0;
 
-	float flLvL = ((float)lvl);
-	flLvL = clamp(flLvL, 1.0f, (MAX_PLAYER_LEVEL - 100.0f));
-	float points = MIN((lvl - 1), 98);
-
-	points += MAX(floor(flLvL / 100.0f) - 1, 0.0f) * pszGamemodeData.iPointsForEveryHundredLvl;
-
-	if (lvl >= 100)
-		points += pszGamemodeData.iPointsForLvlHundred;
-
 	if (lvl >= MAX_PLAYER_LEVEL)
-		points += pszGamemodeData.iPointsForLvlFiveHundred;
+		return MAX_PLAYER_TALENTS;
+
+	float points = MIN((lvl - 1), 98) + ((lvl >= 100) ? 2 : 0);
+	if (lvl > 100)
+	{
+		float flLvL = ((float)lvl) - 100.0f;
+		points += floor((clamp((flLvL / (MAX_PLAYER_LEVEL - 100.0f)), 0.0f, 1.0f) * (MAX_PLAYER_TALENTS - 100.0f)));
+	}
 
 	return ((int)points);
 }

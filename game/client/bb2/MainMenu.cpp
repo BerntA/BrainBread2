@@ -402,7 +402,7 @@ CMainMenu::CMainMenu(vgui::VPANEL parent) : BaseClass(NULL, "MainMenu")
 	MoveToFront();
 	RequestFocus();
 
-	m_pLabelVersion->SetText(VarArgs("Version: %s", GameBaseShared()->GetGameVersion()));
+	m_pLabelVersion->SetText(VarArgs("Version: %s", engine->GetProductVersionString()));
 	m_pLabelVersion->SetContentAlignment(vgui::Label::a_east);
 }
 

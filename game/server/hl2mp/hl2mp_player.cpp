@@ -1391,35 +1391,21 @@ bool CHL2MP_Player::PerformLevelUp(int iXP)
 		m_BB2Local.m_iSkill_XPCurrent = 0;
 
 		// Add talent point(s).
-		int pointsToGive = (m_iSkill_Level < 100) ? 1 : 0; // Get 1 pnt from lvl 1-99, 2 pnt for lvl 100, 5 pnt for every 100 lvl, 10 pnt for lvl 500!
+		int pointsSpent = 0;
+		for (int i = 0; i < PLAYER_SKILL_ZOMBIE_HEALTH; i++)
+			pointsSpent += m_BB2Local.m_iPlayerSkills.Get(i);
 
-		if (m_iSkill_Level >= 100)
-		{
-			switch (m_iSkill_Level)
-			{
-			case 100:
-				pointsToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iPointsForLvlHundred;
-				break;
-			case MAX_PLAYER_LEVEL:
-				pointsToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iPointsForLvlFiveHundred;
-				break;
-			default: // For every 100 lvl after lvl 100, give X pnts!
-				int lvl = (m_iSkill_Level - 100);
-				if ((lvl % 100) == 0)
-					pointsToGive = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iPointsForEveryHundredLvl;
-				break;
-			}
-		}
-
-		m_BB2Local.m_iSkill_Talents += pointsToGive;
+		int pointsBefore = m_BB2Local.m_iSkill_Talents.Get();
+		int pointsAfter = (GameBaseShared()->GetSharedGameDetails()->CalculatePointsForLevel(m_iSkill_Level) - pointsSpent);
+		m_BB2Local.m_iSkill_Talents.Set(pointsAfter);
 
 		if (!IsBot())
 		{
-			if (pointsToGive > 0)
+			if (pointsAfter != pointsBefore)
 			{
 				// Congrats!
 				char pchArg[32]; pchArg[0] = 0;
-				Q_snprintf(pchArg, 32, "%i", pointsToGive);
+				Q_snprintf(pchArg, 32, "%i", pointsAfter);
 				GameBaseServer()->SendToolTip("#TOOLTIP_LEVELUP2", GAME_TIP_DEFAULT, this->entindex(), pchArg);
 			}
 
