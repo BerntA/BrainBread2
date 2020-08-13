@@ -1630,7 +1630,7 @@ float CBaseCombatWeapon::GetFireRate( void )
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-void CBaseCombatWeapon::WeaponSound( WeaponSound_t sound_type, float soundtime /* = 0.0f */ )
+void CBaseCombatWeapon::WeaponSound(WeaponSound_t sound_type, float soundtime /* = 0.0f */, bool bSkipPrediction)
 {
 	// If we have some sounds from the weapon classname.txt file, play a random one of them
 	const char *shootsound = GetShootSound( sound_type );
@@ -1648,7 +1648,7 @@ void CBaseCombatWeapon::WeaponSound( WeaponSound_t sound_type, float soundtime /
 		if ( GetOwner() && GetOwner()->IsPlayer() )
 		{
 			CSingleUserRecipientFilter filter( ToBasePlayer( GetOwner() ) );
-			if ( IsPredicted() && CBaseEntity::GetPredictionPlayer() )
+			if (IsPredicted() && CBaseEntity::GetPredictionPlayer() && !bSkipPrediction)
 			{
 				filter.UsePredictionRules();
 			}
@@ -1661,7 +1661,7 @@ void CBaseCombatWeapon::WeaponSound( WeaponSound_t sound_type, float soundtime /
 		if ( GetOwner() )
 		{
 			CPASAttenuationFilter filter( GetOwner(), params.soundlevel );
-			if ( IsPredicted() && CBaseEntity::GetPredictionPlayer() )
+			if (IsPredicted() && CBaseEntity::GetPredictionPlayer() && !bSkipPrediction)
 			{
 				filter.UsePredictionRules();
 			}
@@ -1678,7 +1678,7 @@ void CBaseCombatWeapon::WeaponSound( WeaponSound_t sound_type, float soundtime /
 		else
 		{
 			CPASAttenuationFilter filter( this, params.soundlevel );
-			if ( IsPredicted() && CBaseEntity::GetPredictionPlayer() )
+			if (IsPredicted() && CBaseEntity::GetPredictionPlayer() && !bSkipPrediction)
 			{
 				filter.UsePredictionRules();
 			}
@@ -2020,7 +2020,7 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 	VectorNormalize(forward);
 	Vector swingEnd = swingStart + (forward * range);
 
-	IPredictionSystem::SuppressHostEvents(NULL);
+	//IPredictionSystem::SuppressHostEvents(NULL);
 	Activity activity = pvm->GetSequenceActivity(pvm->GetSequence());
 
 	lagcompensation->TraceRealtime(pOwner, swingStart, swingEnd, -Vector(5, 5, 5), Vector(5, 5, 5), &traceHit, LAGCOMP_TRACE_REVERT_HULL, range);
@@ -2029,6 +2029,7 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 
 	if (traceHit.fraction == 1.0f)
 	{
+		IGNORE_PREDICTION_SUPPRESSION;
 		if (CanHitThisTarget(-1) && ImpactWater(swingStart, swingEnd))
 			StruckTarget(-1);
 	}
@@ -2068,10 +2069,12 @@ void CBaseCombatWeapon::MeleeAttackTrace(void)
 			}
 
 			if (pHitEnt->IsNPC() || pHitEnt->IsPlayer())
-				WeaponSound(MELEE_HIT);
+				WeaponSound(MELEE_HIT, 0.0f, true);
 			else
-				WeaponSound(MELEE_HIT_WORLD);
+				WeaponSound(MELEE_HIT_WORLD, 0.0f, true);
 		}
+
+		IGNORE_PREDICTION_SUPPRESSION;
 
 		// See if we hit water (we don't do the other impact effects in this case)
 		if (ImpactWater(traceHit.startpos, traceHit.endpos))

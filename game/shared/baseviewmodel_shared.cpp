@@ -526,6 +526,8 @@ BEGIN_PREDICTION_DATA( CBaseViewModel )
 	DEFINE_FIELD( m_Activity, FIELD_INTEGER ),
 	DEFINE_PRED_FIELD( m_flCycle, FIELD_FLOAT, FTYPEDESC_PRIVATE | FTYPEDESC_OVERRIDE | FTYPEDESC_NOERRORCHECK ),
 
+	DEFINE_PRED_ARRAY_TOL(m_flPoseParameter, FIELD_FLOAT, MAXSTUDIOPOSEPARAM, FTYPEDESC_INSENDTABLE, 0.1f), // will this work? we also use interpolated vars, maybe they should only interp. for non local plr weps?
+
 END_PREDICTION_DATA()
 
 void RecvProxy_SequenceNum( const CRecvProxyData *pData, void *pStruct, void *pOut )

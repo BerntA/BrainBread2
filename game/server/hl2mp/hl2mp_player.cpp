@@ -1417,7 +1417,6 @@ bool CHL2MP_Player::PerformLevelUp(int iXP)
 			}
 
 			// Particle fanciness...
-			IPredictionSystem::SuppressHostEvents(NULL);
 			DispatchParticleEffect("bb2_levelup_effect", PATTACH_ROOTBONE_FOLLOW, this, -1, true);
 		}
 
@@ -1511,6 +1510,7 @@ bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 		return false;
 
 	// We try to level up:
+	IGNORE_PREDICTION_SUPPRESSION;
 	return PerformLevelUp(m_BB2Local.m_iSkill_XPCurrent);
 }
 
@@ -1550,7 +1550,7 @@ bool CHL2MP_Player::ActivatePerk(int skill)
 	}
 	}
 
-	IPredictionSystem::SuppressHostEvents(NULL);
+	IGNORE_PREDICTION_SUPPRESSION;
 	DispatchParticleEffect("bb2_perk_activate", PATTACH_ROOTBONE_FOLLOW, this, -1, true);
 	return true;
 }
@@ -1581,7 +1581,7 @@ bool CHL2MP_Player::EnterRageMode(bool bForce) // Zombie 'Perk' thing.
 	RefreshSpeed();
 
 	AddPerkFlag(PERK_ZOMBIE_RAGE);
-	IPredictionSystem::SuppressHostEvents(NULL);
+	IGNORE_PREDICTION_SUPPRESSION;
 	DispatchParticleEffect("bb2_perk_activate", PATTACH_ROOTBONE_FOLLOW, this, -1, true);
 	return true;
 }
@@ -2371,7 +2371,7 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 			if (IsZombie())
 			{
 				float flCreditsToLose = ceil((GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flZombieCreditsPercentToLose / 100.0f) * ((float)m_BB2Local.m_iZombieCredits));
-				if (!IsPerkFlagActive(PERK_ZOMBIE_RAGE) && (flCreditsToLose > 0.0f))
+				if (!IsPerkFlagActive(PERK_ZOMBIE_RAGE) && !m_BB2Local.m_bCanRespawnAsHuman && (flCreditsToLose > 0.0f))
 				{
 					m_BB2Local.m_iZombieCredits -= MIN(((int)flCreditsToLose), m_BB2Local.m_iZombieCredits.Get());
 
@@ -3258,14 +3258,12 @@ void TE_PlayerAnimEvent(CBasePlayer *pPlayer, PlayerAnimEvent_t event, int nData
 
 	if (bSkipPrediction == false)
 		filter.UsePredictionRules();
-	else
-		IPredictionSystem::SuppressHostEvents(NULL);
 
 	g_TEPlayerAnimEvent.m_hPlayer = pPlayer;
 	g_TEPlayerAnimEvent.m_iEvent = event;
 	g_TEPlayerAnimEvent.m_nData = nData;
 	g_TEPlayerAnimEvent.m_flData = flData;
-	g_TEPlayerAnimEvent.Create(filter, 0);
+	g_TEPlayerAnimEvent.Create(filter, 0.0f);
 }
 
 void CHL2MP_Player::DoAnimationEvent(PlayerAnimEvent_t event, int nData, bool bSkipPrediction, float flData)

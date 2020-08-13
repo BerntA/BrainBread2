@@ -50,7 +50,7 @@ bool CWeaponHL2MPBase::IsPredicted() const
 	return true;
 }
 
-void CWeaponHL2MPBase::WeaponSound( WeaponSound_t sound_type, float soundtime /* = 0.0f */ )
+void CWeaponHL2MPBase::WeaponSound(WeaponSound_t sound_type, float soundtime /* = 0.0f */, bool bSkipPrediction)
 {
 #ifdef CLIENT_DLL
 		// If we have some sounds from the weapon classname.txt file, play a random one of them
@@ -64,7 +64,7 @@ void CWeaponHL2MPBase::WeaponSound( WeaponSound_t sound_type, float soundtime /*
 				
 		CBaseEntity::EmitSound( filter, GetPlayerOwner()->entindex(), shootsound, &GetPlayerOwner()->GetAbsOrigin() ); 
 #else
-		BaseClass::WeaponSound( sound_type, soundtime );
+	BaseClass::WeaponSound(sound_type, soundtime, bSkipPrediction);
 #endif
 }
 

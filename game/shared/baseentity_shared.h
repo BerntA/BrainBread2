@@ -277,4 +277,24 @@ inline bool IsEntityQAngleVelReasonable( const QAngle &q )
 
 extern bool CheckEmitReasonablePhysicsSpew();
 
+// HELPER CLASS
+class CIgnorePredictionSuppression
+{
+public:
+	explicit CIgnorePredictionSuppression()
+	{
+		CBaseEntity::m_bDontSuppressEvents = true;
+	}
+
+	~CIgnorePredictionSuppression()
+	{
+		CBaseEntity::m_bDontSuppressEvents = false;
+	}
+private:
+	CIgnorePredictionSuppression(const CIgnorePredictionSuppression &);
+};
+
+#define IGNORE_PREDICTION_SUPPRESSION CIgnorePredictionSuppression c_IgnorePredSuppression
+extern bool ShouldIgnorePredictionSuppression();
+
 #endif // BASEENTITY_SHARED_H

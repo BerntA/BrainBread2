@@ -775,7 +775,7 @@ void UTIL_Tracer( const Vector &vecStart, const Vector &vecEnd, int iEntIndex,
 void UTIL_BloodDrips(const Vector &origin, const Vector &direction, int color, int amount, int hitbox)
 {
 #ifdef BB2_AI
-	IPredictionSystem::SuppressHostEvents( NULL );
+	IGNORE_PREDICTION_SUPPRESSION;
 #endif //BB2_AI
 
 	if ( !UTIL_ShouldShowBlood( color ) )
@@ -830,7 +830,7 @@ void UTIL_DecalTrace( trace_t *pTrace, char const *decalName )
 void UTIL_BloodDecalTrace( trace_t *pTrace, int bloodColor )
 {
 #ifdef BB2_AI
-	IPredictionSystem::SuppressHostEvents(NULL);
+	IGNORE_PREDICTION_SUPPRESSION;
 #endif //BB2_AI
 
 	if ( UTIL_ShouldShowBlood( bloodColor ) )
@@ -876,7 +876,7 @@ void UTIL_GibImpact(CBaseEntity *pVictim, int attachment, int color, int hitbox,
 		return;
 
 #ifdef BB2_AI
-	IPredictionSystem::SuppressHostEvents(NULL);
+	IGNORE_PREDICTION_SUPPRESSION;
 #endif //BB2_AI
 
 	CEffectData	data;
@@ -902,7 +902,7 @@ void UTIL_GibImpact(CBaseEntity *pVictim, int attachment, int color, int hitbox,
 void UTIL_BloodSpawn(int iEntIndex, const Vector &pos, const Vector &dir, float flDamage, int hitbox)
 {
 #ifdef BB2_AI
-	IPredictionSystem::SuppressHostEvents(NULL);
+	IGNORE_PREDICTION_SUPPRESSION;
 #endif //BB2_AI
 
 	CEffectData	data;

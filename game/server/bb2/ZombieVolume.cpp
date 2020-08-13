@@ -28,7 +28,8 @@ enum ZombieClassTypes
 	ZOMBIE_TYPE_RANDOM,
 };
 
-ConVar bb2_zombie_spawner_distance("bb2_zombie_spawner_distance", "5200", FCVAR_GAMEDLL, "If there is no players within this distance from the spawner it will not spawn any zombies.", true, 200.0f, false, 0.0f);
+static ConVar bb2_zombie_spawner_distance("bb2_zombie_spawner_distance", "5200", FCVAR_GAMEDLL, "If there is no players within this distance from the spawner it will not spawn any zombies.", true, 200.0f, false, 0.0f);
+static CUtlVector<CZombieVolume*> g_pZombieVolumes;
 
 bool IsAllowedToSpawn(CBaseEntity *pEntity, float distance, float zDiff, bool bCheckVisible)
 {
@@ -136,12 +137,13 @@ CZombieVolume::CZombieVolume()
 	m_flSpawnFrequency = 0.0f;
 
 	m_vZombieList.Purge();
-	ListenForGameEvent("entity_killed");
+	g_pZombieVolumes.AddToTail(this);
 }
 
 CZombieVolume::~CZombieVolume()
 {
 	m_vZombieList.Purge();
+	g_pZombieVolumes.FindAndRemove(this);
 }
 
 void CZombieVolume::Spawn()
@@ -319,12 +321,14 @@ const char *CZombieVolume::GetZombieClassnameToSpawn()
 	}
 }
 
-void CZombieVolume::FireGameEvent(IGameEvent *event)
+/*static*/ void CZombieVolume::OnZombieRemoved(int index)
 {
-	if (!HasSpawnFlags(SF_RESPAWN_ONLY_IF_DEAD))
-		return;
+	for (int i = 0; i < g_pZombieVolumes.Count(); i++)
+	{
+		if ((g_pZombieVolumes[i] == NULL) || !g_pZombieVolumes[i]->HasSpawnFlags(SF_RESPAWN_ONLY_IF_DEAD))
+			continue;
 
-	const char * type = event->GetName();
-	if (!strcmp(type, "entity_killed"))
-		m_vZombieList.FindAndRemove(event->GetInt("entindex_killed", 0));
+		if (g_pZombieVolumes[i]->m_vZombieList.FindAndRemove(index))
+			break;
+	}
 }

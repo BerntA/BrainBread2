@@ -4548,6 +4548,7 @@ void CAI_BaseNPC::PrescheduleThink( void )
 	if ((m_flTimeToFadeIn > 0.0f) && (gpGlobals->curtime > m_flTimeToFadeIn))
 	{
 		m_flTimeToFadeIn = 0.0f;
+		m_bHasFadedIn = true;
 		OnFullyFadedIn();
 	}
 }

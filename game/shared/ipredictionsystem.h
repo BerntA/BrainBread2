@@ -51,12 +51,10 @@ public:
 		m_pSuppressHost = host;
 	}
 
-	CBaseEntity const *GetSuppressHost( void )
+	CBaseEntity const *GetSuppressHost(void)
 	{
-		if ( DisableFiltering() )
-		{
+		if (DisableFiltering() || ShouldIgnorePredictionSuppression())
 			return NULL;
-		}
 
 		return m_pSuppressHost;
 	}

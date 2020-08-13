@@ -1340,6 +1340,7 @@ public:
 	static void SetAllowPrecache( bool allow );
 
 	static bool m_bAllowPrecache;
+	static bool m_bDontSuppressEvents;
 
 	static bool IsSimulatingOnAlternateTicks();
 

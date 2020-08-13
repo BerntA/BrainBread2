@@ -264,7 +264,6 @@ void CNPCFred::PostscheduleThink(void)
 				vecPush.y = maxVEL * ((random->RandomInt(0, 1) == 0) ? 1.0f : -1.0f);
 				vecPush.z = 135.0f;
 
-				IPredictionSystem::SuppressHostEvents(NULL);
 				DispatchParticleEffect("bb2_item_spawn", PATTACH_ROOTBONE_FOLLOW, pOther);
 
 				if (pOther->m_takedamage == DAMAGE_YES)
@@ -365,8 +364,6 @@ void CNPCFred::StartTask(const Task_t *pTask)
 
 	case TASK_FRED_SHOCK_PLAYERS:
 	{
-		IPredictionSystem::SuppressHostEvents(NULL);
-
 		DispatchParticleEffect("bb2_healing_effect", GetLocalOrigin(), vec3_angle, this);
 		HL2MPRules()->EmitSoundToClient(this, "Laugh", GetNPCType(), GetGender());
 		EmitSound("Fred.Shockwave");
@@ -435,7 +432,6 @@ void CNPCFred::StartTask(const Task_t *pTask)
 		info.SetRelationshipLink(Classify());
 		RadiusDamage(info, vecStart, RAGE_RADIUS, CLASS_ZOMBIE, this);
 
-		IPredictionSystem::SuppressHostEvents(NULL);
 		DispatchParticleEffect("bb2_item_spawn", vecStart, vec3_angle, this);
 
 		TaskComplete();

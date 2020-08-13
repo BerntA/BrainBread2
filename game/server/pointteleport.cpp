@@ -25,9 +25,13 @@ public:
 
 	void InputTeleport( inputdata_t &inputdata );
 
+	void InputTeleportHumans(inputdata_t &inputdata);
+	void InputTeleportZombies(inputdata_t &inputdata);
+
 private:
 	
 	bool	EntityMayTeleport( CBaseEntity *pTarget );
+	void	TeleportTeam(int team);
 
 	Vector m_vSaveOrigin;
 	QAngle m_vSaveAngles;
@@ -45,6 +49,9 @@ BEGIN_DATADESC( CPointTeleport )
 	DEFINE_FIELD( m_vSaveAngles, FIELD_VECTOR ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Teleport", InputTeleport ),
+
+	DEFINE_INPUTFUNC(FIELD_VOID, "TeleportHumans", InputTeleportHumans),
+	DEFINE_INPUTFUNC(FIELD_VOID, "TeleportZombies", InputTeleportZombies),
 
 END_DATADESC()
 
@@ -119,4 +126,33 @@ void CPointTeleport::InputTeleport( inputdata_t &inputdata )
 	}
 
 	pTarget->Teleport( &m_vSaveOrigin, &m_vSaveAngles, NULL );
+}
+
+void CPointTeleport::InputTeleportHumans(inputdata_t &inputdata)
+{
+	TeleportTeam(TEAM_HUMANS);
+}
+
+void CPointTeleport::InputTeleportZombies(inputdata_t &inputdata)
+{
+	TeleportTeam(TEAM_DECEASED);
+}
+
+void CPointTeleport::TeleportTeam(int team)
+{
+	QAngle viewAngles;
+	viewAngles.Init();
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+		if (!pPlayer || (pPlayer->GetTeamNumber() != team) || !pPlayer->IsAlive() || pPlayer->IsObserver() || !EntityMayTeleport(pPlayer))
+			continue;
+
+		if ((team == TEAM_HUMANS) && pPlayer->IsPlayerInfected())
+			continue;
+
+		viewAngles[YAW] = random->RandomFloat(-180.0f, 180.0f);
+		pPlayer->Teleport(&m_vSaveOrigin, &viewAngles, NULL);
+	}
 }

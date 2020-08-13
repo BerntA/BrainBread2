@@ -48,6 +48,9 @@
 
 bool CBaseEntity::m_bAllowPrecache = false;
 
+bool CBaseEntity::m_bDontSuppressEvents = false;
+bool ShouldIgnorePredictionSuppression() { return CBaseEntity::m_bDontSuppressEvents; }
+
 // Set default max values for entities based on the existing constants from elsewhere
 float k_flMaxEntityPosCoord = MAX_COORD_FLOAT;
 float k_flMaxEntityEulerAngle = 360.0 * 1000.0f; // really should be restricted to +/-180, but some code doesn't adhere to this.  let's just trap NANs, etc

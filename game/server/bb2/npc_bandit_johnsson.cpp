@@ -193,14 +193,8 @@ void CNPCBanditJohnsson::PrescheduleThink(void)
 	if ((currHealth < (maxHealth * (m_flHealthFractionToCheck / 100.0f))) && (m_flHealthFractionToCheck > 0.0f))
 	{
 		HL2MPRules()->EmitSoundToClient(this, "Retreat", GetNPCType(), GetGender());
-
-#ifdef BB2_AI
-		IPredictionSystem::SuppressHostEvents(NULL);
-#endif //BB2_AI
-
 		DispatchParticleEffect(TELEPORT_PARTICLE, GetAbsOrigin(), GetAbsAngles(), this);
 		m_flHealthFractionToCheck -= 25.0f;
-
 		m_OnLostQuarterOfHealth.FireOutput(this, this);
 	}
 }

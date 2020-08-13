@@ -22,7 +22,7 @@ public:
 	DECLARE_PREDICTABLE();
 
 	CWeaponREXAkimbo(void);
-	
+
 	void AddViewKick(void);
 	bool UsesEmptyAnimation() { return false; }
 	int GetOverloadCapacity() { return 3; }
@@ -71,16 +71,7 @@ void CWeaponREXAkimbo::AddViewKick(void)
 	CHL2MP_Player* pPlayer = ToHL2MPPlayer(GetOwner());
 	if (pPlayer)
 	{
-		QAngle angles = pPlayer->GetLocalAngles();
-
-		angles.x += random->RandomInt(-1, 1);
-		angles.y += random->RandomInt(-1, 1);
-		angles.z = 0;
-#ifndef CLIENT_DLL
-		pPlayer->SnapEyeAngles(angles);
-#endif
-
+		pPlayer->ViewPunch(QAngle(-random->RandomFloat(3.65f, 6.5f), random->RandomFloat(-2.0f, 2.0f), 0.0f));
 		m_iShotsFired++;
-		pPlayer->ViewPunch(QAngle(-5, random->RandomFloat(-1, 1), 0));
 	}
 }

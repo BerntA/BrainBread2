@@ -15,7 +15,6 @@
 #endif
 
 #include "baseentity.h"
-#include "GameEventListener.h"
 
 //
 // Spawnflags
@@ -28,7 +27,7 @@ enum
 	SF_RESPAWN_ONLY_IF_DEAD = 0x08, // Don't spawn zombies blindly, only respawn the ones who died, keep track of live zombies.
 };
 
-class CZombieVolume : public CBaseEntity, public CGameEventListener
+class CZombieVolume : public CBaseEntity
 {
 public:
 
@@ -43,6 +42,8 @@ public:
 
 	void InputStartSpawn(inputdata_t &inputData);
 	void InputStopSpawn(inputdata_t &inputData);
+
+	static void OnZombieRemoved(int index);
 
 private:
 
@@ -78,7 +79,6 @@ protected:
 	void TraceZombieBBox(const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm, CBaseEntity *pEntity);
 	void SpawnWave();
 	const char *GetZombieClassnameToSpawn();
-	void FireGameEvent(IGameEvent *event);
 
 	CUtlVector<int> m_vZombieList;
 };

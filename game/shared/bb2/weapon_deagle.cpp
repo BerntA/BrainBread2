@@ -247,23 +247,9 @@ QAngle CWeaponDeagle::GetViewKickAngle(void)
 {
 	BaseClass::GetViewKickAngle();
 
-	QAngle viewkick = vec3_angle;
-	CHL2MP_Player *pPlayer = ToHL2MPPlayer(GetOwner());
-	if (pPlayer)
-	{
-#ifndef CLIENT_DLL
-		QAngle angles = pPlayer->GetLocalAngles();
-		angles.x += random->RandomInt(-0.6f, 0.6f);
-		angles.y += random->RandomInt(-0.6f, 0.6f);
-		angles.z = 0;
-		pPlayer->SnapEyeAngles(angles);
-#endif
-
-		viewkick = QAngle(-random->RandomFloat(1.0f, 2.25f), random->RandomFloat(-0.5f, 0.5f), 0.0f);
-
-		if (m_iSwitchState.Get() == DEAGLE_STATE_ONE_HAND)
-			viewkick *= 1.55f;
-	}
+	QAngle viewkick = QAngle(-random->RandomFloat(5.10f, 9.0f), random->RandomFloat(-2.5f, 2.5f), 0.0f);
+	if (m_iSwitchState.Get() == DEAGLE_STATE_ONE_HAND)
+		viewkick *= 1.55f;
 
 	return viewkick;
 }

@@ -31,6 +31,7 @@
 #include "hl2mp_gamerules.h"
 #include "GameBase_Server.h"
 #include "random_extended.h"
+#include "ZombieVolume.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -130,6 +131,7 @@ CNPC_BaseZombie::~CNPC_BaseZombie()
 	m_hLastIgnitionSource = NULL;
 
 	zombieList.FindAndRemove(this);
+	CZombieVolume::OnZombieRemoved(this->entindex());
 }
 
 //-----------------------------------------------------------------------------
