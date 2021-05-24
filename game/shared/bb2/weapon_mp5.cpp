@@ -34,6 +34,9 @@ public:
 	const char *GetAmmoEntityLink(void) { return "ammo_smg"; }
 	void PrimaryAttack(void) { CWeaponHL2MPBase::PrimaryAttack(); }
 
+	int		GetMinBurst() { return 3; }
+	int		GetMaxBurst() { return 5; }
+
 	bool Reload(void)
 	{
 		if (m_flNextPrimaryAttack > gpGlobals->curtime)

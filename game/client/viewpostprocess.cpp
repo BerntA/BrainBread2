@@ -763,6 +763,9 @@ float CLuminanceHistogramSystem::GetTargetTonemapScalar( bool bGetIdealTargetFor
 
 static float GetCurrentBloomScale( void )
 {
+	if (IsInOtherView())
+		return 0.0f;
+
 	// Use the appropriate bloom scale settings.  Mapmakers's overrides the convar settings.
 	float flCurrentBloomScale = 1.0f;
 	if ( g_bUseCustomBloomScale )

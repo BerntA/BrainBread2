@@ -6184,18 +6184,14 @@ void CBasePlayer::InitFogController( void )
 // Purpose: 
 // Input  : *pEntity - 
 //-----------------------------------------------------------------------------
-void CBasePlayer::SetViewEntity( CBaseEntity *pEntity ) 
-{ 
-	m_hViewEntity = pEntity; 
-
-	if ( m_hViewEntity )
-	{
-		engine->SetView( edict(), m_hViewEntity->edict() );
-	}
+void CBasePlayer::SetViewEntity(CBaseEntity *pEntity)
+{
+	m_hViewEntity = pEntity;
+	m_Local.m_bIsInOtherView = (pEntity != NULL);
+	if (m_hViewEntity)
+		engine->SetView(edict(), m_hViewEntity->edict());
 	else
-	{
-		engine->SetView( edict(), edict() );
-	}
+		engine->SetView(edict(), edict());
 }
 
 //-----------------------------------------------------------------------------

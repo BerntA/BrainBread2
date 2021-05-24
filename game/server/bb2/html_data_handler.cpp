@@ -17,7 +17,8 @@
 #endif
 
 ConVar bb2_enable_ban_list("bb2_enable_ban_list", "1", FCVAR_GAMEDLL, "Enable or Disable the official ban list?", true, 0.0f, true, 1.0f);
-ConVar bb2_debug_libcurl("bb2_debug_libcurl", "0", FCVAR_GAMEDLL | FCVAR_HIDDEN, "Enable Verboseness for LIBCURL.", true, 0.0f, true, 1.0f);
+static ConVar bb2_debug_libcurl("bb2_debug_libcurl", "0", FCVAR_GAMEDLL | FCVAR_HIDDEN, "Enable Verboseness for LIBCURL.", true, 0.0f, true, 1.0f);
+static ConVar bb2_libcurl_timeout("bb2_libcurl_timeout", "0", FCVAR_GAMEDLL | FCVAR_HIDDEN, "Set LIBCURL timeout time.");
 
 void EnumerateSoundScriptFolder(FileHandle_t fileInfo, const char *path, const char *targetFolder)
 {
@@ -130,6 +131,9 @@ bool ParseHTML(const char *url)
 
 	if (bb2_debug_libcurl.GetBool())
 		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+
+	if (bb2_libcurl_timeout.GetInt()) // Not advisable ? ? ?	
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT, ((long)bb2_libcurl_timeout.GetInt()));
 
 	CURLcode result = curl_easy_perform(curl);
 	if (result == CURLE_OK)

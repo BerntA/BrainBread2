@@ -62,6 +62,7 @@ public:
 	CInterpolatedVar< QAngle >	m_iv_vecPunchAngleVel;
 	float					m_flStepSize;
 	bool					m_bAllowAutoMovement;
+	bool					m_bIsInOtherView;
 
 	// 3d skybox
 	sky3dparams_t			m_skybox3d;

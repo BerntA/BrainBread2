@@ -6880,20 +6880,24 @@ bool CAI_BaseNPC::IsWeaponStateChanging( void )
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::OnRangeAttack1()
 {
-	SetLastAttackTime( gpGlobals->curtime );
+	SetLastAttackTime(gpGlobals->curtime);
 
 	// Houston, there is a problem!
-	AssertOnce( GetShotRegulator()->ShouldShoot() );
+	AssertOnce(GetShotRegulator()->ShouldShoot());
 
 	m_ShotRegulator.OnFiredWeapon();
-	if ( m_ShotRegulator.IsInRestInterval() )
-	{
+	if (m_ShotRegulator.IsInRestInterval())
 		OnUpdateShotRegulator();
+
+	CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+	if (pWeapon && (pWeapon->GetWeaponType() == WEAPON_TYPE_SHOTGUN))
+	{
+		SetNextAttack(gpGlobals->curtime + MAX(0.5f, pWeapon->GetFireRate())); // Fixes crazy auto-shotgun shit. (sometimes they wait for god, why?)
+		m_ShotRegulator.FireNoEarlierThan(GetNextAttack());
 	}
-
-	SetNextAttack( m_ShotRegulator.NextShotTime() );
+	else
+		SetNextAttack(m_ShotRegulator.NextShotTime());
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Initialze the relationship table from the keyvalues

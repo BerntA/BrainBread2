@@ -216,7 +216,7 @@ void CPropaneExplosive::Spawn(void)
 		m_DmgRadius = data->flRadius;
 	}
 
-	color32 col32 = { 70, 130, 180, 255 };
+	color32 col32 = { 240, 100, 125, 255 };
 	m_GlowColor = col32;
 	SetGlowMode(GLOW_MODE_RADIUS);
 }

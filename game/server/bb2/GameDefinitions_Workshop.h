@@ -47,6 +47,8 @@ protected:
 private:
 	char pszWorkshopDir[2048];
 	float m_flDownloadInfoDelay;
+	int m_iProcessed;
+	int m_iProcessCount;
 	CUtlVector<PublishedFileId_t> m_pWorkshopItemDownloadList;
 };
 

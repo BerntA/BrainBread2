@@ -106,8 +106,8 @@ void CNPCBanditJohnsson::Spawn(void)
 
 	m_iNumGrenades = 2000;
 
-	// No kicking for Johnsson.
-	CapabilitiesRemove(bits_CAP_INNATE_MELEE_ATTACK1);
+	// No kicking or jumping for Johnsson.
+	CapabilitiesRemove(bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_MOVE_JUMP);
 
 	m_flHealthFractionToCheck = 75.0f;
 }

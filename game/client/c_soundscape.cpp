@@ -265,8 +265,6 @@ void Soundscape_Update( audioparams_t &audio )
 	g_SoundscapeSystem.UpdateAudioParams( audio );
 }
 
-#define SOUNDSCAPE_MANIFEST_FILE				"scripts/soundscapes_manifest.txt"
-
 void C_SoundscapeSystem::AddSoundScapeFile( const char *filename )
 {
 	KeyValues *script = new KeyValues(filename);
@@ -303,52 +301,24 @@ bool C_SoundscapeSystem::Init()
 {
 	m_loopingSoundId = 0;
 
-	const char *mapname = MapName();
-	const char *mapSoundscapeFilename = NULL;
-	if ( mapname && *mapname )
+	DevMsg("Client Loading Soundscapes:\n");
+	char filePath[MAX_WEAPON_STRING];
+	FileFindHandle_t findHandle;
+	const char *pFilename = filesystem->FindFirstEx("data/soundscapes/*.txt", "MOD", &findHandle);
+	while (pFilename)
 	{
-		mapSoundscapeFilename = VarArgs( "scripts/soundscapes_%s.txt", mapname );
-	}
-
-	KeyValues *manifest = new KeyValues( SOUNDSCAPE_MANIFEST_FILE );	
-#ifdef POSIX
-	if (manifest->LoadFromFile(filesystem, SOUNDSCAPE_MANIFEST_FILE, "MOD"))
-#else
-	if (filesystem->LoadKeyValues(*manifest, IFileSystem::TYPE_SOUNDSCAPE, SOUNDSCAPE_MANIFEST_FILE, "MOD"))
-#endif
-	{
-		for ( KeyValues *sub = manifest->GetFirstSubKey(); sub != NULL; sub = sub->GetNextKey() )
+		if (!filesystem->IsDirectory(pFilename, "MOD"))
 		{
-			if ( !Q_stricmp( sub->GetName(), "file" ) )
-			{
-				// Add
-				AddSoundScapeFile( sub->GetString() );
-				if ( mapSoundscapeFilename && FStrEq( sub->GetString(), mapSoundscapeFilename ) )
-				{
-					mapSoundscapeFilename = NULL; // we've already loaded the map's soundscape
-				}
-				continue;
-			}
-
-			Warning( "C_SoundscapeSystem::Init:  Manifest '%s' with bogus file type '%s', expecting 'file'\n", 
-				SOUNDSCAPE_MANIFEST_FILE, sub->GetName() );
+			Q_snprintf(filePath, MAX_WEAPON_STRING, "data/soundscapes/%s", pFilename);
+			AddSoundScapeFile(filePath);
+			DevMsg("Loaded: %s\n", filePath);
 		}
-
-		if ( mapSoundscapeFilename && filesystem->FileExists( mapSoundscapeFilename ) )
-		{
-			AddSoundScapeFile( mapSoundscapeFilename );
-		}
+		pFilename = filesystem->FindNext(findHandle);
 	}
-	else
-	{
-		Error( "Unable to load manifest file '%s'\n", SOUNDSCAPE_MANIFEST_FILE );
-	}
-
-	manifest->deleteThis();
+	filesystem->FindClose(findHandle);
 
 	return true;
 }
-
 
 int C_SoundscapeSystem::FindSoundscapeByName( const char *pSoundscapeName )
 {

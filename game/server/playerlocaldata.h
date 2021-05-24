@@ -69,6 +69,7 @@ public:
 
 	CNetworkVar( float, m_flStepSize );
 	CNetworkVar( bool, m_bAllowAutoMovement );
+	CNetworkVar(bool, m_bIsInOtherView);
 
 	// 3d skybox
 	CNetworkVarEmbedded( sky3dparams_t, m_skybox3d );

@@ -37,6 +37,9 @@ int C_FirstpersonBody::DrawModel(int flags)
 	if (!pOwner)
 		return 0;
 
+	if ((pOwner == pLocalPlayer) && IsInOtherView())
+		return 0;
+
 	if ((pLocalPlayer->GetObserverMode() != OBS_MODE_IN_EYE) && (pLocalPlayer->GetTeamNumber() <= TEAM_SPECTATOR))
 		return 0;
 

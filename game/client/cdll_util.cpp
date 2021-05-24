@@ -163,6 +163,12 @@ int GetLocalPlayerTeam( void )
 		return TEAM_UNASSIGNED;
 }
 
+bool IsInOtherView(void)
+{
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	return (pPlayer ? pPlayer->m_Local.m_bIsInOtherView : false);
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Convert angles to -180 t 180 range
 // Input  : angles - 

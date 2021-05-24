@@ -478,7 +478,7 @@ void IN_QuestDown(const CCommand& args)
 	KeyDown(&in_quest, args[1]);
 
 	C_HL2MP_Player* pClient = C_HL2MP_Player::GetLocalHL2MPPlayer();
-	if (!pClient || (pClient->GetTeamNumber() != TEAM_HUMANS))
+	if (!pClient || (pClient->GetTeamNumber() == TEAM_DECEASED))
 		return;
 
 	if (g_pQuestPanel)

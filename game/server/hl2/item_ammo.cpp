@@ -147,10 +147,7 @@ void CItem_AmmoCrate::OnRestore(void)
 void CItem_AmmoCrate::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
 {
 	CBasePlayer *pPlayer = ToBasePlayer(pActivator);
-	if (pPlayer == NULL)
-		return;
-
-	if (!pPlayer->IsHuman())
+	if (!pPlayer || !pPlayer->IsHuman() || m_hActivator.Get())
 		return;
 
 	int timeLeft = ((int)(pPlayer->m_flNextResupplyTime - gpGlobals->curtime));
@@ -234,7 +231,6 @@ void CItem_AmmoCrate::HandleAnimEvent(animevent_t *pEvent)
 	BaseClass::HandleAnimEvent(pEvent);
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -242,7 +238,6 @@ void CItem_AmmoCrate::CrateThink(void)
 {
 	StudioFrameAdvance();
 	DispatchAnimEvents(this);
-
 	SetNextThink(gpGlobals->curtime + 0.1f);
 
 	// Start closing if we're not already
@@ -252,7 +247,6 @@ void CItem_AmmoCrate::CrateThink(void)
 		if (m_flCloseTime <= gpGlobals->curtime)
 		{
 			m_hActivator = NULL;
-
 			ResetSequence(LookupSequence("Close"));
 		}
 	}

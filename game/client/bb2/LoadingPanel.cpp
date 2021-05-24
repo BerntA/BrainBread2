@@ -396,40 +396,38 @@ void CLoadingPanel::OnTick()
 			// Load the map details!
 			if (iMapIndex >= 0 && iMapIndex < GameBaseShared()->GetSharedMapData()->pszGameMaps.Count())
 			{
-				gameMapItem_t *mapItem = &GameBaseShared()->GetSharedMapData()->pszGameMaps[iMapIndex];
-				if (!mapItem->bExclude)
+				const gameMapItem_t *mapItem = &GameBaseShared()->GetSharedMapData()->pszGameMaps[iMapIndex];
+
+				if (mapItem->numLoadingScreens)
 				{
-					if (mapItem->numLoadingScreens)
-					{
-						int iRandomImage = random->RandomInt(0, (mapItem->numLoadingScreens - 1));
-						m_pImgLoadingBackground->SetImage(VarArgs("loading/%s_%i", GameBaseClient->GetLoadingImage(), iRandomImage));
-					}
-
-					int gamemodeForMap = GetGamemodeForMap(mapItem->pszMapName);
-					m_bLoadedMapData = ((gamemodeForMap == MODE_ARENA) || (gamemodeForMap == MODE_OBJECTIVE));
-					m_pTextMapDetail[3]->SetVisible(m_bLoadedMapData);
-
-					m_pTextMapDetail[0]->SetText(mapItem->pszMapTitle);
-					m_pTextMapDetail[1]->SetText(GetGamemodeNameForPrefix(mapItem->pszMapName));
-					m_pTextMapDetail[1]->SetContentAlignment(Label::Alignment::a_east);
-					m_pTextMapDetail[2]->SetContentAlignment(Label::Alignment::a_east);
-					m_pTextMapDetail[3]->SetContentAlignment(Label::Alignment::a_east);
-
-					colMapString = Color(0, 255, 0, 255);
-					if (mapItem->iMapVerification == MAP_VERIFIED_WHITELISTED)
-					{
-						m_pMapRating->SetVisible(true);
-						m_pMapRating->SetProgress(mapItem->flScore);
-						m_pTextMapDetail[2]->SetText("#LoadingUI_CustomMap");
-					}
-					else if (mapItem->iMapVerification == MAP_VERIFIED_UNKNOWN)
-					{
-						colMapString = Color(255, 0, 0, 255);
-						m_pTextMapDetail[2]->SetText("#LoadingUI_CustomMap");
-					}
-					else
-						m_pTextMapDetail[2]->SetText("#LoadingUI_OfficialMap");
+					int iRandomImage = random->RandomInt(0, (mapItem->numLoadingScreens - 1));
+					m_pImgLoadingBackground->SetImage(VarArgs("loading/%s_%i", GameBaseClient->GetLoadingImage(), iRandomImage));
 				}
+
+				int gamemodeForMap = GetGamemodeForMap(mapItem->pszMapName);
+				m_bLoadedMapData = ((gamemodeForMap == MODE_ARENA) || (gamemodeForMap == MODE_OBJECTIVE));
+				m_pTextMapDetail[3]->SetVisible(m_bLoadedMapData);
+
+				m_pTextMapDetail[0]->SetText(mapItem->pszMapTitle);
+				m_pTextMapDetail[1]->SetText(GetGamemodeNameForPrefix(mapItem->pszMapName));
+				m_pTextMapDetail[1]->SetContentAlignment(Label::Alignment::a_east);
+				m_pTextMapDetail[2]->SetContentAlignment(Label::Alignment::a_east);
+				m_pTextMapDetail[3]->SetContentAlignment(Label::Alignment::a_east);
+
+				colMapString = Color(0, 255, 0, 255);
+				if (mapItem->iMapVerification == MAP_VERIFIED_WHITELISTED)
+				{
+					m_pMapRating->SetVisible(true);
+					m_pMapRating->SetProgress(mapItem->flScore);
+					m_pTextMapDetail[2]->SetText("#LoadingUI_CustomMap");
+				}
+				else if (mapItem->iMapVerification == MAP_VERIFIED_UNKNOWN)
+				{
+					colMapString = Color(255, 0, 0, 255);
+					m_pTextMapDetail[2]->SetText("#LoadingUI_CustomMap");
+				}
+				else
+					m_pTextMapDetail[2]->SetText("#LoadingUI_OfficialMap");
 			}
 		}
 

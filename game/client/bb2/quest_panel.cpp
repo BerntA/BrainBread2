@@ -82,7 +82,7 @@ void CQuestPanel::UpdateLayout(void)
 
 	int w, h;
 	GetSize(w, h);
-	
+
 	GetBackground()->SetSize(w, h);
 	GetBackground()->SetPos(0, 0);
 
@@ -123,13 +123,13 @@ void CQuestPanel::PaintBackground()
 void CQuestPanel::OnShowPanel(bool bShow)
 {
 	BaseClass::OnShowPanel(bShow);
-	UpdateLayout();	
+	UpdateLayout();
 
 	C_HL2MP_Player* pClient = C_HL2MP_Player::GetLocalHL2MPPlayer();
 	if (!pClient)
 		return;
 
-	bool bNoQuests = (pClient->GetTeamNumber() != TEAM_HUMANS) || (HL2MPRules()->GetCurrentGamemode() != MODE_OBJECTIVE) || !GameBaseShared()->GetSharedQuestData()->IsAnyQuestActive();	
+	bool bNoQuests = (HL2MPRules()->GetCurrentGamemode() != MODE_OBJECTIVE) || !GameBaseShared()->GetSharedQuestData()->IsAnyQuestActive();
 	m_pLabelWarning->SetVisible(bNoQuests);
 	m_pQuestDetailList->SetVisible(!bNoQuests);
 
@@ -141,14 +141,14 @@ void CQuestPanel::OnShowPanel(bool bShow)
 }
 
 void CQuestPanel::OnSelectQuest(int index)
-{	
+{
 	if (m_pQuestDetailList->SelectID(index))
 	{
 		m_pQuestDetailList->SetVisible(true);
 		m_pLabelWarning->SetVisible(false);
 		m_iSelectedQuestIdx = index;
 		m_pQuestLists->SetActiveIndex(index);
-	}		
+	}
 }
 
 void CQuestPanel::UpdateSelectedQuest(void)

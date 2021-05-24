@@ -52,6 +52,7 @@ BEGIN_SEND_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 
 	SendPropFloat	(SENDINFO(m_flStepSize), 16, SPROP_ROUNDUP, 0.0f, 128.0f ),
 	SendPropInt		(SENDINFO(m_bAllowAutoMovement),1, SPROP_UNSIGNED ),
+	SendPropBool(SENDINFO(m_bIsInOtherView)),
 
 	// 3d skybox data
 	SendPropInt(SENDINFO_STRUCTELEM(m_skybox3d.scale), 12),
@@ -149,6 +150,7 @@ BEGIN_SIMPLE_DATADESC( CPlayerLocalData )
 	DEFINE_FIELD( m_vecPunchAngleVel, FIELD_VECTOR ),
 	DEFINE_FIELD( m_flStepSize, FIELD_FLOAT ),
 	DEFINE_FIELD( m_bAllowAutoMovement, FIELD_BOOLEAN ),
+	DEFINE_FIELD(m_bIsInOtherView, FIELD_BOOLEAN),
 	DEFINE_EMBEDDED( m_skybox3d ),
 	DEFINE_EMBEDDED( m_PlayerFog ),
 	DEFINE_EMBEDDED( m_fog ),

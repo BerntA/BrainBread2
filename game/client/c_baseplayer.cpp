@@ -145,6 +145,7 @@ BEGIN_RECV_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 
 	RecvPropFloat	(RECVINFO(m_flStepSize)),
 	RecvPropInt		(RECVINFO(m_bAllowAutoMovement)),
+	RecvPropBool	(RECVINFO(m_bIsInOtherView)),
 
 	// 3d skybox data
 	RecvPropInt(RECVINFO(m_skybox3d.scale)),

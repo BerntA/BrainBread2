@@ -16,7 +16,7 @@ static bool m_bLoaded = false;
 static bool m_bDownloadListOfItems = false;
 static PublishedFileId_t m_currentFileID = 0;
 
-PublishedFileId_t GetPublishedFileIDFromCommandLine(const char *param)
+static PublishedFileId_t GetPublishedFileIDFromCommandLine(const char *param)
 {
 	return ((PublishedFileId_t)Q_atoui64(CommandLine()->ParmValue(param, "0")));
 }
@@ -29,6 +29,7 @@ CGameDefinitionsWorkshop::CGameDefinitionsWorkshop() : m_CallbackItemDownloaded(
 	m_currentFileID = 0;
 	m_flDownloadInfoDelay = 0.0f;
 	ugcQueryHandle = NULL;
+	m_iProcessed = m_iProcessCount = 1;
 
 	char pchGameDir[1024];
 	engine->GetGameDir(pchGameDir, 1024);
@@ -76,7 +77,7 @@ void CGameDefinitionsWorkshop::Initialize()
 	{
 		Msg("Trying to update downloaded workshop items...\n");
 		UpdateDownloadedItems();
-	}	
+	}
 	else if (CommandLine()->FindParm("+workshop_download_collection"))
 	{
 		PublishedFileId_t itemID = GetPublishedFileIDFromCommandLine("+workshop_download_collection");
@@ -114,7 +115,7 @@ void CGameDefinitionsWorkshop::DownloadThink()
 			if (steamgameserverapicontext->SteamUGC()->GetItemDownloadInfo(m_currentFileID, &bytesReceived, &totalBytesToReceive))
 			{
 				if (totalBytesToReceive)
-					Msg("Downloading item '%llu':\nProgress: %llu / %llu\n", ((uint64)m_currentFileID), bytesReceived, totalBytesToReceive);
+					Msg("(%i / %i) Downloading item '%llu':\nProgress: %llu / %llu\n", m_iProcessed, m_iProcessCount, ((uint64)m_currentFileID), bytesReceived, totalBytesToReceive);
 			}
 		}
 	}
@@ -125,6 +126,7 @@ void CGameDefinitionsWorkshop::UpdateDownloadedItems()
 	if (!m_bLoaded || m_bDownloadListOfItems)
 		return;
 
+	m_iProcessed = 0;
 	m_currentFileID = 0;
 	m_pWorkshopItemDownloadList.Purge();
 	GetListOfAddons(m_pWorkshopItemDownloadList);
@@ -136,6 +138,7 @@ void CGameDefinitionsWorkshop::DownloadCollection(PublishedFileId_t itemID)
 	if (!m_bLoaded || m_bDownloadListOfItems || (ugcQueryHandle != NULL))
 		return;
 
+	m_iProcessed = 0;
 	ugcQueryHandle = steamgameserverapicontext->SteamUGC()->CreateQueryUGCDetailsRequest(&itemID, 1);
 	steamgameserverapicontext->SteamUGC()->SetReturnChildren(ugcQueryHandle, true);
 
@@ -162,6 +165,7 @@ void CGameDefinitionsWorkshop::OnReceiveUGCQueryUGCDetails(SteamUGCQueryComplete
 					for (uint32 child = 0; child < childrenCount; ++child)
 						AddItemToList(childrenIDs[child]);
 
+					m_iProcessCount = m_pWorkshopItemDownloadList.Count();
 					DownloadNextItemInList();
 				}
 				delete[] childrenIDs;
@@ -200,6 +204,7 @@ bool CGameDefinitionsWorkshop::DownloadNextItemInList(void)
 {
 	if (m_pWorkshopItemDownloadList.Count())
 	{
+		m_iProcessed++;
 		m_bDownloadListOfItems = true;
 		m_currentFileID = m_pWorkshopItemDownloadList[GetLastItemInList()];
 		steamgameserverapicontext->SteamUGC()->DownloadItem(m_currentFileID, true);
@@ -238,6 +243,7 @@ void CGameDefinitionsWorkshop::DownloadedItem(DownloadItemResult_t *pItem)
 
 		m_bDownloadListOfItems = false;
 		m_currentFileID = 0;
+		m_iProcessed = m_iProcessCount = 1;
 	}
 }
 
@@ -269,6 +275,8 @@ void CGameDefinitionsWorkshop::GetListOfAddons(CUtlVector<PublishedFileId_t> &li
 		pFilename = filesystem->FindNext(findHandle);
 	}
 	filesystem->FindClose(findHandle);
+
+	m_iProcessCount = list.Count();
 }
 
 CON_COMMAND(workshop_help, "Display some help & tips related to gameserver workshop stuff.")
