@@ -779,8 +779,15 @@ static float GetCurrentBloomScale( void )
 	return flCurrentBloomScale;
 }
 
-static void GetExposureRange( float *flAutoExposureMin, float *flAutoExposureMax )
+static void GetExposureRange(float *flAutoExposureMin, float *flAutoExposureMax)
 {
+	if (IsInOtherView())
+	{
+		*flAutoExposureMin = mat_autoexposure_min.GetFloat();
+		*flAutoExposureMax = mat_autoexposure_max.GetFloat();
+		return;
+	}
+
 	// Get min
 	if ( ( g_bUseCustomAutoExposureMin ) && ( g_flCustomAutoExposureMin > 0.0f ) )
 	{
@@ -1425,7 +1432,7 @@ static void DrawBloomDebugBoxes( IMatRenderContext *pRenderContext )
 static float GetBloomAmount( void )
 {
 	// return bloom amount ( 0.0 if disabled or otherwise turned off )
-	if ( engine->GetDXSupportLevel() < 80 )
+	if ((engine->GetDXSupportLevel() < 80) || IsInOtherView())
 		return 0.0;
 
 	HDRType_t hdrType = g_pMaterialSystemHardwareConfig->GetHDRType();
