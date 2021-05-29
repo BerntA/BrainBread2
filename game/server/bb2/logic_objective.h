@@ -46,7 +46,6 @@ private:
 	void ProgressEntityCounting(void);
 
 	// Shared - Globals
-	int m_iIndex;
 	string_t szObjective;
 	bool m_bShouldEntityCount;
 	bool m_bShouldPinToMap;

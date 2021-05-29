@@ -117,13 +117,7 @@ public:
 	bool PlayRandomMusic(int type, bool reset = false)
 	{
 		if (bb2_music_system_shuffle.GetBool() && (m_pAmbientTracks.Count() > 1) && (type == MUSIC_TYPE_AMBIENT_TRACK))
-		{
-			int iCurrentIndexInAmbientList = m_iActiveIndex;
-			while (iCurrentIndexInAmbientList == m_iActiveIndex)
-				iCurrentIndexInAmbientList = random->RandomInt(0, (m_pAmbientTracks.Count() - 1));
-
-			m_iActiveIndex = iCurrentIndexInAmbientList;
-		}
+			m_iActiveIndex = GetRandIdxExcluded(m_pAmbientTracks.Count(), m_iActiveIndex);
 		else
 		{
 			if (reset || (m_iActiveIndex >= m_pAmbientTracks.Count()))

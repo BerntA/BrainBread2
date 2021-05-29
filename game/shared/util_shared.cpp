@@ -1181,3 +1181,15 @@ const char* UTIL_GetActiveHolidayString()
 {
 	return NULL;
 }
+
+int GetRandIdxExcluded(int count, int excluded)
+{
+	CUtlVector<int> temp;
+	for (int i = 0; i < count; i++)
+	{
+		if (i == excluded)
+			continue;
+		temp.AddToTail(i);
+	}
+	return (temp[random->RandomInt(0, (temp.Count() - 1))]);
+}

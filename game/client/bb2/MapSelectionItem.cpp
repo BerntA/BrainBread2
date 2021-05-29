@@ -164,12 +164,7 @@ void MapSelectionItem::OnUpdate(void)
 
 void MapSelectionItem::SelectNewImage(bool bPreview)
 {
-	int iNewImage = random->RandomInt(0, (m_iAmountOfImages - 1));
-	while (iNewImage == m_iLastImage)
-		iNewImage = random->RandomInt(0, (m_iAmountOfImages - 1));
-
-	m_iLastImage = iNewImage;
-
+	m_iLastImage = GetRandIdxExcluded(m_iAmountOfImages, m_iLastImage);
 	if (GameBaseShared()->GetSharedMapData() && (m_iMapItemIndexLink >= 0) && (m_iMapItemIndexLink < GameBaseShared()->GetSharedMapData()->pszGameMaps.Count()))
 	{
 		gameMapItem_t *mapItem = &GameBaseShared()->GetSharedMapData()->pszGameMaps[m_iMapItemIndexLink];

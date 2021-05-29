@@ -201,85 +201,74 @@ float CVoiceStatus::GetHeadLabelOffset( void ) const
 	return g_flHeadOffset;
 }
 
-
 void CVoiceStatus::DrawHeadLabels()
 {
-	if ( m_bHeadLabelsDisabled )
+	if (m_bHeadLabelsDisabled || !m_pHeadLabelMaterial || (GameRules() && (GameRules()->ShouldDrawHeadLabels() == false)))
 		return;
 
-	if ( GameRules() && ( GameRules()->ShouldDrawHeadLabels() == false ) )
+	// Align it so it never points up or down.
+	Vector vUp(0, 0, 1);
+	Vector vRight = CurrentViewRight();
+	if (fabs(vRight.z) > 0.95)	// don't draw it edge-on
 		return;
 
-	if( !m_pHeadLabelMaterial )
-		return;
+	vRight.z = 0;
+	VectorNormalize(vRight);
+	const float flSize = g_flHeadIconSize;
+	CMatRenderContextPtr pRenderContext(materials);
 
-	CMatRenderContextPtr pRenderContext( materials );
-
-	for(int i=0; i < VOICE_MAX_PLAYERS; i++)
+	for (int i = 0; i < VOICE_MAX_PLAYERS; i++)
 	{
-		if ( !m_VoicePlayers[i] )
+		if (!m_VoicePlayers[i])
 			continue;
-		
-		IClientNetworkable *pClient = cl_entitylist->GetClientEntity( i+1 );
-		
+
+		IClientNetworkable *pClient = cl_entitylist->GetClientEntity(i + 1);
+
 		// Don't show an icon if the player is not in our PVS.
-		if ( !pClient || pClient->IsDormant() )
+		if (!pClient || pClient->IsDormant())
 			continue;
 
 		C_BasePlayer *pPlayer = dynamic_cast<C_BasePlayer*>(pClient);
-		if( !pPlayer )
+		if (!pPlayer)
 			continue;
 
 		// Don't show an icon for dead or spectating players (ie: invisible entities).
-		if( pPlayer->IsPlayerDead() )
+		if (pPlayer->IsPlayerDead())
 			continue;
 
 		// Place it 20 units above his head.
 		Vector vOrigin = pPlayer->WorldSpaceCenter();
 		vOrigin.z += g_flHeadOffset;
 
-		
-		// Align it so it never points up or down.
-		Vector vUp( 0, 0, 1 );
-		Vector vRight = CurrentViewRight();
-		if ( fabs( vRight.z ) > 0.95 )	// don't draw it edge-on
-			continue;
-
-		vRight.z = 0;
-		VectorNormalize( vRight );
-
-
-		float flSize = g_flHeadIconSize;
-
-		pRenderContext->Bind( pPlayer->GetHeadLabelMaterial() );
+		pRenderContext->Bind(pPlayer->GetHeadLabelMaterial());
 		IMesh *pMesh = pRenderContext->GetDynamicMesh();
 		CMeshBuilder meshBuilder;
-		meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+		meshBuilder.Begin(pMesh, MATERIAL_QUADS, 1);
 
-		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
-		meshBuilder.TexCoord2f( 0,0,0 );
-		meshBuilder.Position3fv( (vOrigin + (vRight * -flSize) + (vUp * flSize)).Base() );
+		meshBuilder.Color3f(1.0, 1.0, 1.0);
+		meshBuilder.TexCoord2f(0, 0, 0);
+		meshBuilder.Position3fv((vOrigin + (vRight * -flSize) + (vUp * flSize)).Base());
 		meshBuilder.AdvanceVertex();
 
-		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
-		meshBuilder.TexCoord2f( 0,1,0 );
-		meshBuilder.Position3fv( (vOrigin + (vRight * flSize) + (vUp * flSize)).Base() );
+		meshBuilder.Color3f(1.0, 1.0, 1.0);
+		meshBuilder.TexCoord2f(0, 1, 0);
+		meshBuilder.Position3fv((vOrigin + (vRight * flSize) + (vUp * flSize)).Base());
 		meshBuilder.AdvanceVertex();
 
-		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
-		meshBuilder.TexCoord2f( 0,1,1 );
-		meshBuilder.Position3fv( (vOrigin + (vRight * flSize) + (vUp * -flSize)).Base() );
+		meshBuilder.Color3f(1.0, 1.0, 1.0);
+		meshBuilder.TexCoord2f(0, 1, 1);
+		meshBuilder.Position3fv((vOrigin + (vRight * flSize) + (vUp * -flSize)).Base());
 		meshBuilder.AdvanceVertex();
 
-		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
-		meshBuilder.TexCoord2f( 0,0,1 );
-		meshBuilder.Position3fv( (vOrigin + (vRight * -flSize) + (vUp * -flSize)).Base() );
+		meshBuilder.Color3f(1.0, 1.0, 1.0);
+		meshBuilder.TexCoord2f(0, 0, 1);
+		meshBuilder.Position3fv((vOrigin + (vRight * -flSize) + (vUp * -flSize)).Base());
 		meshBuilder.AdvanceVertex();
+
 		meshBuilder.End();
 		pMesh->Draw();
 	}
 }
-
 
 void CVoiceStatus::UpdateSpeakerStatus(int entindex, bool bTalking)
 {

@@ -17,7 +17,6 @@ BEGIN_DATADESC(CLogicObjective)
 // Shared
 DEFINE_KEYFIELD(szObjective, FIELD_STRING, "Objective"),
 DEFINE_KEYFIELD(m_flTimeToCompleteObjective, FIELD_FLOAT, "DefaultTime"),
-DEFINE_KEYFIELD(m_iIndex, FIELD_INTEGER, "Index"),
 DEFINE_KEYFIELD(m_bShouldFailOnTimerEnd, FIELD_BOOLEAN, "ShouldFail"),
 DEFINE_KEYFIELD(m_iScaleType, FIELD_INTEGER, "ScaleType"), // Non-Scaling, Scaling, Non-Time Scaling/Fixed...
 DEFINE_KEYFIELD(m_iTeamLink, FIELD_INTEGER, "TeamLink"),
@@ -58,7 +57,6 @@ CLogicObjective::CLogicObjective()
 	szObjectiveIconTexture = NULL_STRING;
 	szObjectiveIconLocation = NULL_STRING;
 	szGoalEntity = NULL_STRING;
-	m_iIndex = 0;
 	m_iKillsNeeded = 0;
 	m_iKillsLeft = 0;
 	m_flTimeToCompleteObjective = 0.0f;
@@ -209,7 +207,7 @@ void CLogicObjective::SendObjectiveParameters(int iStatus, bool bEntCountUpdate,
 		IGameEvent *event = gameeventmanager->CreateEvent("objective_run");
 		if (event)
 		{
-			event->SetInt("index", m_iIndex);
+			event->SetInt("index", entindex());
 			event->SetInt("team", m_iTeamLink);
 			event->SetInt("status", m_iStatusOverall);
 			event->SetString("objective", STRING(szObjective));
@@ -261,7 +259,7 @@ void CLogicObjective::SendObjectiveParameters(int iStatus, bool bEntCountUpdate,
 		IGameEvent *event = gameeventmanager->CreateEvent("objective_update");
 		if (event)
 		{
-			event->SetInt("index", m_iIndex);
+			event->SetInt("index", entindex());
 			event->SetInt("kills_left", m_iKillsLeft);
 			gameeventmanager->FireEvent(event);
 		}
@@ -372,7 +370,7 @@ void CLogicObjective::FireGameEvent(IGameEvent *event)
 			IGameEvent *event = gameeventmanager->CreateEvent("objective_run");
 			if (event)
 			{
-				event->SetInt("index", m_iIndex);
+				event->SetInt("index", entindex());
 				event->SetInt("team", m_iTeamLink);
 				event->SetInt("status", m_iStatusOverall);
 				event->SetString("objective", STRING(szObjective));

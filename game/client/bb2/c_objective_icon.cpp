@@ -55,6 +55,15 @@ void RenderObjectiveIcons(void)
 	if (!pPlayer || pPlayer->IsInVGuiInputMode())
 		return;
 
+	// Align it so it never points up or down.
+	Vector vUp(0, 0, 1);
+	Vector vRight = CurrentViewRight();
+	if (fabs(vRight.z) > 0.95)	// don't draw it edge-on
+		return;
+
+	vRight.z = 0;
+	VectorNormalize(vRight);
+
 	CMatRenderContextPtr pRenderContext(materials);
 	int iTeam = pPlayer->GetTeamNumber();
 	int iNumObjIcons = m_pObjectiveIcons.Count();
@@ -71,16 +80,7 @@ void RenderObjectiveIcons(void)
 		if ((iconTeamLink != iTeam && (iconTeamLink > 0)) || pIcon->IsHidden() || (renderTexture == NULL))
 			continue;
 
-		Vector vOrigin = pIcon->WorldSpaceCenter();
-
-		// Align it so it never points up or down.
-		Vector vUp(0, 0, 1);
-		Vector vRight = CurrentViewRight();
-		if (fabs(vRight.z) > 0.95)	// don't draw it edge-on
-			continue;
-
-		vRight.z = 0;
-		VectorNormalize(vRight);
+		const Vector &vOrigin = pIcon->WorldSpaceCenter();
 
 		pRenderContext->Bind(renderTexture);
 		IMesh *pMesh = pRenderContext->GetDynamicMesh();
@@ -106,6 +106,7 @@ void RenderObjectiveIcons(void)
 		meshBuilder.TexCoord2f(0, 0, 1);
 		meshBuilder.Position3fv((vOrigin + (vRight * -flSize) + (vUp * -flSize)).Base());
 		meshBuilder.AdvanceVertex();
+
 		meshBuilder.End();
 		pMesh->Draw();
 	}

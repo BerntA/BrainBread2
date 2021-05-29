@@ -50,27 +50,18 @@ CBaseEntity *CInventoryItemRandomizer::SpawnNewEntity(void)
 
 	if (!m_iOverrideID)
 	{
-		bool bCanLoopThrough = false;
+		CUtlVector<int> indexList;
 		for (int i = 0; i < itemCount; i++)
 		{
 			const DataInventoryItem_Base_t *data = &GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[i];
 			if (data->bAutoConsume && !data->bIsMapItem)
-			{
-				bCanLoopThrough = true;
-				break;
-			}
+				indexList.AddToTail(i);
 		}
 
-		if (!bCanLoopThrough)
+		if (indexList.Count() == 0)
 			return NULL;
 
-		while (itemIndex == -1)
-		{
-			int index = random->RandomInt(0, (itemCount - 1));
-			const DataInventoryItem_Base_t *data = &GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[index];
-			if (data->bAutoConsume && !data->bIsMapItem)
-				itemIndex = index;
-		}
+		itemIndex = indexList[random->RandomInt(0, (indexList.Count() - 1))];
 	}
 	else
 	{

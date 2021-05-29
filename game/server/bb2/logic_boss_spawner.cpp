@@ -13,7 +13,7 @@
 #include "hl2mp_player.h"
 #include "GameEventListener.h"
 
-CUtlVector<EHANDLE> bossSpawnPoints;
+static CUtlVector<EHANDLE> bossSpawnPoints;
 
 class CBossSpawnPoint : public CLogicalEntity
 {
@@ -27,8 +27,7 @@ public:
 
 	~CBossSpawnPoint()
 	{
-		if (bossSpawnPoints.Find(this) != -1)
-			bossSpawnPoints.FindAndRemove(this);
+		bossSpawnPoints.FindAndRemove(this);
 	}
 
 	void Spawn()
@@ -42,8 +41,7 @@ public:
 			return;
 		}
 
-		if (bossSpawnPoints.Find(this) == -1)
-			bossSpawnPoints.AddToTail(this);
+		bossSpawnPoints.AddToTail(this);
 	}
 
 	COutputEvent m_OnSpawnedInPoint;
@@ -64,39 +62,25 @@ END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(info_boss_point, CBossSpawnPoint);
 
-CBaseEntity *GetBossSpawnPointEntity(const char *classnameLink)
+static CBaseEntity *GetBossSpawnPointEntity(const char *classnameLink)
 {
-	int maxIndex = (bossSpawnPoints.Count() - 1);
-	bool bDoesExist = false;
-
-	// Don't perform the while loop unless this link + ent exist:
+	CUtlVector<CBaseEntity*> pSpawnPoints;
 	for (int i = 0; i < bossSpawnPoints.Count(); i++)
 	{
 		CBaseEntity *pEntity = bossSpawnPoints[i].Get();
-		if (pEntity)
-		{
-			CBossSpawnPoint *pBossPoint = dynamic_cast<CBossSpawnPoint*> (pEntity);
-			if (pBossPoint && (!strcmp(pBossPoint->GetClassnameLink(), classnameLink)))
-				bDoesExist = true;
-		}
+		if (!pEntity)
+			continue;
+
+		CBossSpawnPoint *pBossPoint = dynamic_cast<CBossSpawnPoint*> (pEntity);
+		if (pBossPoint && !strcmp(pBossPoint->GetClassnameLink(), classnameLink))
+			pSpawnPoints.AddToTail(pEntity);
 	}
 
-	CBaseEntity *pPoint = NULL;
-	if (bDoesExist)
-	{
-		while (pPoint == NULL)
-		{
-			int index = random->RandomInt(0, maxIndex);
-			CBaseEntity *pEntity = bossSpawnPoints[index].Get();
-			if (pEntity)
-			{
-				CBossSpawnPoint *pBossPoint = dynamic_cast<CBossSpawnPoint*> (pEntity);
-				if (pBossPoint && (!strcmp(pBossPoint->GetClassnameLink(), classnameLink)))
-					pPoint = pEntity;
-			}
-		}
-	}
+	if (pSpawnPoints.Count() == 0)
+		return NULL;
 
+	CBaseEntity *pPoint = pSpawnPoints[random->RandomInt(0, (pSpawnPoints.Count() - 1))];
+	pSpawnPoints.RemoveAll();
 	return pPoint;
 }
 
@@ -174,17 +158,12 @@ void CBossSpawner::InputSpawn(inputdata_t &inputData)
 	{
 		Vector vecOrigin = GetAbsOrigin();
 		Warning("No info_boss_point were found in the map!\nSpawning boss %s at %s pos : %f %f %f!\n", classnameToSpawn, STRING(GetEntityName()), vecOrigin.x, vecOrigin.y, vecOrigin.z);
-		CBaseEntity *pNewEntity = Create(classnameToSpawn, GetAbsOrigin(), GetAbsAngles(), NULL);
-		if (pNewEntity)
-			m_pActiveBossEnt = pNewEntity;
-
+		m_pActiveBossEnt = Create(classnameToSpawn, GetAbsOrigin(), GetAbsAngles(), NULL);
 		return;
 	}
 
 	// Create our boss:
-	CBaseEntity *pNewEntity = Create(classnameToSpawn, pNewBossSpawnEnt->GetAbsOrigin(), pNewBossSpawnEnt->GetAbsAngles(), NULL);
-	if (pNewEntity)
-		m_pActiveBossEnt = pNewEntity;
+	m_pActiveBossEnt = Create(classnameToSpawn, pNewBossSpawnEnt->GetAbsOrigin(), pNewBossSpawnEnt->GetAbsAngles(), NULL);
 
 	// Announce the spawn...
 	CBossSpawnPoint *pBossPoint = dynamic_cast<CBossSpawnPoint*> (pNewBossSpawnEnt);
@@ -203,13 +182,10 @@ void CBossSpawner::FireGameEvent(IGameEvent *event)
 			return;
 
 		CBaseEntity *pActiveBoss = m_pActiveBossEnt.Get();
-		if (pActiveBoss)
+		if (pActiveBoss && (pActiveBoss->entindex() == pVictim->entindex()))
 		{
-			if (pActiveBoss->entindex() == pVictim->entindex())
-			{
-				m_OnDeath.FireOutput(this, this);
-				m_pActiveBossEnt = NULL;
-			}
+			m_OnDeath.FireOutput(this, this);
+			m_pActiveBossEnt = NULL;
 		}
 	}
 }

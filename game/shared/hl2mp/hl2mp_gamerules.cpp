@@ -2791,10 +2791,7 @@ void CHL2MPRules::AddBreakableDoor(CBaseEntity *pEntity)
 
 void CHL2MPRules::RemoveBreakableDoor(CBaseEntity *pEntity)
 {
-	if (m_hBreakableDoors.Find(pEntity) != -1)
-	{
-		m_hBreakableDoors.FindAndRemove(pEntity);
-	}
+	m_hBreakableDoors.FindAndRemove(pEntity);
 }
 
 bool CHL2MPRules::IsBreakableDoor(CBaseEntity *pEntity)
