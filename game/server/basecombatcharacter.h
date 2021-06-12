@@ -26,7 +26,6 @@
 #include "skills_shareddefs.h"
 
 class CNavArea;
-class CScriptedTarget;
 typedef CHandle<CBaseCombatWeapon> CBaseCombatWeaponHandle;
 
 // -------------------------------------
@@ -140,10 +139,6 @@ public:
 	virtual bool		ShouldShootMissTarget( CBaseCombatCharacter *pAttacker );
 	virtual CBaseEntity *FindMissTarget( void );
 
-	// Do not call HandleInteraction directly, use DispatchInteraction
-	bool				DispatchInteraction( int interactionType, void *data, CBaseCombatCharacter* sourceEnt )	{ return ( interactionType > 0 ) ? HandleInteraction( interactionType, data, sourceEnt ) : false; }
-	virtual bool		HandleInteraction( int interactionType, void *data, CBaseCombatCharacter* sourceEnt );
-
 	virtual QAngle		BodyAngles();
 	virtual Vector		BodyDirection2D( void );
 	virtual Vector		BodyDirection3D( void );
@@ -247,12 +242,6 @@ public:
 	virtual int				BloodColor();
 	virtual Activity		GetDeathActivity( void );
 
-	virtual bool			CorpseGib( const CTakeDamageInfo &info );
-	virtual void			CorpseFade( void );	// Called instead of GibNPC() when gibs are disabled
-	virtual bool			HasHumanGibs( void );
-	virtual bool			HasAlienGibs( void );
-	virtual bool			ShouldGib( const CTakeDamageInfo &info ) { return false; }	// Always ragdoll, unless specified by the leaf class
-
 	float GetDamageAccumulator() { return m_flDamageAccumulator; }
 	int	  GetDamageCount( void ) { return m_iDamageCount; }	// # of times NPC has been damaged.  used for tracking 1-shot kills.
 
@@ -263,10 +252,6 @@ public:
 	void InputKilledNPC( inputdata_t &inputdata );
 	virtual void OnKilledNPC( CBaseCombatCharacter *pKilled ) {}; 
 
-	// Exactly one of these happens immediately after killed (gibbed may happen later when the corpse gibs)
-	// Character gibbed or faded out (violence controls) (only fired once)
-	// returns true if gibs were spawned
-	virtual bool			Event_Gibbed( const CTakeDamageInfo &info );
 	// Character entered the dying state without being gibbed (only fired once)
 	virtual void			Event_Dying( const CTakeDamageInfo &info );
 	virtual void			Event_Dying();
@@ -445,9 +430,6 @@ protected:
 	string_t	m_RelationshipString;	// Used to load up relationship keyvalues
 	float		m_impactEnergyScale;// scale the amount of energy used to calculate damage this ent takes due to physics
 
-public:
-	static int					GetInteractionID();	// Returns the next interaction #
-
 protected:
 	// Visibility-related stuff
 	bool ComputeLOS( const Vector &vecEyePosition, const Vector &vecTarget ) const;
@@ -455,10 +437,7 @@ private:
 	// For weapon strip
 	void ThrowDirForWeaponStrip( CBaseCombatWeapon *pWeapon, const Vector &vecForward, Vector *pVecThrowDir );
 	void DropWeaponForWeaponStrip( CBaseCombatWeapon *pWeapon, const Vector &vecForward, const QAngle &vecAngles, float flDiameter );
-
-	friend class CScriptedTarget; // needs to access GetInteractionID()
 	
-	static int					m_lastInteraction;	// Last registered interaction #
 	static Relationship_t**		m_DefaultRelationship;
 
 	// attack/damage

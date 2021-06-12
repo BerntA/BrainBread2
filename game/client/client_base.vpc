@@ -469,7 +469,6 @@ $Project
 		$File	"c_env_fog_controller.cpp"
 		$File	"c_env_particlescript.cpp"
 		$File	"c_env_projectedtexture.cpp"
-		$File	"c_env_screenoverlay.cpp"
 		$File	"c_env_tonemap_controller.cpp"
 		$File	"c_fire_smoke.cpp"
 		$File	"c_fish.cpp"
@@ -483,8 +482,6 @@ $Project
 		$File	"c_func_rotating.cpp"
 		$File	"c_func_smokevolume.cpp"
 		$File	"c_func_tracktrain.cpp"
-		$File	"c_gib.cpp"
-		$File	"c_hairball.cpp"
 		$File	"c_info_overlay_accessor.cpp"
 		$File	"c_lightglow.cpp"
 		$File	"C_MaterialModifyControl.cpp"
@@ -496,7 +493,6 @@ $Project
 		$File	"c_plasma.cpp"
 		$File	"c_playerresource.cpp"
 		$File	"c_point_camera.cpp"
-		$File	"c_point_commentary_node.cpp"
 		$File	"c_props.cpp"
 		$File	"c_props.h"
 		$File	"c_rope.cpp"
@@ -539,10 +535,7 @@ $Project
 		$File	"clientsteamcontext.cpp"
 		$File	"clientsteamcontext.h"
 		$File	"colorcorrectionmgr.cpp"
-		$File	"commentary_modelviewer.cpp"
-		$File	"commentary_modelviewer.h"
 		$File	"$SRCDIR\game\shared\collisionproperty.cpp"
-		$File	"$SRCDIR\game\shared\death_pose.cpp"
 		$File	"$SRCDIR\game\shared\debugoverlay_shared.cpp"
 		$File	"$SRCDIR\game\shared\decals.cpp"
 		$File	"detailobjectsystem.cpp"
@@ -648,8 +641,6 @@ $Project
 		$File	"ragdoll.cpp"
 		$File	"$SRCDIR\game\shared\ragdoll_shared.cpp"
 		$File	"recvproxy.cpp"
-		$File	"basepresence.cpp"			[$WIN32||$POSIX]
-		$File	"basepresence_xbox.cpp"		[$X360]
 		$File	"$SRCDIR\game\shared\rope_helpers.cpp"
 		$File	"$SRCDIR\game\shared\saverestore.cpp"
 		$File	"$SRCDIR\game\shared\sceneentity_shared.cpp"
@@ -730,12 +721,9 @@ $Project
 		"$SRCDIR\public\filesystem_helpers.cpp"				\
 		"$SRCDIR\public\interpolatortypes.cpp"				\
 		"$SRCDIR\game\shared\interval.cpp"					\
-		"$SRCDIR\common\language.cpp"						\
 		"$SRCDIR\public\networkvar.cpp"						\
 		"$SRCDIR\common\randoverride.cpp"					\
 		"$SRCDIR\public\rope_physics.cpp"					\
-		"$SRCDIR\public\scratchpad3d.cpp"					\
-		"$SRCDIR\public\ScratchPadUtils.cpp"				\
 		"$SRCDIR\public\sentence.cpp"						\
 		"$SRCDIR\game\shared\sheetsimulator.cpp"			\
 		"$SRCDIR\public\simple_physics.cpp"					\
@@ -746,7 +734,6 @@ $Project
 		"$SRCDIR\public\jigglebones.cpp"					\
 		"hud_lcd.cpp"										\
 		"in_mouse.cpp"										\
-		"mumble.cpp"						\
 		"$SRCDIR\public\renamed_recvtable_compat.cpp"		\
 		"rendertexture.cpp"									
 		{
@@ -843,13 +830,8 @@ $Project
 			$File	"game_controls\baseviewport.cpp"
 			$File	"game_controls\basemodelpanel.cpp"
 			$File	"game_controls\basemodelpanel.h"
-			$File	"game_controls\basemodel_panel.cpp"
-			$File	"game_controls\basemodel_panel.h"
-			$File	"game_controls\commandmenu.cpp"
-			$File	"game_controls\intromenu.cpp"
 			$File	"game_controls\NavProgress.cpp"
 			$File	"game_controls\vguitextwindow.cpp"
-			$File	"game_controls\IconPanel.cpp"
 		}
 
 	}
@@ -888,7 +870,6 @@ $Project
 		$File	"c_fire_smoke.h"
 		$File	"c_func_dust.h"
 		$File	"c_func_reflective_glass.h"
-		$File	"c_gib.h"
 		$File	"c_impact_effects.h"
 		$File	"c_physbox.h"
 		$File	"c_physicsprop.h"
@@ -913,7 +894,6 @@ $Project
 		$File	"c_tracer.h"
 		$File	"c_user_message_register.h"
 		$File	"c_vguiscreen.h"
-		$File	"c_weapon__stubs.h"
 		$File	"c_world.h"
 		$File	"cbase.h"
 		$File	"cdll_client_int.h"
@@ -965,7 +945,6 @@ $Project
 		$File	"hud_macros.h"
 		$File	"hud_numericdisplay.h"
 		$File	"hud_pdump.h"
-		$File	"basepresence.h"
 		$File	"hudelement.h"
 		$File	"hudtexturehandle.h"
 		$File	"iclassmap.h"
@@ -976,7 +955,6 @@ $Project
 		$File	"idebugoverlaypanel.h"
 		$File	"ifpspanel.h"
 		$File	"ihudlcd.h"
-		$File	"ipresence.h"
 		$File	"iinput.h"
 		$File	"iloadingdisc.h"
 		$File	"imessagechars.h"
@@ -992,11 +970,9 @@ $Project
 		$File	"iviewrender_beams.h"
 		$File	"ivmodemanager.h"
 		$File	"kbutton.h"
-		$File	"$SRCDIR\common\language.h"
 		$File	"lerp_functions.h"
 		$File	"menu.h"
 		$File	"movehelper_client.h"
-		$File	"mumble.h"
 		$File	"networkstringtable_clientdll.h"
 		$File	"panelmetaclassmgr.h"
 		$File	"particle_collision.h"
@@ -1161,7 +1137,6 @@ $Project
 		$File	"$SRCDIR\public\irecipientfilter.h"
 		$File	"$SRCDIR\public\isaverestore.h"
 		$File	"$SRCDIR\public\vgui\IScheme.h"
-		$File	"$SRCDIR\public\iscratchpad3d.h"
 		$File	"$SRCDIR\public\iserverentity.h"
 		$File	"$SRCDIR\public\iservernetworkable.h"
 		$File	"$SRCDIR\public\iserverunknown.h"
@@ -1220,8 +1195,6 @@ $Project
 		$File	"$SRCDIR\public\rope_physics.h"
 		$File	"$SRCDIR\public\rope_shared.h"
 		$File	"$SRCDIR\public\saverestoretypes.h"
-		$File	"$SRCDIR\public\scratchpad3d.h"
-		$File	"$SRCDIR\public\ScratchPadUtils.h"
 		$File	"$SRCDIR\public\vgui_controls\ScrollBar.h"
 		$File	"$SRCDIR\public\vgui_controls\SectionedListPanel.h"
 		$File	"$SRCDIR\public\sentence.h"
@@ -1298,7 +1271,6 @@ $Project
 		$File	"$SRCDIR\game\shared\choreoevent.h"
 		$File	"$SRCDIR\game\shared\choreoscene.h"
 		$File	"$SRCDIR\game\shared\collisionproperty.h"
-		$File	"$SRCDIR\game\shared\death_pose.h"
 		$File	"$SRCDIR\game\shared\decals.h"
 		$File	"$SRCDIR\game\shared\effect_color_tables.h"
 		$File	"$SRCDIR\game\shared\effect_dispatch_data.h"
@@ -1387,13 +1359,10 @@ $Project
 	$Folder	"game_controls Header Files"
 	{
 		$File	"game_controls\baseviewport.h"
-		$File	"game_controls\commandmenu.h"
 		$File	"game_controls\imagemouseoverbutton.h"
-		$File	"game_controls\intromenu.h"
 		$File	"game_controls\mouseoverhtmlbutton.h"
 		$File	"game_controls\mouseoverpanelbutton.h"
 		$File	"game_controls\vguitextwindow.h"
-		$File	"game_controls\IconPanel.h"
 	}
 	
 	$Folder	"Link Libraries"

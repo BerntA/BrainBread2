@@ -18,7 +18,6 @@
 #include "ai_route.h"
 #include "ai_senses.h"
 #include "ai_hint.h"
-#include "ai_interactions.h"
 #include "ai_looktarget.h"
 #include "sceneentity.h"
 #include "GameBase_Shared.h"

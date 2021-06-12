@@ -302,8 +302,6 @@ void CPlayerMove::RunPostThink( CBasePlayer *player )
 	player->PostThink();
 }
 
-void CommentarySystem_PePlayerRunCommand( CBasePlayer *player, CUserCmd *ucmd );
-
 //-----------------------------------------------------------------------------
 // Purpose: Runs movement commands for the player
 // Input  : *player - 
@@ -370,9 +368,7 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	}
 	*/
 
-	g_pGameMovement->StartTrackPredictionErrors( player );
-
-	CommentarySystem_PePlayerRunCommand( player, ucmd );
+	g_pGameMovement->StartTrackPredictionErrors(player);
 
 	// Do weapon selection
 	if ( ucmd->weaponselect != 0 )

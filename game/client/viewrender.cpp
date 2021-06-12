@@ -163,7 +163,6 @@ static QAngle g_vecCurrentRenderAngles(0,0,0);
 static Vector g_vecCurrentVForward(0,0,0), g_vecCurrentVRight(0,0,0), g_vecCurrentVUp(0,0,0);
 static VMatrix g_matCurrentCamInverse;
 bool s_bCanAccessCurrentView = false;
-IntroData_t *g_pIntroData = NULL;
 static bool	g_bRenderingView = false;			// For debugging...
 static int g_CurrentViewID = VIEW_NONE;
 bool g_bRenderingScreenshot = false;
@@ -719,12 +718,6 @@ static void SetClearColorToFogColor()
 //-----------------------------------------------------------------------------
 // Precache of necessary materials
 //-----------------------------------------------------------------------------
-
-#ifdef HL2_CLIENT_DLL
-CLIENTEFFECT_REGISTER_BEGIN( PrecacheViewRender )
-	CLIENTEFFECT_MATERIAL( "scripted/intro_screenspaceeffect" )
-CLIENTEFFECT_REGISTER_END()
-#endif
 
 CLIENTEFFECT_REGISTER_BEGIN( PrecachePostProcessingEffects )
 	CLIENTEFFECT_MATERIAL( "dev/blurfiltery_and_add_nohdr" )
@@ -1901,14 +1894,7 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 		}
 
 		// Render world and all entities, particles, etc.
-		if( !g_pIntroData )
-		{
-			ViewDrawScene( bDrew3dSkybox, nSkyboxVisible, view, nClearFlags, VIEW_MAIN, whatToDraw & RENDERVIEW_DRAWVIEWMODEL );
-		}
-		else
-		{
-			ViewDrawScene_Intro( view, nClearFlags, *g_pIntroData );
-		}
+		ViewDrawScene(bDrew3dSkybox, nSkyboxVisible, view, nClearFlags, VIEW_MAIN, whatToDraw & RENDERVIEW_DRAWVIEWMODEL);
 
 		// We can still use the 'current view' stuff set up in ViewDrawScene
 		s_bCanAccessCurrentView = true;
@@ -2499,189 +2485,6 @@ void CViewRender::GetWaterLODParams( float &flCheapWaterStartDistance, float &fl
 {
 	flCheapWaterStartDistance = m_flCheapWaterStartDistance;
 	flCheapWaterEndDistance = m_flCheapWaterEndDistance;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : &view - 
-//			&introData - 
-//-----------------------------------------------------------------------------
-void CViewRender::ViewDrawScene_Intro( const CViewSetup &view, int nClearFlags, const IntroData_t &introData )
-{
-	VPROF( "CViewRender::ViewDrawScene" );
-
-	CMatRenderContextPtr pRenderContext( materials );
-
-	// this allows the refract texture to be updated once per *scene* on 360
-	// (e.g. once for a monitor scene and once for the main scene)
-	g_viewscene_refractUpdateFrame = gpGlobals->framecount - 1;
-
-	// -----------------------------------------------------------------------
-	// Set the clear color to black since we are going to be adding up things
-	// in the frame buffer.
-	// -----------------------------------------------------------------------
-	// Clear alpha to 255 so that masking with the vortigaunts (0) works properly.
-	pRenderContext->ClearColor4ub( 0, 0, 0, 255 );
-	
-	// -----------------------------------------------------------------------
-	// Draw the primary scene and copy it to the first framebuffer texture
-	// -----------------------------------------------------------------------	
-	unsigned int visFlags;
-
-	// NOTE: We only increment this once since time doesn't move forward.
-	ParticleMgr()->IncrementFrameCode();
-
-	if( introData.m_bDrawPrimary  )
-	{
-		CViewSetup playerView( view );
-		playerView.origin = introData.m_vecCameraView;
-		playerView.angles = introData.m_vecCameraViewAngles;
-		if ( introData.m_playerViewFOV )
-		{
-			playerView.fov = ScaleFOVByWidthRatio( introData.m_playerViewFOV, engine->GetScreenAspectRatio() / ( 4.0f / 3.0f ) );
-		}
-
-		g_pClientShadowMgr->PreRender();
-
-		// Shadowed flashlights supported on ps_2_b and up...
-		if ( r_flashlightdepthtexture.GetBool() )
-		{
-			g_pClientShadowMgr->ComputeShadowDepthTextures( playerView );
-		}
-
-		SetupCurrentView( playerView.origin, playerView.angles, VIEW_INTRO_PLAYER );
-
-		// Invoke pre-render methods
-		IGameSystem::PreRenderAllSystems();
-
-		// Start view, clear frame/z buffer if necessary
-		SetupVis( playerView, visFlags );
-		
-		render->Push3DView( playerView, VIEW_CLEAR_COLOR | VIEW_CLEAR_DEPTH, NULL, GetFrustum() );
-		DrawWorldAndEntities( true /* drawSkybox */, playerView, VIEW_CLEAR_COLOR | VIEW_CLEAR_DEPTH  );
-		render->PopView( GetFrustum() );
-
-		// Free shadow depth textures for use in future view
-		if ( r_flashlightdepthtexture.GetBool() )
-		{
-			g_pClientShadowMgr->UnlockAllShadowDepthTextures();
-		}
-	}
-	else
-	{
-		pRenderContext->ClearBuffers( true, true );
-	}
-	Rect_t actualRect;
-	UpdateScreenEffectTexture( 0, view.x, view.y, view.width, view.height, false, &actualRect );
-
-	g_pClientShadowMgr->PreRender();
-
-	// Shadowed flashlights supported on ps_2_b and up...
-	if ( r_flashlightdepthtexture.GetBool() )
-	{
-		g_pClientShadowMgr->ComputeShadowDepthTextures( view );
-	}
-
-	// -----------------------------------------------------------------------
-	// Draw the secondary scene and copy it to the second framebuffer texture
-	// -----------------------------------------------------------------------
-	SetupCurrentView( view.origin, view.angles, VIEW_INTRO_CAMERA );
-
-	// Invoke pre-render methods
-	IGameSystem::PreRenderAllSystems();
-
-	// Start view, clear frame/z buffer if necessary
-	SetupVis( view, visFlags );
-
-	// Clear alpha to 255 so that masking with the vortigaunts (0) works properly.
-	pRenderContext->ClearColor4ub( 0, 0, 0, 255 );
-
-	DrawWorldAndEntities( true /* drawSkybox */, view, VIEW_CLEAR_COLOR | VIEW_CLEAR_DEPTH  );
-
-	UpdateScreenEffectTexture( 1, view.x, view.y, view.width, view.height );
-
-	// -----------------------------------------------------------------------
-	// Draw quads on the screen for each screenspace pass.
-	// -----------------------------------------------------------------------
-	// Find the material that we use to render the overlays
-	IMaterial *pOverlayMaterial = materials->FindMaterial( "scripted/intro_screenspaceeffect", TEXTURE_GROUP_OTHER );
-	IMaterialVar *pModeVar = pOverlayMaterial->FindVar( "$mode", NULL );
-	IMaterialVar *pAlphaVar = pOverlayMaterial->FindVar( "$alpha", NULL );
-
-	pRenderContext->ClearBuffers( true, true );
-	
-	pRenderContext->MatrixMode( MATERIAL_VIEW );
-	pRenderContext->PushMatrix();
-	pRenderContext->LoadIdentity();
-
-	pRenderContext->MatrixMode( MATERIAL_PROJECTION );
-	pRenderContext->PushMatrix();
-	pRenderContext->LoadIdentity();
-	
-	int passID;
-	for( passID = 0; passID < introData.m_Passes.Count(); passID++ )
-	{
-		const IntroDataBlendPass_t& pass = introData.m_Passes[passID];
-		if ( pass.m_Alpha == 0 )
-			continue;
-
-		// Pick one of the blend modes for the material.
-		if ( pass.m_BlendMode >= 0 && pass.m_BlendMode <= 9 )
-		{
-			pModeVar->SetIntValue( pass.m_BlendMode );
-		}
-		else
-		{
-			Assert(0);
-		}
-		// Set the alpha value for the material.
-		pAlphaVar->SetFloatValue( pass.m_Alpha );
-		
-		// Draw a quad for this pass.
-		ITexture *pTexture = GetFullFrameFrameBufferTexture( 0 );
-		pRenderContext->DrawScreenSpaceRectangle( pOverlayMaterial, 0, 0, view.width, view.height,
-											actualRect.x, actualRect.y, actualRect.x+actualRect.width-1, actualRect.y+actualRect.height-1, 
-											pTexture->GetActualWidth(), pTexture->GetActualHeight() );
-	}
-	
-	pRenderContext->MatrixMode( MATERIAL_VIEW );
-	pRenderContext->PopMatrix();
-	
-	pRenderContext->MatrixMode( MATERIAL_PROJECTION );
-	pRenderContext->PopMatrix();
-	
-	// Draw the starfield
-	// FIXME
-	// blur?
-	
-	// Disable fog for the rest of the stuff
-	DisableFog();
-	
-	// Here are the overlays...
-	CGlowOverlay::DrawOverlays( view.m_bCacheFullSceneState );
-
-	// issue the pixel visibility tests
-	PixelVisibility_EndCurrentView();
-
-	// And here are the screen-space effects
-	PerformScreenSpaceEffects( 0, 0, view.width, view.height );
-
-	// Make sure sound doesn't stutter
-	engine->Sound_ExtraUpdate();
-
-	// Debugging info goes over the top
-	CDebugViewRender::Draw3DDebuggingInfo( view );
-
-	// Let the particle manager simulate things that haven't been simulated.
-	ParticleMgr()->PostRender();
-
-	FinishCurrentView();
-
-	// Free shadow depth textures for use in future view
-	if ( r_flashlightdepthtexture.GetBool() )
-	{
-		g_pClientShadowMgr->UnlockAllShadowDepthTextures();
-	}
 }
 
 //-----------------------------------------------------------------------------

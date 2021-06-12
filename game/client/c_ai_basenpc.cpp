@@ -10,7 +10,6 @@
 #include "GameBase_Shared.h"
 #include "model_types.h"
 #include "GlobalRenderEffects.h"
-#include "death_pose.h"
 #include "hud_npc_health_bar.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -96,7 +95,13 @@ bool C_AI_BaseNPC::GetRagdollInitBoneArrays(matrix3x4_t *pDeltaBones0, matrix3x4
 	if (!ForceSetupBonesAtTime(pDeltaBones0, gpGlobals->curtime - boneDt))
 		bRet = false;
 
-	GetRagdollCurSequenceWithDeathPose(this, pDeltaBones1, gpGlobals->curtime, ACT_INVALID, DEATH_FRAME_STOMACH); // HL1 death anims are old!!
+	InvalidateBoneCache();
+	Vector vPrevOrigin = GetAbsOrigin();
+	Interpolate(gpGlobals->curtime);
+	SetupBones(pDeltaBones1, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, gpGlobals->curtime);
+	InvalidateBoneCache(); // blow the cached prev bones
+	SetupBones(NULL, -1, BONE_USED_BY_ANYTHING, gpGlobals->curtime);
+
 	float ragdollCreateTime = PhysGetSyncCreateTime();
 	if (ragdollCreateTime != gpGlobals->curtime)
 	{

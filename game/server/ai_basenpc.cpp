@@ -22,11 +22,6 @@
 #include "worldsize.h"
 #include "game.h"
 #include "shot_manipulator.h"
-
-#ifdef HL2_DLL
-#include "ai_interactions.h"
-#endif // HL2_DLL
-
 #include "ai_network.h"
 #include "ai_networkmanager.h"
 #include "ai_pathfinder.h"
@@ -404,31 +399,6 @@ void CAI_BaseNPC::ClearAllSchedules(void)
 	}
 }
 
-// ==============================================================================
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-bool CAI_BaseNPC::Event_Gibbed( const CTakeDamageInfo &info )
-{
-	bool gibbed = CorpseGib( info );
-
-	if ( gibbed )
-	{
-		// don't remove players!
-		UTIL_Remove( this );
-		SetThink( NULL ); //We're going away, so don't think anymore.
-	}
-	else
-	{
-		CorpseFade();
-	}
-
-	return gibbed;
-}
-
 //=========================================================
 // GetFlinchActivity - determines the best type of flinch
 // anim to play.
@@ -579,10 +549,8 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	StopLoopingSounds();
 	DeathSound( info );
 
-	if ( ( GetFlags() & FL_NPC ) && ( ShouldGib( info ) == false ) )
-	{
-		SetTouch( NULL );
-	}
+	if (GetFlags() & FL_NPC)
+		SetTouch(NULL);
 
 	BaseClass::Event_Killed( info );
 	
@@ -2804,11 +2772,8 @@ void CAI_BaseNPC::PostMovement()
 	}
 }
 
-
 //-----------------------------------------------------------------------------
-
 float g_AINextDisabledMessageTime;
-extern bool IsInCommentaryMode( void );
 
 bool CAI_BaseNPC::PreThink( void )
 {
@@ -2820,7 +2785,7 @@ bool CAI_BaseNPC::PreThink( void )
 	// ----------------------------------------------------------
 	if ( (CAI_BaseNPC::m_nDebugBits & bits_debugDisableAI || !g_pAINetworkManager->NetworksLoaded()) )
 	{
-		if ( gpGlobals->curtime >= g_AINextDisabledMessageTime && !IsInCommentaryMode() )
+		if ( gpGlobals->curtime >= g_AINextDisabledMessageTime )
 		{
 			g_AINextDisabledMessageTime = gpGlobals->curtime + 0.5f;
 
@@ -11494,13 +11459,6 @@ void CAI_BaseNPC::CleanupScriptsOnTeleport( bool bEnrouteAsWell )
 
 		m_hCine->ScriptEntityCancel( m_hCine, true );
 	}
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-bool CAI_BaseNPC::HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt)
-{
-	return BaseClass::HandleInteraction( interactionType, data, sourceEnt );
 }
 
 CAI_BaseNPC *CAI_BaseNPC::GetInteractionPartner( void )

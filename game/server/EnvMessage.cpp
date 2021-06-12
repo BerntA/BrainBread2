@@ -32,8 +32,6 @@ BEGIN_DATADESC( CMessage )
 
 	END_DATADESC()
 
-
-
 	//-----------------------------------------------------------------------------
 	// Purpose: 
 	//-----------------------------------------------------------------------------
@@ -75,7 +73,6 @@ BEGIN_DATADESC( CMessage )
 	}
 }
 
-
 void CMessage::Precache( void )
 {
 	if ( m_sNoise != NULL_STRING )
@@ -83,7 +80,6 @@ void CMessage::Precache( void )
 		PrecacheScriptSound( STRING(m_sNoise) );
 	}
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Input handler for showing the message and/or playing the sound.
@@ -138,7 +134,6 @@ void CMessage::InputShowMessage( inputdata_t &inputdata )
 	m_OnShowMessage.FireOutput( inputdata.pActivator, this );
 }
 
-
 void CMessage::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	inputdata_t inputdata;
@@ -147,163 +142,4 @@ void CMessage::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useT
 	inputdata.pCaller		= NULL;
 
 	InputShowMessage( inputdata );
-}
-
-
-class CCredits : public CPointEntity
-{
-public:
-	DECLARE_CLASS( CMessage, CPointEntity );
-	DECLARE_DATADESC();
-
-	void	Spawn( void );
-	void	InputRollCredits( inputdata_t &inputdata );
-	void	InputRollOutroCredits( inputdata_t &inputdata );
-	void	InputShowLogo( inputdata_t &inputdata );
-	void	InputSetLogoLength( inputdata_t &inputdata );
-
-	COutputEvent m_OnCreditsDone;
-
-	virtual void OnRestore();
-private:
-
-	void		RollOutroCredits();
-
-	bool		m_bRolledOutroCredits;
-	float		m_flLogoLength;
-};
-
-LINK_ENTITY_TO_CLASS( env_credits, CCredits );
-
-BEGIN_DATADESC( CCredits )
-	DEFINE_INPUTFUNC( FIELD_VOID, "RollCredits", InputRollCredits ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "RollOutroCredits", InputRollOutroCredits ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "ShowLogo", InputShowLogo ),
-	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetLogoLength", InputSetLogoLength ),
-	DEFINE_OUTPUT( m_OnCreditsDone, "OnCreditsDone"),
-
-	DEFINE_FIELD( m_bRolledOutroCredits, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flLogoLength, FIELD_FLOAT )
-	END_DATADESC()
-
-	void CCredits::Spawn( void )
-{
-	SetSolid( SOLID_NONE );
-	SetMoveType( MOVETYPE_NONE );
-}
-
-static void CreditsDone_f( void )
-{
-	CCredits *pCredits = (CCredits*)gEntList.FindEntityByClassname( NULL, "env_credits" );
-
-	if ( pCredits )
-	{
-		pCredits->m_OnCreditsDone.FireOutput( pCredits, pCredits );
-	}
-}
-
-static ConCommand creditsdone("creditsdone", CreditsDone_f );
-
-void CCredits::OnRestore()
-{
-	BaseClass::OnRestore();
-
-	if ( m_bRolledOutroCredits )
-	{
-		// Roll them again so that the client .dll will send the "creditsdone" message and we'll
-		//  actually get back to the main menu
-		RollOutroCredits();
-	}
-}
-
-void CCredits::RollOutroCredits()
-{
-#ifdef BB2_AI
-	CRecipientFilter filter; 
-	filter.AddAllPlayers(); 
-	filter.MakeReliable(); 
-	UserMessageBegin( filter, "CreditsMsg" ); 
-#else
-	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-	CSingleUserRecipientFilter user( pPlayer );
-	user.MakeReliable();
-	UserMessageBegin( user, "CreditsMsg" );
-#endif //BB2_AI
-	WRITE_BYTE( 3 );
-	MessageEnd();
-}
-
-void CCredits::InputRollOutroCredits( inputdata_t &inputdata )
-{
-	RollOutroCredits();
-	// In case we save restore
-	m_bRolledOutroCredits = true;
-}
-
-void CCredits::InputShowLogo( inputdata_t &inputdata )
-{
-#ifdef BB2_AI
-	CRecipientFilter filter; 
-	filter.AddAllPlayers(); 
-	filter.MakeReliable(); 
-
-	// Modification. Set to how old patched AI SDK had code. 
-	//CSingleUserRecipientFilter user( pPlayer ); 
-	//user.MakeReliable(); 
-#else
-	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-
-	CSingleUserRecipientFilter user( pPlayer );
-	user.MakeReliable();
-#endif //BB2_AI
-
-
-	if ( m_flLogoLength )
-	{
-#ifdef BB2_AI
-		UserMessageBegin( filter, "LogoTimeMsg" ); 
-#else
-		UserMessageBegin( user, "LogoTimeMsg" );
-#endif //BB2_AI
-
-		WRITE_FLOAT( m_flLogoLength );
-		MessageEnd();
-	}
-	else
-	{
-#ifdef BB2_AI
-		UserMessageBegin( filter, "CreditsMsg" ); 
-#else
-		UserMessageBegin( user, "CreditsMsg" );
-#endif //BB2_AI
-
-		WRITE_BYTE( 1 );
-		MessageEnd();
-	}
-}
-
-void CCredits::InputSetLogoLength( inputdata_t &inputdata )
-{
-	m_flLogoLength = inputdata.value.Float();
-}
-
-void CCredits::InputRollCredits( inputdata_t &inputdata )
-{
-#ifdef BB2_AI
-	CRecipientFilter filter; 
-	filter.AddAllPlayers(); 
-	filter.MakeReliable(); 
-
-	UserMessageBegin( filter, "CreditsMsg" ); 
-	WRITE_BYTE( 2 ); // Modification: Added from old patched AI SDK. 
-#else
-	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-
-	CSingleUserRecipientFilter user( pPlayer );
-	user.MakeReliable();
-
-	UserMessageBegin( user, "CreditsMsg" );
-	WRITE_BYTE( 2 );
-#endif //BB2_AI
-	MessageEnd();
 }

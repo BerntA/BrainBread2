@@ -134,8 +134,6 @@ void CItem::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType,
 		pPlayer->PickupObject(this);
 }
 
-extern int gEvilImpulse101;
-
 //-----------------------------------------------------------------------------
 // Activate when at rest, but don't allow pickup until then
 //-----------------------------------------------------------------------------
@@ -310,8 +308,6 @@ void CItem::ItemTouch(CBaseEntity *pOther)
 		g_pGameRules->PlayerGotItem(pPlayer, this);
 		UTIL_Remove(this);
 	}
-	else if (gEvilImpulse101)
-		UTIL_Remove(this);
 }
 
 CBaseEntity* CItem::Respawn( void )

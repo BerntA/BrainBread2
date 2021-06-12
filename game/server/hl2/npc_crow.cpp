@@ -20,8 +20,6 @@
 #include "hl2_shareddefs.h"
 #include "ai_route.h"
 #include "npcevent.h"
-#include "gib.h"
-#include "ai_interactions.h"
 #include "ndebugoverlay.h"
 #include "soundent.h"
 #include "vstdlib/random.h"
@@ -1056,21 +1054,6 @@ void CNPC_Crow::RunTask( const Task_t *pTask )
 	}
 }
 
-
-//------------------------------------------------------------------------------
-// Purpose: Override to do crow specific gibs.
-// Output : Returns true to gib, false to not gib.
-//-----------------------------------------------------------------------------
-bool CNPC_Crow::CorpseGib( const CTakeDamageInfo &info )
-{
-	EmitSound( "NPC_Crow.Gib" );
-
-	// TODO: crow gibs?
-	//CGib::SpawnSpecificGibs( this, CROW_GIB_COUNT, 300, 400, "models/gibs/crow_gibs.mdl");
-
-	return true;
-}
-
 //-----------------------------------------------------------------------------
 // Don't allow ridiculous forces to be applied to the crow. It only weighs
 // 1.5kg, so extreme forces will give it ridiculous velocity.
@@ -1324,21 +1307,6 @@ void CNPC_Crow::FlapSound( void )
 	m_bPlayedLoopingSound = true;
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose:  This is a generic function (to be implemented by sub-classes) to
-//			 handle specific interactions between different types of characters
-//			 (For example the barnacle grabbing an NPC)
-// Input  :  Constant for the type of interaction
-// Output :	 true  - if sub-class has a response for the interaction
-//			 false - if sub-class has no response
-//-----------------------------------------------------------------------------
-bool CNPC_Crow::HandleInteraction( int interactionType, void *data, CBaseCombatCharacter *sourceEnt )
-{
-	return BaseClass::HandleInteraction( interactionType, data, sourceEnt );
-}
-
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1363,7 +1331,6 @@ int CNPC_Crow::DrawDebugTextOverlays( void )
 
 	return nOffset;
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Determines which sounds the crow cares about.

@@ -1452,8 +1452,6 @@ public:
 	void				InputGagEnable( inputdata_t &inputdata ) { AddSpawnFlags(SF_NPC_GAG); }
 	void				InputGagDisable( inputdata_t &inputdata ) { RemoveSpawnFlags(SF_NPC_GAG); }
 
-	bool				HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt);
-
 	virtual void		InputOutsideTransition( inputdata_t &inputdata );
 	virtual void		InputInsideTransition( inputdata_t &inputdata );
 
@@ -1752,8 +1750,6 @@ public:
 
 	virtual Activity	GetFlinchActivity( bool bHeavyDamage, bool bGesture );
 	
-	virtual bool		ShouldGib( const CTakeDamageInfo &info ) { return false; }	// Always ragdoll, unless specified by the leaf class
-	virtual bool		Event_Gibbed( const CTakeDamageInfo &info );
 	virtual void		Event_Killed( const CTakeDamageInfo &info );
 
 	virtual Vector		GetShootEnemyDir( const Vector &shootOrigin, bool bNoisy = true );
@@ -2394,11 +2390,6 @@ typedef CHandle<CAI_BaseNPC> AIHANDLE;
 
 //-----------------
 
-#define DECLARE_INTERACTION( interaction ) \
-	ADD_CUSTOM_INTERACTION( interaction );
-
-//-----------------
-
 #define DECLARE_ANIMEVENT( id ) \
 	ADD_CUSTOM_ANIMEVENT( CNpc, id );
 
@@ -2702,8 +2693,6 @@ public:
 #define INIT_CUSTOM_AI(derivedClass)\
 	derivedClass::AccessClassScheduleIdSpaceDirect().Init( #derivedClass, BaseClass::GetSchedulingSymbols(), &BaseClass::AccessClassScheduleIdSpaceDirect() ); \
 	derivedClass::gm_SquadSlotIdSpace.Init( &CAI_BaseNPC::gm_SquadSlotNamespace, &BaseClass::gm_SquadSlotIdSpace);
-
-#define	ADD_CUSTOM_INTERACTION( interaction )	{ interaction = CBaseCombatCharacter::GetInteractionID(); }
 
 #define ADD_CUSTOM_SQUADSLOT_NAMED(derivedClass,squadSlotName,squadSlotEN)\
 	if ( !derivedClass::gm_SquadSlotIdSpace.AddSymbol( squadSlotName, squadSlotEN, "squadslot", derivedClass::gm_pszErrorClassName ) ) return;

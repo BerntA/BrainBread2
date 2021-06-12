@@ -38,7 +38,6 @@
 #include "IGameUIFuncs.h"
 #include "hud.h"
 #include "NavProgress.h"
-#include "commentary_modelviewer.h"
 #include "skill_tree.h"
 #include "keypad_menu.h"
 #include "zombie_menu.h"
@@ -340,11 +339,6 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 		newpanel = new CNavProgress( this );
 	}
 #endif
-
-	if ( Q_strcmp(PANEL_COMMENTARY_MODELVIEWER, szPanelName) == 0 )
-	{
-		newpanel = new CCommentaryModelViewer( this );
-	}
 	
 	return newpanel; 
 }

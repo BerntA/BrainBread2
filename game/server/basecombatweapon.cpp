@@ -8,7 +8,6 @@
 #include "ai_basenpc.h"
 #include "animation.h"
 #include "basecombatweapon.h"
-#include "player.h"			// For gEvilImpulse101 / CBasePlayer
 #include "gamerules.h"		// For g_pGameRules
 #include <KeyValues.h>
 #include "ammodef.h"
@@ -33,8 +32,6 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-extern int	gEvilImpulse101;		// In Player.h
 
 // -----------------------------------------
 //	Sprite Index info

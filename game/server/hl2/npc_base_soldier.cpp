@@ -11,7 +11,6 @@
 #include "ai_squadslot.h"
 #include "ai_squad.h"
 #include "ai_route.h"
-#include "ai_interactions.h"
 #include "ai_senses.h"
 #include "ai_tacticalservices.h"
 #include "soundent.h"
@@ -54,11 +53,6 @@
 #define SOLDIER_SHOTGUN_CROUCHING_POSITION	Vector( 0, 0, 36 )
 
 #define TAKE_COVER_DELAY 15.0f
-
-//-----------------------------------------------------------------------------
-// Interactions
-//-----------------------------------------------------------------------------
-int	g_interactionSoldierBash		= 0; // melee bash attack
 
 //=========================================================
 // Soldiers's Anim Events Go Here
@@ -1957,20 +1951,17 @@ void CNPC_BaseSoldier::HandleAnimEvent( animevent_t *pEvent )
 					Vector forward, up;
 					AngleVectors( GetLocalAngles(), &forward, NULL, &up );
 
-					if ( !pBCC->DispatchInteraction( g_interactionSoldierBash, NULL, this ) )
+					if (pBCC->IsPlayer())
 					{
-						if ( pBCC->IsPlayer() )
-						{
-							pBCC->ViewPunch( QAngle(-12,-7,0) );
-							pHurt->ApplyAbsVelocityImpulse( forward * 100 + up * 50 );
-						}
-
-						CTakeDamageInfo info( this, this, m_nKickDamage, DMG_CLUB );
-						CalculateMeleeDamageForce( &info, forward, pBCC->GetAbsOrigin() );
-						pBCC->TakeDamage( info );
-
-						EmitSound( "BaseEnemyHumanoid.WeaponBash" );
+						pBCC->ViewPunch(QAngle(-12, -7, 0));
+						pHurt->ApplyAbsVelocityImpulse(forward * 100 + up * 50);
 					}
+
+					CTakeDamageInfo info(this, this, m_nKickDamage, DMG_CLUB);
+					CalculateMeleeDamageForce(&info, forward, pBCC->GetAbsOrigin());
+					pBCC->TakeDamage(info);
+
+					EmitSound("BaseEnemyHumanoid.WeaponBash");
 				}			
 
 				// kick grunt sound?
@@ -2496,19 +2487,6 @@ bool CNPC_BaseSoldier::ActiveWeaponIsFullyLoaded()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose:  This is a generic function (to be implemented by sub-classes) to
-//			 handle specific interactions between different types of characters
-//			 (For example the barnacle grabbing an NPC)
-// Input  :  The type of interaction, extra info pointer, and who started it
-// Output :	 true  - if sub-class has a response for the interaction
-//			 false - if sub-class has no response
-//-----------------------------------------------------------------------------
-bool CNPC_BaseSoldier::HandleInteraction(int interactionType, void *data, CBaseCombatCharacter *sourceEnt)
-{
-	return BaseClass::HandleInteraction( interactionType, data, sourceEnt );
-}
-
-//-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
 const char* CNPC_BaseSoldier::GetSquadSlotDebugName( int iSquadSlot )
@@ -2608,8 +2586,6 @@ DECLARE_SQUADSLOT( SQUAD_SLOT_GRENADE2 )
 
 DECLARE_CONDITION( COND_SOLDIER_SHOULD_PATROL )
 DECLARE_CONDITION( COND_SOLDIER_ATTACK_SLOT_AVAILABLE )
-
-DECLARE_INTERACTION( g_interactionSoldierBash );
 
 //=========================================================
 // SCHED_SOLDIER_TAKE_COVER_FROM_BEST_SOUND

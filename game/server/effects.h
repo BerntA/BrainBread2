@@ -12,25 +12,8 @@
 #pragma once
 #endif
 
-
 class CBaseEntity;
 class Vector;
-
-
-//-----------------------------------------------------------------------------
-// The rotor wash shooter. It emits gibs when pushed by a rotor wash
-//-----------------------------------------------------------------------------
-abstract_class IRotorWashShooter
-{
-public:
-	virtual CBaseEntity *DoWashPush( float flWashStartTime, const Vector &vecForce ) = 0;
-};
-
-
-//-----------------------------------------------------------------------------
-// Gets at the interface if the entity supports it
-//-----------------------------------------------------------------------------
-IRotorWashShooter *GetRotorWashShooter( CBaseEntity *pEntity );
 
 class CEnvQuadraticBeam : public CPointEntity
 {
@@ -62,7 +45,7 @@ private:
 	DECLARE_DATADESC();
 	DECLARE_SERVERCLASS();
 };
-CEnvQuadraticBeam *CreateQuadraticBeam( const char *pSpriteName, const Vector &start, const Vector &control, const Vector &end, float width, CBaseEntity *pOwner );
 
+CEnvQuadraticBeam *CreateQuadraticBeam( const char *pSpriteName, const Vector &start, const Vector &control, const Vector &end, float width, CBaseEntity *pOwner );
 
 #endif // EFFECTS_H

@@ -32,30 +32,6 @@ class C_BaseEntity;
 struct WriteReplayScreenshotParams_t;
 class CReplayScreenshotTaker;
 
-//-----------------------------------------------------------------------------
-// Data specific to intro mode to control rendering.
-//-----------------------------------------------------------------------------
-struct IntroDataBlendPass_t
-{
-	int m_BlendMode;
-	float m_Alpha; // in [0.0f,1.0f]  This needs to add up to 1.0 for all passes, unless you are fading out.
-};
-
-struct IntroData_t
-{
-	bool	m_bDrawPrimary;
-	Vector	m_vecCameraView;
-	QAngle	m_vecCameraViewAngles;
-	float	m_playerViewFOV;
-	CUtlVector<IntroDataBlendPass_t> m_Passes;
-
-	// Fade overriding for the intro
-	float	m_flCurrentFadeColor[4];
-};
-
-// Robin, make this point at something to get intro mode.
-extern IntroData_t *g_pIntroData;
-
 // This identifies the view for certain systems that are unique per view (e.g. pixel visibility)
 // NOTE: This is identifying which logical part of the scene an entity is being redered in
 // This is not identifying a particular render target necessarily.  This is mostly needed for entities that
@@ -438,8 +414,6 @@ private:
 
 	// Water-related methods
 	void			DrawWorldAndEntities( bool drawSkybox, const CViewSetup &view, int nClearFlags, ViewCustomVisibility_t *pCustomVisibility = NULL );
-
-	virtual void			ViewDrawScene_Intro( const CViewSetup &view, int nClearFlags, const IntroData_t &introData );
 
 	// Determines what kind of water we're going to use
 	void			DetermineWaterRenderInfo( const VisibleFogVolumeInfo_t &fogVolumeInfo, WaterRenderInfo_t &info );

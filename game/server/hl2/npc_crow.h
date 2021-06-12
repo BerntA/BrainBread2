@@ -111,7 +111,6 @@ public:
 	// CBaseCombatCharacter:
 	//
 	virtual int OnTakeDamage_Alive( const CTakeDamageInfo &info );
-	virtual bool CorpseGib( const CTakeDamageInfo &info );
 	bool	BecomeRagdollOnClient( const Vector &force );
 
 	//
@@ -127,8 +126,6 @@ public:
 	virtual int SelectSchedule( void );
 	virtual void StartTask( const Task_t *pTask );
 	virtual void RunTask( const Task_t *pTask );
-
-	virtual bool HandleInteraction( int interactionType, void *data, CBaseCombatCharacter *sourceEnt );
 
 	virtual void OnChangeActivity( Activity eNewActivity );
 

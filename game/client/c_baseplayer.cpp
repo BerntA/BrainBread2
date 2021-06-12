@@ -67,8 +67,6 @@ extern ConVar mp_forcecamera; // in gamevars_shared.h
 static Vector WALL_MIN(-WALL_OFFSET,-WALL_OFFSET,-WALL_OFFSET);
 static Vector WALL_MAX(WALL_OFFSET,WALL_OFFSET,WALL_OFFSET);
 
-bool CommentaryModeShouldSwallowInput( C_BasePlayer *pPlayer );
-
 static C_BasePlayer *s_pLocalPlayer = NULL;
 
 static ConVar	spec_track		( "spec_track", "0", 0, "Tracks an entity in spec mode" );
@@ -1757,11 +1755,8 @@ void C_BasePlayer::PostThink( void )
 			SetCollisionBounds( VEC_HULL_MIN, VEC_HULL_MAX );
 		}		
 		
-		if ( !CommentaryModeShouldSwallowInput( this ) )
-		{
-			// do weapon stuff
-			ItemPostFrame();
-		}
+		// do weapon stuff
+		ItemPostFrame();
 
 		if ( GetFlags() & FL_ONGROUND )
 		{		

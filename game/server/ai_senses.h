@@ -41,7 +41,7 @@ enum seentype_t
 #define SENSING_FLAGS_DONT_LISTEN	0x00000002 // Effectively makes the NPC deaf
 
 //-----------------------------------------------------------------------------
-// class CAI_ScriptConditions
+// class CAI_Senses
 //
 // Purpose: 
 //-----------------------------------------------------------------------------

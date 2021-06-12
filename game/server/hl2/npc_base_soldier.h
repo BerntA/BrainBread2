@@ -106,7 +106,6 @@ public:
 	// Combat
 	bool			ActiveWeaponIsFullyLoaded();
 
-	bool			HandleInteraction(int interactionType, void *data, CBaseCombatCharacter *sourceEnt);
 	const char*		GetSquadSlotDebugName( int iSquadSlot );
 
 	bool			IsUsingTacticalVariant( int variant );

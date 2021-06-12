@@ -5,15 +5,12 @@
 //=============================================================================//
 
 #include "cbase.h"
-
 #include "npc_playercompanion.h"
-
 #include "fire.h"
 #include "func_tank.h"
 #include "npcevent.h"
 #include "props.h"
 #include "BasePropDoor.h"
-
 #include "ai_hint.h"
 #include "ai_localnavigator.h"
 #include "ai_memory.h"
@@ -23,7 +20,6 @@
 #include "ai_squad.h"
 #include "ai_squadslot.h"
 #include "ai_tacticalservices.h"
-#include "ai_interactions.h"
 #include "filesystem.h"
 #include "collisionutils.h"
 #include "grenade_frag.h"
@@ -1283,28 +1279,6 @@ void CNPC_PlayerCompanion::HandleAnimEvent( animevent_t *pEvent )
 		BaseClass::HandleAnimEvent( pEvent );
 		break;
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:  This is a generic function (to be implemented by sub-classes) to
-//			 handle specific interactions between different types of characters
-//			 (For example the barnacle grabbing an NPC)
-// Input  :  Constant for the type of interaction
-// Output :	 true  - if sub-class has a response for the interaction
-//			 false - if sub-class has no response
-//-----------------------------------------------------------------------------
-bool CNPC_PlayerCompanion::HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt)
-{
-	if (interactionType == g_interactionHitByPlayerThrownPhysObj )
-	{
-		if ( IsOkToSpeakInResponseToPlayer() )
-		{
-			Speak( TLK_PLYR_PHYSATK );
-		}
-		return true;
-	}
-
-	return BaseClass::HandleInteraction( interactionType, data, sourceEnt );
 }
 
 //------------------------------------------------------------------------------
@@ -3096,10 +3070,6 @@ CBasePlayer *pLocalPlayer = AI_GetSinglePlayer();
 //-----------------------------------------------------------------------------
 
 AI_BEGIN_CUSTOM_NPC( player_companion_base, CNPC_PlayerCompanion )
-
-	// AI Interaction for being hit by a physics object
-	DECLARE_INTERACTION(g_interactionHitByPlayerThrownPhysObj)
-	DECLARE_INTERACTION(g_interactionPlayerPuntedHeavyObject)
 
 	DECLARE_CONDITION( COND_PC_HURTBYFIRE )
 	DECLARE_CONDITION( COND_PC_SAFE_FROM_MORTAR )

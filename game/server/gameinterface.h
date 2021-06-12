@@ -111,7 +111,6 @@ public:
 	virtual void			PreSaveGameLoaded( char const *pSaveName, bool bInGame ) OVERRIDE;
 
 	// Returns true if the game DLL wants the server not to be made public.
-	// Used by commentary system to hide multiplayer commentary servers from the master.
 	virtual bool			ShouldHideServer( void ) OVERRIDE;
 
 	virtual void			InvalidateMdlCache() OVERRIDE;

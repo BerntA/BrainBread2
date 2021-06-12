@@ -12,7 +12,6 @@
 #include "ai_squadslot.h"
 #include "ai_squad.h"
 #include "ai_route.h"
-#include "ai_interactions.h"
 #include "ai_senses.h"
 #include "ai_tacticalservices.h"
 #include "soundent.h"
@@ -41,11 +40,6 @@ static int g_fSoldierQuestion = 0;
 #define SOLDIER_EYE_STANDING_POSITION	Vector( 0, 0, 66 )
 #define SOLDIER_GUN_STANDING_POSITION	Vector( 0, 0, 57 )
 #define SOLDIER_SHOTGUN_STANDING_POSITION	Vector( 0, 0, 36 )
-
-//-----------------------------------------------------------------------------
-// Interactions
-//-----------------------------------------------------------------------------
-int	g_interactionSoldierStaticBash = 0; // melee bash attack
 
 //=========================================================
 // Soldiers's Anim Events Go Here
@@ -1041,20 +1035,17 @@ void CNPCBaseSoldierStatic::HandleAnimEvent(animevent_t *pEvent)
 				Vector forward, up;
 				AngleVectors(GetLocalAngles(), &forward, NULL, &up);
 
-				if (!pBCC->DispatchInteraction(g_interactionSoldierStaticBash, NULL, this))
+				if (pBCC->IsPlayer())
 				{
-					if (pBCC->IsPlayer())
-					{
-						pBCC->ViewPunch(QAngle(-12, -7, 0));
-						pHurt->ApplyAbsVelocityImpulse(forward * 100 + up * 50);
-					}
-
-					CTakeDamageInfo info(this, this, m_nKickDamage, DMG_CLUB);
-					CalculateMeleeDamageForce(&info, forward, pBCC->GetAbsOrigin());
-					pBCC->TakeDamage(info);
-
-					EmitSound("BaseEnemyHumanoid.WeaponBash");
+					pBCC->ViewPunch(QAngle(-12, -7, 0));
+					pHurt->ApplyAbsVelocityImpulse(forward * 100 + up * 50);
 				}
+
+				CTakeDamageInfo info(this, this, m_nKickDamage, DMG_CLUB);
+				CalculateMeleeDamageForce(&info, forward, pBCC->GetAbsOrigin());
+				pBCC->TakeDamage(info);
+
+				EmitSound("BaseEnemyHumanoid.WeaponBash");
 			}
 
 			// kick sound
@@ -1423,8 +1414,6 @@ DECLARE_SQUADSLOT(SQUAD_SLOT_GRENADE2)
 
 DECLARE_CONDITION(COND_SOLDIER_STATIC_NO_FIRE)
 DECLARE_CONDITION(COND_SOLDIER_STATIC_ATTACK_SLOT_AVAILABLE)
-
-DECLARE_INTERACTION(g_interactionSoldierStaticBash);
 
 //=========================================================
 //	SCHED_SOLDIER_STATIC_COMBAT_FAIL

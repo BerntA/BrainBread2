@@ -45,8 +45,6 @@
 // For not just using one big ai net
 extern CBaseEntity*	FindPickerEntity( CBasePlayer* pPlayer );
 
-extern bool IsInCommentaryMode( void );
-
 ConVar  *sv_cheats = NULL;
 
 void ClientKill( edict_t *pEdict, const Vector &vecForce, bool bExplode = false )
@@ -628,16 +626,8 @@ void CPointClientCommand::InputCommand( inputdata_t& inputdata )
 	{
 		// In multiplayer, send it back to the activator
 		CBasePlayer *player = dynamic_cast< CBasePlayer * >( inputdata.pActivator );
-		if ( player )
-		{
+		if (player)
 			pClient = player->edict();
-		}
-
-		if ( IsInCommentaryMode() && !pClient )
-		{
-			// Commentary is stuffing a command in. We'll pretend it came from the first player.
-			pClient = engine->PEntityOfEntIndex( 1 );
-		}
 	}
 
 	if ( !pClient || !pClient->GetUnknown() )

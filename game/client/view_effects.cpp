@@ -19,12 +19,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-extern IntroData_t *g_pIntroData;
-
-
 // Arbitrary limit so that bad entity logic on the server can't consume tons of memory on the client.
 #define MAX_SHAKES		32
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Screen fade variables
@@ -605,19 +601,7 @@ void CViewEffects::ClearAllFades( void )
 //-----------------------------------------------------------------------------
 void CViewEffects::GetFadeParams( byte *r, byte *g, byte *b, byte *a, bool *blend )
 {
-	// If the intro is overriding our fade, use that instead
-	if ( g_pIntroData && g_pIntroData->m_flCurrentFadeColor[3] )
-	{
-		*r = g_pIntroData->m_flCurrentFadeColor[0];
-		*g = g_pIntroData->m_flCurrentFadeColor[1];
-		*b = g_pIntroData->m_flCurrentFadeColor[2];
-		*a = g_pIntroData->m_flCurrentFadeColor[3];
-		*blend = false;
-		return;
-	}
-
 	FadeCalculate();
-
 	*r = m_FadeColorRGBA[0];
 	*g = m_FadeColorRGBA[1];
 	*b = m_FadeColorRGBA[2];

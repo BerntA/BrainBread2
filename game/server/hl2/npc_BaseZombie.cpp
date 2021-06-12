@@ -20,7 +20,6 @@
 #include "npcevent.h"
 #include "activitylist.h"
 #include "entitylist.h"
-#include "gib.h"
 #include "ndebugoverlay.h"
 #include "rope.h"
 #include "rope_shared.h"
@@ -35,8 +34,6 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-int g_interactionZombieMeleeWarning;
 
 // After taking damage, ignore further damage for n seconds. This keeps the zombie
 // from being interrupted while.
@@ -560,16 +557,7 @@ void CNPC_BaseZombie::HandleAnimEvent( animevent_t *pEvent )
 {
 	if ( pEvent->event == AE_NPC_ATTACK_BROADCAST )
 	{
-		if( GetEnemy() && GetEnemy()->IsNPC() )
-		{
-			if( HasCondition(COND_CAN_MELEE_ATTACK1) )
-			{
-				// This animation is sometimes played by code that doesn't intend to attack the enemy
-				// (For instance, code that makes a zombie take a frustrated swipe at an obstacle). 
-				// Try not to trigger a reaction from our enemy unless we're really attacking. 
-				GetEnemy()->MyNPCPointer()->DispatchInteraction( g_interactionZombieMeleeWarning, NULL, this );
-			}
-		}
+		// TODO ? 
 		return;
 	}
 
@@ -1265,8 +1253,6 @@ DECLARE_ANIMEVENT( AE_ZOMBIE_ATTACK_SCREAM )
 DECLARE_ANIMEVENT( AE_ZOMBIE_GET_UP )
 DECLARE_ANIMEVENT( AE_ZOMBIE_POUND )
 DECLARE_ANIMEVENT( AE_ZOMBIE_ALERTSOUND )
-
-DECLARE_INTERACTION( g_interactionZombieMeleeWarning )
 
 //=========================================================
 // AttackDoor

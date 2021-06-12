@@ -511,36 +511,6 @@ void CAI_Squad::SquadNewEnemy( CBaseEntity *pEnemy )
 	}
 }
 
-//-------------------------------------
-// Purpose: Broadcast a message to all squad members
-// Input:	messageID - generic message handle
-//			data - generic data handle
-//			sender - who sent the message (NULL by default, if not, will not resend to the sender)
-//-------------------------------------
-
-int	CAI_Squad::BroadcastInteraction( int interactionType, void *data, CBaseCombatCharacter *sender )
-{
-	//Must have a squad
-	if ( m_SquadMembers.Count() == 0 )
-		return false;
-
-	//Broadcast to all members of the squad
-	for ( int i = 0; i < m_SquadMembers.Count(); i++ )
-	{
-		CAI_BaseNPC *pMember = m_SquadMembers[i]->MyNPCPointer();
-		
-		//Validate and don't send again to the sender
-		if ( ( pMember != NULL) && ( pMember != sender ) )
-		{
-			//Send it
-			pMember->DispatchInteraction( interactionType, data, sender );
-		}
-	}
-
-	return true;
-}
-
-
 //-----------------------------------------------------------------------------
 // Purpose: is it ok to make a sound of the given priority?  Check for conflicts
 // Input  : soundPriority - 
@@ -555,7 +525,6 @@ bool CAI_Squad::FOkToMakeSound( int soundPriority )
 	}
 	return true;
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: A squad member made an exclusive sound.  Keep track so other squad

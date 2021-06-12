@@ -112,8 +112,6 @@ public:
 	bool					IsLeader( CAI_BaseNPC *pLeader );
 	CAI_BaseNPC				*GetLeader( void );
 
-	int						BroadcastInteraction( int interactionType, void *data, CBaseCombatCharacter *sender = NULL );
-
 	void					AddToSquad(CAI_BaseNPC *pNPC);
 	bool					FOkToMakeSound( int soundPriority );
 	void					JustMadeSound( int soundPriority, float time );

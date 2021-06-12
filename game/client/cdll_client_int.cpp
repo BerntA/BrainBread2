@@ -107,7 +107,6 @@
 #include "vgui/ILocalize.h"
 #include "vgui/IVGui.h"
 #include "ixboxsystem.h"
-#include "ipresence.h"
 #include "engine/imatchmaking.h"
 #include "cdll_bounded_cvars.h"
 #include "matsys_controls/matsyscontrols.h"
@@ -115,7 +114,6 @@
 #include "clientsteamcontext.h"
 #include "renamed_recvtable_compat.h"
 #include "mouthinfo.h"
-#include "mumble.h"
 
 // BB2 
 #include "GameBase_Client.h"
@@ -929,7 +927,6 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	IGameSystem::Add( ClientThinkList() );
 	IGameSystem::Add( ClientSoundscapeSystem() );
 	IGameSystem::Add( PerfVisualBenchmark() );
-	IGameSystem::Add( MumbleSystem() );
 
 #if defined( CLIENT_DLL ) && defined( COPY_CHECK_STRESSTEST )
 	IGameSystem::Add( GetPredictionCopyTester() );
@@ -1363,27 +1360,24 @@ bool CHLClient::GetPlayerView( CViewSetup &playerView )
 //-----------------------------------------------------------------------------
 void CHLClient::SetupGameProperties( CUtlVector< XUSER_CONTEXT > &contexts, CUtlVector< XUSER_PROPERTY > &properties )
 {
-	presence->SetupGameProperties( contexts, properties );
 }
 
 uint CHLClient::GetPresenceID( const char *pIDName )
 {
-	return presence->GetPresenceID( pIDName );
+	return 0;
 }
 
 const char *CHLClient::GetPropertyIdString( const uint id )
 {
-	return presence->GetPropertyIdString( id );
+	return NULL;
 }
 
 void CHLClient::GetPropertyDisplayString( uint id, uint value, char *pOutput, int nBytes )
 {
-	presence->GetPropertyDisplayString( id, value, pOutput, nBytes );
 }
 
 void CHLClient::StartStatsReporting( HANDLE handle, bool bArbitrated )
 {
-	presence->StartStatsReporting( handle, bArbitrated );
 }
 
 //-----------------------------------------------------------------------------

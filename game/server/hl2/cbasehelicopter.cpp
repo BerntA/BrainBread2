@@ -445,38 +445,14 @@ bool CBaseHelicopter::DoWashPush( washentity_t *pWash, const Vector &vecWashOrig
 	float flDist = VectorNormalize( vecToSpot );
 	if ( flDist > BASECHOPPER_WASH_RADIUS )
 		return false;
-
-	IRotorWashShooter *pShooter = GetRotorWashShooter( pEntity );
-	IPhysicsObject *pPhysObject;
-
 	
 	float flPushTime = (gpGlobals->curtime - pWash->flWashStartTime);
 	flPushTime = clamp( flPushTime, 0, BASECHOPPER_WASH_RAMP_TIME );
 	float flWashAmount = RemapVal( flPushTime, 0, BASECHOPPER_WASH_RAMP_TIME, BASECHOPPER_WASH_PUSH_MIN, BASECHOPPER_WASH_PUSH_MAX );
 
-	if ( pShooter )
-	{
-		Vector vecForce = (0.015f / 0.1f) * flWashAmount * vecToSpot * phys_pushscale.GetFloat();
-		pEntity = pShooter->DoWashPush( pWash->flWashStartTime, vecForce );
-		if ( !pEntity )
-			return true;
-
-		washentity_t Wash;
-		Wash.hEntity = pEntity;
-		Wash.flWashStartTime = pWash->flWashStartTime;
-		int i = m_hEntitiesPushedByWash.AddToTail( Wash );
-		pWash = &m_hEntitiesPushedByWash[i];
-		
-		pPhysObject = pEntity->VPhysicsGetObject();
-		if ( !pPhysObject )
-			return true;
-	}
-	else
-	{
-		pPhysObject = pEntity->VPhysicsGetObject();
-		if ( !pPhysObject )
-			return false;
-	}
+	IPhysicsObject *pPhysObject = pEntity->VPhysicsGetObject();
+	if (!pPhysObject)
+		return false;
 
 	// Push it away from the center of the wash
 	float flMass = pPhysObject->GetMass();
@@ -553,12 +529,10 @@ void CBaseHelicopter::DoRotorPhysicsPush( const Vector &vecRotorOrigin, float fl
 	float flLightestMass = 9999;
 	while ((pEntity = gEntList.FindEntityInSphere(pEntity, vecPhysicsOrigin, BASECHOPPER_WASH_RADIUS )) != NULL)
 	{
-		IRotorWashShooter *pShooter = GetRotorWashShooter( pEntity );
-
 		if ( pEntity->IsEFlagSet( EFL_NO_ROTORWASH_PUSH ))
 			continue;
 
-		if ( pShooter || pEntity->GetMoveType() == MOVETYPE_VPHYSICS || (pEntity->VPhysicsGetObject() && !pEntity->IsPlayer()) ) 
+		if ( pEntity->GetMoveType() == MOVETYPE_VPHYSICS || (pEntity->VPhysicsGetObject() && !pEntity->IsPlayer()) ) 
 		{
 			// Make sure it's not already in our wash
 			bool bAlreadyPushing = false;
@@ -574,20 +548,13 @@ void CBaseHelicopter::DoRotorPhysicsPush( const Vector &vecRotorOrigin, float fl
 				continue;
 
 			float flMass = FLT_MAX;
-			if ( pShooter )
+			// Don't try to push anything too big
+			IPhysicsObject *pPhysObject = pEntity->VPhysicsGetObject();
+			if (pPhysObject)
 			{
-				flMass = 1.0f;
-			}
-			else
-			{
-				// Don't try to push anything too big
-				IPhysicsObject *pPhysObject = pEntity->VPhysicsGetObject();
-				if ( pPhysObject )
-				{
-					flMass = pPhysObject->GetMass();
-					if ( flMass > BASECHOPPER_WASH_MAX_MASS )
-						continue;
-				}
+				flMass = pPhysObject->GetMass();
+				if (flMass > BASECHOPPER_WASH_MAX_MASS)
+					continue;
 			}
 
 			// Ignore anything bigger than the one we've already found

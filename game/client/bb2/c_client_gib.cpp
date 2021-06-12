@@ -159,8 +159,7 @@ void C_ClientSideGibBase::LoadPhysics()
 	}
 
 	// We want touch calls when we hit the world
-	unsigned int flags = pPhysicsObj->GetCallbackFlags();
-	pPhysicsObj->SetCallbackFlags(flags | CALLBACK_GLOBAL_TOUCH_STATIC);
+	pPhysicsObj->SetCallbackFlags(pPhysicsObj->GetCallbackFlags() | CALLBACK_GLOBAL_TOUCH | CALLBACK_GLOBAL_TOUCH_STATIC);
 }
 
 void C_ClientSideGibBase::SetForceFade(bool value)
@@ -376,8 +375,7 @@ bool C_ClientRagdollGib::LoadRagdoll()
 	if (pPhysicsObj)
 	{
 		// We want touch calls when we hit the world
-		unsigned int flags = pPhysicsObj->GetCallbackFlags();
-		pPhysicsObj->SetCallbackFlags(flags | CALLBACK_GLOBAL_TOUCH_STATIC);
+		pPhysicsObj->SetCallbackFlags(pPhysicsObj->GetCallbackFlags() | CALLBACK_GLOBAL_TOUCH | CALLBACK_GLOBAL_TOUCH_STATIC);
 	}
 
 	// start fading out at 75% of r_propsmaxdist
@@ -524,8 +522,7 @@ void C_ClientPhysicsGib::LoadPhysics()
 	if (pPhysicsObj)
 	{
 		// We want touch calls when we hit the world
-		unsigned int flags = pPhysicsObj->GetCallbackFlags();
-		pPhysicsObj->SetCallbackFlags(flags | CALLBACK_GLOBAL_TOUCH_STATIC);
+		pPhysicsObj->SetCallbackFlags(pPhysicsObj->GetCallbackFlags() | CALLBACK_GLOBAL_TOUCH | CALLBACK_GLOBAL_TOUCH_STATIC);
 	}
 	else
 	{

@@ -61,10 +61,6 @@ ConVar g_debug_doors( "g_debug_doors", "0" );
 ConVar breakable_disable_gib_limit( "breakable_disable_gib_limit", "0" );
 ConVar breakable_multiplayer( "breakable_multiplayer", "1" );
 
-// AI Interaction for being hit by a physics object
-int g_interactionHitByPlayerThrownPhysObj = 0;
-int	g_interactionPlayerPuntedHeavyObject = 0;
-
 int g_ActiveGibCount = 0;
 ConVar prop_active_gib_limit( "prop_active_gib_limit", "999999" );
 ConVar prop_active_gib_max_fade_time( "prop_active_gib_max_fade_time", "999999" );
@@ -2918,11 +2914,8 @@ void CPhysicsProp::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 	{
 		// If we were thrown by a player, and we've hit an NPC, let the NPC know
 		CBaseEntity *pHitEntity = pEvent->pEntities[!index];
-		if ( pHitEntity && pHitEntity->MyNPCPointer() )
-		{
-			pHitEntity->MyNPCPointer()->DispatchInteraction( g_interactionHitByPlayerThrownPhysObj, this, NULL );
+		if (pHitEntity && pHitEntity->MyNPCPointer())
 			m_bThrownByPlayer = false;
-		}
 	}
 
 	if ( m_bFirstCollisionAfterLaunch )

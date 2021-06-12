@@ -725,17 +725,6 @@ enum
 	SIMULATION_TIME_WINDOW_BITS = 8,
 };
 
-//-----------------------------------------------------------------------------
-// Commentary Mode
-//-----------------------------------------------------------------------------
-
-// The player's method of starting / stopping commentary
-#ifdef GAME_HAS_NO_USE_KEY
-#define COMMENTARY_BUTTONS		(IN_ATTACK | IN_ATTACK2 | IN_USE)
-#else
-#define COMMENTARY_BUTTONS		(IN_USE)
-#endif
-
 enum
 {
 	HILL_TYPE_NONE = 0,

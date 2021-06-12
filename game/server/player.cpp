@@ -9,7 +9,6 @@
 #include "baseplayer_shared.h"
 #include "trains.h"
 #include "soundent.h"
-#include "gib.h"
 #include "shake.h"
 #include "decals.h"
 #include "gamerules.h"
@@ -80,10 +79,7 @@ static ConVar sv_maxusrcmdprocessticks( "sv_maxusrcmdprocessticks", "24", FCVAR_
 #include "tier0/memdbgon.h"
 
 static ConVar old_armor( "player_old_armor", "0" );
-
 static ConVar physicsshadowupdate_render( "physicsshadowupdate_render", "0" );
-bool IsInCommentaryMode( void );
-bool IsListeningToCommentary( void );
 
 ConVar cl_sidespeed( "cl_sidespeed", "450", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar cl_upspeed( "cl_upspeed", "320", FCVAR_REPLICATED | FCVAR_CHEAT );
@@ -127,8 +123,6 @@ extern ConVar *sv_maxreplay;
 #define VPHYS_MAX_VEL			10
 #define VPHYS_MAX_DISTSQR		(VPHYS_MAX_DISTANCE*VPHYS_MAX_DISTANCE)
 #define VPHYS_MAX_VELSQR		(VPHYS_MAX_VEL*VPHYS_MAX_VEL)
-
-int gEvilImpulse101;
 
 bool gInitHUD = true;
 
@@ -855,30 +849,6 @@ void CBasePlayer::DamageEffect(float flDamage, int fDamageType)
 #define ARMOR_RATIO	0.2
 #define ARMOR_BONUS	1.0
 
-//---------------------------------------------------------
-//---------------------------------------------------------
-bool CBasePlayer::ShouldTakeDamageInCommentaryMode( const CTakeDamageInfo &inputInfo )
-{
-	// Only ignore damage when we're listening to a commentary node
-	if ( !IsListeningToCommentary() )
-		return true;
-
-	// Allow SetHealth inputs to kill player.
-	if ( inputInfo.GetInflictor() == this && inputInfo.GetAttacker() == this )
-		return true;
-
-	// In commentary, ignore all damage except for falling and leeches
-	if ( !(inputInfo.GetDamageType() & (DMG_BURN | DMG_PLASMA | DMG_FALL | DMG_CRUSH)) && inputInfo.GetDamageType() != DMG_GENERIC )
-		return false;
-
-	// We let DMG_CRUSH pass the check above so that we can check here for stress damage. Deny the CRUSH damage if there is no attacker,
-	// or if the attacker isn't a BSP model. Therefore, we're allowing any CRUSH damage done by a BSP model.
-	if ( (inputInfo.GetDamageType() & DMG_CRUSH) && ( inputInfo.GetAttacker() == NULL || !inputInfo.GetAttacker()->IsBSPModel() ) )
-		return false;
-
-	return true;
-}
-
 int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
 	// have suit diagnose the problem - ie: report damage type
@@ -896,12 +866,6 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 	CHL2MP_Player *pClient = ToHL2MPPlayer(this);
 	CBaseEntity *pAttacker = info.GetAttacker();
-
- 	if ( IsInCommentaryMode() )
-	{
-		if( !ShouldTakeDamageInCommentaryMode( info ) )
-			return 0;
-	}
 
 	if ( GetFlags() & FL_GODMODE )
 		return 0;
@@ -4595,17 +4559,6 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 
 	switch (iImpulse)
 	{
-	case 81:
-		GiveNamedItem("weapon_cubemap");
-		break;
-
-	case 101:
-		gEvilImpulse101 = true;
-		if (GetHealth() < GetMaxHealth())		
-			TakeHealth(25, DMG_GENERIC);		
-		gEvilImpulse101 = false;
-		break;
-
 	case 103:
 		pEntity = FindEntityForward(this, true);
 		if (pEntity)

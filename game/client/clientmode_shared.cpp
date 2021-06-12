@@ -97,9 +97,6 @@ ConVar bb2_enable_healthbar_for_all("bb2_enable_healthbar_for_all", "0", FCVAR_C
 extern ConVar v_viewmodel_fov;
 extern ConVar voice_modenable;
 
-extern bool IsInCommentaryMode( void );
-extern const char* GetWearLocalizationString( float flWear );
-
 CON_COMMAND( cl_reload_localization_files, "Reloads all localization files" )
 {
 	g_pVGuiLocalize->ReloadLocalizationFiles();
@@ -1233,59 +1230,50 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 		if ( PlayerNameNotSetYet(event->GetString("name")) )
 			return;
 
-		if ( !IsInCommentaryMode() )
-		{
-			wchar_t wszLocalized[100];
-			wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
-			g_pVGuiLocalize->ConvertANSIToUnicode( event->GetString("name"), wszPlayerName, sizeof(wszPlayerName) );
-			g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_joined_game" ), 1, wszPlayerName );
+		wchar_t wszLocalized[100];
+		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
+		g_pVGuiLocalize->ConvertANSIToUnicode(event->GetString("name"), wszPlayerName, sizeof(wszPlayerName));
+		g_pVGuiLocalize->ConstructString(wszLocalized, sizeof(wszLocalized), g_pVGuiLocalize->Find("#game_player_joined_game"), 1, wszPlayerName);
 
-			char szLocalized[100];
-			g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );
+		char szLocalized[100];
+		g_pVGuiLocalize->ConvertUnicodeToANSI(wszLocalized, szLocalized, sizeof(szLocalized));
 
-			m_pChatElement->Printf("%s", szLocalized);
-		}
+		m_pChatElement->Printf("%s", szLocalized);
 	}
 	else if ( Q_strcmp( "player_disconnect", eventname ) == 0 )
 	{
 		C_BasePlayer *pPlayer = USERID2PLAYER( event->GetInt("userid") );
-
-		if (!m_pChatElement || !pPlayer)
-			return;
-		if ( PlayerNameNotSetYet(event->GetString("name")) )
+		if (!m_pChatElement || !pPlayer || PlayerNameNotSetYet(event->GetString("name")))
 			return;
 
-		if ( !IsInCommentaryMode() )
+		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
+		g_pVGuiLocalize->ConvertANSIToUnicode(pPlayer->GetPlayerName(), wszPlayerName, sizeof(wszPlayerName));
+
+		wchar_t wszReason[64];
+		const char *pszReason = event->GetString("reason");
+		if (pszReason && (pszReason[0] == '#') && g_pVGuiLocalize->Find(pszReason))
 		{
-			wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
-			g_pVGuiLocalize->ConvertANSIToUnicode( pPlayer->GetPlayerName(), wszPlayerName, sizeof(wszPlayerName) );
-
-			wchar_t wszReason[64];
-			const char *pszReason = event->GetString( "reason" );
-			if ( pszReason && ( pszReason[0] == '#' ) && g_pVGuiLocalize->Find( pszReason ) )
-			{
-				V_wcsncpy( wszReason, g_pVGuiLocalize->Find( pszReason ), sizeof( wszReason ) );
-			}
-			else
-			{
-				g_pVGuiLocalize->ConvertANSIToUnicode( pszReason, wszReason, sizeof(wszReason) );
-			}
-
-			wchar_t wszLocalized[100];
-			if (IsPC())
-			{
-				g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_left_game" ), 2, wszPlayerName, wszReason );
-			}
-			else
-			{
-				g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_left_game" ), 1, wszPlayerName );
-			}
-
-			char szLocalized[100];
-			g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );
-
-			m_pChatElement->Printf("%s", szLocalized);
+			V_wcsncpy(wszReason, g_pVGuiLocalize->Find(pszReason), sizeof(wszReason));
 		}
+		else
+		{
+			g_pVGuiLocalize->ConvertANSIToUnicode(pszReason, wszReason, sizeof(wszReason));
+		}
+
+		wchar_t wszLocalized[100];
+		if (IsPC())
+		{
+			g_pVGuiLocalize->ConstructString(wszLocalized, sizeof(wszLocalized), g_pVGuiLocalize->Find("#game_player_left_game"), 2, wszPlayerName, wszReason);
+		}
+		else
+		{
+			g_pVGuiLocalize->ConstructString(wszLocalized, sizeof(wszLocalized), g_pVGuiLocalize->Find("#game_player_left_game"), 1, wszPlayerName);
+		}
+
+		char szLocalized[100];
+		g_pVGuiLocalize->ConvertUnicodeToANSI(wszLocalized, szLocalized, sizeof(szLocalized));
+
+		m_pChatElement->Printf("%s", szLocalized);
 	}
 	else if ( Q_strcmp( "player_team", eventname ) == 0 )
 	{
@@ -1336,23 +1324,20 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 				_snwprintf(wszTeam, sizeof(wszTeam) / sizeof(wchar_t), L"%d", team);
 			}
 
-			if (!IsInCommentaryMode())
+			wchar_t wszLocalized[100];
+			if (bAutoTeamed)
 			{
-				wchar_t wszLocalized[100];
-				if (bAutoTeamed)
-				{
-					g_pVGuiLocalize->ConstructString(wszLocalized, sizeof(wszLocalized), g_pVGuiLocalize->Find("#game_player_joined_autoteam"), 2, wszPlayerName, wszTeam);
-				}
-				else
-				{
-					g_pVGuiLocalize->ConstructString(wszLocalized, sizeof(wszLocalized), g_pVGuiLocalize->Find("#game_player_joined_team"), 2, wszPlayerName, wszTeam);
-				}
-
-				char szLocalized[100];
-				g_pVGuiLocalize->ConvertUnicodeToANSI(wszLocalized, szLocalized, sizeof(szLocalized));
-
-				m_pChatElement->Printf("%s", szLocalized);
+				g_pVGuiLocalize->ConstructString(wszLocalized, sizeof(wszLocalized), g_pVGuiLocalize->Find("#game_player_joined_autoteam"), 2, wszPlayerName, wszTeam);
 			}
+			else
+			{
+				g_pVGuiLocalize->ConstructString(wszLocalized, sizeof(wszLocalized), g_pVGuiLocalize->Find("#game_player_joined_team"), 2, wszPlayerName, wszTeam);
+			}
+
+			char szLocalized[100];
+			g_pVGuiLocalize->ConvertUnicodeToANSI(wszLocalized, szLocalized, sizeof(szLocalized));
+
+			m_pChatElement->Printf("%s", szLocalized);
 		}
 
 		if (pPlayer && pPlayer->IsLocalPlayer())
@@ -1436,7 +1421,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 		if (cvar && cvar[0])
 			bIsTags = !strcmp(cvar, "sv_tags");
 
-		if (!IsInCommentaryMode() && !bIsTags)
+		if (!bIsTags)
 		{
 			wchar_t wszCvarName[64];
 			g_pVGuiLocalize->ConvertANSIToUnicode( event->GetString("cvarname"), wszCvarName, sizeof(wszCvarName) );

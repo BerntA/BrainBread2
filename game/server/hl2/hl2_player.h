@@ -126,7 +126,6 @@ public:
 protected:
 	virtual void		PreThink( void );
 	virtual	void		PostThink( void );
-	virtual bool		HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt);
 
 	virtual void		ItemPostFrame();
 	virtual void		PlayUseDenySound();

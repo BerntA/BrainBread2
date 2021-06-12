@@ -8,7 +8,6 @@
 #include "basecombatcharacter.h"
 #include "basecombatweapon.h"
 #include "animation.h"
-#include "gib.h"
 #include "entitylist.h"
 #include "gamerules.h"
 #include "ai_basenpc.h"
@@ -97,7 +96,6 @@ END_DATADESC()
 //-----------------------------------------------------------------------------
 // Init static variables
 //-----------------------------------------------------------------------------
-int					CBaseCombatCharacter::m_lastInteraction   = 0;
 Relationship_t**	CBaseCombatCharacter::m_DefaultRelationship	= NULL;
 
 //-----------------------------------------------------------------------------
@@ -160,7 +158,6 @@ IMPLEMENT_SERVERCLASS_ST(CBaseCombatCharacter, DT_BaseCombatCharacter)
 	SendPropInt(SENDINFO(m_nMaterialOverlayFlags), MAX_MAT_OVERLAYS_BITS, SPROP_UNSIGNED),
 END_SEND_TABLE()
 
-
 //-----------------------------------------------------------------------------
 // Interactions
 //-----------------------------------------------------------------------------
@@ -168,55 +165,6 @@ void CBaseCombatCharacter::InitInteractionSystem()
 {
 	// interaction ids continue to go up with every map load, otherwise you get
 	// collisions if a future map has a different set of NPCs from a current map
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Return an interaction ID (so we have no collisions)
-//-----------------------------------------------------------------------------
-int	CBaseCombatCharacter::GetInteractionID(void)
-{
-	m_lastInteraction++;
-	return (m_lastInteraction);
-}
-
-// ============================================================================
-bool CBaseCombatCharacter::HasHumanGibs( void )
-{
-#if defined( HL2_DLL )
-	Class_T myClass = Classify();
-	if (myClass == CLASS_MILITARY ||
-		myClass == CLASS_COMBINE ||
-		myClass == CLASS_CONSCRIPT ||
-		myClass == CLASS_PLAYER_INFECTED ||
-		myClass == CLASS_PLAYER_ZOMB ||
-		myClass == CLASS_PLAYER)
-		return true;
-#endif
-
-	return false;
-}
-
-bool CBaseCombatCharacter::HasAlienGibs( void )
-{
-#if defined( HL2_DLL )
-	Class_T myClass = Classify();
-	if (myClass == CLASS_ZOMBIE_BOSS || myClass == CLASS_ZOMBIE)
-		return true;
-#endif
-
-	return false;
-}
-
-void CBaseCombatCharacter::CorpseFade( void )
-{
-	StopAnimation();
-	SetAbsVelocity( vec3_origin );
-	SetMoveType( MOVETYPE_NONE );
-	SetLocalAngularVelocity( vec3_angle );
-	m_flAnimTime = gpGlobals->curtime;
-	IncrementInterpolationFrame();
-	SUB_StartFadeOut();
 }
 
 //-----------------------------------------------------------------------------
@@ -429,19 +377,6 @@ bool CBaseCombatCharacter::FInAimCone( const Vector &vecSpot )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose:  This is a generic function (to be implemented by sub-classes) to
-//			 handle specific interactions between different types of characters
-//			 (For example the barnacle grabbing an NPC)
-// Input  :  The type of interaction, extra info pointer, and who started it
-// Output :	 true  - if sub-class has a response for the interaction
-//			 false - if sub-class has no response
-//-----------------------------------------------------------------------------
-bool CBaseCombatCharacter::HandleInteraction( int interactionType, void *data, CBaseCombatCharacter* sourceEnt )
-{
-	return false;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Constructor : Initialize some fields
 //-----------------------------------------------------------------------------
 CBaseCombatCharacter::CBaseCombatCharacter( void )
@@ -596,33 +531,6 @@ void CBaseCombatCharacter::UpdateOnRemove( void )
 
 	// Chain at end to mimic destructor unwind order
 	BaseClass::UpdateOnRemove();
-}
-
-//=========================================================
-// CorpseGib - create some gore and get rid of a character's
-// model.
-//=========================================================
-bool CBaseCombatCharacter::CorpseGib( const CTakeDamageInfo &info )
-{
-	trace_t		tr;
-	bool		gibbed = false;
-
-	EmitSound( "BaseCombatCharacter.CorpseGib" );
-
-	// only humans throw skulls !!!UNDONE - eventually NPCs will have their own sets of gibs
-	if ( HasHumanGibs() )
-	{
-		CGib::SpawnHeadGib( this );
-		CGib::SpawnRandomGibs( this, 4, GIB_HUMAN );	// throw some human gibs.
-		gibbed = true;
-	}
-	else if ( HasAlienGibs() )
-	{
-		CGib::SpawnRandomGibs( this, 4, GIB_ALIEN );	// Throw alien gibs
-		gibbed = true;
-	}
-
-	return gibbed;
 }
 
 //=========================================================
@@ -990,17 +898,6 @@ CBaseEntity *CBaseCombatCharacter::CheckTraceHullAttack( const Vector &vStart, c
 	return pEntity;
 }
 
-
-bool  CBaseCombatCharacter::Event_Gibbed( const CTakeDamageInfo &info )
-{
-	m_takedamage	= DAMAGE_NO;
-	AddSolidFlags( FSOLID_NOT_SOLID );
-	m_lifeState		= LIFE_DEAD;
-	AddEffects(EF_NODRAW); // make the model invisible.
-	return CorpseGib(info);
-}
-
-
 Vector CBaseCombatCharacter::CalcDamageForceVector( const CTakeDamageInfo &info )
 {
 	// Already have a damage force in the data, use that.
@@ -1186,31 +1083,27 @@ void CBaseCombatCharacter::Event_Killed( const CTakeDamageInfo &info )
 	}
 	SendOnKilledGameEvent( info );
 
-	// Ragdoll unless we've gibbed
-	if ( ShouldGib( info ) == false )
+	bool bRagdollCreated = false;
+	if ((info.GetDamageType() & DMG_DISSOLVE) && CanBecomeRagdoll())
 	{
-		bool bRagdollCreated = false;
-		if ( (info.GetDamageType() & DMG_DISSOLVE) && CanBecomeRagdoll() )
+		int nDissolveType = ENTITY_DISSOLVE_NORMAL;
+		if (info.GetDamageType() & DMG_SHOCK)
 		{
-			int nDissolveType = ENTITY_DISSOLVE_NORMAL;
-			if ( info.GetDamageType() & DMG_SHOCK )
-			{
-				nDissolveType = ENTITY_DISSOLVE_ELECTRICAL;
-			}
-
-			bRagdollCreated = Dissolve( NULL, gpGlobals->curtime, false, nDissolveType );
-
-			// Also dissolve any weapons we dropped
-			if ( pDroppedWeapon )
-			{
-				pDroppedWeapon->Dissolve( NULL, gpGlobals->curtime, false, nDissolveType );
-			}
+			nDissolveType = ENTITY_DISSOLVE_ELECTRICAL;
 		}
 
-		if ( !bRagdollCreated && ( info.GetDamageType() & DMG_REMOVENORAGDOLL ) == 0 )
+		bRagdollCreated = Dissolve(NULL, gpGlobals->curtime, false, nDissolveType);
+
+		// Also dissolve any weapons we dropped
+		if (pDroppedWeapon)
 		{
-			BecomeRagdoll( info, forceVector );
+			pDroppedWeapon->Dissolve(NULL, gpGlobals->curtime, false, nDissolveType);
 		}
+	}
+
+	if (!bRagdollCreated && (info.GetDamageType() & DMG_REMOVENORAGDOLL) == 0)
+	{
+		BecomeRagdoll(info, forceVector);
 	}
 	
 	// no longer standing on a nav area
@@ -1785,20 +1678,8 @@ int CBaseCombatCharacter::OnTakeDamage(const CTakeDamageInfo &info)
 				pPhysics->EnableCollisions(false);
 			}
 
-			bool bGibbed = false;
-
 			Event_Killed(damageCopy);
-
-			// Only classes that specifically request it are gibbed
-			if (ShouldGib(damageCopy))
-			{
-				bGibbed = Event_Gibbed(damageCopy);
-			}
-
-			if (bGibbed == false)
-			{
-				Event_Dying(damageCopy);
-			}
+			Event_Dying(damageCopy);
 		}
 		return retVal;
 		break;
@@ -1809,11 +1690,6 @@ int CBaseCombatCharacter::OnTakeDamage(const CTakeDamageInfo &info)
 	default:
 	case LIFE_DEAD:
 		retVal = OnTakeDamage_Dead(damageCopy);
-		if (m_iHealth <= 0 && g_pGameRules->Damage_ShouldGibCorpse(damageCopy.GetDamageType()) && ShouldGib(damageCopy))
-		{
-			Event_Gibbed(damageCopy);
-			retVal = 0;
-		}
 		return retVal;
 	}
 }

@@ -11,7 +11,6 @@
 #include "trains.h"
 #include "vcollide_parse.h"
 #include "in_buttons.h"
-#include "ai_interactions.h"
 #include "ai_squad.h"
 #include "igamemovement.h"
 #include "ai_hull.h"
@@ -27,7 +26,6 @@
 #include "vphysics/player_controller.h"
 #include "player_pickup.h"
 #include "hl2_shared_misc.h"
-#include "script_intro.h"
 #include "effect_dispatch_data.h"
 #include "te_effect_dispatch.h" 
 #include "ai_basenpc.h"
@@ -376,19 +374,6 @@ Class_T CHL2_Player::Classify ( void )
 	return ((m_nControlClass != CLASS_NONE) ? m_nControlClass : CLASS_NONE);
 }
 
-//-----------------------------------------------------------------------------
-// Purpose:  This is a generic function (to be implemented by sub-classes) to
-//			 handle specific interactions between different types of characters
-//			 (For example the barnacle grabbing an NPC)
-// Input  :  Constant for the type of interaction
-// Output :	 true  - if sub-class has a response for the interaction
-//			 false - if sub-class has no response
-//-----------------------------------------------------------------------------
-bool CHL2_Player::HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt)
-{
-	return false;
-}
-
 void CHL2_Player::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 {
 	// Can't use stuff while dead
@@ -478,26 +463,8 @@ CHL2_Player::~CHL2_Player( void )
 void CHL2_Player::SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize )
 {
 	BaseClass::SetupVisibility( pViewEntity, pvs, pvssize );
-
 	int area = pViewEntity ? pViewEntity->NetworkProp()->AreaNum() : NetworkProp()->AreaNum();
 	PointCameraSetupVisibility( this, area, pvs, pvssize );
-
-	// If the intro script is playing, we want to get it's visibility points
-	if ( g_hIntroScript )
-	{
-		Vector vecOrigin;
-		CBaseEntity *pCamera;
-		if ( g_hIntroScript->GetIncludedPVSOrigin( &vecOrigin, &pCamera ) )
-		{
-			// If it's a point camera, turn it on
-			CPointCamera *pPointCamera = dynamic_cast< CPointCamera* >(pCamera); 
-			if ( pPointCamera )
-			{
-				pPointCamera->SetActive( true );
-			}
-			engine->AddOriginToPVS( vecOrigin );
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------

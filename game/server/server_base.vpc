@@ -379,8 +379,6 @@ $Project
 		$File	"ai_saverestore.h"
 		$File	"ai_schedule.cpp"
 		$File	"ai_schedule.h"
-		$File	"ai_scriptconditions.cpp"
-		$File	"ai_scriptconditions.h"
 		$File	"ai_senses.cpp"
 		$File	"ai_senses.h"
 		$File	"ai_sentence.cpp"
@@ -460,13 +458,11 @@ $Project
 		$File	"$SRCDIR\public\collisionutils.h"
 		$File	"colorcorrection.cpp"
 		$File	"colorcorrectionvolume.cpp"
-		$File	"CommentarySystem.cpp"
 		$File	"controlentities.cpp"
 		$File	"cplane.cpp"
 		$File	"CRagdollMagnet.cpp"
 		$File	"CRagdollMagnet.h"
 		$File	"damagemodifier.cpp"
-		$File	"$SRCDIR\game\shared\death_pose.cpp"
 		$File	"$SRCDIR\game\shared\debugoverlay_shared.cpp"
 		$File	"$SRCDIR\game\shared\debugoverlay_shared.h"
 		$File	"$SRCDIR\game\shared\decals.cpp"
@@ -501,13 +497,11 @@ $Project
 		$File	"env_debughistory.cpp"
 		$File	"env_debughistory.h"
 		$File	"$SRCDIR\game\shared\env_detail_controller.cpp"
-		$File	"env_effectsscript.cpp"
 		$File	"env_entity_maker.cpp"
 		$File	"env_particlescript.cpp"
 		$File	"env_player_surface_trigger.cpp"
 		$File	"env_player_surface_trigger.h"
 		$File	"env_projectedtexture.cpp"
-		$File	"env_screenoverlay.cpp"
 		$File	"env_texturetoggle.cpp"
 		$File	"env_tonemap_controller.cpp"
 		$File	"$SRCDIR\game\shared\env_wind_shared.cpp"
@@ -574,8 +568,6 @@ $Project
 		$File	"$SRCDIR\game\shared\gamevars_shared.h"
 		$File	"genericactor.cpp"
 		$File	"genericmonster.cpp"
-		$File	"gib.cpp"
-		$File	"gib.h"
 		$File	"globals.cpp"
 		$File	"guntarget.cpp"
 		$File	"h_ai.cpp"
@@ -723,11 +715,8 @@ $Project
 		$File	"sceneentity.cpp"
 		$File	"sceneentity.h"
 		$File	"$SRCDIR\game\shared\sceneentity_shared.cpp"
-		$File	"scratchpad_gamedll_helpers.cpp"
 		$File	"scripted.cpp"
 		$File	"scripted.h"
-		$File	"scriptedtarget.cpp"
-		$File	"scriptedtarget.h"
 		$File	"$SRCDIR\game\shared\scriptevent.h"
 		$File	"sendproxy.cpp"
 		$File	"$SRCDIR\game\shared\sequence_Transitioner.cpp"
@@ -823,14 +812,11 @@ $Project
 		"$SRCDIR\public\interpolatortypes.cpp"				\
 		"$SRCDIR\game\shared\interval.cpp"					\
 		"$SRCDIR\public\keyframe\keyframe.cpp"				\
-		"$SRCDIR\common\language.cpp"						\
 		"$SRCDIR\public\map_utils.cpp"						\
 		"$SRCDIR\public\networkvar.cpp"						\
 		"$SRCDIR\common\randoverride.cpp"					\
 		"$SRCDIR\public\registry.cpp"						\
 		"$SRCDIR\public\rope_physics.cpp"					\
-		"$SRCDIR\public\scratchpad3d.cpp"					\
-		"$SRCDIR\public\ScratchPadUtils.cpp"				\
 		"$SRCDIR\public\server_class.cpp"					\
 		"$SRCDIR\game\shared\sheetsimulator.cpp"			\
 		"$SRCDIR\public\simple_physics.cpp"					\
@@ -957,7 +943,6 @@ $Project
 		$File	"damagemodifier.h"
 		$File	"$SRCDIR\public\datamap.h"
 		$File	"$SRCDIR\public\tier0\dbg.h"
-		$File	"$SRCDIR\game\shared\death_pose.h"
 		$File	"$SRCDIR\game\shared\decals.h"
 		$File	"$SRCDIR\public\dlight.h"
 		$File	"$SRCDIR\public\dt_common.h"
@@ -1015,7 +1000,6 @@ $Project
 		$File	"$SRCDIR\game\shared\ipredictionsystem.h"
 		$File	"$SRCDIR\public\irecipientfilter.h"
 		$File	"$SRCDIR\public\isaverestore.h"
-		$File	"$SRCDIR\public\iscratchpad3d.h"
 		$File	"$SRCDIR\public\iserverentity.h"
 		$File	"$SRCDIR\public\iservernetworkable.h"
 		$File	"$SRCDIR\public\iserverunknown.h"
@@ -1026,7 +1010,6 @@ $Project
 		$File	"$SRCDIR\public\engine\ivdebugoverlay.h"
 		$File	"$SRCDIR\public\engine\ivmodelinfo.h"
 		$File	"$SRCDIR\public\tier1\KeyValues.h"
-		$File	"$SRCDIR\common\language.h"
 		$File	"$SRCDIR\public\tier0\l2cache.h"
 		$File	"logicrelay.h"
 		$File	"$SRCDIR\public\map_utils.h"
@@ -1064,9 +1047,6 @@ $Project
 		$File	"$SRCDIR\game\shared\saverestore_utlmap.h"
 		$File	"$SRCDIR\game\shared\saverestore_utlrbtree.h"
 		$File	"$SRCDIR\public\saverestoretypes.h"
-		$File	"$SRCDIR\public\scratchpad3d.h"
-		$File	"scratchpad_gamedll_helpers.h"
-		$File	"$SRCDIR\public\ScratchPadUtils.h"
 		$File	"sendproxy.h"
 		$File	"$SRCDIR\public\shake.h"
 		$File	"$SRCDIR\game\shared\shared_classnames.h"

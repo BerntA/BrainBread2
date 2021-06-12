@@ -5,34 +5,14 @@
 //=============================================================================//
 
 #include "cbase.h"
-
 #include "BasePropDoor.h"
-
 #include "ai_basehumanoid.h"
 #include "ai_blended_movement.h"
 #include "ai_navigator.h"
 #include "ai_memory.h"
 
-#ifdef HL2_DLL
-#include "ai_interactions.h"
-#endif
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-
-//-----------------------------------------------------------------------------
-// Purpose:  This is a generic function (to be implemented by sub-classes) to
-//			 handle specific interactions between different types of characters
-//			 (For example the barnacle grabbing an NPC)
-// Input  :  Constant for the type of interaction
-// Output :	 true  - if sub-class has a response for the interaction
-//			 false - if sub-class has no response
-//-----------------------------------------------------------------------------
-bool CAI_BaseHumanoid::HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt)
-{
-	return BaseClass::HandleInteraction( interactionType, data, sourceEnt);
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: check ammo

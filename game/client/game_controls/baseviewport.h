@@ -15,7 +15,6 @@
 #include <vgui_controls/Frame.h>
 #include "vguitextwindow.h"
 #include "vgui/ISurface.h"
-#include "commandmenu.h"
 #include <igameevents.h>
 
 using namespace vgui;

@@ -33,8 +33,6 @@ void RegisterUserMessages(void)
 	usermessages->Register("RequestState", 0);
 	usermessages->Register("CloseCaption", -1); // Show a caption (by string id number)(duration in 10th of a second)
 	usermessages->Register("AmmoDenied", 2);
-	usermessages->Register("CreditsMsg", 1);
-	usermessages->Register("LogoTimeMsg", 4);
 
 	// BB2 : 
 	usermessages->Register("ShowNote", -1); // Sends the note filename and its header.
