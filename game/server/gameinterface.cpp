@@ -12,17 +12,12 @@
 #include "game.h"
 #include "entityapi.h"
 #include "client.h"
-#include "saverestore.h"
 #include "entitylist.h"
 #include "gamerules.h"
 #include "hl2mp_gamerules.h"
 #include "soundent.h"
 #include "player.h"
 #include "server_class.h"
-#include "ai_node.h"
-#include "ai_link.h"
-#include "ai_saverestore.h"
-#include "ai_networkmanager.h"
 #include "ndebugoverlay.h"
 #include "ivoiceserver.h"
 #include <stdarg.h>
@@ -37,13 +32,10 @@
 #include "engine/IEngineSound.h"
 #include "ispatialpartition.h"
 #include "bitbuf.h"
-#include "saverestoretypes.h"
-#include "physics_saverestore.h"
 #include "tier0/vprof.h"
 #include "effect_dispatch_data.h"
 #include "engine/IStaticPropMgr.h"
 #include "TemplateEntities.h"
-#include "ai_speech.h"
 #include "soundenvelope.h"
 #include "usermessages.h"
 #include "physics.h"
@@ -62,8 +54,6 @@
 #include "replay/iserverreplaycontext.h"
 #endif
 #include "SoundEmitterSystem/isoundemittersystembase.h"
-#include "AI_ResponseSystem.h"
-#include "saverestore_stringtable.h"
 #include "util.h"
 #include "tier0/icommandline.h"
 #include "datacache/imdlcache.h"
@@ -73,9 +63,7 @@
 #endif
 #include "ragdoll_shared.h"
 #include "toolframework/iserverenginetools.h"
-#include "sceneentity.h"
 #include "appframework/IAppSystemGroup.h"
-#include "scenefilecache/ISceneFileCache.h"
 #include "tier2/tier2.h"
 #include "particles/particles.h"
 #include "ixboxsystem.h"
@@ -85,7 +73,6 @@
 #include "steam/steam_gameserver.h"
 #endif
 #include "tier3/tier3.h"
-#include "querycache.h"
 
 #include "GameBase_Server.h"
 #include "GameBase_Shared.h"
@@ -118,8 +105,6 @@ CSteamGameServerAPIContext *steamgameserverapicontext = &s_SteamGameServerAPICon
 
 CTimedEventMgr g_NetworkPropertyEventMgr;
 
-ISaveRestoreBlockHandler *GetEventQueueSaveRestoreBlockHandler();
-
 CUtlLinkedList<CMapEntityRef, unsigned short> g_MapEntityRefs;
 
 // Engine interfaces.
@@ -143,7 +128,6 @@ IVDebugOverlay * debugoverlay = NULL;
 ISoundEmitterSystemBase *soundemitterbase = NULL;
 IServerPluginHelpers *serverpluginhelpers = NULL;
 IServerEngineTools *serverenginetools = NULL;
-ISceneFileCache *scenefilecache = NULL;
 IXboxSystem *xboxsystem = NULL;	// Xbox 360 only
 IMatchmaking *matchmaking = NULL;	// Xbox 360 only
 #if defined( REPLAY_ENABLED )
@@ -155,8 +139,6 @@ IGameSystem *SoundEmitterSystem();
 
 bool ModelSoundsCacheInit();
 void ModelSoundsCacheShutdown();
-
-void SceneManager_ClientActive( CBasePlayer *player );
 
 class IMaterialSystem;
 class IStudioRender;
@@ -179,10 +161,7 @@ INetworkStringTable *g_pStringTableEffectDispatch = NULL;
 INetworkStringTable *g_pStringTableVguiScreen = NULL;
 INetworkStringTable *g_pStringTableMaterials = NULL;
 INetworkStringTable *g_pStringTableInfoPanel = NULL;
-INetworkStringTable *g_pStringTableClientSideChoreoScenes = NULL;
 INetworkStringTable *g_pStringTableServerMapCycle = NULL;
-
-CStringTableSaveRestoreOps g_VguiScreenStringOps;
 
 // Holds global variables shared between engine and game.
 CGlobalVars *gpGlobals;
@@ -211,12 +190,12 @@ const IChangeInfoAccessor *CBaseEdict::GetChangeAccessor() const
 	return engine->GetChangeAccessor( (const edict_t *)this );
 }
 
-const char *GetHintTypeDescription( CAI_Hint *pHint );
-
 void ClientPutInServerOverride( ClientPutInServerOverrideFn fn )
 {
 	g_pClientPutInServerOverride = fn;
 }
+
+bool HasLoadedNAV(void) { return (TheNavMesh && TheNavMesh->IsLoaded()); }
 
 ConVar ai_post_frame_navigation( "ai_post_frame_navigation", "0" );
 class CPostFrameNavigationHook;
@@ -280,13 +259,8 @@ bool UTIL_GetModDir( char *lpszTextOut, unsigned int nSize )
 extern void InitializeCvars( void );
 
 CBaseEntity*	FindPickerEntity( CBasePlayer* pPlayer );
-CAI_Node*		FindPickerAINode( CBasePlayer* pPlayer, NodeType_e nNodeType );
-CAI_Link*		FindPickerAILink( CBasePlayer* pPlayer );
-float			GetFloorZ(const Vector &origin);
 void			UpdateAllClientData( void );
 void			DrawMessageEntities();
-
-#include "ai_network.h"
 
 // For now just using one big AI network
 extern ConVar think_limit;
@@ -385,90 +359,11 @@ void DrawAllDebugOverlays( void )
 	// --------------------------------------------------------
 	UTIL_DrawOverlayLines();
 
-	// ------------------------------------------------------------------------
-	// If in wc_edit mode draw a box to highlight which node I'm looking at
-	// ------------------------------------------------------------------------
-	if (engine->IsInEditMode())
-	{
-		CBasePlayer* pPlayer = UTIL_PlayerByIndex( CBaseEntity::m_nDebugPlayer );
-		if (pPlayer) 
-		{
-			if (g_pAINetworkManager->GetEditOps()->m_bLinkEditMode)
-			{
-				CAI_Link* pAILink = FindPickerAILink(pPlayer);
-				if (pAILink)
-				{
-					// For now just using one big AI network
-					Vector startPos = g_pBigAINet->GetNode(pAILink->m_iSrcID)->GetPosition(g_pAINetworkManager->GetEditOps()->m_iHullDrawNum);
-					Vector endPos	= g_pBigAINet->GetNode(pAILink->m_iDestID)->GetPosition(g_pAINetworkManager->GetEditOps()->m_iHullDrawNum);
-					Vector linkDir	= startPos-endPos;
-					float linkLen = VectorNormalize( linkDir );
-					
-					// Draw in green if link that's been turned off
-					if (pAILink->m_LinkInfo & bits_LINK_OFF)
-					{
-						NDebugOverlay::BoxDirection(startPos, Vector(-4,-4,-4), Vector(-linkLen,4,4), linkDir, 0,255,0,40,0);
-					}
-					else
-					{
-						NDebugOverlay::BoxDirection(startPos, Vector(-4,-4,-4), Vector(-linkLen,4,4), linkDir, 255,0,0,40,0);
-					}
-				}
-			}
-			else
-			{
-				CAI_Node* pAINode;
-				if (g_pAINetworkManager->GetEditOps()->m_bAirEditMode)
-				{
-					pAINode = FindPickerAINode(pPlayer,NODE_AIR);
-				}
-				else
-				{
-					pAINode = FindPickerAINode(pPlayer,NODE_GROUND);
-				}
-
-				if (pAINode)
-				{
-					Vector vecPos = pAINode->GetPosition(g_pAINetworkManager->GetEditOps()->m_iHullDrawNum);
-					NDebugOverlay::Box( vecPos, Vector(-8,-8,-8), Vector(8,8,8), 255,0,0,40,0);
-
-					if ( pAINode->GetHint() )
-					{
-						CBaseEntity *pEnt = (CBaseEntity *)pAINode->GetHint();
-						if ( pEnt->GetEntityName() != NULL_STRING )
-						{
-							NDebugOverlay::Text( vecPos + Vector(0,0,6), STRING(pEnt->GetEntityName()), false, 0 );
-						}
-						NDebugOverlay::Text( vecPos, GetHintTypeDescription( pAINode->GetHint() ), false, 0 );
-					}
-				}
-			}
-			// ------------------------------------
-			// If in air edit mode draw guide line
-			// ------------------------------------
-			if (g_pAINetworkManager->GetEditOps()->m_bAirEditMode)
-			{
-				UTIL_DrawPositioningOverlay(g_pAINetworkManager->GetEditOps()->m_flAirEditDistance);
-			}
-			else
-			{
-				NDebugOverlay::DrawGroundCrossHairOverlay();
-			}
-		}
-	}
-
-	// For not just using one big AI Network
-	if ( g_pAINetworkManager )
-	{
-		g_pAINetworkManager->GetEditOps()->DrawAINetworkOverlay();
-	}
-
 	// PERFORMANCE: only do this in developer mode
 	if ( g_pDeveloper->GetInt() && !engine->IsDedicatedServer() )
 	{
 		// iterate through all objects for debug overlays
 		const CEntInfo *pInfo = gEntList.FirstEntInfo();
-
 		for ( ;pInfo; pInfo = pInfo->m_pNext )
 		{
 			CBaseEntity *ent = (CBaseEntity *)pInfo->m_pEntity;
@@ -561,8 +456,6 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 		return false;
 	if ( (serverpluginhelpers = (IServerPluginHelpers *)appSystemFactory(INTERFACEVERSION_ISERVERPLUGINHELPERS, NULL)) == NULL )
 		return false;
-	if ( (scenefilecache = (ISceneFileCache *)appSystemFactory( SCENE_FILE_CACHE_INTERFACE_VERSION, NULL )) == NULL )
-		return false;
 	if ( IsX360() && (xboxsystem = (IXboxSystem *)appSystemFactory( XBOXSYSTEM_INTERFACE_VERSION, NULL )) == NULL )
 		return false;
 	if ( IsX360() && (matchmaking = (IMatchmaking *)appSystemFactory( VENGINE_MATCHMAKING_VERSION, NULL )) == NULL )
@@ -618,13 +511,6 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 
 	sv_maxreplay = g_pCVar->FindVar( "sv_maxreplay" );
 
-	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetEntitySaveRestoreBlockHandler() );
-	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetPhysSaveRestoreBlockHandler() );
-	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetAISaveRestoreBlockHandler() );
-	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetTemplateSaveRestoreBlockHandler() );
-	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetDefaultResponseSystemSaveRestoreBlockHandler() );
-	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetEventQueueSaveRestoreBlockHandler() );
-
 	// The string system must init first + shutdown last
 	IGameSystem::Add( GameStringSystem() );
 
@@ -663,8 +549,6 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 		return false;
 	}
 
-	InvalidateQueryCache();
-
 	// Parse the particle manifest file & register the effects within it
 	ParseParticleEffects( false, false );
 
@@ -690,13 +574,6 @@ void CServerGameDLL::DLLShutdown( void )
 {
 	// Due to dependencies, these are not autogamesystems
 	ModelSoundsCacheShutdown();
-
-	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetEventQueueSaveRestoreBlockHandler() );
-	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetDefaultResponseSystemSaveRestoreBlockHandler() );
-	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetTemplateSaveRestoreBlockHandler() );
-	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetAISaveRestoreBlockHandler() );
-	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetPhysSaveRestoreBlockHandler() );
-	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetEntitySaveRestoreBlockHandler() );
 
 	IGameSystem::ShutdownAllSystems();
 
@@ -798,72 +675,6 @@ void CServerGameDLL::GameShutdown( void )
 	GameBaseShared()->Release();
 }
 
-static bool g_OneWayTransition = false;
-void Game_SetOneWayTransition( void )
-{
-	g_OneWayTransition = true;
-}
-
-static CUtlVector<EHANDLE> g_RestoredEntities;
-// just for debugging, assert that this is the only time this function is called
-static bool g_InRestore = false;
-
-void AddRestoredEntity( CBaseEntity *pEntity )
-{
-	Assert(g_InRestore);
-	if ( !pEntity )
-		return;
-
-	g_RestoredEntities.AddToTail( EHANDLE(pEntity) );
-}
-
-void EndRestoreEntities()
-{
-	if ( !g_InRestore )
-		return;
-		
-	// The entire hierarchy is restored, so we can call GetAbsOrigin again.
-	//CBaseEntity::SetAbsQueriesValid( true );
-
-	// Call all entities' OnRestore handlers
-	for ( int i = g_RestoredEntities.Count()-1; i >=0; --i )
-	{
-		CBaseEntity *pEntity = g_RestoredEntities[i].Get();
-		if ( pEntity && !pEntity->IsDormant() )
-		{
-			MDLCACHE_CRITICAL_SECTION();
-			pEntity->OnRestore();
-		}
-	}
-
-	g_RestoredEntities.Purge();
-
-	IGameSystem::OnRestoreAllSystems();
-
-	g_InRestore = false;
-	gEntList.CleanupDeleteList();
-
-	// HACKHACK: UNDONE: We need to redesign the main loop with respect to save/load/server activate
-	g_ServerGameDLL.ServerActivate( NULL, 0, 0 );
-	CBaseEntity::SetAllowPrecache( false );
-}
-
-void BeginRestoreEntities()
-{
-	if ( g_InRestore )
-	{
-		DevMsg( "BeginRestoreEntities without previous EndRestoreEntities.\n" );
-		gEntList.CleanupDeleteList();
-	}
-	g_RestoredEntities.Purge();
-	g_InRestore = true;
-
-	CBaseEntity::SetAllowPrecache( true );
-
-	// No calls to GetAbsOrigin until the entire hierarchy is restored!
-	//CBaseEntity::SetAbsQueriesValid( false );
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: This prevents sv.tickcount/gpGlobals->tickcount from advancing during restore which
 //  would cause a lot of the NPCs to fast forward their think times to the same
@@ -871,7 +682,7 @@ void BeginRestoreEntities()
 //-----------------------------------------------------------------------------
 bool CServerGameDLL::IsRestoring()
 {
-	return g_InRestore;
+	return false;
 }
 
 // Called any time a new level is started (after GameInit() also on level transitions within a game)
@@ -882,6 +693,9 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	// Bernt: Should we force a certain maxplayer count depending on the gamemode?
 	// This fully works, I think we should go for it..
 	// engine->ServerCommand("maxplayers 5\n");
+
+	extern int g_iObjectiveIndex;
+	g_iObjectiveIndex = 1;
 
 	// Parse map specific data.
 	if (GameBaseShared()->GetSharedMapData())
@@ -894,60 +708,15 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 
 	// IGameSystem::LevelInitPreEntityAllSystems() is called when the world is precached
 	// That happens either in LoadGameState() or in MapEntity_ParseAllEntities()
-	if ( loadGame )
-	{
-		if ( pOldLevel )
-		{
-			gpGlobals->eLoadType = MapLoad_Transition;
-		}
-		else
-		{
-			gpGlobals->eLoadType = MapLoad_LoadGame;
-		}
+	gpGlobals->eLoadType = (background ? MapLoad_Background : MapLoad_NewGame);
 
-		BeginRestoreEntities();
-		if ( !engine->LoadGameState( pMapName, 1 ) )
-		{
-			if ( pOldLevel )
-			{
-				MapEntity_ParseAllEntities( pMapEntities );
-			}
-			else
-			{
-				// Regular save load case
-				return false;
-			}
-		}
+	// Clear out entity references, and parse the entities into it.
+	g_MapEntityRefs.Purge();
+	CMapLoadEntityFilter filter;
+	MapEntity_ParseAllEntities(pMapEntities, &filter);
 
-		if ( pOldLevel )
-		{
-			engine->LoadAdjacentEnts( pOldLevel, pLandmarkName );
-		}
-
-		if ( g_OneWayTransition )
-		{
-			engine->ClearSaveDirAfterClientLoad();
-		}
-	}
-	else
-	{
-		if ( background )
-		{
-			gpGlobals->eLoadType = MapLoad_Background;
-		}
-		else
-		{
-			gpGlobals->eLoadType = MapLoad_NewGame;
-		}
-
-		// Clear out entity references, and parse the entities into it.
-		g_MapEntityRefs.Purge();
-		CMapLoadEntityFilter filter;
-		MapEntity_ParseAllEntities( pMapEntities, &filter );
-
-		// Now call the mod specific parse
-		LevelInit_ParseAllEntities( pMapEntities );
-	}
+	// Now call the mod specific parse
+	LevelInit_ParseAllEntities(pMapEntities);
 
 	// Now that all of the active entities have been loaded in, precache any entities who need point_template parameters
 	//  to be parsed (the above code has loaded all point_template entities)
@@ -959,10 +728,6 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	// Sometimes an ent will Remove() itself during its precache, so RemoveImmediate won't happen.
 	// This makes sure those ents get cleaned up.
 	gEntList.CleanupDeleteList();
-
-	g_AIFriendliesTalkSemaphore.Release();
-	g_AIFoesTalkSemaphore.Release();
-	g_OneWayTransition = false;
 
 	return true;
 }
@@ -991,10 +756,6 @@ bool g_bCheckForChainedActivate;
 
 void CServerGameDLL::ServerActivate( edict_t *pEdictList, int edictCount, int clientMax )
 {
-	// HACKHACK: UNDONE: We need to redesign the main loop with respect to save/load/server activate
-	if ( g_InRestore )
-		return;
-
 	if ( gEntList.ResetDeleteList() != 0 )
 	{
 		Msg( "ERROR: Entity delete queue not empty on level start!\n" );
@@ -1078,10 +839,6 @@ void CServerGameDLL::GameFrame( bool simulating )
 {
 	VPROF( "CServerGameDLL::GameFrame" );
 
-	// Don't run frames until fully restored
-	if ( g_InRestore )
-		return;
-
 	if ( CBaseEntity::IsSimulatingOnAlternateTicks() )
 	{
 		// only run simulation on even numbered ticks
@@ -1117,8 +874,6 @@ void CServerGameDLL::GameFrame( bool simulating )
 	TheNavMesh->Update();
 #endif
 #endif
-
-	UpdateQueryCache();
 
 	Physics_RunThinkFunctions( simulating );
 	
@@ -1245,8 +1000,6 @@ void CServerGameDLL::LevelShutdown( void )
 
 	gEntList.Clear();
 
-	InvalidateQueryCache();
-
 	IGameSystem::LevelShutdownPostEntityAllSystems();
 
 	// In case we quit out during initial load
@@ -1288,7 +1041,6 @@ void CServerGameDLL::CreateNetworkStringTables( void )
 	g_pStringTableVguiScreen = networkstringtable->CreateStringTable( "VguiScreen", MAX_VGUI_SCREEN_STRINGS );
 	g_pStringTableMaterials = networkstringtable->CreateStringTable( "Materials", MAX_MATERIAL_STRINGS );
 	g_pStringTableInfoPanel = networkstringtable->CreateStringTable( "InfoPanel", MAX_INFOPANEL_STRINGS );
-	g_pStringTableClientSideChoreoScenes = networkstringtable->CreateStringTable( "Scenes", MAX_CHOREO_SCENES_STRINGS );
 	g_pStringTableServerMapCycle = networkstringtable->CreateStringTable( "ServerMapCycle", 128 );
 
 	bool bPopFilesValid = true;
@@ -1299,7 +1051,6 @@ void CServerGameDLL::CreateNetworkStringTables( void )
 			g_pStringTableVguiScreen &&
 			g_pStringTableMaterials &&
 			g_pStringTableInfoPanel &&
-			g_pStringTableClientSideChoreoScenes &&
 			g_pStringTableServerMapCycle && 
 			bPopFilesValid
 			);
@@ -1312,14 +1063,11 @@ void CServerGameDLL::CreateNetworkStringTables( void )
 	Assert( GetParticleSystemIndex( "error" ) == 0 );
 
 	CreateNetworkStringTables_GameRules();
-
-	// Set up save/load utilities for string tables
-	g_VguiScreenStringOps.Init( g_pStringTableVguiScreen );
 }
 
 CSaveRestoreData *CServerGameDLL::SaveInit( int size )
 {
-	return ::SaveInit(size);
+	return NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -1332,10 +1080,7 @@ CSaveRestoreData *CServerGameDLL::SaveInit( int size )
 //-----------------------------------------------------------------------------
 void CServerGameDLL::SaveWriteFields( CSaveRestoreData *pSaveData, const char *pname, void *pBaseData, datamap_t *pMap, typedescription_t *pFields, int fieldCount )
 {
-	CSave saveHelper( pSaveData );
-	saveHelper.WriteFields( pname, pBaseData, pMap, pFields, fieldCount );
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Reads data from a save/restore block into a structure
@@ -1350,8 +1095,6 @@ void CServerGameDLL::SaveWriteFields( CSaveRestoreData *pSaveData, const char *p
 
 void CServerGameDLL::SaveReadFields( CSaveRestoreData *pSaveData, const char *pname, void *pBaseData, datamap_t *pMap, typedescription_t *pFields, int fieldCount )
 {
-	CRestore restoreHelper( pSaveData );
-	restoreHelper.ReadFields( pname, pBaseData, pMap, pFields, fieldCount );
 }
 
 //-----------------------------------------------------------------------------
@@ -1366,15 +1109,10 @@ void CServerGameDLL::RestoreGlobalState(CSaveRestoreData *s)
 
 void CServerGameDLL::Save( CSaveRestoreData *s )
 {
-	CSave saveHelper( s );
-	g_pGameSaveRestoreBlockSet->Save( &saveHelper );
 }
 
 void CServerGameDLL::Restore( CSaveRestoreData *s, bool b)
 {
-	CRestore restore(s);
-	g_pGameSaveRestoreBlockSet->Restore( &restore, b );
-	g_pGameSaveRestoreBlockSet->PostRestore();
 }
 
 //-----------------------------------------------------------------------------
@@ -1402,26 +1140,11 @@ CStandardSendProxies* CServerGameDLL::GetStandardSendProxies()
 
 int	CServerGameDLL::CreateEntityTransitionList( CSaveRestoreData *s, int a)
 {
-	CRestore restoreHelper( s );
-	// save off file base
-	int base = restoreHelper.GetReadPos();
-
-	int movedCount = ::CreateEntityTransitionList(s, a);
-	if ( movedCount )
-	{
-		g_pGameSaveRestoreBlockSet->CallBlockHandlerRestore( GetPhysSaveRestoreBlockHandler(), base, &restoreHelper, false );
-		g_pGameSaveRestoreBlockSet->CallBlockHandlerRestore( GetAISaveRestoreBlockHandler(), base, &restoreHelper, false );
-	}
-
-	GetPhysSaveRestoreBlockHandler()->PostRestore();
-	GetAISaveRestoreBlockHandler()->PostRestore();
-
-	return movedCount;
+	return 0;
 }
 
 void CServerGameDLL::PreSave( CSaveRestoreData *s )
 {
-	g_pGameSaveRestoreBlockSet->PreSave( s );
 }
 
 //#include "client_textmessage.h"
@@ -1439,16 +1162,10 @@ void CServerGameDLL::GetSaveComment( char *text, int maxlength, float flMinutes,
 
 void CServerGameDLL::WriteSaveHeaders( CSaveRestoreData *s )
 {
-	CSave saveHelper( s );
-	g_pGameSaveRestoreBlockSet->WriteSaveHeaders( &saveHelper );
-	g_pGameSaveRestoreBlockSet->PostSave();
 }
 
 void CServerGameDLL::ReadRestoreHeaders( CSaveRestoreData *s )
 {
-	CRestore restoreHelper( s );
-	g_pGameSaveRestoreBlockSet->PreRestore();
-	g_pGameSaveRestoreBlockSet->ReadRestoreHeaders( &restoreHelper );
 }
 
 void CServerGameDLL::PreSaveGameLoaded( char const *pSaveName, bool bInGame )
@@ -2054,9 +1771,6 @@ void CServerGameClients::ClientActive( edict_t *pEdict, bool bLoadGame )
 	
 	::ClientActive( pEdict, bLoadGame );
 
-	// If we just loaded from a save file, call OnRestore on valid entities
-	EndRestoreEntities();
-
 	if ( gpGlobals->eLoadType != MapLoad_LoadGame )
 	{
 		// notify all entities that the player is now in the game
@@ -2069,7 +1783,6 @@ void CServerGameClients::ClientActive( edict_t *pEdict, bool bLoadGame )
 	// Tell the sound controller to check looping sounds
 	CBasePlayer *pPlayer = ( CBasePlayer * )CBaseEntity::Instance( pEdict );
 	CSoundEnvelopeController::GetController().CheckLoopingSoundsForPlayer( pPlayer );
-	SceneManager_ClientActive( pPlayer );
 }
 
 //-----------------------------------------------------------------------------
@@ -2464,41 +2177,6 @@ CPlayerState *CServerGameClients::GetPlayerState( edict_t *player )
 //-----------------------------------------------------------------------------
 void CServerGameClients::GetBugReportInfo( char *buf, int buflen )
 {
-	recentNPCSpeech_t speech[ SPEECH_LIST_MAX_SOUNDS ];
-	int  num;
-	int  i;
-
-	buf[ 0 ] = 0;
-
-	if ( gpGlobals->maxClients == 1 )
-	{
-		#ifdef BB2_AI
-			CBaseEntity *ent = FindPickerEntity( UTIL_GetLocalPlayer() ); 
-		#else
-			CBaseEntity *ent = FindPickerEntity( UTIL_PlayerByIndex(1) );
-		#endif //BB2_AI
-
-		if ( ent )
-		{
-			Q_snprintf( buf, buflen, "Picker %i/%s - ent %s model %s\n",
-				ent->entindex(),
-				ent->GetClassname(),
-				STRING( ent->GetEntityName() ),
-				STRING( ent->GetModelName() ) );
-		}
-
-		// get any sounds that were spoken by NPCs recently
-		num = GetRecentNPCSpeech( speech );
-		if ( num > 0 )
-		{
-			Q_snprintf( buf, buflen, "%sRecent NPC speech:\n", buf );
-			for( i = 0; i < num; i++ )
-			{
-				Q_snprintf( buf, buflen, "%s   time: %6.3f   sound name: %s   scene: %s\n", buf, speech[ i ].time, speech[ i ].name, speech[ i ].sceneName );
-			}
-			Q_snprintf( buf, buflen, "%sCurrent time: %6.3f\n", buf, gpGlobals->curtime );
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -2724,7 +2402,6 @@ public:
 	CServerDLLSharedAppSystems()
 	{
 		AddAppSystem( "soundemittersystem" DLL_EXT_STRING, SOUNDEMITTERSYSTEM_INTERFACE_VERSION );
-		AddAppSystem( "scenefilecache" DLL_EXT_STRING, SCENE_FILE_CACHE_INTERFACE_VERSION );
 	}
 
 	virtual int	Count()

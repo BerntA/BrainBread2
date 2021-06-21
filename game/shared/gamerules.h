@@ -69,10 +69,6 @@ public:
 	CGameRulesProxy();
 	~CGameRulesProxy();
 
-	// UNDONE: Is this correct, Mike?
-	// Don't carry these across a transition, they are recreated.
-	virtual int	ObjectCaps( void ) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
-
 	// ALWAYS transmit to all clients.
 	virtual int UpdateTransmitState( void );
 

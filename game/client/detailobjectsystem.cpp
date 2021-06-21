@@ -378,8 +378,6 @@ public:
 	void LevelShutdownPreEntity();
 	void LevelShutdownPostEntity();
 
-	void OnSave() {}
-	void OnRestore() {}
 	void SafeRemoveIfDesired() {}
 
     // Gets a particular detail object

@@ -14,7 +14,6 @@
 #include "soundent.h"
 #include "explode.h"
 #include "smoke_trail.h"
-#include "hl2_shareddefs.h"
 #include "collisionutils.h"
 #include "te_effect_dispatch.h"
 #endif
@@ -138,21 +137,7 @@ static QAngle AlignAngles(const QAngle &angles, float cosineAlignAngle)
 // derive from this so we can add save/load data to it
 struct game_shadowcontrol_params_t : public hlshadowcontrol_params_t
 {
-	DECLARE_SIMPLE_DATADESC();
 };
-
-BEGIN_SIMPLE_DATADESC(game_shadowcontrol_params_t)
-
-DEFINE_FIELD(targetPosition, FIELD_POSITION_VECTOR),
-DEFINE_FIELD(targetRotation, FIELD_VECTOR),
-DEFINE_FIELD(maxAngular, FIELD_FLOAT),
-DEFINE_FIELD(maxDampAngular, FIELD_FLOAT),
-DEFINE_FIELD(maxSpeed, FIELD_FLOAT),
-DEFINE_FIELD(maxDampSpeed, FIELD_FLOAT),
-DEFINE_FIELD(dampFactor, FIELD_FLOAT),
-DEFINE_FIELD(teleportDistance, FIELD_FLOAT),
-
-END_DATADESC()
 
 //-----------------------------------------------------------------------------
 class CGrabController : public IMotionEvent
@@ -163,7 +148,6 @@ public:
 	~CGrabController(void);
 	void AttachEntity(CBasePlayer *pPlayer, CBaseEntity *pEntity, IPhysicsObject *pPhys, bool bIsMegaPhysCannon, const Vector &vGrabPosition, bool bUseGrabPosition);
 	void DetachEntity(bool bClearVelocity);
-	void OnRestore();
 
 	bool UpdateObject(CBasePlayer *pPlayer, float flError);
 
@@ -231,14 +215,6 @@ CGrabController::CGrabController(void)
 CGrabController::~CGrabController(void)
 {
 	DetachEntity(false);
-}
-
-void CGrabController::OnRestore()
-{
-	if (m_controller)
-	{
-		m_controller->SetEventHandler(this);
-	}
 }
 
 void CGrabController::SetTargetPosition(const Vector &target, const QAngle &targetOrientation)
@@ -696,10 +672,6 @@ public:
 	void Shutdown(bool bThrown = false);
 	bool OnControls(CBaseEntity *pControls) { return true; }
 	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
-	void OnRestore()
-	{
-		m_grabController.OnRestore();
-	}
 	void VPhysicsUpdate(IPhysicsObject *pPhysics){}
 	void VPhysicsShadowUpdate(IPhysicsObject *pPhysics) {}
 
@@ -915,17 +887,6 @@ static ConVar sk_apc_missile_damage("sk_apc_missile_damage", "15");
 
 BEGIN_DATADESC(CMissile)
 
-DEFINE_FIELD(m_hOwner, FIELD_EHANDLE),
-DEFINE_FIELD(m_hRocketTrail, FIELD_EHANDLE),
-DEFINE_FIELD(m_flGracePeriodEndsAt, FIELD_TIME),
-DEFINE_FIELD(m_flDamage, FIELD_FLOAT),
-DEFINE_FIELD(m_flRadius, FIELD_FLOAT),
-
-#ifdef BB2_AI
-DEFINE_FIELD(m_bCreateDangerSounds, FIELD_BOOLEAN),
-#endif //BB2_AI
-
-// Function Pointers
 DEFINE_FUNCTION(MissileTouch),
 DEFINE_FUNCTION(IgniteThink),
 DEFINE_FUNCTION(SeekThink),
@@ -1236,8 +1197,6 @@ CMissile *CMissile::Create(const Vector &vecOrigin, const QAngle &vecAngles, edi
 //-----------------------------------------------------------------------------
 class CInfoAPCMissileHint : public CBaseEntity
 {
-	DECLARE_DATADESC();
-
 public:
 	DECLARE_CLASS(CInfoAPCMissileHint, CBaseEntity);
 
@@ -1263,10 +1222,6 @@ private:
 CUtlVector< CInfoAPCMissileHint::APCMissileHintHandle_t > CInfoAPCMissileHint::s_APCMissileHints;
 
 LINK_ENTITY_TO_CLASS(info_apc_missile_hint, CInfoAPCMissileHint);
-
-BEGIN_DATADESC(CInfoAPCMissileHint)
-DEFINE_FIELD(m_hTarget, FIELD_EHANDLE),
-END_DATADESC()
 
 //-----------------------------------------------------------------------------
 // Spawn, remove

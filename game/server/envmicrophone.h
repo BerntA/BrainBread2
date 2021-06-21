@@ -42,7 +42,6 @@ public:
 
 	void Spawn(void);
 	void Activate(void);
-	void OnRestore( void );
 	void ActivateSpeaker( void );
 	void Think(void);
 	bool CanHearSound(CSound *pSound, float &flVolume);

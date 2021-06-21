@@ -26,15 +26,8 @@ class CDmgAccumulator;
 
 struct CSoundParameters;
 
-class AI_CriteriaSet;
-class IResponseSystem;
-class IEntitySaveUtils;
 class CRecipientFilter;
 class CStudioHdr;
-
-// Matching the high level concept is significantly better than other criteria
-// FIXME:  Could do this in the script file by making it required and bumping up weighting there instead...
-#define CONCEPT_WEIGHT 5.0f
 
 typedef CHandle<CBaseEntity> EHANDLE;
 
@@ -53,12 +46,7 @@ typedef CHandle<CBaseEntity> EHANDLE;
 		inline type* Get##accessorName##() { return varName.Get(); } \
 		inline void Set##accessorName##( type *pType ) { varName = pType; m_NetStateMgr.StateChanged(); }
 
-
-// saverestore.h declarations
-class CSaveRestoreData;
 struct typedescription_t;
-class ISave;
-class IRestore;
 class CBaseEntity;
 class CEntityMapData;
 class CBaseCombatWeapon;
@@ -124,18 +112,6 @@ struct inputdata_t
 	int nOutputID;					// The unique ID of the output that was fired.
 };
 
-// Serializable list of context as set by entity i/o and used for deducing proper
-//  speech state, et al.
-struct ResponseContext_t
-{
-	DECLARE_SIMPLE_DATADESC();
-
-	string_t		m_iszName;
-	string_t		m_iszValue;
-	float			m_fExpirationTime;		// when to expire context (0 == never)
-};
-
-
 //-----------------------------------------------------------------------------
 // Entity events... targetted to a particular entity
 // Each event has a well defined structure to use for parameters
@@ -146,7 +122,6 @@ enum EntityEvent_t
 	ENTITY_EVENT_WATER_UNTOUCH,			// No data needed
 	ENTITY_EVENT_PARENT_CHANGED,		// No data needed
 };
-
 
 //-----------------------------------------------------------------------------
 
@@ -183,7 +158,7 @@ enum DebugOverlayBits_t
 	//			=	0x00000200,		// Display autoaim radius
 
 	OVERLAY_NPC_SELECTED_BIT	=	0x00001000,		// the npc is current selected
-	OVERLAY_NPC_NEAREST_BIT		=	0x00002000,		// show the nearest node of this npc
+	//		=	0x00002000,		// unused
 	OVERLAY_NPC_ROUTE_BIT		=	0x00004000,		// draw the route for this npc
 	OVERLAY_NPC_TRIANGULATE_BIT =	0x00008000,		// draw the triangulation for this npc
 	OVERLAY_NPC_ZAP_BIT			=	0x00010000,		// destroy the NPC
@@ -241,8 +216,6 @@ struct thinkfunc_t
 	string_t	m_iszContext;
 	int			m_nNextThinkTick;
 	int			m_nLastThinkTick;
-
-	DECLARE_SIMPLE_DATADESC();
 };
 
 struct EmitSound_t;
@@ -401,7 +374,6 @@ public:
 	// virtual methods; you can override these
 public:
 	// Owner entity.
-	// FIXME: These are virtual only because of CNodeEnt
 	CBaseEntity				*GetOwnerEntity() const;
 	virtual void			SetOwnerEntity( CBaseEntity* pOwner );
 	void					SetEffectEntity( CBaseEntity *pEffectEnt );
@@ -569,11 +541,7 @@ public:
 	void InputSetDamageFilter( inputdata_t &inputdata );
 	void InputDispatchEffect( inputdata_t &inputdata );
 	void InputEnableDamageForces( inputdata_t &inputdata );
-	void InputDisableDamageForces( inputdata_t &inputdata );
-	void InputAddContext( inputdata_t &inputdata );
-	void InputRemoveContext( inputdata_t &inputdata );
-	void InputClearContext( inputdata_t &inputdata );
-	void InputDispatchResponse( inputdata_t& inputdata );
+	void InputDisableDamageForces(inputdata_t &inputdata);
 	void InputDisableShadow( inputdata_t &inputdata );
 	void InputEnableShadow( inputdata_t &inputdata );
 	void InputAddOutput( inputdata_t &inputdata );
@@ -621,22 +589,6 @@ public:
 
 	void		SetSolid( SolidType_t val );
 
-	// save/restore
-	// only overload these if you have special data to serialize
-	virtual int	Save( ISave &save );
-	virtual int	Restore( IRestore &restore );
-	virtual bool ShouldSavePhysics();
-
-	// handler to reset stuff before you are restored
-	// NOTE: Always chain to base class when implementing this!
-	virtual void OnSave( IEntitySaveUtils *pSaveUtils );
-
-	// handler to reset stuff after you are restored
-	// called after all entities have been loaded from all affected levels
-	// called before activate
-	// NOTE: Always chain to base class when implementing this!
-	virtual void OnRestore();
-
 	int			 GetTextureFrameIndex( void );
 	void		 SetTextureFrameIndex( int iIndex );
 
@@ -648,9 +600,6 @@ public:
 
 	void		 SetAIWalkable( bool bBlocksLOS );
 	bool		 IsAIWalkable( void );
-private:
-	int SaveDataDescBlock( ISave &save, datamap_t *dmap );
-	int RestoreDataDescBlock( IRestore &restore, datamap_t *dmap );
 
 public:
 	// Networking related methods
@@ -761,21 +710,6 @@ protected:
 	int							m_iCurrentThinkContext;
 #endif
 
-	void RemoveExpiredConcepts( void );
-	int	GetContextCount() const;						// Call RemoveExpiredConcepts to clean out expired concepts
-	const char *GetContextName( int index ) const;		// note: context may be expired
-	const char *GetContextValue( int index ) const; 	// note: context may be expired
-	bool ContextExpired( int index ) const;
-	int FindContextByName( const char *name ) const;
-public:
-	void	AddContext( const char *nameandvalue );
-
-protected:
-	CUtlVector< ResponseContext_t > m_ResponseContexts;
-
-	// Map defined context sets
-	string_t	m_iszResponseContext;
-
 private:
 	CBaseEntity( CBaseEntity& );
 
@@ -795,9 +729,6 @@ public:
 
 	// Returns a CBaseAnimating if the entity is derived from CBaseAnimating.
 	virtual CBaseAnimating*	GetBaseAnimating() { return 0; }
-
-	virtual IResponseSystem *GetResponseSystem();
-	virtual void	DispatchResponse( const char *conceptName );
 
 // Classify - returns the type of group (i.e, "houndeye", or "human military" so that NPCs with different classnames
 // still realize that they are teammates. (overridden for NPCs that form groups)
@@ -1085,10 +1016,6 @@ public:
 	}
 
 #endif // _DEBUG
-
-	virtual void	ModifyOrAppendCriteria( AI_CriteriaSet& set );
-	void			AppendContextToCriteria( AI_CriteriaSet& set, const char *prefix = "" );
-	void			DumpResponseCriteria( void );
 	
 	// Return the IHasAttributes interface for this base entity. Removes the need for:
 	//	dynamic_cast< IHasAttributes * >( pEntity );
@@ -1762,9 +1689,6 @@ public:
 		return "server";
 	}
 	
-	// Used to access m_vecAbsOrigin during restore when it's unsafe to call GetAbsOrigin.
-	friend class CPlayerRestoreHelper;
-	
 	static bool s_bAbsQueriesValid;
 
 	// Call this when hierarchy is not completely set up (such as during Restore) to throw asserts
@@ -1785,8 +1709,6 @@ public:
 // Send tables exposed in this module.
 EXTERN_SEND_TABLE(DT_Edict);
 EXTERN_SEND_TABLE(DT_BaseEntity);
-
-
 
 // Ugly technique to override base member functions
 // Normally it's illegal to cast a pointer to a member function of a derived class to a pointer to a 
@@ -2615,11 +2537,8 @@ class CPointEntity : public CBaseEntity
 {
 public:
 	DECLARE_CLASS( CPointEntity, CBaseEntity );
-
 	void	Spawn( void );
-	virtual int	ObjectCaps( void ) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 	virtual bool KeyValue( const char *szKeyName, const char *szValue );
-private:
 };
 
 // Has a position + size
@@ -2628,8 +2547,6 @@ class CServerOnlyEntity : public CBaseEntity
 	DECLARE_CLASS( CServerOnlyEntity, CBaseEntity );
 public:
 	CServerOnlyEntity() : CBaseEntity( true ) {}
-	
-	virtual int ObjectCaps( void ) { return (BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION); }
 };
 
 // Has only a position, no size

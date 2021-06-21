@@ -27,7 +27,6 @@ public:
 	virtual void Precache( void );
 	virtual void Spawn( void );
 	virtual void Activate( void );
-	virtual void OnRestore( void );
 
 	Class_T Classify( void );
 	void	Event_Killed( const CTakeDamageInfo &info );

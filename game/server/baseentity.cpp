@@ -5,7 +5,6 @@
 //===========================================================================//
 
 #include "cbase.h"
-#include "isaverestore.h"
 #include "client.h"
 #include "decals.h"
 #include "gamerules.h"
@@ -29,19 +28,13 @@
 #include "animation.h"
 #include "tier1/strtools.h"
 #include "engine/IEngineSound.h"
-#include "physics_saverestore.h"
-#include "saverestore_utlvector.h"
 #include "bone_setup.h"
 #include "vcollide_parse.h"
 #include "filters.h"
 #include "te_effect_dispatch.h"
-#include "AI_Criteria.h"
-#include "AI_ResponseSystem.h"
 #include "world.h"
 #include "globals.h"
-#include "saverestoretypes.h"
 #include "SkyCamera.h"
-#include "sceneentity.h"
 #include "game.h"
 #include "tier0/vprof.h"
 #include "ai_basenpc.h"
@@ -1263,12 +1256,6 @@ void CBaseEntity::Activate( void )
 	{
 		m_hDamageFilter = gEntList.FindEntityByName( NULL, m_iszDamageFilterName );
 	}
-
-	// Add any non-null context strings to our context vector
-	if ( m_iszResponseContext != NULL_STRING ) 
-	{
-		AddContext( m_iszResponseContext.ToCStr() );
-	}
 }
 
 ////////////////////////////  old CBaseEntity stuff ///////////////////////////////////
@@ -1620,243 +1607,47 @@ CBaseEntity *CBaseEntity::GetNextTarget( void )
 	return gEntList.FindEntityByName( NULL, m_target );
 }
 
-class CThinkContextsSaveDataOps : public CDefSaveRestoreOps
-{
-	virtual void Save( const SaveRestoreFieldInfo_t &fieldInfo, ISave *pSave )
-	{
-		AssertMsg( fieldInfo.pTypeDesc->fieldSize == 1, "CThinkContextsSaveDataOps does not support arrays");
-
-		// Write out the vector
-		CUtlVector< thinkfunc_t > *pUtlVector = (CUtlVector< thinkfunc_t > *)fieldInfo.pField;
-		SaveUtlVector( pSave, pUtlVector, FIELD_EMBEDDED );
-
-		// Get our owner
-		CBaseEntity *pOwner = (CBaseEntity*)fieldInfo.pOwner;
-
-		pSave->StartBlock();
-		// Now write out all the functions
-		for ( int i = 0; i < pUtlVector->Size(); i++ )
-		{
-#ifdef WIN32
-			void **ppV = (void**)&((*pUtlVector)[i].m_pfnThink);
-#else
-			BASEPTR *ppV = &((*pUtlVector)[i].m_pfnThink);
-#endif
-			bool bHasFunc = (*ppV != NULL);
-			pSave->WriteBool( &bHasFunc, 1 );
-			if ( bHasFunc )
-			{
-				pSave->WriteFunction( pOwner->GetDataDescMap(), "m_pfnThink", (inputfunc_t **)ppV, 1 );
-			}
-		}
-		pSave->EndBlock();
-	}
-
-	virtual void Restore( const SaveRestoreFieldInfo_t &fieldInfo, IRestore *pRestore )
-	{
-		AssertMsg( fieldInfo.pTypeDesc->fieldSize == 1, "CThinkContextsSaveDataOps does not support arrays");
-
-		// Read in the vector
-		CUtlVector< thinkfunc_t > *pUtlVector = (CUtlVector< thinkfunc_t > *)fieldInfo.pField;
-		RestoreUtlVector( pRestore, pUtlVector, FIELD_EMBEDDED );
-
-		// Get our owner
-		CBaseEntity *pOwner = (CBaseEntity*)fieldInfo.pOwner;
-
-		pRestore->StartBlock();
-		// Now read in all the functions
-		for ( int i = 0; i < pUtlVector->Size(); i++ )
-		{
-			bool bHasFunc;
-			pRestore->ReadBool( &bHasFunc, 1 );
-#ifdef WIN32
-			void **ppV = (void**)&((*pUtlVector)[i].m_pfnThink);
-#else
-			BASEPTR *ppV = &((*pUtlVector)[i].m_pfnThink);
-			Q_memset( (void *)ppV, 0x0, sizeof(inputfunc_t) );
-#endif
-			if ( bHasFunc )
-			{
-				SaveRestoreRecordHeader_t header;
-				pRestore->ReadHeader( &header );
-				pRestore->ReadFunction( pOwner->GetDataDescMap(), (inputfunc_t **)ppV, 1, header.size );
-			}
-			else
-			{
-				*ppV = NULL;
-			}
-		}
-		pRestore->EndBlock();
-	}
-
-	virtual bool IsEmpty( const SaveRestoreFieldInfo_t &fieldInfo )
-	{
-		CUtlVector< thinkfunc_t > *pUtlVector = (CUtlVector< thinkfunc_t > *)fieldInfo.pField;
-		return ( pUtlVector->Count() == 0 );
-	}
-
-	virtual void MakeEmpty( const SaveRestoreFieldInfo_t &fieldInfo )
-	{
-		BASEPTR pFunc = *((BASEPTR*)fieldInfo.pField);
-		pFunc = NULL;
-	}
-};
-CThinkContextsSaveDataOps g_ThinkContextsSaveDataOps;
-ISaveRestoreOps *thinkcontextFuncs = &g_ThinkContextsSaveDataOps;
-
-BEGIN_SIMPLE_DATADESC( thinkfunc_t )
-
-	DEFINE_FIELD( m_iszContext,	FIELD_STRING ),
-	// DEFINE_FIELD( m_pfnThink,		FIELD_FUNCTION ),		// Manually written
-	DEFINE_FIELD( m_nNextThinkTick,	FIELD_TICK	),
-	DEFINE_FIELD( m_nLastThinkTick,	FIELD_TICK	),
-
-END_DATADESC()
-
-BEGIN_SIMPLE_DATADESC( ResponseContext_t )
-
-	DEFINE_FIELD( m_iszName,			FIELD_STRING ),
-	DEFINE_FIELD( m_iszValue,			FIELD_STRING ),
-	DEFINE_FIELD( m_fExpirationTime,	FIELD_TIME ),
-
-END_DATADESC()
-
 BEGIN_DATADESC_NO_BASE( CBaseEntity )
 
 	DEFINE_KEYFIELD( m_iClassname, FIELD_STRING, "classname" ),
 	DEFINE_KEYFIELD( m_iParent, FIELD_STRING, "parentname" ),
-
 	DEFINE_KEYFIELD( m_iHammerID, FIELD_INTEGER, "hammerid" ), // save ID numbers so that entities can be tracked between save/restore and vmf
-
 	DEFINE_KEYFIELD( m_flSpeed, FIELD_FLOAT, "speed" ),
 	DEFINE_KEYFIELD( m_nRenderFX, FIELD_CHARACTER, "renderfx" ),
 	DEFINE_KEYFIELD( m_nRenderMode, FIELD_CHARACTER, "rendermode" ),
-
-	// Consider moving to CBaseAnimating?
-	DEFINE_FIELD( m_flPrevAnimTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flAnimTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flSimulationTime, FIELD_TIME ),
-	DEFINE_FIELD( m_nLastThinkTick, FIELD_TICK ),
-
 	DEFINE_KEYFIELD( m_nNextThinkTick, FIELD_TICK, "nextthink" ),
 	DEFINE_KEYFIELD( m_fEffects, FIELD_INTEGER, "effects" ),
 	DEFINE_KEYFIELD( m_clrRender, FIELD_COLOR32, "rendercolor" ),
 	DEFINE_GLOBAL_KEYFIELD( m_nModelIndex, FIELD_SHORT, "modelindex" ),
-#if !defined( NO_ENTITY_PREDICTION )
-	// DEFINE_FIELD( m_PredictableID, CPredictableId ),
-#endif
-	DEFINE_FIELD( touchStamp, FIELD_INTEGER ),
-	DEFINE_CUSTOM_FIELD( m_aThinkFunctions, thinkcontextFuncs ),
-	//								m_iCurrentThinkContext (not saved, debug field only, and think transient to boot)
 
-	DEFINE_UTLVECTOR(m_ResponseContexts,		FIELD_EMBEDDED),
-	DEFINE_KEYFIELD( m_iszResponseContext, FIELD_STRING, "ResponseContext" ),
-
-	DEFINE_FIELD( m_pfnThink, FIELD_FUNCTION ),
-	DEFINE_FIELD( m_pfnTouch, FIELD_FUNCTION ),
-	DEFINE_FIELD( m_pfnUse, FIELD_FUNCTION ),
-	DEFINE_FIELD( m_pfnBlocked, FIELD_FUNCTION ),
-	DEFINE_FIELD( m_pfnMoveDone, FIELD_FUNCTION ),
-
-	DEFINE_FIELD( m_lifeState, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_takedamage, FIELD_CHARACTER ),
 	DEFINE_KEYFIELD( m_iMaxHealth, FIELD_INTEGER, "max_health" ),
 	DEFINE_KEYFIELD( m_iHealth, FIELD_INTEGER, "health" ),
-	// DEFINE_FIELD( m_pLink, FIELD_CLASSPTR ),
 	DEFINE_KEYFIELD( m_target, FIELD_STRING, "target" ),
 
 	DEFINE_KEYFIELD( m_iszDamageFilterName, FIELD_STRING, "damagefilter" ),
-	DEFINE_FIELD( m_hDamageFilter, FIELD_EHANDLE ),
-	
-	DEFINE_FIELD( m_debugOverlays, FIELD_INTEGER ),
 
-	DEFINE_GLOBAL_FIELD( m_pParent, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_iParentAttachment, FIELD_CHARACTER ),
-	DEFINE_GLOBAL_FIELD( m_hMoveParent, FIELD_EHANDLE ),
-	DEFINE_GLOBAL_FIELD( m_hMoveChild, FIELD_EHANDLE ),
-	DEFINE_GLOBAL_FIELD( m_hMovePeer, FIELD_EHANDLE ),
-	
-	DEFINE_FIELD( m_iEFlags, FIELD_INTEGER ),
-
-	DEFINE_FIELD( m_iName, FIELD_STRING ),
 	DEFINE_EMBEDDED( m_Collision ),
-	DEFINE_EMBEDDED( m_Network ),
 
-	DEFINE_FIELD( m_MoveType, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_MoveCollide, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_hOwnerEntity, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_CollisionGroup, FIELD_INTEGER ),
-	DEFINE_PHYSPTR( m_pPhysicsObject),
-	DEFINE_FIELD( m_flElasticity, FIELD_FLOAT ),
 	DEFINE_KEYFIELD( m_flShadowCastDistance, FIELD_FLOAT, "shadowcastdist" ),
-	DEFINE_FIELD( m_flDesiredShadowCastDistance, FIELD_FLOAT ),
 
 	DEFINE_INPUT( m_iInitialTeamNum, FIELD_INTEGER, "TeamNum" ),
-	DEFINE_FIELD( m_iTeamNum, FIELD_INTEGER ),
 
-//	DEFINE_FIELD( m_bSentLastFrame, FIELD_INTEGER ),
-
-	DEFINE_FIELD( m_hGroundEntity, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_flGroundChangeTime, FIELD_TIME ),
 	DEFINE_GLOBAL_KEYFIELD( m_ModelName, FIELD_MODELNAME, "model" ),
 	
 	DEFINE_KEYFIELD( m_vecBaseVelocity, FIELD_VECTOR, "basevelocity" ),
-	DEFINE_FIELD( m_vecAbsVelocity, FIELD_VECTOR ),
 	DEFINE_KEYFIELD( m_vecAngVelocity, FIELD_VECTOR, "avelocity" ),
-//	DEFINE_FIELD( m_vecAbsAngVelocity, FIELD_VECTOR ),
-	DEFINE_ARRAY( m_rgflCoordinateFrame, FIELD_FLOAT, 12 ), // NOTE: MUST BE IN LOCAL SPACE, NOT POSITION_VECTOR!!! (see CBaseEntity::Restore)
 
 	DEFINE_KEYFIELD( m_nWaterLevel, FIELD_CHARACTER, "waterlevel" ),
-	DEFINE_FIELD( m_nWaterType, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_pBlocker, FIELD_EHANDLE ),
-
 	DEFINE_KEYFIELD( m_flGravity, FIELD_FLOAT, "gravity" ),
 	DEFINE_KEYFIELD( m_flFriction, FIELD_FLOAT, "friction" ),
 
 	// Local time is local to each object.  It doesn't need to be re-based if the clock
 	// changes.  Therefore it is saved as a FIELD_FLOAT, not a FIELD_TIME
 	DEFINE_KEYFIELD( m_flLocalTime, FIELD_FLOAT, "ltime" ),
-	DEFINE_FIELD( m_flVPhysicsUpdateLocalTime, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flMoveDoneTime, FIELD_FLOAT ),
-
-//	DEFINE_FIELD( m_nPushEnumCount, FIELD_INTEGER ),
-
-	DEFINE_FIELD( m_vecAbsOrigin, FIELD_POSITION_VECTOR ),
 	DEFINE_KEYFIELD( m_vecVelocity, FIELD_VECTOR, "velocity" ),
 	DEFINE_KEYFIELD( m_iTextureFrameIndex, FIELD_CHARACTER, "texframeindex" ),
-	DEFINE_FIELD( m_bSimulatedEveryTick, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bAnimatedEveryTick, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bAlternateSorting, FIELD_BOOLEAN ),
 	DEFINE_KEYFIELD( m_spawnflags, FIELD_INTEGER, "spawnflags" ),
-	DEFINE_FIELD( m_nTransmitStateOwnedCounter, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_angAbsRotation, FIELD_VECTOR ),
-	DEFINE_FIELD( m_vecOrigin, FIELD_VECTOR ),			// NOTE: MUST BE IN LOCAL SPACE, NOT POSITION_VECTOR!!! (see CBaseEntity::Restore)
-	DEFINE_FIELD( m_angRotation, FIELD_VECTOR ),
-
-	// BB2
-#ifdef GLOWS_ENABLE
-	DEFINE_FIELD( m_GlowColor , FIELD_COLOR32),
-	DEFINE_FIELD( m_iGlowMethod, FIELD_INTEGER),
-	DEFINE_FIELD(m_iGlowTeamLink, FIELD_INTEGER),
-#endif
-
 	DEFINE_KEYFIELD( m_vecViewOffset, FIELD_VECTOR, "view_ofs" ),
-
-	DEFINE_FIELD( m_fFlags, FIELD_INTEGER ),
-#if !defined( NO_ENTITY_PREDICTION )
-//	DEFINE_FIELD( m_bIsPlayerSimulated, FIELD_INTEGER ),
-//	DEFINE_FIELD( m_hPlayerSimulationOwner, FIELD_EHANDLE ),
-#endif
-	// DEFINE_FIELD( m_pTimedOverlay, TimedOverlay_t* ),
-	DEFINE_FIELD( m_nSimulationTick, FIELD_TICK ),
-	// DEFINE_FIELD( m_RefEHandle, CBaseHandle ),
-
-//	DEFINE_FIELD( m_nWaterTouch,		FIELD_INTEGER ),
-//	DEFINE_FIELD( m_nSlimeTouch,		FIELD_INTEGER ),
-	DEFINE_FIELD( m_flNavIgnoreUntilTime,	FIELD_TIME ),
-
-//	DEFINE_FIELD( m_bToolRecording,		FIELD_BOOLEAN ),
-//	DEFINE_FIELD( m_ToolHandle,		FIELD_INTEGER ),
 
 	// NOTE: This is tricky. TeamNum must be saved, but we can't directly
 	// read it in, because we can only set it after the team entity has been read in,
@@ -1880,12 +1671,6 @@ BEGIN_DATADESC_NO_BASE( CBaseEntity )
 	DEFINE_INPUTFUNC( FIELD_VOID, "DisableDamageForces", InputDisableDamageForces ),
 
 	DEFINE_INPUTFUNC( FIELD_STRING, "DispatchEffect", InputDispatchEffect ),
-	DEFINE_INPUTFUNC( FIELD_STRING, "DispatchResponse", InputDispatchResponse ),
-
-	// Entity I/O methods to alter context
-	DEFINE_INPUTFUNC( FIELD_STRING, "AddContext", InputAddContext ),
-	DEFINE_INPUTFUNC( FIELD_STRING, "RemoveContext", InputRemoveContext ),
-	DEFINE_INPUTFUNC( FIELD_STRING, "ClearContext", InputClearContext ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "DisableShadow", InputDisableShadow ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "EnableShadow", InputEnableShadow ),
@@ -1919,8 +1704,6 @@ BEGIN_DATADESC_NO_BASE( CBaseEntity )
 	DEFINE_FUNCTION( SUB_Vanish ),
 	DEFINE_FUNCTION( SUB_CallUseToggle ),
 	DEFINE_THINKFUNC( ShadowCastDistThink ),
-
-	DEFINE_FIELD( m_hEffectEntity, FIELD_EHANDLE ),
 END_DATADESC()
 
 // For code error checking
@@ -2037,18 +1820,11 @@ int CBaseEntity::ObjectCaps( void )
 		int caps = pParent->ObjectCaps();
 
 		if ( !bIsBrush )
-			caps &= ( FCAP_ACROSS_TRANSITION | FCAP_IMPULSE_USE | FCAP_CONTINUOUS_USE | FCAP_ONOFF_USE | FCAP_DIRECTIONAL_USE );
+			caps &= ( FCAP_IMPULSE_USE | FCAP_CONTINUOUS_USE | FCAP_ONOFF_USE | FCAP_DIRECTIONAL_USE );
 		else
 			caps &= ( FCAP_IMPULSE_USE | FCAP_CONTINUOUS_USE | FCAP_ONOFF_USE | FCAP_DIRECTIONAL_USE );
 
-		if ( pParent->IsPlayer() )
-			caps |= FCAP_ACROSS_TRANSITION;
-
 		return caps;
-	}
-	else if ( !bIsBrush ) 
-	{
-		return FCAP_ACROSS_TRANSITION;
 	}
 
 	return 0;
@@ -2066,7 +1842,7 @@ int CBaseEntity::ObjectCaps( void )
 	if ( pModel && modelinfo->GetModelType( pModel ) == mod_brush )
 		return parentCaps;
 
-	return FCAP_ACROSS_TRANSITION | parentCaps;
+	return parentCaps;
 #endif
 }
 
@@ -3058,181 +2834,6 @@ Vector CBaseEntity::GetSoundEmissionOrigin() const
 	return WorldSpaceCenter();
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: Saves the current object out to disk, by iterating through the objects
-//			data description hierarchy
-// Input  : &save - save buffer which the class data is written to
-// Output : int	- 0 if the save failed, 1 on success
-//-----------------------------------------------------------------------------
-int CBaseEntity::Save( ISave &save )
-{
-	// loop through the data description list, saving each data desc block
-	int status = SaveDataDescBlock( save, GetDataDescMap() );
-
-	return status;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Recursively saves all the classes in an object, in reverse order (top down)
-// Output : int 0 on failure, 1 on success
-//-----------------------------------------------------------------------------
-int CBaseEntity::SaveDataDescBlock( ISave &save, datamap_t *dmap )
-{
-	return save.WriteAll( this, dmap );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Restores the current object from disk, by iterating through the objects
-//			data description hierarchy
-// Input  : &restore - restore buffer which the class data is read from
-// Output : int	- 0 if the restore failed, 1 on success
-//-----------------------------------------------------------------------------
-int CBaseEntity::Restore( IRestore &restore )
-{
-	// This is essential to getting the spatial partition info correct
-	CollisionProp()->DestroyPartitionHandle();
-
-	// loops through the data description list, restoring each data desc block in order
-	int status = RestoreDataDescBlock( restore, GetDataDescMap() );
-
-	// ---------------------------------------------------------------
-	// HACKHACK: We don't know the space of these vectors until now
-	// if they are worldspace, fix them up.
-	// ---------------------------------------------------------------
-	{
-		CGameSaveRestoreInfo *pGameInfo = restore.GetGameSaveRestoreInfo();
-		Vector parentSpaceOffset = pGameInfo->modelSpaceOffset;
-		if ( !GetParent() )
-		{
-			// parent is the world, so parent space is worldspace
-			// so update with the worldspace leveltransition transform
-			parentSpaceOffset += pGameInfo->GetLandmark();
-		}
-		
-		// NOTE: Do *not* use GetAbsOrigin() here because it will
-		// try to recompute m_rgflCoordinateFrame!
-		MatrixSetColumn( m_vecAbsOrigin, 3, m_rgflCoordinateFrame );
-
-		m_vecOrigin += parentSpaceOffset;
-	}
-
-	// Gotta do this after the coordframe is set up as it depends on it.
-
-	// By definition, the surrounding bounds are dirty
-	// Also, twiddling with the flags here ensures it gets added to the KD tree dirty list
-	// (We don't want to use the saved version of this flag)
-	RemoveEFlags( EFL_DIRTY_SPATIAL_PARTITION );
-	CollisionProp()->MarkSurroundingBoundsDirty();
-
-	if ( edict() && GetModelIndex() != 0 && GetModelName() != NULL_STRING && restore.GetPrecacheMode() )
-	{
-		PrecacheModel( STRING( GetModelName() ) );
-
-		//Adrian: We should only need to do this after we precache. No point in setting the model again.
-		SetModelIndex( modelinfo->GetModelIndex( STRING(GetModelName() ) ) );
-	}
-
-	// Restablish ground entity
-	if ( m_hGroundEntity != NULL )
-	{
-		m_hGroundEntity->AddEntityToGroundList( this );
-	}
-
-	return status;
-}
-
-
-//-----------------------------------------------------------------------------
-// handler to do stuff before you are saved
-//-----------------------------------------------------------------------------
-void CBaseEntity::OnSave( IEntitySaveUtils *pUtils )
-{
-	// Here, we must force recomputation of all abs data so it gets saved correctly
-	// We can't leave the dirty bits set because the loader can't cope with it.
-	CalcAbsolutePosition();
-	CalcAbsoluteVelocity();
-}
-
-//-----------------------------------------------------------------------------
-// handler to do stuff after you are restored
-//-----------------------------------------------------------------------------
-void CBaseEntity::OnRestore()
-{
-#if defined ( HL2_DLL )
-	// We had a short period during the 2013 beta where the FL_* flags had a bogus value near the top, so detect
-	// these bad saves and just give up. Only saves from the short beta period should have been effected.
-	if ( GetFlags() & FL_FAKECLIENT )
-	{
-		char szMsg[256];
-		V_snprintf( szMsg, sizeof(szMsg), "\nInvalid save, unable to load. Please run \"map %s\" to restart this level manually\n\n", gpGlobals->mapname.ToCStr() );
-		Msg( "%s", szMsg );
-		
-		engine->ServerCommand("wait;wait;disconnect;showconsole\n");
-	}
-#endif
-
-	SimThink_EntityChanged( this );
-
-	// touchlinks get recomputed
-	if ( IsEFlagSet( EFL_CHECK_UNTOUCH ) )
-	{
-		RemoveEFlags( EFL_CHECK_UNTOUCH );
-		SetCheckUntouch( true );
-	}
-
-	//Adrian: If I'm restoring with these fields it means I've become a client side ragdoll.
-	//Don't create another one, just wait until is my time of being removed.
-	if ( GetFlags() & FL_TRANSRAGDOLL )
-	{
-		m_nRenderFX = kRenderFxNone;
-		AddEffects( EF_NODRAW );
-		RemoveFlag( FL_DISSOLVING | FL_ONFIRE );
-	}
-
-	if ( m_pParent )
-	{
-		CBaseEntity *pChild = m_pParent->FirstMoveChild();
-		while ( pChild )
-		{
-			if ( pChild == this )
-				break;
-			pChild = pChild->NextMovePeer();
-		}
-		if ( pChild != this )
-		{
-#if _DEBUG
-			// generally this means you've got something marked FCAP_DONT_SAVE
-			// in a hierarchy.  That's probably ok given this fixup, but the hierarhcy
-			// linked list is just saved/loaded in-place
-			Warning("Fixing up parent on %s\n", GetClassname() );
-#endif
-			// We only need to be back in the parent's list because we're already in the right place and with the right data
-			LinkChild( m_pParent, this );
-		}
-	}
-
-	// We're not save/loading the PVS dirty state. Assume everything is dirty after a restore
-	NetworkProp()->MarkPVSInformationDirty();
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Recursively restores all the classes in an object, in reverse order (top down)
-// Output : int 0 on failure, 1 on success
-//-----------------------------------------------------------------------------
-int CBaseEntity::RestoreDataDescBlock( IRestore &restore, datamap_t *dmap )
-{
-	return restore.ReadAll( this, dmap );
-}
-
-//-----------------------------------------------------------------------------
-
-bool CBaseEntity::ShouldSavePhysics()
-{
-	return true;
-}
-
 //-----------------------------------------------------------------------------
 
 #include "tier0/memdbgoff.h"
@@ -3268,16 +2869,6 @@ void CBaseEntity::operator delete( void *pMem )
 #ifdef _DEBUG
 void CBaseEntity::FunctionCheck( void *pFunction, const char *name )
 { 
-#ifdef USES_SAVERESTORE
-	// Note, if you crash here and your class is using multiple inheritance, it is
-	// probably the case that CBaseEntity (or a descendant) is not the first
-	// class in your list of ancestors, which it must be.
-	if (pFunction && !UTIL_FunctionToName( GetDataDescMap(), (inputfunc_t *)pFunction ) )
-	{
-		Warning( "FUNCTION NOT IN TABLE!: %s:%s (%08lx)\n", STRING(m_iClassname), name, (unsigned long)pFunction );
-		Assert(0);
-	}
-#endif
 }
 #endif
 
@@ -6229,179 +5820,6 @@ void CBaseEntity::SetGlowMode(int mode)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : set - 
-//-----------------------------------------------------------------------------
-void CBaseEntity::ModifyOrAppendCriteria( AI_CriteriaSet& set )
-{
-	// TODO
-	// Append chapter/day?
-
-	set.AppendCriteria( "randomnum", UTIL_VarArgs("%d", RandomInt(0,100)) );
-	// Append map name
-	set.AppendCriteria( "map", gpGlobals->mapname.ToCStr() );
-	// Append our classname and game name
-	set.AppendCriteria( "classname", GetClassname() );
-	set.AppendCriteria( "name", GetEntityName().ToCStr() );
-
-	// Append our health
-	set.AppendCriteria( "health", UTIL_VarArgs( "%i", GetHealth() ) );
-
-	float healthfrac = 0.0f;
-	if ( GetMaxHealth() > 0 )
-	{
-		healthfrac = (float)GetHealth() / (float)GetMaxHealth();
-	}
-
-	set.AppendCriteria( "healthfrac", UTIL_VarArgs( "%.3f", healthfrac ) );
-
-	// Append anything from I/O or keyvalues pairs
-	AppendContextToCriteria( set );
-
-	// Append anything from world I/O/keyvalues with "world" as prefix
-	CWorld *world = dynamic_cast< CWorld * >( CBaseEntity::Instance( engine->PEntityOfEntIndex( 0 ) ) );
-	if ( world )
-	{
-		world->AppendContextToCriteria( set, "world" );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : set - 
-//			"" - 
-//-----------------------------------------------------------------------------
-void CBaseEntity::AppendContextToCriteria( AI_CriteriaSet& set, const char *prefix /*= ""*/ )
-{
-	RemoveExpiredConcepts();
-
-	int c = GetContextCount();
-	int i;
-
-	char sz[ 128 ];
-	for ( i = 0; i < c; i++ )
-	{
-		const char *name = GetContextName( i );
-		const char *value = GetContextValue( i );
-
-		Q_snprintf( sz, sizeof( sz ), "%s%s", prefix, name );
-
-		set.AppendCriteria( sz, value );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Removes expired concepts from list
-// Output : 
-//-----------------------------------------------------------------------------
-void CBaseEntity::RemoveExpiredConcepts( void )
-{
-	int c = GetContextCount();
-	int i;
-
-	for ( i = 0; i < c; i++ )
-	{
-		if ( ContextExpired( i ) )
-		{
-			m_ResponseContexts.Remove( i );
-			c--;
-			i--;
-			continue;
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Get current context count
-// Output : int
-//-----------------------------------------------------------------------------
-int CBaseEntity::GetContextCount() const
-{
-	return m_ResponseContexts.Count();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : index - 
-// Output : const char
-//-----------------------------------------------------------------------------
-const char *CBaseEntity::GetContextName( int index ) const
-{
-	if ( index < 0 || index >= m_ResponseContexts.Count() )
-	{
-		Assert( 0 );
-		return "";
-	}
-
-	return  m_ResponseContexts[ index ].m_iszName.ToCStr();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : index - 
-// Output : const char
-//-----------------------------------------------------------------------------
-const char *CBaseEntity::GetContextValue( int index ) const
-{
-	if ( index < 0 || index >= m_ResponseContexts.Count() )
-	{
-		Assert( 0 );
-		return "";
-	}
-
-	return  m_ResponseContexts[ index ].m_iszValue.ToCStr();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Check if context has expired
-// Input  : index - 
-// Output : bool
-//-----------------------------------------------------------------------------
-bool CBaseEntity::ContextExpired( int index ) const
-{
-	if ( index < 0 || index >= m_ResponseContexts.Count() )
-	{
-		Assert( 0 );
-		return true;
-	}
-
-	if ( !m_ResponseContexts[ index ].m_fExpirationTime )
-	{
-		return false;
-	}
-
-	return ( m_ResponseContexts[ index ].m_fExpirationTime <= gpGlobals->curtime );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Search for index of named context string
-// Input  : *name - 
-// Output : int
-//-----------------------------------------------------------------------------
-int CBaseEntity::FindContextByName( const char *name ) const
-{
-	int c = m_ResponseContexts.Count();
-	for ( int i = 0; i < c; i++ )
-	{
-		if ( FStrEq( name, GetContextName( i ) ) )
-			return i;
-	}
-
-	return -1;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : inputdata - 
-//-----------------------------------------------------------------------------
-void CBaseEntity::InputAddContext( inputdata_t& inputdata )
-{
-	const char *contextName = inputdata.value.String();
-	AddContext( contextName );
-}
-
-
-//-----------------------------------------------------------------------------
 // Purpose: User inputs. These fire the corresponding user outputs, and are
 //			a means of forwarding messages through !activator to a target known
 //			known by !activator but not by the targetting entity.
@@ -6446,85 +5864,6 @@ void CBaseEntity::InputFireInventoryObjectiveFail(inputdata_t& inputdata)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *contextName - 
-//-----------------------------------------------------------------------------
-void CBaseEntity::AddContext( const char *contextName )
-{
-	char key[ 128 ];
-	char value[ 128 ];
-	float duration;
-
-	const char *p = contextName;
-	while ( p )
-	{
-		duration = 0.0f;
-		p = SplitContext( p, key, sizeof( key ), value, sizeof( value ), &duration );
-		if ( duration )
-		{
-			duration += gpGlobals->curtime;
-		}
-
-		int iIndex = FindContextByName( key );
-		if ( iIndex != -1 )
-		{
-			// Set the existing context to the new value
-			m_ResponseContexts[iIndex].m_iszValue = AllocPooledString( value );
-			m_ResponseContexts[iIndex].m_fExpirationTime = duration;
-			continue;
-		}
-
-		ResponseContext_t newContext;
-		newContext.m_iszName = AllocPooledString( key );
-		newContext.m_iszValue = AllocPooledString( value );
-		newContext.m_fExpirationTime = duration;
-
-		m_ResponseContexts.AddToTail( newContext );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : inputdata - 
-//-----------------------------------------------------------------------------
-void CBaseEntity::InputRemoveContext( inputdata_t& inputdata )
-{
-	const char *contextName = inputdata.value.String();
-	int idx = FindContextByName( contextName );
-	if ( idx == -1 )
-		return;
-
-	m_ResponseContexts.Remove( idx );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : inputdata - 
-//-----------------------------------------------------------------------------
-void CBaseEntity::InputClearContext( inputdata_t& inputdata )
-{
-	m_ResponseContexts.RemoveAll();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Output : IResponseSystem
-//-----------------------------------------------------------------------------
-IResponseSystem *CBaseEntity::GetResponseSystem()
-{
-	return NULL;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : inputdata - 
-//-----------------------------------------------------------------------------
-void CBaseEntity::InputDispatchResponse( inputdata_t& inputdata )
-{
-	DispatchResponse( inputdata.value.String() );
-}
-
-//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CBaseEntity::InputDisableShadow( inputdata_t &inputdata )
 {
@@ -6566,74 +5905,6 @@ void CBaseEntity::InputAddOutput( inputdata_t &inputdata )
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *conceptName - 
-//-----------------------------------------------------------------------------
-void CBaseEntity::DispatchResponse( const char *conceptName )
-{
-	IResponseSystem *rs = GetResponseSystem();
-	if ( !rs )
-		return;
-
-	AI_CriteriaSet set;
-	// Always include the concept name
-	set.AppendCriteria( "concept", conceptName, CONCEPT_WEIGHT );
-	// Let NPC fill in most match criteria
-	ModifyOrAppendCriteria( set );
-
-	// Append local player criteria to set,too
-	#ifdef BB2_AI
-		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-	#else
-		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-	#endif //BB2_AI
-
-	if( pPlayer )
-		pPlayer->ModifyOrAppendPlayerCriteria( set );
-
-	// Now that we have a criteria set, ask for a suitable response
-	AI_Response result;
-	bool found = rs->FindBestResponse( set, result );
-	if ( !found )
-		return;
-
-	// Handle the response here...
-	const char *szResponse = result.GetResponsePtr();
-	switch ( result.GetType() )
-	{
-	case RESPONSE_SPEAK:
-		EmitSound( szResponse );
-		break;
-
-	case RESPONSE_SENTENCE:
-		{
-			int sentenceIndex = SENTENCEG_Lookup( szResponse );
-			if( sentenceIndex == -1 )
-			{
-				// sentence not found
-				break;
-			}
-
-			// FIXME:  Get pitch from npc?
-			CPASAttenuationFilter filter( this );
-			CBaseEntity::EmitSentenceByIndex( filter, entindex(), CHAN_VOICE, sentenceIndex, 1, result.GetSoundLevel(), 0, PITCH_NORM );
-		}
-		break;
-
-	case RESPONSE_SCENE:
-		// Try to fire scene w/o an actor
-		InstancedScriptedScene( NULL, szResponse );
-		break;
-
-	case RESPONSE_PRINT:
-		break;
-	default:
-		// Don't know how to handle .vcds!!!
-		break;
-	}
-}
-
 // Check if another entity is within the bounds of our entity.
 bool CBaseEntity::IsWithinBounds( CBaseEntity *pEntity )
 {
@@ -6651,45 +5922,6 @@ bool CBaseEntity::IsWithinBounds( CBaseEntity *pEntity )
 
 	return false;
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CBaseEntity::DumpResponseCriteria( void )
-{
-	Msg("----------------------------------------------\n");
-	Msg("RESPONSE CRITERIA FOR: %s (%s)\n", GetClassname(), GetDebugName() );
-
-	AI_CriteriaSet set;
-	// Let NPC fill in most match criteria
-	ModifyOrAppendCriteria( set );
-
-	// Append local player criteria to set,too
-#ifdef BB2_AI
-	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-#else
-	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-#endif //BB2_AI
-
-	if ( pPlayer )
-	{
-		pPlayer->ModifyOrAppendPlayerCriteria( set );
-	}
-
-	// Now dump it all to console
-	set.Describe();
-}
-
-//------------------------------------------------------------------------------
-void CC_Ent_Show_Response_Criteria( const CCommand& args )
-{
-	CBaseEntity *pEntity = NULL;
-	while ( (pEntity = GetNextCommandEntity( UTIL_GetCommandClient(), args[1], pEntity )) != NULL )
-	{
-		pEntity->DumpResponseCriteria();
-	}
-}
-static ConCommand ent_show_response_criteria("ent_show_response_criteria", CC_Ent_Show_Response_Criteria, "Print, to the console, an entity's current criteria set used to select responses.\n\tArguments:   	{entity_name} / {class_name} / no argument picks what player is looking at ", FCVAR_CHEAT);
 
 //-----------------------------------------------------------------------------
 // Purpose: 

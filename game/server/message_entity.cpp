@@ -62,8 +62,6 @@ BEGIN_DATADESC( CMessageEntity )
 	DEFINE_KEYFIELD( m_radius, FIELD_INTEGER, "radius" ),
 	DEFINE_KEYFIELD( m_messageText, FIELD_STRING, "message" ),
 	DEFINE_KEYFIELD( m_bDeveloperOnly, FIELD_BOOLEAN, "developeronly" ),
-	DEFINE_FIELD( m_drawText, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bEnabled, FIELD_BOOLEAN ),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID,	 "Enable", InputEnable ),

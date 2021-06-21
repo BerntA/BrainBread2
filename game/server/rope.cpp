@@ -56,39 +56,19 @@ END_SEND_TABLE()
 
 BEGIN_DATADESC( CRopeKeyframe )
 
-	DEFINE_FIELD( m_RopeFlags,		FIELD_INTEGER ),
-
 	DEFINE_KEYFIELD( m_iNextLinkName,	FIELD_STRING,	"NextKey" ),
 	DEFINE_KEYFIELD( m_Slack,			FIELD_INTEGER,	"Slack" ),
 	DEFINE_KEYFIELD( m_Width,			FIELD_FLOAT,	"Width" ),
 	DEFINE_KEYFIELD( m_TextureScale,		FIELD_FLOAT,	"TextureScale" ),
-	DEFINE_FIELD( m_nSegments,		FIELD_INTEGER ),
-	DEFINE_FIELD( m_bConstrainBetweenEndpoints,		FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_strRopeMaterialModel, FIELD_STRING ),
-	DEFINE_FIELD( m_iRopeMaterialModelIndex, FIELD_MODELINDEX ),
 	DEFINE_KEYFIELD( m_Subdiv,			FIELD_INTEGER,	"Subdiv" ),
-	DEFINE_FIELD( m_RopeLength,		FIELD_INTEGER ),
-	DEFINE_FIELD( m_fLockedPoints,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_bCreatedFromMapFile, FIELD_BOOLEAN ),
 	DEFINE_KEYFIELD( m_flScrollSpeed,	FIELD_FLOAT,	"ScrollSpeed" ),
 
-	DEFINE_FIELD( m_bStartPointValid, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bEndPointValid,	FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_hStartPoint,		FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hEndPoint,		FIELD_EHANDLE ),
-	DEFINE_FIELD( m_iStartAttachment,	FIELD_SHORT ),
-	DEFINE_FIELD( m_iEndAttachment,	FIELD_SHORT ),
-	
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_FLOAT,	"SetScrollSpeed",	InputSetScrollSpeed ),
 	DEFINE_INPUTFUNC( FIELD_VECTOR,	"SetForce",			InputSetForce ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"Break",			InputBreak ),
 
 END_DATADESC()
-
-
 
 // -------------------------------------------------------------------------------- //
 // CRopeKeyframe implementation.

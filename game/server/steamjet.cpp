@@ -39,10 +39,6 @@ BEGIN_DATADESC( CSteamJet )
 	DEFINE_KEYFIELD( m_nType,		FIELD_INTEGER,	"Type" ),
 	DEFINE_KEYFIELD( m_flRollSpeed, FIELD_FLOAT, "RollSpeed" ),
 
-	//Regular fields
-	DEFINE_FIELD( m_bEmit, FIELD_INTEGER ),
-	DEFINE_FIELD( m_bFaceLeft, FIELD_BOOLEAN ),
-
 	// Inputs
 	DEFINE_INPUT( m_JetLength, FIELD_FLOAT, "JetLength" ),
 	DEFINE_INPUT( m_SpreadSpeed, FIELD_FLOAT, "SpreadSpeed" ),

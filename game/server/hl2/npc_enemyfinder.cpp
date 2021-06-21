@@ -93,15 +93,12 @@ IMPLEMENT_CUSTOM_AI( npc_enemyfinder, CNPC_EnemyFinder );
 BEGIN_DATADESC( CNPC_EnemyFinder )
 
 	DEFINE_EMBEDDED( m_PlayerFreePass ),
-	DEFINE_EMBEDDED( m_ChooseEnemyTimer ),
 
 	// Inputs
 	DEFINE_INPUT( m_nStartOn,			FIELD_INTEGER,	"StartOn" ),
 	DEFINE_INPUT( m_flFieldOfView,	FIELD_FLOAT,	"FieldOfView" ),
 	DEFINE_INPUT( m_flMinSearchDist,	FIELD_FLOAT,	"MinSearchDist" ),
 	DEFINE_INPUT( m_flMaxSearchDist,	FIELD_FLOAT,	"MaxSearchDist" ),
-
-	DEFINE_FIELD( m_bEnemyStatus, FIELD_BOOLEAN ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOn", InputTurnOn ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOff", InputTurnOff ),
@@ -528,10 +525,6 @@ public:
 LINK_ENTITY_TO_CLASS( npc_enemyfinder_combinecannon, CNPC_EnemyFinderCombineCannon );
 
 BEGIN_DATADESC( CNPC_EnemyFinderCombineCannon )
-DEFINE_FIELD( m_flTimeNextHateNPC, FIELD_TIME ),
-DEFINE_FIELD( m_flTimeStopHateNPC, FIELD_TIME ),
-DEFINE_FIELD( m_flOriginalFOV, FIELD_FLOAT ),
-DEFINE_FIELD( m_flTimeWideFOV, FIELD_TIME ),
 DEFINE_KEYFIELD( m_iszSnapToEnt, FIELD_STRING, "snaptoent" ),
 DEFINE_INPUTFUNC( FIELD_FLOAT, "SetWideFOVForSeconds", InputSetWideFOVForSeconds ),
 END_DATADESC()

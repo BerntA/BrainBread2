@@ -13,8 +13,6 @@
 
 #include "ai_basenpc.h"
 #include "mathlib/vector.h"
-#include "ai_network.h"
-#include "ai_node.h"
 #include "ai_waypoint.h"
 
 struct AI_Waypoint_t;
@@ -105,7 +103,6 @@ public:
 
 	void			SetGoalType(GoalType_t goalType);				// Set the goal type
 	void			SetGoalPosition(const Vector &goalPos);			// Set the goal position
-	void			SetLastNodeAsGoal(bool bReset = false);			// Sets last node as goal and goal position
 	void			ResetGoalPosition(const Vector &goalPos);		// Reset the goal position
 
 	// Returns the *base* goal position (without the offset applied) 
@@ -130,11 +127,9 @@ public:
 
 	//---------------------------------
 
-	int GetLastNodeReached() { return m_iLastNodeReached; }
 	void ClearWaypoints()
 	{ 
 		m_Waypoints.RemoveAll();
-		m_iLastNodeReached = NO_NODE;
 	}
 
 private:
@@ -156,9 +151,6 @@ private:
 	//---------------------------------
 	Activity	m_arrivalActivity;
 	int			m_arrivalSequence;
-
-	//---------------------------------
-	int			m_iLastNodeReached;			// What was the last node that I reached
 
 	bool		m_bGoalPosSet;				// Was goal position set (used to check for errors)
 	Vector		m_goalPos;					// Our ultimate goal position
@@ -182,9 +174,6 @@ private:
 
 	//---------------------------------
 	static AI_Waypoint_t gm_InvalidWaypoint;
-
-	DECLARE_SIMPLE_DATADESC();
-
 };
 
 #endif // AI_ROUTE_H

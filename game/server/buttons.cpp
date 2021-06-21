@@ -35,23 +35,8 @@ string_t MakeButtonSound( int sound );				// get string of button sound number
 BEGIN_DATADESC( CBaseButton )
 
 	DEFINE_KEYFIELD( m_vecMoveDir, FIELD_VECTOR, "movedir" ),
-	DEFINE_FIELD( m_fStayPushed, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_fRotating, FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_bLockedSound, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_bLockedSentence, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_bUnlockedSound, FIELD_CHARACTER ),	
-	DEFINE_FIELD( m_bUnlockedSentence, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_bLocked, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_sNoise, FIELD_SOUNDNAME ),
-	DEFINE_FIELD( m_flUseLockedTime, FIELD_TIME ),
-	DEFINE_FIELD( m_bSolidBsp, FIELD_BOOLEAN ),
-	DEFINE_KEYFIELD( TeamNum, FIELD_INTEGER, "Filter" ),
-	
+	DEFINE_KEYFIELD( TeamNum, FIELD_INTEGER, "Filter" ),	
 	DEFINE_KEYFIELD( m_sounds, FIELD_INTEGER, "sounds" ),
-	
-//	DEFINE_FIELD( m_ls, FIELD_SOUNDNAME ),   // This is restored in Precache()
-//  DEFINE_FIELD( m_nState, FIELD_INTEGER ),
 
 	// Function Pointers
 	DEFINE_FUNCTION( ButtonTouch ),
@@ -95,37 +80,6 @@ void CBaseButton::Precache( void )
 	{
 		m_ls.sUnlockedSound = MakeButtonSound( (int)m_bUnlockedSound );
 		PrecacheScriptSound(m_ls.sUnlockedSound.ToCStr());
-	}
-
-	// get sentence group names, for doors which are directly 'touched' to open
-
-	switch (m_bLockedSentence)
-	{
-		case 1: m_ls.sLockedSentence = MAKE_STRING("NA"); break; // access denied
-		case 2: m_ls.sLockedSentence = MAKE_STRING("ND"); break; // security lockout
-		case 3: m_ls.sLockedSentence = MAKE_STRING("NF"); break; // blast door
-		case 4: m_ls.sLockedSentence = MAKE_STRING("NFIRE"); break; // fire door
-		case 5: m_ls.sLockedSentence = MAKE_STRING("NCHEM"); break; // chemical door
-		case 6: m_ls.sLockedSentence = MAKE_STRING("NRAD"); break; // radiation door
-		case 7: m_ls.sLockedSentence = MAKE_STRING("NCON"); break; // gen containment
-		case 8: m_ls.sLockedSentence = MAKE_STRING("NH"); break; // maintenance door
-		case 9: m_ls.sLockedSentence = MAKE_STRING("NG"); break; // broken door
-		
-		default: m_ls.sLockedSentence = NULL_STRING; break;
-	}
-
-	switch (m_bUnlockedSentence)
-	{
-		case 1: m_ls.sUnlockedSentence = MAKE_STRING("EA"); break; // access granted
-		case 2: m_ls.sUnlockedSentence = MAKE_STRING("ED"); break; // security door
-		case 3: m_ls.sUnlockedSentence = MAKE_STRING("EF"); break; // blast door
-		case 4: m_ls.sUnlockedSentence = MAKE_STRING("EFIRE"); break; // fire door
-		case 5: m_ls.sUnlockedSentence = MAKE_STRING("ECHEM"); break; // chemical door
-		case 6: m_ls.sUnlockedSentence = MAKE_STRING("ERAD"); break; // radiation door
-		case 7: m_ls.sUnlockedSentence = MAKE_STRING("ECON"); break; // gen containment
-		case 8: m_ls.sUnlockedSentence = MAKE_STRING("EH"); break; // maintenance door
-	
-		default: m_ls.sUnlockedSentence = NULL_STRING; break;
 	}
 
 	if ( m_sNoise != NULL_STRING )
@@ -709,8 +663,8 @@ void CBaseButton::ButtonActivate( void )
 //-----------------------------------------------------------------------------
 int	CBaseButton::ObjectCaps(void)
 {
-	return((BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION) |
-			(HasSpawnFlags(SF_BUTTON_USE_ACTIVATES) ? (FCAP_IMPULSE_USE | FCAP_USE_IN_RADIUS) : 0));
+	return(BaseClass::ObjectCaps() |
+		(HasSpawnFlags(SF_BUTTON_USE_ACTIVATES) ? (FCAP_IMPULSE_USE | FCAP_USE_IN_RADIUS) : 0));
 }
 
 
@@ -944,13 +898,6 @@ bool CRotButton::CreateVPhysics( void )
 
 BEGIN_DATADESC( CMomentaryRotButton )
 
-	DEFINE_FIELD( m_lastUsed, FIELD_INTEGER ),
-	DEFINE_FIELD( m_start, FIELD_VECTOR ),
-	DEFINE_FIELD( m_end, FIELD_VECTOR ),
-	DEFINE_FIELD( m_IdealYaw, FIELD_FLOAT ),
-	DEFINE_FIELD( m_sNoise, FIELD_SOUNDNAME ),
-	DEFINE_FIELD( m_bUpdateTarget, FIELD_BOOLEAN ),
-
 	DEFINE_KEYFIELD( m_direction, FIELD_INTEGER, "StartDirection" ),
 	DEFINE_KEYFIELD( m_returnSpeed, FIELD_FLOAT, "returnspeed" ),
 	DEFINE_KEYFIELD( m_flStartPosition, FIELD_FLOAT, "StartPosition"),
@@ -977,7 +924,6 @@ BEGIN_DATADESC( CMomentaryRotButton )
 
 	DEFINE_INPUTFUNC( FIELD_VOID,	"Enable",	InputEnable ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"Disable",	InputDisable ),
-	DEFINE_FIELD( m_bDisabled, FIELD_BOOLEAN )
 
 END_DATADESC()
 

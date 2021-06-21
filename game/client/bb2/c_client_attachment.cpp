@@ -102,7 +102,7 @@ C_ClientAttachment::~C_ClientAttachment()
 
 bool C_ClientAttachment::Initialize(int type, int param)
 {
-	if (engine->IsInEditMode() || (InitializeAsClientEntity(STRING(GetModelName()), RENDER_GROUP_OPAQUE_ENTITY) == false))
+	if (InitializeAsClientEntity(STRING(GetModelName()), RENDER_GROUP_OPAQUE_ENTITY) == false)
 		return false;
 
 	m_iAttachmentType = type;

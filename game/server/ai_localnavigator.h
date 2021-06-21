@@ -65,8 +65,6 @@ private:
 	
 	CAI_PlaneSolver *	m_pPlaneSolver;
 	CAI_MoveProbe *		m_pMoveProbe;
-
-	DECLARE_SIMPLE_DATADESC();
 };
 
 #endif // AI_LOCALNAVIGATOR_H

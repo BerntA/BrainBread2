@@ -169,8 +169,6 @@ struct magnetted_objects_t
 {
 	IPhysicsConstraint *pConstraint;
 	EHANDLE			   hEntity;
-
-	DECLARE_SIMPLE_DATADESC();
 };
 
 class CPhysMagnet : public CBaseAnimating, public IPhysicsConstraintEvent

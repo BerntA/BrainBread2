@@ -45,8 +45,6 @@ private:
 	bool	m_bNoShootWhileMove;
 	float	m_initialDelay;
 	float	m_flSuspendUntilTime;
-
-	DECLARE_SIMPLE_DATADESC();
 };
 
 //-----------------------------------------------------------------------------

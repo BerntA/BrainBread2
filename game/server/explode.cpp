@@ -28,7 +28,6 @@ public:
 	void Spawn( void );
 	void Think( void );
 	void Touch( CBaseEntity *pOther );
-	int ObjectCaps( void ) { return FCAP_DONT_SAVE; }
 };
 
 LINK_ENTITY_TO_CLASS( spark_shower, CShower );
@@ -135,14 +134,7 @@ BEGIN_DATADESC( CEnvExplosion )
 
 	DEFINE_KEYFIELD( m_iMagnitude, FIELD_INTEGER, "iMagnitude" ),
 	DEFINE_KEYFIELD( m_iRadiusOverride, FIELD_INTEGER, "iRadiusOverride" ),
-	DEFINE_FIELD( m_spriteScale, FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_flDamageForce, FIELD_FLOAT, "DamageForce" ),
-	DEFINE_FIELD( m_iszFireballSprite, FIELD_STRING ),
-	DEFINE_FIELD( m_sFireballSprite, FIELD_SHORT ),
-	DEFINE_FIELD( m_hInflictor, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_iCustomDamageType, FIELD_INTEGER ),
-
-	DEFINE_FIELD( m_iClassIgnore, FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_hEntityIgnore, FIELD_EHANDLE, "ignoredEntity" ),
 
 	// Function Pointers

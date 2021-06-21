@@ -19,7 +19,6 @@ class CSmokeStackLightInfo
 {
 public:
 	DECLARE_CLASS_NOBASE( CSmokeStackLightInfo );
-	DECLARE_SIMPLE_DATADESC();
 	DECLARE_NETWORKVAR_CHAIN();
 
 	CNetworkVector( m_vPos );

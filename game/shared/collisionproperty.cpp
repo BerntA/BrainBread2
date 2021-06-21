@@ -257,26 +257,7 @@ void CDirtySpatialPartitionEntityList::OnPostQuery( SpatialPartitionListMask_t l
 #ifndef CLIENT_DLL
 
 	BEGIN_DATADESC_NO_BASE( CCollisionProperty )
-
-//		DEFINE_FIELD( m_pOuter, FIELD_CLASSPTR ),
-		DEFINE_GLOBAL_FIELD( m_vecMinsPreScaled, FIELD_VECTOR ),
-		DEFINE_GLOBAL_FIELD( m_vecMaxsPreScaled, FIELD_VECTOR ),
-		DEFINE_GLOBAL_FIELD( m_vecMins, FIELD_VECTOR ),
-		DEFINE_GLOBAL_FIELD( m_vecMaxs, FIELD_VECTOR ),
 		DEFINE_KEYFIELD( m_nSolidType, FIELD_CHARACTER, "solid" ),
-		DEFINE_FIELD( m_usSolidFlags, FIELD_SHORT ),
-		DEFINE_FIELD( m_nSurroundType, FIELD_CHARACTER ),
-		DEFINE_FIELD( m_flRadius, FIELD_FLOAT ),
-		DEFINE_FIELD( m_triggerBloat, FIELD_CHARACTER ),
-		DEFINE_FIELD( m_vecSpecifiedSurroundingMinsPreScaled, FIELD_VECTOR ),
-		DEFINE_FIELD( m_vecSpecifiedSurroundingMaxsPreScaled, FIELD_VECTOR ),
-		DEFINE_FIELD( m_vecSpecifiedSurroundingMins, FIELD_VECTOR ),
-		DEFINE_FIELD( m_vecSpecifiedSurroundingMaxs, FIELD_VECTOR ),
-		DEFINE_FIELD( m_vecSurroundingMins, FIELD_VECTOR ),
-		DEFINE_FIELD( m_vecSurroundingMaxs, FIELD_VECTOR ),
-//		DEFINE_FIELD( m_Partition, FIELD_SHORT ),
-//		DEFINE_PHYSPTR( m_pPhysicsObject ),
-
 	END_DATADESC()
 
 #else

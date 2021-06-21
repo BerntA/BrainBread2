@@ -83,90 +83,6 @@ BEGIN_SEND_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 	SendPropEHandle( SENDINFO_STRUCTELEM( m_audio.ent ) ),
 END_SEND_TABLE()
 
-BEGIN_SIMPLE_DATADESC( fogplayerparams_t )
-	DEFINE_FIELD( m_hCtrl, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_flTransitionTime, FIELD_FLOAT ),
-	DEFINE_FIELD( m_OldColor, FIELD_COLOR32 ),
-	DEFINE_FIELD( m_flOldStart, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flOldEnd, FIELD_FLOAT ),
-	DEFINE_FIELD( m_NewColor, FIELD_COLOR32 ),
-	DEFINE_FIELD( m_flNewStart, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flNewEnd, FIELD_FLOAT ),
-END_DATADESC()
-
-BEGIN_SIMPLE_DATADESC( fogparams_t )
-
-	DEFINE_FIELD( enable, FIELD_BOOLEAN ),
-	DEFINE_FIELD( blend, FIELD_BOOLEAN ),
-	DEFINE_FIELD( dirPrimary, FIELD_VECTOR ),
-	DEFINE_FIELD( colorPrimary, FIELD_COLOR32 ),
-	DEFINE_FIELD( colorSecondary, FIELD_COLOR32 ),
-	DEFINE_FIELD( start, FIELD_FLOAT ),
-	DEFINE_FIELD( end, FIELD_FLOAT ),
-	DEFINE_FIELD( farz, FIELD_FLOAT ),
-	DEFINE_FIELD( maxdensity, FIELD_FLOAT ),
-	DEFINE_FIELD( colorPrimaryLerpTo, FIELD_COLOR32 ),
-	DEFINE_FIELD( colorSecondaryLerpTo, FIELD_COLOR32 ),
-	DEFINE_FIELD( startLerpTo, FIELD_FLOAT ),
-	DEFINE_FIELD( endLerpTo, FIELD_FLOAT ),
-	DEFINE_FIELD( lerptime, FIELD_TIME ),
-	DEFINE_FIELD( duration, FIELD_FLOAT ),
-END_DATADESC()
-
-BEGIN_SIMPLE_DATADESC( sky3dparams_t )
-
-	DEFINE_FIELD( scale, FIELD_INTEGER ),
-	DEFINE_FIELD( origin, FIELD_VECTOR ),
-	DEFINE_FIELD( area, FIELD_INTEGER ),
-	DEFINE_EMBEDDED( fog ),
-
-END_DATADESC()
-
-BEGIN_SIMPLE_DATADESC( audioparams_t )
-
-	DEFINE_AUTO_ARRAY( localSound, FIELD_VECTOR ),
-	DEFINE_FIELD( soundscapeIndex, FIELD_INTEGER ),
-	DEFINE_FIELD( localBits, FIELD_INTEGER ),
-	DEFINE_FIELD( ent, FIELD_EHANDLE ),
-
-END_DATADESC()
-
-BEGIN_SIMPLE_DATADESC( CPlayerLocalData )
-	DEFINE_AUTO_ARRAY( m_chAreaBits, FIELD_CHARACTER ),
-	DEFINE_AUTO_ARRAY( m_chAreaPortalBits, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_iHideHUD, FIELD_INTEGER ),
-	DEFINE_FIELD( m_flFOVRate, FIELD_FLOAT ),
-	DEFINE_FIELD( m_vecOverViewpoint, FIELD_VECTOR ),
-	DEFINE_FIELD( m_bDucked, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bDucking, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bInDuckJump, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flDucktime, FIELD_TIME ),
-	DEFINE_FIELD( m_flDuckJumpTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flJumpTime, FIELD_TIME ),
-	DEFINE_FIELD( m_nStepside, FIELD_INTEGER ),
-	DEFINE_FIELD( m_flFallVelocity, FIELD_FLOAT ),
-	DEFINE_FIELD( m_nOldButtons, FIELD_INTEGER ),
-	DEFINE_FIELD( m_vecPunchAngle, FIELD_VECTOR ),
-	DEFINE_FIELD( m_vecPunchAngleVel, FIELD_VECTOR ),
-	DEFINE_FIELD( m_flStepSize, FIELD_FLOAT ),
-	DEFINE_FIELD( m_bAllowAutoMovement, FIELD_BOOLEAN ),
-	DEFINE_FIELD(m_bIsInOtherView, FIELD_BOOLEAN),
-	DEFINE_EMBEDDED( m_skybox3d ),
-	DEFINE_EMBEDDED( m_PlayerFog ),
-	DEFINE_EMBEDDED( m_fog ),
-	DEFINE_EMBEDDED( m_audio ),
-	
-	// "Why don't we save this field, grandpa?"
-	//
-	// "You see Billy, trigger_vphysics_motion uses vPhysics to touch the player,
-	// so if the trigger is Disabled via an input while the player is inside it,
-	// the trigger won't get its EndTouch until the player moves. Since touchlinks
-	// aren't saved and restored, if the we save before EndTouch is called, it
-	// will never be called after we load."
-	//DEFINE_FIELD( m_bSlowMovement, FIELD_BOOLEAN ),
-	
-END_DATADESC()
-
 //-----------------------------------------------------------------------------
 // Purpose: Constructor.
 //-----------------------------------------------------------------------------
@@ -181,7 +97,6 @@ CPlayerLocalData::CPlayerLocalData()
 	m_audio.ent.Set( NULL );
 	m_pOldSkyCamera = NULL;
 }
-
 
 void CPlayerLocalData::UpdateAreaBits( CBasePlayer *pl, unsigned char chAreaPortalBits[MAX_AREA_PORTAL_STATE_BYTES] )
 {
@@ -229,7 +144,6 @@ void ClientData_Update( CBasePlayer *pl )
 	}
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -248,4 +162,3 @@ void UpdateAllClientData( void )
 		ClientData_Update( pl );
 	}
 }
-

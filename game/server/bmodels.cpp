@@ -24,7 +24,6 @@
 class CFuncWall : public CBaseEntity
 {
 public:
-	DECLARE_DATADESC();
 	DECLARE_CLASS( CFuncWall, CBaseEntity );
 	void	Spawn( void );
 	bool	CreateVPhysics( void );
@@ -34,15 +33,6 @@ public:
 };
 
 LINK_ENTITY_TO_CLASS( func_wall, CFuncWall );
-
-//---------------------------------------------------------
-// Save/Restore
-//---------------------------------------------------------
-BEGIN_DATADESC( CFuncWall )
-
-	DEFINE_FIELD( m_nState,	FIELD_INTEGER ),
-
-END_DATADESC()
 
 void CFuncWall::Spawn( void )
 {
@@ -220,7 +210,6 @@ BEGIN_DATADESC( CFuncConveyor )
 	DEFINE_INPUTFUNC( FIELD_VOID, "SetSpeed", InputSetSpeed ),
 
 	DEFINE_KEYFIELD( m_vecMoveDir, FIELD_VECTOR, "movedir" ),
-	DEFINE_FIELD( m_flConveyorSpeed, FIELD_FLOAT ),
 
 END_DATADESC()
 
@@ -392,17 +381,9 @@ LINK_ENTITY_TO_CLASS( func_rotating, CFuncRotating );
 
 BEGIN_DATADESC( CFuncRotating )
 
-	DEFINE_FIELD( m_vecMoveAng, FIELD_VECTOR ),
-	DEFINE_FIELD( m_flFanFriction, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flAttenuation, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flVolume, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flTargetSpeed, FIELD_FLOAT ),
 	DEFINE_KEYFIELD( m_flMaxSpeed, FIELD_FLOAT, "maxspeed" ),
 	DEFINE_KEYFIELD( m_flBlockDamage, FIELD_FLOAT, "dmg" ),
 	DEFINE_KEYFIELD( m_NoiseRunning, FIELD_SOUNDNAME, "message" ),
-	DEFINE_FIELD( m_bReversed, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_angStart, FIELD_VECTOR ),
-	DEFINE_FIELD( m_bStopAtStartPos, FIELD_BOOLEAN ),
 	DEFINE_KEYFIELD( m_bSolidBsp, FIELD_BOOLEAN, "solidbsp" ),
 
 	// Function Pointers
@@ -1269,8 +1250,6 @@ BEGIN_DATADESC( CFuncVPhysicsClip )
 
 	// Keyfields
 	DEFINE_KEYFIELD( m_iFilterName,	FIELD_STRING,	"filtername" ),
-	DEFINE_FIELD( m_hFilter,	FIELD_EHANDLE ),
-	DEFINE_FIELD( m_bDisabled,	FIELD_BOOLEAN ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),

@@ -60,7 +60,6 @@ public:
 	void	Spawn( void );
 	void	Precache( void );
 #if !defined( CLIENT_DLL )
-	int		ObjectCaps( void );
 	void	SetTransmit( CCheckTransmitInfo *pInfo, bool bAlways );
 	int		UpdateTransmitState( void );
 	int		ShouldTransmit( const CCheckTransmitInfo *pInfo );
@@ -229,19 +228,6 @@ private:
 	int			m_nDissolveType;
 #endif
 };
-
-#if !defined( CLIENT_DLL )
-//-----------------------------------------------------------------------------
-// Inline methods 
-//-----------------------------------------------------------------------------
-inline int CBeam::ObjectCaps( void )
-{ 
-	int flags = 0;
-	if ( HasSpawnFlags( SF_BEAM_TEMPORARY ) )
-		flags = FCAP_DONT_SAVE;
-	return (BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | flags; 
-}
-#endif
 
 inline void	CBeam::SetFireTime( float flFireTime )		
 { 

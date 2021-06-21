@@ -14,7 +14,6 @@
 #include "ai_activity.h"
 #include "ai_schedule.h"
 #include "ai_default.h"
-#include "ai_hint.h"
 #include "bitstring.h"
 #include "stringregistry.h"
 
@@ -141,7 +140,6 @@ int CAI_SchedulesManager::GetMemoryID(const char *state_name)
 	else if (!stricmp(state_name,"PATH_FAILED"))	{	return bits_MEMORY_PATH_FAILED;		}
 	else if (!stricmp(state_name,"FLINCHED"))		{	return bits_MEMORY_FLINCHED;		}
 	else if (!stricmp(state_name,"TOURGUIDE"))		{	return bits_MEMORY_TOURGUIDE;		}
-	else if (!stricmp(state_name,"LOCKED_HINT"))	{	return bits_MEMORY_LOCKED_HINT;		}
 	else if (!stricmp(state_name,"TURNING"))		{	return bits_MEMORY_TURNING;			}
 	else if (!stricmp(state_name,"TURNHACK"))		{	return bits_MEMORY_TURNHACK;		}
 	else if (!stricmp(state_name,"CUSTOM4"))		{	return bits_MEMORY_CUSTOM4;			}
@@ -410,27 +408,6 @@ bool CAI_SchedulesManager::LoadSchedulesFromBuffer( const char *prefix, const ch
 				if (tempTask[taskNum].flTaskData == -1)
 				{
 					DevMsg( "ERROR: LoadSchd (%s): (%s) Unknown goal type  %s!\n", prefix,new_schedule->GetName(), token);
-					Assert(0);
-					return false;
-				}
-			}
-			else if ( !stricmp( "HintFlags",token ) )
-			{
-				// Skip the ":", but make sure it's present
-				pfile = engine->ParseFile(pfile, token, sizeof( token ) );
-				if (stricmp(token,":"))
-				{
-					DevMsg( "ERROR: LoadSchd (%s): (%s) Malformed AI Schedule.  Expecting ':' after type 'HINTFLAG'\n",prefix,new_schedule->GetName());
-					Assert(0);
-					return false;
-				}
-
-				// Load the flags and make sure they are valid
-				pfile = engine->ParseFile( pfile, token, sizeof( token ) );
-				tempTask[taskNum].flTaskData = CAI_HintManager::GetFlags( token );
-				if (tempTask[taskNum].flTaskData == -1)
-				{
-					DevMsg( "ERROR: LoadSchd (%s): (%s) Unknown hint flag type  %s!\n", prefix,new_schedule->GetName(), token);
 					Assert(0);
 					return false;
 				}

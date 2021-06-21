@@ -52,13 +52,7 @@ BEGIN_DATADESC( CBasePlatTrain )
 
 	DEFINE_KEYFIELD( m_NoiseMoving, FIELD_SOUNDNAME, "noise1" ),
 	DEFINE_KEYFIELD( m_NoiseArrived, FIELD_SOUNDNAME, "noise2" ),
-
-	DEFINE_SOUNDPATCH( m_pMovementSound ),
-
 	DEFINE_KEYFIELD( m_volume, FIELD_FLOAT, "volume" ),
-
-	DEFINE_FIELD( m_flTWidth, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flTLength, FIELD_FLOAT ),
 	DEFINE_KEYFIELD( m_flLip, FIELD_FLOAT, "lip" ),
 	DEFINE_KEYFIELD( m_flWait, FIELD_FLOAT, "wait" ),
 	DEFINE_KEYFIELD( m_flHeight, FIELD_FLOAT, "height" ),
@@ -160,8 +154,6 @@ private:
 
 BEGIN_DATADESC( CFuncPlat )
 
-	DEFINE_FIELD( m_sNoise, FIELD_STRING ),
-
 	// Function Pointers
 	DEFINE_FUNCTION( PlatUse ),
 	DEFINE_FUNCTION( CallGoDown ),
@@ -184,7 +176,6 @@ class CPlatTrigger : public CBaseEntity
 {
 	DECLARE_CLASS( CPlatTrigger, CBaseEntity );
 public:
-	virtual int	ObjectCaps( void ) { return BaseClass::ObjectCaps() | FCAP_DONT_SAVE; }
 	void SpawnInsideTrigger( CFuncPlat *pPlatform );
 	void Touch( CBaseEntity *pOther );
 	CFuncPlat *m_pPlatform;
@@ -532,20 +523,11 @@ public:
 	virtual void	HitBottom( void );
 	
 	void			RotMove( QAngle &destAngle, float time );
-	DECLARE_DATADESC();
 
 	QAngle	m_end, m_start;
 };
 
 LINK_ENTITY_TO_CLASS( func_platrot, CFuncPlatRot );
-
-BEGIN_DATADESC( CFuncPlatRot )
-
-	DEFINE_FIELD( m_end, FIELD_VECTOR ),
-	DEFINE_FIELD( m_start, FIELD_VECTOR ),
-
-END_DATADESC()
-
 
 void CFuncPlatRot::SetupRotation( void )
 {
@@ -635,7 +617,6 @@ public:
 	void Spawn( void );
 	void Precache( void );
 	void Activate( void );
-	void OnRestore( void );
 
 	void SetupTarget( void );
 	void Blocked( CBaseEntity *pOther );
@@ -669,12 +650,6 @@ LINK_ENTITY_TO_CLASS( func_train, CFuncTrain );
 
 
 BEGIN_DATADESC( CFuncTrain )
-
-	DEFINE_FIELD( m_hCurrentTarget, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_activated, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_hEnemy, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_iszLastTarget, FIELD_STRING ),
-	DEFINE_FIELD( m_flNextBlockTime, FIELD_TIME ),
 
 	DEFINE_KEYFIELD( m_flBlockDamage, FIELD_FLOAT, "dmg" ),
 
@@ -977,27 +952,10 @@ void CFuncTrain::Spawn( void )
 	}
 }
 
-
 void CFuncTrain::Precache( void )
 {
 	BaseClass::Precache();
 }
-
-
-void CFuncTrain::OnRestore( void )
-{
-	BaseClass::OnRestore();
-
-	// Are we moving?
-	if ( IsMoving() )
-	{
-		// Continue moving to the same target
-		m_target = m_iszLastTarget;
-	}
-
-	SetupTarget();
-}
-
 
 void CFuncTrain::InputToggle( inputdata_t &data )
 {
@@ -1087,21 +1045,8 @@ BEGIN_DATADESC( CFuncTrackTrain )
 	DEFINE_KEYFIELD( m_nMoveSoundMaxPitch, FIELD_INTEGER, "MoveSoundMaxPitch" ),
 	DEFINE_KEYFIELD( m_flMoveSoundMinTime, FIELD_FLOAT, "MoveSoundMinTime" ),
 	DEFINE_KEYFIELD( m_flMoveSoundMaxTime, FIELD_FLOAT, "MoveSoundMaxTime" ),
-	DEFINE_FIELD( m_flNextMoveSoundTime, FIELD_TIME ),
 	DEFINE_KEYFIELD( m_eVelocityType, FIELD_INTEGER, "velocitytype" ),
 	DEFINE_KEYFIELD( m_eOrientationType, FIELD_INTEGER, "orientationtype" ),
-
-	DEFINE_FIELD( m_ppath, FIELD_CLASSPTR ),
-	DEFINE_FIELD( m_dir, FIELD_FLOAT ),
-	DEFINE_FIELD( m_controlMins, FIELD_VECTOR ),
-	DEFINE_FIELD( m_controlMaxs, FIELD_VECTOR ),
-	DEFINE_FIELD( m_flVolume, FIELD_FLOAT ),
-	DEFINE_FIELD( m_oldSpeed, FIELD_FLOAT ),
-	//DEFINE_FIELD( m_lastBlockPos, FIELD_POSITION_VECTOR ), // temp values for blocking, don't save
-	//DEFINE_FIELD( m_lastBlockTick, FIELD_INTEGER ),
-
-	DEFINE_FIELD( m_bSoundPlaying, FIELD_BOOLEAN ),
-
 	DEFINE_KEYFIELD( m_bManualSpeedChanges, FIELD_BOOLEAN, "ManualSpeedChanges" ),
 	DEFINE_KEYFIELD( m_flAccelSpeed, FIELD_FLOAT, "ManualAccelSpeed" ),
 	DEFINE_KEYFIELD( m_flDecelSpeed, FIELD_FLOAT, "ManualDecelSpeed" ),
@@ -2503,17 +2448,6 @@ void CFuncTrackTrain::NearestPath( void )
 	}
 }
 
-void CFuncTrackTrain::OnRestore( void )
-{
-	BaseClass::OnRestore();
-	if ( !m_ppath )
-	{
-		NearestPath();
-		SetThink( NULL );
-	}
-}
-
-
 CFuncTrackTrain *CFuncTrackTrain::Instance( edict_t *pent )
 { 
 	CBaseEntity *pEntity = CBaseEntity::Instance( pent );
@@ -2521,7 +2455,6 @@ CFuncTrackTrain *CFuncTrackTrain::Instance( edict_t *pent )
 		return (CFuncTrackTrain *)pEntity;
 	return NULL;
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -2780,15 +2713,9 @@ LINK_ENTITY_TO_CLASS( func_trackchange, CFuncTrackChange );
 
 BEGIN_DATADESC( CFuncTrackChange )
 
-	DEFINE_GLOBAL_FIELD( m_trackTop, FIELD_CLASSPTR ),
-	DEFINE_GLOBAL_FIELD( m_trackBottom, FIELD_CLASSPTR ),
-	DEFINE_GLOBAL_FIELD( m_train, FIELD_CLASSPTR ),
 	DEFINE_GLOBAL_KEYFIELD( m_trackTopName, FIELD_STRING, "toptrack" ),
 	DEFINE_GLOBAL_KEYFIELD( m_trackBottomName, FIELD_STRING, "bottomtrack" ),
 	DEFINE_GLOBAL_KEYFIELD( m_trainName, FIELD_STRING, "train" ),
-	DEFINE_FIELD( m_code, FIELD_INTEGER ),
-	DEFINE_FIELD( m_targetState, FIELD_INTEGER ),
-	DEFINE_FIELD( m_use, FIELD_INTEGER ),
 
 	// Function Pointers
 	DEFINE_FUNCTION( Find ),

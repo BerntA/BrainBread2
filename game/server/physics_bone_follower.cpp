@@ -9,21 +9,9 @@
 #include "bone_setup.h"
 #include "physics_bone_follower.h"
 #include "vcollide_parse.h"
-#include "saverestore_utlvector.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-
-BEGIN_SIMPLE_DATADESC( physfollower_t )
-DEFINE_FIELD( boneIndex,			FIELD_INTEGER	),
-DEFINE_FIELD( hFollower,			FIELD_EHANDLE	),
-END_DATADESC()
-
-BEGIN_SIMPLE_DATADESC( CBoneFollowerManager )
-DEFINE_GLOBAL_FIELD( m_iNumBones,			FIELD_INTEGER	),
-DEFINE_GLOBAL_UTLVECTOR( m_physBones,		FIELD_EMBEDDED	),
-END_DATADESC()
 
 //================================================================================================================
 // BONE FOLLOWER MANAGER
@@ -214,18 +202,6 @@ int CBoneFollowerManager::GetBoneFollowerIndex( CBoneFollower *pFollower )
 //================================================================================================================
 // BONE FOLLOWER
 //================================================================================================================
-
-//---------------------------------------------------------
-// Save/Restore
-//---------------------------------------------------------
-BEGIN_DATADESC( CBoneFollower )
-
-	DEFINE_FIELD( m_modelIndex,	FIELD_MODELINDEX ),
-	DEFINE_FIELD( m_solidIndex,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_physicsBone,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_hitGroup,	FIELD_INTEGER ),
-
-END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST( CBoneFollower, DT_BoneFollower )
 	SendPropModelIndex(SENDINFO(m_modelIndex)),

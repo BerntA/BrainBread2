@@ -77,10 +77,6 @@ public:
 BEGIN_DATADESC( CGameUI )
 
 	DEFINE_KEYFIELD( m_flFieldOfView, FIELD_FLOAT, "FieldOfView" ),
-	DEFINE_FIELD( m_hSaveWeapon, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_bForceUpdate, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_player, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_nLastButtonState, FIELD_INTEGER ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Deactivate", InputDeactivate ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "Activate", InputActivate ),

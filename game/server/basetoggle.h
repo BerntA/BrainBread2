@@ -41,8 +41,6 @@ public:
 
 	int					m_movementType;
 
-	DECLARE_DATADESC();
-
 	virtual float	GetDelay( void ) { return m_flWait; }
 
 	// common member functions
@@ -63,7 +61,5 @@ public:
 							// the button will be allowed to operate. Otherwise, it will be
 							// deactivated.
 };
-
-
 
 #endif // BASETOGGLE_H

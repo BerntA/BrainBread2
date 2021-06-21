@@ -51,7 +51,6 @@ public:
 	DECLARE_CLASS( CBaseNPCMaker, CBaseEntity );
 
 	void Spawn( void );
-	virtual int	ObjectCaps( void ) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 	void MakerThink( void );
 	bool HumanHullFits( const Vector &vecLocation );
 	bool CanMakeNPC( bool bIgnoreSolidEntities = false );
@@ -116,7 +115,6 @@ public:
 	
 	string_t m_iszNPCClassname;			// classname of the NPC(s) that will be created.
 	string_t m_SquadName;
-	string_t m_strHintGroup;
 	string_t m_spawnEquipment;
 	string_t m_RelationshipString;		// Used to load up relationship keyvalues
 	string_t m_ChildTargetName;

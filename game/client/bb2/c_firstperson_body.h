@@ -21,7 +21,6 @@ class C_FirstpersonBody : public C_BaseAnimatingOverlay
 public:
 
 	C_FirstpersonBody();
-	virtual int ObjectCaps() { return FCAP_DONT_SAVE; }
 	virtual ShadowType_t ShadowCastType() { return SHADOWS_NONE; }
 	virtual int DrawModel(int flags);
 	virtual bool ShouldDraw() { return true; }

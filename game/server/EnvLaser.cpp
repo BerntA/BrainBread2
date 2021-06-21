@@ -18,9 +18,7 @@ LINK_ENTITY_TO_CLASS( env_laser, CEnvLaser );
 BEGIN_DATADESC( CEnvLaser )
 
 	DEFINE_KEYFIELD( m_iszLaserTarget, FIELD_STRING, "LaserTarget" ),
-	DEFINE_FIELD( m_pSprite, FIELD_CLASSPTR ),
 	DEFINE_KEYFIELD( m_iszSpriteName, FIELD_STRING, "EndSprite" ),
-	DEFINE_FIELD( m_firePosition, FIELD_VECTOR ),
 	DEFINE_KEYFIELD( m_flStartFrame, FIELD_FLOAT, "framestart" ),
 
 	// Function Pointers

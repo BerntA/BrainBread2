@@ -11,7 +11,6 @@
 #pragma once
 #endif
 
-class CAI_Network;
 class CAI_Pathfinder;
 class CNavArea;
 
@@ -30,13 +29,12 @@ class CAI_TacticalServices : public CAI_Component
 {
 public:
 	CAI_TacticalServices(CAI_BaseNPC *pOuter)
-		: CAI_Component(pOuter),
-		m_pNetwork(NULL)
+		: CAI_Component(pOuter)
 	{
 		m_bAllowFindLateralLos = true;
 	}
 
-	void Init(CAI_Network *pNetwork);
+	void Init();
 
 	bool			FindLos(const Vector &threatPos, const Vector &threatEyePos, float minThreatDist, float maxThreatDist, float blockTime, Vector *pResult);
 	bool			FindLos(const Vector &threatPos, const Vector &threatEyePos, float minThreatDist, float maxThreatDist, float blockTime, FlankType_t eFlankType, const Vector &VecFlankRefPos, float flFlankParam, Vector *pResult);
@@ -55,11 +53,6 @@ private:
 	bool			TestLateralCover(const Vector &vecCheckStart, const Vector &vecCheckEnd, float flMinDist);
 	bool			TestLateralLos(const Vector &vecCheckStart, const Vector &vecCheckEnd);
 
-	int				FindBackAwayNode(const Vector &vecThreat);
-	int				FindCoverNode(const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinDist, float flMaxDist);
-	int				FindCoverNode(const Vector &vNearPos, const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinDist, float flMaxDist);
-	int				FindLosNode(const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinThreatDist, float flMaxThreatDist, float flBlockTime, FlankType_t eFlankType, const Vector &vThreatFacing, float flFlankParam);
-
 #ifdef BB2_USE_NAVMESH // Helpful stuff ported from Infestus.
 	const Vector	FindLosNavArea(const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinThreatDist, float flMaxThreatDist, FlankType_t eFlankType, const Vector &vThreatFacing, float flFlankParam);
 	const Vector	FindBackAwayNavArea(const Vector &vecFrom);
@@ -67,20 +60,12 @@ private:
 	const Vector	FindCoverNavArea(const Vector &vNearPos, const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinDist, float flMaxDist);
 #endif // BB2_USE_NAVMESH
 
-	Vector			GetNodePos(int);
-
-	CAI_Network *GetNetwork()				{ return m_pNetwork; }
-	const CAI_Network *GetNetwork() const	{ return m_pNetwork; }
-
 	CAI_Pathfinder *GetPathfinder()				{ return m_pPathfinder; }
 	const CAI_Pathfinder *GetPathfinder() const	{ return m_pPathfinder; }
 
-	CAI_Network *m_pNetwork;
 	CAI_Pathfinder *m_pPathfinder;
 
 	bool	m_bAllowFindLateralLos;	// Allows us to turn Lateral LOS checking on/off. 
-
-	DECLARE_SIMPLE_DATADESC();
 };
 
 //-----------------------------------------------------------------------------

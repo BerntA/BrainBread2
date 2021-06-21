@@ -198,8 +198,6 @@ private:
 	void	SetMoveScriptAnim( float flNewSpeed );
 
 	int		GetInteriorSequence( int fromSequence );
-
-	DECLARE_SIMPLE_DATADESC();
 };
 
 //-----------------------------------------------------------------------------

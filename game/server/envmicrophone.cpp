@@ -36,18 +36,13 @@ LINK_ENTITY_TO_CLASS(env_microphone, CEnvMicrophone);
 BEGIN_DATADESC( CEnvMicrophone )
 
 	DEFINE_KEYFIELD(m_bDisabled, FIELD_BOOLEAN, "StartDisabled"),
-	DEFINE_FIELD(m_hMeasureTarget, FIELD_EHANDLE),
 	DEFINE_KEYFIELD(m_nSoundMask, FIELD_INTEGER, "SoundMask"),
 	DEFINE_KEYFIELD(m_flSensitivity, FIELD_FLOAT, "Sensitivity"),
 	DEFINE_KEYFIELD(m_flSmoothFactor, FIELD_FLOAT, "SmoothFactor"),
 	DEFINE_KEYFIELD(m_iszSpeakerName, FIELD_STRING, "SpeakerName"),
 	DEFINE_KEYFIELD(m_iszListenFilter, FIELD_STRING, "ListenFilter"),
-	DEFINE_FIELD(m_hListenFilter, FIELD_EHANDLE),
-	DEFINE_FIELD(m_hSpeaker, FIELD_EHANDLE),
-	// DEFINE_FIELD(m_bAvoidFeedback, FIELD_BOOLEAN),	// DONT SAVE
 	DEFINE_KEYFIELD(m_iSpeakerDSPPreset, FIELD_INTEGER, "speaker_dsp_preset" ),
 	DEFINE_KEYFIELD(m_flMaxRange, FIELD_FLOAT, "MaxRange"),
-	DEFINE_AUTO_ARRAY(m_szLastSound, FIELD_CHARACTER),
 
 	DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
 	DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
@@ -145,16 +140,6 @@ void CEnvMicrophone::Activate(void)
 	{
 		m_hMeasureTarget = this;
 	}
-
-	ActivateSpeaker();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CEnvMicrophone::OnRestore( void )
-{
-	BaseClass::OnRestore();
 
 	ActivateSpeaker();
 }

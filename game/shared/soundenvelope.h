@@ -76,16 +76,4 @@ public:
 	virtual void		SoundSetCloseCaptionDuration( CSoundPatch *pSound, float flDuration ) = 0;
 };
 
-
-//-----------------------------------------------------------------------------
-// Save/restore
-//-----------------------------------------------------------------------------
-class ISaveRestoreOps;
-
-ISaveRestoreOps *GetSoundSaveRestoreOps( );
-
-#define DEFINE_SOUNDPATCH(name) \
-	{ FIELD_CUSTOM, #name, { offsetof(classNameTypedef,name), 0 }, 1, FTYPEDESC_SAVE, NULL, GetSoundSaveRestoreOps( ), NULL }
-
-
 #endif // SOUNDENVELOPE_H

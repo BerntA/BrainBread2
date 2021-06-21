@@ -48,8 +48,6 @@ private:
 //-----------------------------------------------------------------------------
 BEGIN_DATADESC( CEnvParticleScript )
 
-	DEFINE_FIELD( m_flSequenceScale, FIELD_FLOAT ),
-	
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_STRING, "SetSequence", InputSetSequence ),
 

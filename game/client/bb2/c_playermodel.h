@@ -24,8 +24,6 @@ public:
 
 	virtual bool Initialize(void);
 	virtual void Release(void);
-
-	virtual int ObjectCaps() { return FCAP_DONT_SAVE; }
 	virtual ShadowType_t ShadowCastType();
 	virtual bool ShouldDraw();
 	virtual bool ShouldReceiveProjectedTextures(int flags);

@@ -15,8 +15,6 @@ LINK_ENTITY_TO_CLASS( env_player_surface_trigger, CEnvPlayerSurfaceTrigger );
 
 BEGIN_DATADESC( CEnvPlayerSurfaceTrigger )
 	DEFINE_KEYFIELD( m_iTargetGameMaterial, FIELD_INTEGER, "gamematerial" ),
-	DEFINE_FIELD( m_iCurrentGameMaterial, FIELD_INTEGER ),
-	DEFINE_FIELD( m_bDisabled, FIELD_BOOLEAN ),
 
 	DEFINE_THINKFUNC( UpdateMaterialThink ),
 
@@ -50,16 +48,6 @@ void CEnvPlayerSurfaceTrigger::Spawn( void )
 
 	m_iCurrentGameMaterial = 0;
 	m_bDisabled = false;
-
-	g_PlayerSurfaceTriggers.AddToTail( this );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CEnvPlayerSurfaceTrigger::OnRestore( void )
-{
-	BaseClass::OnRestore();
 
 	g_PlayerSurfaceTriggers.AddToTail( this );
 }

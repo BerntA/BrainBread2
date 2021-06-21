@@ -9,7 +9,6 @@
 
 #include "cbase.h"
 #include "shake.h"
-#include "physics_saverestore.h"
 #include "rope.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -17,8 +16,6 @@
 
 class CPhysicsShake : public IMotionEvent
 {
-	DECLARE_SIMPLE_DATADESC();
-
 public:
 	virtual simresult_e	Simulate( IPhysicsMotionController *pController, IPhysicsObject *pObject, float deltaTime, Vector &linear, AngularImpulse &angular )
 	{
@@ -34,11 +31,6 @@ public:
 
 	Vector  m_force;
 };
-
-BEGIN_SIMPLE_DATADESC( CPhysicsShake )
-	DEFINE_FIELD( m_force, FIELD_VECTOR ),
-END_DATADESC()
-
 
 class CEnvShake : public CPointEntity
 {
@@ -63,7 +55,6 @@ public:
 
 			~CEnvShake( void );
 	virtual void	Spawn( void );
-	virtual void	OnRestore( void );
 
 	inline	float	Amplitude( void ) { return m_Amplitude; }
 	inline	float	Frequency( void ) { return m_Frequency; }
@@ -95,12 +86,6 @@ BEGIN_DATADESC( CEnvShake )
 	DEFINE_KEYFIELD( m_Frequency,	FIELD_FLOAT, "frequency" ),
 	DEFINE_KEYFIELD( m_Duration,		FIELD_FLOAT, "duration" ),
 	DEFINE_KEYFIELD( m_Radius,		FIELD_FLOAT, "radius" ),
-	DEFINE_FIELD( m_stopTime,		FIELD_TIME ),
-	DEFINE_FIELD( m_nextShake,	FIELD_TIME ),
-	DEFINE_FIELD( m_currentAmp,	FIELD_FLOAT ),
-	DEFINE_FIELD( m_maxForce,		FIELD_VECTOR ),
-	DEFINE_PHYSPTR( m_pShakeController ),
-	DEFINE_EMBEDDED( m_shakeCallback ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "StartShake", InputStartShake ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "StopShake", InputStopShake ),
@@ -158,21 +143,6 @@ void CEnvShake::Spawn( void )
 		DevWarning( "env_shake %s with \"Don't shake view\" spawnflag set without \"Shake physics\" or \"Shake ropes\" spawnflags set.", GetDebugName() );
 	}
 }
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Restore the motion controller
-//-----------------------------------------------------------------------------
-void CEnvShake::OnRestore( void )
-{
-	BaseClass::OnRestore();
-
-	if ( m_pShakeController )
-	{
-		m_pShakeController->SetEventHandler( &m_shakeCallback );
-	}
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 

@@ -5,7 +5,6 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "isaverestore.h"
 #include "ai_debug.h"
 #include "ai_memory.h"
 #include "ai_basenpc.h"
@@ -19,9 +18,6 @@
 //-----------------------------------------------------------------------------
 // AI_EnemyInfo_t
 //
-//-----------------------------------------------------------------------------
-
-
 //-----------------------------------------------------------------------------
 
 AI_EnemyInfo_t::AI_EnemyInfo_t(void) 
@@ -42,112 +38,11 @@ AI_EnemyInfo_t::AI_EnemyInfo_t(void)
 	bMobbedMe = 0;
 }
 
- 
-//-----------------------------------------------------------------------------
-// CAI_EnemiesListSaveRestoreOps
-//
-// Purpose: Handles save and load for enemy memories
-//
-//-----------------------------------------------------------------------------
-
-class CAI_EnemiesListSaveRestoreOps : public CDefSaveRestoreOps
-{
-public:
-	CAI_EnemiesListSaveRestoreOps()
-	{
-	}
-
-	virtual void Save( const SaveRestoreFieldInfo_t &fieldInfo, ISave *pSave )
-	{
-		CAI_Enemies::CMemMap *pMemMap = (CAI_Enemies::CMemMap *)fieldInfo.pField;
-		
-		int nMemories = pMemMap->Count();
-		pSave->WriteInt( &nMemories );
-		
-		for ( CAI_Enemies::CMemMap::IndexType_t i = pMemMap->FirstInorder(); i != pMemMap->InvalidIndex(); i = pMemMap->NextInorder( i ) )
-		{
-			pSave->WriteAll( (*pMemMap)[i] );
-		}
-	}
-	
-	virtual void Restore( const SaveRestoreFieldInfo_t &fieldInfo, IRestore *pRestore )
-	{
-		CAI_Enemies::CMemMap *pMemMap = (CAI_Enemies::CMemMap *)fieldInfo.pField;
-		Assert( pMemMap->Count() == 0 );
-		
-		int nMemories = pRestore->ReadInt();
-		
-		while ( nMemories-- )
-		{
-			AI_EnemyInfo_t *pAddMemory = new AI_EnemyInfo_t;
-			
-			pRestore->ReadAll( pAddMemory );
-			
-			if ( pAddMemory->hEnemy != NULL )
-			{
-				pMemMap->Insert( pAddMemory->hEnemy, pAddMemory );
-			}
-			else
-				delete pAddMemory;
-		}
-	}
-	
-	virtual void MakeEmpty( const SaveRestoreFieldInfo_t &fieldInfo )
-	{
-		CAI_Enemies::CMemMap *pMemMap = (CAI_Enemies::CMemMap *)fieldInfo.pField;
-		
-		for ( CAI_Enemies::CMemMap::IndexType_t i = pMemMap->FirstInorder(); i != pMemMap->InvalidIndex(); i = pMemMap->NextInorder( i ) )
-		{
-			delete (*pMemMap)[i];
-		}
-		
-		pMemMap->RemoveAll();
-	}
-
-	virtual bool IsEmpty( const SaveRestoreFieldInfo_t &fieldInfo )
-	{
-		CAI_Enemies::CMemMap *pMemMap = (CAI_Enemies::CMemMap *)fieldInfo.pField;
-		return ( pMemMap->Count() == 0 );
-	}
-	
-} g_AI_MemoryListSaveRestoreOps;
-
 //-----------------------------------------------------------------------------
 // CAI_Enemies
 //
 // Purpose: Stores a set of AI_EnemyInfo_t's
 //
-//-----------------------------------------------------------------------------
-
-BEGIN_SIMPLE_DATADESC( CAI_Enemies )
-
-	DEFINE_CUSTOM_FIELD( m_Map, &g_AI_MemoryListSaveRestoreOps ),
-  	DEFINE_FIELD( m_flFreeKnowledgeDuration,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_flEnemyDiscardTime,				FIELD_FLOAT ),
-  	DEFINE_FIELD( m_vecDefaultLKP,					FIELD_POSITION_VECTOR ),
-  	DEFINE_FIELD( m_vecDefaultLSP,					FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_serial,							FIELD_INTEGER ),
-
-END_DATADESC()
-
-BEGIN_SIMPLE_DATADESC( AI_EnemyInfo_t )
-	DEFINE_FIELD( vLastKnownLocation, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( vLastSeenLocation, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( hEnemy, 			FIELD_EHANDLE ),
-	DEFINE_FIELD( timeLastSeen, 	FIELD_TIME ),
-	DEFINE_FIELD( timeFirstSeen, 	FIELD_TIME ),
-	DEFINE_FIELD( timeLastReacquired, FIELD_TIME ),
-	DEFINE_FIELD( timeValidEnemy, 	FIELD_TIME ),
-	DEFINE_FIELD( timeLastReceivedDamageFrom, 	FIELD_TIME ),
-	DEFINE_FIELD( timeAtFirstHand,	FIELD_TIME ),
-	DEFINE_FIELD(classification, FIELD_INTEGER),
-	DEFINE_FIELD( bDangerMemory, 	FIELD_BOOLEAN ),
-	DEFINE_FIELD( bEludedMe, 		FIELD_BOOLEAN ),
-	DEFINE_FIELD( bUnforgettable,	FIELD_BOOLEAN ),
-	DEFINE_FIELD( bMobbedMe,		FIELD_BOOLEAN ),
-	// NOT SAVED nextEMemory
-END_DATADESC()
-
 //-----------------------------------------------------------------------------
 
 CAI_Enemies::CAI_Enemies(void)
@@ -159,7 +54,6 @@ CAI_Enemies::CAI_Enemies(void)
 	m_serial = 0;
 	SetDefLessFunc( m_Map );
 }
-
 
 //-----------------------------------------------------------------------------
 
@@ -328,7 +222,7 @@ void CAI_Enemies::RefreshMemories(void)
 // Output : Returns true if new enemy, false if already know of enemy
 //-----------------------------------------------------------------------------
 
-bool CAI_Enemies::UpdateMemory(CAI_Network* pAINet, CBaseEntity *pEnemy, const Vector &vPosition, float reactionDelay, bool firstHand )
+bool CAI_Enemies::UpdateMemory(CBaseEntity *pEnemy, const Vector &vPosition, float reactionDelay, bool firstHand)
 {
 	if ( pEnemy == AI_UNKNOWN_ENEMY )
 		pEnemy = NULL;

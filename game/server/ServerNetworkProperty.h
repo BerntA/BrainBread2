@@ -23,7 +23,6 @@ class CServerNetworkProperty : public IServerNetworkable, public IEventRegisterC
 {
 public:
 	DECLARE_CLASS_NOBASE( CServerNetworkProperty );
-	DECLARE_DATADESC();
 
 public:
 	CServerNetworkProperty();

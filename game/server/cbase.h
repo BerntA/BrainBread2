@@ -81,7 +81,6 @@
 #include "basetoggle.h"
 #include "igameevents.h"
 
-// saverestore.h declarations
 class ISave;
 class IRestore;
 

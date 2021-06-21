@@ -26,7 +26,6 @@ class CAI_Pathfinder;
 class CAI_LocalNavigator;
 struct AI_Waypoint_t;
 class CAI_WaypointList;
-class CAI_Network;
 struct AIMoveTrace_t;
 struct AILocalMoveGoal_t;
 typedef int AI_TaskFailureCode_t;
@@ -279,7 +278,7 @@ public:
 	CAI_Navigator(CAI_BaseNPC *pOuter);
 	virtual ~CAI_Navigator();
 
-	virtual void Init( CAI_Network *pNetwork );
+	virtual void Init();
 	
 	// --------------------------------
 
@@ -287,11 +286,6 @@ public:
 	void SetRememberStaleNodes( bool fNewVal)						{ m_fRememberStaleNodes = fNewVal; }
 	void SetValidateActivitySpeed( bool bValidateActivitySpeed )	{ m_bValidateActivitySpeed = bValidateActivitySpeed; }
 	void SetLocalSucceedOnWithinTolerance( bool fNewVal )			{ m_bLocalSucceedOnWithinTolerance = fNewVal; }
-
-	// --------------------------------
-
-	void Save( ISave &save );
-	void Restore( IRestore &restore );
 	
 	// --------------------------------
 	// Methods to issue movement directives
@@ -305,8 +299,6 @@ public:
 	
 	// Fancy pathing
 	bool				SetRadialGoal( const Vector &destination, const Vector &center, float radius, float arc, float stepDist, bool bClockwise, bool bAirRoute = false );
-	bool 				SetRandomGoal( float minPathLength, const Vector &dir = vec3_origin );
-	bool 				SetRandomGoal( const Vector &from, float minPathLength, const Vector &dir = vec3_origin );
 	bool				SetDirectGoal( const Vector &goalPos, Navigation_t navType = NAV_GROUND );
 	
 	bool				SetWanderGoal( float minRadius, float maxRadius );
@@ -401,13 +393,6 @@ public:
 	// --------------------------------
 	
 	AI_NavPathProgress_t ProgressFlyPath( const AI_ProgressFlyPathParams_t &params); // note: will not return "blocked"
-
-	AI_PathNode_t		GetNearestNode();
-	Vector				GetNodePos( AI_PathNode_t );
-
-	CAI_Network *		GetNetwork()						{ return m_pAINetwork; }
-	const CAI_Network *	GetNetwork() const					{ return m_pAINetwork; }
-	void 				SetNetwork( CAI_Network *pNetwork ) { m_pAINetwork = pNetwork; }
 	
 	CAI_Path *			GetPath()							{ return m_pPath; }
 	const CAI_Path *	GetPath() const						{ return m_pPath; }
@@ -420,13 +405,12 @@ public:
 										 AI_NpcBlockHandling_t blockHandling = AISF_BLOCK);
 	bool				SimplifyFlyPath(  const AI_ProgressFlyPathParams_t &params );
 	
-	bool				CanFitAtNode(int nodeNum, unsigned int collisionMask = MASK_NPCSOLID_BRUSHONLY); 
 	float				MovementCost( int moveType, Vector &vecStart, Vector &vecEnd );
 
 	bool				CanFitAtPosition( const Vector &vStartPos, unsigned int collisionMask, bool bIgnoreTransients = false, bool bAllowPlayerAvoid = true );
 	bool				IsOnNetwork() const			{ return !m_bNotOnNetwork; }
 
-	void				SetMaxRouteRebuildTime(float time) { m_timePathRebuildMax = time;			}
+	void				SetMaxRouteRebuildTime(float flTime) { m_timePathRebuildMax = flTime; }
 
 	// --------------------------------
 	void				DrawDebugRouteOverlay( void );
@@ -553,7 +537,6 @@ protected:
 private:
 	bool				FindPath( const AI_NavGoal_t &goal, unsigned flags );
 	bool				FindPath( bool fSignalTaskStatus = true, bool bDontIgnoreBadLinks = false );
-	bool				MarkCurWaypointFailedLink( void );			// Call when route fails
 
 	struct SimplifyForwardScanParams
 	{
@@ -589,7 +572,6 @@ private:
 
     // ---------------------------------
 
-	CAI_Network*		m_pAINetwork;			 					// My current AINetwork
 	CAI_Path*			m_pPath;									// My current route
 
 	CAI_WaypointList *	m_pClippedWaypoints;
@@ -645,8 +627,6 @@ private:
 
 	int					m_nNavFailCounter;
 	float				m_flLastNavFailTime;
-public:
-	DECLARE_SIMPLE_DATADESC();
 };
 
 

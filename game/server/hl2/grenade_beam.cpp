@@ -22,8 +22,6 @@
 // ==============================================================================
 BEGIN_DATADESC( CGrenadeBeamChaser )
 
-	DEFINE_FIELD( m_pTarget, FIELD_CLASSPTR ),
-
 	// Function pointers
 	DEFINE_FUNCTION( ChaserThink ),
 
@@ -96,18 +94,6 @@ CGrenadeBeamChaser* CGrenadeBeamChaser::ChaserCreate( CGrenadeBeam *pTarget )
 //  > CGrenadeBeam
 // ==============================================================================
 BEGIN_DATADESC( CGrenadeBeam )
-
-	DEFINE_FIELD( m_vLaunchPos,		FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_flBeamWidth,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_flBeamSpeed,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_flBeamLag,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_flLaunchTime,		FIELD_TIME ),
-	DEFINE_FIELD( m_flLastTouchTime,	FIELD_TIME ),
-	DEFINE_FIELD( m_hBeamChaser,		FIELD_EHANDLE ),
-	DEFINE_FIELD( m_nNumHits,			FIELD_INTEGER ),
-
-	DEFINE_ARRAY( m_pHitLocation,		FIELD_VECTOR,	GRENADEBEAM_MAXHITS ),
-	DEFINE_ARRAY( m_pBeam,			FIELD_CLASSPTR, GRENADEBEAM_MAXBEAMS ),
 
 	// Function pointers
 	DEFINE_ENTITYFUNC( GrenadeBeamTouch ),

@@ -62,9 +62,6 @@ LINK_ENTITY_TO_CLASS( func_guntarget, CGunTarget );
 
 BEGIN_DATADESC( CGunTarget )
 
-	DEFINE_FIELD( m_on, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_hTargetEnt, FIELD_EHANDLE ),
-
 	// Function Pointers
 	DEFINE_FUNCTION( Next ),
 	DEFINE_FUNCTION( Start ),

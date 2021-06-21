@@ -69,22 +69,11 @@ bool CRuleEntity::CanFireForActivator( CBaseEntity *pActivator )
 class CRulePointEntity : public CRuleEntity
 {
 public:
-	DECLARE_DATADESC();
 	DECLARE_CLASS( CRulePointEntity, CRuleEntity );
 
 	int		m_Score;
 	void		Spawn( void );
 };
-
-//---------------------------------------------------------
-// Save/Restore
-//---------------------------------------------------------
-BEGIN_DATADESC( CRulePointEntity )
-
-	DEFINE_FIELD( m_Score,	FIELD_INTEGER ),
-
-END_DATADESC()
-
 
 void CRulePointEntity::Spawn( void )
 {
@@ -293,7 +282,6 @@ LINK_ENTITY_TO_CLASS( game_text, CGameText );
 BEGIN_DATADESC( CGameText )
 
 	DEFINE_KEYFIELD( m_iszMessage, FIELD_STRING, "message" ),
-
 	DEFINE_KEYFIELD( m_textParms.channel, FIELD_INTEGER, "channel" ),
 	DEFINE_KEYFIELD( m_textParms.x, FIELD_FLOAT, "x" ),
 	DEFINE_KEYFIELD( m_textParms.y, FIELD_FLOAT, "y" ),
@@ -302,8 +290,6 @@ BEGIN_DATADESC( CGameText )
 	DEFINE_KEYFIELD( m_textParms.fadeoutTime, FIELD_FLOAT, "fadeout" ),
 	DEFINE_KEYFIELD( m_textParms.holdTime, FIELD_FLOAT, "holdtime" ),
 	DEFINE_KEYFIELD( m_textParms.fxTime, FIELD_FLOAT, "fxtime" ),
-
-	DEFINE_ARRAY( m_textParms, FIELD_CHARACTER, sizeof(hudtextparms_t) ),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "Display", InputDisplay ),
@@ -581,8 +567,6 @@ void CGamePlayerHurt::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TY
 
 class CGamePlayerEquip : public CRulePointEntity
 {
-	DECLARE_DATADESC();
-
 public:
 	DECLARE_CLASS( CGamePlayerEquip, CRulePointEntity );
 
@@ -601,19 +585,6 @@ private:
 };
 
 LINK_ENTITY_TO_CLASS( game_player_equip, CGamePlayerEquip );
-
-//---------------------------------------------------------
-// Save/Restore
-//---------------------------------------------------------
-BEGIN_DATADESC( CGamePlayerEquip )
-
-	DEFINE_AUTO_ARRAY( m_weaponNames,		FIELD_STRING ),
-	DEFINE_AUTO_ARRAY( m_weaponCount,		FIELD_INTEGER ),
-
-END_DATADESC()
-
-
-
 
 bool CGamePlayerEquip::KeyValue( const char *szKeyName, const char *szValue )
 {

@@ -10,7 +10,6 @@
 #include "items.h"
 #include "gamerules.h"
 #include "engine/IEngineSound.h"
-#include "physics_saverestore.h"
 #include "world.h"
 
 #ifdef HL2MP
@@ -23,10 +22,6 @@
 #define ITEM_PICKUP_BOX_BLOAT 20.0f
 
 BEGIN_DATADESC( CItem )
-
-	DEFINE_FIELD( m_bActivateWhenAtRest,	 FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_vOriginalSpawnOrigin, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_vOriginalSpawnAngles, FIELD_VECTOR ),
 
 	// Function Pointers
 	DEFINE_ENTITYFUNC( ItemTouch ),

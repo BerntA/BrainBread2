@@ -10,7 +10,6 @@
 #include "entityoutput.h"
 #include "engine/IEngineSound.h"
 #include "igamesystem.h"
-#include "physics_saverestore.h"
 #include "vcollide_parse.h"
 #include "positionwatcher.h"
 #include "fmtstr.h"
@@ -124,9 +123,7 @@ private:
 };
 
 BEGIN_DATADESC( CPhysConstraintSystem )
-	DEFINE_PHYSPTR( m_pMachine ),
 	DEFINE_KEYFIELD( m_additionalIterations, FIELD_INTEGER, "additionaliterations" ),
-	
 END_DATADESC()
 
 
@@ -379,8 +376,6 @@ void CPhysConstraint::GetBreakParams( constraint_breakableparams_t &params, cons
 
 BEGIN_DATADESC( CPhysConstraint )
 
-	DEFINE_PHYSPTR( m_pConstraint ),
-
 	DEFINE_KEYFIELD( m_nameSystem, FIELD_STRING, "constraintsystem" ),
 	DEFINE_KEYFIELD( m_nameAttach1, FIELD_STRING, "attach1" ),
 	DEFINE_KEYFIELD( m_nameAttach2, FIELD_STRING, "attach2" ),
@@ -388,7 +383,6 @@ BEGIN_DATADESC( CPhysConstraint )
 	DEFINE_KEYFIELD( m_forceLimit, FIELD_FLOAT, "forcelimit" ),
 	DEFINE_KEYFIELD( m_torqueLimit, FIELD_FLOAT, "torquelimit" ),
 	DEFINE_KEYFIELD( m_minTeleportDistance, FIELD_FLOAT, "teleportfollowdistance" ),
-//	DEFINE_FIELD( m_teleportTick, FIELD_INTEGER ),
 
 	DEFINE_OUTPUT( m_OnBreak, "OnBreak" ),
 
@@ -794,7 +788,6 @@ private:
 BEGIN_DATADESC( CPhysHinge )
 
 	DEFINE_KEYFIELD( m_hingeFriction, FIELD_FLOAT, "hingefriction" ),
-	DEFINE_FIELD( m_hinge.worldPosition, FIELD_POSITION_VECTOR ),
 	DEFINE_KEYFIELD( m_hinge.worldAxisDirection, FIELD_VECTOR, "hingeaxis" ),
 	DEFINE_KEYFIELD( m_systemLoadScale, FIELD_FLOAT, "systemloadscale" ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetAngularVelocity", InputSetVelocity ),
@@ -1083,7 +1076,6 @@ private:
 BEGIN_DATADESC( CPhysPulley )
 
 	DEFINE_KEYFIELD( m_position2, FIELD_POSITION_VECTOR, "position2" ),
-	DEFINE_AUTO_ARRAY( m_offset, FIELD_VECTOR ),
 	DEFINE_KEYFIELD( m_addLength, FIELD_FLOAT, "addlength" ),
 	DEFINE_KEYFIELD( m_gearRatio, FIELD_FLOAT, "gearratio" ),
 
@@ -1191,12 +1183,9 @@ private:
 };
 
 BEGIN_DATADESC( CPhysLength )
-
-	DEFINE_AUTO_ARRAY( m_offset, FIELD_VECTOR ),
 	DEFINE_KEYFIELD( m_addLength, FIELD_FLOAT, "addlength" ),
 	DEFINE_KEYFIELD( m_minLength, FIELD_FLOAT, "minlength" ),
 	DEFINE_KEYFIELD( m_vecAttach, FIELD_POSITION_VECTOR, "attachpoint" ),
-	DEFINE_FIELD( m_totalLength, FIELD_FLOAT ),
 END_DATADESC()
 
 

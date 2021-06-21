@@ -55,8 +55,6 @@ public:
 
 BEGIN_DATADESC( CLookDoorThinker )
 
-	DEFINE_FIELD( m_hLookDoor, FIELD_EHANDLE ),
-
 	// Function Pointers
 	DEFINE_FUNCTION(LookThink),
 
@@ -88,7 +86,6 @@ BEGIN_DATADESC( CLookDoor )
 	DEFINE_KEYFIELD( m_flProximityDistance,	FIELD_FLOAT, "ProximityDistance"),
 	DEFINE_KEYFIELD( m_flProximityOffset,	FIELD_FLOAT, "ProximityOffset"),
 	DEFINE_KEYFIELD( m_flFieldOfView,		FIELD_FLOAT, "FieldOfView" ),
-	DEFINE_FIELD(m_hLooker,				FIELD_EHANDLE),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID,		"InvertOn",		InputInvertOn ),

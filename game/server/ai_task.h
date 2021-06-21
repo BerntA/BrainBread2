@@ -175,14 +175,6 @@ enum sharedtasks_e
 		// Build a path to m_hTargetEnt
 		TASK_GET_PATH_TO_TARGET,
 
-		// Allow a little slop, and allow for some Z offset (like the target is a gun on a table).
-		TASK_GET_PATH_TO_TARGET_WEAPON,
-
-		TASK_CREATE_PENDING_WEAPON,
-
-		// Path to nodes[ m_pHintNode ]
-		TASK_GET_PATH_TO_HINTNODE,
-
 		// Store current position for later reference
 		TASK_STORE_LASTPOSITION,
 
@@ -201,13 +193,6 @@ enum sharedtasks_e
 		// Store current enemy position in saveposition
 		TASK_STORE_ENEMY_POSITION_IN_SAVEPOSITION,
 
-		// Move to the goal specified by the player in command mode.
-		TASK_GET_PATH_TO_COMMAND_GOAL,
-
-		TASK_MARK_COMMAND_GOAL_POS,
-
-		TASK_CLEAR_COMMAND_GOAL,
-
 		// Path to last position (Last position must be stored with TASK_STORE_LAST_POSITION)
 		TASK_GET_PATH_TO_LASTPOSITION,
 
@@ -216,9 +201,6 @@ enum sharedtasks_e
 
 		// Path to location that has line of sight to saved position (Save position must by set in code or by a task)
 		TASK_GET_PATH_TO_SAVEPOSITION_LOS,
-
-		// Path to random node
-		TASK_GET_PATH_TO_RANDOM_NODE,
 
 		// Path to source of loudest heard sound that I care about
 		TASK_GET_PATH_TO_BESTSOUND,
@@ -283,12 +265,6 @@ enum sharedtasks_e
 		// Turn to face the enemy
 		TASK_FACE_ENEMY,
 
-		// Turn to face nodes[ m_pHintNode ]
-		TASK_FACE_HINTNODE,
-
-		// Play activity associate with the current hint
-		TASK_PLAY_HINT_ACTIVITY,
-
 		// Turn to face m_hTargetEnt
 		TASK_FACE_TARGET,
 
@@ -317,14 +293,6 @@ enum sharedtasks_e
 		TASK_SPECIAL_ATTACK1,
 		TASK_SPECIAL_ATTACK2,
 
-		TASK_FIND_HINTNODE,
-		TASK_FIND_LOCK_HINTNODE,
-
-		TASK_CLEAR_HINTNODE,
-
-		// Claim m_pHintNode exclusively for this NPC.
-		TASK_LOCK_HINTNODE,
-
 		// Emit an angry sound
 		TASK_SOUND_ANGRY,
 
@@ -342,12 +310,6 @@ enum sharedtasks_e
 
 		// Emit a death sound
 		TASK_SOUND_DIE,
-
-		// Speak a sentence
-		TASK_SPEAK_SENTENCE,
-
-		// Wait for the current sentence I'm speaking to finish
-		TASK_WAIT_FOR_SPEAK_FINISH,
 
 		// Set current animation activity to the specified activity
 		TASK_SET_ACTIVITY,
@@ -392,15 +354,6 @@ enum sharedtasks_e
 
 		// Find a place further from the saved position
 		TASK_FIND_BACKAWAY_FROM_SAVEPOSITION,
-
-		// Fine a place to hide from the enemy, anywhere. Use the node system.
-		TASK_FIND_NODE_COVER_FROM_ENEMY,
-
-		// Find a place to hide from the enemy that's within the specified distance
-		TASK_FIND_NEAR_NODE_COVER_FROM_ENEMY,
-
-		// data for this one is there MINIMUM aceptable distance to the cover.
-		TASK_FIND_FAR_NODE_COVER_FROM_ENEMY,
 
 		// Find a place to go that can't see to where I am now.
 		TASK_FIND_COVER_FROM_ORIGIN,
@@ -451,15 +404,6 @@ enum sharedtasks_e
 		// Wait until I can't hear any danger sound.
 		TASK_WAIT_UNTIL_NO_DANGER_SOUND,
 
-		// Pick up new weapons:
-		TASK_WEAPON_FIND,
-		TASK_WEAPON_PICKUP,
-		TASK_WEAPON_RUN_PATH,	// run to weapon but break if someone else picks it up
-		TASK_WEAPON_CREATE,
-
-		TASK_ITEM_PICKUP,
-		TASK_ITEM_RUN_PATH,
-
 		// Use small hull for tight navigation
 		TASK_USE_SMALL_HULL,
 
@@ -478,18 +422,6 @@ enum sharedtasks_e
 		TASK_IGNORE_OLD_ENEMIES,
 		
 		TASK_DEBUG_BREAK,
-
-		// Add a specified amount of health to this NPC
-		TASK_ADD_HEALTH,
-
-		// Add a gesture layer and wait until it's finished
-		TASK_ADD_GESTURE_WAIT,
-
-		// Add a gesture layer
-		TASK_ADD_GESTURE,
-
-		// Get a path to my forced interaction partner
-		TASK_GET_PATH_TO_INTERACTION_PARTNER,
 		
 		// First task of all schedules for playing back scripted sequences
 		TASK_PRE_SCRIPT,

@@ -76,10 +76,6 @@ BEGIN_DATADESC( CBubbling )
 	DEFINE_KEYFIELD( m_density, FIELD_INTEGER, "density" ),
 	DEFINE_KEYFIELD( m_frequency, FIELD_INTEGER, "frequency" ),
 
-	DEFINE_FIELD( m_state, FIELD_INTEGER ),
-	// Let spawn restore this!
-	//	DEFINE_FIELD( m_bubbleModel, FIELD_INTEGER ),
-
 	// Function Pointers
 	DEFINE_FUNCTION( FizzThink ),
 
@@ -253,8 +249,6 @@ BEGIN_DATADESC( CEnvTracer )
 
 	DEFINE_KEYFIELD( m_flDelay, FIELD_FLOAT, "delay" ),
 
-	DEFINE_FIELD( m_vecEnd, FIELD_POSITION_VECTOR ),
-
 	// Function Pointers
 	DEFINE_FUNCTION( TracerThink ),
 
@@ -338,7 +332,6 @@ BEGIN_DATADESC( CBlood )
 
 	DEFINE_KEYFIELD( m_vecSprayDir, FIELD_VECTOR, "spraydir" ),
 	DEFINE_KEYFIELD( m_flAmount, FIELD_FLOAT, "amount" ),
-	DEFINE_FIELD( m_Color, FIELD_INTEGER ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "EmitBlood", InputEmitBlood ),
 
@@ -531,7 +524,6 @@ static ConCommand bloodspray( "bloodspray", CC_BloodSpray, "blood", FCVAR_CHEAT 
 //-----------------------------------------------------------------------------
 class CEnvFunnel : public CBaseEntity
 {
-	DECLARE_DATADESC();
 public:
 	DECLARE_CLASS( CEnvFunnel, CBaseEntity );
 
@@ -543,17 +535,6 @@ public:
 };
 
 LINK_ENTITY_TO_CLASS( env_funnel, CEnvFunnel );
-
-//---------------------------------------------------------
-// Save/Restore
-//---------------------------------------------------------
-BEGIN_DATADESC( CEnvFunnel )
-
-//	DEFINE_FIELD( m_iSprite,	FIELD_INTEGER ),
-
-END_DATADESC()
-
-
 
 void CEnvFunnel::Precache ( void )
 {
@@ -671,12 +652,6 @@ BEGIN_DATADESC( CEnvWind )
 	DEFINE_KEYFIELD( m_EnvWindShared.m_flGustDuration, FIELD_FLOAT, "gustduration" ),
 //	DEFINE_KEYFIELD( m_EnvWindShared.m_iszGustSound, FIELD_STRING, "gustsound" ),
 
-// Just here to quiet down classcheck
-	// DEFINE_FIELD( m_EnvWindShared, CEnvWindShared ),
-
-	DEFINE_FIELD( m_EnvWindShared.m_iWindDir, FIELD_INTEGER ),
-	DEFINE_FIELD( m_EnvWindShared.m_flWindSpeed, FIELD_FLOAT ),
-
 	DEFINE_OUTPUT( m_EnvWindShared.m_OnGustStart, "OnGustStart" ),
 	DEFINE_OUTPUT( m_EnvWindShared.m_OnGustEnd,	"OnGustEnd" ),
 
@@ -781,8 +756,6 @@ BEGIN_DATADESC( CEmbers )
 	DEFINE_KEYFIELD( m_nLifetime,	FIELD_INTEGER, "lifetime" ),
 	DEFINE_KEYFIELD( m_nSpeed,		FIELD_INTEGER, "speed" ),
 
-	DEFINE_FIELD( m_bEmit,	FIELD_BOOLEAN ),
-
 	//Function pointers
 	DEFINE_FUNCTION( EmberUse ),
 
@@ -886,8 +859,6 @@ BEGIN_DATADESC( CPhysicsWire )
 
 	DEFINE_KEYFIELD( m_nDensity,	FIELD_INTEGER, "Density" ),
 //	DEFINE_KEYFIELD( m_frequency, FIELD_INTEGER, "frequency" ),
-
-//	DEFINE_FIELD( m_flFoo, FIELD_FLOAT ),
 
 	// Function Pointers
 //	DEFINE_FUNCTION( WireThink ),
@@ -1150,18 +1121,12 @@ BEGIN_DATADESC( CEnvGunfire )
 	DEFINE_KEYFIELD( m_flBias, FIELD_FLOAT, "bias" ),
 	DEFINE_KEYFIELD( m_bCollide, FIELD_BOOLEAN, "collisions" ),
 
-	DEFINE_FIELD( m_iShotsRemaining, FIELD_INTEGER ),
-	DEFINE_FIELD( m_vecSpread, FIELD_VECTOR ),
-	DEFINE_FIELD( m_vecTargetPosition, FIELD_VECTOR ),
-	DEFINE_FIELD( m_flTargetDist, FIELD_FLOAT ),
-
-	DEFINE_FIELD( m_hTarget, FIELD_EHANDLE ),
-
 	DEFINE_THINKFUNC( ShootThink ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),
 END_DATADESC()
+
 LINK_ENTITY_TO_CLASS( env_gunfire, CEnvGunfire );
 
 //-----------------------------------------------------------------------------
@@ -1331,12 +1296,6 @@ void CEnvGunfire::InputDisable( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 // Quadratic spline beam effect
 //-----------------------------------------------------------------------------
-BEGIN_DATADESC( CEnvQuadraticBeam )
-	DEFINE_FIELD( m_targetPosition, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_controlPosition, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_scrollRate, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flWidth, FIELD_FLOAT ),
-END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( env_quadraticbeam, CEnvQuadraticBeam );
 

@@ -16,8 +16,6 @@ struct template_t
 {
 	int			iTemplateIndex;
 	VMatrix		matEntityToTemplate;
-
-	DECLARE_SIMPLE_DATADESC();
 };
 
 //-----------------------------------------------------------------------------

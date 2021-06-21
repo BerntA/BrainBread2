@@ -18,8 +18,6 @@
 #include "engine/IEngineSound.h"
 #include "model_types.h"
 #include "props.h"
-#include "physics_saverestore.h"
-#include "saverestore_utlvector.h"
 #include "vphysics/constraints.h"
 #include "collisionutils.h"
 #include "decals.h"
@@ -88,8 +86,6 @@ LINK_ENTITY_TO_CLASS( phys_spring, CPhysicsSpring );
 
 BEGIN_DATADESC( CPhysicsSpring )
 
-	DEFINE_PHYSPTR( m_pSpring ),
-
 	DEFINE_KEYFIELD( m_tempConstant, FIELD_FLOAT, "constant" ),
 	DEFINE_KEYFIELD( m_tempLength, FIELD_FLOAT, "length" ),
 	DEFINE_KEYFIELD( m_tempDamping, FIELD_FLOAT, "damping" ),
@@ -97,13 +93,7 @@ BEGIN_DATADESC( CPhysicsSpring )
 
 	DEFINE_KEYFIELD( m_nameAttachStart, FIELD_STRING, "attach1" ),
 	DEFINE_KEYFIELD( m_nameAttachEnd, FIELD_STRING, "attach2" ),
-
-	DEFINE_FIELD( m_start, FIELD_POSITION_VECTOR ),
 	DEFINE_KEYFIELD( m_end, FIELD_POSITION_VECTOR, "springaxis" ),
-	DEFINE_FIELD( m_isLocal, FIELD_BOOLEAN ),
-
-	// Not necessary to save... it's only there to make sure 
-//	DEFINE_FIELD( m_teleportTick, FIELD_INTEGER ),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetSpringConstant", InputSetSpringConstant ),
@@ -371,8 +361,6 @@ LINK_ENTITY_TO_CLASS( func_physbox, CPhysBox );
 
 BEGIN_DATADESC( CPhysBox )
 
-	DEFINE_FIELD( m_hCarryingPlayer, FIELD_EHANDLE ),
-
 	DEFINE_KEYFIELD( m_massScale, FIELD_FLOAT, "massScale" ),
 	DEFINE_KEYFIELD( m_damageType, FIELD_INTEGER, "Damagetype" ),
 	DEFINE_KEYFIELD( m_iszOverrideScript, FIELD_STRING, "overridescript" ),
@@ -549,7 +537,8 @@ bool CPhysBox::CreateVPhysics()
 //-----------------------------------------------------------------------------
 int CPhysBox::ObjectCaps() 
 { 
-	int caps = BaseClass::ObjectCaps() | FCAP_WCEDIT_POSITION;
+	int caps = BaseClass::ObjectCaps();
+
 	if ( HasSpawnFlags( SF_PHYSBOX_ENABLE_PICKUP_OUTPUT ) )
 	{
 		caps |= FCAP_IMPULSE_USE;
@@ -1262,7 +1251,7 @@ public:
 
 	int ObjectCaps()
 	{ 
-		int caps = BaseClass::ObjectCaps() | FCAP_WCEDIT_POSITION;
+		int caps = BaseClass::ObjectCaps();
 
 		if ( CBasePlayer::CanPickupObject( this, 35, 128 ) )
 		{
@@ -1466,14 +1455,6 @@ void CPhysConvert::InputConvertTarget( inputdata_t &inputdata )
 
 LINK_ENTITY_TO_CLASS( phys_magnet, CPhysMagnet );
 
-// BUGBUG: This won't work!  Right now you can't save physics pointers inside an embedded type!
-BEGIN_SIMPLE_DATADESC( magnetted_objects_t )
-
-	DEFINE_PHYSPTR( pConstraint ),
-	DEFINE_FIELD( hEntity,	FIELD_EHANDLE	),
-
-END_DATADESC()
-
 BEGIN_DATADESC( CPhysMagnet )
 	// Outputs
 	DEFINE_OUTPUT( m_OnMagnetAttach, "OnAttach" ),
@@ -1485,15 +1466,6 @@ BEGIN_DATADESC( CPhysMagnet )
 	DEFINE_KEYFIELD( m_iMaxObjectsAttached, FIELD_INTEGER, "maxobjects" ),
 	DEFINE_KEYFIELD( m_forceLimit, FIELD_FLOAT, "forcelimit" ),
 	DEFINE_KEYFIELD( m_torqueLimit, FIELD_FLOAT, "torquelimit" ),
-
-	DEFINE_UTLVECTOR( m_MagnettedEntities, FIELD_EMBEDDED ),
-	DEFINE_PHYSPTR( m_pConstraintGroup ),
-
-	DEFINE_FIELD( m_bActive, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bHasHitSomething, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flTotalMass, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flRadius, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flNextSuckTime, FIELD_FLOAT ),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "Toggle", InputToggle ),

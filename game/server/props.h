@@ -267,7 +267,6 @@ public:
 	void	UpdateOnRemove( void );
 	void	AnimThink( void );
 	void	PropSetSequence( int nSequence );
-	void	OnRestore( void );
 	bool	OverridePropdata( void );
 	void	HandleAnimEvent( animevent_t *pEvent );
 

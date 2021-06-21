@@ -14,20 +14,20 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-BEGIN_BYTESWAP_DATADESC( CompiledCaptionHeader_t )
-	DEFINE_FIELD( magic, FIELD_INTEGER ),
-	DEFINE_FIELD( version, FIELD_INTEGER ),
-	DEFINE_FIELD( numblocks, FIELD_INTEGER ),
-	DEFINE_FIELD( blocksize, FIELD_INTEGER ),
-	DEFINE_FIELD( directorysize, FIELD_INTEGER ),
-	DEFINE_FIELD( dataoffset, FIELD_INTEGER ),
+BEGIN_BYTESWAP_DATADESC(CompiledCaptionHeader_t)
+DEFINE_FIELD(magic, FIELD_INTEGER),
+DEFINE_FIELD(version, FIELD_INTEGER),
+DEFINE_FIELD(numblocks, FIELD_INTEGER),
+DEFINE_FIELD(blocksize, FIELD_INTEGER),
+DEFINE_FIELD(directorysize, FIELD_INTEGER),
+DEFINE_FIELD(dataoffset, FIELD_INTEGER),
 END_BYTESWAP_DATADESC()
 
-BEGIN_BYTESWAP_DATADESC( CaptionLookup_t )
-	DEFINE_FIELD( hash, FIELD_INTEGER ),
-	DEFINE_FIELD( blockNum, FIELD_INTEGER ),
-	DEFINE_FIELD( offset, FIELD_SHORT ),
-	DEFINE_FIELD( length, FIELD_SHORT ),
+BEGIN_BYTESWAP_DATADESC(CaptionLookup_t)
+DEFINE_FIELD(hash, FIELD_INTEGER),
+DEFINE_FIELD(blockNum, FIELD_INTEGER),
+DEFINE_FIELD(offset, FIELD_SHORT),
+DEFINE_FIELD(length, FIELD_SHORT),
 END_BYTESWAP_DATADESC()
 
 //-----------------------------------------------------------------------------

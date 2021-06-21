@@ -25,6 +25,8 @@ LINK_ENTITY_TO_CLASS(npc_bandit, CNPCBandit);
 
 #define AE_SOLDIER_BLOCK_PHYSICS 20 // trying to block an incoming physics object...
 
+int CNPCBandit::g_pBanditQuestion = 0;
+
 //-----------------------------------------------------------------------------
 // Purpose: Take Damage
 //-----------------------------------------------------------------------------

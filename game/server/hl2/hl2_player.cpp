@@ -14,7 +14,6 @@
 #include "ai_squad.h"
 #include "igamemovement.h"
 #include "ai_hull.h"
-#include "hl2_shareddefs.h"
 #include "info_camera_link.h"
 #include "point_camera.h"
 #include "engine/IEngineSound.h"
@@ -29,7 +28,6 @@
 #include "effect_dispatch_data.h"
 #include "te_effect_dispatch.h" 
 #include "ai_basenpc.h"
-#include "AI_Criteria.h"
 #include "entitylist.h"
 #include "datacache/imdlcache.h"
 #include "eventqueue.h"
@@ -62,28 +60,11 @@ PRECACHE_REGISTER(player);
 	// Global Savedata for HL2 player
 BEGIN_DATADESC( CHL2_Player )
 
-	DEFINE_FIELD( m_nControlClass, FIELD_INTEGER ),
-
-	DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_flTimeIgnoreFallDamage, FIELD_TIME ),
-	DEFINE_FIELD( m_bIgnoreFallDamageResetAfterImpact, FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_flLastDamageTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flTargetFindTime, FIELD_TIME ),
-
-	DEFINE_FIELD( m_bFlashlightDisabled, FIELD_BOOLEAN ),
-
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "IgnoreFallDamage", InputIgnoreFallDamage ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "IgnoreFallDamageWithoutReset", InputIgnoreFallDamageWithoutReset ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "DisableFlashlight", InputDisableFlashlight ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "EnableFlashlight", InputEnableFlashlight ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "ForceDropPhysObjects", InputForceDropPhysObjects ),
-
-	DEFINE_SOUNDPATCH( m_sndLeeches ),
-	DEFINE_SOUNDPATCH( m_sndWaterSplashes ),
-
-	DEFINE_FIELD( m_flTimeUseSuspended, FIELD_TIME ),
 
 END_DATADESC()
 

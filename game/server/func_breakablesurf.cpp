@@ -152,30 +152,13 @@ BEGIN_DATADESC( CBreakableSurface )
 	DEFINE_KEYFIELD( m_vURVertex,		FIELD_VECTOR,  "upperright" ),
 	DEFINE_KEYFIELD( m_nQuadError,		FIELD_INTEGER, "error" ),
 
-	DEFINE_FIELD( m_nNumWide,			FIELD_INTEGER),	
-	DEFINE_FIELD( m_nNumHigh,			FIELD_INTEGER),	
-	DEFINE_FIELD( m_flPanelWidth,		FIELD_FLOAT),	
-	DEFINE_FIELD( m_flPanelHeight,	FIELD_FLOAT),	
-	DEFINE_FIELD( m_vNormal,			FIELD_VECTOR),	
-	DEFINE_FIELD( m_vCorner,			FIELD_POSITION_VECTOR),	
-	DEFINE_FIELD( m_bIsBroken,		FIELD_BOOLEAN),	
-	DEFINE_FIELD( m_nNumBrokenPanes,	FIELD_INTEGER),	
-	
-	// UNDONE: How to load save this?  Need a way to update
-	//		   the client about the state of the window upon load...
-	//			We should use client-side save/load to fix this problem.
-	DEFINE_AUTO_ARRAY2D( m_flSupport,	FIELD_FLOAT),	
-	DEFINE_ARRAY( m_RawPanelBitVec, FIELD_BOOLEAN, MAX_NUM_PANELS*MAX_NUM_PANELS ),
-
 	// Function Pointers
 	DEFINE_THINKFUNC( BreakThink ),
 	DEFINE_ENTITYFUNC( SurfaceTouch ),
 
 	DEFINE_INPUTFUNC( FIELD_VECTOR,	"Shatter", InputShatter ),
 
-	// DEFINE_FIELD( m_ForceUpdateClientData, CBitVec < MAX_PLAYERS > ),  // No need to save/restore this, it's just a temporary flag field
 END_DATADESC()
-
 
 IMPLEMENT_SERVERCLASS_ST(CBreakableSurface, DT_BreakableSurface)
 	SendPropInt(SENDINFO(m_nNumWide), 8,  SPROP_UNSIGNED),

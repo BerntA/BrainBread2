@@ -9,7 +9,6 @@
 #include "datamap.h"
 #include "soundscape_system.h"
 #include "triggers.h"
-#include "saverestore_utlvector.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -71,13 +70,6 @@ LINK_ENTITY_TO_CLASS( env_soundscape, CEnvSoundscape );
 BEGIN_DATADESC( CEnvSoundscape )
 
 	DEFINE_KEYFIELD( m_flRadius, FIELD_FLOAT, "radius" ),
-	// don't save, recomputed on load
-	//DEFINE_FIELD( m_soundscapeIndex, FIELD_INTEGER ),
-	DEFINE_FIELD( m_soundscapeName, FIELD_STRING ),
-	DEFINE_FIELD( m_hProxySoundscape, FIELD_EHANDLE ),
-
-// Silence, Classcheck!
-//	DEFINE_ARRAY( m_positionNames, FIELD_STRING, 4 ),
 
 	DEFINE_KEYFIELD( m_positionNames[0], FIELD_STRING, "position0" ),
 	DEFINE_KEYFIELD( m_positionNames[1], FIELD_STRING, "position1" ),
@@ -95,7 +87,6 @@ BEGIN_DATADESC( CEnvSoundscape )
 	DEFINE_INPUTFUNC( FIELD_VOID, "ToggleEnabled", InputToggleEnabled ),
 
 	DEFINE_OUTPUT( m_OnPlay, "OnPlay" ),
-
 
 END_DATADESC()
 
@@ -407,21 +398,15 @@ void CEnvSoundscape::DrawDebugGeometryOverlays( void )
 	BaseClass::DrawDebugGeometryOverlays();
 }
 
-
 // ---------------------------------------------------------------------------------------------------- //
 // CEnvSoundscapeTriggerable
 // ---------------------------------------------------------------------------------------------------- //
 
 LINK_ENTITY_TO_CLASS( env_soundscape_triggerable, CEnvSoundscapeTriggerable );
 
-BEGIN_DATADESC( CEnvSoundscapeTriggerable )
-END_DATADESC()
-
-
 CEnvSoundscapeTriggerable::CEnvSoundscapeTriggerable()
 {
 }
-
 
 void CEnvSoundscapeTriggerable::DelegateStartTouch( CBaseEntity *pEnt )
 {
@@ -506,8 +491,6 @@ LINK_ENTITY_TO_CLASS( trigger_soundscape, CTriggerSoundscape );
 BEGIN_DATADESC( CTriggerSoundscape )
 	DEFINE_THINKFUNC( PlayerUpdateThink ),
 	DEFINE_KEYFIELD( m_SoundscapeName, FIELD_STRING, "soundscape" ),
-	DEFINE_FIELD( m_hSoundscape, FIELD_EHANDLE ),
-	DEFINE_UTLVECTOR( m_spectators, FIELD_EHANDLE ), 
 END_DATADESC()
 
 

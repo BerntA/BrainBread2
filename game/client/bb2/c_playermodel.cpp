@@ -75,7 +75,7 @@ C_Playermodel::~C_Playermodel()
 
 bool C_Playermodel::Initialize(void)
 {
-	if (engine->IsInEditMode() || (InitializeAsClientEntity(NULL, RENDER_GROUP_OPAQUE_ENTITY) == false))
+	if (InitializeAsClientEntity(NULL, RENDER_GROUP_OPAQUE_ENTITY) == false)
 		return false;
 
 	SetSolid(SOLID_NONE);

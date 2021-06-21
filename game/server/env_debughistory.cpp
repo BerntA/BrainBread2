@@ -4,7 +4,6 @@
 //
 //=============================================================================
 #include "cbase.h"
-#include "isaverestore.h"
 #include "env_debughistory.h"
 #include "tier0/vprof.h"
 
@@ -24,25 +23,16 @@ class CDebugHistory : public CBaseEntity
 {
 	DECLARE_CLASS( CDebugHistory, CBaseEntity );
 public:
-	DECLARE_DATADESC();
 
 	void	Spawn();
 	void	AddDebugHistoryLine( int iCategory, const char *szLine );
 	void	ClearHistories( void );
 	void	DumpDebugHistory( int iCategory );
 
-	int		Save( ISave &save );
-	int		Restore( IRestore &restore );
-
 private:
 	char m_DebugLines[MAX_HISTORY_CATEGORIES][MAX_DEBUG_HISTORY_LENGTH];
 	char *m_DebugLineEnd[MAX_HISTORY_CATEGORIES];
 };
-
-BEGIN_DATADESC( CDebugHistory )
-	//DEFINE_FIELD( m_DebugLines, FIELD_CHARACTER ),		// Not saved because we write it out manually
-	//DEFINE_FIELD( m_DebugLineEnd, FIELD_CHARACTER ),
-END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( env_debughistory, CDebugHistory );
 
@@ -206,59 +196,6 @@ void CDebugHistory::ClearHistories( void )
 		m_DebugLineEnd[i] = m_DebugLines[i];
 	}
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int CDebugHistory::Save( ISave &save )
-{
-	int iVersion = DEBUG_HISTORY_VERSION;
-	save.WriteInt( &iVersion );
-	int iMaxCategorys = MAX_HISTORY_CATEGORIES;
-	save.WriteInt( &iMaxCategorys );
-	for ( int iCategory = 0; iCategory < MAX_HISTORY_CATEGORIES; iCategory++ )
-	{
-		int iEnd = m_DebugLineEnd[iCategory] - m_DebugLines[iCategory];
-		save.WriteInt( &iEnd );
-		save.WriteData( m_DebugLines[iCategory], MAX_DEBUG_HISTORY_LENGTH );
-	}
-
-	return BaseClass::Save(save);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int CDebugHistory::Restore( IRestore &restore )
-{
-	ClearHistories();
-
-	int iVersion = restore.ReadInt();
-
-	if ( iVersion >= DEBUG_HISTORY_FIRST_VERSIONED )
-	{
-		int iMaxCategorys = restore.ReadInt();
-		for ( int iCategory = 0; iCategory < MIN(iMaxCategorys,MAX_HISTORY_CATEGORIES); iCategory++ )
-		{
-			int iEnd = restore.ReadInt();
-			m_DebugLineEnd[iCategory] = m_DebugLines[iCategory] + iEnd;
-			restore.ReadData( m_DebugLines[iCategory], sizeof(m_DebugLines[iCategory]), 0 );
-		}
-	}
-	else
-	{
-		int iMaxCategorys = iVersion;
-		for ( int iCategory = 0; iCategory < MIN(iMaxCategorys,MAX_HISTORY_CATEGORIES); iCategory++ )
-		{
-			int iEnd = restore.ReadInt();
-			m_DebugLineEnd[iCategory] = m_DebugLines[iCategory] + iEnd;
-			restore.ReadData( m_DebugLines[iCategory], sizeof(m_DebugLines[iCategory]), 0 );
-		}
-	}
-
-	return BaseClass::Restore(restore);
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Singleton debug history.  Created by first usage.

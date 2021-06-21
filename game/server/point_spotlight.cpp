@@ -75,19 +75,6 @@ public:
 };
 
 BEGIN_DATADESC( CPointSpotlight )
-	DEFINE_FIELD( m_flSpotlightCurLength, FIELD_FLOAT ),
-
-	DEFINE_FIELD( m_bSpotlightOn,			FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bEfficientSpotlight,	FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_vSpotlightTargetPos,	FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_vSpotlightCurrentPos,	FIELD_POSITION_VECTOR ),
-
-	// Robin: Don't Save, recreated after restore/transition
-	//DEFINE_FIELD( m_hSpotlight,			FIELD_EHANDLE ),
-	//DEFINE_FIELD( m_hSpotlightTarget,		FIELD_EHANDLE ),
-
-	DEFINE_FIELD( m_vSpotlightDir,			FIELD_VECTOR ),
-	DEFINE_FIELD( m_nHaloSprite,			FIELD_INTEGER ),
 
 	DEFINE_KEYFIELD( m_bIgnoreSolid, FIELD_BOOLEAN, "IgnoreSolid" ),
 	DEFINE_KEYFIELD( m_flSpotlightMaxLength,FIELD_FLOAT, "SpotlightLength"),

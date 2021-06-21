@@ -37,8 +37,6 @@ public:
 	// Disable auto fading under dx7 or when level fades are specified
 	void DisableAutoFade();
 
-	int ObjectCaps();
-
 	DECLARE_SERVERCLASS();
 	// Don't treat as a live target
 	virtual bool IsAlive( void ) { return false; }
@@ -52,9 +50,6 @@ public:
 
 	virtual int DrawDebugTextOverlays(void);
 
-	// Response system stuff
-	virtual IResponseSystem *GetResponseSystem();
-	virtual void ModifyOrAppendCriteria( AI_CriteriaSet& set );
 	void SetSourceClassName( const char *pClassname );
 
 	// Physics attacker
@@ -74,8 +69,6 @@ public:
 	// Damage passing
 	virtual void	SetDamageEntity( CBaseEntity *pEntity );
 	virtual int		OnTakeDamage( const CTakeDamageInfo &info );
-	virtual void OnSave( IEntitySaveUtils *pUtils );
-	virtual void OnRestore();
 
 	// Purpose: CDefaultPlayerPickupVPhysics
 	virtual void VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );

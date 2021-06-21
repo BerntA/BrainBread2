@@ -22,8 +22,6 @@
 class CPlayerLocalData
 {
 public:
-	// Save/restore
-	DECLARE_SIMPLE_DATADESC();
 	// Prediction data copying
 	DECLARE_CLASS_NOBASE( CPlayerLocalData );
 	DECLARE_EMBEDDED_NETWORKVAR();
@@ -83,6 +81,5 @@ public:
 };
 
 EXTERN_SEND_TABLE(DT_Local);
-
 
 #endif // PLAYERLOCALDATA_H

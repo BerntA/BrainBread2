@@ -23,10 +23,6 @@
 struct AIMoveTrace_t;
 struct OverlayLine_t;
 struct AI_Waypoint_t;
-class CAI_Link;
-class CAI_Network;
-class CAI_Node;
-
 
 //-----------------------------------------------------------------------------
 // The type of route to build
@@ -54,30 +50,15 @@ class CAI_Pathfinder : public CAI_Component
 {
 public:
 	CAI_Pathfinder( CAI_BaseNPC *pOuter )
-	 :	CAI_Component(pOuter),
-		m_flLastStaleLinkCheckTime( 0 ),
-		m_pNetwork( NULL )
+	 :	CAI_Component(pOuter)
 	{
 	}
 
-	void Init( CAI_Network *pNetwork );
-	
-	//---------------------------------
-	
-	int				NearestNodeToNPC();
-	int				NearestNodeToPoint( const Vector &vecOrigin );
-
-	AI_Waypoint_t*	FindBestPath		(int startID, int endID);
-	AI_Waypoint_t*	FindShortRandomPath	(int startID, float minPathLength, const Vector &vDirection = vec3_origin);
-
-	// --------------------------------
-
-	bool			IsLinkUsable(CAI_Link *pLink, int startID);
+	void Init();
 
 	// --------------------------------
 	
 	AI_Waypoint_t *BuildRoute( const Vector &vStart, const Vector &vEnd, CBaseEntity *pTarget, float goalTolerance, Navigation_t curNavType = NAV_NONE, bool bLocalSucceedOnWithinTolerance = false );
-	void UnlockRouteNodes( AI_Waypoint_t * );
 
 #ifdef BB2_USE_NAVMESH
 	virtual AI_Waypoint_t *BuildNavRoute(CBaseEntity *pTarget, CNavArea *area, const Vector &start, const Vector &end, int buildFlags);
@@ -88,12 +69,7 @@ public:
 #endif
 
 	// --------------------------------
-
-	void SetIgnoreBadLinks()		{ m_bIgnoreStaleLinks = true; } // lasts only for the next pathfind
-
-	// --------------------------------
 	
-	virtual AI_Waypoint_t *BuildNodeRoute( const Vector &vStart, const Vector &vEnd, int buildFlags, float goalTolerance );
 	virtual AI_Waypoint_t *BuildLocalRoute( const Vector &vStart, const Vector &vEnd, CBaseEntity const *pTarget, int endFlags, int nodeID, int buildFlags, float goalTolerance);
 	virtual AI_Waypoint_t *BuildRadialRoute( const Vector &vStartPos, const Vector &vCenterPos, const Vector &vGoalPos, float flRadius, float flArc, float flStepDist, bool bClockwise, float goalTolerance, bool bAirRoute );	
 	
@@ -118,29 +94,14 @@ protected:
 	virtual bool	CanUseLocalNavigation() { return true; }
 
 private:
-	friend class CPathfindNearestNodeFilter;
 
-	//---------------------------------
-
-	AI_Waypoint_t*	RouteToNode(const Vector &vecOrigin, int buildFlags, int nodeID, float goalTolerance);
-	AI_Waypoint_t*	RouteFromNode(const Vector &vecOrigin, int buildFlags, int nodeID, float goalTolerance);
-
-	AI_Waypoint_t *	BuildNearestNodeRoute( const Vector &vGoal, bool bToNode, int buildFlags, float goalTolerance, int *pNearestNode );
-
-	//---------------------------------
-	
-	AI_Waypoint_t*	MakeRouteFromParents(int *parentArray, int endID);
-	AI_Waypoint_t*	CreateNodeWaypoint( Hull_t hullType, int nodeID, int nodeFlags = 0 );
-	
 	AI_Waypoint_t*	BuildRouteThroughPoints( Vector *vecPoints, int nNumPoints, int nDirection, int nStartIndex, int nEndIndex, Navigation_t navType, CBaseEntity *pTarget );
-
-	bool			IsLinkStillStale(int moveType, CAI_Link *nodeLink);
 
 	// --------------------------------
 	
 	// Builds a simple route (no triangulation, no making way)
 	AI_Waypoint_t	*BuildSimpleRoute( Navigation_t navType, const Vector &vStart, const Vector &vEnd, 
-		const CBaseEntity *pTarget, int endFlags, int nodeID, int nodeTargetType, float flYaw);
+		const CBaseEntity *pTarget, int endFlags, float flYaw);
 
 	// Builds a complex route (triangulation, making way)
 	AI_Waypoint_t	*BuildComplexRoute( Navigation_t navType, const Vector &vStart, 
@@ -152,18 +113,10 @@ private:
 	AI_Waypoint_t	*BuildJumpRoute( const Vector &vStart, const Vector &vEnd, CBaseEntity const *pTarget, int endFlags, int nodeID, int buildFlags, float flYaw );
 	AI_Waypoint_t	*BuildClimbRoute( const Vector &vStart, const Vector &vEnd, CBaseEntity const *pTarget, int endFlags, int nodeID, int buildFlags, float flYaw );
 
-	// Computes the link type
-	Navigation_t ComputeWaypointType( CAI_Node **ppNodes, int parentID, int destID );
-
 	// --------------------------------
 	
 	bool TestTriangulationRoute( Navigation_t navType, const Vector& vecStart, 
 		const Vector &vecApex, const Vector &vecEnd, const CBaseEntity *pTargetEnt, AIMoveTrace_t *pStartTrace );
-
-	// --------------------------------
-	
-	bool			CheckStaleRoute( const Vector &vStart, const Vector &vEnd, int moveTypes);
-	bool			CheckStaleNavTypeRoute( Navigation_t navType, const Vector &vStart, const Vector &vEnd );
 
 	// --------------------------------
 	
@@ -195,21 +148,6 @@ private:
 	};
 
 	CTriDebugOverlay m_TriDebugOverlay;
-
-	//---------------------------------
-	
-	float m_flLastStaleLinkCheckTime;	// Last time I check for a stale link
-	bool m_bIgnoreStaleLinks;
-
-	//---------------------------------
-	
-	CAI_Network *GetNetwork()				{ return m_pNetwork; }
-	const CAI_Network *GetNetwork() const	{ return m_pNetwork; }
-	
-	CAI_Network *m_pNetwork;
-
-public:
-	DECLARE_SIMPLE_DATADESC();
 };
 
 //-----------------------------------------------------------------------------

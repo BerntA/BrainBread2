@@ -13,6 +13,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+int g_iObjectiveIndex = 1;
+
 BEGIN_DATADESC(CLogicObjective)
 // Shared
 DEFINE_KEYFIELD(szObjective, FIELD_STRING, "Objective"),
@@ -74,6 +76,8 @@ CLogicObjective::CLogicObjective()
 	ListenForGameEvent("round_started");
 	ListenForGameEvent("entity_killed");
 	ListenForGameEvent("player_connection");
+
+	m_iCurrIndex = g_iObjectiveIndex++;
 }
 
 CLogicObjective::~CLogicObjective()
@@ -207,7 +211,7 @@ void CLogicObjective::SendObjectiveParameters(int iStatus, bool bEntCountUpdate,
 		IGameEvent *event = gameeventmanager->CreateEvent("objective_run");
 		if (event)
 		{
-			event->SetInt("index", entindex());
+			event->SetInt("index", m_iCurrIndex);
 			event->SetInt("team", m_iTeamLink);
 			event->SetInt("status", m_iStatusOverall);
 			event->SetString("objective", STRING(szObjective));
@@ -259,7 +263,7 @@ void CLogicObjective::SendObjectiveParameters(int iStatus, bool bEntCountUpdate,
 		IGameEvent *event = gameeventmanager->CreateEvent("objective_update");
 		if (event)
 		{
-			event->SetInt("index", entindex());
+			event->SetInt("index", m_iCurrIndex);
 			event->SetInt("kills_left", m_iKillsLeft);
 			gameeventmanager->FireEvent(event);
 		}
@@ -370,7 +374,7 @@ void CLogicObjective::FireGameEvent(IGameEvent *event)
 			IGameEvent *event = gameeventmanager->CreateEvent("objective_run");
 			if (event)
 			{
-				event->SetInt("index", entindex());
+				event->SetInt("index", m_iCurrIndex);
 				event->SetInt("team", m_iTeamLink);
 				event->SetInt("status", m_iStatusOverall);
 				event->SetString("objective", STRING(szObjective));

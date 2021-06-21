@@ -17,7 +17,6 @@
 #include "ndebugoverlay.h"
 #include "tier1/strtools.h"
 #include "npcevent.h"
-#include "isaverestore.h"
 #include "KeyValues.h"
 #include "tier0/vprof.h"
 #include "EntityFlame.h"
@@ -32,28 +31,6 @@
 #include "tier0/memdbgon.h"
 
 ConVar ai_sequence_debug( "ai_sequence_debug", "0" );
-
-class CIKSaveRestoreOps : public CClassPtrSaveRestoreOps
-{
-	// save data type interface
-	void Save( const SaveRestoreFieldInfo_t &fieldInfo, ISave *pSave )
-	{
-		Assert( fieldInfo.pTypeDesc->fieldSize == 1 );
-		CIKContext **pIK = (CIKContext **)fieldInfo.pField;
-		bool bHasIK = (*pIK) != 0;
-		pSave->WriteBool( &bHasIK );
-	}
-
-	void Restore( const SaveRestoreFieldInfo_t &fieldInfo, IRestore *pRestore )
-	{
-		Assert( fieldInfo.pTypeDesc->fieldSize == 1 );
-		CIKContext **pIK = (CIKContext **)fieldInfo.pField;
-
-		bool bHasIK;
-		pRestore->ReadBool( &bHasIK );
-		*pIK = (bHasIK) ? new CIKContext : NULL;
-	}
-};
 
 //-----------------------------------------------------------------------------
 // Relative lighting entity
@@ -78,7 +55,6 @@ LINK_ENTITY_TO_CLASS( info_lighting_relative, CInfoLightingRelative );
 
 BEGIN_DATADESC( CInfoLightingRelative )
 	DEFINE_KEYFIELD( m_strLightingLandmark, FIELD_STRING, "LightingLandmark" ),
-	DEFINE_FIELD( m_hLightingLandmark, FIELD_EHANDLE ),
 END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST(CInfoLightingRelative, DT_InfoLightingRelative)
@@ -148,54 +124,18 @@ int CInfoLightingRelative::UpdateTransmitState( void )
 	return SetTransmitState( FL_EDICT_ALWAYS );
 }
 
-static CIKSaveRestoreOps s_IKSaveRestoreOp;
-
-
 BEGIN_DATADESC( CBaseAnimating )
-
-	DEFINE_FIELD( m_flGroundSpeed, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flLastEventCheck, FIELD_TIME ),
-	DEFINE_FIELD( m_bSequenceFinished, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bSequenceLoops, FIELD_BOOLEAN ),
-
-//	DEFINE_FIELD( m_nForceBone, FIELD_INTEGER ),
-//	DEFINE_FIELD( m_vecForce, FIELD_VECTOR ),
 
 	DEFINE_INPUT( m_nSkin, FIELD_INTEGER, "skin" ),
 	DEFINE_KEYFIELD( m_nBody, FIELD_INTEGER, "body" ),
 	DEFINE_INPUT( m_nBody, FIELD_INTEGER, "SetBodyGroup" ),
 	DEFINE_KEYFIELD( m_nHitboxSet, FIELD_INTEGER, "hitboxset" ),
 	DEFINE_KEYFIELD( m_nSequence, FIELD_INTEGER, "sequence" ),
-	DEFINE_ARRAY( m_flPoseParameter, FIELD_FLOAT, CBaseAnimating::NUM_POSEPAREMETERS ),
-	DEFINE_ARRAY( m_flEncodedController,	FIELD_FLOAT, CBaseAnimating::NUM_BONECTRLS ),
 	DEFINE_KEYFIELD( m_flPlaybackRate, FIELD_FLOAT, "playbackrate" ),
 	DEFINE_KEYFIELD( m_flCycle, FIELD_FLOAT, "cycle" ),
-//	DEFINE_FIELD( m_flIKGroundContactTime, FIELD_TIME ),
-//	DEFINE_FIELD( m_flIKGroundMinHeight, FIELD_FLOAT ),
-//	DEFINE_FIELD( m_flIKGroundMaxHeight, FIELD_FLOAT ),
-//	DEFINE_FIELD( m_flEstIkFloor, FIELD_FLOAT ),
-//	DEFINE_FIELD( m_flEstIkOffset, FIELD_FLOAT ),
-//	DEFINE_FIELD( m_pStudioHdr, CStudioHdr ),
-//	DEFINE_FIELD( m_StudioHdrInitLock, CThreadFastMutex ),
-//	DEFINE_FIELD( m_BoneSetupMutex, CThreadFastMutex ),
-	DEFINE_CUSTOM_FIELD( m_pIk, &s_IKSaveRestoreOp ),
-	DEFINE_FIELD( m_iIKCounter, FIELD_INTEGER ),
-	DEFINE_FIELD( m_bClientSideAnimation, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bClientSideFrameReset, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_nNewSequenceParity, FIELD_INTEGER ),
-	DEFINE_FIELD( m_nResetEventsParity, FIELD_INTEGER ),
-	DEFINE_FIELD( m_nMuzzleFlashParity, FIELD_CHARACTER ),
 
 	DEFINE_KEYFIELD( m_iszLightingOriginRelative, FIELD_STRING, "LightingOriginHack" ),
 	DEFINE_KEYFIELD( m_iszLightingOrigin, FIELD_STRING, "LightingOrigin" ),
-
-	DEFINE_FIELD( m_hLightingOrigin, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hLightingOriginRelative, FIELD_EHANDLE ),
-
-	DEFINE_FIELD( m_flModelScale, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flDissolveStartTime, FIELD_TIME ),
-
- // DEFINE_FIELD( m_boneCacheHandle, memhandle_t ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Ignite", InputIgnite ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "IgniteLifetime", InputIgniteLifetime ),
@@ -212,8 +152,6 @@ BEGIN_DATADESC( CBaseAnimating )
 	
 	DEFINE_KEYFIELD( m_flModelScale, FIELD_FLOAT, "modelscale" ),
 	DEFINE_INPUTFUNC( FIELD_VECTOR, "SetModelScale", InputSetModelScale ),	
-
-	DEFINE_FIELD( m_fBoneCacheFlags, FIELD_SHORT ),
 
 	DEFINE_THINKFUNC(OnRotationEffect),
 
@@ -349,31 +287,6 @@ void CBaseAnimating::SetTransmit( CCheckTransmitInfo *pInfo, bool bAlways )
 		m_hLightingOriginRelative->SetTransmit( pInfo, bAlways );
 	}
 }
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-int CBaseAnimating::Restore( IRestore &restore )
-{
-	int result = BaseClass::Restore( restore );
-	if ( m_flModelScale <= 0.0f )
-		m_flModelScale = 1.0f;
-	LockStudioHdr();
-	return result;
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void CBaseAnimating::OnRestore()
-{
-	BaseClass::OnRestore();
-
-	if ( m_nSequence != -1 && GetModelPtr() && !IsValidSequence( m_nSequence ) )
-		m_nSequence = 0;
-
-	m_flEstIkFloor = GetLocalOrigin().z;
-	PopulatePoseParameters();
-}
-
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -3281,20 +3194,10 @@ Activity CBaseAnimating::GetSequenceActivity( int iSequence )
 	return (Activity)::GetSequenceActivity( GetModelPtr(), iSequence );
 }
 
-void CBaseAnimating::ModifyOrAppendCriteria( AI_CriteriaSet& set )
-{
-	BaseClass::ModifyOrAppendCriteria( set );
-
-	// TODO
-	// Append any animation state parameters here
-}
-
-
 void CBaseAnimating::DoMuzzleFlash()
 {
 	m_nMuzzleFlashParity = (m_nMuzzleFlashParity+1) & ((1 << EF_MUZZLEFLASH_BITS) - 1);
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 

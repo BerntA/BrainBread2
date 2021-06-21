@@ -5,7 +5,6 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "physics_saverestore.h"
 #include "vphysics/friction.h"
 #include "ai_basenpc.h"
 #include "movevars_shared.h"
@@ -20,7 +19,7 @@ class CPhysicsNPCSolver : public CLogicalEntity, public IMotionEvent
 public:
 	CPhysicsNPCSolver();
 	~CPhysicsNPCSolver();
-	DECLARE_DATADESC();
+
 	void Init( CAI_BaseNPC *pNPC, CBaseEntity *pPhysicsObject, bool disableCollisions, float separationTime );
 	static CPhysicsNPCSolver *Create( CAI_BaseNPC *pNPC, CBaseEntity *pPhysicsObject, bool disableCollisions, float separationTime );
 
@@ -28,14 +27,6 @@ public:
 	virtual void Spawn();
 	virtual void UpdateOnRemove();
 	virtual void Think();
-	virtual void OnRestore()
-	{
-		BaseClass::OnRestore();
-		if ( m_allowIntersection )
-		{
-			PhysDisableEntityCollisions( m_hNPC, m_hEntity );
-		}
-	}
 
 	// IMotionEvent
 	virtual simresult_e	Simulate( IPhysicsMotionController *pController, IPhysicsObject *pObject, float deltaTime, Vector &linear, AngularImpulse &angular );
@@ -60,18 +51,6 @@ private:
 };
 
 LINK_ENTITY_TO_CLASS( physics_npc_solver, CPhysicsNPCSolver );
-
-BEGIN_DATADESC( CPhysicsNPCSolver )
-
-	DEFINE_FIELD( m_hNPC, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hEntity, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_separationDuration, FIELD_FLOAT ),
-	DEFINE_FIELD( m_cancelTime, FIELD_TIME ),
-	DEFINE_FIELD( m_allowIntersection, FIELD_BOOLEAN ),
-	DEFINE_PHYSPTR( m_pController ),
-	//DEFINE_FIELD( m_pNext, FIELD_CLASSPTR ),
-
-END_DATADESC()
 
 CEntityClassList<CPhysicsNPCSolver> g_SolverList;
 template <> CPhysicsNPCSolver *CEntityClassList<CPhysicsNPCSolver>::m_pClassList = NULL;
@@ -366,7 +345,6 @@ class CPhysicsEntitySolver : public CLogicalEntity//, public IMotionEvent
 {
 	DECLARE_CLASS( CPhysicsEntitySolver, CLogicalEntity );
 public:
-	DECLARE_DATADESC();
 	void Init( CBaseEntity *pMovingEntity, CBaseEntity *pPhysicsBlocker, float separationTime );
 	static CPhysicsEntitySolver *Create( CBaseEntity *pMovingEntity, CBaseEntity *pPhysicsBlocker, float separationTime );
 
@@ -394,17 +372,6 @@ private:
 };
 
 LINK_ENTITY_TO_CLASS( physics_entity_solver, CPhysicsEntitySolver );
-
-BEGIN_DATADESC( CPhysicsEntitySolver )
-
-	DEFINE_FIELD( m_hMovingEntity, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hPhysicsBlocker, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_separationDuration, FIELD_FLOAT ),
-	DEFINE_FIELD( m_cancelTime, FIELD_TIME ),
-	DEFINE_FIELD( m_savedCollisionGroup, FIELD_INTEGER ),
-	//DEFINE_PHYSPTR( m_pController ),
-
-END_DATADESC()
 
 CPhysicsEntitySolver *CPhysicsEntitySolver::Create( CBaseEntity *pMovingEntity, CBaseEntity *pPhysicsBlocker, float separationTime )
 {

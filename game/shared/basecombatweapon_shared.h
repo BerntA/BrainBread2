@@ -25,9 +25,6 @@
 #endif
 
 #if !defined( CLIENT_DLL )
-extern void OnBaseCombatWeaponCreated( CBaseCombatWeapon * );
-extern void OnBaseCombatWeaponDestroyed( CBaseCombatWeapon * );
-
 void *SendProxy_SendLocalWeaponDataTable( const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID );
 #endif
 
@@ -320,9 +317,6 @@ public:
 	void					Lock( float lockTime, CBaseEntity *pLocker );
 	bool					IsLocked( CBaseEntity *pAsker );
 
-	// All weapons can be picked up by NPCs by default
-	virtual bool			CanBePickedUpByNPCs( void ) { return true;	}
-
 public:
 
 	// Weapon info accessors for data in the weapon's data file
@@ -398,8 +392,6 @@ public:
 	virtual void			CheckRespawn( void );					// see if this weapon should respawn after being picked up
 	CBaseEntity				*Respawn ( void );						// copy a weapon
 
-	static int				GetAvailableWeaponsInBox( CBaseCombatWeapon **pList, int listMax, const Vector &mins, const Vector &maxs );
-
 	// Weapon dropping / destruction
 	virtual void			Delete( void );
 	void					DestroyItem( void );
@@ -443,7 +435,6 @@ public:
 	virtual ShadowType_t	ShadowCastType();
 	virtual void			SetDormant( bool bDormant );
 	virtual void			OnDataChanged( DataUpdateType_t updateType );
-	virtual void			OnRestore();
 
 	virtual unsigned char	GetClientSideFade(void);
 
@@ -595,8 +586,6 @@ protected:
 	int                     m_iDefaultAmmoCount; // The ammo this weapon spawns with.
 
 #else // Client .dll only
-	bool					m_bJustRestored;
-
 	// Allow weapons resource to access m_hWeaponFileInfo directly
 	friend class			WeaponsResource;
 

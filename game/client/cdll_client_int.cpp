@@ -52,9 +52,6 @@
 #include "gamestringpool.h"
 #include "c_user_message_register.h"
 #include "IGameUIFuncs.h"
-#include "saverestoretypes.h"
-#include "saverestore.h"
-#include "physics_saverestore.h"
 #include "igameevents.h"
 #include "datacache/idatacache.h"
 #include "datacache/imdlcache.h"
@@ -82,7 +79,6 @@
 #include "con_nprint.h"
 #include "inputsystem/iinputsystem.h"
 #include "appframework/IAppSystemGroup.h"
-#include "scenefilecache/ISceneFileCache.h"
 #include "tier2/tier2dm.h"
 #include "tier3/tier3.h"
 #include "ihudlcd.h"
@@ -164,7 +160,6 @@ IGameUIFuncs *gameuifuncs = NULL;
 IGameEventManager2 *gameeventmanager = NULL;
 ISoundEmitterSystemBase *soundemitterbase = NULL;
 IInputSystem *inputsystem = NULL;
-ISceneFileCache *scenefilecache = NULL;
 IXboxSystem *xboxsystem = NULL;	// Xbox 360 only
 IMatchmaking *matchmaking = NULL;
 IClientReplayContext *g_pClientReplayContext = NULL;
@@ -193,22 +188,6 @@ AchievementsAndStatsInterface* g_pAchievementsAndStatsInterface = NULL;
 IGameSystem *SoundEmitterSystem();
 IGameSystem *ToolFrameworkClientSystem();
 
-// Engine player info, no game related infos here
-BEGIN_BYTESWAP_DATADESC( player_info_s )
-	DEFINE_ARRAY( name, FIELD_CHARACTER, MAX_PLAYER_NAME_LENGTH ),
-	DEFINE_FIELD( userID, FIELD_INTEGER ),
-	DEFINE_ARRAY( guid, FIELD_CHARACTER, SIGNED_GUID_LEN + 1 ),
-	DEFINE_FIELD( friendsID, FIELD_INTEGER ),
-	DEFINE_ARRAY( friendsName, FIELD_CHARACTER, MAX_PLAYER_NAME_LENGTH ),
-	DEFINE_FIELD( fakeplayer, FIELD_BOOLEAN ),
-	DEFINE_FIELD( ishltv, FIELD_BOOLEAN ),
-#if defined( REPLAY_ENABLED )
-	DEFINE_FIELD( isreplay, FIELD_BOOLEAN ),
-#endif
-	DEFINE_ARRAY( customFiles, FIELD_INTEGER, MAX_CUSTOM_FILES ),
-	DEFINE_FIELD( filesDownloaded, FIELD_INTEGER ),
-END_BYTESWAP_DATADESC()
-
 static bool g_bRequestCacheUsedMaterials = false;
 void RequestCacheUsedMaterials()
 {
@@ -233,7 +212,6 @@ INetworkStringTable *g_StringTableEffectDispatch = NULL;
 INetworkStringTable *g_StringTableVguiScreen = NULL;
 INetworkStringTable *g_pStringTableMaterials = NULL;
 INetworkStringTable *g_pStringTableInfoPanel = NULL;
-INetworkStringTable *g_pStringTableClientSideChoreoScenes = NULL;
 INetworkStringTable *g_pStringTableServerMapCycle = NULL;
 
 static CGlobalVarsBase dummyvars( true );
@@ -273,12 +251,8 @@ public:
 	int					*m_pStoredEvent;
 };
 
-ISaveRestoreBlockHandler *GetEntitySaveRestoreBlockHandler();
-ISaveRestoreBlockHandler *GetViewEffectsRestoreBlockHandler();
-
 CUtlLinkedList<CDataChangedEvent, unsigned short> g_DataChangedEvents;
 ClientFrameStage_t g_CurFrameStage = FRAME_UNDEFINED;
-
 
 class IMoveHelper;
 
@@ -289,7 +263,6 @@ static ConVar s_CV_ShowParticleCounts("showparticlecounts", "0", 0, "Display num
 // Physics system
 bool g_bLevelInitialized;
 bool g_bTextMode = false;
-class IClientPurchaseInterfaceV2 *g_pClientPurchaseInterface = (class IClientPurchaseInterfaceV2 *)(&g_bTextMode + 156);
 
 static ConVar *g_pcv_ThreadMode = NULL;
 
@@ -373,7 +346,6 @@ public:
 	CClientDLLSharedAppSystems()
 	{
 		AddAppSystem( "soundemittersystem" DLL_EXT_STRING, SOUNDEMITTERSYSTEM_INTERFACE_VERSION );
-		AddAppSystem( "scenefilecache" DLL_EXT_STRING, SCENE_FILE_CACHE_INTERFACE_VERSION );
 	}
 
 	virtual int	Count()
@@ -844,8 +816,6 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 		return false;
 	if ( (inputsystem = (IInputSystem *)appSystemFactory(INPUTSYSTEM_INTERFACE_VERSION, NULL)) == NULL )
 		return false;
-	if ( (scenefilecache = (ISceneFileCache *)appSystemFactory( SCENE_FILE_CACHE_INTERFACE_VERSION, NULL )) == NULL )
-		return false;
 	if ( IsX360() && (xboxsystem = (IXboxSystem *)appSystemFactory( XBOXSYSTEM_INTERFACE_VERSION, NULL )) == NULL )
 		return false;
 	if ( IsX360() && (matchmaking = (IMatchmaking *)appSystemFactory( VENGINE_MATCHMAKING_VERSION, NULL )) == NULL )
@@ -977,10 +947,6 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	if ( !PhysicsDLLInit( physicsFactory ) )
 		return false;
 
-	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetEntitySaveRestoreBlockHandler() );
-	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetPhysSaveRestoreBlockHandler() );
-	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetViewEffectsRestoreBlockHandler() );
-
 	ClientWorldFactoryInit();
 	C_BaseAnimating::InitBoneSetupThreadPool();
 	engine->ClientCmd( "progress_enable" );
@@ -1038,10 +1004,6 @@ void CHLClient::Shutdown( void )
 {
 	C_BaseAnimating::ShutdownBoneSetupThreadPool();
 	ClientWorldFactoryShutdown();
-
-	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetViewEffectsRestoreBlockHandler() );
-	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetPhysSaveRestoreBlockHandler() );
-	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetEntitySaveRestoreBlockHandler() );
 
 	ClientVoiceMgr_Shutdown();
 
@@ -1494,7 +1456,6 @@ void CHLClient::ResetStringTablePointers()
 	g_StringTableVguiScreen = NULL;
 	g_pStringTableMaterials = NULL;
 	g_pStringTableInfoPanel = NULL;
-	g_pStringTableClientSideChoreoScenes = NULL;
 	g_pStringTableServerMapCycle = NULL;
 }
 
@@ -1664,18 +1625,6 @@ void OnVguiScreenTableChanged( void *object, INetworkStringTable *stringTable, i
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Preload the string on the client (if single player it should already be in the cache from the server!!!)
-// Input  : *object - 
-//			*stringTable - 
-//			stringNumber - 
-//			*newString - 
-//			*newData - 
-//-----------------------------------------------------------------------------
-void OnSceneStringTableChanged( void *object, INetworkStringTable *stringTable, int stringNumber, const char *newString, void const *newData )
-{
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Hook up any callbacks here, the table definition has been parsed but 
 //  no data has been added yet
 //-----------------------------------------------------------------------------
@@ -1705,11 +1654,6 @@ void CHLClient::InstallStringTableCallback( const char *tableName )
 	else if ( !Q_strcasecmp( tableName, "InfoPanel" ) )
 	{
 		g_pStringTableInfoPanel = networkstringtable->FindTable( tableName );
-	}
-	else if ( !Q_strcasecmp( tableName, "Scenes" ) )
-	{
-		g_pStringTableClientSideChoreoScenes = networkstringtable->FindTable( tableName );
-		g_pStringTableClientSideChoreoScenes->SetStringChangedCallback( NULL, OnSceneStringTableChanged );
 	}
 	else if ( !Q_strcasecmp( tableName, "ParticleEffectNames" ) )
 	{
@@ -2125,84 +2069,47 @@ void CHLClient::FrameStageNotify( ClientFrameStage_t curStage )
 	}
 }
 
-CSaveRestoreData *SaveInit( int size );
-
 // Save/restore system hooks
 CSaveRestoreData  *CHLClient::SaveInit( int size )
 {
-	return ::SaveInit(size);
+	return NULL;
 }
 
 void CHLClient::SaveWriteFields( CSaveRestoreData *pSaveData, const char *pname, void *pBaseData, datamap_t *pMap, typedescription_t *pFields, int fieldCount )
 {
-	CSave saveHelper( pSaveData );
-	saveHelper.WriteFields( pname, pBaseData, pMap, pFields, fieldCount );
 }
 
 void CHLClient::SaveReadFields( CSaveRestoreData *pSaveData, const char *pname, void *pBaseData, datamap_t *pMap, typedescription_t *pFields, int fieldCount )
 {
-	CRestore restoreHelper( pSaveData );
-	restoreHelper.ReadFields( pname, pBaseData, pMap, pFields, fieldCount );
 }
 
 void CHLClient::PreSave( CSaveRestoreData *s )
 {
-	g_pGameSaveRestoreBlockSet->PreSave( s );
 }
 
 void CHLClient::Save( CSaveRestoreData *s )
 {
-	CSave saveHelper( s );
-	g_pGameSaveRestoreBlockSet->Save( &saveHelper );
 }
 
 void CHLClient::WriteSaveHeaders( CSaveRestoreData *s )
 {
-	CSave saveHelper( s );
-	g_pGameSaveRestoreBlockSet->WriteSaveHeaders( &saveHelper );
-	g_pGameSaveRestoreBlockSet->PostSave();
 }
 
 void CHLClient::ReadRestoreHeaders( CSaveRestoreData *s )
 {
-	CRestore restoreHelper( s );
-	g_pGameSaveRestoreBlockSet->PreRestore();
-	g_pGameSaveRestoreBlockSet->ReadRestoreHeaders( &restoreHelper );
 }
 
 void CHLClient::Restore( CSaveRestoreData *s, bool b )
 {
-	CRestore restore(s);
-	g_pGameSaveRestoreBlockSet->Restore( &restore, b );
-	g_pGameSaveRestoreBlockSet->PostRestore();
-}
-
-static CUtlVector<EHANDLE> g_RestoredEntities;
-
-void AddRestoredEntity( C_BaseEntity *pEntity )
-{
-	if ( !pEntity )
-		return;
-
-	g_RestoredEntities.AddToTail( EHANDLE(pEntity) );
 }
 
 void CHLClient::DispatchOnRestore()
 {
-	for ( int i = 0; i < g_RestoredEntities.Count(); i++ )
-	{
-		if ( g_RestoredEntities[i] != NULL )
-		{
-			MDLCACHE_CRITICAL_SECTION();
-			g_RestoredEntities[i]->OnRestore();
-		}
-	}
-	g_RestoredEntities.RemoveAll();
 }
 
 void CHLClient::WriteSaveGameScreenshot( const char *pFilename )
 {
-	view->WriteSaveGameScreenshot( pFilename );
+	//view->WriteSaveGameScreenshot( pFilename );
 }
 
 // Given a list of "S(wavname) S(wavname2)" tokens, look up the localized text and emit

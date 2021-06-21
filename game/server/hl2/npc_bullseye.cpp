@@ -85,11 +85,9 @@ ConVar	sk_bullseye_health( "sk_bullseye_health","0");
 
 BEGIN_DATADESC( CNPC_Bullseye )
 
-	DEFINE_FIELD( m_hPainPartner, FIELD_EHANDLE ),
 	DEFINE_KEYFIELD( m_fAutoaimRadius, FIELD_FLOAT, "autoaimradius" ),
 	DEFINE_KEYFIELD( m_flFieldOfView, FIELD_FLOAT, "minangle" ),
 	DEFINE_KEYFIELD( m_flMinDistValidEnemy, FIELD_FLOAT, "mindist" ),
-	// DEFINE_FIELD( m_bPerfectAccuracy, FIELD_BOOLEAN ),	// Don't save
 
 	// Function Pointers
 	DEFINE_THINKFUNC( BullseyeThink ),
@@ -315,21 +313,6 @@ void CNPC_Bullseye::ImpactTrace( trace_t *pTrace, int iDamageType, const char *p
 Class_T	CNPC_Bullseye::Classify( void )
 {
 	return	CLASS_BULLSEYE;
-}
-
-void CNPC_Bullseye::OnRestore( void )
-{
-	if ( m_spawnflags & SF_BULLSEYE_VPHYSICSSHADOW )
-	{
-		IPhysicsObject *pObject = VPhysicsGetObject();
-
-		if ( pObject == NULL )
-		{
-			VPhysicsInitShadow( false, false );
-		}
-	}
-
-	BaseClass::OnRestore();
 }
 
 //-----------------------------------------------------------------------------

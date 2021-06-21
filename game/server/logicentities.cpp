@@ -10,7 +10,6 @@
 #include "eventqueue.h"
 #include "mathlib/mathlib.h"
 #include "ndebugoverlay.h"
-#include "saverestore_utlvector.h"
 #include "vstdlib/random.h"
 #include "gameinterface.h"
 
@@ -54,8 +53,6 @@ BEGIN_DATADESC( CLogicCompareInteger )
 
 	DEFINE_KEYFIELD( m_iIntegerValue, FIELD_INTEGER, "IntegerValue" ),
 	DEFINE_KEYFIELD( m_iShouldCompareToValue, FIELD_INTEGER, "ShouldComparetoValue" ),
-
-	DEFINE_FIELD( m_AllIntCompares, FIELD_INPUT ),
 
 	DEFINE_INPUTFUNC( FIELD_INPUT, "InputValue", InputValue ),
 	DEFINE_INPUTFUNC( FIELD_INPUT, "CompareValues", InputCompareValues ),
@@ -182,8 +179,6 @@ BEGIN_DATADESC( CTimerEntity )
 	DEFINE_KEYFIELD( m_iDisabled, FIELD_INTEGER, "StartDisabled" ),
 	DEFINE_KEYFIELD( m_flRefireTime, FIELD_FLOAT, "RefireTime" ),
 
-	DEFINE_FIELD( m_bUpDownState, FIELD_BOOLEAN ),
-
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "RefireTime", InputRefireTime ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "FireTimer", InputFireTimer ),
@@ -197,7 +192,6 @@ BEGIN_DATADESC( CTimerEntity )
 	DEFINE_INPUT( m_iUseRandomTime, FIELD_INTEGER, "UseRandomTime" ),
 	DEFINE_INPUT( m_flLowerRandomBound, FIELD_FLOAT, "LowerRandomBound" ),
 	DEFINE_INPUT( m_flUpperRandomBound, FIELD_FLOAT, "UpperRandomBound" ),
-
 
 	// Outputs
 	DEFINE_OUTPUT( m_OnTimer, "OnTimer" ),
@@ -490,8 +484,6 @@ BEGIN_DATADESC( CLogicLineToEntity )
 	// Keys
 	// target is handled in the base class, stored in field m_target
 	DEFINE_KEYFIELD( m_SourceName, FIELD_STRING, "source" ),
- 	DEFINE_FIELD( m_StartEntity, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_EndEntity, FIELD_EHANDLE ),
 
 	// Outputs
 	DEFINE_OUTPUT( m_Line, "Line" ),
@@ -623,8 +615,6 @@ BEGIN_DATADESC( CMathRemap )
 	DEFINE_KEYFIELD(m_flInMax, FIELD_FLOAT, "in2"),
 	DEFINE_KEYFIELD(m_flOut1, FIELD_FLOAT, "out1"),
 	DEFINE_KEYFIELD(m_flOut2, FIELD_FLOAT, "out2"),
-
-	DEFINE_FIELD( m_bEnabled, FIELD_BOOLEAN ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),
@@ -838,11 +828,6 @@ public:
 
 BEGIN_DATADESC( CMultiSource )
 
-	//!!!BUGBUG FIX
-	DEFINE_ARRAY( m_rgEntities, FIELD_EHANDLE, MS_MAX_TARGETS ),
-	DEFINE_ARRAY( m_rgTriggered, FIELD_INTEGER, MS_MAX_TARGETS ),
-	DEFINE_FIELD( m_iTotal, FIELD_INTEGER ),
-
 	// Function pointers
 	DEFINE_FUNCTION( Register ),
 
@@ -1034,13 +1019,9 @@ LINK_ENTITY_TO_CLASS(math_counter, CMathCounter);
 
 BEGIN_DATADESC( CMathCounter )
 
-	DEFINE_FIELD(m_bHitMax, FIELD_BOOLEAN),
-	DEFINE_FIELD(m_bHitMin, FIELD_BOOLEAN),
-
 	// Keys
 	DEFINE_KEYFIELD(m_flMin, FIELD_FLOAT, "min"),
 	DEFINE_KEYFIELD(m_flMax, FIELD_FLOAT, "max"),
-
 	DEFINE_KEYFIELD(m_bDisabled, FIELD_BOOLEAN, "StartDisabled" ),
 
 	// Inputs
@@ -1398,9 +1379,6 @@ LINK_ENTITY_TO_CLASS(logic_case, CLogicCase);
 
 BEGIN_DATADESC( CLogicCase )
 
-// Silence, Classcheck!
-//	DEFINE_ARRAY( m_nCase, FIELD_STRING, MAX_LOGIC_CASES ),
-
 	// Keys
 	DEFINE_KEYFIELD(m_nCase[0], FIELD_STRING, "Case01"),
 	DEFINE_KEYFIELD(m_nCase[1], FIELD_STRING, "Case02"),
@@ -1418,10 +1396,6 @@ BEGIN_DATADESC( CLogicCase )
 	DEFINE_KEYFIELD(m_nCase[13], FIELD_STRING, "Case14"),
 	DEFINE_KEYFIELD(m_nCase[14], FIELD_STRING, "Case15"),
 	DEFINE_KEYFIELD(m_nCase[15], FIELD_STRING, "Case16"),
-	
-	DEFINE_FIELD( m_nShuffleCases, FIELD_INTEGER ),
-	DEFINE_FIELD( m_nLastShuffleCase, FIELD_INTEGER ),
-	DEFINE_ARRAY( m_uchShuffleCaseMap, FIELD_CHARACTER, MAX_LOGIC_CASES ),
 
 	// Inputs
 	DEFINE_INPUTFUNC(FIELD_INPUT, "InValue", InputValue),
@@ -1796,8 +1770,6 @@ BEGIN_DATADESC( CLogicBranch )
 	// Keys
 	DEFINE_KEYFIELD(m_bInValue, FIELD_BOOLEAN, "InitialValue"),
 
-	DEFINE_UTLVECTOR( m_Listeners, FIELD_EHANDLE ),
-
 	// Inputs
 	DEFINE_INPUTFUNC(FIELD_BOOLEAN, "SetValue", InputSetValue),
 	DEFINE_INPUTFUNC(FIELD_BOOLEAN, "SetValueTest", InputSetValueTest),
@@ -2020,8 +1992,6 @@ public:
 			return;
 		EnableCollisions( true );
 	}
-	// If Activate() becomes PostSpawn()
-	//void OnRestore() { Activate(); }
 
 	DECLARE_DATADESC();
 
@@ -2036,7 +2006,6 @@ BEGIN_DATADESC( CLogicCollisionPair )
 	DEFINE_KEYFIELD( m_nameAttach1, FIELD_STRING, "attach1" ),
 	DEFINE_KEYFIELD( m_nameAttach2, FIELD_STRING, "attach2" ),
 	DEFINE_KEYFIELD( m_disabled, FIELD_BOOLEAN, "startdisabled" ),
-	DEFINE_FIELD( m_succeeded, FIELD_BOOLEAN ),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "DisableCollisions", InputDisableCollisions ),
@@ -2092,9 +2061,6 @@ LINK_ENTITY_TO_CLASS(logic_branch_listener, CLogicBranchList);
 
 BEGIN_DATADESC( CLogicBranchList )
 
-	// Silence, classcheck!
-	//DEFINE_ARRAY( m_nLogicBranchNames, FIELD_STRING, MAX_LOGIC_BRANCH_NAMES ),
-
 	// Keys
 	DEFINE_KEYFIELD( m_nLogicBranchNames[0], FIELD_STRING, "Branch01" ),
 	DEFINE_KEYFIELD( m_nLogicBranchNames[1], FIELD_STRING, "Branch02" ),
@@ -2112,10 +2078,6 @@ BEGIN_DATADESC( CLogicBranchList )
 	DEFINE_KEYFIELD( m_nLogicBranchNames[13], FIELD_STRING, "Branch14" ),
 	DEFINE_KEYFIELD( m_nLogicBranchNames[14], FIELD_STRING, "Branch15" ),
 	DEFINE_KEYFIELD( m_nLogicBranchNames[15], FIELD_STRING, "Branch16" ),
-	
-	DEFINE_UTLVECTOR( m_LogicBranchList, FIELD_EHANDLE ),
-	
-	DEFINE_FIELD( m_eLastState, FIELD_INTEGER ),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_INPUT, "Test", InputTest ),

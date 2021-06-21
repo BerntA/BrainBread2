@@ -45,8 +45,6 @@ class CRagdoll : public IRagdoll
 public:
 	CRagdoll();
 	~CRagdoll( void );
-
-	DECLARE_SIMPLE_DATADESC();
 	
 	void Init( 
 		C_BaseEntity *ent, 

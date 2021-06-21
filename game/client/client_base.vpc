@@ -426,7 +426,6 @@ $Project
 		$File	"hl2\C_Func_Monitor.cpp"
 		$File	"history_resource.cpp"
 		$File	"train.cpp"
-		$File	"$SRCDIR\game\shared\weapon_parse_default.cpp"
 		$File	"$SRCDIR\game\shared\activitylist.cpp"
 		$File	"alphamaterialproxy.cpp"
 		$File	"$SRCDIR\game\shared\ammodef.cpp"
@@ -497,7 +496,6 @@ $Project
 		$File	"c_props.h"
 		$File	"c_rope.cpp"
 		$File	"c_rumble.cpp"
-		$File	"c_sceneentity.cpp"
 		$File	"c_shadowcontrol.cpp"
 		$File	"c_slideshow_display.cpp"
 		$File	"c_slideshow_display.h"
@@ -508,7 +506,6 @@ $Project
 		$File	"c_sun.cpp"
 		$File	"c_team.cpp"
 		$File	"c_tesla.cpp"
-		$File	"c_test_proxytoggle.cpp"
 		$File	"c_user_message_register.cpp"
 		$File	"c_vguiscreen.cpp"
 		$File	"hl2\c_waterbullet.cpp"
@@ -623,11 +620,9 @@ $Project
 		$File	"physics.cpp"
 		$File	"physics_main_client.cpp"
 		$File	"$SRCDIR\game\shared\physics_main_shared.cpp"
-		$File	"$SRCDIR\game\shared\physics_saverestore.cpp"
 		$File	"$SRCDIR\game\shared\physics_shared.cpp"
 		$File	"physpropclientside.cpp"
 		$File	"playerandobjectenumerator.cpp"
-		$File	"playerspawncache.cpp"
 		$File	"$SRCDIR\game\shared\point_posecontroller.cpp"
 		$File	"$SRCDIR\game\shared\precache_register.cpp"
 		$File	"$SRCDIR\game\shared\predictableid.cpp"
@@ -642,12 +637,9 @@ $Project
 		$File	"$SRCDIR\game\shared\ragdoll_shared.cpp"
 		$File	"recvproxy.cpp"
 		$File	"$SRCDIR\game\shared\rope_helpers.cpp"
-		$File	"$SRCDIR\game\shared\saverestore.cpp"
-		$File	"$SRCDIR\game\shared\sceneentity_shared.cpp"
 		$File	"ScreenSpaceEffects.cpp"
 		$File	"$SRCDIR\game\shared\sequence_Transitioner.cpp"
 		$File	"simple_keys.cpp"
-		$File	"$SRCDIR\game\shared\simtimer.cpp"
 		$File	"$SRCDIR\game\shared\SoundEmitterSystem.cpp"
 		$File	"$SRCDIR\game\shared\soundenvelope.cpp"
 		$File	"$SRCDIR\public\SoundParametersInternal.cpp"
@@ -660,7 +652,6 @@ $Project
 		$File	"studio_stats.h"
 		$File	"$SRCDIR\game\shared\takedamageinfo.cpp"
 		$File	"$SRCDIR\game\shared\teamplay_gamerules.cpp"
-		$File	"$SRCDIR\game\shared\test_ehandle.cpp"
 		$File	"text_message.cpp"
 		$File	"texturescrollmaterialproxy.cpp"
 		$File	"timematerialproxy.cpp"
@@ -725,7 +716,6 @@ $Project
 		"$SRCDIR\common\randoverride.cpp"					\
 		"$SRCDIR\public\rope_physics.cpp"					\
 		"$SRCDIR\public\sentence.cpp"						\
-		"$SRCDIR\game\shared\sheetsimulator.cpp"			\
 		"$SRCDIR\public\simple_physics.cpp"					\
 		"$SRCDIR\public\stringregistry.cpp"					\
 		"$SRCDIR\public\studio.cpp"							\
@@ -814,7 +804,6 @@ $Project
 			$File	"c_te_sprite.cpp"
 			$File	"c_te_spritespray.cpp"
 			$File	"c_te_worlddecal.cpp"
-			$File	"c_testtraceline.cpp"
 			$File	"c_tracer.cpp"
 			$File	"fx.cpp"
 			$File	"fx_discreetline.cpp"
@@ -832,6 +821,8 @@ $Project
 			$File	"game_controls\basemodelpanel.h"
 			$File	"game_controls\NavProgress.cpp"
 			$File	"game_controls\vguitextwindow.cpp"
+			$File	"game_controls\baseviewport.h"
+			$File	"game_controls\vguitextwindow.h"
 		}
 
 	}
@@ -880,7 +871,6 @@ $Project
 		$File	"c_recipientfilter.h"
 		$File	"c_rope.h"
 		$File	"c_rumble.h"
-		$File	"c_sceneentity.h"
 		$File	"c_smoke_trail.h"
 		$File	"c_soundscape.h"
 		$File	"c_sprite.h"
@@ -994,7 +984,6 @@ $Project
 		$File	"physpropclientside.h"
 		$File	"playerandobjectenumerator.h"
 		$File	"playerenumerator.h"
-		$File	"playerspawncache.h"
 		$File	"prediction.h"
 		$File	"prediction_private.h"
 		$File	"proxyentity.h"
@@ -1135,7 +1124,6 @@ $Project
 		$File	"$SRCDIR\public\vgui\IPanel.h"
 		$File	"$SRCDIR\public\iprediction.h"
 		$File	"$SRCDIR\public\irecipientfilter.h"
-		$File	"$SRCDIR\public\isaverestore.h"
 		$File	"$SRCDIR\public\vgui\IScheme.h"
 		$File	"$SRCDIR\public\iserverentity.h"
 		$File	"$SRCDIR\public\iservernetworkable.h"
@@ -1194,7 +1182,6 @@ $Project
 		$File	"$SRCDIR\public\vgui_controls\RichText.h"
 		$File	"$SRCDIR\public\rope_physics.h"
 		$File	"$SRCDIR\public\rope_shared.h"
-		$File	"$SRCDIR\public\saverestoretypes.h"
 		$File	"$SRCDIR\public\vgui_controls\ScrollBar.h"
 		$File	"$SRCDIR\public\vgui_controls\SectionedListPanel.h"
 		$File	"$SRCDIR\public\sentence.h"
@@ -1266,10 +1253,6 @@ $Project
 		$File	"$SRCDIR\game\shared\baseviewmodel_shared.h"
 		$File	"$SRCDIR\game\shared\beam_flags.h"
 		$File	"$SRCDIR\game\shared\beam_shared.h"
-		$File	"$SRCDIR\game\shared\choreoactor.h"
-		$File	"$SRCDIR\game\shared\choreochannel.h"
-		$File	"$SRCDIR\game\shared\choreoevent.h"
-		$File	"$SRCDIR\game\shared\choreoscene.h"
 		$File	"$SRCDIR\game\shared\collisionproperty.h"
 		$File	"$SRCDIR\game\shared\decals.h"
 		$File	"$SRCDIR\game\shared\effect_color_tables.h"
@@ -1282,7 +1265,6 @@ $Project
 		$File	"$SRCDIR\game\shared\env_wind_shared.h"
 		$File	"$SRCDIR\game\shared\eventlist.h"
 		$File	"$SRCDIR\game\shared\func_dust_shared.h"
-		$File	"$SRCDIR\game\shared\gameeventdefs.h"
 		$File	"$SRCDIR\game\shared\gamemovement.h"
 		$File	"$SRCDIR\game\shared\gamerules.h"
 		$File	"$SRCDIR\game\shared\gamerules_register.h"
@@ -1291,7 +1273,6 @@ $Project
 		$File	"$SRCDIR\game\shared\groundlink.h"
 		$File	"$SRCDIR\game\shared\hl2\hl2_player_shared.h"
 		$File	"$SRCDIR\game\shared\hl2\hl_movedata.h"
-		$File	"$SRCDIR\game\shared\ichoreoeventcallback.h"
 		$File	"$SRCDIR\game\shared\IEffects.h"
 		$File	"$SRCDIR\game\shared\igamemovement.h"
 		$File	"$SRCDIR\game\shared\igamesystem.h"
@@ -1307,7 +1288,6 @@ $Project
 		$File	"$SRCDIR\game\shared\multiplay_gamerules.h"
 		$File	"$SRCDIR\game\shared\npcevent.h"
 		$File	"$SRCDIR\game\shared\obstacle_pushaway.h"
-		$File	"$SRCDIR\game\shared\physics_saverestore.h"
 		$File	"$SRCDIR\game\shared\physics_shared.h"
 		$File	"$SRCDIR\game\shared\playernet_vars.h"
 		$File	"$SRCDIR\game\shared\point_posecontroller.h"
@@ -1319,18 +1299,11 @@ $Project
 		$File	"$SRCDIR\game\shared\predictioncopy.h"
 		$File	"$SRCDIR\game\shared\ragdoll_shared.h"
 		$File	"$SRCDIR\game\shared\rope_helpers.h"
-		$File	"$SRCDIR\game\shared\saverestore.h"
-		$File	"$SRCDIR\game\shared\saverestore_bitstring.h"
-		$File	"$SRCDIR\game\shared\saverestore_utlclass.h"
-		$File	"$SRCDIR\game\shared\saverestore_utlsymbol.h"
-		$File	"$SRCDIR\game\shared\saverestore_utlvector.h"
-		$File	"$SRCDIR\game\shared\sceneentity_shared.h"
 		$File	"$SRCDIR\game\shared\scriptevent.h"
 		$File	"$SRCDIR\game\shared\sequence_Transitioner.h"
 		$File	"$SRCDIR\game\shared\shared_classnames.h"
 		$File	"$SRCDIR\game\shared\shareddefs.h"
 		$File	"$SRCDIR\game\shared\sharedInterface.h"
-		$File	"$SRCDIR\game\shared\sheetsimulator.h"
 		$File	"$SRCDIR\game\shared\shot_manipulator.h"
 		$File	"$SRCDIR\game\shared\simtimer.h"
 		$File	"$SRCDIR\game\shared\smoke_fog_overlay_shared.h"
@@ -1346,7 +1319,6 @@ $Project
 		$File	"$SRCDIR\game\shared\usercmd.h"
 		$File	"$SRCDIR\game\shared\usermessages.h"
 		$File	"$SRCDIR\game\shared\util_shared.h"
-		$File	"$SRCDIR\game\shared\vgui_defaultinputsignal.h"
 		$File	"$SRCDIR\game\shared\viewport_panel_names.h"
 		$File	"$SRCDIR\game\shared\voice_banmgr.h"
 		$File	"$SRCDIR\game\shared\voice_common.h"
@@ -1355,20 +1327,10 @@ $Project
 		$File	"$SRCDIR\game\shared\vphysics_sound.h"
 		$File	"$SRCDIR\game\shared\weapon_parse.h"
 	}
-
-	$Folder	"game_controls Header Files"
-	{
-		$File	"game_controls\baseviewport.h"
-		$File	"game_controls\imagemouseoverbutton.h"
-		$File	"game_controls\mouseoverhtmlbutton.h"
-		$File	"game_controls\mouseoverpanelbutton.h"
-		$File	"game_controls\vguitextwindow.h"
-	}
 	
 	$Folder	"Link Libraries"
 	{
 		$Lib		bitmap
-		$Lib		choreoobjects
 		$Lib		dmxloader
 		$Lib		mathlib
 		$Lib		matsys_controls

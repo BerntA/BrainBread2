@@ -118,8 +118,6 @@ public:
 
 	virtual int	ObjectCaps( void ) { return BaseClass::ObjectCaps() | FCAP_DIRECTIONAL_USE | FCAP_USE_ONGROUND; }
 
-	virtual void	OnRestore( void );
-
 	float GetMaxSpeed() const { return m_maxSpeed; }
 	float GetCurrentSpeed() const { return m_flSpeed; }
 	float GetDesiredSpeed() const { return m_flDesiredSpeed;}

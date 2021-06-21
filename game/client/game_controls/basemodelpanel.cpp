@@ -20,7 +20,6 @@
 #include "materialsystem/imaterialsystem.h"
 #include "engine/ivmodelinfo.h"
 
-#include "c_sceneentity.h"
 #include "gamestringpool.h"
 #include "model_types.h"
 #include "view_shared.h"
@@ -31,9 +30,6 @@
 #include "activitylist.h"
 
 #include "basemodelpanel.h"
-
-bool UseHWMorphModels();
-
 
 using namespace vgui;
 
@@ -47,7 +43,6 @@ CModelPanel::CModelPanel( vgui::Panel *pParent, const char *pName ) : vgui::Edit
 	m_nFOV = 54;
 	m_hModel = NULL;
 	m_pModelInfo = NULL;
-	m_hScene = NULL;
 	m_iDefaultAnimation = 0;
 	m_bPanelDirty = true;
 	m_bStartFramed = false;
@@ -67,7 +62,6 @@ CModelPanel::~CModelPanel()
 		m_pModelInfo = NULL;
 	}
 
-	DeleteVCDData();
 	DeleteModelData();
 }
 
@@ -110,12 +104,10 @@ void CModelPanel::ParseModelInfo( KeyValues *inResourceData )
 		return;
 
 	m_pModelInfo->m_pszModelName = ReadAndAllocStringValue( inResourceData, "modelname" );
-	m_pModelInfo->m_pszModelName_HWM = ReadAndAllocStringValue( inResourceData, "modelname_hwm" );
 	m_pModelInfo->m_nSkin = inResourceData->GetInt( "skin", -1 );
 	m_pModelInfo->m_vecAbsAngles.Init( inResourceData->GetFloat( "angles_x", 0.0 ), inResourceData->GetFloat( "angles_y", 0.0 ), inResourceData->GetFloat( "angles_z", 0.0 ) );
 	m_pModelInfo->m_vecOriginOffset.Init( inResourceData->GetFloat( "origin_x", 110.0 ), inResourceData->GetFloat( "origin_y", 5.0 ), inResourceData->GetFloat( "origin_z", 5.0 ) );
 	m_pModelInfo->m_vecFramedOriginOffset.Init( inResourceData->GetFloat( "frame_origin_x", 110.0 ), inResourceData->GetFloat( "frame_origin_y", 5.0 ), inResourceData->GetFloat( "frame_origin_z", 5.0 ) );
-	m_pModelInfo->m_pszVCD = ReadAndAllocStringValue( inResourceData, "vcd" );
 	m_pModelInfo->m_bUseSpotlight = ( inResourceData->GetInt( "spotlight", 0 ) == 1 );
 	m_pModelInfo->m_vecViewportOffset.Init();
 
@@ -250,49 +242,6 @@ void CModelPanel::SwapModel( const char *pszName, const char *pszAttached )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CModelPanel::DeleteVCDData( void )
-{
-	if ( m_hScene.Get() )
-	{
-		m_hScene->StopClientOnlyScene();
-
-		m_hScene->Remove();
-		m_hScene = NULL;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CModelPanel::SetupVCD( void )
-{
-	if ( !m_pModelInfo )
-		return;
-
-	DeleteVCDData();
-
-	C_SceneEntity *pEnt = new class C_SceneEntity;
-
-	if ( !pEnt )
-		return;
-
-	if ( pEnt->InitializeAsClientEntity( "", RENDER_GROUP_OTHER ) == false )
-	{
-		// we failed to initialize this entity so just return gracefully
-		pEnt->Remove();
-		return;
-	}
-
-	// setup the handle
-	m_hScene = pEnt;
-
-	// setup the scene
-	pEnt->SetupClientOnlyScene( m_pModelInfo->m_pszVCD, m_hModel, true );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CModelPanel::ClearAttachedModelInfos( void )
 {
 	if ( m_pModelInfo )
@@ -328,25 +277,7 @@ void CModelPanel::DeleteModelData( void )
 //-----------------------------------------------------------------------------
 const char *CModelPanel::GetModelName( void )
 {
-	if ( !m_pModelInfo )
-		return NULL;
-
-	// check to see if we want to use a HWM model
-	if ( UseHWMorphModels() )
-	{
-		// do we have a valid HWM model filename
-		if ( m_pModelInfo->m_pszModelName_HWM && ( Q_strlen( m_pModelInfo->m_pszModelName_HWM  ) > 0 ) )
-		{
-			// does the file exist
-			model_t *pModel = (model_t *)engine->LoadModel( m_pModelInfo->m_pszModelName_HWM );
-			if ( pModel )
-			{
-				return m_pModelInfo->m_pszModelName_HWM;
-			}
-		}
-	}
-
-	return m_pModelInfo->m_pszModelName;
+	return (m_pModelInfo ? m_pModelInfo->m_pszModelName : NULL);
 }
 
 //-----------------------------------------------------------------------------
@@ -485,15 +416,7 @@ void CModelPanel::UpdateModel()
 	if ( m_bPanelDirty )
 	{
 		InitCubeMaps();
-
 		SetupModel();
-
-		// are we trying to play a VCD?
-		if ( Q_strlen( m_pModelInfo->m_pszVCD ) > 0 )
-		{
-			SetupVCD();
-		}
-
 		m_bPanelDirty = false;
 	}
 }

@@ -70,7 +70,6 @@ class IConVar;
 // cdll_client_int.cpp and cdll_engine_int.cpp
 typedef struct player_info_s
 {
-	DECLARE_BYTESWAP_DATADESC();
 	// scoreboard information
 	char			name[MAX_PLAYER_NAME_LENGTH];
 	// local server user ID, unique while server is running

@@ -105,8 +105,6 @@ enum
 //=========================================================
 class CSound
 {
-	DECLARE_SIMPLE_DATADESC();
-
 public:
 	bool	DoesSoundExpire() const;
 	float	SoundExpirationTime() const;
@@ -212,8 +210,6 @@ inline bool CSound::ValidateOwner( void ) const
 //=========================================================
 class CSoundEnt : public CPointEntity
 {
-	DECLARE_DATADESC();
-
 public:
 	DECLARE_CLASS( CSoundEnt, CPointEntity );
 
@@ -224,12 +220,10 @@ public:
 	CSoundEnt();
 	virtual ~CSoundEnt();
 
-	virtual void OnRestore();
 	void Precache ( void );
 	void Spawn( void );
 	void Think( void );
 	void Initialize ( void );
-	int ObjectCaps( void ) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 
 	static void		InsertSound ( int iType, const Vector &vecOrigin, int iVolume, float flDuration, CBaseEntity *pOwner = NULL, int soundChannelIndex = SOUNDENT_CHANNEL_UNSPECIFIED, CBaseEntity *pSoundTarget = NULL );
 	static void		FreeSound ( int iSound, int iPrevious );

@@ -4,9 +4,6 @@
 //
 //			ambient_generic: a sound emitter used for one-shot and looping sounds.
 //
-//			env_speaker: used for public address announcements over loudspeakers.
-//				This tries not to drown out talking NPCs.
-//
 //			env_soundscape: controls what sound script an area uses.
 //
 //=============================================================================//
@@ -14,7 +11,6 @@
 #include "cbase.h"
 #include "player.h"
 #include "mathlib/mathlib.h"
-#include "ai_speech.h"
 #include "stringregistry.h"
 #include "gamerules.h"
 #include "game.h"
@@ -197,21 +193,6 @@ BEGIN_DATADESC( CAmbientGeneric )
 	DEFINE_KEYFIELD( m_iszSound, FIELD_SOUNDNAME, "message" ),
 	DEFINE_KEYFIELD( m_radius,			FIELD_FLOAT, "radius" ),
 	DEFINE_KEYFIELD( m_sSourceEntName,	FIELD_STRING, "SourceEntityName" ),
-	// recomputed in Activate()
-	// DEFINE_FIELD( m_hSoundSource, EHANDLE ),
-	// DEFINE_FIELD( m_nSoundSourceEntIndex, FIELD_INTERGER ),
-
-	DEFINE_FIELD( m_flMaxRadius, FIELD_FLOAT ),
-	DEFINE_FIELD( m_fActive, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_fLooping, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_iSoundLevel, FIELD_INTEGER ),
-
-	// HACKHACK - This is not really in the spirit of the save/restore design, but save this
-	// out as a binary data block.  If the dynpitchvol_t is changed, old saved games will NOT
-	// load these correctly, so bump the save/restore version if you change the size of the struct
-	// The right way to do this is to split the input parms (read in keyvalue) into members and re-init this
-	// struct in Precache(), but it's unlikely that the struct will change, so it's not worth the time right now.
-	DEFINE_ARRAY( m_dpv, FIELD_CHARACTER, sizeof(dynpitchvol_t) ),
 
 	// Function Pointers
 	DEFINE_FUNCTION( RampThink ),
@@ -1143,196 +1124,7 @@ bool CAmbientGeneric::KeyValue( const char *szKeyName, const char *szValue )
 	return true;
 }
 
-
 // =================== ROOM SOUND FX ==========================================
-
-
-
-
-// ==================== SENTENCE GROUPS, UTILITY FUNCTIONS  ======================================
-
-int fSentencesInit = false;
-
-// ===================== SENTENCE GROUPS, MAIN ROUTINES ========================
-
-// given sentence group index, play random sentence for given entity.
-// returns sentenceIndex - which sentence was picked 
-// Ipick is only needed if you plan on stopping the sound before playback is done (see SENTENCEG_Stop). 
-// sentenceIndex can be used to find the name/length of the sentence
-
-int SENTENCEG_PlayRndI(edict_t *entity, int isentenceg, 
-					  float volume, soundlevel_t soundlevel, int flags, int pitch)
-{
-	char name[64];
-	int ipick;
-
-	if (!fSentencesInit)
-		return -1;
-
-	name[0] = 0;
-
-	ipick = engine->SentenceGroupPick( isentenceg, name, sizeof( name ) );
-	if (( ipick > 0 ) && name[0])
-	{
-		int sentenceIndex = SENTENCEG_Lookup( name );
-		CPASAttenuationFilter filter( GetContainingEntity( entity ), soundlevel );
-		CBaseEntity::EmitSentenceByIndex( filter, ENTINDEX(entity), CHAN_VOICE, sentenceIndex, volume, soundlevel, flags, pitch );
-		return sentenceIndex;
-	}
-
-	return -1;
-}
-
-
-//-----------------------------------------------------------------------------
-// Picks a sentence, but doesn't play it
-//-----------------------------------------------------------------------------
-int SENTENCEG_PickRndSz(const char *szgroupname)
-{
-	char name[64];
-	int ipick;
-	int isentenceg;
-
-	if (!fSentencesInit)
-		return -1;
-
-	name[0] = 0;
-
-	isentenceg = engine->SentenceGroupIndexFromName(szgroupname);
-	if (isentenceg < 0)
-	{
-		Warning( "No such sentence group %s\n", szgroupname );
-		return -1;
-	}
-
-	ipick = engine->SentenceGroupPick(isentenceg, name, sizeof( name ));
-	if (ipick >= 0 && name[0])
-	{
-		return SENTENCEG_Lookup( name );
-	}
-	return -1;
-}
-
-//-----------------------------------------------------------------------------
-// Plays a sentence by sentence index
-//-----------------------------------------------------------------------------
-void SENTENCEG_PlaySentenceIndex( edict_t *entity, int iSentenceIndex, float volume, soundlevel_t soundlevel, int flags, int pitch )
-{
-	if ( iSentenceIndex >= 0 )
-	{
-		CPASAttenuationFilter filter( GetContainingEntity( entity ), soundlevel );
-		CBaseEntity::EmitSentenceByIndex( filter, ENTINDEX(entity), CHAN_VOICE, iSentenceIndex, volume, soundlevel, flags, pitch );
-	}
-}
-
-
-int SENTENCEG_PlayRndSz(edict_t *entity, const char *szgroupname, 
-					  float volume, soundlevel_t soundlevel, int flags, int pitch)
-{
-	char name[64];
-	int ipick;
-	int isentenceg;
-
-	if (!fSentencesInit)
-		return -1;
-
-	name[0] = 0;
-
-	isentenceg = engine->SentenceGroupIndexFromName(szgroupname);
-	if (isentenceg < 0)
-	{
-		Warning( "No such sentence group %s\n", szgroupname );
-		return -1;
-	}
-
-	ipick = engine->SentenceGroupPick(isentenceg, name, sizeof( name ));
-	if (ipick >= 0 && name[0])
-	{
-		int sentenceIndex = SENTENCEG_Lookup( name );
-		CPASAttenuationFilter filter( GetContainingEntity( entity ), soundlevel );
-		CBaseEntity::EmitSentenceByIndex( filter, ENTINDEX(entity), CHAN_VOICE, sentenceIndex, volume, soundlevel, flags, pitch );
-		return sentenceIndex;
-	}
-
-	return -1;
-}
-
-// play sentences in sequential order from sentence group.  Reset after last sentence.
-
-int SENTENCEG_PlaySequentialSz(edict_t *entity, const char *szgroupname, 
-					  float volume, soundlevel_t soundlevel, int flags, int pitch, int ipick, int freset)
-{
-	char name[64];
-	int ipicknext;
-	int isentenceg;
-
-	if (!fSentencesInit)
-		return -1;
-
-	name[0] = 0;
-
-	isentenceg = engine->SentenceGroupIndexFromName(szgroupname);
-	if (isentenceg < 0)
-		return -1;
-
-	ipicknext = engine->SentenceGroupPickSequential(isentenceg, name, sizeof( name ), ipick, freset);
-	if (ipicknext >= 0 && name[0])
-	{
-		int sentenceIndex = SENTENCEG_Lookup( name );
-		CPASAttenuationFilter filter( GetContainingEntity( entity ), soundlevel );
-		CBaseEntity::EmitSentenceByIndex( filter, ENTINDEX(entity), CHAN_VOICE, sentenceIndex, volume, soundlevel, flags, pitch );
-		return sentenceIndex;
-	}
-	
-	return -1;
-}
-
-
-#if 0
-// for this entity, for the given sentence within the sentence group, stop
-// the sentence.
-
-void SENTENCEG_Stop(edict_t *entity, int isentenceg, int ipick)
-{
-	char buffer[64];
-	char sznum[8];
-	
-	if (!fSentencesInit)
-		return;
-
-	if (isentenceg < 0 || ipick < 0)
-		return;
-
-	Q_snprintf(buffer,sizeof(buffer),"!%s%d", engine->SentenceGroupNameFromIndex( isentenceg ), ipick );
-
-	UTIL_StopSound(entity, CHAN_VOICE, buffer);
-}
-#endif
-
-// open sentences.txt, scan for groups, build rgsentenceg
-// Should be called from world spawn, only works on the
-// first call and is ignored subsequently.
-void SENTENCEG_Init()
-{
-	if (fSentencesInit)
-		return;
-
-	engine->PrecacheSentenceFile( "scripts/sentences.txt" );
-	fSentencesInit = true;
-}
-
-// convert sentence (sample) name to !sentencenum, return !sentencenum
-
-int SENTENCEG_Lookup(const char *sample)
-{
-	return engine->SentenceIndexFromName( sample + 1 );
-}
-
-
-int SENTENCEG_GetIndex(const char *szrootname)
-{
-	return engine->SentenceGroupIndexFromName( szrootname );
-}
 
 void UTIL_RestartAmbientSounds( void )
 {

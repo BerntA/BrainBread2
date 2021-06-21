@@ -109,8 +109,6 @@ private:
 	
 	Vector			   m_vMark;
 	float			   m_flMarkTolerance;
-
-	DECLARE_SIMPLE_DATADESC();
 };
 
 
@@ -180,8 +178,6 @@ private:
 	float	m_flMinRestInterval, m_flMaxRestInterval;
 	float	m_flMinBurstInterval, m_flMaxBurstInterval;
 	bool	m_bDisabled;
-
-	DECLARE_SIMPLE_DATADESC();
 };
 
 
@@ -212,8 +208,6 @@ private:
 	float	m_invDecay; //	0.8	// maintain X percent of velocity when slowing down
 	float	m_decayTime;//	0.4161	// Sum( 1..cycle, HEIGHTINVDECAY^cycle ) 
 	float	m_accel;	//	0.5		// accel toward maxVelocity by X percent each cycle
-
-	DECLARE_SIMPLE_DATADESC();
 };
 
 

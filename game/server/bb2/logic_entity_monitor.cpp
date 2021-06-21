@@ -57,7 +57,6 @@ DEFINE_INPUTFUNC(FIELD_VOID, "StopMonitoring", StopMonitoring),
 DEFINE_OUTPUT(m_OnNoneFound, "OnNotFound"),
 DEFINE_OUTPUT(m_OnEntityFound, "OnFound"),
 DEFINE_OUTPUT(m_OnEntityNonExistant, "OnFinished"),
-DEFINE_FIELD(m_bIsMonitoring, FIELD_BOOLEAN),
 DEFINE_THINKFUNC(MonitorEntThink),
 END_DATADESC()
 

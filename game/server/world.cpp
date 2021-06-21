@@ -14,13 +14,10 @@
 #include "gamerules.h"
 #include "teamplay_gamerules.h"
 #include "physics.h"
-#include "isaverestore.h"
 #include "activitylist.h"
 #include "eventlist.h"
 #include "eventqueue.h"
-#include "ai_network.h"
 #include "ai_schedule.h"
-#include "ai_networkmanager.h"
 #include "ai_utils.h"
 #include "basetempentity.h"
 #include "world.h"
@@ -67,7 +64,6 @@ private:
 
 BEGIN_DATADESC( CDecal )
 
-	DEFINE_FIELD( m_nTexture, FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_bLowPriority, FIELD_BOOLEAN, "LowPriority" ), // Don't mark as FDECAL_PERMANENT so not save/restored and will be reused on the client preferentially
 
 	// Function pointers
@@ -259,8 +255,6 @@ private:
 
 BEGIN_DATADESC( CProjectedDecal )
 
-	DEFINE_FIELD( m_nTexture, FIELD_INTEGER ),
-
 	DEFINE_KEYFIELD( m_flDistance, FIELD_FLOAT, "Distance" ),
 
 	// Function pointers
@@ -355,14 +349,10 @@ LINK_ENTITY_TO_CLASS( worldspawn, CWorld );
 
 BEGIN_DATADESC( CWorld )
 
-	DEFINE_FIELD( m_flWaveHeight, FIELD_FLOAT ),
-
 	// keyvalues are parsed from map, but not saved/loaded
 	DEFINE_KEYFIELD( m_iszChapterTitle, FIELD_STRING, "chaptertitle" ),
 	DEFINE_KEYFIELD( m_bStartDark,		FIELD_BOOLEAN, "startdark" ),
 	DEFINE_KEYFIELD( m_bDisplayTitle,	FIELD_BOOLEAN, "gametitle" ),
-	DEFINE_FIELD( m_WorldMins, FIELD_VECTOR ),
-	DEFINE_FIELD( m_WorldMaxs, FIELD_VECTOR ),
 #ifdef _X360
 	DEFINE_KEYFIELD( m_flMaxOccludeeArea, FIELD_FLOAT, "maxoccludeearea_x360" ),
 	DEFINE_KEYFIELD( m_flMinOccluderArea, FIELD_FLOAT, "minoccluderarea_x360" ),
@@ -416,12 +406,6 @@ bool CWorld::KeyValue( const char *szKeyName, const char *szValue )
 	}
 	else if ( FStrEq(szKeyName, "newunit") )
 	{
-		// Single player only.  Clear save directory if set
-		if ( atoi(szValue) )
-		{
-			extern void Game_SetOneWayTransition();
-			Game_SetOneWayTransition();
-		}
 	}
 	else if ( FStrEq(szKeyName, "world_mins") )
 	{
@@ -634,11 +618,6 @@ void CWorld::Precache( void )
 	EventList_Free();
 	RegisterSharedEvents();
 
-// init sentence group playback stuff from sentences.txt.
-// ok to call this multiple times, calls after first are ignored.
-
-	SENTENCEG_Init();
-
 	// Precache standard particle systems
 	PrecacheStandardParticleSystems( );
 
@@ -670,13 +649,10 @@ void CWorld::Precache( void )
 	engine->LightStyle(63, "a");
 
 	// =================================================
-	//	Load and Init AI Networks
-	// =================================================
-	CAI_NetworkManager::InitializeAINetworks();
-	// =================================================
 	//	Load and Init AI Schedules
 	// =================================================
 	g_AI_SchedulesManager.LoadAllSchedules();
+
 	// =================================================
 	//	Initialize NPC Relationships
 	// =================================================

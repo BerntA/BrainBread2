@@ -655,7 +655,6 @@ class C_ClientRagdoll : public C_BaseAnimating, public IPVSNotify
 public:
 	C_ClientRagdoll( bool bRestoring = true );
 	DECLARE_CLASS( C_ClientRagdoll, C_BaseAnimating );
-	DECLARE_DATADESC();
 
 	// inherited from IPVSNotify
 	virtual void OnPVSStatusChanged( bool bInPVS );
@@ -665,9 +664,6 @@ public:
 	virtual void ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCustomImpactName );
 	void ClientThink( void );
 	void ReleaseRagdoll( void ) { m_bReleaseRagdoll = true;	}
-	bool ShouldSavePhysics( void ) { return true; }
-	virtual void	OnSave();
-	virtual void	OnRestore();
 	virtual int ObjectCaps( void ) { return BaseClass::ObjectCaps() | FCAP_SAVE_NON_NETWORKABLE; }
 	virtual IPVSNotify*				GetPVSNotifyInterface() { return this; }
 

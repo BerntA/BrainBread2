@@ -106,20 +106,7 @@ public:
 	
 	void SetAsTemporary( void ) { AddSpawnFlags( SF_SPRITE_TEMPORARY ); }
 	bool IsTemporary( void ) { return ( HasSpawnFlags( SF_SPRITE_TEMPORARY ) ); }
-	
-	int	ObjectCaps( void )
-	{ 
-		int flags = 0;
-		
-		if ( IsTemporary() )
-		{
-			flags = FCAP_DONT_SAVE;
-		}
-		
-		return (BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | flags; 
-	}
 
-	void OnRestore();
 #endif
 
 	void AnimateThink( void );

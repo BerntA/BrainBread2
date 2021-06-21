@@ -90,8 +90,6 @@ public:
 
 	// Network state changes get forwarded here.
 	CBaseAnimatingOverlay *m_pOwnerEntity;
-	
-	DECLARE_SIMPLE_DATADESC();
 };
 
 inline float CAnimationLayer::GetFadeout( float flCurTime )
@@ -138,8 +136,6 @@ private:
 	//int				m_nActiveBaseLayers;
 
 public:
-	
-	virtual void	OnRestore();
 
 	virtual void	StudioFrameAdvance();
 	virtual	void	DispatchAnimEvents ( CBaseAnimating *eventHandler );
@@ -197,7 +193,6 @@ private:
 	int		AllocateLayer( int iPriority = 0 ); // lower priorities are processed first
 
 	DECLARE_SERVERCLASS();
-	DECLARE_DATADESC();
 	DECLARE_PREDICTABLE();
 };
 

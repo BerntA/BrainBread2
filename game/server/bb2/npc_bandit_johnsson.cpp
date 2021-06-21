@@ -70,7 +70,6 @@ private:
 LINK_ENTITY_TO_CLASS(npc_bandit_johnsson, CNPCBanditJohnsson);
 
 BEGIN_DATADESC(CNPCBanditJohnsson)
-DEFINE_FIELD(m_flHealthFractionToCheck, FIELD_FLOAT),
 DEFINE_INPUTFUNC(FIELD_VOID, "EnterHideout", InputEnteredHideout),
 DEFINE_INPUTFUNC(FIELD_VOID, "LeaveHideout", InputLeftHideout),
 DEFINE_OUTPUT(m_OnLostQuarterOfHealth, "OnLostQuarterHealth"),

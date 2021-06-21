@@ -9,7 +9,6 @@
 #include "entityoutput.h"
 #include "TemplateEntities.h"
 #include "point_template.h"
-#include "saverestore_utlvector.h"
 #include "mapentities.h"
 #include "tier0/icommandline.h"
 #include "mapentities_shared.h"
@@ -24,20 +23,11 @@
 // of the entities will ever be spawned at a time.
 #define	SF_POINTTEMPLATE_PRESERVE_NAMES					0x0002
 
-
 LINK_ENTITY_TO_CLASS(point_template, CPointTemplate);
 
-BEGIN_SIMPLE_DATADESC( template_t )
-	DEFINE_FIELD( iTemplateIndex,	FIELD_INTEGER ),
-	DEFINE_FIELD( matEntityToTemplate, FIELD_VMATRIX ),
-END_DATADESC()
-
 BEGIN_DATADESC( CPointTemplate )
+
 	// Keys
-
-	// Silence, Classcheck!
-	// DEFINE_ARRAY( m_iszTemplateEntityNames, FIELD_STRING, MAX_NUM_TEMPLATES ),
-
 	DEFINE_KEYFIELD( m_iszTemplateEntityNames[0], FIELD_STRING, "Template01"),
 	DEFINE_KEYFIELD( m_iszTemplateEntityNames[1], FIELD_STRING, "Template02"),
 	DEFINE_KEYFIELD( m_iszTemplateEntityNames[2], FIELD_STRING, "Template03"),
@@ -54,9 +44,6 @@ BEGIN_DATADESC( CPointTemplate )
 	DEFINE_KEYFIELD( m_iszTemplateEntityNames[13], FIELD_STRING, "Template14"),
 	DEFINE_KEYFIELD( m_iszTemplateEntityNames[14], FIELD_STRING, "Template15"),
 	DEFINE_KEYFIELD( m_iszTemplateEntityNames[15], FIELD_STRING, "Template16"),
-	DEFINE_UTLVECTOR( m_hTemplateEntities, FIELD_CLASSPTR ),
-
-	DEFINE_UTLVECTOR( m_hTemplates, FIELD_EMBEDDED ),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "ForceSpawn", InputForceSpawn ),

@@ -23,8 +23,6 @@ DEFINE_KEYFIELD(m_bShouldBeHidden, FIELD_BOOLEAN, "Hidden"),
 
 DEFINE_INPUTFUNC(FIELD_VOID, "ShowIcon", InputShowIcon),
 DEFINE_INPUTFUNC(FIELD_VOID, "HideIcon", InputHideIcon),
-
-DEFINE_ARRAY(m_szTextureFile, FIELD_CHARACTER, MAX_WEAPON_STRING),
 END_DATADESC()
 
 CObjectiveIcon::CObjectiveIcon()

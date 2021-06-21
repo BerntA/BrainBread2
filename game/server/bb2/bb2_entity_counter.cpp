@@ -8,7 +8,6 @@
 #include "bb2_entity_counter.h"
 #include "triggers.h"
 #include "props.h"
-#include "saverestore_utlvector.h"
 #include "ai_basenpc.h"
 #include "hl2mp_gamerules.h"
 #include "hl2mp_player.h"

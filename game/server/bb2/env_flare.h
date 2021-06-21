@@ -43,7 +43,6 @@ public:
 
 	void	Spawn(void);
 	void	Precache(void);
-	int		Restore(IRestore &restore);
 	void	Activate(void);
 
 	void	StartBurnSound(void);

@@ -384,6 +384,8 @@ enum Collision_Group_t
 	COLLISION_GROUP_NPC_ZOMBIE_SPAWNING, // Used for spawning zombies, non-bosses of course.
 	COLLISION_GROUP_PLAYER_REALITY_PHASE, // Used when reality phase is active... (perk)
 
+	COLLISION_GROUP_NPC_CROW,
+
 	LAST_SHARED_COLLISION_GROUP
 };
 

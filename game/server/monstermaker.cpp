@@ -36,7 +36,6 @@ LINK_ENTITY_TO_CLASS( info_npc_spawn_destination, CNPCSpawnDestination );
 BEGIN_DATADESC( CNPCSpawnDestination )
 	DEFINE_KEYFIELD( m_ReuseDelay, FIELD_FLOAT, "ReuseDelay" ),
 	DEFINE_KEYFIELD( m_RenameNPC,FIELD_STRING, "RenameNPC" ),
-	DEFINE_FIELD( m_TimeNextAvailable, FIELD_TIME ),
 
 	DEFINE_OUTPUT( m_OnSpawnNPC,	"OnSpawnNPC" ),
 END_DATADESC()
@@ -83,8 +82,6 @@ BEGIN_DATADESC( CBaseNPCMaker )
 	DEFINE_KEYFIELD( m_flSpawnFrequency,		FIELD_FLOAT,	"SpawnFrequency" ),
 	DEFINE_KEYFIELD( m_bDisabled,			FIELD_BOOLEAN,	"StartDisabled" ),
 
-	DEFINE_FIELD(	m_nLiveChildren,		FIELD_INTEGER ),
-
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID,	"Spawn",	InputSpawnNPC ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"Enable",	InputEnable ),
@@ -104,7 +101,6 @@ BEGIN_DATADESC( CBaseNPCMaker )
 	// Function Pointers
 	DEFINE_THINKFUNC( MakerThink ),
 
-	DEFINE_FIELD( m_hIgnoreEntity, FIELD_EHANDLE ),
 	DEFINE_KEYFIELD( m_iszIngoreEnt, FIELD_STRING, "IgnoreEntity" ), 
 END_DATADESC()
 
@@ -372,7 +368,6 @@ BEGIN_DATADESC( CNPCMaker )
 	DEFINE_KEYFIELD( m_ChildTargetName,		FIELD_STRING,	"NPCTargetname" ),
 	DEFINE_KEYFIELD( m_SquadName,			FIELD_STRING,	"NPCSquadName" ),
 	DEFINE_KEYFIELD( m_spawnEquipment,		FIELD_STRING,	"additionalequipment" ),
-	DEFINE_KEYFIELD( m_strHintGroup,			FIELD_STRING,	"NPCHintGroup" ),
 	DEFINE_KEYFIELD( m_RelationshipString,	FIELD_STRING,	"Relationship" ),
 
 END_DATADESC()
@@ -446,7 +441,6 @@ void CNPCMaker::MakeNPC( void )
 
 	pent->m_spawnEquipment	= m_spawnEquipment;
 	pent->SetSquadName( m_SquadName );
-	pent->SetHintGroup( m_strHintGroup );
 
 	ChildPreSpawn( pent );
 
@@ -559,7 +553,6 @@ BEGIN_DATADESC( CTemplateNPCMaker )
 
 	DEFINE_KEYFIELD( m_iszTemplateName, FIELD_STRING, "TemplateName" ),
 	DEFINE_KEYFIELD( m_flRadius, FIELD_FLOAT, "radius" ),
-	DEFINE_FIELD( m_iszTemplateData, FIELD_STRING ),
 	DEFINE_KEYFIELD( m_iszDestinationGroup, FIELD_STRING, "DestinationGroup" ),
 	DEFINE_KEYFIELD( m_CriterionVisibility, FIELD_INTEGER, "CriterionVisibility" ),
 	DEFINE_KEYFIELD( m_CriterionDistance, FIELD_INTEGER, "CriterionDistance" ),

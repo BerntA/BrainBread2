@@ -26,17 +26,13 @@
 #include "c_te_effect_dispatch.h"
 #include <KeyValues.h>
 #include "c_rope.h"
-#include "isaverestore.h"
 #include "datacache/imdlcache.h"
 #include "eventlist.h"
-#include "saverestore.h"
-#include "physics_saverestore.h"
 #include "vphysics/constraints.h"
 #include "ragdoll_shared.h"
 #include "view.h"
 #include "c_ai_basenpc.h"
 #include "c_entitydissolve.h"
-#include "saverestoretypes.h"
 #include "c_fire_smoke.h"
 #include "input.h"
 #include "soundinfo.h"
@@ -253,29 +249,6 @@ END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( client_ragdoll, C_ClientRagdoll );
 
-BEGIN_DATADESC( C_ClientRagdoll )
-	DEFINE_FIELD( m_iCurrentFriction, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iMinFriction, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iMaxFriction, FIELD_INTEGER ),
-	DEFINE_FIELD( m_flFrictionModTime, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flFrictionTime, FIELD_TIME ),
-	DEFINE_FIELD( m_iFrictionAnimState, FIELD_INTEGER ),
-	DEFINE_FIELD( m_bReleaseRagdoll, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_nBody, FIELD_INTEGER ),
-	DEFINE_FIELD( m_nSkin, FIELD_INTEGER ),
-	DEFINE_FIELD( m_nRenderFX, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_nRenderMode, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_clrRender, FIELD_COLOR32 ),
-	DEFINE_FIELD( m_flEffectTime, FIELD_TIME ),
-	DEFINE_FIELD( m_bFadingOut, FIELD_BOOLEAN ),
-
-	DEFINE_AUTO_ARRAY( m_flScaleEnd, FIELD_FLOAT ),
-	DEFINE_AUTO_ARRAY( m_flScaleTimeStart, FIELD_FLOAT ),
-	DEFINE_AUTO_ARRAY( m_flScaleTimeEnd, FIELD_FLOAT ),
-	DEFINE_EMBEDDEDBYREF( m_pRagdoll ),
-
-END_DATADESC()
-
 C_ClientRagdoll::C_ClientRagdoll( bool bRestoring )
 {
 	m_iCurrentFriction = 0;
@@ -290,79 +263,6 @@ C_ClientRagdoll::C_ClientRagdoll( bool bRestoring )
 	{
 		m_pRagdoll = new CRagdoll;
 	}
-}
-
-void C_ClientRagdoll::OnSave( void )
-{
-}
-
-void C_ClientRagdoll::OnRestore( void )
-{
-	CStudioHdr *hdr = GetModelPtr();
-
-	if ( hdr == NULL )
-	{
-		const char *pModelName = STRING( GetModelName() );
-		SetModel( pModelName );
-
-		hdr = GetModelPtr();
-
-		if ( hdr == NULL )
-			return;
-	}
-	
-	if ( m_pRagdoll == NULL )
-		 return;
-
-	ragdoll_t *pRagdollT = m_pRagdoll->GetRagdoll();
-
-	if ( pRagdollT == NULL || pRagdollT->list[0].pObject == NULL )
-	{
-		m_bReleaseRagdoll = true;
-		m_pRagdoll = NULL;
-		Assert( !"Attempted to restore a ragdoll without physobjects!" );
-		return;
-	}
-
-	if ( GetFlags() & FL_DISSOLVING )
-	{
-		DissolveEffect( this, m_flEffectTime );
-	}
-	else if ( GetFlags() & FL_ONFIRE )
-	{
-		C_EntityFlame *pFireChild = dynamic_cast<C_EntityFlame *>( GetEffectEntity() );
-		C_EntityFlame *pNewFireChild = FireEffect( this, pFireChild, m_flScaleEnd, m_flScaleTimeStart, m_flScaleTimeEnd );
-
-		//Set the new fire child as the new effect entity.
-		SetEffectEntity( pNewFireChild );
-	}
-
-	VPhysicsSetObject( NULL );
-	VPhysicsSetObject( pRagdollT->list[0].pObject );
-
-	SetupBones( NULL, -1, BONE_USED_BY_ANYTHING, gpGlobals->curtime );
-
-	pRagdollT->list[0].parentIndex = -1;
-	pRagdollT->list[0].originParentSpace.Init();
-
-	RagdollActivate( *pRagdollT, modelinfo->GetVCollide( GetModelIndex() ), GetModelIndex(), true );
-	RagdollSetupAnimatedFriction( physenv, pRagdollT, GetModelIndex() );
-
-	m_pRagdoll->BuildRagdollBounds( this );
-
-	// UNDONE: The shadow & leaf system cleanup should probably be in C_BaseEntity::OnRestore()
-	// this must be recomputed because the model was NULL when this was set up
-	RemoveFromLeafSystem();
-	AddToLeafSystem( RENDER_GROUP_OPAQUE_ENTITY );
-
-	DestroyShadow();
- 	CreateShadow();
-
-	SetNextClientThink( CLIENT_THINK_ALWAYS );
-	NoteRagdollCreationTick( this );
-	
-	BaseClass::OnRestore();
-	RagdollMoved();
 }
 
 void C_ClientRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCustomImpactName )

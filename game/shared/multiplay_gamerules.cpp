@@ -9,7 +9,6 @@
 #include "cdll_int.h"
 #include "multiplay_gamerules.h"
 #include "viewport_panel_names.h"
-#include "gameeventdefs.h"
 #include <KeyValues.h>
 #include "filesystem.h"
 #include "utlbuffer.h"
@@ -30,10 +29,7 @@
 	#include "in_buttons.h" 
 	#include <ctype.h>
 	#include "voice_gamemgr.h"
-	#include "iscorer.h"
 	#include "hltvdirector.h"
-	#include "AI_Criteria.h"
-	#include "sceneentity.h"
 	#include "team.h"
 	#include "usermessages.h"
 	#include "tier0/icommandline.h"
@@ -533,32 +529,10 @@ bool CMultiplayRules::Init()
 	//-----------------------------------------------------------------------------
 	// Purpose: 
 	//-----------------------------------------------------------------------------
-	CBasePlayer *CMultiplayRules::GetDeathScorer( CBaseEntity *pKiller, CBaseEntity *pInflictor )
+	CBasePlayer *CMultiplayRules::GetDeathScorer(CBaseEntity *pKiller, CBaseEntity *pInflictor)
 	{
-		if ( pKiller)
-		{
-			if ( pKiller->IsZombie() || pKiller->IsHuman() )
-				return (CBasePlayer*)pKiller;
-
-			// Killing entity might be specifying a scorer player
-			IScorer *pScorerInterface = dynamic_cast<IScorer*>( pKiller );
-			if ( pScorerInterface )
-			{
-				CBasePlayer *pPlayer = pScorerInterface->GetScorer();
-				if ( pPlayer )
-					return pPlayer;
-			}
-
-			// Inflicting entity might be specifying a scoring player
-			pScorerInterface = dynamic_cast<IScorer*>( pInflictor );
-			if ( pScorerInterface )
-			{
-				CBasePlayer *pPlayer = pScorerInterface->GetScorer();
-				if ( pPlayer )
-					return pPlayer;
-			}
-		}
-
+		if (pKiller && (pKiller->IsZombie() || pKiller->IsHuman()))
+			return (CBasePlayer*)pKiller;
 		return NULL;
 	}
 

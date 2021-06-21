@@ -109,9 +109,6 @@ DEFINE_KEYFIELD(goalActivity, FIELD_INTEGER, "goal_activity"),
 DEFINE_KEYFIELD(goalType, FIELD_INTEGER, "goal_type"),
 DEFINE_KEYFIELD(goalInterruptType, FIELD_INTEGER, "goal_interrupt_type"),
 
-DEFINE_FIELD(m_flNextSpawnWave, FIELD_TIME),
-DEFINE_FIELD(m_iSpawnNum, FIELD_INTEGER),
-
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(zombie_volume, CZombieVolume);

@@ -71,11 +71,6 @@ BEGIN_DATADESC( CLogicMeasureMovement )
 	DEFINE_KEYFIELD( m_flScale, FIELD_FLOAT, "TargetScale" ),
 	DEFINE_KEYFIELD( m_nMeasureType, FIELD_INTEGER, "MeasureType" ),
 
-	DEFINE_FIELD( m_hMeasureTarget, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hMeasureReference, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hTarget, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hTargetReference, FIELD_EHANDLE ),
-
 	DEFINE_INPUTFUNC( FIELD_STRING, "SetMeasureTarget", InputSetMeasureTarget ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "SetMeasureReference", InputSetMeasureReference ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "SetTarget", InputSetTarget ),

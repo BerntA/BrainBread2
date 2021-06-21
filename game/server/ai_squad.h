@@ -151,7 +151,6 @@ private:
 	bool IsSlotOccupied( CBaseEntity *pEnemy, int i ) const;
 
 private:
-	friend class CAI_SaveRestoreBlockHandler;
 	friend class CAI_SquadManager;
 
 	CAI_Squad();
@@ -189,10 +188,6 @@ private:
 	CVarBitVec	m_squadSlotsUsed;							// What squad slots are filled?
 
 #endif
-
-	//---------------------------------
-public:
-	DECLARE_SIMPLE_DATADESC();
 };
 
 //-----------------------------------------------------------------------------

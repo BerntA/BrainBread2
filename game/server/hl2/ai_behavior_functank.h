@@ -16,15 +16,6 @@
 
 #define AI_FUNCTANK_BEHAVIOR_BUSYTIME		10.0f
 
-enum
-{
-	FUNCTANK_SENTENCE_MOVE_TO_MOUNT = SENTENCE_BASE_BEHAVIOR_INDEX,
-	FUNCTANK_SENTENCE_JUST_MOUNTED,
-	FUNCTANK_SENTENCE_SCAN_FOR_ENEMIES,
-	FUNCTANK_SENTENCE_DISMOUNTING,
-};
-
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -32,7 +23,6 @@ class CAI_FuncTankBehavior : public CAI_SimpleBehavior
 {
 	DECLARE_CLASS( CAI_FuncTankBehavior, CAI_SimpleBehavior );
 	DEFINE_CUSTOM_SCHEDULE_PROVIDER;
-	DECLARE_DATADESC();
 	
 public:
 	// Contructor/Deconstructor

@@ -22,8 +22,6 @@
 //-----------------------------------------------------------------------------
 struct TrailPoint_t
 {
-	DECLARE_SIMPLE_DATADESC();
-
 	Vector	m_vecScreenPos;
 	float	m_flDieTime;
 	float	m_flTexCoord;

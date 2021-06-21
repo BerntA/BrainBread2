@@ -39,9 +39,6 @@ private:
 LINK_ENTITY_TO_CLASS( env_particle_performance_monitor, CParticlePerformanceMonitor );
 
 BEGIN_DATADESC( CParticlePerformanceMonitor )
-	DEFINE_FIELD( m_bDisplayPerf, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bMeasurePerf, FIELD_BOOLEAN ),
-
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOnDisplay", InputTurnOnDisplay ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOffDisplay", InputTurnOffDisplay ),

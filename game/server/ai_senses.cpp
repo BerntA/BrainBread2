@@ -6,14 +6,11 @@
 //=============================================================================//
 
 #include "cbase.h"
-
 #include "ai_senses.h"
-
 #include "soundent.h"
 #include "team.h"
 #include "ai_basenpc.h"
 #include "npc_BaseZombie.h"
-#include "saverestore_utlvector.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -50,33 +47,11 @@ struct AISightIterVal_t
 
 #pragma pack(pop)
 
-
 //=============================================================================
 //
 // CAI_Senses
 //
 //=============================================================================
-
-BEGIN_SIMPLE_DATADESC( CAI_Senses )
-
-	DEFINE_FIELD( m_LookDist,			FIELD_FLOAT	),
-	DEFINE_FIELD( m_LastLookDist, 	FIELD_FLOAT	),
-	DEFINE_FIELD( m_TimeLastLook, 	FIELD_TIME	),
-	DEFINE_FIELD( m_iSensingFlags, FIELD_INTEGER ),
-	//								m_iAudibleList		(no way to save?)
-	DEFINE_UTLVECTOR(m_SeenHighPriority, FIELD_EHANDLE ),
-	DEFINE_UTLVECTOR(m_SeenNPCs, 		FIELD_EHANDLE ),
-	DEFINE_UTLVECTOR(m_SeenMisc, 		FIELD_EHANDLE ),
-	//								m_SeenArrays		(not saved, rebuilt)
-
-	// Could fold these three and above timer into one concept, but would invalidate savegames
-	DEFINE_FIELD( m_TimeLastLookHighPriority, 	FIELD_TIME	),
-	DEFINE_FIELD( m_TimeLastLookNPCs, 	FIELD_TIME	),
-	DEFINE_FIELD( m_TimeLastLookMisc, 	FIELD_TIME	),
-
-END_DATADESC()
-
-//-----------------------------------------------------------------------------
 
 bool CAI_Senses::CanHearSound( CSound *pSound )
 {

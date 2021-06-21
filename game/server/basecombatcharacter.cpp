@@ -26,14 +26,12 @@
 #include "globals.h"
 #include "physics_prop_ragdoll.h"
 #include "physics_impact_damage.h"
-#include "saverestore_utlvector.h"
 #include "eventqueue.h"
 #include "world.h"
 #include "items.h"
 #include "movevars_shared.h"
 #include "RagdollBoogie.h"
 #include "rumble_shared.h"
-#include "saverestoretypes.h"
 #include "nav_mesh.h"
 #include "particle_parse.h"
 #include "hl2mp_player.h"
@@ -60,37 +58,9 @@ ConVar ai_use_visibility_cache( "ai_use_visibility_cache", "1" );
 #endif
 
 BEGIN_DATADESC( CBaseCombatCharacter )
-
-	DEFINE_FIELD( m_flNextAttack, FIELD_TIME ),
-	DEFINE_FIELD( m_eHull, FIELD_INTEGER ),
-	DEFINE_FIELD( m_bloodColor, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iDamageCount, FIELD_INTEGER ),
-	
-	DEFINE_FIELD( m_flFieldOfView, FIELD_FLOAT ),
-	DEFINE_FIELD( m_HackedGunPos, FIELD_VECTOR ),
 	DEFINE_KEYFIELD( m_RelationshipString, FIELD_STRING, "Relationship" ),
-
-	DEFINE_FIELD( m_LastHitGroup, FIELD_INTEGER ),
-	DEFINE_FIELD( m_flDamageAccumulator, FIELD_FLOAT ),
 	DEFINE_INPUT( m_impactEnergyScale, FIELD_FLOAT, "physdamagescale" ),
-
-	DEFINE_UTLVECTOR( m_Relationship,	FIELD_EMBEDDED),
-
-	DEFINE_AUTO_ARRAY( m_hMyWeapons, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hActiveWeapon, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_bForceServerRagdoll, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bPreventWeaponPickup, FIELD_BOOLEAN ),
-
 	DEFINE_INPUTFUNC( FIELD_VOID, "KilledNPC", InputKilledNPC ),
-
-END_DATADESC()
-
-
-BEGIN_SIMPLE_DATADESC( Relationship_t )
-	DEFINE_FIELD( entity,			FIELD_EHANDLE ),
-	DEFINE_FIELD( classType,		FIELD_INTEGER ),
-	DEFINE_FIELD( disposition,	FIELD_INTEGER ),
-	DEFINE_FIELD( priority,	FIELD_INTEGER ),
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
@@ -483,32 +453,6 @@ void CBaseCombatCharacter::Precache()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int CBaseCombatCharacter::Restore( IRestore &restore )
-{
-	int status = BaseClass::Restore(restore);
-	if ( !status )
-		return 0;
-
-	if ( gpGlobals->eLoadType == MapLoad_Transition )
-	{
-		DevMsg( 2, "%s (%s) removing class relationships due to level transition\n", STRING( GetEntityName() ), GetClassname() );
-
-		for ( int i = m_Relationship.Count() - 1; i >= 0; --i )
-		{
-			if ( !m_Relationship[i].entity && m_Relationship[i].classType != CLASS_NONE ) 
-			{
-				m_Relationship.FastRemove( i );
-			}
-		}
-	}
-	return status;
-}
-
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CBaseCombatCharacter::UpdateOnRemove( void )
 {
 	int i;
@@ -532,146 +476,6 @@ void CBaseCombatCharacter::UpdateOnRemove( void )
 	// Chain at end to mimic destructor unwind order
 	BaseClass::UpdateOnRemove();
 }
-
-//=========================================================
-// GetDeathActivity - determines the best type of death
-// anim to play.
-//=========================================================
-Activity CBaseCombatCharacter::GetDeathActivity ( void )
-{
-	Activity	deathActivity;
-	bool		fTriedDirection;
-	float		flDot;
-	trace_t		tr;
-	Vector		vecSrc;
-
-	if (IsPlayer())
-	{
-		// die in an interesting way
-		switch( random->RandomInt(0,7) )
-		{
-		case 0:	return ACT_DIESIMPLE;
-		case 1: return ACT_DIEBACKWARD;
-		case 2: return ACT_DIEFORWARD;
-		case 3: return ACT_DIEVIOLENT;
-		case 4: return ACT_DIE_HEADSHOT;
-		case 5: return ACT_DIE_CHESTSHOT;
-		case 6: return ACT_DIE_GUTSHOT;
-		case 7: return ACT_DIE_BACKSHOT;
-		}
-	}
-
-	vecSrc = WorldSpaceCenter();
-
-	fTriedDirection = false;
-	deathActivity = ACT_DIESIMPLE;// in case we can't find any special deaths to do.
-
-	Vector forward;
-	AngleVectors( GetLocalAngles(), &forward );
-	flDot = -DotProduct( forward, g_vecAttackDir );
-
-	switch ( m_LastHitGroup )
-	{
-		// try to pick a region-specific death.
-	case HITGROUP_HEAD:
-		deathActivity = ACT_DIE_HEADSHOT;
-		break;
-
-	case HITGROUP_STOMACH:
-		deathActivity = ACT_DIE_GUTSHOT;
-		break;
-
-	case HITGROUP_GENERIC:
-		// try to pick a death based on attack direction
-		fTriedDirection = true;
-
-		if ( flDot > 0.3 )
-		{
-			deathActivity = ACT_DIEFORWARD;
-		}
-		else if ( flDot <= -0.3 )
-		{
-			deathActivity = ACT_DIEBACKWARD;
-		}
-		break;
-
-	default:
-		// try to pick a death based on attack direction
-		fTriedDirection = true;
-
-		if ( flDot > 0.3 )
-		{
-			deathActivity = ACT_DIEFORWARD;
-		}
-		else if ( flDot <= -0.3 )
-		{
-			deathActivity = ACT_DIEBACKWARD;
-		}
-		break;
-	}
-
-
-	// can we perform the prescribed death?
-	if ( SelectWeightedSequence ( deathActivity ) == ACTIVITY_NOT_AVAILABLE )
-	{
-		// no! did we fail to perform a directional death? 
-		if ( fTriedDirection )
-		{
-			// if yes, we're out of options. Go simple.
-			deathActivity = ACT_DIESIMPLE;
-		}
-		else
-		{
-			// cannot perform the ideal region-specific death, so try a direction.
-			if ( flDot > 0.3 )
-			{
-				deathActivity = ACT_DIEFORWARD;
-			}
-			else if ( flDot <= -0.3 )
-			{
-				deathActivity = ACT_DIEBACKWARD;
-			}
-		}
-	}
-
-	if ( SelectWeightedSequence ( deathActivity ) == ACTIVITY_NOT_AVAILABLE )
-	{
-		// if we're still invalid, simple is our only option.
-		deathActivity = ACT_DIESIMPLE;
-
-		if ( SelectWeightedSequence ( deathActivity ) == ACTIVITY_NOT_AVAILABLE )
-		{
-			Msg( "ERROR! %s missing ACT_DIESIMPLE\n", STRING(GetModelName()) );
-		}
-	}
-
-	if ( deathActivity == ACT_DIEFORWARD )
-	{
-			// make sure there's room to fall forward
-			UTIL_TraceHull ( vecSrc, vecSrc + forward * 64, Vector(-16,-16,-18), 
-				Vector(16,16,18), MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
-
-			if ( tr.fraction != 1.0 )
-			{
-				deathActivity = ACT_DIESIMPLE;
-			}
-	}
-
-	if ( deathActivity == ACT_DIEBACKWARD )
-	{
-			// make sure there's room to fall backward
-			UTIL_TraceHull ( vecSrc, vecSrc - forward * 64, Vector(-16,-16,-18), 
-				Vector(16,16,18), MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
-
-			if ( tr.fraction != 1.0 )
-			{
-				deathActivity = ACT_DIESIMPLE;
-			}
-	}
-
-	return deathActivity;
-}
-
 
 // UNDONE: Should these operate on a list of weapon/items
 Activity CBaseCombatCharacter::Weapon_TranslateActivity( Activity baseAct, bool *pRequired )
@@ -2231,128 +2035,6 @@ CBaseEntity *CBaseCombatCharacter::FindHealthItem( const Vector &vecPosition, co
 	}
 
 	return NULL;
-}
-
-//-----------------------------------------------------------------------------
-// Compares the weapon's center with this character's current origin, so it
-// will not give reliable results for weapons that are visible to the NPC
-// but are upstairs/downstairs, etc.
-//
-// A weapon is said to be on the ground if it is no more than 12 inches above
-// or below the caller's feet.
-//-----------------------------------------------------------------------------
-bool CBaseCombatCharacter::Weapon_IsOnGround( CBaseCombatWeapon *pWeapon )
-{
-	if (pWeapon->HasSpawnFlags(SF_NORESPAWN) == false)
-		return false;
-
-	if( fabs(pWeapon->WorldSpaceCenter().z - GetAbsOrigin().z) >= 12.0f )	
-		return false;	
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : &range - 
-// Output : CBaseEntity
-//-----------------------------------------------------------------------------
-CBaseEntity *CBaseCombatCharacter::Weapon_FindUsable( const Vector &range )
-{
-	bool bConservative = false;
-
-	CBaseCombatWeapon *weaponList[64];
-	CBaseCombatWeapon *pBestWeapon = NULL;
-
-	Vector mins = GetAbsOrigin() - range;
-	Vector maxs = GetAbsOrigin() + range;
-	int listCount = CBaseCombatWeapon::GetAvailableWeaponsInBox( weaponList, ARRAYSIZE(weaponList), mins, maxs );
-
-	float fBestDist = 1e6;
-
-	for ( int i = 0; i < listCount; i++ )
-	{
-		// Make sure not moving (ie flying through the air)
-		Vector velocity;
-
-		CBaseCombatWeapon *pWeapon = weaponList[i];
-		Assert(pWeapon);
-		pWeapon->GetVelocity( &velocity, NULL );
-
-		if ( pWeapon->CanBePickedUpByNPCs() == false )
-			continue;
-
-		if ( velocity.LengthSqr() > 1 || !Weapon_CanUse(pWeapon) )
-			continue;
-
-		if ( pWeapon->IsLocked(this) )
-			continue;
-
-		if ( GetActiveWeapon() )
-		{
-			// Already armed. Would picking up this weapon improve my situation?
-			if( GetActiveWeapon()->m_iClassname == pWeapon->m_iClassname )
-			{
-				// No, I'm already using this type of weapon.
-				continue;
-			}
-		}
-
-		float fCurDist = (pWeapon->GetLocalOrigin() - GetLocalOrigin()).Length();
-
-		// Give any reserved weapon a bonus
-		if( pWeapon->HasSpawnFlags( SF_WEAPON_NO_PLAYER_PICKUP ) )
-		{
-			fCurDist *= 0.5f;
-		}
-
-		if ( pBestWeapon )
-		{
-			// choose the last range attack weapon you find or the first available other weapon
-			if ( ! (pWeapon->CapabilitiesGet() & bits_CAP_RANGE_ATTACK_GROUP) )
-			{
-				continue;
-			}
-			else if (fCurDist > fBestDist ) 
-			{
-				continue;
-			}
-		}
-
-		if( Weapon_IsOnGround(pWeapon) )
-		{
-			// Weapon appears to be lying on the ground. Make sure this weapon is reachable
-			// by tracing out a human sized hull just above the weapon.  If not, reject
-			trace_t tr;
-
-			Vector	vAboveWeapon = pWeapon->GetAbsOrigin();
-			UTIL_TraceEntity( this, vAboveWeapon, vAboveWeapon + Vector( 0, 0, 1 ), MASK_SOLID, pWeapon, COLLISION_GROUP_NONE, &tr );
-
-			if ( tr.startsolid || (tr.fraction < 1.0) )
-				continue;
-		}
-		else if( bConservative )
-		{
-			// Skip it.
-			continue;
-		}
-
-		if( FVisible(pWeapon) )
-		{
-			fBestDist   = fCurDist;
-			pBestWeapon = pWeapon;
-		}
-	}
-
-	if( pBestWeapon )
-	{
-		// Lock this weapon for my exclusive use. Lock it for just a couple of seconds because my AI 
-		// might not actually be able to go pick it up right now.
-		pBestWeapon->Lock( 2.0, this );
-	}
-
-
-	return pBestWeapon;
 }
 
 ConVar	phys_stressbodyweights( "phys_stressbodyweights", "5.0" );

@@ -21,27 +21,17 @@
 BEGIN_DATADESC( CBaseDoor )
 
 	DEFINE_KEYFIELD( m_vecMoveDir, FIELD_VECTOR, "movedir" ),
-
-	DEFINE_FIELD( m_bLockedSentence, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_bUnlockedSentence, FIELD_CHARACTER ),	
 	DEFINE_KEYFIELD( m_NoiseMoving, FIELD_SOUNDNAME, "noise1" ),
 	DEFINE_KEYFIELD( m_NoiseArrived, FIELD_SOUNDNAME, "noise2" ),
 	DEFINE_KEYFIELD( m_NoiseMovingClosed, FIELD_SOUNDNAME, "startclosesound" ),
 	DEFINE_KEYFIELD( m_NoiseArrivedClosed, FIELD_SOUNDNAME, "closesound" ),
 	DEFINE_KEYFIELD( m_ChainTarget, FIELD_STRING, "chainstodoor" ),
-	// DEFINE_FIELD( m_isChaining, FIELD_BOOLEAN ),
-	// DEFINE_FIELD( m_ls, locksound_t ),
-//	DEFINE_FIELD( m_isChaining, FIELD_BOOLEAN ),
 	DEFINE_KEYFIELD( m_ls.sLockedSound, FIELD_SOUNDNAME, "locked_sound" ),
 	DEFINE_KEYFIELD( m_ls.sUnlockedSound, FIELD_SOUNDNAME, "unlocked_sound" ),
-	DEFINE_FIELD( m_bLocked, FIELD_BOOLEAN ),
 	DEFINE_KEYFIELD( m_flWaveHeight, FIELD_FLOAT, "WaveHeight" ),
 	DEFINE_KEYFIELD( m_flBlockDamage, FIELD_FLOAT, "dmg" ),
 	DEFINE_KEYFIELD( m_eSpawnPosition, FIELD_INTEGER, "spawnpos" ),
-
 	DEFINE_KEYFIELD( m_bForceClosed, FIELD_BOOLEAN, "forceclosed" ),
-	DEFINE_FIELD( m_bDoorGroup, FIELD_BOOLEAN ),
-
 	DEFINE_KEYFIELD( m_bLoopMoveSound, FIELD_BOOLEAN, "loopmovesound" ),
 	DEFINE_KEYFIELD( m_bIgnoreDebris, FIELD_BOOLEAN, "ignoredebris" ),
 
@@ -113,8 +103,6 @@ void PlayLockSounds(CBaseEntity *pEdict, locksound_t *pls, int flocked, int fbut
 	if ( flocked )
 	{
 		int		fplaysound = (pls->sLockedSound != NULL_STRING && gpGlobals->curtime > pls->flwaitSound);
-		int		fplaysentence = (pls->sLockedSentence != NULL_STRING && !pls->bEOFLocked && gpGlobals->curtime > pls->flwaitSentence);
-		float	fvol = ( fplaysound && fplaysentence ) ? 0.25f : 1.0f;
 
 		// if there is a locked sound, and we've debounced, play sound
 		if (fplaysound)
@@ -125,45 +113,17 @@ void PlayLockSounds(CBaseEntity *pEdict, locksound_t *pls, int flocked, int fbut
 			EmitSound_t ep;
 			ep.m_nChannel = CHAN_ITEM;
 			ep.m_pSoundName = (char*)STRING(pls->sLockedSound);
-			ep.m_flVolume = fvol;
+			ep.m_flVolume = 1.0f;
 			ep.m_SoundLevel = SNDLVL_NORM;
 
 			CBaseEntity::EmitSound( filter, pEdict->entindex(), ep );
 			pls->flwaitSound = gpGlobals->curtime + flsoundwait;
 		}
-
-		// if there is a sentence, we've not played all in list, and we've debounced, play sound
-		if (fplaysentence)
-		{
-			// play next 'door locked' sentence in group
-			int iprev = pls->iLockedSentence;
-			
-			pls->iLockedSentence = SENTENCEG_PlaySequentialSz(	pEdict->edict(), 
-																STRING(pls->sLockedSentence), 
-																0.85f, 
-																SNDLVL_NORM, 
-																0, 
-																100, 
-																pls->iLockedSentence, 
-																FALSE);
-			pls->iUnlockedSentence = 0;
-
-			// make sure we don't keep calling last sentence in list
-			pls->bEOFLocked = (iprev == pls->iLockedSentence);
-		
-			pls->flwaitSentence = gpGlobals->curtime + DOOR_SENTENCEWAIT;
-		}
 	}
 	else
 	{
 		// UNLOCKED SOUND
-
 		int fplaysound = (pls->sUnlockedSound != NULL_STRING && gpGlobals->curtime > pls->flwaitSound);
-		int fplaysentence = (pls->sUnlockedSentence != NULL_STRING && !pls->bEOFUnlocked && gpGlobals->curtime > pls->flwaitSentence);
-		float fvol;
-
-		// if playing both sentence and sound, lower sound volume so we hear sentence
-		fvol = ( fplaysound && fplaysentence ) ? 0.25f : 1.0f;
 
 		// play 'door unlocked' sound if set
 		if (fplaysound)
@@ -173,25 +133,11 @@ void PlayLockSounds(CBaseEntity *pEdict, locksound_t *pls, int flocked, int fbut
 			EmitSound_t ep;
 			ep.m_nChannel = CHAN_ITEM;
 			ep.m_pSoundName = (char*)STRING(pls->sUnlockedSound);
-			ep.m_flVolume = fvol;
+			ep.m_flVolume = 1.0f;
 			ep.m_SoundLevel = SNDLVL_NORM;
 
 			CBaseEntity::EmitSound( filter, pEdict->entindex(), ep );
 			pls->flwaitSound = gpGlobals->curtime + flsoundwait;
-		}
-
-		// play next 'door unlocked' sentence in group
-		if (fplaysentence)
-		{
-			int iprev = pls->iUnlockedSentence;
-			
-			pls->iUnlockedSentence = SENTENCEG_PlaySequentialSz(pEdict->edict(), STRING(pls->sUnlockedSentence), 
-					  0.85, SNDLVL_NORM, 0, 100, pls->iUnlockedSentence, FALSE);
-			pls->iLockedSentence = 0;
-
-			// make sure we don't keep calling last sentence in list
-			pls->bEOFUnlocked = (iprev == pls->iUnlockedSentence);
-			pls->flwaitSentence = gpGlobals->curtime + DOOR_SENTENCEWAIT;
 		}
 	}
 }
@@ -366,13 +312,6 @@ void CBaseDoor::StopMovingSound(void)
 	}
 	StopSound( entindex(), CHAN_STATIC, pSoundName );
 }
- 
-
-bool CBaseDoor::ShouldSavePhysics()
-{
-	// don't save physics if you're func_water
-	return !FClassnameIs( this, "func_water" );
-}
 
 //-----------------------------------------------------------------------------
 bool CBaseDoor::CreateVPhysics( )
@@ -503,36 +442,6 @@ void CBaseDoor::Precache( void )
 	PrecacheScriptSound( (char *) STRING(m_NoiseArrivedClosed) );
 	PrecacheScriptSound( (char *) STRING(m_ls.sLockedSound) );
 	PrecacheScriptSound( (char *) STRING(m_ls.sUnlockedSound) );
-
-	//Get sentence group names, for doors which are directly 'touched' to open
-	switch (m_bLockedSentence)
-	{
-		case 1: m_ls.sLockedSentence = AllocPooledString("NA"); break; // access denied
-		case 2: m_ls.sLockedSentence = AllocPooledString("ND"); break; // security lockout
-		case 3: m_ls.sLockedSentence = AllocPooledString("NF"); break; // blast door
-		case 4: m_ls.sLockedSentence = AllocPooledString("NFIRE"); break; // fire door
-		case 5: m_ls.sLockedSentence = AllocPooledString("NCHEM"); break; // chemical door
-		case 6: m_ls.sLockedSentence = AllocPooledString("NRAD"); break; // radiation door
-		case 7: m_ls.sLockedSentence = AllocPooledString("NCON"); break; // gen containment
-		case 8: m_ls.sLockedSentence = AllocPooledString("NH"); break; // maintenance door
-		case 9: m_ls.sLockedSentence = AllocPooledString("NG"); break; // broken door
-		
-		default: m_ls.sLockedSentence = NULL_STRING; break;
-	}
-
-	switch (m_bUnlockedSentence)
-	{
-		case 1: m_ls.sUnlockedSentence = AllocPooledString("EA"); break; // access granted
-		case 2: m_ls.sUnlockedSentence = AllocPooledString("ED"); break; // security door
-		case 3: m_ls.sUnlockedSentence = AllocPooledString("EF"); break; // blast door
-		case 4: m_ls.sUnlockedSentence = AllocPooledString("EFIRE"); break; // fire door
-		case 5: m_ls.sUnlockedSentence = AllocPooledString("ECHEM"); break; // chemical door
-		case 6: m_ls.sUnlockedSentence = AllocPooledString("ERAD"); break; // radiation door
-		case 7: m_ls.sUnlockedSentence = AllocPooledString("ECON"); break; // gen containment
-		case 8: m_ls.sUnlockedSentence = AllocPooledString("EH"); break; // maintenance door
-		
-		default: m_ls.sUnlockedSentence = NULL_STRING; break;
-	}
 }
 
 

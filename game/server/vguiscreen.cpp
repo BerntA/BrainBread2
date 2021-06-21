@@ -8,7 +8,6 @@
 #include "cbase.h"
 #include "vguiscreen.h"
 #include "networkstringtable_gamedll.h"
-#include "saverestore_stringtable.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -37,14 +36,9 @@ PRECACHE_REGISTER( vgui_screen );
 //-----------------------------------------------------------------------------
 BEGIN_DATADESC( CVGuiScreen )
 
-	DEFINE_CUSTOM_FIELD( m_nPanelName, &g_VguiScreenStringOps ),
-	DEFINE_FIELD( m_nAttachmentIndex, FIELD_INTEGER ),
-//	DEFINE_FIELD( m_nOverlayMaterial, FIELD_INTEGER ),
-	DEFINE_FIELD( m_fScreenFlags, FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_flWidth, FIELD_FLOAT, "width" ),
 	DEFINE_KEYFIELD( m_flHeight, FIELD_FLOAT, "height" ),
 	DEFINE_KEYFIELD( m_strOverlayMaterial, FIELD_STRING, "overlaymaterial" ),
-	DEFINE_FIELD( m_hPlayerOwner, FIELD_EHANDLE ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "SetActive", InputSetActive ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "SetInactive", InputSetInactive ),
@@ -149,13 +143,6 @@ void CVGuiScreen::Activate()
 	{
 		SetOverlayMaterial( STRING(m_strOverlayMaterial) );
 	}
-}
-
-void CVGuiScreen::OnRestore()
-{
-	UpdateTransmitState();
-
-	BaseClass::OnRestore();
 }
 
 void CVGuiScreen::SetAttachmentIndex( int nIndex )

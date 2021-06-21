@@ -6,8 +6,6 @@
 //=============================================================================//
 
 #include "cbase.h"
-
-#include "isaverestore.h"
 #include "ai_behavior.h"
 #include "scripted.h"
 
@@ -21,7 +19,6 @@ bool g_bBehaviorHost_PreventBaseClassGatherConditions;
 //-----------------------------------------------------------------------------
 
 BEGIN_DATADESC_NO_BASE( CAI_BehaviorBase )
-
 END_DATADESC()
 
 //-------------------------------------
@@ -190,14 +187,6 @@ float CAI_BehaviorBase::GetDefaultNavGoalTolerance()
 
 //-------------------------------------
 
-bool CAI_BehaviorBase::FValidateHintType( CAI_Hint *pHint )
-{
-	m_fOverrode = false;
-	return false;
-}
-
-//-------------------------------------
-
 bool CAI_BehaviorBase::IsValidEnemy( CBaseEntity *pEnemy )
 {
 	Assert( m_pBackBridge != NULL );
@@ -216,20 +205,11 @@ CBaseEntity *CAI_BehaviorBase::BestEnemy( void )
 
 //-------------------------------------
 
-bool CAI_BehaviorBase::IsValidCover( const Vector &vLocation, CAI_Hint const *pHint )
+bool CAI_BehaviorBase::IsValidCover( const Vector &vLocation )
 {
 	Assert( m_pBackBridge != NULL );
 	
-	return m_pBackBridge->BackBridge_IsValidCover( vLocation, pHint );
-}
-
-//-------------------------------------
-
-bool CAI_BehaviorBase::IsValidShootPosition( const Vector &vLocation, CAI_Node *pNode, CAI_Hint const *pHint )
-{
-	Assert( m_pBackBridge != NULL );
-	
-	return m_pBackBridge->BackBridge_IsValidShootPosition( vLocation, pNode, pHint );
+	return m_pBackBridge->BackBridge_IsValidCover( vLocation );
 }
 
 //-------------------------------------
@@ -324,15 +304,6 @@ bool CAI_BehaviorBase::QueryHearSound( CSound *pSound )
 
 //-------------------------------------
 
-bool CAI_BehaviorBase::CanRunAScriptedNPCInteraction( bool bForced )
-{
-	Assert( m_pBackBridge != NULL );
-
-	return m_pBackBridge->BackBridge_CanRunAScriptedNPCInteraction( bForced );
-}
-
-//-------------------------------------
-
 bool CAI_BehaviorBase::ShouldPlayerAvoid( void )
 {
 	Assert( m_pBackBridge != NULL );
@@ -386,15 +357,6 @@ bool CAI_BehaviorBase::OnCalcBaseMove( AILocalMoveGoal_t *pMoveGoal, float distC
 
 //-------------------------------------
 
-void CAI_BehaviorBase::ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
-{
-	Assert( m_pBackBridge != NULL );
-
-	return m_pBackBridge->BackBridge_ModifyOrAppendCriteria( criteriaSet );
-}
-
-//-------------------------------------
-
 void CAI_BehaviorBase::Teleport( const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity )
 {
 	Assert( m_pBackBridge != NULL );
@@ -443,91 +405,3 @@ bool CAI_BehaviorBase::NotifyChangeBehaviorStatus( bool fCanFinishSchedule )
 
 	return fInterrupt;
 }
-
-//-------------------------------------
-
-int	CAI_BehaviorBase::Save( ISave &save )				
-{ 
-	return save.WriteAll( this, GetDataDescMap() );	
-}
-
-//-------------------------------------
-
-int	CAI_BehaviorBase::Restore( IRestore &restore )
-{ 
-	return restore.ReadAll( this, GetDataDescMap() );	
-}
-
-//-------------------------------------
-
-#define BEHAVIOR_SAVE_BLOCKNAME "AI_Behaviors"
-#define BEHAVIOR_SAVE_VERSION	2
-
-void CAI_BehaviorBase::SaveBehaviors(ISave &save, CAI_BehaviorBase *pCurrentBehavior, CAI_BehaviorBase **ppBehavior, int nBehaviors )		
-{ 
-	save.StartBlock( BEHAVIOR_SAVE_BLOCKNAME );
-	short temp = BEHAVIOR_SAVE_VERSION;
-	save.WriteShort( &temp );
-	temp = (short)nBehaviors;
-	save.WriteShort( &temp );
-
-	for ( int i = 0; i < nBehaviors; i++ )
-	{
-		if ( strcmp( ppBehavior[i]->GetDataDescMap()->dataClassName, CAI_BehaviorBase::m_DataMap.dataClassName ) != 0 )
-		{
-			save.StartBlock();
-			save.WriteString( ppBehavior[i]->GetDataDescMap()->dataClassName );
-			bool bIsCurrent = ( pCurrentBehavior == ppBehavior[i] );
-			save.WriteBool( &bIsCurrent );
-			ppBehavior[i]->Save( save );
-			save.EndBlock();
-		}
-	}
-
-	save.EndBlock();
-}
-
-//-------------------------------------
-
-int CAI_BehaviorBase::RestoreBehaviors(IRestore &restore, CAI_BehaviorBase **ppBehavior, int nBehaviors )	
-{ 
-	int iCurrent = -1;
-	char szBlockName[SIZE_BLOCK_NAME_BUF];
-	restore.StartBlock( szBlockName );
-	if ( strcmp( szBlockName, BEHAVIOR_SAVE_BLOCKNAME ) == 0 )
-	{
-		short version;
-		restore.ReadShort( &version );
-		if ( version == BEHAVIOR_SAVE_VERSION )
-		{
-			short nToRestore;
-			char szClassNameCurrent[256];
-			restore.ReadShort( &nToRestore );
-			for ( int i = 0; i < nToRestore; i++ )
-			{
-				restore.StartBlock();
-				restore.ReadString( szClassNameCurrent, sizeof( szClassNameCurrent ), 0 );
-				bool bIsCurrent;
-				restore.ReadBool( &bIsCurrent );
-
-				for ( int j = 0; j < nBehaviors; j++ )
-				{
-					if ( strcmp( ppBehavior[j]->GetDataDescMap()->dataClassName, szClassNameCurrent ) == 0 )
-					{
-						if ( bIsCurrent )
-							iCurrent = j;
-						ppBehavior[j]->Restore( restore );
-					}
-				}
-
-				restore.EndBlock();
-
-			}
-		}
-	}
-	restore.EndBlock();
-	return iCurrent; 
-}
-
-
-//-----------------------------------------------------------------------------

@@ -20,7 +20,6 @@ class CBoneFollower;
 
 struct physfollower_t
 {
-	DECLARE_SIMPLE_DATADESC();
 	int boneIndex;
 	CHandle<CBoneFollower> hFollower;
 };
@@ -35,7 +34,6 @@ void CreateBoneFollowersFromRagdoll( CBaseAnimating *pEntity, class CBoneFollowe
 //-----------------------------------------------------------------------------
 class CBoneFollowerManager
 {
-	DECLARE_SIMPLE_DATADESC();
 public:
 	CBoneFollowerManager();
 	~CBoneFollowerManager();
@@ -66,7 +64,6 @@ private:
 class CBoneFollower : public CBaseEntity
 {
 	DECLARE_CLASS( CBoneFollower, CBaseEntity );
-	DECLARE_DATADESC();
 	DECLARE_SERVERCLASS();
 public:
 	// CBaseEntity

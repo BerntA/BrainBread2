@@ -13,21 +13,16 @@
 #include "animation.h"		// for NOMOTION
 #include "collisionutils.h"
 #include "ndebugoverlay.h"
-#include "isaverestore.h"
-#include "saverestore_utlvector.h"
 
 #include "ai_navigator.h"
-#include "ai_node.h"
 #include "ai_route.h"
 #include "ai_routedist.h"
 #include "ai_waypoint.h"
 #include "ai_pathfinder.h"
-#include "ai_link.h"
 #include "ai_memory.h"
 #include "ai_motor.h"
 #include "ai_localnavigator.h"
 #include "ai_moveprobe.h"
-#include "ai_hint.h"
 #include "BasePropDoor.h"
 #include "props.h"
 #include "physics_npc_solver.h"
@@ -43,7 +38,6 @@ const char * g_ppszGoalTypes[] =
 	"GOALTYPE_ENEMY",
 	"GOALTYPE_PATHCORNER",
 	"GOALTYPE_LOCATION",
-	"GOALTYPE_LOCATION_NEAREST_NODE",
 	"GOALTYPE_FLANK",
 	"GOALTYPE_COVER",
 };
@@ -73,40 +67,6 @@ bool g_fTestSteering = 0;
 
 //-----------------------------------------------------------------------------
 
-class CAI_NavInHintGroupFilter : public INearestNodeFilter
-{
-public:
-	CAI_NavInHintGroupFilter( string_t iszGroup = NULL_STRING ) :
-	  m_iszGroup( iszGroup )
-	  {
-	  }
-
-	  bool IsValid( CAI_Node *pNode )
-	  {
-		  if ( !pNode->GetHint() )
-		  {
-			  return false;
-		  }
-
-		  if ( pNode->GetHint()->GetGroup() != m_iszGroup )
-		  {
-			  return false;
-		  }
-
-		  return true;
-	  }
-
-	  bool ShouldContinue()
-	  {
-		  return true;
-	  }
-
-	  string_t m_iszGroup;
-
-};
-
-//-----------------------------------------------------------------------------
-
 const Vector AIN_NO_DEST( FLT_MAX, FLT_MAX, FLT_MAX );
 #define NavVecToString(v) ((v == AIN_NO_DEST) ? "AIN_NO_DEST" : VecToString(v))
 
@@ -118,56 +78,10 @@ const Vector AIN_NO_DEST( FLT_MAX, FLT_MAX, FLT_MAX );
 // class CAI_Navigator
 //-----------------------------------------------------------------------------
 
-BEGIN_SIMPLE_DATADESC( CAI_Navigator )
-
-	DEFINE_FIELD( m_navType,					FIELD_INTEGER ),
-	//								m_pMotor
-	//								m_pMoveProbe
-	//								m_pLocalNavigator
-	//								m_pAINetwork
-	DEFINE_EMBEDDEDBYREF( m_pPath ),
-	//								m_pClippedWaypoints	(not saved)
-	//								m_flTimeClipped		(not saved)
-	//								m_PreviousMoveActivity (not saved)
-	//								m_PreviousArrivalActivity (not saved)
-	DEFINE_FIELD( m_bValidateActivitySpeed,		FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bCalledStartMove,			FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_fNavComplete,				FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bNotOnNetwork,				FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bLastNavFailed,				FIELD_BOOLEAN ),
-  	DEFINE_FIELD( m_flNextSimplifyTime,			FIELD_TIME ),
-	DEFINE_FIELD( m_bForcedSimplify,			FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flLastSuccessfulSimplifyTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flTimeLastAvoidanceTriangulate, FIELD_TIME ),
-  	DEFINE_FIELD( m_timePathRebuildMax,			FIELD_FLOAT ),
-  	DEFINE_FIELD( m_timePathRebuildDelay,		FIELD_FLOAT ),
-  	DEFINE_FIELD( m_timePathRebuildFail,		FIELD_TIME ),
-  	DEFINE_FIELD( m_timePathRebuildNext,		FIELD_TIME ),
-	DEFINE_FIELD( m_fRememberStaleNodes,		FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bNoPathcornerPathfinds,		FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bLocalSucceedOnWithinTolerance, FIELD_BOOLEAN ),
-	// 								m_fPeerMoveWait		(think transient)
-	//								m_hPeerWaitingOn	(peer move fields do not need to be saved, tied to current schedule and path, which are not saved)
-	//								m_PeerWaitMoveTimer	(ibid)
-	//								m_PeerWaitClearTimer(ibid)
-	//								m_NextSidestepTimer	(ibid)
-	DEFINE_FIELD( m_hBigStepGroundEnt,			FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hLastBlockingEnt,			FIELD_EHANDLE ),
-	//								m_vPosBeginFailedSteer (reset on load)
-	//								m_timeBeginFailedSteer (reset on load)
-	//								m_nNavFailCounter  (reset on load)
-	//								m_flLastNavFailTime  (reset on load)
-
-END_DATADESC()
-
-
-//-----------------------------------------------------------------------------
-
 CAI_Navigator::CAI_Navigator(CAI_BaseNPC *pOuter)
  :	BaseClass(pOuter)
 {
 	m_pPath					= new CAI_Path;
-	m_pAINetwork			= NULL;
 	m_bNotOnNetwork			= false;
 	m_flNextSimplifyTime	= 0;
 
@@ -214,13 +128,11 @@ CAI_Navigator::CAI_Navigator(CAI_BaseNPC *pOuter)
 
 //-----------------------------------------------------------------------------
 
-void CAI_Navigator::Init( CAI_Network *pNetwork )
+void CAI_Navigator::Init()
 {
 	m_pMotor = GetOuter()->GetMotor();
 	m_pMoveProbe = GetOuter()->GetMoveProbe();
 	m_pLocalNavigator = GetOuter()->GetLocalNavigator();
-	m_pAINetwork = pNetwork;
-
 }
 
 //-----------------------------------------------------------------------------
@@ -230,61 +142,6 @@ CAI_Navigator::~CAI_Navigator()
 	delete m_pPath;
 	m_pClippedWaypoints->RemoveAll();
 	delete m_pClippedWaypoints;
-}
-
-//-----------------------------------------------------------------------------
-
-const short AI_NAVIGATOR_SAVE_VERSION = 1;
-
-void CAI_Navigator::Save( ISave &save )
-{
-	save.WriteShort( &AI_NAVIGATOR_SAVE_VERSION );
-
-	CUtlVector<AI_Waypoint_t> minPathArray;
-
-	AI_Waypoint_t *pCurWaypoint = GetPath()->GetCurWaypoint();
-	if ( pCurWaypoint )
-	{
-		if ( ( pCurWaypoint->NavType() == NAV_CLIMB || pCurWaypoint->NavType() == NAV_JUMP ) )
-		{	
-			CAI_WaypointList minCompletionPath;
-			if ( GetStoppingPath( &minCompletionPath ) && !minCompletionPath.IsEmpty() )
-			{
-				AI_Waypoint_t *pCurrent = minCompletionPath.GetLast();
-				while ( pCurrent )
-				{
-					minPathArray.AddToTail( *pCurrent );
-					pCurrent = pCurrent->GetPrev();
-				}
-				minCompletionPath.RemoveAll();
-			}
-		}
-	}
-
-	SaveUtlVector( &save, &minPathArray, FIELD_EMBEDDED );
-}
-
-//-----------------------------------------------------------------------------
-
-void CAI_Navigator::Restore( IRestore &restore )
-{
-	short version = restore.ReadShort();
-
-	if ( version != AI_NAVIGATOR_SAVE_VERSION )
-		return;
-
-	CUtlVector<AI_Waypoint_t> minPathArray;
-	RestoreUtlVector( &restore, &minPathArray, FIELD_EMBEDDED );
-
-	if ( minPathArray.Count() )
-	{
-		for ( int i = 0; i < minPathArray.Count(); i++ )
-		{
-			m_pClippedWaypoints->PrependWaypoint( minPathArray[i].GetPos(), minPathArray[i].NavType(), ( minPathArray[i].Flags() & ~bits_WP_TO_PATHCORNER ), minPathArray[i].flYaw );
-		}
-		m_flTimeClipped = gpGlobals->curtime + 1000; // time passes between restore and onrestore
-	}
-
 }
 
 //-----------------------------------------------------------------------------
@@ -398,10 +255,8 @@ bool CAI_Navigator::FindPath( const AI_NavGoal_t &goal, unsigned flags )
 	{
 		// When our goaltype is position based, we have to set
 		// the goal position here because it won't get set during DoFindPath().
-		if ( goal.dest != AIN_NO_DEST )
-			pPath->ResetGoalPosition( goal.dest );
-		else if ( goal.destNode != AIN_NO_NODE )
-			pPath->ResetGoalPosition( GetNodePos( goal.destNode ) );
+		if (goal.dest != AIN_NO_DEST)
+			pPath->ResetGoalPosition(goal.dest);
 	}
 
 	if ( pPathTarget > AIN_DEF_TARGET )
@@ -555,43 +410,6 @@ bool CAI_Navigator::SetRadialGoal( const Vector &destination, const Vector &cent
 
 //-----------------------------------------------------------------------------
 
-bool CAI_Navigator::SetRandomGoal( const Vector &from, float minPathLength, const Vector &dir )
-{
-	DbgNavMsg( GetOuter(), "Set random goal\n" );
-	OnNewGoal();
-	if ( GetNetwork()->NumNodes() <= 0 )
-		return false;
-
-	INearestNodeFilter *pFilter = NULL;
-	CAI_NavInHintGroupFilter filter;
-	if ( GetOuter()->GetHintGroup() != NULL_STRING )
-	{
-		filter.m_iszGroup = GetOuter()->GetHintGroup();
-		pFilter = &filter;
-	}
-		
-	int fromNodeID = GetNetwork()->NearestNodeToPoint( GetOuter(), from, true, pFilter );
-	
-	if (fromNodeID == NO_NODE)
-		return false;
-		
-	AI_Waypoint_t* pRoute = GetPathfinder()->FindShortRandomPath( fromNodeID, minPathLength, dir );
-
-	if (!pRoute)
-		return false;
-
-	GetPath()->SetGoalType(GOALTYPE_LOCATION);
-	GetPath()->SetWaypoints(pRoute);
-	GetPath()->SetLastNodeAsGoal();
-	GetPath()->SetGoalTolerance( GetOuter()->GetDefaultNavGoalTolerance() );
-
-	SimplifyPath( true );
-	
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-
 bool CAI_Navigator::SetDirectGoal( const Vector &goalPos, Navigation_t navType )
 {
 	DbgNavMsg( GetOuter(), "Set direct goal\n" );
@@ -625,21 +443,7 @@ static bool SetWanderGoalByRandomVector(CAI_Navigator *pNav, float minRadius, fl
 
 bool CAI_Navigator::SetWanderGoal( float minRadius, float maxRadius )
 {
-	// @Note (toml 11-07-02): this is a bogus placeholder implementation!!!
-	// 
-	// First try using a random setvector goal, and then try SetRandomGoal().
-	// Except, if we have a hint group, first try SetRandomGoal() (which 
-	// respects hint groups) and then fall back on the setvector.
-	if( !GetOuter()->GetHintGroup() )
-	{
-		return ( SetWanderGoalByRandomVector( this, minRadius, maxRadius, 5 ) || 
-			SetRandomGoal( 1 ) );
-	}
-	else
-	{
-		return ( SetRandomGoal(1) ||
-			SetWanderGoalByRandomVector( this, minRadius, maxRadius, 5 ) );
-	}
+	return SetWanderGoalByRandomVector(this, minRadius, maxRadius, 5);
 }
 
 
@@ -714,13 +518,6 @@ bool CAI_Navigator::FindVectorGoal( Vector *pResult, const Vector &dir, float ta
 
 	*pResult = moveTrace.vEndPosition;
 	return true;
-}
-
-//-----------------------------------------------------------------------------
-
-bool CAI_Navigator::SetRandomGoal( float minPathLength, const Vector &dir )
-{
-	return SetRandomGoal( GetLocalOrigin(), minPathLength, dir );
 }
 
 //-----------------------------------------------------------------------------
@@ -1213,23 +1010,6 @@ float CAI_Navigator::GetPathTimeToGoal()
 	if ( GetOuter()->m_flGroundSpeed )
 		return (GetPathDistanceToGoal() / GetOuter()->m_flGroundSpeed);
 	return 0;
-}
-
-//-----------------------------------------------------------------------------
-
-AI_PathNode_t CAI_Navigator::GetNearestNode()
-{
-#ifdef WIN32
-	COMPILE_TIME_ASSERT( (int)AIN_NO_NODE == NO_NODE );
-#endif
-	return (AI_PathNode_t)( GetPathfinder()->NearestNodeToNPC() );
-}
-
-//-----------------------------------------------------------------------------
-
-Vector CAI_Navigator::GetNodePos( AI_PathNode_t node )
-{
-	return GetNetwork()->GetNode((int)node)->GetPosition(GetHullType());
 }
 
 //-----------------------------------------------------------------------------
@@ -2516,33 +2296,9 @@ bool CAI_Navigator::Move( float flInterval )
 				// --------------------------------------------
 				if ( IsMoveBlocked( moveResult ) )
 				{
-					bool bRecovered = false;
-					if (moveResult != AIMR_BLOCKED_NPC || GetNavType() == NAV_CLIMB || GetNavType() == NAV_JUMP || GetPath()->CurWaypointNavType() == NAV_JUMP )
-					{
-						if ( MarkCurWaypointFailedLink() )
-						{
-							AI_Waypoint_t *pSavedWaypoints = GetPath()->GetCurWaypoint();
-							if ( pSavedWaypoints )
-							{
-								GetPath()->SetWaypoints( NULL );
-								if ( RefindPathToGoal( false, true ) )
-								{
-									DeleteAll( pSavedWaypoints );
-									bRecovered = true;
-								}
-								else
-									GetPath()->SetWaypoints( pSavedWaypoints );
-
-							}
-						}
-
-					}
-
-					if ( !bRecovered )
-					{
-						OnNavFailed( ( moveResult == AIMR_ILLEGAL ) ? FAIL_NO_ROUTE_ILLEGAL : FAIL_NO_ROUTE_BLOCKED, true );
-					}
+					OnNavFailed((moveResult == AIMR_ILLEGAL) ? FAIL_NO_ROUTE_ILLEGAL : FAIL_NO_ROUTE_BLOCKED, true);
 				}
+
 				return bMoved;
 			}
 			
@@ -3201,61 +2957,6 @@ float CAI_Navigator::MovementCost( int moveType, Vector &vecStart, Vector &vecEn
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Will the entities hull fit at the given node
-// Input  :
-// Output : Returns true if hull fits at node
-//-----------------------------------------------------------------------------
-bool CAI_Navigator::CanFitAtNode(int nodeNum, unsigned int collisionMask ) 
-{
-	// Make sure I have a network
-	if (!GetNetwork())
-	{
-		DevMsg("CanFitAtNode() called with no network!\n");
-		return false;
-	}
-
-	CAI_Node* pTestNode = GetNetwork()->GetNode(nodeNum);
-	Vector startPos		= pTestNode->GetPosition(GetHullType());
-
-	// -------------------------------------------------------------------
-	// Check ground nodes for standable bottom
-	// -------------------------------------------------------------------
-	if (pTestNode->GetType() == NODE_GROUND)
-	{
-		if (!GetMoveProbe()->CheckStandPosition( startPos, collisionMask ))
-		{
-			return false;
-		}
-	}
-
-
-	// -------------------------------------------------------------------
-	// Check climb exit nodes for standable bottom
-	// -------------------------------------------------------------------
-	if ((pTestNode->GetType() == NODE_CLIMB) &&
-		(pTestNode->m_eNodeInfo & (bits_NODE_CLIMB_BOTTOM | bits_NODE_CLIMB_EXIT )))
-	{
-		if (!GetMoveProbe()->CheckStandPosition( startPos, collisionMask ))
-		{
-			return false;
-		}
-	}
-
-
-	// -------------------------------------------------------------------
-	// Check that hull fits at position of node
-	// -------------------------------------------------------------------
-	if (!CanFitAtPosition( startPos, collisionMask ))
-	{
-		startPos.z += GetOuter()->StepHeight();
-		if (!CanFitAtPosition( startPos, collisionMask ))
-			return false;
-	}
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Returns true if NPC's hull fits in the given spot with the
 //			given collision mask
 // Input  :
@@ -3357,11 +3058,8 @@ bool CAI_Navigator::FindPath( bool fSignalTaskStatus, bool bDontIgnoreBadLinks )
 
 	bool bFindResult = DoFindPath();
 
-	if ( !bDontIgnoreBadLinks && !bFindResult && GetOuter()->IsNavigationUrgent() )
-	{
-		GetPathfinder()->SetIgnoreBadLinks();
+	if (!bDontIgnoreBadLinks && !bFindResult && GetOuter()->IsNavigationUrgent())
 		bFindResult = DoFindPath();
-	}
 
 	if (bFindResult)
 	{	
@@ -3393,105 +3091,6 @@ bool CAI_Navigator::FindPath( bool fSignalTaskStatus, bool bDontIgnoreBadLinks )
 		return false;
 	}
 	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Called when route fails.  Marks last link on which that failure
-//			occured as stale so when then next node route is build that link
-//			will be explictly checked for blockages
-// Input  :
-// Output : 
-//-----------------------------------------------------------------------------
-bool CAI_Navigator::MarkCurWaypointFailedLink( void )
-{
-	if ( TestingSteering() )
-		return false;
-
-	if ( !m_fRememberStaleNodes )
-		return false;
-
-	// Prevent a crash in release
-	if( !GetPath() || !GetPath()->GetCurWaypoint() )
-		return false;
-
-	bool didMark = false;
-
-	int startID =	GetPath()->GetLastNodeReached();
-	int endID	=	GetPath()->GetCurWaypoint()->iNodeID;
-
-	if ( endID != NO_NODE )
-	{
-		bool bBlockAll = false;
-
-		if ( m_hLastBlockingEnt != NULL && 
-			 !m_hLastBlockingEnt->IsPlayer() && !m_hLastBlockingEnt->IsNPC() &&
-			 m_hLastBlockingEnt->GetMoveType() == MOVETYPE_VPHYSICS && 
-			 m_hLastBlockingEnt->VPhysicsGetObject() && 
-			 ( !m_hLastBlockingEnt->VPhysicsGetObject()->IsMoveable() || 
-			   m_hLastBlockingEnt->VPhysicsGetObject()->GetMass() > 200 ) )
-		{
-			// Make sure it's a "large" object
-			//		- One dimension is >40
-			//		- Other 2 dimensions are >30
-			CCollisionProperty *pCollisionProp = m_hLastBlockingEnt->CollisionProp();
-			bool bFoundLarge = false;
-			bool bFoundSmall = false;
-			Vector vecSize = pCollisionProp->OBBMaxs() - pCollisionProp->OBBMins();
-			for ( int i = 0; i < 3; i++ )
-			{
-				if ( vecSize[i] > 40 )
-				{
-					bFoundLarge = true;
-				}
-
-				if ( vecSize[i] < 30 )
-				{
-					bFoundSmall = true;
-					break;
-				}
-			}
-
-			if ( bFoundLarge && !bFoundSmall )
-			{
-				Vector vStartPos = GetNetwork()->GetNode( endID )->GetPosition( GetHullType() );
-				Vector vEndPos = vStartPos;
-				vEndPos.z += 0.01;
-				trace_t tr;
-
-				UTIL_TraceModel( vStartPos, vEndPos, GetHullMins(), GetHullMaxs(), m_hLastBlockingEnt, COLLISION_GROUP_NONE, &tr );
-
-				if ( tr.startsolid )
-					bBlockAll = true;
-			}
-		}
-
-		if ( bBlockAll )
-		{
-			CAI_Node *pDestNode = GetNetwork()->GetNode( endID );
-			for ( int i = 0; i < pDestNode->NumLinks(); i++ )
-			{
-				CAI_Link *pLink = pDestNode->GetLinkByIndex( i );
-				pLink->m_LinkInfo |= bits_LINK_STALE_SUGGESTED;
-				pLink->m_timeStaleExpires = gpGlobals->curtime + 4.0;
-				didMark = true;
-			}
-
-		}
-		else if ( startID != NO_NODE )
-		{
-			// Find link and mark it as stale
-			CAI_Node *pNode = GetNetwork()->GetNode(startID);
-			CAI_Link *pLink = pNode->GetLink( endID );
-			if ( pLink )
-			{
-				pLink->m_LinkInfo |= bits_LINK_STALE_SUGGESTED;
-				pLink->m_timeStaleExpires = gpGlobals->curtime + 4.0;
-				didMark = true;
-			}
-		}
-	}
-
-	return didMark;
 }
 
 //-----------------------------------------------------------------------------
@@ -3572,28 +3171,10 @@ bool CAI_Navigator::DoFindPathToPos(void)
 
 //-----------------------------------------------------------------------------
 
-CBaseEntity *CAI_Navigator::GetNextPathcorner( CBaseEntity *pPathCorner )
+CBaseEntity *CAI_Navigator::GetNextPathcorner(CBaseEntity *pPathCorner)
 {
-	CBaseEntity *pNextPathCorner = NULL;
-
-	Assert( pPathCorner );
-	if ( pPathCorner )
-	{
-		pNextPathCorner = pPathCorner->GetNextTarget();
-
-		CAI_Hint *pHint;
-		if ( !pNextPathCorner && ( pHint = dynamic_cast<CAI_Hint *>( pPathCorner ) ) != NULL )
-		{
-			int targetNode = pHint->GetTargetNode();
-			if ( targetNode != NO_NODE )
-			{
-				CAI_Node *pTestNode = GetNetwork()->GetNode(targetNode);
-				pNextPathCorner = pTestNode->GetHint();
-			}
-		}
-	}
-
-	return pNextPathCorner;
+	Assert(pPathCorner);
+	return (pPathCorner ? pPathCorner->GetNextTarget() : NULL);
 }
 
 //-----------------------------------------------------------------------------
@@ -3747,32 +3328,6 @@ bool CAI_Navigator::DoFindPath( void )
 		returnCode = DoFindPathToPos();
 		break;
 
-	case GOALTYPE_LOCATION_NEAREST_NODE:
-		{
-			int myNodeID;
-			int destNodeID;
-
-			returnCode = false;
-			
-			myNodeID = GetPathfinder()->NearestNodeToNPC();
-			if (myNodeID != NO_NODE)
-			{
-				destNodeID = GetPathfinder()->NearestNodeToPoint( GetPath()->ActualGoalPosition() );
-				if (destNodeID != NO_NODE)
-				{
-					AI_Waypoint_t *pRoute = GetPathfinder()->FindBestPath( myNodeID, destNodeID );
-					
-					if ( pRoute != NULL )
-					{
-						GetPath()->SetWaypoints( pRoute );
-						GetPath()->SetLastNodeAsGoal(true);
-						returnCode = true;
-					}
-				}
-			}
-		}
-		break;
-
 	case GOALTYPE_TARGETENT:
 		{
 			// NOTE: This is going to set the goal position, which was *not*
@@ -3823,21 +3378,6 @@ void CAI_Navigator::ClearPath( void )
 		if( m_pClippedWaypoints && m_pClippedWaypoints->GetFirst() )
 		{
 			Assert( m_PreviousMoveActivity > ACT_RESET );
-		}
-
-		while ( pWaypoint )
-		{
-			if ( pWaypoint->iNodeID != NO_NODE )
-			{
-				CAI_Node *pNode = GetNetwork()->GetNode(pWaypoint->iNodeID);
-				
-				if ( pNode )
-				{
-					if ( pNode->IsLocked() )
-						 pNode->Unlock();
-				}
-			}
-			pWaypoint = pWaypoint->GetNext();
 		}
 	}
 

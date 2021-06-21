@@ -122,7 +122,6 @@ LINK_ENTITY_TO_CLASS( tanktrain_aitarget, CTankTargetChange );
 
 BEGIN_DATADESC( CTankTargetChange )
 
-	// DEFINE_FIELD( m_newTarget, variant_t ),
 	DEFINE_KEYFIELD( m_newTargetName, FIELD_STRING, "newtarget" ),
 
 END_DATADESC()
@@ -193,16 +192,9 @@ LINK_ENTITY_TO_CLASS( tanktrain_ai, CTankTrainAI );
 
 BEGIN_DATADESC( CTankTrainAI )
 
-	DEFINE_FIELD( m_hTrain, FIELD_EHANDLE),
-	DEFINE_FIELD( m_hTargetEntity, FIELD_EHANDLE),
-	DEFINE_FIELD( m_soundPlaying, FIELD_INTEGER),
-	DEFINE_SOUNDPATCH( m_soundTreads ),
-	DEFINE_SOUNDPATCH( m_soundEngine ),
-
 	DEFINE_KEYFIELD( m_startSoundName, FIELD_STRING, "startsound" ),
 	DEFINE_KEYFIELD( m_engineSoundName, FIELD_STRING, "enginesound" ),
 	DEFINE_KEYFIELD( m_movementSoundName, FIELD_STRING, "movementsound" ),
-	DEFINE_FIELD( m_targetEntityName, FIELD_STRING),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_STRING, "TargetEntity", InputTargetEntity ),

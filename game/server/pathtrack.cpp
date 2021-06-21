@@ -17,15 +17,9 @@
 //-----------------------------------------------------------------------------
 BEGIN_DATADESC( CPathTrack )
 
-	DEFINE_FIELD( m_pnext,			FIELD_CLASSPTR ),
-	DEFINE_FIELD( m_pprevious,		FIELD_CLASSPTR ),
-	DEFINE_FIELD( m_paltpath,		FIELD_CLASSPTR ),
-
 	DEFINE_KEYFIELD( m_flRadius,	FIELD_FLOAT, "radius" ),
-	DEFINE_FIELD( m_length,			FIELD_FLOAT ),
 	DEFINE_KEYFIELD( m_altName,		FIELD_STRING, "altpath" ),
 	DEFINE_KEYFIELD( m_eOrientationType, FIELD_INTEGER, "orientationtype" ),
-//	DEFINE_FIELD( m_nIterVal,		FIELD_INTEGER ),
 	
 	DEFINE_INPUTFUNC( FIELD_VOID, "InPass", InputPass ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "InTeleport",  InputTeleport ),

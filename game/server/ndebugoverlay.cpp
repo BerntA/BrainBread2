@@ -11,17 +11,13 @@
 #include "mathlib/mathlib.h"
 #include "player.h"
 #include "ndebugoverlay.h"
-#include "wcedit.h"
 
 #ifdef POSIX
 #include "ai_basenpc.h"
-#include "ai_network.h"
-#include "ai_networkmanager.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
 
 #define		NUM_DEBUG_OVERLAY_LINES		20
 
@@ -135,82 +131,6 @@ float GetLongFloorZ(const Vector &origin)
 	}
 
 	return tr.endpos.z;
-}
-
-//------------------------------------------------------------------------------
-// Purpose : Draws a large crosshair at flCrossDistance from the debug player
-//			 with tick marks
-//------------------------------------------------------------------------------
-void UTIL_DrawPositioningOverlay( float flCrossDistance )
-{
-	CBasePlayer* pPlayer = UTIL_PlayerByIndex(CBaseEntity::m_nDebugPlayer);
-
-	if (!pPlayer) 
-	{
-		return;
-	}
-
-	Vector pRight;
-	pPlayer->EyeVectors( NULL, &pRight, NULL );
-
-#ifdef _WIN32
-	Vector topPos		= NWCEdit::AirNodePlacementPosition();
-#else
-        Vector pForward;
-        pPlayer->EyeVectors( &pForward );
-
-        Vector  floorVec = pForward;
-        floorVec.z = 0;
-        VectorNormalize( floorVec );
-        VectorNormalize( pForward );
-
-        float cosAngle = DotProduct(floorVec,pForward);
-
-        float lookDist = g_pAINetworkManager->GetEditOps()->m_flAirEditDistance/cosAngle;
-        Vector topPos = pPlayer->EyePosition()+pForward * lookDist;
-#endif
-
-	Vector bottomPos	= topPos;
-	bottomPos.z			= GetLongFloorZ(bottomPos);
-
-	// Make sure we can see the target pos
-	trace_t tr;
-	Vector	endPos;
-	UTIL_TraceLine(pPlayer->EyePosition(), topPos, MASK_NPCSOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_NONE, &tr);
-	if (tr.fraction == 1.0)
-	{
-		Vector rightTrace = topPos + pRight*400;
-		float  traceLen	  = (topPos - rightTrace).Length();
-		UTIL_TraceLine(topPos, rightTrace, MASK_NPCSOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_NONE, &tr);
-		endPos = topPos+(pRight*traceLen*tr.fraction);
-		NDebugOverlay::DrawTickMarkedLine(topPos, endPos, 24.0, 5, 255,0,0,false,0);
-
-		Vector leftTrace	= topPos - pRight*400;
-		traceLen			= (topPos - leftTrace).Length();
-		UTIL_TraceLine(topPos, leftTrace, MASK_NPCSOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_NONE, &tr);
-		endPos				= topPos-(pRight*traceLen*tr.fraction);
-		NDebugOverlay::DrawTickMarkedLine(topPos, endPos, 24.0, 5, 255,0,0,false,0);
-
-		Vector upTrace		= topPos + Vector(0,0,1)*400;
-		traceLen			= (topPos - upTrace).Length();
-		UTIL_TraceLine(topPos, upTrace, MASK_NPCSOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_NONE, &tr);
-		endPos				= topPos+(Vector(0,0,1)*traceLen*tr.fraction);
-		NDebugOverlay::DrawTickMarkedLine(bottomPos, endPos, 24.0, 5, 255,0,0,false,0);
-
-		// Draw white cross at center
-		NDebugOverlay::Cross3D(topPos, Vector(-2,-2,-2), Vector(2,2,2), 255,255,255, true, 0);
-	}
-	else
-	{
-		// Draw warning  cross at center
-		NDebugOverlay::Cross3D(topPos, Vector(-2,-2,-2), Vector(2,2,2), 255,100,100, true, 0 );
-	}
-	/*  Don't show distance for now.
-	char text[25];
-	Q_snprintf(text,sizeof(text),"%3.0f",flCrossDistance/12.0);
-	Vector textPos = topPos - pRight*16 + Vector(0,0,10);
-	NDebugOverlay::Text( textPos, text, true, 0 );
-	*/
 }
 
 //------------------------------------------------------------------------------

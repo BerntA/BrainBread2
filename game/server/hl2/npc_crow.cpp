@@ -14,10 +14,8 @@
 #include "ai_basenpc.h"
 #include "ai_schedule.h"
 #include "ai_hull.h"
-#include "ai_hint.h"
 #include "ai_motor.h"
 #include "ai_navigator.h"
-#include "hl2_shareddefs.h"
 #include "ai_route.h"
 #include "npcevent.h"
 #include "ndebugoverlay.h"
@@ -57,21 +55,6 @@ LINK_ENTITY_TO_CLASS( npc_pigeon, CNPC_Pigeon );
 
 BEGIN_DATADESC( CNPC_Crow )
 
-	DEFINE_FIELD( m_flGroundIdleMoveTime, FIELD_TIME ),
-	DEFINE_FIELD( m_bOnJeep, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flEnemyDist, FIELD_FLOAT ),
-	DEFINE_FIELD( m_nMorale, FIELD_INTEGER ),
-	DEFINE_FIELD( m_bReachedMoveGoal, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flHopStartZ, FIELD_FLOAT ),
-	DEFINE_FIELD( m_vDesiredTarget, FIELD_VECTOR ),
-	DEFINE_FIELD( m_vCurrentTarget, FIELD_VECTOR ),
-	DEFINE_FIELD( m_flSoarTime, FIELD_TIME ),
-	DEFINE_FIELD( m_bSoar, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bPlayedLoopingSound, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_iBirdType, FIELD_INTEGER ),
-	DEFINE_FIELD( m_vLastStoredOrigin, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_flLastStuckCheck, FIELD_TIME ),
-	DEFINE_FIELD( m_flDangerSoundTime, FIELD_TIME ),
 	DEFINE_KEYFIELD( m_bIsDeaf, FIELD_BOOLEAN, "deaf" ),
 
 	// Inputs
@@ -121,7 +104,7 @@ void CNPC_Crow::Spawn( void )
 
 	m_nMorale = random->RandomInt( 0, 12 );
 	
-	SetCollisionGroup( HL2COLLISION_GROUP_CROW );
+	SetCollisionGroup(COLLISION_GROUP_NPC_CROW);
 
 	CapabilitiesClear();
 
@@ -553,9 +536,7 @@ void CNPC_Crow::MoveCrowFly( float flInterval )
 		flLerpMod = 1.0f - ( flDistance / 256.0f );
 	}
 
-
 	VectorLerp( vForward, m_vCurrentTarget, flLerpMod, vForward );
-
 
 	if ( flDistance < CROW_AIRSPEED * flInterval )
 	{
@@ -572,21 +553,6 @@ void CNPC_Crow::MoveCrowFly( float flInterval )
 		}
 		else
 			m_bReachedMoveGoal = true;
-	}
-
-	if ( GetHintNode() )
-	{
-		AIMoveTrace_t moveTrace;
-		GetMoveProbe()->MoveLimit( NAV_FLY, GetAbsOrigin(), GetNavigator()->GetCurWaypointPos(), MASK_NPCSOLID, GetNavTargetEntity(), &moveTrace );
-
-		//See if it succeeded
-		if ( IsMoveBlocked( moveTrace.fStatus ) )
-		{
-			Vector vNodePos = vecMoveGoal;
-			GetHintNode()->GetPosition(this, &vNodePos);
-			
-			GetNavigator()->SetGoal( vNodePos );
-		}
 	}
 
 	//
@@ -639,7 +605,7 @@ bool CNPC_Crow::Probe( const Vector &vecMoveDir, float flSpeed, Vector &vecDefle
 	// Look 1/2 second ahead.
 	//
 	trace_t tr;
-	AI_TraceHull( GetAbsOrigin(), GetAbsOrigin() + vecMoveDir * flSpeed, GetHullMins(), GetHullMaxs(), MASK_NPCSOLID, this, HL2COLLISION_GROUP_CROW, &tr );
+	AI_TraceHull(GetAbsOrigin(), GetAbsOrigin() + vecMoveDir * flSpeed, GetHullMins(), GetHullMaxs(), MASK_NPCSOLID, this, COLLISION_GROUP_NPC_CROW, &tr);
 	if ( tr.fraction < 1.0f )
 	{
 		//
@@ -830,81 +796,6 @@ void CNPC_Crow::StartTask( const Task_t *pTask )
 			break;
 		}
 
-		case TASK_FIND_HINTNODE:
-		{
-			if ( GetGoalEnt() )
-			{
-				TaskComplete();
-				return;
-			}
-			// Overloaded because we search over a greater distance.
-			if ( !GetHintNode() )
-			{
-				SetHintNode(CAI_HintManager::FindHint( this, HINT_CROW_FLYTO_POINT, bits_HINT_NODE_NEAREST | bits_HINT_NODE_USE_GROUP, 10000 ));
-			}
-
-			if ( GetHintNode() )
-			{
-				TaskComplete();
-			}
-			else
-			{
-				TaskFail( FAIL_NO_HINT_NODE );
-			}
-			break;
-		}
-
-		case TASK_GET_PATH_TO_HINTNODE:
-		{
-			//How did this happen?!
-			if ( GetGoalEnt() == this )
-			{
-				SetGoalEnt( NULL );
-			}
-
-			if ( GetGoalEnt() )
-			{
-				SetFlyingState( FlyState_Flying );
-				StartTargetHandling( GetGoalEnt() );
-			
-				m_bReachedMoveGoal = false;
-				TaskComplete();
-				SetHintNode( NULL );
-				return;
-			}
-
-			if ( GetHintNode() )
-			{
-				Vector vHintPos;
-				GetHintNode()->GetPosition(this, &vHintPos);
-		
-				SetNavType( NAV_FLY );
-				CapabilitiesAdd( bits_CAP_MOVE_FLY );
-				// @HACKHACK: Force allow triangulation. Too many HL2 maps were relying on this feature WRT fly nodes (toml 8/1/2007)
-				NPC_STATE state = GetState();
-				m_NPCState = NPC_STATE_SCRIPT;
-				bool bFoundPath = GetNavigator()->SetGoal( vHintPos );
-				m_NPCState = state;
-				if ( !bFoundPath )
-				{
-					GetHintNode()->DisableForSeconds( .3 );
-					SetHintNode(NULL);
-				}
-				CapabilitiesRemove( bits_CAP_MOVE_FLY );
-			}
-
-			if ( GetHintNode() )
-			{
-				m_bReachedMoveGoal = false;
-				TaskComplete();
-			}
-			else
-			{
-				TaskFail( FAIL_NO_ROUTE );
-			}
-			break;
-		}
-
 		//
 		// We have failed to fly normally. Pick a random "up" direction and fly that way.
 		//
@@ -994,7 +885,7 @@ void CNPC_Crow::RunTask( const Task_t *pTask )
 				// We've hopped off of something! See if we're going to fall very far.
 				//
 				trace_t tr;
-				AI_TraceLine( GetAbsOrigin(), GetAbsOrigin() + Vector( 0, 0, -32 ), MASK_SOLID, this, HL2COLLISION_GROUP_CROW, &tr );
+				AI_TraceLine(GetAbsOrigin(), GetAbsOrigin() + Vector(0, 0, -32), MASK_SOLID, this, COLLISION_GROUP_NPC_CROW, &tr);
 				if ( tr.fraction == 1.0f )
 				{
 					//
@@ -1076,30 +967,6 @@ bool CNPC_Crow::BecomeRagdollOnClient( const Vector &force )
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-//-----------------------------------------------------------------------------
-bool CNPC_Crow::FValidateHintType( CAI_Hint *pHint )
-{
-	return( pHint->HintType() == HINT_CROW_FLYTO_POINT );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Returns the activity for the given hint type.
-// Input  : sHintType - 
-//-----------------------------------------------------------------------------
-Activity CNPC_Crow::GetHintActivity( short sHintType, Activity HintsActivity )
-{
-	if ( sHintType == HINT_CROW_FLYTO_POINT )
-	{
-		return ACT_FLY;
-	}
-
-	return BaseClass::GetHintActivity( sHintType, HintsActivity );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
 // Input  : pevInflictor - 
 //			pevAttacker - 
 //			flDamage - 
@@ -1110,7 +977,6 @@ int CNPC_Crow::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	// TODO: spew a feather or two
 	return BaseClass::OnTakeDamage_Alive( info );
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Returns the best new schedule for this NPC based on current conditions.
@@ -1474,8 +1340,6 @@ AI_BEGIN_CUSTOM_NPC( npc_crow, CNPC_Crow )
 		SCHED_CROW_IDLE_FLY,
 		
 		"	Tasks"
-		"		TASK_FIND_HINTNODE				0"
-		"		TASK_GET_PATH_TO_HINTNODE		0"
 		"		TASK_WAIT_FOR_MOVEMENT			0"
 		"		"
 		"	Interrupts"
@@ -1489,8 +1353,6 @@ AI_BEGIN_CUSTOM_NPC( npc_crow, CNPC_Crow )
 		"	Tasks"
 		"		TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHED_CROW_FLY_FAIL"
 		"		TASK_STOP_MOVING				0"
-		"		TASK_FIND_HINTNODE				0"
-		"		TASK_GET_PATH_TO_HINTNODE		0"
 		"		TASK_CROW_TAKEOFF				0"
 		"		TASK_WAIT_FOR_MOVEMENT			0"
 		"	"

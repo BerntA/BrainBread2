@@ -11,36 +11,14 @@
 
 #include "cbase.h"
 #include "fish.h"
-#include "saverestore_utlvector.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 ConVar fish_dormant( "fish_dormant", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "Turns off interactive fish behavior. Fish become immobile and unresponsive." );
 
-
 //-----------------------------------------------------------------------------------------------------
 LINK_ENTITY_TO_CLASS( fish, CFish );
-
-
-//-----------------------------------------------------------------------------------------------------
-BEGIN_DATADESC( CFish )
-	DEFINE_FIELD( m_pool, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_id, FIELD_INTEGER ),
-	DEFINE_FIELD( m_angle, FIELD_FLOAT ),
-	DEFINE_FIELD( m_angleChange, FIELD_FLOAT ),
-	DEFINE_FIELD( m_forward, FIELD_VECTOR ),
-	DEFINE_FIELD( m_perp, FIELD_VECTOR ),
-	DEFINE_FIELD( m_poolOrigin, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_waterLevel, FIELD_FLOAT ),
-	DEFINE_FIELD( m_speed, FIELD_FLOAT ),
-	DEFINE_FIELD( m_desiredSpeed, FIELD_FLOAT ),
-	DEFINE_FIELD( m_calmSpeed, FIELD_FLOAT ),
-	DEFINE_FIELD( m_panicSpeed, FIELD_FLOAT ),
-	DEFINE_FIELD( m_avoidRange, FIELD_FLOAT ),
-	DEFINE_FIELD( m_turnClockwise, FIELD_BOOLEAN ),
-END_DATADESC()
-
 
 //-----------------------------------------------------------------------------------------------------
 /**
@@ -532,13 +510,6 @@ void CFish::AddVisible( CFish *fish )
 LINK_ENTITY_TO_CLASS( func_fish_pool, CFishPool );
 
 BEGIN_DATADESC( CFishPool )
-
-	DEFINE_FIELD( m_fishCount, FIELD_INTEGER ),
-	DEFINE_FIELD( m_maxRange, FIELD_FLOAT ),
-	DEFINE_FIELD( m_swimDepth, FIELD_FLOAT ),
-	DEFINE_FIELD( m_waterLevel, FIELD_FLOAT ),
-	DEFINE_FIELD( m_isDormant, FIELD_BOOLEAN ),
-	DEFINE_UTLVECTOR( m_fishes, FIELD_EHANDLE ),
 
 	DEFINE_THINKFUNC( Update ),
 

@@ -20,9 +20,6 @@ BEGIN_DATADESC( CAI_LookTarget )
 	DEFINE_KEYFIELD( m_iPriority, FIELD_INTEGER, "priority" ),
 	DEFINE_KEYFIELD( m_flMaxDist, FIELD_FLOAT, "maxdist" ),
 
-	// Fields
-	DEFINE_FIELD( m_flTimeNextAvailable, FIELD_TIME ),
-
 END_DATADESC()
 
 //---------------------------------------------------------

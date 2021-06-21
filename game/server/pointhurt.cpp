@@ -58,8 +58,6 @@ BEGIN_DATADESC( CPointHurt )
 	DEFINE_INPUTFUNC( FIELD_VOID, "Toggle", InputToggle ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Hurt", InputHurt ),
 
-	DEFINE_FIELD( m_pActivator, FIELD_EHANDLE ),
-
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( point_hurt, CPointHurt );

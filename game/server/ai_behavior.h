@@ -11,7 +11,6 @@
 #include "ai_component.h"
 #include "ai_basenpc.h"
 #include "ai_default.h"
-#include "AI_Criteria.h"
 #include "networkvar.h"
 
 #ifdef DEBUG
@@ -81,8 +80,6 @@ public:
 	void BridgeEvent_Killed( const CTakeDamageInfo &info )	{ Event_Killed( info );	}
 	void BridgeCleanupOnDeath( CBaseEntity *pCulprit, bool bFireDeathOutput )		{ CleanupOnDeath( pCulprit, bFireDeathOutput ); }
 
-	void BridgeOnChangeHintGroup( string_t oldGroup, string_t newGroup ) { 	OnChangeHintGroup( oldGroup, newGroup ); }
-
 	void BridgeGatherConditions()					{ GatherConditions(); }
 	void BridgePrescheduleThink()					{ PrescheduleThink(); }
 	void BridgeOnScheduleChange()					{ OnScheduleChange(); }
@@ -102,11 +99,9 @@ public:
 	void BridgeOnMovementFailed()					{ OnMovementFailed(); }
 	void BridgeOnMovementComplete()					{ OnMovementComplete(); }
 	float BridgeGetDefaultNavGoalTolerance();
-	bool BridgeFValidateHintType( CAI_Hint *pHint, bool *pResult );
 	bool BridgeIsValidEnemy( CBaseEntity *pEnemy );
 	CBaseEntity *BridgeBestEnemy();
-	bool BridgeIsValidCover( const Vector &vLocation, CAI_Hint const *pHint );
-	bool BridgeIsValidShootPosition( const Vector &vLocation, CAI_Node *pNode, CAI_Hint const *pHint );
+	bool BridgeIsValidCover( const Vector &vLocation );
 	float BridgeGetMaxTacticalLateralMovement( void );
 	bool BridgeShouldIgnoreSound( CSound *pSound );
 	void BridgeOnSeeEntity( CBaseEntity *pEntity );
@@ -118,16 +113,13 @@ public:
 	float BridgeGetReasonableFacingDist( void );
 	bool BridgeShouldAlwaysThink( bool *pResult );
 	void BridgeOnChangeActiveWeapon( CBaseCombatWeapon *pOldWeapon, CBaseCombatWeapon *pNewWeapon );
-	void BridgeOnRestore();
 	virtual bool BridgeSpeakMapmakerInterruptConcept( string_t iszConcept );
 	bool BridgeCanFlinch( void );
 	bool BridgeIsCrouching( void );
 	bool BridgeIsCrouchedActivity( Activity activity );
 	bool BridgeQueryHearSound( CSound *pSound );
-	bool BridgeCanRunAScriptedNPCInteraction( bool bForced );
 	Activity BridgeGetFlinchActivity( bool bHeavyDamage, bool bGesture );
 	bool BridgeOnCalcBaseMove( AILocalMoveGoal_t *pMoveGoal, float distClear, AIMoveResult_t *pResult );
-	void BridgeModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet );
 	void BridgeTeleport( const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity );
 	void BridgeHandleAnimEvent( animevent_t *pEvent );
 
@@ -138,12 +130,6 @@ public:
 	virtual CAI_ClassScheduleIdSpace *GetClassScheduleIdSpace();
 
 	virtual int  DrawDebugTextOverlays( int text_offset );
-
-	virtual int	Save( ISave &save );
-	virtual int	Restore( IRestore &restore );
-
-	static void SaveBehaviors(ISave &save, CAI_BehaviorBase *pCurrentBehavior, CAI_BehaviorBase **ppBehavior, int nBehaviors );
-	static int RestoreBehaviors(IRestore &restore, CAI_BehaviorBase **ppBehavior, int nBehaviors ); // returns index of "current" behavior, or -1
 
 protected:
 
@@ -170,12 +156,6 @@ protected:
 	virtual void BuildScheduleTestBits() {}
 	bool IsCurSchedule( int schedId, bool fIdeal = true );
 
-
-	CAI_Hint *		GetHintNode()							{ return GetOuter()->GetHintNode(); }
-	const CAI_Hint *GetHintNode() const						{ return GetOuter()->GetHintNode(); }
-	void			SetHintNode( CAI_Hint *pHintNode )		{ GetOuter()->SetHintNode( pHintNode ); }
-	void			ClearHintNode( float reuseDelay = 0.0 )	{ GetOuter()->ClearHintNode( reuseDelay ); }
-
 protected:
 	// Used by derived classes to chain a task to a task that might not be the 
 	// one they are currently handling:
@@ -190,12 +170,10 @@ protected:
 	virtual void OnMovementFailed() {};
 	virtual void OnMovementComplete() {};
 	virtual float GetDefaultNavGoalTolerance();
-	virtual bool FValidateHintType( CAI_Hint *pHint );
 
 	virtual	bool IsValidEnemy( CBaseEntity *pEnemy );
 	virtual CBaseEntity *BestEnemy();
-	virtual	bool IsValidCover( const Vector &vLocation, CAI_Hint const *pHint );
-	virtual	bool IsValidShootPosition( const Vector &vLocation, CAI_Node *pNode, CAI_Hint const *pHint );
+	virtual	bool IsValidCover( const Vector &vLocation );
 	virtual float GetMaxTacticalLateralMovement( void );
 	virtual bool ShouldIgnoreSound( CSound *pSound );
 	virtual void OnSeeEntity( CBaseEntity *pEntity );
@@ -209,10 +187,8 @@ protected:
 	virtual bool IsCrouching( void );
 	virtual bool IsCrouchedActivity( Activity activity );
 	virtual bool QueryHearSound( CSound *pSound );
-	virtual bool CanRunAScriptedNPCInteraction( bool bForced );
 	virtual Activity GetFlinchActivity( bool bHeavyDamage, bool bGesture );
 	virtual bool OnCalcBaseMove( AILocalMoveGoal_t *pMoveGoal, float distClear, AIMoveResult_t *pResult );
-	virtual void ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet );
 	virtual void Teleport( const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity );
 	virtual void HandleAnimEvent( animevent_t *pEvent );
 
@@ -220,20 +196,10 @@ protected:
 
 	virtual void OnChangeActiveWeapon( CBaseCombatWeapon *pOldWeapon, CBaseCombatWeapon *pNewWeapon ) {};
 	virtual bool SpeakMapmakerInterruptConcept( string_t iszConcept ) { return false; };
-	
-	virtual void OnRestore() {};
-	
+
 	bool NotifyChangeBehaviorStatus( bool fCanFinishSchedule = false );
 
 	bool HaveSequenceForActivity( Activity activity )		{ return GetOuter()->HaveSequenceForActivity( activity ); }
-	
-	//---------------------------------
-
-	string_t			GetHintGroup()			{ return GetOuter()->GetHintGroup();	}
-	void				ClearHintGroup()			{ GetOuter()->ClearHintGroup();			}
-	void				SetHintGroup( string_t name )	{ GetOuter()->SetHintGroup( name );		}
-
-	virtual void		OnChangeHintGroup( string_t oldGroup, string_t newGroup ) {}
 
 	//
 	// These allow derived classes to implement custom schedules
@@ -337,8 +303,7 @@ public:
 	virtual Activity 	 BackBridge_NPC_TranslateActivity( Activity activity ) = 0;
 	virtual bool		 BackBridge_IsValidEnemy(CBaseEntity *pEnemy) = 0;
 	virtual CBaseEntity* BackBridge_BestEnemy(void) = 0;
-	virtual bool		 BackBridge_IsValidCover( const Vector &vLocation, CAI_Hint const *pHint ) = 0;
-	virtual bool		 BackBridge_IsValidShootPosition( const Vector &vLocation, CAI_Node *pNode, CAI_Hint const *pHint ) = 0;
+	virtual bool		 BackBridge_IsValidCover( const Vector &vLocation ) = 0;
 	virtual float		 BackBridge_GetMaxTacticalLateralMovement( void ) = 0;
 	virtual bool		 BackBridge_ShouldIgnoreSound( CSound *pSound ) = 0;
 	virtual void		 BackBridge_OnSeeEntity( CBaseEntity *pEntity ) = 0;
@@ -353,10 +318,8 @@ public:
 	virtual bool		 BackBridge_IsCrouching( void ) = 0;
 	virtual bool		 BackBridge_IsCrouchedActivity( Activity activity ) = 0;
 	virtual bool		 BackBridge_QueryHearSound( CSound *pSound ) = 0;
-	virtual bool		 BackBridge_CanRunAScriptedNPCInteraction( bool bForced ) = 0;
 	virtual Activity	 BackBridge_GetFlinchActivity( bool bHeavyDamage, bool bGesture ) = 0;
 	virtual bool		 BackBridge_OnCalcBaseMove( AILocalMoveGoal_t *pMoveGoal, float distClear, AIMoveResult_t *pResult ) = 0;
-	virtual void		 BackBridge_ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet ) = 0;
 	virtual void		 BackBridge_Teleport( const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity ) = 0;
 
 	virtual void		 BackBridge_HandleAnimEvent( animevent_t *pEvent ) = 0;
@@ -393,8 +356,6 @@ public:
 
 	void CleanupOnDeath( CBaseEntity *pCulprit = NULL, bool bFireDeathOutput = true );
 
-	virtual int		Save( ISave &save );
-	virtual int		Restore( IRestore &restore );
 	virtual bool 	CreateComponents();
 
 	// Automatically called during entity construction, derived class calls AddBehavior()
@@ -403,8 +364,6 @@ public:
 	// forces movement and sets a new schedule
 	virtual bool	ScheduledMoveToGoalEntity( int scheduleType, CBaseEntity *pGoalEntity, Activity movementActivity );
 	virtual bool	ScheduledFollowPath( int scheduleType, CBaseEntity *pPathStart, Activity movementActivity );
-	virtual void	ForceSelectedGo(CBaseEntity *pPlayer, const Vector &targetPos, const Vector &traceDir, bool bRun);
-	virtual void	ForceSelectedGoRandom(void);
 
 	// Bridges
 	void			Precache();
@@ -425,21 +384,17 @@ public:
 	CAI_Schedule *	GetSchedule(int localScheduleID);
 	const char *	TaskName(int taskID);
 	void			BuildScheduleTestBits();
-
-	void			OnChangeHintGroup( string_t oldGroup, string_t newGroup );
 	
 	Activity 		NPC_TranslateActivity( Activity activity );
 
 	bool			IsCurTaskContinuousMove();
 	void			OnMovementFailed();
 	void			OnMovementComplete();
-	bool			FValidateHintType( CAI_Hint *pHint );
 	float			GetDefaultNavGoalTolerance();
 
 	bool			IsValidEnemy(CBaseEntity *pEnemy);
 	CBaseEntity*	BestEnemy(void);
-	bool			IsValidCover( const Vector &vLocation, CAI_Hint const *pHint );
-	bool			IsValidShootPosition( const Vector &vLocation, CAI_Node *pNode, CAI_Hint const *pHint );
+	bool			IsValidCover( const Vector &vLocation );
 	float			GetMaxTacticalLateralMovement( void );
 	bool			ShouldIgnoreSound( CSound *pSound );
 	void			OnSeeEntity( CBaseEntity *pEntity );
@@ -453,7 +408,6 @@ public:
 	bool			IsCrouching( void );
 	bool			IsCrouchedActivity( Activity activity );
 	bool			QueryHearSound( CSound *pSound );
-	bool			CanRunAScriptedNPCInteraction( bool bForced );
 	Activity		GetFlinchActivity( bool bHeavyDamage, bool bGesture );
 	bool			OnCalcBaseMove( AILocalMoveGoal_t *pMoveGoal, float distClear, AIMoveResult_t *pResult );
 	void			HandleAnimEvent( animevent_t *pEvent );
@@ -463,9 +417,6 @@ public:
 	void			OnChangeActiveWeapon( CBaseCombatWeapon *pOldWeapon, CBaseCombatWeapon *pNewWeapon );
 	virtual bool	SpeakMapmakerInterruptConcept( string_t iszConcept );
 
-	void			OnRestore();
-
-	void			ModifyOrAppendCriteria( AI_CriteriaSet& set );
 	void			Teleport( const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity );
 
 	//---------------------------------
@@ -493,8 +444,7 @@ private:
 	Activity		BackBridge_NPC_TranslateActivity( Activity activity );
 	bool			BackBridge_IsValidEnemy(CBaseEntity *pEnemy);
 	CBaseEntity*	BackBridge_BestEnemy(void);
-	bool			BackBridge_IsValidCover( const Vector &vLocation, CAI_Hint const *pHint );
-	bool			BackBridge_IsValidShootPosition( const Vector &vLocation, CAI_Node *pNode, CAI_Hint const *pHint );
+	bool			BackBridge_IsValidCover( const Vector &vLocation );
 	float			BackBridge_GetMaxTacticalLateralMovement( void );
 	bool			BackBridge_ShouldIgnoreSound( CSound *pSound );
 	void			BackBridge_OnSeeEntity( CBaseEntity *pEntity );
@@ -509,10 +459,8 @@ private:
 	bool			BackBridge_IsCrouching( void );
 	bool			BackBridge_IsCrouchedActivity( Activity activity );
 	bool			BackBridge_QueryHearSound( CSound *pSound );
-	bool			BackBridge_CanRunAScriptedNPCInteraction( bool bForced );
 	Activity		BackBridge_GetFlinchActivity( bool bHeavyDamage, bool bGesture );
 	bool			BackBridge_OnCalcBaseMove( AILocalMoveGoal_t *pMoveGoal, float distClear, AIMoveResult_t *pResult );
-	void			BackBridge_ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet );
 	void			BackBridge_Teleport( const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity );
 
 	void			BackBridge_HandleAnimEvent( animevent_t *pEvent );
@@ -678,18 +626,6 @@ inline bool CAI_BehaviorBase::BridgeIsCurTaskContinuousMove( bool *pResult )
 
 //-------------------------------------
 
-inline bool CAI_BehaviorBase::BridgeFValidateHintType( CAI_Hint *pHint, bool *pResult )
-{
-	bool fPrevOverride = m_fOverrode;
-	m_fOverrode = true;
-	*pResult = FValidateHintType( pHint );
-	bool result = m_fOverrode;
-	m_fOverrode = fPrevOverride;
-	return result;
-}
-
-//-------------------------------------
-
 inline bool CAI_BehaviorBase::BridgeIsValidEnemy( CBaseEntity *pEnemy )
 {
 	return IsValidEnemy( pEnemy );
@@ -704,16 +640,9 @@ inline CBaseEntity *CAI_BehaviorBase::BridgeBestEnemy()
 
 //-------------------------------------
 
-inline bool CAI_BehaviorBase::BridgeIsValidCover( const Vector &vLocation, CAI_Hint const *pHint )
+inline bool CAI_BehaviorBase::BridgeIsValidCover( const Vector &vLocation )
 {
-	return IsValidCover( vLocation, pHint );
-}
-
-//-------------------------------------
-
-inline bool CAI_BehaviorBase::BridgeIsValidShootPosition( const Vector &vLocation, CAI_Node *pNode, CAI_Hint const *pHint )
-{
-	return IsValidShootPosition( vLocation, pNode, pHint );
+	return IsValidCover( vLocation );
 }
 
 //-------------------------------------
@@ -786,13 +715,6 @@ inline bool CAI_BehaviorBase::BridgeQueryHearSound( CSound *pSound )
 
 //-------------------------------------
 
-inline bool CAI_BehaviorBase::BridgeCanRunAScriptedNPCInteraction( bool bForced )
-{
-	return CanRunAScriptedNPCInteraction( bForced );
-}
-
-//-------------------------------------
-
 inline bool CAI_BehaviorBase::BridgeShouldPlayerAvoid( void )
 {
 	return ShouldPlayerAvoid();
@@ -840,13 +762,6 @@ inline bool CAI_BehaviorBase::BridgeSpeakMapmakerInterruptConcept( string_t iszC
 
 //-------------------------------------
 
-inline void CAI_BehaviorBase::BridgeOnRestore()
-{
-	OnRestore();
-}
-
-//-------------------------------------
-
 inline float CAI_BehaviorBase::BridgeGetDefaultNavGoalTolerance()
 {
 	return GetDefaultNavGoalTolerance();
@@ -864,13 +779,6 @@ inline Activity CAI_BehaviorBase::BridgeGetFlinchActivity( bool bHeavyDamage, bo
 inline bool CAI_BehaviorBase::BridgeOnCalcBaseMove( AILocalMoveGoal_t *pMoveGoal, float distClear, AIMoveResult_t *pResult )
 {
 	return OnCalcBaseMove( pMoveGoal, distClear, pResult );
-}
-
-//-----------------------------------------------------------------------------
-
-inline void CAI_BehaviorBase::BridgeModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
-{
-	ModifyOrAppendCriteria( criteriaSet );
 }
 
 //-----------------------------------------------------------------------------
@@ -1188,18 +1096,6 @@ inline void CAI_BehaviorHost<BASE_NPC>::BuildScheduleTestBits()
 //-------------------------------------
 
 template <class BASE_NPC>
-inline void CAI_BehaviorHost<BASE_NPC>::OnChangeHintGroup( string_t oldGroup, string_t newGroup )
-{
-	for( int i = 0; i < m_Behaviors.Count(); i++ )
-	{
-		m_Behaviors[i]->BridgeOnChangeHintGroup( oldGroup, newGroup );
-	}
-	BaseClass::OnChangeHintGroup( oldGroup, newGroup );
-}
-
-//-------------------------------------
-
-template <class BASE_NPC>
 inline Activity CAI_BehaviorHost<BASE_NPC>::BackBridge_NPC_TranslateActivity( Activity activity )
 {
 	return BaseClass::NPC_TranslateActivity( activity );
@@ -1269,17 +1165,6 @@ inline float CAI_BehaviorHost<BASE_NPC>::BackBridge_GetDefaultNavGoalTolerance()
 //-------------------------------------
 
 template <class BASE_NPC>
-inline bool CAI_BehaviorHost<BASE_NPC>::FValidateHintType( CAI_Hint *pHint )
-{
-	bool result = false;
-	if ( m_pCurBehavior && m_pCurBehavior->BridgeFValidateHintType( pHint, &result ) )
-		return result;
-	return BaseClass::FValidateHintType( pHint );
-}
-
-//-------------------------------------
-
-template <class BASE_NPC>
 inline bool CAI_BehaviorHost<BASE_NPC>::BackBridge_IsValidEnemy(CBaseEntity *pEnemy)
 {
 	return BaseClass::IsValidEnemy( pEnemy );
@@ -1296,17 +1181,9 @@ inline CBaseEntity *CAI_BehaviorHost<BASE_NPC>::BackBridge_BestEnemy(void)
 //-------------------------------------
 
 template <class BASE_NPC>
-inline bool CAI_BehaviorHost<BASE_NPC>::BackBridge_IsValidCover( const Vector &vLocation, CAI_Hint const *pHint )
+inline bool CAI_BehaviorHost<BASE_NPC>::BackBridge_IsValidCover( const Vector &vLocation )
 {
-	return BaseClass::IsValidCover( vLocation, pHint );
-}
-
-//-------------------------------------
-
-template <class BASE_NPC>
-inline bool CAI_BehaviorHost<BASE_NPC>::BackBridge_IsValidShootPosition( const Vector &vLocation, CAI_Node *pNode, CAI_Hint const *pHint )
-{
-	return BaseClass::IsValidShootPosition( vLocation, pNode, pHint );
+	return BaseClass::IsValidCover( vLocation );
 }
 
 //-------------------------------------
@@ -1393,14 +1270,6 @@ inline bool CAI_BehaviorHost<BASE_NPC>::BackBridge_QueryHearSound( CSound *pSoun
 //-------------------------------------
 
 template <class BASE_NPC>
-inline bool CAI_BehaviorHost<BASE_NPC>::BackBridge_CanRunAScriptedNPCInteraction( bool bForced )
-{
-	return BaseClass::CanRunAScriptedNPCInteraction( bForced );
-}
-
-//-------------------------------------
-
-template <class BASE_NPC>
 inline bool CAI_BehaviorHost<BASE_NPC>::BackBridge_ShouldPlayerAvoid( void )
 {
 	return BaseClass::ShouldPlayerAvoid();
@@ -1436,14 +1305,6 @@ template <class BASE_NPC>
 inline bool CAI_BehaviorHost<BASE_NPC>::BackBridge_OnCalcBaseMove( AILocalMoveGoal_t *pMoveGoal, float distClear, AIMoveResult_t *pResult )
 {
 	return BaseClass::OnCalcBaseMove( pMoveGoal, distClear, pResult );
-}
-
-//-------------------------------------
-
-template <class BASE_NPC>
-inline void CAI_BehaviorHost<BASE_NPC>::BackBridge_ModifyOrAppendCriteria( AI_CriteriaSet &criteriaSet )
-{
-	BaseClass::ModifyOrAppendCriteria( criteriaSet );
 }
 
 //-------------------------------------
@@ -1524,35 +1385,12 @@ inline bool CAI_BehaviorHost<BASE_NPC>::SpeakMapmakerInterruptConcept( string_t 
 //-------------------------------------
 
 template <class BASE_NPC>
-inline void CAI_BehaviorHost<BASE_NPC>::OnRestore()
-{
-	for( int i = 0; i < m_Behaviors.Count(); i++ )
-	{
-		m_Behaviors[i]->BridgeOnRestore();
-	}
-	BaseClass::OnRestore();
-}
-
-//-------------------------------------
-
-template <class BASE_NPC>
-inline bool CAI_BehaviorHost<BASE_NPC>::IsValidCover( const Vector &vLocation, CAI_Hint const *pHint )
+inline bool CAI_BehaviorHost<BASE_NPC>::IsValidCover( const Vector &vLocation )
 {
 	if ( m_pCurBehavior )
-		return m_pCurBehavior->BridgeIsValidCover( vLocation, pHint );
+		return m_pCurBehavior->BridgeIsValidCover( vLocation );
 	
-	return BaseClass::IsValidCover( vLocation, pHint );
-}
-	
-//-------------------------------------
-
-template <class BASE_NPC>
-inline bool CAI_BehaviorHost<BASE_NPC>::IsValidShootPosition( const Vector &vLocation, CAI_Node *pNode, CAI_Hint const *pHint )
-{
-	if ( m_pCurBehavior )
-		return m_pCurBehavior->BridgeIsValidShootPosition( vLocation, pNode, pHint );
-	
-	return BaseClass::IsValidShootPosition( vLocation, pNode, pHint );
+	return BaseClass::IsValidCover( vLocation );
 }
 
 //-------------------------------------
@@ -1668,17 +1506,6 @@ inline bool CAI_BehaviorHost<BASE_NPC>::QueryHearSound( CSound *pSound )
 //-------------------------------------
 
 template <class BASE_NPC>
-inline bool CAI_BehaviorHost<BASE_NPC>::CanRunAScriptedNPCInteraction( bool bForced )
-{
-	if ( m_pCurBehavior )
-		return m_pCurBehavior->BridgeCanRunAScriptedNPCInteraction( bForced );
-
-	return BaseClass::CanRunAScriptedNPCInteraction( bForced );
-}
-
-//-------------------------------------
-
-template <class BASE_NPC>
 inline bool CAI_BehaviorHost<BASE_NPC>::ShouldPlayerAvoid( void )
 {
 	if ( m_pCurBehavior )
@@ -1746,28 +1573,6 @@ inline bool CAI_BehaviorHost<BASE_NPC>::ScheduledFollowPath( int scheduleType, C
 //-------------------------------------
 
 template <class BASE_NPC>
-inline void CAI_BehaviorHost<BASE_NPC>::ForceSelectedGo(CBaseEntity *pPlayer, const Vector &targetPos, const Vector &traceDir, bool bRun)
-{
-	// If a behavior is active, we need to stop running it
-	ChangeBehaviorTo( NULL );
-
-	BaseClass::ForceSelectedGo(pPlayer, targetPos, traceDir, bRun);
-}
-
-//-------------------------------------
-
-template <class BASE_NPC>
-inline void CAI_BehaviorHost<BASE_NPC>::ForceSelectedGoRandom(void)
-{
-	// If a behavior is active, we need to stop running it
-	ChangeBehaviorTo( NULL );
-
-	BaseClass::ForceSelectedGoRandom();
-}
-
-//-------------------------------------
-
-template <class BASE_NPC>
 inline void CAI_BehaviorHost<BASE_NPC>::NPCInit()
 {
 	BaseClass::NPCInit();
@@ -1821,23 +1626,6 @@ inline bool CAI_BehaviorHost<BASE_NPC>::OnCalcBaseMove( AILocalMoveGoal_t *pMove
 		return m_pCurBehavior->BridgeOnCalcBaseMove( pMoveGoal, distClear, pResult );
 
 	return BaseClass::OnCalcBaseMove( pMoveGoal, distClear, pResult );
-}
-
-//-------------------------------------
-
-template <class BASE_NPC>
-inline void CAI_BehaviorHost<BASE_NPC>::ModifyOrAppendCriteria( AI_CriteriaSet &criteriaSet )
-{
-	BaseClass::ModifyOrAppendCriteria( criteriaSet );
-
-	if ( m_pCurBehavior )
-	{
-		// Append active behavior name
-		criteriaSet.AppendCriteria( "active_behavior", GetRunningBehavior()->GetName() );
-		
-		m_pCurBehavior->BridgeModifyOrAppendCriteria( criteriaSet );
-		return;
-	}
 }
 
 //-------------------------------------
@@ -1919,34 +1707,6 @@ template <class BASE_NPC>
 inline int CAI_BehaviorHost<BASE_NPC>::NumBehaviors()
 {
 	return m_Behaviors.Count();
-}
-
-//-------------------------------------
-
-template <class BASE_NPC>
-inline int CAI_BehaviorHost<BASE_NPC>::Save( ISave &save )
-{
-	int result = BaseClass::Save( save );
-	if ( result )
-		CAI_BehaviorBase::SaveBehaviors( save, m_pCurBehavior, AccessBehaviors(), NumBehaviors() );
-	return result;
-}
-
-//-------------------------------------
-
-template <class BASE_NPC>
-inline int CAI_BehaviorHost<BASE_NPC>::Restore( IRestore &restore )
-{
-	int result = BaseClass::Restore( restore );
-	if ( result )
-	{
-		int iCurrent = CAI_BehaviorBase::RestoreBehaviors( restore, AccessBehaviors(), NumBehaviors() );
-		if ( iCurrent != -1 )
-			m_pCurBehavior = AccessBehaviors()[iCurrent];
-		else
-			m_pCurBehavior = NULL;
-	}
-	return result;
 }
 
 //-------------------------------------

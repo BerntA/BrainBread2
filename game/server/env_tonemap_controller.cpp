@@ -60,18 +60,6 @@ private:
 LINK_ENTITY_TO_CLASS( env_tonemap_controller, CEnvTonemapController );
 
 BEGIN_DATADESC( CEnvTonemapController )
-	DEFINE_FIELD( m_flBlendTonemapStart, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flBlendTonemapEnd, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flBlendEndTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flBlendStartTime, FIELD_TIME ),
-	DEFINE_FIELD( m_bUseCustomAutoExposureMin, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bUseCustomAutoExposureMax, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flCustomAutoExposureMin, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flCustomAutoExposureMax, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flCustomBloomScale, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flCustomBloomScaleMinimum, FIELD_FLOAT ),
-	DEFINE_FIELD( m_bUseCustomBloomScale, FIELD_BOOLEAN ),
-
 	DEFINE_THINKFUNC( UpdateTonemapScaleBlend ),
 
 	// Inputs

@@ -22,7 +22,6 @@
 #include "physics.h"
 #include "entitylist.h"
 #include "shake.h"
-#include "event_tempentity_tester.h"
 #include "ndebugoverlay.h"
 #include "engine/IEngineSound.h"
 #include <ctype.h>
@@ -142,17 +141,15 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 	if ( !p )
 		return;
 
+	const char *pszPlayerName = pPlayer ? pPlayer->GetPlayerName() : "Console";
+
 	if ( pEdict )
 	{
-		if ( !pPlayer->CanSpeak() )
-			return;
-
 		// See if the player wants to modify of check the text
 		pPlayer->CheckChatText( p, 127 );	// though the buffer szTemp that p points to is 256, 
 											// chat text is capped to 127 in CheckChatText above
 
-		Assert( strlen( pPlayer->GetPlayerName() ) > 0 );
-
+		Assert((pszPlayerName && pszPlayerName[0]));
 		bSenderDead = ( pPlayer->m_lifeState != LIFE_ALIVE );
 	}
 	else
@@ -169,8 +166,6 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		pszPrefix = g_pGameRules->GetChatPrefix( teamonly, pPlayer );	
 		pszLocation = g_pGameRules->GetChatLocation( teamonly, pPlayer );
 	}
-
-	const char *pszPlayerName = pPlayer ? pPlayer->GetPlayerName():"Console";
 
 	if ( pszPrefix && strlen( pszPrefix ) > 0 )
 	{
@@ -305,13 +300,10 @@ void Host_Say(edict_t *pEdict, const char *message, bool teamonly, int chatCmd)
 		Assert(pPlayer);
 	}
 
-	if (pEdict)
-	{
-		if (!pPlayer->CanSpeak())
-			return;
+	const char *pszPlayerName = pPlayer ? pPlayer->GetPlayerName() : "Console";
 
-		Assert(strlen(pPlayer->GetPlayerName()) > 0);
-	}
+	if (pEdict)	
+		Assert((pszPlayerName && pszPlayerName[0]));
 
 	const char *pszFormat = "HL2MP_Chat_Voice";
 	const char *pszToken = message;
@@ -322,9 +314,7 @@ void Host_Say(edict_t *pEdict, const char *message, bool teamonly, int chatCmd)
 		pszFormat = "HL2MP_Chat_Voice";
 		break;
 	}
-	}
-
-	const char *pszPlayerName = pPlayer ? pPlayer->GetPlayerName() : "Console";
+	}	
 
 	// loop through all players
 	// Start with the first player.

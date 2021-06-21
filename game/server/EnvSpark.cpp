@@ -36,7 +36,6 @@ const int SF_SPARK_DIRECTIONAL		= 512;
 BEGIN_DATADESC( CEnvSpark )
 
 	DEFINE_KEYFIELD( m_flDelay, FIELD_FLOAT, "MaxDelay" ),
-	DEFINE_FIELD( m_nGlowSpriteIndex, FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_nMagnitude, FIELD_INTEGER, "Magnitude" ),
 	DEFINE_KEYFIELD( m_nTrailLength, FIELD_INTEGER, "TrailLength" ),
 

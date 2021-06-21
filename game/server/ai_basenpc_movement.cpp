@@ -5,18 +5,13 @@
 // $NoKeywords: $
 //=============================================================================//
 
-
 #include "cbase.h"
-
 #include "game.h"			
 #include "ndebugoverlay.h"
-
 #include "ai_basenpc.h"
 #include "ai_hull.h"
-#include "ai_node.h"
 #include "ai_motor.h"
 #include "ai_navigator.h"
-#include "ai_hint.h"
 #include "scripted.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -25,72 +20,6 @@
 //=============================================================================
 // PATHING & HIGHER LEVEL MOVEMENT
 //-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-// Purpose: Static debug function to force all selected npcs to go to the 
-//			given node
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::ForceSelectedGo(CBaseEntity *pPlayer, const Vector &targetPos, const Vector &traceDir, bool bRun) 
-{
-	CAI_BaseNPC *npc = gEntList.NextEntByClass( (CAI_BaseNPC *)NULL );
-
-	while (npc)
-	{
-		if (npc->m_debugOverlays & OVERLAY_NPC_SELECTED_BIT) 
-		{
-			Vector chasePosition = targetPos;
-			npc->TranslateNavGoal( pPlayer, chasePosition );
-			// It it legal to drop me here
-			Vector	vUpBit = chasePosition;
-			vUpBit.z += 1;
-
-			trace_t tr;
-			AI_TraceHull( chasePosition, vUpBit, npc->GetHullMins(), 
-				npc->GetHullMaxs(), MASK_NPCSOLID, npc, COLLISION_GROUP_NONE, &tr );
-			if (tr.startsolid || tr.fraction != 1.0 )
-			{
-				NDebugOverlay::BoxAngles(chasePosition, npc->GetHullMins(), 
-					npc->GetHullMaxs(), npc->GetAbsAngles(), 255,0,0,20,0.5);
-			}
-
-			npc->m_vecLastPosition = chasePosition;
-
-			if (npc->m_hCine != NULL)
-			{
-				npc->ExitScriptedSequence();
-			}
-
-			if ( bRun )
-				npc->SetSchedule( SCHED_FORCED_GO_RUN );
-			else
-				npc->SetSchedule( SCHED_FORCED_GO );
-			npc->m_flMoveWaitFinished = gpGlobals->curtime;
-		}
-		npc = gEntList.NextEntByClass(npc);
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Static debug function to make all selected npcs run around
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::ForceSelectedGoRandom(void) 
-{
-	CAI_BaseNPC *npc = gEntList.NextEntByClass( (CAI_BaseNPC *)NULL );
-
-	while (npc)
-	{
-		if (npc->m_debugOverlays & OVERLAY_NPC_SELECTED_BIT) 
-		{
-			npc->SetSchedule( SCHED_RUN_RANDOM );
-			npc->GetNavigator()->SetMovementActivity(ACT_RUN);
-		}
-		npc = gEntList.NextEntByClass(npc);
-	}
-}
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -164,7 +93,6 @@ bool CAI_BaseNPC::IsCurTaskContinuousMove()
 	case TASK_WAIT_FOR_MOVEMENT:
 	case TASK_MOVE_TO_TARGET_RANGE:
 	case TASK_MOVE_TO_GOAL_RANGE:
-	case TASK_WEAPON_RUN_PATH:
 	case TASK_PLAY_SCENE:
 	case TASK_RUN_PATH_TIMED:
 	case TASK_WALK_PATH_TIMED:
@@ -182,22 +110,50 @@ bool CAI_BaseNPC::IsCurTaskContinuousMove()
 	}
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: Used to specify that the NPC has a reason not to use the a navigation node
+//----------------------------------------------------------------------------------
+// Purpose: Returns z value of floor below given point (up to fMaxDrop inches below)
 // Input  :
 // Output :
-//-----------------------------------------------------------------------------
-bool CAI_BaseNPC::IsUnusableNode(int iNodeID, CAI_Hint *pHint)
+//----------------------------------------------------------------------------------
+static float GetFloorZ(const Vector &origin, float fMaxDrop)
 {
-	if ( m_bHintGroupNavLimiting && m_strHintGroup != NULL_STRING && STRING(m_strHintGroup)[0] != 0 )
+	// trace to the ground, then pop up 8 units and place node there to make it
+	// easier for them to connect (think stairs, chairs, and bumps in the floor).
+	// After the routing is done, push them back down.
+	//
+	trace_t	tr;
+	AI_TraceLine(origin,
+		origin - Vector(0, 0, fMaxDrop),
+		MASK_NPCSOLID_BRUSHONLY,
+		NULL,
+		COLLISION_GROUP_NONE,
+		&tr);
+
+	// This trace is ONLY used if we hit an entity flagged with FL_WORLDBRUSH
+	trace_t	trEnt;
+	AI_TraceLine(origin,
+		origin - Vector(0, 0, fMaxDrop),
+		MASK_NPCSOLID,
+		NULL,
+		COLLISION_GROUP_NONE,
+		&trEnt);
+
+
+	// Did we hit something closer than the floor?
+	if (trEnt.fraction < tr.fraction)
 	{
-		if (!pHint || pHint->GetGroup() != GetHintGroup())
+		// If it was a world brush entity, copy the node location
+		if (trEnt.m_pEnt)
 		{
-			return true;
+			CBaseEntity *e = trEnt.m_pEnt;
+			if (e && (e->GetFlags() & FL_WORLDBRUSH))
+			{
+				tr.endpos = trEnt.endpos;
+			}
 		}
 	}
-	return false;
+
+	return tr.endpos.z;
 }
 
 //-----------------------------------------------------------------------------
@@ -212,17 +168,14 @@ bool CAI_BaseNPC::ValidateNavGoal()
 		// Check if this location will block my enemy's line of sight to me
 		if (GetEnemy())
 		{
-			Activity nCoverActivity = GetCoverActivity( GetHintNode() );
 			Vector	 vCoverLocation = GetNavigator()->GetGoalPos();
-
 
 			// For now we have to drop the node to the floor so we can
 			// get an accurate postion of the NPC.  Should change once Ken checks in
-			float floorZ = GetFloorZ(vCoverLocation);
+			float floorZ = GetFloorZ(vCoverLocation, 384);
 			vCoverLocation.z = floorZ;
 
-
-			Vector vEyePos = vCoverLocation + EyeOffset(nCoverActivity);
+			Vector vEyePos = vCoverLocation + EyeOffset(ACT_COVER);
 
 			if (!IsCoverPosition( GetEnemy()->EyePosition(), vEyePos ) )
 			{

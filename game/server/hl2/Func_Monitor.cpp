@@ -33,8 +33,6 @@ private:
 // automatically hooks in the system's callbacks
 BEGIN_DATADESC( CFuncMonitor )
 
-	DEFINE_FIELD( m_hInfoCameraLink, FIELD_EHANDLE ),
-
 	// Outputs
 	DEFINE_INPUTFUNC( FIELD_STRING, "SetCamera", InputSetCamera ),
 

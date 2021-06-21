@@ -59,9 +59,6 @@ LINK_ENTITY_TO_CLASS(logic_navigation, CLogicNavigation);
 
 BEGIN_DATADESC( CLogicNavigation )
 
-	DEFINE_FIELD( m_isOn, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_navProperty, FIELD_INTEGER ),
-
 	// Inputs
 	DEFINE_INPUTFUNC(FIELD_VOID, "TurnOn", InputTurnOn),
 	DEFINE_INPUTFUNC(FIELD_VOID, "TurnOff", InputTurnOff),

@@ -82,7 +82,6 @@ public:
 
 	C_SoundscapeSystem()
 	{
-		m_nRestoreFrame = -1;
 	}
 
 	~C_SoundscapeSystem() {}
@@ -124,11 +123,6 @@ public:
 		OnStopAllSounds();
 	}
 
-	virtual void OnSave() {}
-	virtual void OnRestore()
-	{
-		m_nRestoreFrame = gpGlobals->framecount;
-	}
 	virtual void SafeRemoveIfDesired() {}
 
 	// Called before rendering
@@ -210,11 +204,6 @@ public:
 
 private:
 
-	bool	IsBeingRestored() const
-	{
-		return gpGlobals->framecount == m_nRestoreFrame ? true : false;
-	}
-
 	void	AddSoundScapeFile( const char *filename );
 
 	void		TouchPlayLooping( KeyValues *pAmbient );
@@ -223,8 +212,6 @@ private:
 	void		TouchSoundFile( char const *wavefile );
 
 	void		TouchSoundFiles();
-	
-	int							m_nRestoreFrame;
 
 	CUtlVector< KeyValues * >	m_SoundscapeScripts;	// The whole script file in memory
 	CUtlVector<KeyValues *>		m_soundscapes;			// Lookup by index of each root section
@@ -755,12 +742,6 @@ void C_SoundscapeSystem::ProcessPlayLooping( KeyValues *pAmbient, const subsound
 		positionIndex = params.positionOverride;
 	}
 
-	// Sound is mared as "suppress_on_restore" so don't restart it
-	if ( IsBeingRestored() && suppress )
-	{
-		return;
-	}
-
 	if ( volume != 0 && pSoundName != NULL )
 	{
 		if ( positionIndex < 0 )
@@ -958,12 +939,6 @@ void C_SoundscapeSystem::ProcessPlayRandom( KeyValues *pPlayRandom, const subsou
 	{
 		positionIndex = params.positionOverride;
 		randomPosition = false; // override trumps random position
-	}
-
-	// Sound is mared as "suppress_on_restore" so don't restart it
-	if ( IsBeingRestored() && suppress )
-	{
-		return;
 	}
 
 	if ( sound.waveCount != 0 )

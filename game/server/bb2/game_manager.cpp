@@ -52,8 +52,10 @@ static CGameManager *g_pGameManager = NULL;
 BEGIN_DATADESC(CGameManager)
 DEFINE_INPUTFUNC(FIELD_INTEGER, "EndGame", InputEndGame),
 DEFINE_INPUTFUNC(FIELD_INTEGER, "EndRound", InputEndRound),
+
 DEFINE_KEYFIELD(m_iRoundsToPlay, FIELD_INTEGER, "Rounds"),
 DEFINE_KEYFIELD(m_iTriesPerRound, FIELD_INTEGER, "Tries"),
+
 DEFINE_OUTPUT(m_OnEndGame, "OnEndGame"),
 DEFINE_OUTPUT(m_OnEndRound, "OnEndRound"),
 DEFINE_OUTPUT(m_OnStartGame, "OnStartGame"),
@@ -70,8 +72,6 @@ DEFINE_OUTPUT(m_OnNewRound[6], "OnRound7"),
 DEFINE_OUTPUT(m_OnNewRound[7], "OnRound8"),
 DEFINE_OUTPUT(m_OnNewRound[8], "OnRound9"),
 DEFINE_OUTPUT(m_OnNewRound[9], "OnRound10"),
-DEFINE_FIELD(m_iRoundsPlayed, FIELD_INTEGER),
-DEFINE_FIELD(m_iCurrentTries, FIELD_INTEGER),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(game_manager, CGameManager)

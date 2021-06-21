@@ -21,7 +21,6 @@ public:
 	DECLARE_DATADESC();
 
 	virtual void Spawn(void);
-	virtual	int	 ObjectCaps(void) { return BaseClass::ObjectCaps() | FCAP_DONT_SAVE; }
 	virtual void ResourceThink(void);
 	virtual void UpdatePlayerData(void);
 	virtual int  UpdateTransmitState(void);

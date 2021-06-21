@@ -11,19 +11,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-//---------------------------------------------------------
-// Save/Restore
-//---------------------------------------------------------
-BEGIN_DATADESC( CBaseFire )
-
-	DEFINE_FIELD( m_flStartScale, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flScale, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flScaleTime, FIELD_TIME ),
-	DEFINE_FIELD( m_nFlags, FIELD_INTEGER ),
-
-END_DATADESC()
-
-
 //==================================================
 // CBaseFire
 //==================================================
@@ -98,18 +85,6 @@ IMPLEMENT_SERVERCLASS_ST( CFireSmoke, DT_FireSmoke )
 	SendPropModelIndex(	SENDINFO( m_nFlameModelIndex ) ),
 	SendPropModelIndex(	SENDINFO( m_nFlameFromAboveModelIndex ) ),
 END_SEND_TABLE()
-
-//Data description 
-BEGIN_DATADESC( CFireSmoke )
-
-	DEFINE_FIELD( m_flStartScale,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_flScale,			FIELD_FLOAT ),
-	DEFINE_FIELD( m_flScaleTime,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_nFlags,				FIELD_INTEGER ),
-	DEFINE_FIELD( m_nFlameModelIndex,	FIELD_MODELINDEX ),
-	DEFINE_FIELD( m_nFlameFromAboveModelIndex,	FIELD_MODELINDEX ),
-
-END_DATADESC()
 
 //-----------------------------------------------------------------------------
 // Purpose: 

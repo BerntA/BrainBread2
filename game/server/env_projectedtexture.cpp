@@ -65,8 +65,6 @@ private:
 LINK_ENTITY_TO_CLASS( env_projectedtexture, CEnvProjectedTexture );
 
 BEGIN_DATADESC( CEnvProjectedTexture )
-	DEFINE_FIELD( m_hTargetEntity, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_bState, FIELD_BOOLEAN ),
 	DEFINE_KEYFIELD( m_flLightFOV, FIELD_FLOAT, "lightfov" ),
 	DEFINE_KEYFIELD( m_bEnableShadows, FIELD_BOOLEAN, "enableshadows" ),
 	DEFINE_KEYFIELD( m_bLightOnlyTarget, FIELD_BOOLEAN, "lightonlytarget" ),
@@ -78,7 +76,6 @@ BEGIN_DATADESC( CEnvProjectedTexture )
 	DEFINE_KEYFIELD( m_flNearZ, FIELD_FLOAT, "nearz" ),
 	DEFINE_KEYFIELD( m_flFarZ, FIELD_FLOAT, "farz" ),
 	DEFINE_KEYFIELD( m_nShadowQuality, FIELD_INTEGER, "shadowquality" ),
-	DEFINE_FIELD( m_LinearFloatLightColor, FIELD_VECTOR ), 
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOn", InputTurnOn ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOff", InputTurnOff ),

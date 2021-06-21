@@ -13,8 +13,6 @@
 #pragma once
 #endif
 
-#include "isaverestore.h"
-
 class CBaseEntity;
 class CPointTemplate;
 
@@ -29,8 +27,5 @@ void		Templates_ReconnectIOForGroup( CPointTemplate *pGroup );
 void		Templates_StartUniqueInstance( void );
 bool		Templates_IndexRequiresEntityIOFixup( int iIndex );
 char		*Templates_GetEntityIOFixedMapData( int iIndex );
-
-// Save / Restore
-ISaveRestoreBlockHandler *GetTemplateSaveRestoreBlockHandler( void );
 
 #endif // TEMPLATEENTITIES_H

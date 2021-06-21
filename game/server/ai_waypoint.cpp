@@ -8,7 +8,6 @@
 #include "cbase.h"
 #include "mempool.h"
 #include "ai_navtype.h"
-#include "ai_node.h"
 #include "ai_waypoint.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -21,23 +20,6 @@
 //-----------------------------------------------------------------------------
 
 DEFINE_FIXEDSIZE_ALLOCATOR( AI_Waypoint_t, WAYPOINT_POOL_SIZE, CUtlMemoryPool::GROW_FAST );
-
-//-------------------------------------
-
-BEGIN_SIMPLE_DATADESC( AI_Waypoint_t )
-
-	DEFINE_FIELD(	vecLocation, FIELD_POSITION_VECTOR),
-	DEFINE_FIELD(	flYaw, FIELD_FLOAT ),
-	//				iNodeID			(not saved, cannot rely on consistent mapping)
-	//				flPathDistGoal	(not saved )
-	DEFINE_FIELD(	hPathCorner, FIELD_EHANDLE ),
-	DEFINE_FIELD(	m_hData, FIELD_EHANDLE ),
-	DEFINE_FIELD(	m_fWaypointFlags, FIELD_INTEGER ),
-	DEFINE_FIELD(	m_iWPType, FIELD_INTEGER ),
-	//				pNext
-	//				pPrev
-
-END_DATADESC()
 
 //-------------------------------------
 

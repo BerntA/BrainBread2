@@ -38,8 +38,6 @@ public:
 	int  UpdateTransmitState();
 	void Activate( void );
 
-	virtual int	ObjectCaps( void ) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
-
 	// Inputs
 	void	InputEnable( inputdata_t &inputdata );
 	void	InputDisable( inputdata_t &inputdata );
@@ -82,12 +80,6 @@ BEGIN_DATADESC( CColorCorrection )
 	DEFINE_THINKFUNC( FadeInThink ),
 	DEFINE_THINKFUNC( FadeOutThink ),
 
-	DEFINE_FIELD( m_flCurWeight,	      FIELD_FLOAT ),
-	DEFINE_FIELD( m_flTimeStartFadeIn,	  FIELD_FLOAT ),
-	DEFINE_FIELD( m_flTimeStartFadeOut,	  FIELD_FLOAT ),
-	DEFINE_FIELD( m_flStartFadeInWeight,  FIELD_FLOAT ),
-	DEFINE_FIELD( m_flStartFadeOutWeight, FIELD_FLOAT ),
-
 	DEFINE_KEYFIELD( m_MinFalloff,		  FIELD_FLOAT,   "minfalloff" ),
 	DEFINE_KEYFIELD( m_MaxFalloff,		  FIELD_FLOAT,   "maxfalloff" ),
 	DEFINE_KEYFIELD( m_flMaxWeight,		  FIELD_FLOAT,	 "maxweight" ),
@@ -97,7 +89,6 @@ BEGIN_DATADESC( CColorCorrection )
 
 	DEFINE_KEYFIELD( m_bEnabled,		  FIELD_BOOLEAN, "enabled" ),
 	DEFINE_KEYFIELD( m_bStartDisabled,    FIELD_BOOLEAN, "StartDisabled" ),
-//	DEFINE_ARRAY( m_netlookupFilename, FIELD_CHARACTER, MAX_PATH ), 
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),

@@ -31,8 +31,6 @@ public:
 
 	virtual void HandleAnimEvent(animevent_t *pEvent);
 
-	void	OnRestore(void);
-
 	//FIXME: May not want to have this used in a radius
 	int		ObjectCaps(void) { return (BaseClass::ObjectCaps() | (FCAP_IMPULSE_USE | FCAP_USE_IN_RADIUS)); };
 	void	Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
@@ -54,8 +52,6 @@ protected:
 LINK_ENTITY_TO_CLASS(item_ammo_crate, CItem_AmmoCrate);
 
 BEGIN_DATADESC(CItem_AmmoCrate)
-DEFINE_FIELD(m_flCloseTime, FIELD_FLOAT),
-DEFINE_FIELD(m_hActivator, FIELD_EHANDLE),
 DEFINE_OUTPUT(m_OnUsed, "OnUsed"),
 DEFINE_INPUTFUNC(FIELD_VOID, "Kill", InputKill),
 DEFINE_THINKFUNC(CrateThink),
@@ -127,14 +123,6 @@ void CItem_AmmoCrate::Precache(void)
 	PrecacheModel(AMMOCRATE_MODEL_DEFAULT);
 	PrecacheScriptSound("AmmoCrate.Open");
 	PrecacheScriptSound("AmmoCrate.Close");
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CItem_AmmoCrate::OnRestore(void)
-{
-	BaseClass::OnRestore();
 }
 
 //-----------------------------------------------------------------------------

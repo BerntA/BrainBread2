@@ -28,22 +28,6 @@ IMPLEMENT_SERVERCLASS_ST( CPlasma, DT_Plasma )
 	SendPropModelIndex( SENDINFO( m_nGlowModelIndex )),
 END_SEND_TABLE()
 
-//Data description 
-BEGIN_DATADESC( CPlasma )
-
-	//Client-side
-	DEFINE_FIELD( m_flScale,			FIELD_FLOAT ),
-	DEFINE_FIELD( m_flScaleTime,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_nFlags,			FIELD_INTEGER ),
-
-//	DEFINE_FIELD( m_nPlasmaModelIndex, FIELD_INTEGER ),
-//	DEFINE_FIELD( m_nPlasmaModelIndex2, FIELD_INTEGER ),
-//	DEFINE_FIELD( m_nGlowModelIndex,	FIELD_INTEGER ),
-
-	//Server-side
-
-END_DATADESC()
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *name - 

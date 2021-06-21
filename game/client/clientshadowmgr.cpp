@@ -712,8 +712,6 @@ public:
 	virtual void Update( float frametime ) { }
 	virtual void PostRender() {}
 
-	virtual void OnSave() {}
-	virtual void OnRestore() {}
 	virtual void SafeRemoveIfDesired() {}
 
 	virtual ClientShadowHandle_t CreateShadow( ClientEntityHandle_t entity, int flags );

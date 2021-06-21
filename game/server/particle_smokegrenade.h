@@ -18,7 +18,6 @@
 
 class ParticleSmokeGrenade : public CBaseParticleEntity
 {
-	DECLARE_DATADESC();
 public:
 	DECLARE_CLASS( ParticleSmokeGrenade, CBaseParticleEntity );
 	DECLARE_SERVERCLASS();

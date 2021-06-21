@@ -63,9 +63,7 @@ public:
 
 // CBaseEntity overrides.
 public:
-	
-	// don't cross transitions
-	virtual int		ObjectCaps( void ) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+
 	virtual void	Activate();
 	virtual void	Precache();
 	virtual int		OnTakeDamage( const CTakeDamageInfo &info );

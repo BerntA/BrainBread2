@@ -66,8 +66,6 @@ public:
 			return 0;
 		return result;
 	}
-
-	DECLARE_SIMPLE_DATADESC();
 	
 protected:
 	float m_next;
@@ -105,8 +103,6 @@ public:
 	{
 		return m_interval;
 	}
-
-	DECLARE_SIMPLE_DATADESC();
 	
 private:
 	float m_interval;
@@ -159,8 +155,6 @@ public:
 	{
 		return m_maxInterval;
 	}
-
-	DECLARE_SIMPLE_DATADESC();
 	
 private:
 	float m_minInterval;
@@ -191,8 +185,6 @@ public:
 	{
 		return ( m_fIsRunning && CSimpleSimTimer::Expired() );
 	}
-	
-	DECLARE_SIMPLE_DATADESC();
 	
 protected:
 	bool m_fIsRunning;
@@ -249,8 +241,6 @@ public:
 	{
 		return m_interval;
 	}
-
-	DECLARE_SIMPLE_DATADESC();
 	
 private:
 	float m_interval;
@@ -300,8 +290,6 @@ public:
 	{
 		return m_maxInterval;
 	}
-
-	DECLARE_SIMPLE_DATADESC();
 	
 private:
 	float m_minInterval;

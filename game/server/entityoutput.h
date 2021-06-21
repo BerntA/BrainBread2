@@ -47,8 +47,6 @@ public:
 	static void *operator new( size_t stAllocateBlock, int nBlockUse, const char *pFileName, int nLine );
 	static void operator delete( void *pMem );
 	static void operator delete( void *pMem , int nBlockUse, const char *pFileName, int nLine ) { operator delete(pMem); }
-
-	DECLARE_SIMPLE_DATADESC();
 };
 
 
@@ -64,9 +62,6 @@ public:
 	void ParseEventAction( const char *EventData );
 	void AddEventAction( CEventAction *pEventAction );
 
-	int Save( ISave &save );
-	int Restore( IRestore &restore, int elementCount );
-
 	int NumberOfElements( void );
 
 	float GetMaxDelay( void );
@@ -81,7 +76,6 @@ public:
 protected:
 	variant_t m_Value;
 	CEventAction *m_ActionList;
-	DECLARE_SIMPLE_DATADESC();
 
 	CBaseEntityOutput() {} // this class cannot be created, only it's children
 

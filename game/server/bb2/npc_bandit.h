@@ -12,8 +12,6 @@
 
 #include "npc_base_soldier.h"
 
-int g_pBanditQuestion = 0;
-
 class CNPCBandit : public CNPC_BaseSoldier
 {
 	DECLARE_CLASS(CNPCBandit, CNPC_BaseSoldier);
@@ -40,5 +38,7 @@ public:
 
 private:
 	bool		m_fIsBlocking;
+
+	static int g_pBanditQuestion;
 };
 #endif // NPC_BANDIT_H

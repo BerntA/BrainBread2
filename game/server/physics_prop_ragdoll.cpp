@@ -8,7 +8,6 @@
 #include "baseanimating.h"
 #include "studio.h"
 #include "physics.h"
-#include "physics_saverestore.h"
 #include "ai_basenpc.h"
 #include "vphysics/constraints.h"
 #include "datacache/imdlcache.h"
@@ -17,7 +16,6 @@
 #include "KeyValues.h"
 #include "props.h"
 #include "RagdollBoogie.h"
-#include "AI_Criteria.h"
 #include "ragdoll_shared.h"
 #include "hierarchy.h"
 
@@ -63,23 +61,8 @@ IMPLEMENT_SERVERCLASS_ST(CRagdollProp, DT_Ragdoll)
 	SendPropInt(SENDINFO(m_nOverlaySequence), 11),
 END_SEND_TABLE()
 
-#define DEFINE_RAGDOLL_ELEMENT( i ) \
-	DEFINE_FIELD( m_ragdoll.list[i].originParentSpace, FIELD_VECTOR ), \
-	DEFINE_PHYSPTR( m_ragdoll.list[i].pObject ), \
-	DEFINE_PHYSPTR( m_ragdoll.list[i].pConstraint ), \
-	DEFINE_FIELD( m_ragdoll.list[i].parentIndex, FIELD_INTEGER )
-
 BEGIN_DATADESC(CRagdollProp)
-//					m_ragdoll (custom handling)
-	DEFINE_AUTO_ARRAY	( m_ragdoll.boneIndex,	FIELD_INTEGER	),
-	DEFINE_AUTO_ARRAY	( m_ragPos,		FIELD_POSITION_VECTOR	),
-	DEFINE_AUTO_ARRAY	( m_ragAngles,	FIELD_VECTOR	),
 	DEFINE_KEYFIELD(m_anglesOverrideString,	FIELD_STRING, "angleOverride" ),
-	DEFINE_FIELD( m_lastUpdateTickCount, FIELD_INTEGER ),
-	DEFINE_FIELD( m_allAsleep, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_hDamageEntity, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hKiller, FIELD_EHANDLE ),
-
 	DEFINE_KEYFIELD( m_bStartDisabled, FIELD_BOOLEAN, "StartDisabled" ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "StartRagdollBoogie", InputStartRadgollBoogie ),
@@ -89,57 +72,10 @@ BEGIN_DATADESC(CRagdollProp)
 	DEFINE_INPUTFUNC( FIELD_VOID, "Disable",	InputTurnOff ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "FadeAndRemove", InputFadeAndRemove ),
 
-	DEFINE_FIELD( m_hUnragdoll, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_bFirstCollisionAfterLaunch, FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_flBlendWeight, FIELD_FLOAT ),
-	DEFINE_FIELD( m_nOverlaySequence, FIELD_INTEGER ),
-	DEFINE_AUTO_ARRAY( m_ragdollMins, FIELD_VECTOR ),
-	DEFINE_AUTO_ARRAY( m_ragdollMaxs, FIELD_VECTOR ),
-
-	// Physics Influence
-	DEFINE_FIELD( m_hPhysicsAttacker, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_flLastPhysicsInfluenceTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flFadeOutStartTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flFadeTime,	FIELD_FLOAT),
-	DEFINE_FIELD( m_strSourceClassName, FIELD_STRING ),
-	DEFINE_FIELD( m_bHasBeenPhysgunned, FIELD_BOOLEAN ),
-
 	// think functions
 	DEFINE_THINKFUNC( SetDebrisThink ),
 	DEFINE_THINKFUNC( ClearFlagsThink ),
 	DEFINE_THINKFUNC( FadeOutThink ),
-
-	DEFINE_FIELD( m_ragdoll.listCount, FIELD_INTEGER ),
-	DEFINE_FIELD( m_ragdoll.allowStretch, FIELD_BOOLEAN ),
-	DEFINE_PHYSPTR( m_ragdoll.pGroup ),
-	DEFINE_FIELD( m_flDefaultFadeScale, FIELD_FLOAT ),
-
-	//DEFINE_RAGDOLL_ELEMENT( 0 ),
-	DEFINE_RAGDOLL_ELEMENT( 1 ),
-	DEFINE_RAGDOLL_ELEMENT( 2 ),
-	DEFINE_RAGDOLL_ELEMENT( 3 ),
-	DEFINE_RAGDOLL_ELEMENT( 4 ),
-	DEFINE_RAGDOLL_ELEMENT( 5 ),
-	DEFINE_RAGDOLL_ELEMENT( 6 ),
-	DEFINE_RAGDOLL_ELEMENT( 7 ),
-	DEFINE_RAGDOLL_ELEMENT( 8 ),
-	DEFINE_RAGDOLL_ELEMENT( 9 ),
-	DEFINE_RAGDOLL_ELEMENT( 10 ),
-	DEFINE_RAGDOLL_ELEMENT( 11 ),
-	DEFINE_RAGDOLL_ELEMENT( 12 ),
-	DEFINE_RAGDOLL_ELEMENT( 13 ),
-	DEFINE_RAGDOLL_ELEMENT( 14 ),
-	DEFINE_RAGDOLL_ELEMENT( 15 ),
-	DEFINE_RAGDOLL_ELEMENT( 16 ),
-	DEFINE_RAGDOLL_ELEMENT( 17 ),
-	DEFINE_RAGDOLL_ELEMENT( 18 ),
-	DEFINE_RAGDOLL_ELEMENT( 19 ),
-	DEFINE_RAGDOLL_ELEMENT( 20 ),
-	DEFINE_RAGDOLL_ELEMENT( 21 ),
-	DEFINE_RAGDOLL_ELEMENT( 22 ),
-	DEFINE_RAGDOLL_ELEMENT( 23 ),
-
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
@@ -205,40 +141,6 @@ void CRagdollProp::SetSourceClassName( const char *pClassname )
 	m_strSourceClassName = MAKE_STRING( pClassname );
 }
 
-
-void CRagdollProp::OnSave( IEntitySaveUtils *pUtils )
-{
-	if ( !m_ragdoll.listCount )
-		return;
-
-	// Don't save ragdoll element 0, base class saves the pointer in 
-	// m_pPhysicsObject
-	Assert( m_ragdoll.list[0].parentIndex == -1 );
-	Assert( m_ragdoll.list[0].pConstraint == NULL );
-	Assert( m_ragdoll.list[0].originParentSpace == vec3_origin );
-	Assert( m_ragdoll.list[0].pObject != NULL );
-	VPhysicsSetObject( NULL );	// squelch a warning message
-	VPhysicsSetObject( m_ragdoll.list[0].pObject );	// make sure object zero is saved by CBaseEntity
-	BaseClass::OnSave( pUtils );
-}
-
-void CRagdollProp::OnRestore()
-{
-	// rebuild element 0 since it isn't saved
-	// NOTE: This breaks the rules - the pointer needs to get fixed in Restore()
-	m_ragdoll.list[0].pObject = VPhysicsGetObject();
-	m_ragdoll.list[0].parentIndex = -1;
-	m_ragdoll.list[0].originParentSpace.Init();
-
-	BaseClass::OnRestore();
-	if ( !m_ragdoll.listCount )
-		return;
-
-	// JAY: Reset collision relationships
-	RagdollSetupCollisions( m_ragdoll, modelinfo->GetVCollide( GetModelIndex() ), GetModelIndex() );
-	VPhysicsUpdate( VPhysicsGetObject() );
-}
-
 void CRagdollProp::CalcRagdollSize( void )
 {
 	CollisionProp()->SetSurroundingBoundsType( USE_HITBOXES );
@@ -247,14 +149,6 @@ void CRagdollProp::CalcRagdollSize( void )
 
 void CRagdollProp::UpdateOnRemove( void )
 {
-	for ( int i = 0; i < m_ragdoll.listCount; i++ )
-	{
-		if ( m_ragdoll.list[i].pObject )
-		{
-			g_pPhysSaveRestoreManager->ForgetModel( m_ragdoll.list[i].pObject );
-		}
-	}
-
 	// Set to null so that the destructor's call to DestroyObject won't destroy
 	//  m_pObjects[ 0 ] twice since that's the physics object for the prop
 	VPhysicsSetObject( NULL );
@@ -286,11 +180,6 @@ void CRagdollProp::Precache( void )
 	BaseClass::Precache();
 }
 
-int CRagdollProp::ObjectCaps()
-{
-	return BaseClass::ObjectCaps() | FCAP_WCEDIT_POSITION;
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -311,35 +200,6 @@ void CRagdollProp::InitRagdollAnimation()
 		ResetSequence( nSequence );
 	}
 }
-
-
-//-----------------------------------------------------------------------------
-// Response system stuff
-//-----------------------------------------------------------------------------
-IResponseSystem *CRagdollProp::GetResponseSystem()
-{
-	extern IResponseSystem *g_pResponseSystem;
-
-	// Just use the general NPC response system; we often come from NPCs after all
-	return g_pResponseSystem;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CRagdollProp::ModifyOrAppendCriteria( AI_CriteriaSet& set )
-{
-	BaseClass::ModifyOrAppendCriteria( set );
-
-	if ( m_strSourceClassName != NULL_STRING )
-	{
-		set.RemoveCriteria( "classname" );
-		set.AppendCriteria( "classname", STRING(m_strSourceClassName) );
-		set.AppendCriteria( "ragdoll", "1" );
-	}
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -742,7 +602,6 @@ void CRagdollProp::InitRagdoll( const Vector &forceVector, int forceBone, const 
 	for ( int i = 0; i < m_ragdoll.listCount; i++ )
 	{
 		UpdateNetworkDataFromVPhysics( m_ragdoll.list[i].pObject, i );
-		g_pPhysSaveRestoreManager->AssociateModel( m_ragdoll.list[i].pObject, GetModelIndex() );
 		physcollision->CollideGetAABB( &m_ragdollMins[i], &m_ragdollMaxs[i], m_ragdoll.list[i].pObject->GetCollide(), vec3_origin, vec3_angle );
 	}
 	VPhysicsSetObject( m_ragdoll.list[0].pObject );
@@ -1215,7 +1074,6 @@ public:
 	void VPhysicsUpdate( IPhysicsObject *pPhysics );
 
 	DECLARE_SERVERCLASS();
-	DECLARE_DATADESC();
 
 private:
 	void Detach();
@@ -1236,16 +1094,6 @@ IMPLEMENT_SERVERCLASS_ST(CRagdollPropAttached, DT_Ragdoll_Attached)
 	SendPropVector(SENDINFO(m_attachmentPointBoneSpace), -1,  SPROP_COORD ),
 	SendPropVector(SENDINFO(m_attachmentPointRagdollSpace), -1,  SPROP_COORD ),
 END_SEND_TABLE()
-
-BEGIN_DATADESC(CRagdollPropAttached)
-	DEFINE_FIELD( m_boneIndexAttached,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_ragdollAttachedObjectIndex, FIELD_INTEGER ),
-	DEFINE_FIELD( m_attachmentPointBoneSpace,	FIELD_VECTOR ),
-	DEFINE_FIELD( m_attachmentPointRagdollSpace, FIELD_VECTOR ),
-	DEFINE_FIELD( m_bShouldDetach, FIELD_BOOLEAN ),
-	DEFINE_PHYSPTR( m_pAttachConstraint ),
-END_DATADESC()
-
 
 static void SyncAnimatingWithPhysics( CBaseAnimating *pAnimating )
 {

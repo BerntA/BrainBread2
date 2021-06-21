@@ -9,7 +9,6 @@
 #include "engine/IEngineSound.h"
 #include "ammodef.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
-#include "physics_saverestore.h"
 #include "datacache/imdlcache.h"
 #include "activitylist.h"
 #include "GameBase_Shared.h"
@@ -88,7 +87,6 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 	m_iClip = -1;
 	m_iAmmoType = -1;
 #else
-	OnBaseCombatWeaponCreated( this );
 	m_iDefaultAmmoCount = -1;
 	m_bCanRemoveWeapon = false;
 	SetGlowMode(GLOW_MODE_RADIUS);
@@ -107,7 +105,6 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 CBaseCombatWeapon::~CBaseCombatWeapon( void )
 {
 #if !defined( CLIENT_DLL )
-	OnBaseCombatWeaponDestroyed( this );
 	m_pEnemiesStruck.Purge();
 #endif
 }
@@ -2403,8 +2400,6 @@ BEGIN_PREDICTION_DATA( CBaseCombatWeapon )
 	DEFINE_FIELD( m_bReloadsSingly, FIELD_BOOLEAN ),	
 	DEFINE_FIELD( m_iAmmoCount, FIELD_INTEGER ),
 
-	//DEFINE_PHYSPTR( m_pConstraint ),
-
 	// DEFINE_FIELD( m_iOldState, FIELD_INTEGER ),
 	// DEFINE_FIELD( m_bJustRestored, FIELD_BOOLEAN ),
 
@@ -2423,48 +2418,6 @@ BEGIN_PREDICTION_DATA( CBaseCombatWeapon )
 	// Purpose: Save Data for Base Weapon object
 	//-----------------------------------------------------------------------------// 
 BEGIN_DATADESC( CBaseCombatWeapon )
-
-	DEFINE_FIELD( m_flNextPrimaryAttack, FIELD_TIME ),
-	DEFINE_FIELD( m_flNextSecondaryAttack, FIELD_TIME ),
-	DEFINE_FIELD(m_flMeleeCooldown, FIELD_TIME),
-	DEFINE_FIELD( m_flNextBashAttack, FIELD_TIME ),
-	DEFINE_FIELD( m_flTimeWeaponIdle, FIELD_TIME ),
-
-	DEFINE_FIELD( m_bInReload, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_hOwner, FIELD_EHANDLE ),
-
-	DEFINE_FIELD( m_iState, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iszName, FIELD_STRING ),
-	DEFINE_FIELD(m_iAmmoType, FIELD_INTEGER),
-	DEFINE_FIELD(m_iClip, FIELD_INTEGER),
-	DEFINE_FIELD( m_bFiresUnderwater, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_fMinRange1, FIELD_FLOAT ),
-	DEFINE_FIELD( m_fMinRange2, FIELD_FLOAT ),
-	DEFINE_FIELD( m_fMaxRange1, FIELD_FLOAT ),
-	DEFINE_FIELD( m_fMaxRange2, FIELD_FLOAT ),
-
-	DEFINE_FIELD(m_iAmmoCount, FIELD_INTEGER),
-
-	// don't save these, init to 0 and regenerate
-	//	DEFINE_FIELD( m_flNextEmptySoundTime, FIELD_TIME ),
-	//	DEFINE_FIELD( m_Activity, FIELD_INTEGER ),
-	DEFINE_FIELD( m_nIdealSequence, FIELD_INTEGER ),
-	DEFINE_FIELD( m_IdealActivity, FIELD_INTEGER ),
-
-	DEFINE_FIELD( m_fFireDuration, FIELD_FLOAT ),
-
-	DEFINE_FIELD( m_bReloadsSingly, FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_flUnlockTime,		FIELD_TIME ),
-	DEFINE_FIELD( m_hLocker,			FIELD_EHANDLE ),
-
-	//	DEFINE_FIELD( m_iViewModelIndex, FIELD_INTEGER ),
-	//	DEFINE_FIELD( m_iWorldModelIndex, FIELD_INTEGER ),
-	//  DEFINE_FIELD( m_hWeaponFileInfo, ???? ),
-
-	// Just to quiet classcheck.. this field exists only on the client
-	//	DEFINE_FIELD( m_iOldState, FIELD_INTEGER ),
-	//	DEFINE_FIELD( m_bJustRestored, FIELD_BOOLEAN ),
 
 	// Function pointers
 	DEFINE_ENTITYFUNC( DefaultTouch ),

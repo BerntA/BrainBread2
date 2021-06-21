@@ -26,9 +26,7 @@ struct OverlayLine_t
 };
 
 extern void	UTIL_AddDebugLine( const Vector &startPos, const Vector &endPos, bool noDepthTest, bool testLOS );
-extern void	UTIL_DrawPositioningOverlay( float flCrossDistance );
 extern void UTIL_DrawOverlayLines( void );
-
 extern void DebugDrawLine( const Vector& vecAbsStart, const Vector& vecAbsEnd, int r, int g, int b, bool test, float duration );
 
 #endif // NDEBUGOVERLAY_H

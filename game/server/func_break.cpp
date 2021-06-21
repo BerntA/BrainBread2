@@ -71,24 +71,14 @@ const char *pFGDPropData[] =
 LINK_ENTITY_TO_CLASS( func_breakable, CBreakable );
 BEGIN_DATADESC( CBreakable )
 
-	DEFINE_FIELD( m_Material, FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_Explosion, FIELD_INTEGER, "explosion" ),
 	DEFINE_KEYFIELD( m_GibDir, FIELD_VECTOR, "gibdir" ),
-	DEFINE_FIELD( m_hBreaker, FIELD_EHANDLE ),
-
-	// Don't need to save/restore these because we precache after restore
-	//DEFINE_FIELD( m_idShard, FIELD_INTEGER ),
-	DEFINE_FIELD( m_angle, FIELD_FLOAT ),
-	DEFINE_FIELD( m_iszGibModel, FIELD_STRING ),
-	DEFINE_FIELD( m_iszSpawnObject, FIELD_STRING ),
 	DEFINE_KEYFIELD( m_ExplosionMagnitude, FIELD_INTEGER, "explodemagnitude" ),
 	DEFINE_KEYFIELD( m_flPressureDelay, FIELD_FLOAT, "PressureDelay" ),
-	DEFINE_KEYFIELD( m_iMinHealthDmg, FIELD_INTEGER, "minhealthdmg" ),
-	DEFINE_FIELD( m_bTookPhysicsDamage, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_iszPropData, FIELD_STRING ),
-	DEFINE_INPUT( m_impactEnergyScale, FIELD_FLOAT, "physdamagescale" ),
+	DEFINE_KEYFIELD( m_iMinHealthDmg, FIELD_INTEGER, "minhealthdmg" ),	
 	DEFINE_KEYFIELD( m_PerformanceMode, FIELD_INTEGER, "PerformanceMode" ),
 
+	DEFINE_INPUT(m_impactEnergyScale, FIELD_FLOAT, "physdamagescale"),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Break", InputBreak ),
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetHealth", InputSetHealth ),
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "AddHealth", InputAddHealth ),
@@ -102,23 +92,6 @@ BEGIN_DATADESC( CBreakable )
 	// Outputs
 	DEFINE_OUTPUT(m_OnBreak, "OnBreak"),
 	DEFINE_OUTPUT(m_OnHealthChanged, "OnHealthChanged"),
-
-	DEFINE_FIELD( m_flDmgModBullet, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flDmgModClub, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flDmgModExplosive, FIELD_FLOAT ),
-	DEFINE_FIELD( m_iszPhysicsDamageTableName, FIELD_STRING ),
-	DEFINE_FIELD( m_iszBreakableModel, FIELD_STRING ),
-	DEFINE_FIELD( m_iBreakableSkin, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iBreakableCount, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iMaxBreakableSize, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iszBasePropData, FIELD_STRING ),
-	DEFINE_FIELD( m_iInteractions, FIELD_INTEGER ),
-	DEFINE_FIELD( m_explodeRadius, FIELD_FLOAT ),
-	DEFINE_FIELD( m_iszModelName, FIELD_STRING ),
-	
-	// Physics Influence
-	DEFINE_FIELD( m_hPhysicsAttacker, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_flLastPhysicsInfluenceTime, FIELD_TIME ),
 
 END_DATADESC()
 

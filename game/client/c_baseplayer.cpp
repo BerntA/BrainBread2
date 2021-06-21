@@ -780,19 +780,6 @@ void C_BasePlayer::ReceiveMessage( int classID, bf_read &msg )
 	}
 }
 
-void C_BasePlayer::OnRestore()
-{
-	BaseClass::OnRestore();
-
-	if ( IsLocalPlayer() )
-	{
-		// debounce the attack key, for if it was used for restore
-		input->ClearInputButton( IN_ATTACK | IN_ATTACK2 );
-		// GetButtonBits() has to be called for the above to take effect
-		input->GetButtonBits( 0 );
-	}
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Process incoming data
 //-----------------------------------------------------------------------------

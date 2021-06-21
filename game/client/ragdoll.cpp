@@ -14,7 +14,6 @@
 #include "iviewrender.h"
 #include "tier0/vprof.h"
 #include "view.h"
-#include "physics_saverestore.h"
 #include "vphysics/constraints.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -31,46 +30,6 @@ CRagdoll::CRagdoll()
 	
 	m_lastUpdate = -FLT_MAX;
 }
-
-#define DEFINE_RAGDOLL_ELEMENT( i ) \
-	DEFINE_FIELD( m_ragdoll.list[i].originParentSpace, FIELD_VECTOR ), \
-	DEFINE_PHYSPTR( m_ragdoll.list[i].pObject ), \
-	DEFINE_PHYSPTR( m_ragdoll.list[i].pConstraint ), \
-	DEFINE_FIELD( m_ragdoll.list[i].parentIndex, FIELD_INTEGER )
-
-BEGIN_SIMPLE_DATADESC( CRagdoll )
-
-	DEFINE_AUTO_ARRAY( m_ragdoll.boneIndex,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_ragdoll.listCount, FIELD_INTEGER ),
-	DEFINE_FIELD( m_ragdoll.allowStretch, FIELD_BOOLEAN ),
-	DEFINE_PHYSPTR( m_ragdoll.pGroup ),
-
-	DEFINE_RAGDOLL_ELEMENT( 0 ),
-	DEFINE_RAGDOLL_ELEMENT( 1 ),
-	DEFINE_RAGDOLL_ELEMENT( 2 ),
-	DEFINE_RAGDOLL_ELEMENT( 3 ),
-	DEFINE_RAGDOLL_ELEMENT( 4 ),
-	DEFINE_RAGDOLL_ELEMENT( 5 ),
-	DEFINE_RAGDOLL_ELEMENT( 6 ),
-	DEFINE_RAGDOLL_ELEMENT( 7 ),
-	DEFINE_RAGDOLL_ELEMENT( 8 ),
-	DEFINE_RAGDOLL_ELEMENT( 9 ),
-	DEFINE_RAGDOLL_ELEMENT( 10 ),
-	DEFINE_RAGDOLL_ELEMENT( 11 ),
-	DEFINE_RAGDOLL_ELEMENT( 12 ),
-	DEFINE_RAGDOLL_ELEMENT( 13 ),
-	DEFINE_RAGDOLL_ELEMENT( 14 ),
-	DEFINE_RAGDOLL_ELEMENT( 15 ),
-	DEFINE_RAGDOLL_ELEMENT( 16 ),
-	DEFINE_RAGDOLL_ELEMENT( 17 ),
-	DEFINE_RAGDOLL_ELEMENT( 18 ),
-	DEFINE_RAGDOLL_ELEMENT( 19 ),
-	DEFINE_RAGDOLL_ELEMENT( 20 ),
-	DEFINE_RAGDOLL_ELEMENT( 21 ),
-	DEFINE_RAGDOLL_ELEMENT( 22 ),
-	DEFINE_RAGDOLL_ELEMENT( 23 ),
-
-END_DATADESC()
 
 IPhysicsObject *CRagdoll::GetElement( int elementNum )
 { 
@@ -131,11 +90,6 @@ void CRagdoll::Init(
 
 	BuildRagdollBounds( ent );
 
-	for ( int i = 0; i < m_ragdoll.listCount; i++ )
-	{
-		g_pPhysSaveRestoreManager->AssociateModel( m_ragdoll.list[i].pObject, ent->GetModelIndex() );
-	}
-
 #if RAGDOLL_VISUALIZE
 	memcpy( m_savedBone1, &pDeltaBones0[0], sizeof(matrix3x4_t) * pstudiohdr->numbones() );
 	memcpy( m_savedBone2, &pDeltaBones1[0], sizeof(matrix3x4_t) * pstudiohdr->numbones() );
@@ -150,7 +104,6 @@ CRagdoll::~CRagdoll( void )
 		IPhysicsObject *pObject = m_ragdoll.list[i].pObject;
 		if ( pObject )
 		{
-			g_pPhysSaveRestoreManager->ForgetModel( m_ragdoll.list[i].pObject );
 			// Disable collision on all ragdoll parts before calling RagdollDestroy
 			// (which might cause touch callbacks on the ragdoll otherwise, which is
 			// very bad for a half deleted ragdoll).

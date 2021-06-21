@@ -13,71 +13,6 @@
 
 #include <KeyValues.h>
 
-typedef struct activityentry_s activityentry_t;
-
-class CActivityRemap
-{
-public:
-
-	CActivityRemap()
-	{
-		pExtraBlock = NULL;
-	}
-
-	void SetExtraKeyValueBlock ( KeyValues *pKVBlock )
-	{
-		pExtraBlock = pKVBlock;
-	}
-
-	KeyValues *GetExtraKeyValueBlock ( void ) { return pExtraBlock; }
-
-	Activity 		activity;
-	Activity		mappedActivity;
-
-private:
-
-	KeyValues		*pExtraBlock;
-};
-
-
-class CActivityRemapCache
-{
-public:
-
-	CActivityRemapCache()
-	{
-	}
-
-	CActivityRemapCache( const CActivityRemapCache& src )
-	{
-		int c = src.m_cachedActivityRemaps.Count();
-		for ( int i = 0; i < c; i++ )
-		{
-			m_cachedActivityRemaps.AddToTail( src.m_cachedActivityRemaps[ i ] );
-		}
-	}
-
-	CActivityRemapCache& operator = ( const CActivityRemapCache& src )
-	{
-		if ( this == &src )
-			return *this;
-
-		int c = src.m_cachedActivityRemaps.Count();
-		for ( int i = 0; i < c; i++ )
-		{
-			m_cachedActivityRemaps.AddToTail( src.m_cachedActivityRemaps[ i ] );
-		}
-
-		return *this;
-	}
-
-	CUtlVector< CActivityRemap > m_cachedActivityRemaps;
-};
-
-void UTIL_LoadActivityRemapFile( const char *filename, const char *section, CUtlVector <CActivityRemap> &entries );
-
-//=========================================================
-//=========================================================
 extern void ActivityList_Init( void );
 extern void ActivityList_Free( void );
 extern bool ActivityList_RegisterSharedActivity( const char *pszActivityName, int iActivityIndex );
@@ -93,8 +28,5 @@ extern int ActivityList_HighestIndex();
 
 // Implemented in shared code
 extern void ActivityList_RegisterSharedActivities( void );
-
-class ISaveRestoreOps;
-extern ISaveRestoreOps* ActivityDataOps();
 
 #endif // ACTIVITYLIST_H

@@ -106,7 +106,7 @@ LINK_ENTITY_TO_CLASS( target_changegravity, CTargetChangeGravity );
 BEGIN_DATADESC( CTargetChangeGravity )
 
 	DEFINE_KEYFIELD( m_iGravity, FIELD_INTEGER, "gravity" ),
-	DEFINE_FIELD( m_iOldGrav, FIELD_INTEGER ),
+
 	DEFINE_INPUTFUNC( FIELD_VOID, "ChangeGrav", InputChangeGrav ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "ResetGrav", InputResetGrav ),
 

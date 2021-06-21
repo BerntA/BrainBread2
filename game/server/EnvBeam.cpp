@@ -95,9 +95,6 @@ LINK_ENTITY_TO_CLASS( env_beam, CEnvBeam );
 
 BEGIN_DATADESC( CEnvBeam )
 
-	DEFINE_FIELD( m_active, FIELD_INTEGER ),
-	DEFINE_FIELD( m_spriteTexture, FIELD_INTEGER ),
-
 	DEFINE_KEYFIELD( m_iszStartEntity, FIELD_STRING, "LightningStart" ),
 	DEFINE_KEYFIELD( m_iszEndEntity, FIELD_STRING, "LightningEnd" ),
 	DEFINE_KEYFIELD( m_life, FIELD_FLOAT, "life" ),
@@ -111,8 +108,6 @@ BEGIN_DATADESC( CEnvBeam )
 	DEFINE_KEYFIELD( m_TouchType, FIELD_INTEGER, "TouchType" ),
 	DEFINE_KEYFIELD( m_iFilterName,	FIELD_STRING,	"filtername" ),
 	DEFINE_KEYFIELD( m_iszDecal, FIELD_STRING, "decalname" ),
-
-	DEFINE_FIELD( m_hFilter,	FIELD_EHANDLE ),
 
 	// Function Pointers
 	DEFINE_FUNCTION( StrikeThink ),

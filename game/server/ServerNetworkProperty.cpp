@@ -15,21 +15,6 @@
 
 extern CTimedEventMgr g_NetworkPropertyEventMgr;
 
-
-//-----------------------------------------------------------------------------
-// Save/load
-//-----------------------------------------------------------------------------
-BEGIN_DATADESC_NO_BASE( CServerNetworkProperty )
-//	DEFINE_FIELD( m_pOuter, FIELD_CLASSPTR ),
-//	DEFINE_FIELD( m_pPev, FIELD_CLASSPTR ),
-//	DEFINE_FIELD( m_PVSInfo, PVSInfo_t ),
-//	DEFINE_FIELD( m_pServerClass, FIELD_CLASSPTR ),
-	DEFINE_GLOBAL_FIELD( m_hParent, FIELD_EHANDLE ),
-//	DEFINE_FIELD( m_TimerEvent, CEventRegister ),
-//	DEFINE_FIELD( m_bPendingStateChange, FIELD_BOOLEAN ),
-END_DATADESC()
-
-
 //-----------------------------------------------------------------------------
 // Constructor, destructor
 //-----------------------------------------------------------------------------
@@ -37,7 +22,6 @@ CServerNetworkProperty::CServerNetworkProperty()
 {
 	Init( NULL );
 }
-
 
 CServerNetworkProperty::~CServerNetworkProperty()
 {
@@ -53,7 +37,6 @@ CServerNetworkProperty::~CServerNetworkProperty()
 	DetachEdict();
 }
 
-
 //-----------------------------------------------------------------------------
 // Initialization
 //-----------------------------------------------------------------------------
@@ -67,7 +50,6 @@ void CServerNetworkProperty::Init( CBaseEntity *pEntity )
 	m_PVSInfo.m_nClusterCount = 0;
 	m_TimerEvent.Init( &g_NetworkPropertyEventMgr, this );
 }
-
 
 //-----------------------------------------------------------------------------
 // Connects, disconnects edicts
@@ -95,7 +77,6 @@ void CServerNetworkProperty::DetachEdict()
 		m_pPev = NULL;
 	}
 }
-
 
 //-----------------------------------------------------------------------------
 // Entity handles

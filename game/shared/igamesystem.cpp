@@ -281,16 +281,6 @@ void IGameSystem::LevelShutdownPostEntityAllSystems()
 	}
 }
 
-void IGameSystem::OnSaveAllSystems()
-{
-	InvokeMethod( &IGameSystem::OnSave );
-}
-
-void IGameSystem::OnRestoreAllSystems()
-{
-	InvokeMethod( &IGameSystem::OnRestore );
-}
-
 void IGameSystem::SafeRemoveIfDesiredAllSystems()
 {
 	InvokeMethodReverseOrder( &IGameSystem::SafeRemoveIfDesired );

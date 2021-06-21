@@ -16,9 +16,6 @@ LINK_ENTITY_TO_CLASS( light, CLight );
 
 BEGIN_DATADESC( CLight )
 
-	DEFINE_FIELD( m_iCurrentFade, FIELD_CHARACTER),
-	DEFINE_FIELD( m_iTargetFade, FIELD_CHARACTER),
-
 	DEFINE_KEYFIELD( m_iStyle, FIELD_INTEGER, "style" ),
 	DEFINE_KEYFIELD( m_iDefaultStyle, FIELD_INTEGER, "defaultstyle" ),
 	DEFINE_KEYFIELD( m_iszPattern, FIELD_STRING, "pattern" ),

@@ -55,9 +55,6 @@ BEGIN_DATADESC( CInfoCameraLink )
 
 	DEFINE_KEYFIELD( m_strPointCamera, FIELD_STRING, "PointCamera" ),
 
-	DEFINE_FIELD( m_hCamera,		FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hTargetEntity,	FIELD_EHANDLE ),
-
 	// Outputs
 	DEFINE_INPUTFUNC( FIELD_STRING, "SetCamera", InputSetCamera ),
 

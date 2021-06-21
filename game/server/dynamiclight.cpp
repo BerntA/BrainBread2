@@ -50,10 +50,6 @@ LINK_ENTITY_TO_CLASS(light_dynamic, CDynamicLight);
 
 BEGIN_DATADESC( CDynamicLight )
 
-	DEFINE_FIELD( m_ActualFlags, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_Flags, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_On, FIELD_BOOLEAN ),
-
 	DEFINE_THINKFUNC( DynamicLightThink ),
 
 	// Inputs

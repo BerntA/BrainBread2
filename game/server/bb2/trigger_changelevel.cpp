@@ -41,7 +41,6 @@ LINK_ENTITY_TO_CLASS(trigger_changelevel, CTriggerChangelevel);
 BEGIN_DATADESC(CTriggerChangelevel)
 DEFINE_KEYFIELD(pchNextLevel, FIELD_STRING, "NextMap"),
 DEFINE_KEYFIELD(m_flPercentRequired, FIELD_FLOAT, "PercentRequired"),
-DEFINE_FIELD(m_bChangeLevel, FIELD_BOOLEAN),
 DEFINE_THINKFUNC(OnThink),
 END_DATADESC()
 

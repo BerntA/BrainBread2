@@ -7,7 +7,6 @@
 #include "cbase.h"
 #include "hl2_shared_misc.h"
 #include "hl2_player.h"
-#include "saverestore_utlvector.h"
 #include "triggers.h"
 
 //-----------------------------------------------------------------------------
@@ -52,9 +51,6 @@ LINK_ENTITY_TO_CLASS( trigger_weapon_dissolve, CTriggerWeaponDissolve );
 BEGIN_DATADESC( CTriggerWeaponDissolve )
 
 	DEFINE_KEYFIELD( m_strEmitterName,	FIELD_STRING, "emittername" ),
-	DEFINE_UTLVECTOR( m_pWeapons,		FIELD_EHANDLE ),
-	DEFINE_UTLVECTOR( m_pConduitPoints, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_spriteTexture,		FIELD_MODELINDEX ),
 
 	DEFINE_OUTPUT( m_OnDissolveWeapon, "OnDissolveWeapon" ),
 	DEFINE_OUTPUT( m_OnChargingPhyscannon, "OnChargingPhyscannon" ),
@@ -448,7 +444,6 @@ LINK_ENTITY_TO_CLASS( ent_watery_leech, CWateryDeathLeech );
 
 BEGIN_DATADESC( CWateryDeathLeech )
 	DEFINE_THINKFUNC( LeechThink ),
-	DEFINE_FIELD( m_iFadeState, FIELD_INTEGER ),
 END_DATADESC()
 
 void CWateryDeathLeech::Precache( void )
@@ -546,7 +541,6 @@ class CTriggerWateryDeath : public CBaseTrigger
 {
 	DECLARE_CLASS( CTriggerWateryDeath, CBaseTrigger );
 public:
-	DECLARE_DATADESC();
 
 	void Spawn( void );
 	void Precache( void );
@@ -574,14 +568,6 @@ private:
 	float				m_flNextPullSound;
 	float				m_flPainValue;
 };
-
-BEGIN_DATADESC( CTriggerWateryDeath )
-	DEFINE_UTLVECTOR( m_flEntityKillTimes, FIELD_TIME ),
-	DEFINE_UTLVECTOR( m_hLeeches, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_flNextPullSound, FIELD_TIME ),
-	DEFINE_FIELD( m_flPainValue, FIELD_FLOAT ),
-END_DATADESC()
-
 
 LINK_ENTITY_TO_CLASS( trigger_waterydeath, CTriggerWateryDeath );
 
@@ -795,7 +781,6 @@ public:
 	~CTriggerRPGFire();
 
 	void Spawn( void );
-	void OnRestore( void );
 };
 
 LINK_ENTITY_TO_CLASS( trigger_rpgfire, CTriggerRPGFire );
@@ -821,14 +806,4 @@ void CTriggerRPGFire::Spawn( void )
 
 	// Stomp the touch function, because we don't want to respond to touch
 	SetTouch( NULL );
-}
-
-//------------------------------------------------------------------------------
-// Purpose:
-//------------------------------------------------------------------------------
-void CTriggerRPGFire::OnRestore()
-{
-	BaseClass::OnRestore();
-
-	g_hWeaponFireTriggers.AddToTail( this );
 }

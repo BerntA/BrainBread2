@@ -8,12 +8,10 @@
 #include "ivieweffects.h"
 #include "shake.h"
 #include "hud_macros.h"
-#include "isaverestore.h"
 #include "view_shared.h"
 #include "iviewrender.h"
 #include "viewrender.h"
 #include "con_nprint.h"
-#include "saverestoretypes.h"
 #include "c_rumble.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -32,21 +30,7 @@ struct screenfade_t
 	float		Reset;		// When to reset to not fading (for fadeout and hold)
 	byte		r, g, b, alpha;	// Fade color
 	int			Flags;		// Fading flags
-
-	DECLARE_SIMPLE_DATADESC();
 };
-
-BEGIN_SIMPLE_DATADESC( screenfade_t )
-	DEFINE_FIELD( Speed,	FIELD_FLOAT ),
-	DEFINE_FIELD( End,		FIELD_TIME ),
-	DEFINE_FIELD( Reset,	FIELD_TIME ),
-	DEFINE_FIELD( r,		FIELD_CHARACTER ),
-	DEFINE_FIELD( g,		FIELD_CHARACTER ),
-	DEFINE_FIELD( b,		FIELD_CHARACTER ),
-	DEFINE_FIELD( alpha,	FIELD_CHARACTER ),
-	DEFINE_FIELD( Flags,	FIELD_INTEGER ),
-END_DATADESC()
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Screen shake variables
@@ -61,20 +45,7 @@ struct screenshake_t
 	Vector	offset;
 	float	angle;
 	int		command;
-
-	DECLARE_SIMPLE_DATADESC();
 };
-
-BEGIN_SIMPLE_DATADESC( screenshake_t )
-	DEFINE_FIELD( endtime,		FIELD_TIME ),
-	DEFINE_FIELD( duration,		FIELD_FLOAT ),
-	DEFINE_FIELD( amplitude,	FIELD_FLOAT ),
-	DEFINE_FIELD( frequency,	FIELD_FLOAT ),
-	DEFINE_FIELD( nextShake,	FIELD_TIME ),
-	DEFINE_FIELD( offset,		FIELD_VECTOR ),
-	DEFINE_FIELD( angle,		FIELD_FLOAT ),
-END_DATADESC()
-
 
 void CC_Shake_Stop();
 //-----------------------------------------------------------------------------
@@ -615,25 +586,6 @@ void CViewEffects::GetFadeParams( byte *r, byte *g, byte *b, byte *a, bool *blen
 //-----------------------------------------------------------------------------
 void CViewEffects::Save( ISave *pSave )
 {
-	// Save the view fades
-	int iCount = m_FadeList.Count();
-	pSave->WriteInt( &iCount );
-	for ( int i = 0; i < iCount; i++ )
-	{
-		pSave->StartBlock();
-		pSave->WriteAll( m_FadeList[i] );
-		pSave->EndBlock();
-	}
-
-	// Save the view shakes
-	iCount = m_ShakeList.Count();
-	pSave->WriteInt( &iCount );
-	for ( int i = 0; i < iCount; i++ )
-	{
-		pSave->StartBlock();
-		pSave->WriteAll( m_ShakeList[i] );
-		pSave->EndBlock();
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -643,127 +595,4 @@ void CViewEffects::Save( ISave *pSave )
 //-----------------------------------------------------------------------------
 void CViewEffects::Restore( IRestore *pRestore, bool fCreatePlayers )
 {
-	CGameSaveRestoreInfo *pSaveData = pRestore->GetGameSaveRestoreInfo();
-
-	// View effects is a singleton so we only need to restore it once,
-	// from the level that we are going into.
-	if( !pSaveData->levelInfo.fUseLandmark )
-	{
-		ClearAllFades();
-		ClearAllShakes();
-
-		// Read in the view fades
-		int iCount = pRestore->ReadInt();
-		for ( int i = 0; i < iCount; i++ )
-		{
-			screenfade_t *pNewFade = new screenfade_t;
-
-			pRestore->StartBlock();
-			pRestore->ReadAll( pNewFade );
-			pRestore->EndBlock();
-
-			m_FadeList.AddToTail( pNewFade );
-		}
-
-		// Read in the view shakes
-		iCount = pRestore->ReadInt();
-		for ( int i = 0; i < iCount; i++ )
-		{
-			screenshake_t *pNewShake = new screenshake_t;
-
-			pRestore->StartBlock();
-			pRestore->ReadAll( pNewShake );
-			pRestore->EndBlock();
-
-			m_ShakeList.AddToTail( pNewShake );
-		}
-	}	
-}
-
-//====================================================================================================
-// CLIENTSIDE VIEW EFFECTS SAVE/RESTORE 
-//====================================================================================================
-static short VIEWEFFECTS_SAVE_RESTORE_VERSION = 2;
-
-class CViewEffectsSaveRestoreBlockHandler :	public CDefSaveRestoreBlockHandler
-{
-	struct QueuedItem_t;
-public:
-	CViewEffectsSaveRestoreBlockHandler()
-	{
-	}
-
-	const char *GetBlockName()
-	{
-		return "ViewEffects";
-	}
-
-	//---------------------------------
-
-	virtual void PreSave( CSaveRestoreData * ) 
-	{
-	}
-	
-	//---------------------------------
-
-	virtual void Save( ISave *pSave ) 
-	{
-		vieweffects->Save( pSave );
-	}
-	
-	//---------------------------------
-
-	virtual void WriteSaveHeaders( ISave *pSave )
-	{
-		pSave->WriteShort( &VIEWEFFECTS_SAVE_RESTORE_VERSION );
-	}
-	
-	//---------------------------------
-
-	virtual void PostSave() 
-	{
-	}
-	
-	//---------------------------------
-
-	virtual void PreRestore() 
-	{
-	}
-	
-	//---------------------------------
-
-	virtual void ReadRestoreHeaders( IRestore *pRestore )
-	{
-		// No reason why any future version shouldn't try to retain backward compatability. The default here is to not do so.
-		short version = pRestore->ReadShort();
-		m_bDoLoad = ( version == VIEWEFFECTS_SAVE_RESTORE_VERSION );
-	}
-
-	//---------------------------------
-	
-	virtual void Restore( IRestore *pRestore, bool fCreatePlayers ) 
-	{
-		if ( m_bDoLoad )
-		{
-			vieweffects->Restore( pRestore, fCreatePlayers );
-		}
-	}
-	
-	//---------------------------------
-	
-	virtual void PostRestore() 
-	{
-	}
-	
-private:
-	bool	m_bDoLoad;
-};
-
-//-----------------------------------------------------------------------------
-
-CViewEffectsSaveRestoreBlockHandler g_ViewEffectsSaveRestoreBlockHandler;
-
-ISaveRestoreBlockHandler *GetViewEffectsRestoreBlockHandler()
-{
-	return &g_ViewEffectsSaveRestoreBlockHandler;
 }

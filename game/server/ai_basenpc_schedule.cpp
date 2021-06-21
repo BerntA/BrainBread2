@@ -15,25 +15,23 @@
 #include "basecombatweapon.h"
 #include "bitstring.h"
 #include "ai_task.h"
-#include "ai_network.h"
 #include "ai_schedule.h"
 #include "ai_hull.h"
-#include "ai_node.h"
 #include "ai_motor.h"
-#include "ai_hint.h"
 #include "ai_memory.h"
 #include "ai_navigator.h"
 #include "ai_tacticalservices.h"
 #include "ai_moveprobe.h"
 #include "ai_squadslot.h"
 #include "ai_squad.h"
-#include "ai_speech.h"
 #include "game.h"
 #include "IEffects.h"
 #include "vstdlib/random.h"
 #include "ndebugoverlay.h"
 #include "tier0/vcrmode.h"
 #include "env_debughistory.h"
+#include "nav.h"
+#include "nav_mesh.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -476,7 +474,7 @@ CAI_Schedule *CAI_BaseNPC::GetNewSchedule( void )
 
 		AI_PROFILE_SCOPE_BEGIN( CAI_BaseNPC_SelectSchedule);
 
-		if ( m_NPCState == NPC_STATE_SCRIPT || m_NPCState == NPC_STATE_DEAD || m_iInteractionState == NPCINT_MOVING_TO_MARK )
+		if ( m_NPCState == NPC_STATE_SCRIPT || m_NPCState == NPC_STATE_DEAD )
 		{
 			scheduleType = CAI_BaseNPC::SelectSchedule();
 		}
@@ -868,7 +866,7 @@ bool CAI_BaseNPC::FindCoverPosInRadius( CBaseEntity *pEntity, const Vector &goal
 
 	if( ( !GetSquad() || GetSquad()->GetFirstMember() == this ) &&
 		IsCoverPosition( enemyEyePos, goalPos + GetViewOffset() ) && 
-		IsValidCover( goalPos, NULL ) )
+		IsValidCover( goalPos ) )
 	{
 		coverPos = goalPos;
 	}
@@ -923,27 +921,6 @@ void CAI_BaseNPC::StartTurn( float flDeltaYaw )
 	SetTurnActivity();
 }
 
-
-//-----------------------------------------------------------------------------
-// TASK_CLEAR_HINTNODE
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::ClearHintNode( float reuseDelay )
-{
-	if ( m_pHintNode )
-	{
-		if ( m_pHintNode->IsLockedBy(this) )
-			m_pHintNode->Unlock(reuseDelay);
-		m_pHintNode = NULL;
-	}
-}
-
-
-void CAI_BaseNPC::SetHintNode( CAI_Hint *pHintNode )
-{
-	m_pHintNode = pHintNode;
-}
-
-
 //-----------------------------------------------------------------------------
 
 bool CAI_BaseNPC::FindCoverFromEnemy( bool bNodesOnly, float flMinDistance, float flMaxDistance )
@@ -955,8 +932,6 @@ bool CAI_BaseNPC::FindCoverFromEnemy( bool bNodesOnly, float flMinDistance, floa
 		pEntity = this;
 
 	Vector coverPos = vec3_invalid;
-
-	ClearHintNode();
 	
 	if ( bNodesOnly )
 	{
@@ -976,14 +951,7 @@ bool CAI_BaseNPC::FindCoverFromEnemy( bool bNodesOnly, float flMinDistance, floa
 
 	if ( !GetNavigator()->SetGoal( goal ) )
 		return false;
-		
-	// FIXME: add to goal
-	if (GetHintNode())
-	{
-		GetNavigator()->SetArrivalActivity( GetCoverActivity( GetHintNode() ) );
-		GetNavigator()->SetArrivalDirection( GetHintNode()->GetDirection() );
-	}
-	
+
 	return true;
 }
 
@@ -1200,13 +1168,6 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 		TaskComplete();
 		break;
 
-	case TASK_CREATE_PENDING_WEAPON:
-		Assert( m_iszPendingWeapon != NULL_STRING );
-		GiveWeapon( m_iszPendingWeapon );
-		m_iszPendingWeapon = NULL_STRING;
-		TaskComplete();
-		break;
-
 	case TASK_RANDOMIZE_FRAMERATE:
 		{
 			float newRate = GetPlaybackRate();
@@ -1248,44 +1209,6 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 		Forget ( (int)pTask->flTaskData );
 		TaskComplete();
 		break;
-
-	case TASK_FIND_HINTNODE:
-	case TASK_FIND_LOCK_HINTNODE:
-		{
-			if (!GetHintNode())
-			{
-				SetHintNode( CAI_HintManager::FindHint( this, HINT_NONE, pTask->flTaskData, 2000 ) );
-			}
-			if (GetHintNode())
-			{
-				TaskComplete();
-			}
-			else
-			{
-				TaskFail(FAIL_NO_HINT_NODE);
-			}
-			if ( task == TASK_FIND_HINTNODE )
-				break;
-		}
-		// Fall through on TASK_FIND_LOCK_HINTNODE...
-		
-	case TASK_LOCK_HINTNODE:
-	{
-		if (!GetHintNode())
-		{
-			TaskFail(FAIL_NO_HINT_NODE);
-		}
-		else if( GetHintNode()->Lock(this) )
-		{
-			TaskComplete();
-		}
-		else
-		{
-			TaskFail(FAIL_ALREADY_LOCKED);
-			SetHintNode( NULL );
-		}
-		break;
-	}
 
 	case TASK_STORE_LASTPOSITION:
 		m_vecLastPosition = GetLocalOrigin();
@@ -1354,11 +1277,6 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 		}
 		break;
 
-	case TASK_CLEAR_HINTNODE:
-		ClearHintNode(pTask->flTaskData);
-		TaskComplete();
-		break;
-
 	case TASK_STOP_MOVING:
 		if ( ( GetNavigator()->IsGoalSet() && GetNavigator()->IsGoalActive() ) || GetNavType() == NAV_JUMP )
 		{
@@ -1403,54 +1321,6 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 		SetIdealActivity( (Activity)(int)pTask->flTaskData );
 		break;
 
-	case TASK_ADD_GESTURE_WAIT:
-		{
-			int iLayer = AddGesture( (Activity)(int)pTask->flTaskData );
-			if (iLayer > 0)
-			{
-				float flDuration = GetLayerDuration( iLayer );
-				SetWait( flDuration );
-			}
-			else
-			{
-				TaskFail( "Unable to allocate gesture" );
-			}
-			break;
-		}
-
-	case TASK_ADD_GESTURE:
-		{
-			AddGesture( (Activity)(int)pTask->flTaskData );
-			TaskComplete();
-			break;
-		}
-
-	case TASK_PLAY_HINT_ACTIVITY:
-		if ( GetHintNode()->HintActivityName() != NULL_STRING )
-		{
-			Activity hintActivity = (Activity)CAI_BaseNPC::GetActivityID( STRING(GetHintNode()->HintActivityName()) );
-			if ( hintActivity != ACT_INVALID )
-			{
-				SetIdealActivity( GetHintActivity(GetHintNode()->HintType(), hintActivity) );
-			}
-			else
-			{
-				int iSequence = LookupSequence(STRING(GetHintNode()->HintActivityName()));
-				if ( iSequence > ACT_INVALID )
-				{
-					SetSequenceById( iSequence ); // ???
-					SetIdealActivity( ACT_DO_NOT_DISTURB );
-				}
-				else
-					SetIdealActivity( ACT_IDLE );
-			}
-		}
-		else
-		{
-			SetIdealActivity( ACT_IDLE );
-		}
-		break;
-
 	case TASK_SET_SCHEDULE:
 		if ( !SetSchedule( pTask->flTaskData ) )
 			TaskFail(FAIL_SCHEDULE_NOT_FOUND);
@@ -1486,14 +1356,11 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 		}
 		break;
 
-	case TASK_FIND_NEAR_NODE_COVER_FROM_ENEMY:
-	case TASK_FIND_FAR_NODE_COVER_FROM_ENEMY:
-	case TASK_FIND_NODE_COVER_FROM_ENEMY:
 	case TASK_FIND_COVER_FROM_ENEMY:
 		{	
 			bool 	bNodeCover 		= ( task != TASK_FIND_COVER_FROM_ENEMY );
-			float 	flMinDistance 	= ( task == TASK_FIND_FAR_NODE_COVER_FROM_ENEMY ) ? pTask->flTaskData : MinFleeDistance();
-			float 	flMaxDistance 	= ( task == TASK_FIND_NEAR_NODE_COVER_FROM_ENEMY ) ? pTask->flTaskData : FLT_MAX;
+			float 	flMinDistance = MinFleeDistance();
+			float 	flMaxDistance = FLT_MAX;
 			
 			if ( FindCoverFromEnemy( bNodeCover, flMinDistance, flMaxDistance ) )
 			{
@@ -1505,7 +1372,6 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 				TaskFail(FAIL_NO_COVER);
 		}
 		break;
-
 
 	case TASK_FIND_COVER_FROM_ORIGIN:
 		{
@@ -1530,19 +1396,6 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 	case TASK_FIND_COVER_FROM_BEST_SOUND:
 		{
 		}
-		break;
-
-	case TASK_FACE_HINTNODE:
-		
-		// If the yaw is locked, this function will not act correctly
-		Assert( GetMotor()->IsYawLocked() == false );
-
-		GetMotor()->SetIdealYaw( GetHintNode()->Yaw() );
-		GetMotor()->SetIdealYaw( CalcReasonableFacing( true ) ); // CalcReasonableFacing() is based on previously set ideal yaw
-   		if ( FacingIdeal() )
-   			TaskComplete();
-		else
-			SetTurnActivity();
 		break;
 	
 	case TASK_FACE_LASTPOSITION:
@@ -1818,33 +1671,6 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 				// no way to get there =(
 				DevWarning( 2, "GetPathToEnemyLKP failed!!\n" );
 				RememberUnreachable(GetEnemy());
-				TaskFail(FAIL_NO_ROUTE);
-			}
-			break;
-		}
-
-	case TASK_GET_PATH_TO_INTERACTION_PARTNER:
-		{
-			if ( !m_hForcedInteractionPartner || IsUnreachable(m_hForcedInteractionPartner) )
-			{
-				TaskFail(FAIL_NO_ROUTE);
-				return;
-			}
-
-			// Calculate the position we need to be at to start the interaction.
-			CalculateForcedInteractionPosition();
-
-			AI_NavGoal_t goal( m_vecForcedWorldPosition );
-			TranslateNavGoal( m_hForcedInteractionPartner, goal.dest );
-
-			if ( GetNavigator()->SetGoal( goal, AIN_CLEAR_TARGET ) )
-			{
-				TaskComplete();
-			}
-			else
-			{
-				DevWarning( 2, "GetPathToInteractionPartner failed!!\n" );
-				RememberUnreachable(m_hForcedInteractionPartner);
 				TaskFail(FAIL_NO_ROUTE);
 			}
 			break;
@@ -2258,94 +2084,6 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 		break;
 	}
 
-	case TASK_GET_PATH_TO_TARGET_WEAPON:
-		{
-			// Finds the nearest node within the leniency distances,
-			// whether the node can see the target or not.
-			const float XY_LENIENCY = 64.0;
-			const float Z_LENIENCY	= 72.0;
-
-			if (m_hTargetEnt == NULL)
-			{
-				TaskFail(FAIL_NO_TARGET);
-			}
-			else 
-			{
-				// Since this weapon MAY be on a table, we find the nearest node without verifying
-				// line-of-sight, since weapons on the table will not be able to see nodes very nearby.
-				int node = GetNavigator()->GetNetwork()->NearestNodeToPoint( this, m_hTargetEnt->GetAbsOrigin(), false );
-				CAI_Node *pNode = GetNavigator()->GetNetwork()->GetNode( node );
-
-				if( !pNode )
-				{
-					TaskFail( FAIL_NO_ROUTE );
-					break;
-				}
-
-				bool bHasPath = true;
-				Vector vecNodePos;
-
-				vecNodePos = pNode->GetPosition( GetHullType() );
-
-				float flDistZ;
-				flDistZ = fabs( vecNodePos.z - m_hTargetEnt->GetAbsOrigin().z );
-				if( flDistZ > Z_LENIENCY )
-				{
-					// The gun is too far away from its nearest node on the Z axis.
-					TaskFail( "Target not within Z_LENIENCY!\n");
-					CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon*>( m_hTargetEnt.Get() );
-					if( pWeapon )
-					{
-						// Lock this weapon for a long time so no one else tries to get it.
-						pWeapon->Lock( 30.0f, pWeapon );
-						break;
-					}
-				}
-
-				if( flDistZ >= 16.0 )
-				{
-					// The gun is higher or lower, but it's within reach. (probably on a table).
-					float flDistXY = ( vecNodePos - m_hTargetEnt->GetAbsOrigin() ).Length2D();
-
-					// This means we have to stand on the nearest node and still be able to
-					// reach the gun.
-					if( flDistXY > XY_LENIENCY )
-					{
-						TaskFail( "Target not within XY_LENIENCY!\n" );
-						CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon*>( m_hTargetEnt.Get() );
-						if( pWeapon )
-						{
-							// Lock this weapon for a long time so no one else tries to get it.
-							pWeapon->Lock( 30.0f, pWeapon );
-							break;
-						}
-					}
-
-					AI_NavGoal_t goal( vecNodePos );
-					goal.pTarget = m_hTargetEnt;
-					bHasPath = GetNavigator()->SetGoal( goal );
-				}
-				else
-				{
-					// The gun is likely just lying on the floor. Just pick it up.
-					AI_NavGoal_t goal( m_hTargetEnt->GetAbsOrigin() );
-					goal.pTarget = m_hTargetEnt;
-					bHasPath = GetNavigator()->SetGoal( goal );
-				}
-
-				if( !bHasPath )
-				{
-					CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon*>( m_hTargetEnt.Get() );
-					if( pWeapon )
-					{
-						// Lock this weapon for a long time so no one else tries to get it.
-						pWeapon->Lock( 15.0f, pWeapon );
-					}
-				}
-			}
-		}
-		break;
-
 	case TASK_GET_PATH_TO_TARGET:
 		{
 			if (m_hTargetEnt == NULL)
@@ -2360,60 +2098,6 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 			}
 			break;
 		}
-
-	case TASK_GET_PATH_TO_HINTNODE:// for active idles!
-		{
-			if (!GetHintNode())
-			{
-				TaskFail(FAIL_NO_HINT_NODE);
-			}
-			else
-			{
-				Vector vHintPos;
-				GetHintNode()->GetPosition(this, &vHintPos);
-
-				GetNavigator()->SetGoal( AI_NavGoal_t( vHintPos, ACT_RUN ) );
-				if ( pTask->flTaskData == 0 )
-					GetNavigator()->SetArrivalDirection( GetHintNode()->GetDirection() );
-				if ( GetHintNode()->HintActivityName() != NULL_STRING )
-				{
-					Activity hintActivity = (Activity)CAI_BaseNPC::GetActivityID( STRING(GetHintNode()->HintActivityName()) );
-					if ( hintActivity != ACT_INVALID )
-					{
-						GetNavigator()->SetArrivalActivity( GetHintActivity(GetHintNode()->HintType(), hintActivity) );
-					}
-					else
-					{
-						int iSequence = LookupSequence(STRING(GetHintNode()->HintActivityName()));;
-						if ( iSequence != ACT_INVALID )
-							GetNavigator()->SetArrivalSequence( iSequence );
-					}
-
-				}
-			}
-			break;
-		}
-
-	case TASK_GET_PATH_TO_COMMAND_GOAL:
-		{
-			if (!GetNavigator()->SetGoal( m_vecCommandGoal ))
-			{
-				OnMoveToCommandGoalFailed();
-				TaskFail(FAIL_NO_ROUTE);
-			}
-			break;
-		}
-
-	case TASK_MARK_COMMAND_GOAL_POS:
-		// Start watching my position to detect whether another AI process has moved me from my mark.
-		m_CommandMoveMonitor.SetMark( this, COMMAND_GOAL_TOLERANCE );
-		TaskComplete();
-		break;
-
-	case TASK_CLEAR_COMMAND_GOAL:
-		m_vecCommandGoal = vec3_invalid;
-		TaskComplete();
-		break;
 		
 	case TASK_GET_PATH_TO_LASTPOSITION:
 		{
@@ -2431,17 +2115,6 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 	case TASK_GET_PATH_TO_SAVEPOSITION:
 		{
 			GetNavigator()->SetGoal( m_vSavePosition );
-			break;
-		}
-
-
-	case TASK_GET_PATH_TO_RANDOM_NODE:  // Task argument is lenth of path to build
-		{
-			if ( GetNavigator()->SetRandomGoal( pTask->flTaskData ) )
-				TaskComplete();
-			else
-				TaskFail(FAIL_NO_REACHABLE_NODE);
-		
 			break;
 		}
 
@@ -2494,11 +2167,6 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 			// Drop into run task to support interrupt
 			DesireStand();
 		}
-		break;
-
-	case TASK_WEAPON_RUN_PATH:
-	case TASK_ITEM_RUN_PATH:
-		GetNavigator()->SetMovementActivity(ACT_RUN);
 		break;
 
 	case TASK_RUN_PATH:
@@ -2673,7 +2341,7 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 	case TASK_DIE:
 		{
 			GetNavigator()->StopMoving();	
-			SetIdealActivity( GetDeathActivity() );
+			SetIdealActivity(ACT_DIESIMPLE);
 			m_lifeState = LIFE_DYING;
 
 			break;
@@ -2709,40 +2377,6 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 			// sounds are complete as soon as we get here, cause we've already played them.
 			DevMsg( 2, "SOUND\n" );			
 			TaskComplete();
-			break;
-		}
-	case TASK_SPEAK_SENTENCE:
-		{
-			SpeakSentence(pTask->flTaskData);	
-			TaskComplete();
-			break;
-		}
-	case TASK_WAIT_FOR_SPEAK_FINISH:
-		{
-			if ( !GetExpresser() )
-				TaskComplete();
-			else
-			{
-				// Are we waiting for our speech to end? Or for the mutex to be free?
-				if ( pTask->flTaskData )
-				{
-					// Waiting for our speech to end
-					if ( GetExpresser()->CanSpeakAfterMyself() )
-					{
-						TaskComplete();
-					}
-				}
-				else
-				{
-					// Waiting for the speech & the delay afterwards
-					if ( !GetExpresser()->IsSpeaking() )
-					{
-						TaskComplete();
-					}
-				}
-				break;
-
-			}
 			break;
 		}
 	case TASK_WAIT_FOR_SCRIPT:
@@ -2938,78 +2572,6 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 		TaskComplete();
 		break;
 
-	case TASK_WEAPON_FIND:
-		{
-			m_hTargetEnt = Weapon_FindUsable( Vector(1000,1000,1000) );
-			if (m_hTargetEnt)
-			{
-				TaskComplete();
-			}
-			else
-			{
-				TaskFail(FAIL_ITEM_NO_FIND);
-			}
-		}
-		break;
-
-	case TASK_ITEM_PICKUP:
-		{
-			SetIdealActivity( ACT_PICKUP_GROUND );
-		}
-		break;
-
-	case TASK_WEAPON_PICKUP:
-		{
-  			if( GetActiveWeapon() )
-  			{
-  				Weapon_Drop( GetActiveWeapon() );
-  			}
-
-			if( GetTarget() )
-			{
-				CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon*>(GetTarget());
-				if( pWeapon )
-				{
-					if( Weapon_IsOnGround( pWeapon ) )
-					{
-						// Squat down
-						SetIdealActivity( ACT_PICKUP_GROUND );
-					}
-					else
-					{
-						// Reach and take this weapon from rack or shelf.
-						SetIdealActivity( ACT_PICKUP_RACK );
-					}
-
-					return;
-				}
-			}
-
-			TaskFail("Weapon went away!\n");
-		}
-		break;
-
-	case TASK_WEAPON_CREATE:
-		{
-			if( !GetActiveWeapon() && GetTarget() )
-			{
-				// Create a copy of the weapon this NPC is trying to pick up.
-				CBaseCombatWeapon *pTargetWeapon = dynamic_cast<CBaseCombatWeapon*>(GetTarget());
-
-				if( pTargetWeapon )
-				{
-					CBaseCombatWeapon *pWeapon = Weapon_Create( pTargetWeapon->GetClassname() );
-					if ( pWeapon )
-					{
-						Weapon_Equip( pWeapon );
-					}
-				}
-			}
-			SetTarget( NULL );
-			TaskComplete();
-		}
-		break;
-
 	case TASK_USE_SMALL_HULL:
 		{
 			SetHullSizeSmall();
@@ -3072,11 +2634,6 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 				ClearAttackConditions();
 			}
 		}
-		TaskComplete();
-		break;
-
-	case TASK_ADD_HEALTH:
-		TakeHealth( (int)pTask->flTaskData, DMG_GENERIC );
 		TaskComplete();
 		break;
 
@@ -3178,10 +2735,6 @@ void CAI_BaseNPC::RunTask( const Task_t *pTask )
 	VPROF_BUDGET( "CAI_BaseNPC::RunTask", VPROF_BUDGETGROUP_NPCS );
 	switch ( pTask->iTask )
 	{
-	case TASK_GET_PATH_TO_RANDOM_NODE:
-		{
-			break;
-		}
 	case TASK_TURN_RIGHT:
 	case TASK_TURN_LEFT:
 		{
@@ -3218,27 +2771,6 @@ void CAI_BaseNPC::RunTask( const Task_t *pTask )
 			}
 		}		
 		break;
-
-	case TASK_PLAY_HINT_ACTIVITY:
-		{
-			if (!GetHintNode())
-			{
-				TaskFail(FAIL_NO_HINT_NODE);
-			}
-
-			// Put a debugging check in here
-			if (GetHintNode()->User() != this)
-			{
-				DevMsg("Hint node (%s) being used by non-owner!\n",GetHintNode()->GetDebugName());
-			}
-
-			if ( IsActivityFinished() )
-			{
-				TaskComplete();
-			}
-
-			break;
-		}
 
 	case TASK_STOP_MOVING:
 		{
@@ -3295,15 +2827,6 @@ void CAI_BaseNPC::RunTask( const Task_t *pTask )
 		{
 			AutoMovement( );
 			if ( IsActivityFinished() )
-			{
-				TaskComplete();
-			}
-			break;
-		}
-
-	case TASK_ADD_GESTURE_WAIT:
-		{
-			if ( IsWaitFinished() )
 			{
 				TaskComplete();
 			}
@@ -3404,7 +2927,6 @@ void CAI_BaseNPC::RunTask( const Task_t *pTask )
 		}
 		break;
 
-	case TASK_FACE_HINTNODE:
 	case TASK_FACE_LASTPOSITION:
 	case TASK_FACE_SAVEPOSITION:
 	case TASK_FACE_AWAY_FROM_SAVEPOSITION:
@@ -3635,41 +3157,6 @@ void CAI_BaseNPC::RunTask( const Task_t *pTask )
 			{
 			case 0:
 				{
-					if( IsPlayerAlly() )
-					{
-						// Look for a move away hint node.
-						CAI_Hint *pHint;
-						CHintCriteria hintCriteria;
-
-						hintCriteria.AddHintType( HINT_PLAYER_ALLY_MOVE_AWAY_DEST );
-						hintCriteria.SetFlag( bits_HINT_NODE_NEAREST );
-						hintCriteria.AddIncludePosition( GetAbsOrigin(), (20.0f * 12.0f) ); // 20 feet max
-						hintCriteria.AddExcludePosition( GetAbsOrigin(), 28.0f ); // don't plant on an hint that you start on
-
-						pHint = CAI_HintManager::FindHint( this, hintCriteria );
-
-						if( pHint )
-						{
-							#ifdef BB2_AI
-								CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin(), true); 
-							#else
-								CBasePlayer *pPlayer = AI_GetSinglePlayer();
-							#endif //BB2_AI
-							
-							Vector vecGoal = pHint->GetAbsOrigin();
-
-							if( vecGoal.DistToSqr(GetAbsOrigin()) < vecGoal.DistToSqr(pPlayer->GetAbsOrigin()) )
-							{
-								if( GetNavigator()->SetGoal(vecGoal) )
-								{
-									pHint->DisableForSeconds( 0.1f ); // Force others to find their own.
-									TaskComplete();
-									break;
-								}
-							}
-						}
-					}
-
 					AngleVectors( ang, &move );
 
 					if ( GetNavigator()->SetVectorGoal( move, (float)pTask->flTaskData, MIN(36,pTask->flTaskData), true ) && IsValidMoveAwayDest( GetNavigator()->GetGoalPos() ))
@@ -3754,28 +3241,6 @@ void CAI_BaseNPC::RunTask( const Task_t *pTask )
 		}
 		break;
 
-	case TASK_WEAPON_RUN_PATH:
-	case TASK_ITEM_RUN_PATH:
-		{
-			CBaseEntity *pTarget = m_hTargetEnt;
-			if ( pTarget )
-			{
-				if ( pTarget->GetOwnerEntity() )
-				{
-					TaskFail(FAIL_WEAPON_OWNED);
-				}
-				else if (GetNavigator()->GetGoalType() == GOALTYPE_NONE)
-				{
-					TaskComplete();
-				}
-			}
-			else
-			{
-				TaskFail(FAIL_ITEM_NO_FIND);
-			}
-		}
-		break;
-
 	case TASK_WAIT_FOR_MOVEMENT_STEP:
 	case TASK_WAIT_FOR_MOVEMENT:
 		{
@@ -3800,30 +3265,6 @@ void CAI_BaseNPC::RunTask( const Task_t *pTask )
 
 	case TASK_DIE:
 		RunDieTask();
-		break;
-
-	case TASK_WAIT_FOR_SPEAK_FINISH:
-		Assert( GetExpresser() );
-		if ( GetExpresser() )
-		{
-			// Are we waiting for our speech to end? Or for the mutex to be free?
-			if ( pTask->flTaskData )
-			{
-				// Waiting for our speech to end
-				if ( GetExpresser()->CanSpeakAfterMyself() )
-				{
-					TaskComplete();
-				}
-			}
-			else
-			{
-				// Waiting for the speech & the delay afterwards
-				if ( !GetExpresser()->IsSpeaking() )
-				{
-					TaskComplete();
-				}
-			}
-		}
 		break;
 
 	case TASK_SCRIPT_RUN_TO_TARGET:
@@ -3885,14 +3326,6 @@ void CAI_BaseNPC::RunTask( const Task_t *pTask )
 			{
 				DevMsg( "Cine died!\n");
 				TaskComplete();
-			}
-			else if ( IsRunningDynamicInteraction() )
-			{
-				// If we've lost our partner, abort
-				if ( !m_hInteractionPartner )
-				{
-					CineCleanup();
-				}
 			}
 			break;
 		}
@@ -4035,35 +3468,6 @@ void CAI_BaseNPC::RunTask( const Task_t *pTask )
 			{
 				TaskComplete();
 			}
-		}
-		break;
-
-	case TASK_WEAPON_PICKUP:
-		{
-			if ( IsActivityFinished() )
-			{
-				CBaseCombatWeapon	 *pWeapon = dynamic_cast<CBaseCombatWeapon *>(	(CBaseEntity *)m_hTargetEnt);
-				CBaseCombatCharacter *pOwner  = pWeapon->GetOwner();
-				if ( !pOwner )
-				{
-					TaskComplete();
-				}
-				else
-				{
-					TaskFail(FAIL_WEAPON_OWNED);
-				}
-			}
-			break;
-		}
-		break;
-
-	case TASK_ITEM_PICKUP:
-		{
-			if ( IsActivityFinished() )
-			{
-				TaskComplete();
-			}
-			break;
 		}
 		break;
 
@@ -4346,29 +3750,10 @@ bool CAI_BaseNPC::IsInterruptable()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int CAI_BaseNPC::SelectInteractionSchedule( void )
-{
-	SetTarget( m_hForcedInteractionPartner );
-
-	// If we have an interaction, we're the initiator. Move to our interaction point.
-	if ( m_iInteractionPlaying != NPCINT_NONE )
-		return SCHED_INTERACTION_MOVE_TO_PARTNER;
-
-	// Otherwise, turn towards our partner and wait for him to reach us.
-	//m_iInteractionState = NPCINT_MOVING_TO_MARK;
-	return SCHED_INTERACTION_WAIT_FOR_PARTNER;
-}
-
-//-----------------------------------------------------------------------------
 // Idle schedule selection
 //-----------------------------------------------------------------------------
 int CAI_BaseNPC::SelectIdleSchedule()
 {
-	if ( m_hForcedInteractionPartner )
-		return SelectInteractionSchedule();
-
 	int nSched = SelectFlinchSchedule();
 	if ( nSched != SCHED_NONE )
 		return nSched;
@@ -4396,9 +3781,6 @@ int CAI_BaseNPC::SelectIdleSchedule()
 //-----------------------------------------------------------------------------
 int CAI_BaseNPC::SelectAlertSchedule()
 {
-	if ( m_hForcedInteractionPartner )
-		return SelectInteractionSchedule();
-
 	int nSched = SelectFlinchSchedule();
 	if ( nSched != SCHED_NONE )
 		return nSched;
@@ -4432,9 +3814,6 @@ int CAI_BaseNPC::SelectAlertSchedule()
 //-----------------------------------------------------------------------------
 int CAI_BaseNPC::SelectCombatSchedule()
 {
-	if ( m_hForcedInteractionPartner )
-		return SelectInteractionSchedule();
-
 	int nSched = SelectFlinchSchedule();
 	if ( nSched != SCHED_NONE )
 		return nSched;

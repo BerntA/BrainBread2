@@ -96,8 +96,6 @@ public:
 	void			RemoveSensingFlags( int iFlags )	{ m_iSensingFlags &= ~iFlags; }
 	bool			HasSensingFlags( int iFlags )		{ return (m_iSensingFlags & iFlags) == iFlags; }
 
-	DECLARE_SIMPLE_DATADESC();
-
 private:
 	int				GetAudibleList() const { return m_iAudibleList; }
 

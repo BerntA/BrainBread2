@@ -24,8 +24,6 @@ BEGIN_DATADESC( CMessage )
 	DEFINE_KEYFIELD( m_MessageAttenuation, FIELD_INTEGER, "messageattenuation" ),
 	DEFINE_KEYFIELD( m_MessageVolume, FIELD_FLOAT, "messagevolume" ),
 
-	DEFINE_FIELD( m_Radius, FIELD_FLOAT ),
-
 	DEFINE_INPUTFUNC( FIELD_VOID, "ShowMessage", InputShowMessage ),
 
 	DEFINE_OUTPUT(m_OnShowMessage, "OnShowMessage"),

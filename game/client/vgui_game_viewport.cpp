@@ -38,10 +38,6 @@ public:
 	virtual void LevelShutdownPreEntity() {}
 	virtual void LevelShutdownPostEntity() {}
 	virtual void SafeRemoveIfDesired() {}
-
-	virtual void OnSave() {}
-	virtual void OnRestore() {}
-
 };
 
 static CViewportClientSystem g_ViewportClientSystem;

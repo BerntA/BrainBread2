@@ -69,8 +69,6 @@ LINK_ENTITY_TO_CLASS( env_sun, CSun );
 
 BEGIN_DATADESC( CSun )
 
-	DEFINE_FIELD( m_vDirection,		FIELD_VECTOR ),
-	
 	DEFINE_KEYFIELD( m_bUseAngles, FIELD_INTEGER, "use_angles" ),
 	DEFINE_KEYFIELD( m_flPitch, FIELD_FLOAT, "pitch" ),
 	DEFINE_KEYFIELD( m_flYaw, FIELD_FLOAT, "angle" ),
@@ -79,12 +77,6 @@ BEGIN_DATADESC( CSun )
 	DEFINE_KEYFIELD( m_nOverlaySize, FIELD_INTEGER, "overlaysize" ),
 	DEFINE_KEYFIELD( m_strMaterial, FIELD_STRING, "material" ),
 	DEFINE_KEYFIELD( m_strOverlayMaterial, FIELD_STRING, "overlaymaterial" ),
-	
-	// NOT SAVED
-	// m_nOverlayMaterial
-	// m_nMaterial
-
-	DEFINE_FIELD( m_bOn, FIELD_BOOLEAN ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOn", InputTurnOn ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOff", InputTurnOff ),

@@ -45,9 +45,6 @@ LINK_ENTITY_TO_CLASS( point_teleport, CPointTeleport );
 
 BEGIN_DATADESC( CPointTeleport )
 
-	DEFINE_FIELD( m_vSaveOrigin, FIELD_VECTOR ),
-	DEFINE_FIELD( m_vSaveAngles, FIELD_VECTOR ),
-
 	DEFINE_INPUTFUNC( FIELD_VOID, "Teleport", InputTeleport ),
 
 	DEFINE_INPUTFUNC(FIELD_VOID, "TeleportHumans", InputTeleportHumans),

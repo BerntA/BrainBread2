@@ -27,7 +27,6 @@ LINK_ENTITY_TO_CLASS(logic_relay, CLogicRelay);
 
 BEGIN_DATADESC( CLogicRelay )
 
-	DEFINE_FIELD(m_bWaitForRefire, FIELD_BOOLEAN),
 	DEFINE_KEYFIELD(m_bDisabled, FIELD_BOOLEAN, "StartDisabled"),
 
 	// Inputs

@@ -14,25 +14,6 @@
 
 ConVar phys_pushscale( "phys_pushscale", "1", FCVAR_REPLICATED );
 
-BEGIN_SIMPLE_DATADESC( CTakeDamageInfo )
-	DEFINE_FIELD( m_vecDamageForce, FIELD_VECTOR ),
-	DEFINE_FIELD( m_vecDamagePosition, FIELD_POSITION_VECTOR),
-	DEFINE_FIELD( m_vecReportedPosition, FIELD_POSITION_VECTOR),
-	DEFINE_FIELD( m_hInflictor, FIELD_EHANDLE),
-	DEFINE_FIELD( m_hAttacker, FIELD_EHANDLE),
-	DEFINE_FIELD( m_hWeapon, FIELD_EHANDLE),
-	DEFINE_FIELD( m_flDamage, FIELD_FLOAT),
-	DEFINE_FIELD( m_flMaxDamage, FIELD_FLOAT),
-	DEFINE_FIELD( m_flBaseDamage, FIELD_FLOAT ),
-	DEFINE_FIELD( m_bitsDamageType, FIELD_INTEGER),
-	DEFINE_FIELD( m_iDamageCustom, FIELD_INTEGER),
-	DEFINE_FIELD( m_iAmmoType, FIELD_INTEGER),
-	DEFINE_FIELD(m_nSkillFlags, FIELD_INTEGER),
-	DEFINE_FIELD(m_iWeaponIDForced, FIELD_INTEGER),
-	DEFINE_FIELD(m_cRelationshipLink, FIELD_INTEGER),
-	DEFINE_FIELD(m_nMiscFlags, FIELD_INTEGER),
-END_DATADESC()
-
 void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBaseEntity *pWeapon, const Vector &damageForce, const Vector &damagePosition, const Vector &reportedPosition, float flDamage, int bitsDamageType, int iCustomDamage )
 {
 	m_hInflictor = pInflictor;
@@ -171,10 +152,6 @@ const char *CTakeDamageInfo::GetAmmoName() const
 // MultiDamage
 // Collects multiple small damages into a single damage
 // -------------------------------------------------------------------------------------------------- //
-BEGIN_SIMPLE_DATADESC_( CMultiDamage, CTakeDamageInfo )
-	DEFINE_FIELD( m_hTarget, FIELD_EHANDLE),
-END_DATADESC()
-
 CMultiDamage g_MultiDamage;
 
 CMultiDamage::CMultiDamage()

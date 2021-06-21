@@ -22,10 +22,6 @@ struct fogparams_t
 	DECLARE_CLASS_NOBASE( fogparams_t );
 	DECLARE_EMBEDDED_NETWORKVAR();
 
-#ifndef CLIENT_DLL
-	DECLARE_SIMPLE_DATADESC();
-#endif
-
 	bool operator !=( const fogparams_t& other ) const;
 
 	CNetworkVector( dirPrimary );
@@ -58,10 +54,6 @@ struct fogplayerparams_t
 	DECLARE_CLASS_NOBASE( fogplayerparams_t );
 	DECLARE_EMBEDDED_NETWORKVAR();
 
-#ifndef CLIENT_DLL
-	DECLARE_SIMPLE_DATADESC();
-#endif
-
 	CNetworkHandle( CFogController, m_hCtrl );
 	float					m_flTransitionTime;
 
@@ -91,10 +83,6 @@ struct sky3dparams_t
 	DECLARE_CLASS_NOBASE( sky3dparams_t );
 	DECLARE_EMBEDDED_NETWORKVAR();
 
-#ifndef CLIENT_DLL
-	DECLARE_SIMPLE_DATADESC();
-#endif
-
 	// 3d skybox camera data
 	CNetworkVar( int, scale );
 	CNetworkVector( origin );
@@ -108,10 +96,6 @@ struct audioparams_t
 {
 	DECLARE_CLASS_NOBASE( audioparams_t );
 	DECLARE_EMBEDDED_NETWORKVAR();
-
-#ifndef CLIENT_DLL
-	DECLARE_SIMPLE_DATADESC();
-#endif
 
 	CNetworkArray( Vector, localSound, NUM_AUDIO_LOCAL_SOUNDS )
 	CNetworkVar( int, soundscapeIndex );	// index of the current soundscape from soundscape.txt

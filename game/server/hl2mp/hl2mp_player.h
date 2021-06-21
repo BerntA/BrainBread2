@@ -49,7 +49,6 @@ class CHL2MP_Player : public CHL2_Player
 public:
 	DECLARE_CLASS(CHL2MP_Player, CHL2_Player);
 	DECLARE_SERVERCLASS();
-	DECLARE_DATADESC();
 	DECLARE_PREDICTABLE();
 
 	CHL2MP_Player();

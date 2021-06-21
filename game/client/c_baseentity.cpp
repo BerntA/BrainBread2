@@ -25,7 +25,6 @@
 #include "materialsystem/imaterialsystem.h"
 #include "soundinfo.h"
 #include "mathlib/vmatrix.h"
-#include "isaverestore.h"
 #include "interval.h"
 #include "engine/ivdebugoverlay.h"
 #include "c_ai_basenpc.h"
@@ -6037,110 +6036,12 @@ bool C_BaseEntity::IsFloating()
 	return false;
 }
 
-
 BEGIN_DATADESC_NO_BASE(C_BaseEntity)
-DEFINE_FIELD(m_ModelName, FIELD_STRING),
-DEFINE_FIELD(m_vecAbsOrigin, FIELD_POSITION_VECTOR),
-DEFINE_FIELD(m_angAbsRotation, FIELD_VECTOR),
-DEFINE_ARRAY(m_rgflCoordinateFrame, FIELD_FLOAT, 12), // NOTE: MUST BE IN LOCAL SPACE, NOT POSITION_VECTOR!!! (see CBaseEntity::Restore)
-DEFINE_FIELD(m_fFlags, FIELD_INTEGER),
 END_DATADESC()
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool C_BaseEntity::ShouldSavePhysics()
-{
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// handler to do stuff before you are saved
-//-----------------------------------------------------------------------------
-void C_BaseEntity::OnSave()
-{
-	// Here, we must force recomputation of all abs data so it gets saved correctly
-	// We can't leave the dirty bits set because the loader can't cope with it.
-	CalcAbsolutePosition();
-	CalcAbsoluteVelocity();
-}
-
-
-//-----------------------------------------------------------------------------
-// handler to do stuff after you are restored
-//-----------------------------------------------------------------------------
-void C_BaseEntity::OnRestore()
-{
-	InvalidatePhysicsRecursive(POSITION_CHANGED | ANGLES_CHANGED | VELOCITY_CHANGED);
-
-	UpdatePartitionListEntry();
-	CollisionProp()->UpdatePartition();
-
-	UpdateVisibility();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Saves the current object out to disk, by iterating through the objects
-//			data description hierarchy
-// Input  : &save - save buffer which the class data is written to
-// Output : int	- 0 if the save failed, 1 on success
-//-----------------------------------------------------------------------------
-int C_BaseEntity::Save(ISave &save)
-{
-	// loop through the data description list, saving each data desc block
-	int status = SaveDataDescBlock(save, GetDataDescMap());
-
-	return status;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Recursively saves all the classes in an object, in reverse order (top down)
-// Output : int 0 on failure, 1 on success
-//-----------------------------------------------------------------------------
-int C_BaseEntity::SaveDataDescBlock(ISave &save, datamap_t *dmap)
-{
-	int nResult = save.WriteAll(this, dmap);
-	return nResult;
-}
 
 void C_BaseEntity::SetClassname(const char *className)
 {
 	m_iClassname = MAKE_STRING(className);
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Restores the current object from disk, by iterating through the objects
-//			data description hierarchy
-// Input  : &restore - restore buffer which the class data is read from
-// Output : int	- 0 if the restore failed, 1 on success
-//-----------------------------------------------------------------------------
-int C_BaseEntity::Restore(IRestore &restore)
-{
-	// loops through the data description list, restoring each data desc block in order
-	int status = RestoreDataDescBlock(restore, GetDataDescMap());
-
-	// NOTE: Do *not* use GetAbsOrigin() here because it will
-	// try to recompute m_rgflCoordinateFrame!
-	MatrixSetColumn(m_vecAbsOrigin, 3, m_rgflCoordinateFrame);
-
-	// Restablish ground entity
-	if (m_hGroundEntity != NULL)
-	{
-		m_hGroundEntity->AddEntityToGroundList(this);
-	}
-
-	return status;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Recursively restores all the classes in an object, in reverse order (top down)
-// Output : int 0 on failure, 1 on success
-//-----------------------------------------------------------------------------
-int C_BaseEntity::RestoreDataDescBlock(IRestore &restore, datamap_t *dmap)
-{
-	return restore.ReadAll(this, dmap);
 }
 
 //-----------------------------------------------------------------------------

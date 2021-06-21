@@ -16,9 +16,7 @@
 #include <vgui_controls/EditablePanel.h>
 #include "GameEventListener.h"
 #include "KeyValues.h"
-
-class C_SceneEntity;
-
+#include "c_baseflex.h"
 
 class CModelPanelModel : public C_BaseFlex
 {
@@ -114,7 +112,6 @@ public:
 	CModelPanelModelInfo()
 	{
 		m_pszModelName = NULL;
-		m_pszModelName_HWM = NULL;
 		m_nSkin = -1;
 		m_vecAbsAngles.Init();
 		m_vecOriginOffset.Init();
@@ -130,27 +127,13 @@ public:
 			m_pszModelName = NULL;
 		}
 
-		if ( m_pszModelName_HWM && m_pszModelName_HWM[0] )
-		{
-			delete [] m_pszModelName_HWM;
-			m_pszModelName_HWM = NULL;
-		}
-
-		if ( m_pszVCD && m_pszVCD[0] )
-		{
-			delete [] m_pszVCD;
-			m_pszVCD = NULL;
-		}
-
 		m_Animations.PurgeAndDeleteElements();
 		m_AttachedModelsInfo.PurgeAndDeleteElements();
 	}
 
 public:
 	const char	*m_pszModelName;
-	const char	*m_pszModelName_HWM;
 	int			m_nSkin;
-	const char	*m_pszVCD;
 	Vector		m_vecAbsAngles;
 	Vector		m_vecOriginOffset;
 	Vector2D	m_vecViewportOffset;
@@ -174,7 +157,6 @@ public:
 
 	virtual void Paint();
 	virtual void ApplySettings( KeyValues *inResourceData );
-	virtual void DeleteVCDData( void );
 	virtual void DeleteModelData( void );
 
 	virtual void SetFOV( int nFOV ){ m_nFOV = nFOV; }
@@ -200,7 +182,6 @@ public: // IGameEventListener:
 
 protected:
 	virtual void SetupModel( void );
-	virtual void SetupVCD( void );
 	virtual const char *GetModelName( void );
 
 private:
@@ -217,8 +198,6 @@ public:
 	CHandle<CModelPanelModel>				m_hModel;
 	CUtlVector<CHandle<C_BaseAnimating> >	m_AttachedModels;
 
-	CHandle<C_SceneEntity>			m_hScene;
-
 private:
 	bool	m_bPanelDirty;
 	int		m_iDefaultAnimation;
@@ -228,6 +207,5 @@ private:
 	CTextureReference m_DefaultEnvCubemap;
 	CTextureReference m_DefaultHDREnvCubemap;
 };
-
 
 #endif // BASEMODELPANEL_H

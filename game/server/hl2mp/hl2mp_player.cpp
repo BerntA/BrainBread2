@@ -219,10 +219,6 @@ SendPropString(SENDINFO(m_szModelChoice)),
 SendPropInt(SENDINFO(m_iModelIncrementor), 11, SPROP_UNSIGNED),
 END_SEND_TABLE()
 
-BEGIN_DATADESC(CHL2MP_Player)
-DEFINE_EMBEDDED(m_BB2Local),
-END_DATADESC()
-
 #define HL2MPPLAYER_PHYSDAMAGE_SCALE 4.0f
 
 #pragma warning( disable : 4355 )

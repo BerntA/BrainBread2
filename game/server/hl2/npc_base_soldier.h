@@ -13,13 +13,8 @@
 #include "ai_basenpc.h"
 #include "ai_basehumanoid.h"
 #include "ai_behavior.h"
-#include "ai_behavior_assault.h"
-#include "ai_behavior_standoff.h"
-#include "ai_behavior_follow.h"
 #include "ai_behavior_functank.h"
 #include "ai_behavior_rappel.h"
-#include "ai_behavior_actbusy.h"
-#include "ai_sentence.h"
 #include "ai_baseactor.h"
 #include "npc_base_properties.h"
 
@@ -47,7 +42,6 @@ public:
 	virtual float GetJumpGravity() const	{ return 1.8f; }
 	virtual bool CanFlinch(void) { return false; }
 	virtual float CoverRadius(void) { return 700.0f; } // Default cover radius
-	virtual Activity GetCoverActivity(CAI_Hint* pHint) { return ACT_INVALID; }
 	virtual bool IsCrouchedActivity(Activity activity) { return false; }
 	virtual bool ValidateNavGoal() { return true; }
 	virtual float MinFleeDistance(void) { return 20.0f; }

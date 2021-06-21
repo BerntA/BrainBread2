@@ -28,10 +28,6 @@ LINK_ENTITY_TO_CLASS( point_posecontroller, CPoseController );
 
 
 BEGIN_DATADESC( CPoseController )
-	DEFINE_AUTO_ARRAY( m_hProps, FIELD_EHANDLE ),
-	DEFINE_AUTO_ARRAY( m_chPoseIndex, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_bDisablePropLookup, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bPoseValueParity, FIELD_BOOLEAN ),
 	// Keys
 	DEFINE_KEYFIELD( m_iszPropName, FIELD_STRING, "PropName" ),
 	DEFINE_KEYFIELD( m_iszPoseParameterName, FIELD_STRING, "PoseParameterName" ),

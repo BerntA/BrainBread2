@@ -30,8 +30,6 @@ public:
 	int  UpdateTransmitState();
 	void InputSetAngles( inputdata_t &inputdata );
 
-	virtual int	ObjectCaps( void ) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
-
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
 

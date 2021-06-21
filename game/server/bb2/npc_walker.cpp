@@ -30,7 +30,6 @@ enum ZombieSpawningFlags
 
 class CNPCWalker : public CAI_BlendingHost<CNPC_BaseZombie>
 {
-	DECLARE_DATADESC();
 	DECLARE_CLASS( CNPCWalker, CAI_BlendingHost<CNPC_BaseZombie> );
 	DEFINE_CUSTOM_AI;
 
@@ -175,13 +174,6 @@ int ACT_CRAWL_NOLEGS;
 int ACT_CRAWL_NOLEGS_IDLE;
 int ACT_CRAWL_NOLEGS_ATTACK_LEFT;
 int ACT_CRAWL_NOLEGS_ATTACK_RIGHT;
-
-BEGIN_DATADESC( CNPCWalker )
-	DEFINE_FIELD(m_bGibbedForCrawl, FIELD_BOOLEAN),
-	DEFINE_FIELD(m_bIsRunner, FIELD_BOOLEAN),
-	DEFINE_FIELD(m_nZombieSpawnFlags, FIELD_INTEGER),
-	DEFINE_FIELD(m_flNextTimeToCheckCollisionChange, FIELD_TIME),
-END_DATADESC()
 
 Class_T	CNPCWalker::Classify( void )
 {

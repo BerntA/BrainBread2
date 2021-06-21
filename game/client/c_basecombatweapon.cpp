@@ -84,21 +84,6 @@ static inline bool ShouldDrawLocalPlayerViewModel( void )
 	return !C_BasePlayer::ShouldDrawLocalPlayer();
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_BaseCombatWeapon::OnRestore()
-{
-	BaseClass::OnRestore();
-
-	// if the player is holding this weapon, 
-	// mark it as just restored so it won't show as a new pickup
-	if (GetOwner() == C_BasePlayer::GetLocalPlayer())
-	{
-		m_bJustRestored = true;
-	}
-}
-
 int C_BaseCombatWeapon::GetWorldModelIndex( void )
 {
 	return m_iWorldModelIndex;
@@ -153,8 +138,6 @@ void C_BaseCombatWeapon::OnDataChanged( DataUpdateType_t updateType )
 	UpdateVisibility();
 
 	m_iOldState = m_iState;
-
-	m_bJustRestored = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -358,10 +341,7 @@ bool C_BaseCombatWeapon::ShouldDraw( void )
 //-----------------------------------------------------------------------------
 bool C_BaseCombatWeapon::ShouldDrawPickup( void )
 {
-	if ( (GetWeaponFlags() & ITEM_FLAG_NOITEMPICKUP) || m_bJustRestored)
-		return false;
-
-	return true;
+	return !(GetWeaponFlags() & ITEM_FLAG_NOITEMPICKUP);
 }
 		   
 //-----------------------------------------------------------------------------

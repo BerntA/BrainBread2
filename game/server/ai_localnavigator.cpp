@@ -20,18 +20,6 @@ ConVar ai_debug_directnavprobe("ai_debug_directnavprobe", "0");
 
 const float TIME_DELAY_FULL_DIRECT_PROBE[2] = { 0.25, 0.35 };
 
-//-----------------------------------------------------------------------------
-
-BEGIN_SIMPLE_DATADESC(CAI_LocalNavigator)
-	//						m_fLastWasClear	(not saved)
-	//						m_LastMoveGoal	(not saved)
-	//						m_FullDirectTimer	(not saved)
-	//						m_pPlaneSolver	(not saved)
-	//						m_pMoveProbe	(not saved)
-END_DATADESC();
-
-//-------------------------------------
-
 CAI_LocalNavigator::CAI_LocalNavigator(CAI_BaseNPC *pOuter) : CAI_Component( pOuter ) 
 {
 	m_pMoveProbe = NULL;

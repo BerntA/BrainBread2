@@ -222,13 +222,6 @@ BEGIN_DATADESC( CPointCamera )
 	DEFINE_KEYFIELD( m_flFogEnd,	FIELD_FLOAT, "fogEnd" ),
 	DEFINE_KEYFIELD( m_flFogMaxDensity,	FIELD_FLOAT, "fogMaxDensity" ),
 	DEFINE_KEYFIELD( m_bUseScreenAspectRatio, FIELD_BOOLEAN, "UseScreenAspectRatio" ),
-	DEFINE_FIELD( m_bActive,		FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bIsOn,			FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_TargetFOV,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_DegreesPerSecond, FIELD_FLOAT ),
-	// This is re-set up in the constructor
-	//DEFINE_FIELD( m_pNext, FIELD_CLASSPTR ),
 
 	DEFINE_FUNCTION( ChangeFOVThink ),
 

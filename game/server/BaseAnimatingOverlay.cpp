@@ -12,51 +12,12 @@
 #include "bone_setup.h"
 #include "ai_basenpc.h"
 #include "npcevent.h"
-
-#include "saverestore_utlvector.h"
 #include "dt_utlvector_send.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 extern ConVar ai_sequence_debug;
-
-
-BEGIN_SIMPLE_DATADESC( CAnimationLayer )
-
-//	DEFINE_FIELD( m_pOwnerEntity, CBaseAnimatingOverlay ),
-	DEFINE_FIELD( m_fFlags, FIELD_INTEGER ),
-	DEFINE_FIELD( m_bSequenceFinished, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bLooping, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_nSequence, FIELD_INTEGER ),
-	DEFINE_FIELD( m_flCycle, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flPrevCycle, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flPlaybackRate, FIELD_FLOAT),
-	DEFINE_FIELD( m_flWeight, FIELD_FLOAT),
-	DEFINE_FIELD( m_flBlendIn, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flBlendOut, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flKillRate, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flKillDelay, FIELD_FLOAT ),
-	DEFINE_CUSTOM_FIELD( m_nActivity, ActivityDataOps() ),
-	DEFINE_FIELD( m_nPriority, FIELD_INTEGER ),
-	DEFINE_FIELD( m_nOrder, FIELD_INTEGER ),
-	DEFINE_FIELD( m_flLastEventCheck, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flLastAccess, FIELD_TIME ),
-	DEFINE_FIELD( m_flLayerAnimtime, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flLayerFadeOuttime, FIELD_FLOAT ),
-
-END_DATADESC()
-
-
-BEGIN_DATADESC( CBaseAnimatingOverlay )
-
-	DEFINE_UTLVECTOR( m_AnimOverlay, FIELD_EMBEDDED ),
-
-	// DEFINE_FIELD( m_nActiveLayers, FIELD_INTEGER ),
-	// DEFINE_FIELD( m_nActiveBaseLayers, FIELD_INTEGER ),
-
-END_DATADESC()
-
 
 #define ORDER_BITS			4
 #define WEIGHT_BITS			8
@@ -68,7 +29,6 @@ BEGIN_SEND_TABLE_NOBASE(CAnimationLayer, DT_Animationlayer)
 	SendPropFloat	(SENDINFO(m_flWeight),		WEIGHT_BITS,			0,	0.0f,	1.0f),
 	SendPropInt		(SENDINFO(m_nOrder),		ORDER_BITS,				SPROP_UNSIGNED),
 END_SEND_TABLE()
-
 
 BEGIN_SEND_TABLE_NOBASE( CBaseAnimatingOverlay, DT_OverlayVars )
 	SendPropUtlVector( 
@@ -83,14 +43,10 @@ IMPLEMENT_SERVERCLASS_ST( CBaseAnimatingOverlay, DT_BaseAnimatingOverlay )
 	SendPropDataTable( "overlay_vars", 0, &REFERENCE_SEND_TABLE( DT_OverlayVars ) )
 END_SEND_TABLE()
 
-
-
-
 CAnimationLayer::CAnimationLayer( )
 {
 	Init( NULL );
 }
-
 
 void CAnimationLayer::Init( CBaseAnimatingOverlay *pOverlay )
 {
@@ -489,42 +445,6 @@ void CBaseAnimatingOverlay::GetSkeleton( CStudioHdr *pStudioHdr, Vector pos[], Q
 	}
 	boneSetup.CalcBoneAdj( pos, q, GetEncodedControllerArray() );
 }
-
-
-
-//-----------------------------------------------------------------------------
-// Purpose: zero's out all non-restore safe fields
-// Output :
-//-----------------------------------------------------------------------------
-void CBaseAnimatingOverlay::OnRestore( )
-{
-	int i;
-
-	// force order of unused layers to current MAX_OVERLAYS
-	// and Tracker 48843 (Alyx skating after restore) restore the owner entity ptr (otherwise the network layer won't get NetworkStateChanged signals until the layer is re-Init()'ed
-	for (i = 0; i < m_AnimOverlay.Count(); i++)
-	{
-		m_AnimOverlay[i].m_pOwnerEntity = this;
-
-		if ( !m_AnimOverlay[i].IsActive())
-		{
-			m_AnimOverlay[i].m_nOrder.Set( MAX_OVERLAYS );
-		}
-	}
-
-	// get rid of all layers that shouldn't be restored
-	for (i = 0; i < m_AnimOverlay.Count(); i++)
-	{
-		if ( ( m_AnimOverlay[i].IsActive() && (m_AnimOverlay[i].m_fFlags & ANIM_LAYER_DONTRESTORE) ) ||
-			 ( GetModelPtr() && !IsValidSequence(m_AnimOverlay[i].m_nSequence) ) )
-		{
-			FastRemoveLayer( i );
-		}
-	}
-
-	BaseClass::OnRestore();
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 

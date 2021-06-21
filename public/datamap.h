@@ -68,7 +68,6 @@ typedef enum _fieldtypes
 	FIELD_TYPECOUNT,		// MUST BE LAST
 } fieldtype_t;
 
-
 //-----------------------------------------------------------------------------
 // Field sizes... 
 //-----------------------------------------------------------------------------
@@ -195,8 +194,8 @@ DECLARE_FIELD_SIZE( FIELD_MATERIALINDEX,	sizeof(int) )
 // OUTPUTS
 // the variable 'name' MUST BE derived from CBaseOutput
 // we know the output type from the variable itself, so it doesn't need to be specified here
-class ISaveRestoreOps;
-extern ISaveRestoreOps *eventFuncs;
+class IInputOutputOps;
+extern IInputOutputOps *eventFuncs;
 #define DEFINE_OUTPUT( name, outputname )	{ FIELD_CUSTOM, #name, { offsetof(classNameTypedef, name), 0 }, 1, FTYPEDESC_OUTPUT | FTYPEDESC_SAVE | FTYPEDESC_KEY, outputname, eventFuncs }
 
 // replaces EXPORT table for portability and non-DLL based systems (xbox)
@@ -232,9 +231,6 @@ extern ISaveRestoreOps *eventFuncs;
 
 struct typedescription_t;
 
-
-class ISaveRestoreOps;
-
 //
 // Function prototype for all input handlers.
 //
@@ -262,7 +258,7 @@ struct typedescription_t
 	// the name of the variable in the map/fgd data, or the name of the action
 	const char			*externalName;	
 	// pointer to the function set for save/restoring of custom data types
-	ISaveRestoreOps		*pSaveRestoreOps; 
+	IInputOutputOps		*pIODataOps;
 	// for associating function with string names
 	inputfunc_t			inputFunc; 
 	// For embedding additional datatables inside this one
@@ -446,6 +442,23 @@ private:
 	const char *m_pszBase;
 	size_t m_nLenBase;
 	CUtlVector<char *> m_Names;
+};
+
+//-----------------------------------------------------------------------------
+
+// I/O Class
+struct InputOutputFieldInfo_t
+{
+	void *			   pField;
+	void *			   pOwner;
+	typedescription_t *pTypeDesc;
+};
+
+abstract_class IInputOutputOps
+{
+public:
+	virtual bool Parse(const InputOutputFieldInfo_t &fieldInfo, char const* szValue) = 0;
+	bool Parse(void *pField, char const *pszValue)	{ InputOutputFieldInfo_t fieldInfo = { pField, NULL, NULL }; return Parse(fieldInfo, pszValue); }
 };
 
 //-----------------------------------------------------------------------------

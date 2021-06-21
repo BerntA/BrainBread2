@@ -17,12 +17,8 @@
 #include "entitylist.h"
 #include "eventqueue.h"
 #include "worldsize.h"
-#include "isaverestore.h"
 #include "basecombatweapon.h"
 #include "ai_basenpc.h"
-#include "ai_network.h"
-#include "ai_node.h"
-#include "ai_networkmanager.h"
 #include "ammodef.h"
 #include "mathlib/mathlib.h"
 #include "ndebugoverlay.h"
@@ -36,11 +32,9 @@
 #include "engine/IEngineSound.h"
 #include "movehelper_server.h"
 #include "igamemovement.h"
-#include "saverestoretypes.h"
 #include "movevars_shared.h"
 #include "vcollide_parse.h"
 #include "player_command.h"
-#include "AI_Criteria.h"
 #include "globals.h"
 #include "usermessages.h"
 #include "gamevars_shared.h"
@@ -49,7 +43,6 @@
 #include "KeyValues.h"
 #include "coordsize.h"
 #include "vphysics/player_controller.h"
-#include "saverestore_utlvector.h"
 #include "hltvdirector.h"
 #include "nav_mesh.h"
 #include "rumble_shared.h"
@@ -59,7 +52,6 @@
 #include "fogcontroller.h"
 #include "gameinterface.h"
 #include "dt_utlvector_send.h"
-#include "ai_speech.h"
 #include "hl2mp_gamerules.h"
 #include "hl2mp_player.h"
 #include "GameBase_Shared.h"
@@ -151,162 +143,8 @@ void CC_GiveCurrentAmmo(void)
 }
 static ConCommand givecurrentammo("givecurrentammo", CC_GiveCurrentAmmo, "Give a supply of ammo for current weapon..\n", FCVAR_CHEAT);
 
-// pl
-BEGIN_SIMPLE_DATADESC( CPlayerState )
-	// DEFINE_FIELD( netname, FIELD_STRING ),  // Don't stomp player name with what's in save/restore
-	DEFINE_FIELD( v_angle, FIELD_VECTOR ),
-	DEFINE_FIELD( deadflag, FIELD_BOOLEAN ),
-
-	// this is always set to true on restore, don't bother saving it.
-	// DEFINE_FIELD( fixangle, FIELD_INTEGER ),
-	// DEFINE_FIELD( anglechange, FIELD_FLOAT ),
-	// DEFINE_FIELD( hltv, FIELD_BOOLEAN ),
-	// DEFINE_FIELD( replay, FIELD_BOOLEAN ),
-	// DEFINE_FIELD( frags, FIELD_INTEGER ),
-	// DEFINE_FIELD( deaths, FIELD_INTEGER ),
-END_DATADESC()
-
 // Global Savedata for player
 BEGIN_DATADESC( CBasePlayer )
-
-	DEFINE_EMBEDDED( m_Local ),
-	DEFINE_UTLVECTOR( m_hTriggerSoundscapeList, FIELD_EHANDLE ),
-	DEFINE_EMBEDDED( pl ),
-
-	DEFINE_FIELD( m_StuckLast, FIELD_INTEGER ),
-
-	DEFINE_FIELD( m_nButtons, FIELD_INTEGER ),
-	DEFINE_FIELD( m_afButtonLast, FIELD_INTEGER ),
-	DEFINE_FIELD( m_afButtonPressed, FIELD_INTEGER ),
-	DEFINE_FIELD( m_afButtonReleased, FIELD_INTEGER ),
-	DEFINE_FIELD( m_afButtonDisabled, FIELD_INTEGER ),
-	DEFINE_FIELD( m_afButtonForced,	FIELD_INTEGER ),
-
-	DEFINE_FIELD( m_iFOV,		FIELD_INTEGER ),
-	DEFINE_FIELD( m_iFOVStart,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_flFOVTime,	FIELD_TIME ),
-	DEFINE_FIELD( m_iDefaultFOV,FIELD_INTEGER ),
-
-	DEFINE_FIELD( m_iObserverMode, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iObserverLastMode, FIELD_INTEGER ),
-	DEFINE_FIELD( m_hObserverTarget, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_bForcedObserverMode, FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_nUpdateRate, FIELD_INTEGER ),
-	DEFINE_FIELD( m_fLerpTime, FIELD_FLOAT ),
-	DEFINE_FIELD( m_bPredictWeapons, FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_hUseEntity, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_iTrain, FIELD_INTEGER ),
-	DEFINE_FIELD( m_afPhysicsFlags, FIELD_INTEGER ),
-
-	// recreate, don't restore
-	// DEFINE_FIELD( m_CommandContext, CUtlVector < CCommandContext > ),
-	//DEFINE_FIELD( m_pPhysicsController, FIELD_POINTER ),
-	//DEFINE_FIELD( m_pShadowStand, FIELD_POINTER ),
-	//DEFINE_FIELD( m_pShadowCrouch, FIELD_POINTER ),
-	//DEFINE_FIELD( m_vphysicsCollisionState, FIELD_INTEGER ),
-	DEFINE_ARRAY( m_szNetworkIDString, FIELD_CHARACTER, MAX_NETWORKID_LENGTH ),	
-	DEFINE_FIELD( m_oldOrigin, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_vecSmoothedVelocity, FIELD_VECTOR ),
-	//DEFINE_FIELD( m_touchedPhysObject, FIELD_BOOLEAN ),
-	//DEFINE_FIELD( m_bPhysicsWasFrozen, FIELD_BOOLEAN ),
-	//DEFINE_FIELD( m_iPlayerSound, FIELD_INTEGER ),	// Don't restore, set in Precache()
-	DEFINE_FIELD( m_iTargetVolume, FIELD_INTEGER ),
-	//DEFINE_FIELD( m_fNextSuicideTime, FIELD_TIME ),
-	// DEFINE_FIELD( m_PlayerInfo, CPlayerInfo ),
-
-	DEFINE_FIELD( m_flSwimTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flDuckTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flDuckJumpTime, FIELD_TIME ),
-
-	DEFINE_FIELD( m_lastDamageAmount, FIELD_INTEGER ),
-	DEFINE_FIELD( m_tbdPrev, FIELD_TIME ),
-	DEFINE_FIELD( m_fTimeLastHurt, FIELD_TIME ),
-	DEFINE_FIELD(m_flHealthRegenWaitTime, FIELD_FLOAT),
-	DEFINE_FIELD( m_flStepSoundTime, FIELD_FLOAT ),
-	DEFINE_ARRAY( m_szNetname, FIELD_CHARACTER, MAX_PLAYER_NAME_LENGTH ),
-
-	//DEFINE_FIELD( m_iStepLeft, FIELD_INTEGER ), // Don't need to restore
-	//DEFINE_FIELD( m_chTextureType, FIELD_CHARACTER ), // Don't need to restore
-	//DEFINE_FIELD( m_surfaceProps, FIELD_INTEGER ),	// don't need to restore, reset by gamemovement
-	// DEFINE_FIELD( m_pSurfaceData, surfacedata_t* ),
-	//DEFINE_FIELD( m_surfaceFriction, FIELD_FLOAT ),
-	//DEFINE_FIELD( m_chPreviousTextureType, FIELD_CHARACTER ),
-
-	DEFINE_FIELD( m_idrowndmg, FIELD_INTEGER ),
-	DEFINE_FIELD( m_idrownrestored, FIELD_INTEGER ),
-
-	DEFINE_FIELD( m_nPoisonDmg, FIELD_INTEGER ),
-	DEFINE_FIELD( m_nPoisonRestored, FIELD_INTEGER ),
-
-	DEFINE_FIELD( m_bitsHUDDamage, FIELD_INTEGER ),
-	DEFINE_FIELD( m_fInitHUD, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flDeathTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flDeathAnimTime, FIELD_TIME ),
-
-	DEFINE_FIELD( m_iFrags, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iDeaths, FIELD_INTEGER ),
-
-	// from edict_t
-	DEFINE_FIELD( m_ArmorValue, FIELD_INTEGER ),
-	DEFINE_FIELD( m_DmgOrigin, FIELD_VECTOR ),
-	DEFINE_FIELD( m_DmgTake, FIELD_FLOAT ),
-	DEFINE_FIELD( m_DmgSave, FIELD_FLOAT ),
-	DEFINE_FIELD( m_AirFinished, FIELD_TIME ),
-	DEFINE_FIELD( m_PainFinished, FIELD_TIME ),
-	
-	DEFINE_FIELD( m_iPlayerLocked, FIELD_INTEGER ),
-
-	DEFINE_FIELD(m_hViewModel, FIELD_EHANDLE),
-	
-	DEFINE_FIELD( m_flMaxspeed, FIELD_FLOAT ),
-	DEFINE_FIELD(m_flMaxAirSpeed, FIELD_FLOAT),
-	DEFINE_FIELD( m_flWaterJumpTime, FIELD_TIME ),
-	DEFINE_FIELD( m_vecWaterJumpVel, FIELD_VECTOR ),
-	DEFINE_FIELD( m_nImpulse, FIELD_INTEGER ),
-	DEFINE_FIELD( m_flSwimSoundTime, FIELD_TIME ),
-	DEFINE_FIELD( m_vecLadderNormal, FIELD_VECTOR ),
-
-	DEFINE_FIELD( m_nDrownDmgRate, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iSuicideCustomKillFlags, FIELD_INTEGER ),
-
-	// NOT SAVED
-	//DEFINE_FIELD( m_vForcedOrigin, FIELD_VECTOR ),
-	//DEFINE_FIELD( m_bForceOrigin, FIELD_BOOLEAN ),
-	//DEFINE_FIELD( m_nTickBase, FIELD_INTEGER ),
-	//DEFINE_FIELD( m_LastCmd, FIELD_ ),
-	// DEFINE_FIELD( m_pCurrentCommand, CUserCmd ),
-	//DEFINE_FIELD( m_bGamePaused, FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_bitsDamageType, FIELD_INTEGER ),
-	DEFINE_AUTO_ARRAY( m_rgbTimeBasedDamage, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_fLastPlayerTalkTime, FIELD_FLOAT ),
-		
-	DEFINE_FIELD( m_hLastWeapon, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hNextWeapon, FIELD_EHANDLE ),
-
-#if !defined( NO_ENTITY_PREDICTION )
-	// DEFINE_FIELD( m_SimulatedByThisPlayer, CUtlVector < CHandle < CBaseEntity > > ),
-#endif
-
-	DEFINE_FIELD( m_flOldPlayerZ, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flOldPlayerViewOffsetZ, FIELD_FLOAT ),
-	DEFINE_FIELD( m_bPlayerUnderwater, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_hViewEntity, FIELD_EHANDLE ),
-
-	DEFINE_FIELD( m_hConstraintEntity, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_vecConstraintCenter, FIELD_VECTOR ),
-	DEFINE_FIELD( m_flConstraintRadius, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flConstraintWidth, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flConstraintSpeedFactor, FIELD_FLOAT ),
-	
-	DEFINE_FIELD( m_flLaggedMovementValue, FIELD_FLOAT ),
-
-	DEFINE_FIELD( m_vNewVPhysicsPosition, FIELD_VECTOR ),
-	DEFINE_FIELD( m_vNewVPhysicsVelocity, FIELD_VECTOR ),
-
-	DEFINE_FIELD( m_autoKickDisabled, FIELD_BOOLEAN ),
 
 	// Function Pointers
 	DEFINE_FUNCTION( PlayerDeathThink ),
@@ -316,16 +154,6 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "SetHUDVisibility", InputSetHUDVisibility ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "SetFogController", InputSetFogController ),
 
-	DEFINE_FIELD( m_bDuckToggled, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flForwardMove, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flSideMove, FIELD_FLOAT ),
-	DEFINE_FIELD( m_vecPreviouslyPredictedOrigin, FIELD_POSITION_VECTOR ), 
-
-	// DEFINE_FIELD( m_nBodyPitchPoseParam, FIELD_INTEGER ),
-	// DEFINE_ARRAY( m_StepSoundCache, StepSoundCache_t,  2  ),
-
-	// DEFINE_UTLVECTOR( m_vecPlayerCmdInfo ),
-	// DEFINE_UTLVECTOR( m_vecPlayerSimInfo ),
 END_DATADESC()
 
 edict_t *CBasePlayer::s_PlayerEdict = NULL;
@@ -4127,102 +3955,6 @@ void CBasePlayer::ForceRespawn( void )
 	Spawn();
 }
 
-int CBasePlayer::Save( ISave &save )
-{
-	if ( !BaseClass::Save(save) )
-		return 0;
-
-	return 1;
-}
-
-
-// Friend class of CBaseEntity to access private member data.
-class CPlayerRestoreHelper
-{
-public:
-
-	const Vector &GetAbsOrigin( CBaseEntity *pent )
-	{
-		return pent->m_vecAbsOrigin;
-	}
-
-	const Vector &GetAbsVelocity( CBaseEntity *pent )
-	{
-		return pent->m_vecAbsVelocity;
-	}
-};
-
-
-int CBasePlayer::Restore( IRestore &restore )
-{
-	int status = BaseClass::Restore(restore);
-	if ( !status )
-		return 0;
-
-	CSaveRestoreData *pSaveData = gpGlobals->pSaveData;
-	// landmark isn't present.
-	if ( !pSaveData->levelInfo.fUseLandmark )
-	{
-		Msg( "No Landmark:%s\n", pSaveData->levelInfo.szLandmarkName );
-
-		// default to normal spawn
-		CBaseEntity *pSpawnSpot = EntSelectSpawnPoint();
-		SetLocalOrigin( pSpawnSpot->GetLocalOrigin() + Vector(0,0,1) );
-		SetLocalAngles( pSpawnSpot->GetLocalAngles() );
-	}
-
-	QAngle newViewAngles = pl.v_angle;
-	newViewAngles.z = 0;	// Clear out roll
-	SetLocalAngles( newViewAngles );
-	SnapEyeAngles( newViewAngles );
-
-	// Copied from spawn() for now
-	SetBloodColor( BLOOD_COLOR_RED );
-	
-	// clear this - it will get reset by touching the trigger again
-	m_afPhysicsFlags &= ~PFLAG_VPHYSICS_MOTIONCONTROLLER;
-
-	if ( GetFlags() & FL_DUCKING ) 
-	{
-		// Use the crouch HACK
-		FixPlayerCrouchStuck( this );
-		UTIL_SetSize(this, VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX);
-		m_Local.m_bDucked = true;
-	}
-	else
-	{
-		m_Local.m_bDucked = false;
-		UTIL_SetSize(this, VEC_HULL_MIN, VEC_HULL_MAX);
-	}
-
-	// We need to get at m_vecAbsOrigin as it was restored but can't let it be
-	// recalculated by a call to GetAbsOrigin because hierarchy isn't fully restored yet,
-	// so we use this backdoor to get at the private data in CBaseEntity.
-	CPlayerRestoreHelper helper;
-	InitVCollision( helper.GetAbsOrigin( this ), helper.GetAbsVelocity( this ) );
-
-	// success
-	return 1;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CBasePlayer::OnRestore( void )
-{
-	BaseClass::OnRestore();
-
-	SetViewEntity( m_hViewEntity );
-	SetDefaultFOV(m_iDefaultFOV);		// force this to reset if zero
-
-	m_nBodyPitchPoseParam = LookupPoseParameter( "body_pitch" );
-}
-
-/* void CBasePlayer::SetTeamName( const char *pTeamName )
-{
-	Q_strncpy( m_szTeamName, pTeamName, TEAM_NAME_LENGTH );
-} */
-
 void CBasePlayer::SetArmorValue( int value )
 {
 	m_ArmorValue = value;
@@ -4463,36 +4195,6 @@ CBaseEntity *FindPickerEntity( CBasePlayer *pPlayer )
 		pEntity = gEntList.FindEntityNearestFacing( origin, forward,0.95);
 	}
 	return pEntity;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Finds the nearest node in front of the player
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-CAI_Node *FindPickerAINode( CBasePlayer *pPlayer, NodeType_e nNodeType )
-{
-	Vector forward;
-	Vector origin;
-
-	pPlayer->EyeVectors( &forward );
-	origin = pPlayer->EyePosition();	
-	return g_pAINetworkManager->GetEditOps()->FindAINodeNearestFacing( origin, forward,0.90, nNodeType);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Finds the nearest link in front of the player
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-CAI_Link *FindPickerAILink( CBasePlayer* pPlayer )
-{
-	Vector forward;
-	Vector origin;
-
-	pPlayer->EyeVectors( &forward );
-	origin = pPlayer->EyePosition();	
-	return g_pAINetworkManager->GetEditOps()->FindAILinkNearestFacing( origin, forward,0.90);
 }
 
 /*
@@ -5745,12 +5447,6 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 	m_bPhysicsWasFrozen = false;
 }
 
-// recreate physics on save/load, don't try to save the state!
-bool CBasePlayer::ShouldSavePhysics()
-{
-	return false;
-}
-
 void CBasePlayer::RefreshCollisionBounds( void )
 {
 	BaseClass::RefreshCollisionBounds();
@@ -5915,46 +5611,10 @@ void CBasePlayer::SetDefaultFOV( int FOV )
 	m_iDefaultFOV = ( FOV == 0 ) ? g_pGameRules->DefaultFOV() : FOV;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: // static func
-// Input  : set - 
-//-----------------------------------------------------------------------------
-void CBasePlayer::ModifyOrAppendPlayerCriteria( AI_CriteriaSet& set )
-{
-	// Append our health
-	set.AppendCriteria( "playerhealth", UTIL_VarArgs( "%i", GetHealth() ) );
-	float healthfrac = 0.0f;
-	if ( GetMaxHealth() > 0 )
-	{
-		healthfrac = (float)GetHealth() / (float)GetMaxHealth();
-	}
-
-	set.AppendCriteria( "playerhealthfrac", UTIL_VarArgs( "%.3f", healthfrac ) );
-
-	CBaseCombatWeapon *weapon = GetActiveWeapon();
-	if ( weapon )
-	{
-		set.AppendCriteria( "playerweapon", weapon->GetClassname() );
-	}
-	else
-	{
-		set.AppendCriteria( "playerweapon", "none" );
-	}
-
-	// Append current activity name
-	set.AppendCriteria( "playeractivity", CAI_BaseNPC::GetActivityName( ACT_IDLE ) );
-
-	set.AppendCriteria( "playerspeed", UTIL_VarArgs( "%.3f", GetAbsVelocity().Length() ) );
-
-	AppendContextToCriteria( set, "player" );
-}
-
-
 const QAngle& CBasePlayer::GetPunchAngle()
 {
 	return m_Local.m_vecPunchAngle.Get();
 }
-
 
 void CBasePlayer::SetPunchAngle( const QAngle &punchAngle )
 {

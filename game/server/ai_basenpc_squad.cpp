@@ -15,7 +15,6 @@
 #include "ai_squad.h"
 #include "bitstring.h"
 #include "entitylist.h"
-#include "ai_hint.h"
 #include "IEffects.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -88,28 +87,8 @@ void CAI_BaseNPC::VacateStrategySlot(void)
 // Input   :
 // Output  :
 //------------------------------------------------------------------------------
-bool CAI_BaseNPC::IsValidCover( const Vector &vecCoverLocation, CAI_Hint const *pHint )
+bool CAI_BaseNPC::IsValidCover( const Vector &vecCoverLocation )
 {
-	// firstly, limit choices to hint groups
-	string_t iszHint = GetHintGroup();
-	char *pszHint = (char *)STRING(iszHint);
-	if ((iszHint != NULL_STRING) && (pszHint[0] != '\0'))
-	{
-		if (!pHint || pHint->GetGroup() != GetHintGroup())
-		{
-			return false;
-		}
-	}
-
-	/*
-	// If I'm in a squad don't pick cover node it other squad member
-	// is already nearby
-	if (m_pSquad)
-	{
-		return m_pSquad->IsValidCover( vecCoverLocation, pHint );
-	}
-	*/
-	
 	// UNDONE: Do we really need this test?
 	// ----------------------------------------------------------------
 	// Make sure my hull can fit at this node before accepting it. 
@@ -122,33 +101,7 @@ bool CAI_BaseNPC::IsValidCover( const Vector &vecCoverLocation, CAI_Hint const *
 	endPos.z += 0.01;
 	trace_t tr;
 	AI_TraceEntity( this, vecCoverLocation, endPos, MASK_NPCSOLID, &tr );
-	if (tr.startsolid)
-	{
-		return false;
-	}
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Is squad member in my way from shooting here
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-
-bool CAI_BaseNPC::IsValidShootPosition( const Vector &vecShootLocation, CAI_Node *pNode, CAI_Hint const *pHint )
-{
-	// limit choices to hint groups
-	if (GetHintGroup() != NULL_STRING)
-	{
-		if (!pHint || pHint->GetGroup() != GetHintGroup())
-		{
-			if ( ( vecShootLocation - GetAbsOrigin() ).Length2DSqr() > 1 )
-				return false;
-		}
-	}
-
-	return true;
+	return (!tr.startsolid);
 }
 
 //-----------------------------------------------------------------------------

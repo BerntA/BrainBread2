@@ -65,11 +65,6 @@ private:
 };
 
 BEGIN_DATADESC( CEnvEntityMaker )
-	// DEFINE_FIELD( m_vecEntityMins, FIELD_VECTOR ),
-	// DEFINE_FIELD( m_vecEntityMaxs, FIELD_VECTOR ),
-	DEFINE_FIELD( m_hCurrentInstance, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hCurrentBlocker, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_vecBlockerOrigin, FIELD_VECTOR ),
 	DEFINE_KEYFIELD( m_iszTemplate, FIELD_STRING, "EntityTemplate" ),
 	DEFINE_KEYFIELD( m_angPostSpawnDirection, FIELD_VECTOR, "PostSpawnDirection" ),
 	DEFINE_KEYFIELD( m_flPostSpawnDirectionVariance, FIELD_FLOAT, "PostSpawnDirectionVariance" ),

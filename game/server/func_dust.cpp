@@ -101,8 +101,6 @@ END_SEND_TABLE()
 
 BEGIN_DATADESC( CFunc_Dust )
 
-	DEFINE_FIELD( m_DustFlags,FIELD_INTEGER ),
-
 	DEFINE_KEYFIELD( m_Color,		FIELD_COLOR32,	"Color" ),
 	DEFINE_KEYFIELD( m_SpawnRate,	FIELD_INTEGER,	"SpawnRate" ),
 	DEFINE_KEYFIELD( m_flSizeMin,	FIELD_FLOAT,	"SizeMin" ),
@@ -111,18 +109,15 @@ BEGIN_DATADESC( CFunc_Dust )
 	DEFINE_KEYFIELD( m_LifetimeMin,	FIELD_INTEGER,	"LifetimeMin" ),
 	DEFINE_KEYFIELD( m_LifetimeMax,	FIELD_INTEGER,	"LifetimeMax" ),
 	DEFINE_KEYFIELD( m_DistMax,		FIELD_INTEGER,	"DistMax" ),
-	DEFINE_FIELD( m_iAlpha,			FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_FallSpeed,	FIELD_FLOAT,	"FallSpeed" ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOn",  InputTurnOn ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOff", InputTurnOff )
 
-
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( func_dustmotes, CFunc_DustMotes );
 LINK_ENTITY_TO_CLASS( func_dustcloud, CFunc_DustCloud );
-
 
 // ------------------------------------------------------------------------------------- //
 // CFunc_DustMotes implementation.

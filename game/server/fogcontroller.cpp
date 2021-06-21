@@ -46,9 +46,6 @@ BEGIN_DATADESC( CFogController )
 	DEFINE_INPUTFUNC( FIELD_FLOAT,		"SetEndDistLerpTo",	InputSetEndDistLerpTo ),
 	DEFINE_INPUTFUNC( FIELD_VOID,		"StartFogTransition", InputStartFogTransition ),
 
-	// Quiet classcheck
-	//DEFINE_EMBEDDED( m_fog ),
-
 	DEFINE_KEYFIELD( m_bUseAngles,			FIELD_BOOLEAN,	"use_angles" ),
 	DEFINE_KEYFIELD( m_fog.colorPrimary,	FIELD_COLOR32,	"fogcolor" ),
 	DEFINE_KEYFIELD( m_fog.colorSecondary,	FIELD_COLOR32,	"fogcolor2" ),
@@ -62,14 +59,6 @@ BEGIN_DATADESC( CFogController )
 	DEFINE_KEYFIELD( m_fog.duration,		FIELD_FLOAT,	"foglerptime" ),
 
 	DEFINE_THINKFUNC( SetLerpValues ),
-
-	DEFINE_FIELD( m_iChangedVariables, FIELD_INTEGER ),
-
-	DEFINE_FIELD( m_fog.lerptime, FIELD_TIME ),
-	DEFINE_FIELD( m_fog.colorPrimaryLerpTo, FIELD_COLOR32 ),
-	DEFINE_FIELD( m_fog.colorSecondaryLerpTo, FIELD_COLOR32 ),
-	DEFINE_FIELD( m_fog.startLerpTo, FIELD_FLOAT ),
-	DEFINE_FIELD( m_fog.endLerpTo, FIELD_FLOAT ),
 
 END_DATADESC()
 

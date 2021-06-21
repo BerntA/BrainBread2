@@ -133,8 +133,6 @@ private:
 	CTraceListData *	m_pTraceListData;
 
 	EHANDLE				m_hLastBlockingEnt;
-
-	DECLARE_SIMPLE_DATADESC();
 };
 
 // ----------------------------------------------------------------------------

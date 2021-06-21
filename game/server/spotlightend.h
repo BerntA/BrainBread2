@@ -19,17 +19,10 @@
 
 class CSpotlightEnd : public CBaseEntity
 {
-	DECLARE_DATADESC();
 public:
 	DECLARE_CLASS( CSpotlightEnd, CBaseEntity );
 
 	void				Spawn( void );
-
-	int					ObjectCaps( void )
-	{
-		// Don't save and don't go across transitions
-		return (BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_DONT_SAVE; 
-	}
 
 	DECLARE_SERVERCLASS();
 

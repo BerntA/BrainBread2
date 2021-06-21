@@ -97,19 +97,6 @@ LINK_ENTITY_TO_CLASS( npc_soldier, CNPC_BaseSoldier );
 //---------------------------------------------------------
 BEGIN_DATADESC(CNPC_BaseSoldier)
 
-DEFINE_FIELD(m_nKickDamage, FIELD_INTEGER),
-DEFINE_FIELD(m_vecTossVelocity, FIELD_VECTOR),
-DEFINE_FIELD(m_hForcedGrenadeTarget, FIELD_EHANDLE),
-DEFINE_FIELD(m_bShouldPatrol, FIELD_BOOLEAN),
-DEFINE_FIELD(m_flNextPainSoundTime, FIELD_TIME),
-DEFINE_FIELD(m_flNextAlertSoundTime, FIELD_TIME),
-DEFINE_FIELD(m_flNextGrenadeCheck, FIELD_TIME),
-DEFINE_FIELD(m_flNextLostSoundTime, FIELD_TIME),
-DEFINE_FIELD(m_flAlertPatrolTime, FIELD_TIME),
-DEFINE_FIELD(m_nShots, FIELD_INTEGER),
-DEFINE_FIELD(m_flShotDelay, FIELD_FLOAT),
-DEFINE_FIELD(m_flStopMoveShootTime, FIELD_TIME),
-DEFINE_FIELD(m_flLastTimeRanForCover, FIELD_TIME),
 DEFINE_KEYFIELD(m_iNumGrenades, FIELD_INTEGER, "NumGrenades"),
 
 DEFINE_INPUTFUNC(FIELD_VOID, "LookOff", InputLookOff),
@@ -122,13 +109,10 @@ DEFINE_INPUTFUNC(FIELD_STRING, "Assault", InputAssault),
 
 DEFINE_INPUTFUNC(FIELD_STRING, "ThrowGrenadeAtTarget", InputThrowGrenadeAtTarget),
 
-DEFINE_FIELD(m_iLastAnimEventHandled, FIELD_INTEGER),
-
 DEFINE_KEYFIELD(m_iTacticalVariant, FIELD_INTEGER, "tacticalvariant"),
 DEFINE_KEYFIELD(m_iPathfindingVariant, FIELD_INTEGER, "pathfindingvariant"),
 
 END_DATADESC()
-
 
 //------------------------------------------------------------------------------
 // Constructor.
@@ -258,7 +242,7 @@ int CNPC_BaseSoldier::AllowEntityToBeGibbed(void)
 //-----------------------------------------------------------------------------
 void CNPC_BaseSoldier::Spawn( void )
 {
-	if (ParseNPC(entindex()))
+	if (ParseNPC(this))
 	{
 		SetHealth(m_iTotalHP);
 		SetMaxHealth(m_iTotalHP);
@@ -813,34 +797,30 @@ void CNPC_BaseSoldier::StartTask( const Task_t *pTask )
 
 	case TASK_FIND_COVER_FROM_ENEMY:
 		{
-			if (GetHintGroup() == NULL_STRING)
+			CBaseEntity *pEntity = GetEnemy();
+			// FIXME: this should be generalized by the schedules that are selected, or in the definition of 
+			// what "cover" means (i.e., trace attack vulnerability vs. physical attack vulnerability
+			if (pEntity)
 			{
-				CBaseEntity *pEntity = GetEnemy();
-
-				// FIXME: this should be generalized by the schedules that are selected, or in the definition of 
-				// what "cover" means (i.e., trace attack vulnerability vs. physical attack vulnerability
-				if ( pEntity )
+				// NOTE: This is a good time to check to see if the player is hurt.
+				// Have the soldier notice this and call out
+				if (!HasMemory(bits_MEMORY_PLAYER_HURT) && pEntity->IsPlayer() && pEntity->GetHealth() <= 20)
 				{
-					// NOTE: This is a good time to check to see if the player is hurt.
-					// Have the soldier notice this and call out
-					if ( !HasMemory(bits_MEMORY_PLAYER_HURT) && pEntity->IsPlayer() && pEntity->GetHealth() <= 20 )
+					if (m_pSquad)
 					{
-						if ( m_pSquad )
-						{
-							m_pSquad->SquadRemember(bits_MEMORY_PLAYER_HURT);
-						}
-
-						HL2MPRules()->EmitSoundToClient(this, "Taunt", GetNPCType(), GetGender());
-						JustMadeSound( SENTENCE_PRIORITY_HIGH );
+						m_pSquad->SquadRemember(bits_MEMORY_PLAYER_HURT);
 					}
-					if ( pEntity->MyNPCPointer() )
+
+					HL2MPRules()->EmitSoundToClient(this, "Taunt", GetNPCType(), GetGender());
+					JustMadeSound(SENTENCE_PRIORITY_HIGH);
+				}
+				if (pEntity->MyNPCPointer())
+				{
+					if (!(pEntity->MyNPCPointer()->CapabilitiesGet() & bits_CAP_WEAPON_RANGE_ATTACK1) &&
+						!(pEntity->MyNPCPointer()->CapabilitiesGet() & bits_CAP_INNATE_RANGE_ATTACK1))
 					{
-						if ( !(pEntity->MyNPCPointer()->CapabilitiesGet( ) & bits_CAP_WEAPON_RANGE_ATTACK1) && 
-							!(pEntity->MyNPCPointer()->CapabilitiesGet( ) & bits_CAP_INNATE_RANGE_ATTACK1) )
-						{
-							TaskComplete();
-							return;
-						}
+						TaskComplete();
+						return;
 					}
 				}
 			}
@@ -1749,7 +1729,6 @@ int CNPC_BaseSoldier::TranslateSchedule( int scheduleType )
 	case SCHED_SOLDIER_ASSAULT:
 		{
 			CBaseEntity *pEntity = GetEnemy();
-
 			// FIXME: this should be generalized by the schedules that are selected, or in the definition of 
 			// what "cover" means (i.e., trace attack vulnerability vs. physical attack vulnerability
 			if (pEntity && pEntity->MyNPCPointer())
@@ -1758,11 +1737,6 @@ int CNPC_BaseSoldier::TranslateSchedule( int scheduleType )
 				{
 					return TranslateSchedule( SCHED_ESTABLISH_LINE_OF_FIRE );
 				}
-			}
-			// don't charge forward if there's a hint group
-			if (GetHintGroup() != NULL_STRING)
-			{
-				return TranslateSchedule( SCHED_ESTABLISH_LINE_OF_FIRE );
 			}
 			return SCHED_SOLDIER_ASSAULT;
 		}
@@ -2834,7 +2808,6 @@ DEFINE_SCHEDULE
 	"	Tasks"
 	"		TASK_STOP_MOVING					0"
 	"		TASK_FIND_COVER_FROM_ENEMY			99"
-	"		TASK_FIND_FAR_NODE_COVER_FROM_ENEMY	384"
 	"		TASK_PLAY_SEQUENCE					ACTIVITY:ACT_RANGE_ATTACK2"
 	"		TASK_CLEAR_MOVE_WAIT				0"
 	"		TASK_RUN_PATH						0"

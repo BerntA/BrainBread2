@@ -30,7 +30,6 @@ public:
 	void	Precache( void );
 
 	DECLARE_SERVERCLASS();
-	DECLARE_DATADESC();
 
 public:
 

@@ -5,7 +5,6 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "ai_link.h"
 #include "ai_navtype.h"
 #include "ai_waypoint.h"
 #include "ai_pathfinder.h"
@@ -16,33 +15,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-BEGIN_SIMPLE_DATADESC(CAI_Path)
-	//					m_Waypoints	(reconsititute on load)
-	DEFINE_FIELD( m_goalTolerance,	FIELD_FLOAT ),
-	DEFINE_CUSTOM_FIELD( m_activity,	ActivityDataOps() ),
-	DEFINE_FIELD( m_target,			FIELD_EHANDLE ),
-	DEFINE_FIELD( m_sequence,		FIELD_INTEGER ),
-	DEFINE_FIELD( m_vecTargetOffset,	FIELD_VECTOR ),
-	DEFINE_FIELD( m_waypointTolerance, FIELD_FLOAT ),
-	DEFINE_CUSTOM_FIELD( m_arrivalActivity,	ActivityDataOps() ),
-	DEFINE_FIELD( m_arrivalSequence,		FIELD_INTEGER ),
-	//					m_iLastNodeReached
-	DEFINE_FIELD( m_bGoalPosSet,		FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_goalPos,			FIELD_POSITION_VECTOR),
-	DEFINE_FIELD( m_bGoalTypeSet,		FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_goalType,			FIELD_INTEGER ),
-	DEFINE_FIELD( m_goalFlags,		FIELD_INTEGER ),
-	DEFINE_FIELD( m_routeStartTime, FIELD_TIME ),
-	DEFINE_FIELD( m_goalDirection,	FIELD_VECTOR ),
-	DEFINE_FIELD( m_goalDirectionTarget, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_goalSpeed,	FIELD_FLOAT ),
-	DEFINE_FIELD( m_goalSpeedTarget, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_goalStoppingDistance, FIELD_FLOAT ),
-END_DATADESC()
-
 //-----------------------------------------------------------------------------
 AI_Waypoint_t CAI_Path::gm_InvalidWaypoint( Vector(0,0,0), 0, NAV_NONE, 0, 0 );
-
 //-----------------------------------------------------------------------------
 
 void CAI_Path::SetWaypoints(AI_Waypoint_t* route, bool fSetGoalFromLast) 
@@ -349,41 +323,6 @@ void CAI_Path::SetGoalPosition(const Vector &goalPos)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Sets last node as goal and goal position
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-void CAI_Path::SetLastNodeAsGoal(bool bReset)
-{
-	#ifdef _DEBUG
-		// Make sure goal position isn't set more than once
-		if (!bReset && m_bGoalPosSet == true)
-		{
-			DevMsg( "GetCurWaypoint Goal Position Set Twice!\n");
-		}
-	#endif	
-	
-	// Find the last node
-	if (GetCurWaypoint()) 
-	{
-		AI_Waypoint_t* waypoint = GetCurWaypoint();
-
-		while (waypoint)
-		{
-			if (!waypoint->GetNext())
-			{
-				m_goalPos = waypoint->GetPos();
-				m_bGoalPosSet = true;
-				waypoint->ModifyFlags( bits_WP_TO_GOAL, true );
-				return;
-			}
-			waypoint = waypoint->GetNext();
-		}
-	}
-}
-
-
-//-----------------------------------------------------------------------------
 // Purpose: Explicitly change the goal position w/o check
 // Input  :
 // Output :
@@ -483,18 +422,11 @@ void CAI_Path::Advance( void )
 	if (GetCurWaypoint()->GetNext()) 
 	{
 		AI_Waypoint_t *pNext = GetCurWaypoint()->GetNext();
-
-		// If waypoint was a node take note of it
-		if (GetCurWaypoint()->Flags() & bits_WP_TO_NODE)
-		{
-			m_iLastNodeReached = GetCurWaypoint()->iNodeID;
-		}
-
 		delete GetCurWaypoint();
 		SetWaypoints(pNext);
-
 		return;
 	}
+
 	// -------------------------------------------------
 	//  This is an error catch that should *not* happen
 	//  It means a route was created with no goal
@@ -649,8 +581,6 @@ void CAI_Path::ComputeRouteGoalDistances(AI_Waypoint_t *pGoalWaypoint)
 	}
 }
 
-
-
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 // Input  :
@@ -668,16 +598,10 @@ CAI_Path::CAI_Path()
 	m_routeStartTime	= FLT_MAX;
 	m_arrivalActivity	= ACT_INVALID;
 	m_arrivalSequence	= ACT_INVALID;
-
-	m_iLastNodeReached  = NO_NODE;
-
 	m_waypointTolerance = DEF_WAYPOINT_TOLERANCE;
-
 }
 
 CAI_Path::~CAI_Path()
 {
 	DeleteAll( GetCurWaypoint() );
 }
-
-

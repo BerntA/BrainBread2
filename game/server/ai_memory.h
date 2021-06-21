@@ -11,8 +11,6 @@
 #define AI_MEMORY_H
 #pragma once
 
-class CAI_Network;
-
 DECLARE_POINTER_HANDLE(AIEnemiesIter_t);
 
 const float AI_DEF_ENEMY_DISCARD_TIME = 60.0;
@@ -45,8 +43,6 @@ struct AI_EnemyInfo_t
 	bool			bEludedMe;			// True if enemy not at last known location 
 	bool			bUnforgettable;
 	bool			bMobbedMe;			// True if enemy was part of a mob at some point
-
-	DECLARE_SIMPLE_DATADESC();
 };
 
 //-----------------------------------------------------------------------------
@@ -70,7 +66,7 @@ public:
 	int				GetSerialNumber() const	{ return m_serial;		}
 
 	void			RefreshMemories(void);
-	bool			UpdateMemory( CAI_Network* pAINet, CBaseEntity *enemy, const Vector &vPosition, float reactionDelay, bool firstHand );
+	bool			UpdateMemory(CBaseEntity *enemy, const Vector &vPosition, float reactionDelay, bool firstHand);
 	void			OnTookDamageFrom( CBaseEntity *pEnemy );
 
 	bool			HasMemory( CBaseEntity *enemy );
@@ -100,8 +96,6 @@ public:
 	void			SetFreeKnowledgeDuration( float flDuration );
 	void			SetEnemyDiscardTime( float flTime );
 	float			GetEnemyDiscardTime( void ) const { return m_flEnemyDiscardTime; }
-
-	DECLARE_SIMPLE_DATADESC();
 
 	typedef CUtlMap<CBaseEntity *, AI_EnemyInfo_t*, unsigned char> CMemMap;
 

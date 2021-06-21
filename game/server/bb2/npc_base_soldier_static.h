@@ -13,19 +13,13 @@
 #include "ai_basenpc.h"
 #include "ai_basehumanoid.h"
 #include "ai_behavior.h"
-#include "ai_behavior_assault.h"
-#include "ai_behavior_standoff.h"
-#include "ai_behavior_follow.h"
 #include "ai_behavior_functank.h"
 #include "ai_behavior_rappel.h"
-#include "ai_behavior_actbusy.h"
-#include "ai_sentence.h"
 #include "ai_baseactor.h"
 #include "npc_base_properties.h"
 
 class CNPCBaseSoldierStatic : public CAI_BaseActor, public CNPCBaseProperties
 {
-	DECLARE_DATADESC();
 	DEFINE_CUSTOM_AI;
 	DECLARE_CLASS(CNPCBaseSoldierStatic, CAI_BaseActor);
 

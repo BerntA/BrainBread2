@@ -16,17 +16,6 @@
 LINK_ENTITY_TO_CLASS( baseprojectile, CBaseSpriteProjectile );
 
 //---------------------------------------------------------
-// Save/Restore
-//---------------------------------------------------------
-BEGIN_DATADESC( CBaseSpriteProjectile )
-
-	DEFINE_FIELD( m_iDmg,		FIELD_INTEGER ),
-	DEFINE_FIELD( m_iDmgType,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_hIntendedTarget, FIELD_EHANDLE ),
-
-END_DATADESC()
-
-//---------------------------------------------------------
 //---------------------------------------------------------
 void CBaseSpriteProjectile::Spawn(	char *pszModel,
 								const Vector &vecOrigin,

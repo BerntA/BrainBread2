@@ -21,7 +21,6 @@ enum MoveCollide_t;
 //=============================================================================
 class CBaseSpriteProjectile : public CSprite
 {
-	DECLARE_DATADESC();
 	DECLARE_CLASS( CBaseSpriteProjectile, CSprite );
 
 public:

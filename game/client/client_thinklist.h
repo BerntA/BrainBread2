@@ -66,8 +66,6 @@ public:
 	virtual void PreRender();
 	virtual void PostRender() { }
 	virtual void Update( float frametime );
-	virtual void OnSave() {}
-	virtual void OnRestore() {}
 	virtual void SafeRemoveIfDesired() {}
 
 private:

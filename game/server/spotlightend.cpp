@@ -22,20 +22,6 @@ IMPLEMENT_SERVERCLASS_ST(CSpotlightEnd, DT_SpotlightEnd)
 //	SendPropVector(SENDINFO(m_vSpotlightOrg), -1, SPROP_COORD),
 END_SEND_TABLE()
 
-
-//---------------------------------------------------------
-// Save/Restore
-//---------------------------------------------------------
-BEGIN_DATADESC( CSpotlightEnd )
-
-	DEFINE_FIELD( m_flLightScale, FIELD_FLOAT ),
-	DEFINE_FIELD( m_Radius, FIELD_FLOAT ),
-	DEFINE_FIELD( m_vSpotlightDir, FIELD_VECTOR ),
-	DEFINE_FIELD( m_vSpotlightOrg, FIELD_POSITION_VECTOR ),
-
-END_DATADESC()
-
-
 //------------------------------------------------------------------------------
 // Purpose :
 // Input   :

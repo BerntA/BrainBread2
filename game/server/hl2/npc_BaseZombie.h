@@ -12,7 +12,7 @@
 
 #include "ai_basenpc.h"
 #include "ai_blended_movement.h"
-#include "ai_behavior_actbusy.h"
+#include "ai_behavior.h"
 #include "npc_base_properties.h"
 #include "BasePropDoor.h"
 
@@ -79,7 +79,6 @@ abstract_class CNPC_BaseZombie : public CAI_BaseZombieBase, public CNPCBasePrope
 {
 	DECLARE_CLASS(CNPC_BaseZombie, CAI_BaseZombieBase);
 	DECLARE_SERVERCLASS();
-	DECLARE_DATADESC();
 	DEFINE_CUSTOM_AI;
 
 public:

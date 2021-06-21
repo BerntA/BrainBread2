@@ -97,7 +97,6 @@ friend class CTriggerSoundscape;
 
 public:
 	DECLARE_CLASS( CEnvSoundscapeTriggerable, CEnvSoundscape );
-	DECLARE_DATADESC();
 
 	CEnvSoundscapeTriggerable();
 	

@@ -131,9 +131,6 @@ public:
 
 	virtual bool OverrideMove( float flInterval );
 
-	virtual bool FValidateHintType( CAI_Hint *pHint );
-	virtual Activity GetHintActivity( short sHintType, Activity HintsActivity );
-
 	virtual void PainSound( const CTakeDamageInfo &info );
 	virtual void DeathSound( const CTakeDamageInfo &info );
 	virtual void IdleSound( void );

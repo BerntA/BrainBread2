@@ -37,16 +37,6 @@ extern ConVar    sk_plr_dmg_grenade;
 
 // Global Savedata for friction modifier
 BEGIN_DATADESC( CBaseGrenade )
-	//					nextGrenade
-	DEFINE_FIELD( m_hThrower, FIELD_EHANDLE ),
-	//					m_fRegisteredSound ???
-	DEFINE_FIELD( m_bIsLive, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_DmgRadius, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flDetonateTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flWarnAITime, FIELD_TIME ),
-	DEFINE_FIELD( m_flDamage, FIELD_FLOAT ),
-	DEFINE_FIELD( m_iszBounceSound, FIELD_STRING ),
-	DEFINE_FIELD( m_bHasWarnedAI,	FIELD_BOOLEAN ),
 
 	// Function Pointers
 	DEFINE_THINKFUNC( Smoke ),

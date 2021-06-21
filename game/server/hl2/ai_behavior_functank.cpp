@@ -16,13 +16,6 @@
 // How long to fire a func tank before running schedule selection again.
 #define FUNCTANK_FIRE_TIME	5.0f
 
-BEGIN_DATADESC( CAI_FuncTankBehavior )
-	DEFINE_FIELD( m_hFuncTank, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_bMounted, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flBusyTime, FIELD_TIME ),
-	DEFINE_FIELD( m_bSpottedPlayerOutOfCover, FIELD_BOOLEAN ),
-END_DATADESC();
-
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //--k---------------------------------------------------------------------------
@@ -53,11 +46,7 @@ bool CAI_FuncTankBehavior::CanSelectSchedule()
 	// Are you alive, in a script?
 	if ( !GetOuter()->IsInterruptable() )
 		return false;
-	
-	// Commander is giving you orders?
-	if ( GetOuter()->HasCondition( COND_RECEIVED_ORDERS ) )
-		return false;
-	
+
 	return true;
 }
 
@@ -164,8 +153,6 @@ void CAI_FuncTankBehavior::Dismount( void )
 
 	if ( m_hFuncTank )
 	{
-		GetOuter()->SpeakSentence( FUNCTANK_SENTENCE_DISMOUNTING );
-
 		Assert( m_hFuncTank->IsMarkedForDeletion() || m_hFuncTank->GetController() == GetOuter() );
 		
 		m_hFuncTank->NPC_SetInRoute( false );
@@ -218,10 +205,6 @@ void CAI_FuncTankBehavior::StartTask( const Task_t *pTask )
 	{
 	case TASK_FUNCTANK_ANNOUNCE_SCAN:
 		{
-			if ( random->RandomInt( 0, 3 ) == 0 )
-			{
-				GetOuter()->SpeakSentence( FUNCTANK_SENTENCE_SCAN_FOR_ENEMIES );
-			}
 			TaskComplete();
 		}
 		break;
@@ -288,8 +271,6 @@ void CAI_FuncTankBehavior::StartTask( const Task_t *pTask )
 
 			if ( GetOuter()->IsWeaponHolstered() || !GetOuter()->CanHolsterWeapon() )
 			{
-				GetOuter()->SpeakSentence( FUNCTANK_SENTENCE_JUST_MOUNTED );
-
 				// We are at the correct position and facing for the func_tank, mount it.
 				m_hFuncTank->StartControl( GetOuter() );
 				GetOuter()->ClearEnemyMemory();
@@ -419,8 +400,6 @@ void CAI_FuncTankBehavior::RunTask( const Task_t *pTask )
 
 			if ( GetOuter()->IsWeaponHolstered() )
 			{
-				GetOuter()->SpeakSentence( FUNCTANK_SENTENCE_JUST_MOUNTED );
-
 				// We are at the correct position and facing for the func_tank, mount it.
 				m_hFuncTank->StartControl( GetOuter() );
 				GetOuter()->ClearEnemyMemory();
@@ -710,7 +689,6 @@ AI_BEGIN_CUSTOM_SCHEDULE_PROVIDER( CAI_FuncTankBehavior )
 		"	Tasks"
 		"		TASK_SET_FAIL_SCHEDULE		SCHEDULE: SCHED_FAIL_MOVE_TO_FUNCTANK"
 		"		TASK_GET_PATH_TO_FUNCTANK	0"
-		"		TASK_SPEAK_SENTENCE			1000"	// FUNCTANK_SENTENCE_MOVE_TO_MOUNT
 		"		TASK_RUN_PATH				0"
 		"		TASK_WAIT_FOR_MOVEMENT		0"
 		"		TASK_STOP_MOVING			0"

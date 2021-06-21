@@ -19,17 +19,6 @@ END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS(ar2explosion, AR2Explosion);
 
-
-//---------------------------------------------------------
-// Save/Restore
-//---------------------------------------------------------
-BEGIN_DATADESC( AR2Explosion )
-
-	DEFINE_AUTO_ARRAY( m_szMaterialName, FIELD_CHARACTER ),
-
-END_DATADESC()
-
-
 AR2Explosion* AR2Explosion::CreateAR2Explosion(const Vector &pos)
 {
 	CBaseEntity *pEnt = CreateEntityByName(AR2EXPLOSION_ENTITYNAME);
@@ -72,14 +61,12 @@ private:
 	string_t m_iszMaterialName;
 };
 
-
 BEGIN_DATADESC( CEnvAR2Explosion )
 	DEFINE_INPUTFUNC(FIELD_VOID, "Explode", InputExplode),
 	DEFINE_KEYFIELD(m_iszMaterialName, FIELD_STRING, "material"),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( env_ar2explosion, CEnvAR2Explosion );
-
 
 //-----------------------------------------------------------------------------
 // Purpose: So you can see where this function begins and the last one ends.

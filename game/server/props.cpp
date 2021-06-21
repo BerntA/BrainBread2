@@ -712,31 +712,10 @@ BEGIN_DATADESC( CBreakableProp )
 	DEFINE_KEYFIELD( m_explodeDamage, FIELD_FLOAT, "ExplodeDamage"),	
 	DEFINE_KEYFIELD( m_explodeRadius, FIELD_FLOAT, "ExplodeRadius"),	
 	DEFINE_KEYFIELD( m_iMinHealthDmg, FIELD_INTEGER, "minhealthdmg" ),
-	DEFINE_FIELD( m_createTick, FIELD_INTEGER ),
-	DEFINE_FIELD( m_hBreaker, FIELD_EHANDLE ),
 	DEFINE_KEYFIELD( m_PerformanceMode, FIELD_INTEGER, "PerformanceMode" ),
-
 	DEFINE_KEYFIELD( m_iszBreakModelMessage, FIELD_STRING, "BreakModelMessage" ),
-
-	DEFINE_FIELD( m_flDmgModBullet, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flDmgModClub, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flDmgModExplosive, FIELD_FLOAT ),
-	DEFINE_FIELD( m_iszPhysicsDamageTableName, FIELD_STRING ),
-	DEFINE_FIELD( m_iszBreakableModel, FIELD_STRING ),
-	DEFINE_FIELD( m_iBreakableSkin, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iBreakableCount, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iMaxBreakableSize, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iszBasePropData, FIELD_STRING ),
-	DEFINE_FIELD( m_iInteractions,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_iNumBreakableChunks, FIELD_INTEGER ),
-	DEFINE_FIELD( m_nPhysgunState, FIELD_CHARACTER ),
 	DEFINE_KEYFIELD( m_iszPuntSound, FIELD_STRING, "puntsound" ),
-
 	DEFINE_KEYFIELD( m_flPressureDelay, FIELD_FLOAT, "PressureDelay" ),
-	DEFINE_FIELD( m_preferredCarryAngles, FIELD_VECTOR ),
-	DEFINE_FIELD( m_flDefaultFadeScale, FIELD_FLOAT ),
-	DEFINE_FIELD( m_bUsePuntSound, FIELD_BOOLEAN ),
-	// DEFINE_FIELD( m_mpBreakMode, mp_break_t ),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "Break", InputBreak ),
@@ -764,18 +743,6 @@ BEGIN_DATADESC( CBreakableProp )
 	DEFINE_THINKFUNC( AnimateThink ),
 	DEFINE_THINKFUNC( RampToDefaultFadeScale ),
 	DEFINE_ENTITYFUNC( BreakablePropTouch ),
-
-	// Physics Influence
-	DEFINE_FIELD( m_hPhysicsAttacker, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_flLastPhysicsInfluenceTime, FIELD_TIME ),
-
-	DEFINE_FIELD( m_bOriginalBlockLOS, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bBlockLOSSetByPropData, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bIsWalkableSetByPropData, FIELD_BOOLEAN ),
-
-	// Damage
-	DEFINE_FIELD( m_hLastAttacker, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hFlareEnt,	FIELD_EHANDLE ),
 
 END_DATADESC()
 
@@ -1679,16 +1646,11 @@ BEGIN_DATADESC( CDynamicProp )
 
 	// Fields
 	DEFINE_KEYFIELD( m_iszDefaultAnim, FIELD_STRING, "DefaultAnim"),	
-	DEFINE_FIELD(	 m_iGoalSequence, FIELD_INTEGER ),
-	DEFINE_FIELD(	 m_iTransitionDirection, FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_bRandomAnimator, FIELD_BOOLEAN, "RandomAnimation"),	
-	DEFINE_FIELD(	 m_flNextRandAnim, FIELD_TIME ),
 	DEFINE_KEYFIELD( m_flMinRandAnimTime, FIELD_FLOAT, "MinAnimTime"),
 	DEFINE_KEYFIELD( m_flMaxRandAnimTime, FIELD_FLOAT, "MaxAnimTime"),
 	DEFINE_KEYFIELD( m_bStartDisabled, FIELD_BOOLEAN, "StartDisabled" ),
 	DEFINE_KEYFIELD( m_bDisableBoneFollowers, FIELD_BOOLEAN, "DisableBoneFollowers" ),
-	DEFINE_FIELD(	 m_bUseHitboxesForRenderBox, FIELD_BOOLEAN ),
-	DEFINE_FIELD(	m_nPendingSequence, FIELD_SHORT ),
 		
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_STRING,	"SetAnimation",	InputSetAnimation ),
@@ -1707,8 +1669,6 @@ BEGIN_DATADESC( CDynamicProp )
 
 	// Function Pointers
 	DEFINE_THINKFUNC( AnimThink ),
-
-	DEFINE_EMBEDDED( m_BoneFollowerManager ),
 
 END_DATADESC()
 
@@ -1799,16 +1759,6 @@ void CDynamicProp::Spawn( )
 	{
 		AddSolidFlags( FSOLID_NOT_SOLID );
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CDynamicProp::OnRestore( void )
-{
-	BaseClass::OnRestore();
-
-	BoneFollowerHierarchyChanged();
 }
 
 void CDynamicProp::SetParent( CBaseEntity *pNewParent, int iAttachment )
@@ -2267,8 +2217,6 @@ BEGIN_DATADESC( CPhysicsProp )
 	DEFINE_INPUTFUNC( FIELD_VOID, "Sleep", InputSleep ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "DisableFloating", InputDisableFloating ),
 
-	DEFINE_FIELD( m_bAwake, FIELD_BOOLEAN ),
-
 	DEFINE_KEYFIELD( m_massScale, FIELD_FLOAT, "massscale" ),
 	DEFINE_KEYFIELD( m_inertiaScale, FIELD_FLOAT, "inertiascale" ),
 	DEFINE_KEYFIELD( m_damageType, FIELD_INTEGER, "Damagetype" ),
@@ -2285,9 +2233,6 @@ BEGIN_DATADESC( CPhysicsProp )
 	DEFINE_OUTPUT( m_OnPlayerUse, "OnPlayerUse" ),
 	DEFINE_OUTPUT( m_OnPlayerPickup, "OnPlayerPickup" ),
 	DEFINE_OUTPUT( m_OnOutOfWorld, "OnOutOfWorld" ),
-
-	DEFINE_FIELD( m_bThrownByPlayer, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bFirstCollisionAfterLaunch, FIELD_BOOLEAN ),
 
 	DEFINE_THINKFUNC( ClearFlagsThink ),
 
@@ -2712,7 +2657,7 @@ float CPhysicsProp::GetCarryDistanceOffset( void )
 //-----------------------------------------------------------------------------
 int CPhysicsProp::ObjectCaps()
 { 
-	int caps = BaseClass::ObjectCaps() | FCAP_WCEDIT_POSITION;
+	int caps = BaseClass::ObjectCaps();
 
 	if ( HasSpawnFlags( SF_PHYSPROP_ENABLE_PICKUP_OUTPUT ) )
 	{
@@ -3352,42 +3297,17 @@ enum
 
 void PlayLockSounds(CBaseEntity *pEdict, locksound_t *pls, int flocked, int fbutton);
 
-BEGIN_DATADESC_NO_BASE(locksound_t)
-
-	DEFINE_FIELD( sLockedSound,	FIELD_STRING),
-	DEFINE_FIELD( sLockedSentence,	FIELD_STRING ),
-	DEFINE_FIELD( sUnlockedSound,	FIELD_STRING ),
-	DEFINE_FIELD( sUnlockedSentence, FIELD_STRING ),
-	DEFINE_FIELD( iLockedSentence, FIELD_INTEGER ),
-	DEFINE_FIELD( iUnlockedSentence, FIELD_INTEGER ),
-	DEFINE_FIELD( flwaitSound,		FIELD_FLOAT ),
-	DEFINE_FIELD( flwaitSentence,	FIELD_FLOAT ),
-	DEFINE_FIELD( bEOFLocked,		FIELD_CHARACTER ),
-	DEFINE_FIELD( bEOFUnlocked,	FIELD_CHARACTER ),
-
-END_DATADESC()
-
 BEGIN_DATADESC(CBasePropDoor)
-	//DEFINE_FIELD(m_bLockedSentence, FIELD_CHARACTER),
-	//DEFINE_FIELD(m_bUnlockedSentence, FIELD_CHARACTER),	
 	DEFINE_KEYFIELD(m_nHardwareType, FIELD_INTEGER, "hardware"),
 	DEFINE_KEYFIELD(m_flAutoReturnDelay, FIELD_FLOAT, "returndelay"),
-	DEFINE_FIELD( m_hActivator, FIELD_EHANDLE ),
 	DEFINE_KEYFIELD(m_SoundMoving, FIELD_SOUNDNAME, "soundmoveoverride"),
 	DEFINE_KEYFIELD(m_SoundOpen, FIELD_SOUNDNAME, "soundopenoverride"),
 	DEFINE_KEYFIELD(m_SoundClose, FIELD_SOUNDNAME, "soundcloseoverride"),
 	DEFINE_KEYFIELD(m_ls.sLockedSound, FIELD_SOUNDNAME, "soundlockedoverride"),
 	DEFINE_KEYFIELD(m_ls.sUnlockedSound, FIELD_SOUNDNAME, "soundunlockedoverride"),
 	DEFINE_KEYFIELD(m_SlaveName, FIELD_STRING, "slavename" ),
-	DEFINE_FIELD(m_bLocked, FIELD_BOOLEAN),
-	//DEFINE_KEYFIELD(m_flBlockDamage, FIELD_FLOAT, "dmg"),
 	DEFINE_KEYFIELD( m_bForceClosed, FIELD_BOOLEAN, "forceclosed" ),
-	DEFINE_FIELD(m_eDoorState, FIELD_INTEGER),
-	DEFINE_FIELD( m_hMaster, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hBlocker, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_bFirstBlocked, FIELD_BOOLEAN ),
-	DEFINE_FIELD(m_flLastTimeUsed, FIELD_TIME),
-	//DEFINE_FIELD(m_hDoorList, FIELD_CLASSPTR),	// Reconstructed
+	//DEFINE_KEYFIELD(m_flBlockDamage, FIELD_FLOAT, "dmg"),
 	
 	DEFINE_INPUTFUNC(FIELD_VOID, "Open", InputOpen),
 	DEFINE_INPUTFUNC(FIELD_STRING, "OpenAwayFrom", InputOpenAwayFrom),
@@ -3405,7 +3325,6 @@ BEGIN_DATADESC(CBasePropDoor)
 	DEFINE_OUTPUT(m_OnClose, "OnClose"),
 	DEFINE_OUTPUT(m_OnOpen, "OnOpen"),
 	DEFINE_OUTPUT(m_OnLockedUse, "OnLockedUse" ),
-	DEFINE_EMBEDDED( m_ls ),
 
 	// Function Pointers
 	DEFINE_THINKFUNC(DoorOpenMoveDone),
@@ -4547,7 +4466,6 @@ public:
 	void	MoveDone( void );
 	void	BeginOpening(CBaseEntity *pOpenAwayFrom);
 	void	BeginClosing( void );
-	void	OnRestore( void );
 
 	void	DoorTeleportToSpawnPosition();
 
@@ -4618,17 +4536,8 @@ BEGIN_DATADESC(CPropDoorRotating)
 	DEFINE_KEYFIELD(m_vecAxis, FIELD_VECTOR, "axis"),
 	DEFINE_KEYFIELD(m_flDistance, FIELD_FLOAT, "distance"),
 	DEFINE_KEYFIELD( m_angRotationAjar, FIELD_VECTOR, "ajarangles" ),
-	DEFINE_FIELD( m_angRotationClosed, FIELD_VECTOR ),
-	DEFINE_FIELD( m_angRotationOpenForward, FIELD_VECTOR ),
-	DEFINE_FIELD( m_angRotationOpenBack, FIELD_VECTOR ),
-	DEFINE_FIELD( m_angGoal, FIELD_VECTOR ),
-	DEFINE_FIELD( m_hDoorBlocker, FIELD_EHANDLE ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetRotationDistance", InputSetRotationDistance ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetSpeed", InputSetSpeed ),
-	//m_vecForwardBoundsMin
-	//m_vecForwardBoundsMax
-	//m_vecBackBoundsMin
-	//m_vecBackBoundsMax
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(prop_door_rotating, CPropDoorRotating);
@@ -4880,18 +4789,6 @@ void CPropDoorRotating::CalculateDoorVolume( QAngle closedAngles, QAngle openAng
 	// Move this back into local space
 	*destMins -= GetAbsOrigin();
 	*destMaxs -= GetAbsOrigin();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CPropDoorRotating::OnRestore( void )
-{
-	BaseClass::OnRestore();
-
-	// Figure out our volumes of movement as this door opens
-	CalculateDoorVolume( GetLocalAngles(), m_angRotationOpenForward, &m_vecForwardBoundsMin, &m_vecForwardBoundsMax );
-	CalculateDoorVolume( GetLocalAngles(), m_angRotationOpenBack, &m_vecBackBoundsMin, &m_vecBackBoundsMax );
 }
 
 //-----------------------------------------------------------------------------
@@ -5364,8 +5261,6 @@ public:
 	CNetworkVar( int, m_iPhysicsMode );	// One of the PHYSICS_MULTIPLAYER_ defines.	
 	CNetworkVar( float, m_fMass );
 
-
-	DECLARE_DATADESC();
 	DECLARE_SERVERCLASS();
 
 	virtual void Activate()
@@ -5377,9 +5272,6 @@ public:
 };
 
 LINK_ENTITY_TO_CLASS( func_physbox_multiplayer, CPhysBoxMultiplayer );
-
-BEGIN_DATADESC( CPhysBoxMultiplayer )
-END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST( CPhysBoxMultiplayer, DT_PhysBoxMultiplayer )
 	SendPropInt( SENDINFO( m_iPhysicsMode ), 1, SPROP_UNSIGNED ),
@@ -5536,10 +5428,6 @@ LINK_ENTITY_TO_CLASS( prop_physics_multiplayer, CPhysicsPropMultiplayer );
 
 BEGIN_DATADESC( CPhysicsPropMultiplayer )
 	DEFINE_KEYFIELD( m_iPhysicsMode, FIELD_INTEGER, "physicsmode" ),
-	DEFINE_FIELD( m_fMass, FIELD_FLOAT ),
-	DEFINE_FIELD( m_usingCustomCollisionBounds, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_collisionMins, FIELD_VECTOR ),
-	DEFINE_FIELD( m_collisionMaxs, FIELD_VECTOR ),
 END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST( CPhysicsPropMultiplayer, DT_PhysicsPropMultiplayer )
@@ -5581,10 +5469,6 @@ LINK_ENTITY_TO_CLASS( prop_physics_respawnable, CPhysicsPropRespawnable );
 BEGIN_DATADESC( CPhysicsPropRespawnable )
 	DEFINE_THINKFUNC( Materialize ),
 	DEFINE_KEYFIELD( m_flRespawnTime, FIELD_FLOAT, "RespawnTime" ),
-	DEFINE_FIELD( m_vOriginalSpawnOrigin, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_vOriginalSpawnAngles, FIELD_VECTOR ),
-	DEFINE_FIELD( m_vOriginalMins, FIELD_VECTOR ),
-	DEFINE_FIELD( m_vOriginalMaxs, FIELD_VECTOR ),
 END_DATADESC()
 
 CPhysicsPropRespawnable::CPhysicsPropRespawnable( void )

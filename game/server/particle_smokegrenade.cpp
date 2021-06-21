@@ -21,16 +21,6 @@ END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( env_particlesmokegrenade, ParticleSmokeGrenade );
 
-BEGIN_DATADESC( ParticleSmokeGrenade )
-
-	DEFINE_FIELD( m_CurrentStage, FIELD_CHARACTER ),
-	DEFINE_FIELD( m_FadeStartTime, FIELD_TIME ),
-	DEFINE_FIELD( m_FadeEndTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flSpawnTime, FIELD_TIME ),
-
-END_DATADESC()
-
-
 ParticleSmokeGrenade::ParticleSmokeGrenade()
 {
 	m_CurrentStage = 0;
@@ -39,7 +29,6 @@ ParticleSmokeGrenade::ParticleSmokeGrenade()
 
 	m_flSpawnTime = gpGlobals->curtime;
 }
-
 
 // Smoke grenade particles should always transmitted to clients.  If not, a client who
 // enters the PVS late will see the smoke start billowing from then, allowing better vision.

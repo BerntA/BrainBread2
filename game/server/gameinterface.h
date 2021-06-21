@@ -208,6 +208,7 @@ public:
 };
 
 bool IsEngineThreaded();
+bool HasLoadedNAV(void);
 
 class CServerGameTags : public IServerGameTags
 {

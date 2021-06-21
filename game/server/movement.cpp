@@ -90,15 +90,8 @@ LINK_ENTITY_TO_CLASS( keyframe_track, CPathKeyFrame );
 
 BEGIN_DATADESC( CPathKeyFrame )
 
-	DEFINE_FIELD( m_Origin, FIELD_VECTOR ),
-	DEFINE_FIELD( m_Angles, FIELD_VECTOR ),
-	DEFINE_FIELD( m_qAngle, FIELD_QUATERNION ),
-
 	DEFINE_KEYFIELD( m_iNextKey, FIELD_STRING, "NextKey" ),
-	DEFINE_FIELD( m_flNextTime, FIELD_FLOAT ),	// derived from speed
 	DEFINE_KEYFIELD( m_flSpeed, FIELD_FLOAT, "MoveSpeed" ),
-	DEFINE_FIELD( m_pNextKey, FIELD_CLASSPTR ),
-	DEFINE_FIELD( m_pPrevKey, FIELD_CLASSPTR ),
 
 END_DATADESC()
 
@@ -310,17 +303,6 @@ BEGIN_DATADESC( CBaseMoveBehavior )
 //	DEFINE_KEYFIELD( m_iTimeModifier, FIELD_INTEGER, "TimeModifier" ),
 	DEFINE_KEYFIELD( m_iPositionInterpolator, FIELD_INTEGER, "PositionInterpolator" ),
 	DEFINE_KEYFIELD( m_iRotationInterpolator, FIELD_INTEGER, "RotationInterpolator" ),
-
-	DEFINE_FIELD( m_pCurrentKeyFrame, FIELD_CLASSPTR ),
-	DEFINE_FIELD( m_pTargetKeyFrame, FIELD_CLASSPTR ),
-	DEFINE_FIELD( m_pPreKeyFrame, FIELD_CLASSPTR ),
-	DEFINE_FIELD( m_pPostKeyFrame, FIELD_CLASSPTR ),
-	
-	DEFINE_FIELD( m_flAnimStartTime, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flAnimEndTime, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flAverageSpeedAcrossFrame, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flTimeIntoFrame, FIELD_FLOAT ),
-	DEFINE_FIELD( m_iDirection, FIELD_INTEGER ),
 
 END_DATADESC()
 

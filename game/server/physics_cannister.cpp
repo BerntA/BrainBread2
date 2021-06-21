@@ -20,7 +20,6 @@
 #include "props.h"
 #include "physics_cannister.h"
 #include "globals.h"
-#include "physics_saverestore.h"
 #include "shareddefs.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -30,13 +29,8 @@
 #define SF_CANNISTER_EXPLODE	0x0002
 
 BEGIN_SIMPLE_DATADESC( CThrustController )
-
-	DEFINE_FIELD( m_thrustVector,	FIELD_VECTOR ),
-	DEFINE_FIELD( m_torqueVector,	FIELD_VECTOR ),
 	DEFINE_KEYFIELD( m_thrust,		FIELD_FLOAT, "thrust" ),
-
 END_DATADESC()
-
 
 LINK_ENTITY_TO_CLASS( physics_cannister, CPhysicsCannister );
 
@@ -44,22 +38,13 @@ BEGIN_DATADESC( CPhysicsCannister )
 
 	DEFINE_OUTPUT( m_onActivate, "OnActivate" ),
 	DEFINE_OUTPUT( m_OnAwakened, "OnAwakened" ),
-	DEFINE_FIELD( m_thrustOrigin, FIELD_VECTOR ),	// this is a position, but in local space
+
 	DEFINE_EMBEDDED( m_thruster ),
-	DEFINE_PHYSPTR( m_pController ),
-	DEFINE_FIELD( m_pJet, FIELD_CLASSPTR ),
-	DEFINE_FIELD( m_active, FIELD_BOOLEAN ),
+
 	DEFINE_KEYFIELD( m_thrustTime, FIELD_FLOAT, "fuel" ),
 	DEFINE_KEYFIELD( m_damage, FIELD_FLOAT, "expdamage" ),
 	DEFINE_KEYFIELD( m_damageRadius, FIELD_FLOAT, "expradius" ),
-	DEFINE_FIELD( m_activateTime, FIELD_TIME ),
 	DEFINE_KEYFIELD( m_gasSound, FIELD_SOUNDNAME, "gassound" ),
-	DEFINE_FIELD( m_bFired, FIELD_BOOLEAN ),
-
-	// Physics Influence
-	DEFINE_FIELD( m_hPhysicsAttacker, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_flLastPhysicsInfluenceTime, FIELD_TIME ),
-	DEFINE_FIELD( m_hLauncher, FIELD_EHANDLE ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Activate", InputActivate ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Deactivate", InputDeactivate ),
@@ -97,15 +82,6 @@ void CPhysicsCannister::Spawn( void )
 	{
 		// must have a physics object or code will crash later
 		UTIL_Remove(this);
-	}
-}
-
-void CPhysicsCannister::OnRestore()
-{
-	BaseClass::OnRestore();
-	if ( m_pController )
-	{
-		m_pController->SetEventHandler( &m_thruster );
 	}
 }
 

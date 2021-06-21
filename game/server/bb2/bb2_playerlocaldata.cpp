@@ -48,39 +48,6 @@ SendPropBool(SENDINFO(m_bSliding)),
 
 END_SEND_TABLE()
 
-BEGIN_SIMPLE_DATADESC(CBB2PlayerLocalData)
-DEFINE_FIELD(m_iSkill_XPCurrent, FIELD_INTEGER),
-DEFINE_FIELD(m_iSkill_XPLeft, FIELD_INTEGER),
-DEFINE_FIELD(m_iSkill_Talents, FIELD_INTEGER),
-
-DEFINE_FIELD(m_iZombieCredits, FIELD_INTEGER),
-DEFINE_FIELD(m_flZombieRageThresholdDamage, FIELD_FLOAT),
-
-DEFINE_ARRAY(m_iPlayerSkills, FIELD_INTEGER, MAX_SKILL_ARRAY),
-DEFINE_FIELD(m_iPerkTeamBonus, FIELD_INTEGER),
-DEFINE_FIELD(m_bCanActivatePerk, FIELD_BOOLEAN),
-DEFINE_FIELD(m_bHasPlayerEscaped, FIELD_BOOLEAN),
-DEFINE_FIELD(m_bCanRespawnAsHuman, FIELD_BOOLEAN),
-
-DEFINE_FIELD(m_iActiveArmorType, FIELD_INTEGER),
-DEFINE_FIELD(m_flInfectionTimer, FIELD_FLOAT),
-DEFINE_FIELD(m_flCarryWeight, FIELD_FLOAT),
-DEFINE_FIELD(m_flPlayerRespawnTime, FIELD_FLOAT),
-DEFINE_FIELD(m_flPerkTimer, FIELD_FLOAT),
-
-DEFINE_FIELD(m_flPlayerSpeed, FIELD_FLOAT),
-DEFINE_FIELD(m_flLeapLength, FIELD_FLOAT),
-DEFINE_FIELD(m_flJumpHeight, FIELD_FLOAT),
-DEFINE_FIELD(m_flSlideKickCooldownEnd, FIELD_FLOAT),
-DEFINE_FIELD(m_flSlideKickCooldownStart, FIELD_FLOAT),
-DEFINE_FIELD(m_flNewSurfaceFriction, FIELD_FLOAT),
-DEFINE_FIELD(m_bPlayerJumped, FIELD_BOOLEAN),
-
-DEFINE_FIELD(m_flSlideTime, FIELD_TIME),
-DEFINE_FIELD(m_bStandToSlide, FIELD_BOOLEAN),
-DEFINE_FIELD(m_bSliding, FIELD_BOOLEAN),
-END_DATADESC()
-
 CBB2PlayerLocalData::CBB2PlayerLocalData()
 {
 	m_iSkill_XPCurrent = 0;

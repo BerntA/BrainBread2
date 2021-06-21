@@ -9,14 +9,10 @@
 #ifndef PARTICLE_FIRE_H
 #define PARTICLE_FIRE_H
 
-
 #include "baseparticleentity.h"
-
 
 class CParticleFire : public CBaseParticleEntity
 {
-	DECLARE_DATADESC();
-
 public:
 	CParticleFire();
 
@@ -29,8 +25,4 @@ public:
 	CNetworkVector( m_vDirection );
 };
 
-
 #endif
-
-
-

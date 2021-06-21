@@ -48,7 +48,6 @@ public:
 
 	void Spawn( void );
 	void Precache( void );
-	virtual void OnRestore();
 	bool CreateVPhysics();
 
 	DECLARE_DATADESC();

@@ -75,9 +75,6 @@ enum SquadSlot_T
 //---------------------------------------------------------
 LINK_ENTITY_TO_CLASS(npc_soldier_base, CNPCBaseSoldierStatic);
 
-BEGIN_DATADESC(CNPCBaseSoldierStatic)
-END_DATADESC()
-
 CNPCBaseSoldierStatic::CNPCBaseSoldierStatic()
 {
 	//UseClientSideAnimation(); // todo: KEEP?
@@ -126,7 +123,7 @@ int CNPCBaseSoldierStatic::AllowEntityToBeGibbed(void)
 
 void CNPCBaseSoldierStatic::Spawn(void)
 {
-	if (ParseNPC(entindex()))
+	if (ParseNPC(this))
 	{
 		SetHealth(m_iTotalHP);
 		SetMaxHealth(m_iTotalHP);

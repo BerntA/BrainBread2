@@ -75,12 +75,7 @@ BEGIN_DATADESC(CPointAngleSensor)
 	// Keys
 	DEFINE_KEYFIELD(m_bDisabled, FIELD_BOOLEAN, "StartDisabled"),
 	DEFINE_KEYFIELD(m_nLookAtName, FIELD_STRING, "lookatname"),
-	DEFINE_FIELD(m_hTargetEntity, FIELD_EHANDLE),
-	DEFINE_FIELD(m_hLookAtEntity, FIELD_EHANDLE),
 	DEFINE_KEYFIELD(m_flDuration, FIELD_FLOAT, "duration"),
-	DEFINE_FIELD(m_flDotTolerance, FIELD_FLOAT),
-	DEFINE_FIELD(m_flFacingTime, FIELD_TIME),
-	DEFINE_FIELD(m_bFired, FIELD_BOOLEAN),
 
 	// Outputs
 	DEFINE_OUTPUT(m_OnFacingLookat, "OnFacingLookat"),
@@ -431,7 +426,6 @@ BEGIN_DATADESC( CPointProximitySensor )
 
 	// Keys
 	DEFINE_KEYFIELD( m_bDisabled, FIELD_BOOLEAN, "StartDisabled" ),
-	DEFINE_FIELD( m_hTargetEntity, FIELD_EHANDLE ),
 
 	// Outputs
 	DEFINE_OUTPUT( m_Distance, "Distance"),

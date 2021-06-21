@@ -42,7 +42,6 @@ private:
 	CNetworkVar( float, m_scrollRate );
 	CNetworkVar( float, m_flWidth );
 
-	DECLARE_DATADESC();
 	DECLARE_SERVERCLASS();
 };
 

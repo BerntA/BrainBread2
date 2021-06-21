@@ -51,9 +51,6 @@ public:
 	virtual void Precache();
 	virtual void SetTransmit( CCheckTransmitInfo *pInfo, bool bAlways );
 
-	virtual int	 Restore( IRestore &restore );
-	virtual void OnRestore();
-
 	virtual void EnableRotationEffect(void);
 
 	CStudioHdr *GetModelPtr( void );
@@ -284,8 +281,6 @@ public:
 
 	void	GetInputDispatchEffectPosition( const char *sInputString, Vector &pOrigin, QAngle &pAngles );
 
-	virtual void	ModifyOrAppendCriteria( AI_CriteriaSet& set );
-
 	// Send a muzzle flash event to the client for this entity.
 	void DoMuzzleFlash();
 
@@ -425,11 +420,6 @@ private:
 	CStudioHdr			*m_pStudioHdr;
 	CThreadFastMutex	m_StudioHdrInitLock;
 	CThreadFastMutex	m_BoneSetupMutex;
-
-// FIXME: necessary so that cyclers can hack m_bSequenceFinished
-friend class CFlexCycler;
-friend class CCycler;
-friend class CBlendingCycler;
 };
 
 //-----------------------------------------------------------------------------

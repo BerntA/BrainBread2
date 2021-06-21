@@ -30,7 +30,6 @@ public:
 	virtual bool KeyValue( const char *szKeyName, const char *szValue );
 	virtual void Spawn();
 	virtual void Activate();
-	virtual void OnRestore();
 
 	const char *GetPanelName() const;
 

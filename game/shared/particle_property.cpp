@@ -30,7 +30,6 @@
 // Save/load
 //-----------------------------------------------------------------------------
 BEGIN_DATADESC_NO_BASE( CParticleProperty )
-	//		DEFINE_FIELD( m_pOuter, FIELD_CLASSPTR ),
 END_DATADESC()
 
 #ifdef CLIENT_DLL

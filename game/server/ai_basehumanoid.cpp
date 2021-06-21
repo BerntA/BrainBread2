@@ -100,17 +100,6 @@ bool CAI_BaseHumanoid::OnMoveBlocked( AIMoveResult_t *pResult )
 			DbgNavMsg1( this, "Setting ignore on object %s", pBlocker->GetDebugName() );
 			pBlocker->SetNavIgnore( 2.5 );
 		}
-#if 0
-		else
-		{
-			CPhysicsProp *pProp = dynamic_cast<CPhysicsProp*>( pBlocker );
-			if ( pProp && pProp->GetHealth() && pProp->GetExplosiveDamage() == 0.0 && GetActiveWeapon() && !GetActiveWeapon()->ClassMatches( "weapon_rpg" ) )
-			{
-				Msg( "!\n" );
-				// Destroy!
-			}
-		}
-#endif
 	}
 
 	return BaseClass::OnMoveBlocked( pResult );

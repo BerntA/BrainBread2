@@ -8,7 +8,6 @@
 #include "baseentity.h"
 #include "triggers.h"
 #include "props.h"
-#include "saverestore_utlvector.h"
 #include "hl2mp_gamerules.h"
 #include "hl2mp_player.h"
 #include "GameEventListener.h"

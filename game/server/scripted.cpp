@@ -17,9 +17,6 @@
 #include "ai_schedule.h"
 #include "ai_default.h"
 #include "ai_motor.h"
-#include "ai_hint.h"
-#include "ai_networkmanager.h"
-#include "ai_network.h"
 #include "engine/IEngineSound.h"
 #include "animation.h"
 #include "scripted.h"
@@ -54,40 +51,10 @@ BEGIN_DATADESC( CAI_ScriptedSequence )
 	DEFINE_KEYFIELD( m_fMoveTo, FIELD_INTEGER, "m_fMoveTo" ),
 	DEFINE_KEYFIELD( m_flRadius, FIELD_FLOAT, "m_flRadius" ),
 	DEFINE_KEYFIELD( m_flRepeat, FIELD_FLOAT, "m_flRepeat" ),
-
-	DEFINE_FIELD( m_bIsPlayingEntry, FIELD_BOOLEAN ),
 	DEFINE_KEYFIELD( m_bLoopActionSequence, FIELD_BOOLEAN, "m_bLoopActionSequence" ),
 	DEFINE_KEYFIELD( m_bSynchPostIdles, FIELD_BOOLEAN, "m_bSynchPostIdles" ),
 	DEFINE_KEYFIELD( m_bIgnoreGravity, FIELD_BOOLEAN, "m_bIgnoreGravity" ),
 	DEFINE_KEYFIELD( m_bDisableNPCCollisions, FIELD_BOOLEAN, "m_bDisableNPCCollisions" ),
-
-	DEFINE_FIELD( m_iDelay, FIELD_INTEGER ),
-	DEFINE_FIELD( m_bDelayed, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_startTime, FIELD_TIME ),
-	DEFINE_FIELD( m_bWaitForBeginSequence, FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_saved_effects, FIELD_INTEGER ),
-	DEFINE_FIELD( m_savedFlags, FIELD_INTEGER ),
-	DEFINE_FIELD( m_savedCollisionGroup, FIELD_INTEGER ),
-	
-	DEFINE_FIELD( m_interruptable, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_sequenceStarted, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_hTargetEnt, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hNextCine, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hLastFoundEntity, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hForcedTarget, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_bDontCancelOtherSequences, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bForceSynch, FIELD_BOOLEAN ),
-	
-	DEFINE_FIELD( m_bThinking, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bInitiatedSelfDelete, FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_bIsTeleportingDueToMoveTo, FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_matInteractionPosition, FIELD_VMATRIX ),
-	DEFINE_FIELD( m_hInteractionRelativeEntity, FIELD_EHANDLE ),
-
-	DEFINE_FIELD( m_bTargetWasAsleep, FIELD_BOOLEAN ),
 
 	// Function Pointers
 	DEFINE_THINKFUNC( ScriptThink ),
@@ -761,11 +728,7 @@ void CAI_ScriptedSequence::StartScript( void )
 //-----------------------------------------------------------------------------
 void CAI_ScriptedSequence::ScriptThink( void )
 {
-	if ( g_pAINetworkManager && !g_pAINetworkManager->IsInitialized() )
-	{
-		SetNextThink( gpGlobals->curtime + 0.1f );
-	}
-	else if (FindEntity())
+	if (FindEntity())
 	{
 		StartScript( );
 		DevMsg( 2,  "scripted_sequence %d:\"%s\" using NPC %d:\"%s\"(%s)\n", entindex(), GetDebugName(), GetTarget()->entindex(), GetTarget()->GetEntityName().ToCStr(), STRING( m_iszEntity ) );
@@ -1243,7 +1206,6 @@ void CAI_ScriptedSequence::SetupInteractionPosition( CBaseEntity *pRelativeEntit
 	m_hInteractionRelativeEntity = pRelativeEntity;
 }
 
-extern ConVar ai_debug_dyninteractions;
 //-----------------------------------------------------------------------------
 // Purpose: Modify the target AutoMovement() position before the NPC moves.
 //-----------------------------------------------------------------------------
@@ -1264,13 +1226,6 @@ void CAI_ScriptedSequence::ModifyScriptedAutoMovement( Vector *vecNewPos )
 			angRelativeAngles[YAW] = pNPC->GetInteractionYaw();
 		}
 
-		bool bDebug = ai_debug_dyninteractions.GetInt() == 2;
-		if ( bDebug )
-		{
-			Msg("--\n%s current org: %f %f\n", m_hTargetEnt->GetDebugName(), m_hTargetEnt->GetAbsOrigin().x, m_hTargetEnt->GetAbsOrigin().y );
-			Msg("%s current org: %f %f", m_hInteractionRelativeEntity->GetDebugName(), vecRelativeOrigin.x, vecRelativeOrigin.y );
-		}
-
 		CBaseAnimating *pAnimating = dynamic_cast<CBaseAnimating*>(m_hInteractionRelativeEntity.Get());
 		if ( pAnimating )
 		{
@@ -1278,17 +1233,7 @@ void CAI_ScriptedSequence::ModifyScriptedAutoMovement( Vector *vecNewPos )
 			QAngle vecDeltaAngles;
  			pAnimating->GetSequenceMovement( pAnimating->GetSequence(), 0.0f, pAnimating->GetCycle(), vecDeltaPos, vecDeltaAngles );
  			VectorYawRotate( vecDeltaPos, pAnimating->GetLocalAngles().y, vecDeltaPos );
-
-			if ( bDebug )
-			{
-				NDebugOverlay::Box( vecRelativeOrigin, -Vector(2,2,2), Vector(2,2,2), 0,255,0, 8, 0.1 );
-			}
 			vecRelativeOrigin -= vecDeltaPos;
-			if ( bDebug )
-			{
-				Msg(", relative to sequence start: %f %f\n", vecRelativeOrigin.x, vecRelativeOrigin.y );
-				NDebugOverlay::Box( vecRelativeOrigin, -Vector(3,3,3), Vector(3,3,3), 255,0,0, 8, 0.1 );
-			}
 		}
 
 		// We've been asked to maintain a specific position relative to the other NPC
@@ -1303,19 +1248,8 @@ void CAI_ScriptedSequence::ModifyScriptedAutoMovement( Vector *vecNewPos )
 		vecOrigin = matLocalToWorld.GetTranslation();
  		MatrixToAngles( matLocalToWorld, angAngles );
 
-		if ( bDebug )
-		{
-			Msg("Desired Origin for %s: %f %f\n", m_hTargetEnt->GetDebugName(), vecOrigin.x, vecOrigin.y );
-			NDebugOverlay::Axis( vecOrigin, angAngles, 5, true, 0.1 );
-		}
-
 		// Lerp to it over time
    		Vector vecToTarget = (vecOrigin - *vecNewPos);
-		if ( bDebug )
-		{
-			Msg("Automovement's output origin: %f %f\n", (*vecNewPos).x, (*vecNewPos).y );
-			Msg("Vector from automovement to desired: %f %f\n", vecToTarget.x, vecToTarget.y );
-		}
 		*vecNewPos += (vecToTarget * pAnimating->GetCycle());
 	}
 }
@@ -1611,18 +1545,13 @@ private:
 
 BEGIN_DATADESC( CAI_ScriptedSchedule )
 
-	DEFINE_FIELD( m_hLastFoundEntity, FIELD_EHANDLE ),
-	DEFINE_KEYFIELD( m_flRadius, FIELD_FLOAT, "m_flRadius" ),
-	
+	DEFINE_KEYFIELD( m_flRadius, FIELD_FLOAT, "m_flRadius" ),	
 	DEFINE_KEYFIELD( m_iszEntity, FIELD_STRING, "m_iszEntity" ),
 	DEFINE_KEYFIELD( m_nSchedule, FIELD_INTEGER, "schedule" ),
 	DEFINE_KEYFIELD( m_nForceState, FIELD_INTEGER, "forcestate" ),
 	DEFINE_KEYFIELD( m_sGoalEnt, FIELD_STRING, "goalent" ),
 	DEFINE_KEYFIELD( m_bGrabAll, FIELD_BOOLEAN, "graball" ),
 	DEFINE_KEYFIELD( m_Interruptability, FIELD_INTEGER, "interruptability"),
-
-	DEFINE_FIELD( m_bDidFireOnce, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_hActivator, FIELD_EHANDLE ),
 
 	DEFINE_THINKFUNC( ScriptThink ),
 
@@ -1725,17 +1654,8 @@ void CAI_ScriptedSchedule::StartSchedule( CAI_BaseNPC *pTarget )
 	// NOTE: !!! all possible choices require a goal ent currently
 	if ( !pGoalEnt ) 
 	{
-		CHintCriteria hintCriteria;
-		hintCriteria.SetGroup( m_sGoalEnt );
-		hintCriteria.SetHintType( HINT_ANY );
-		hintCriteria.AddIncludePosition( pTarget->GetAbsOrigin(), FLT_MAX );
-		CAI_Hint *pHint = CAI_HintManager::FindHint( pTarget->GetAbsOrigin(), hintCriteria );
-		if ( !pHint )
-		{
-			DevMsg( 1, "Can't find goal entity %s\nCan't execute script %s\n", STRING(m_sGoalEnt), GetDebugName() );
-			return;
-		}
-		pGoalEnt = pHint;
+		DevMsg(1, "Can't find goal entity %s\nCan't execute script %s\n", STRING(m_sGoalEnt), GetDebugName());
+		return;
 	}
 	
 	static NPC_STATE forcedStatesMap[] = 
@@ -1902,319 +1822,6 @@ void CAI_ScriptedSchedule::StopSchedule( CAI_BaseNPC *pTarget )
 		pTarget->ClearSchedule( "Stopping scripted schedule" );
 	}
 }
-
-class CAI_ScriptedSentence : public CPointEntity
-{
-public:
-	DECLARE_CLASS( CAI_ScriptedSentence, CPointEntity );
-
-	void Spawn( void );
-	bool KeyValue( const char *szKeyName, const char *szValue );
-	void FindThink( void );
-	void DelayThink( void );
-	int	 ObjectCaps( void ) { return (BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION); }
-
-	// Input handlers
-	void InputBeginSentence( inputdata_t &inputdata );
-
-	DECLARE_DATADESC();
-
-	CAI_BaseNPC *FindEntity( void );
-	bool AcceptableSpeaker( CAI_BaseNPC *pNPC );
-	int StartSentence( CAI_BaseNPC *pTarget );
-
-private:
-	string_t m_iszSentence;		// string index for sentence name
-	string_t m_iszEntity;	// entity that is wanted for this sentence
-	float	m_flRadius;		// range to search
-	float	m_flDelay;	// How long the sentence lasts
-	float	m_flRepeat;	// repeat rate
-	soundlevel_t	m_iSoundLevel;
-	int		m_TempAttenuation;
-	float	m_flVolume;
-	bool	m_active;
-	string_t m_iszListener;	// name of entity to look at while talking
-	CBaseEntity *m_pActivator;
-
-	COutputEvent m_OnBeginSentence;
-	COutputEvent m_OnEndSentence;
-};
-
-
-#define SF_SENTENCE_ONCE				0x0001
-#define SF_SENTENCE_FOLLOWERS			0x0002	// only say if following player
-#define SF_SENTENCE_INTERRUPT			0x0004	// force talking except when dead
-#define SF_SENTENCE_CONCURRENT			0x0008	// allow other people to keep talking
-#define SF_SENTENCE_SPEAKTOACTIVATOR	0x0010
-
-BEGIN_DATADESC( CAI_ScriptedSentence )
-
-	DEFINE_KEYFIELD( m_iszSentence, FIELD_STRING, "sentence" ),
-	DEFINE_KEYFIELD( m_iszEntity, FIELD_STRING, "entity" ),
-	DEFINE_KEYFIELD( m_flRadius, FIELD_FLOAT, "radius" ),
-	DEFINE_KEYFIELD( m_flDelay, FIELD_FLOAT, "delay" ),
-	DEFINE_KEYFIELD( m_flRepeat, FIELD_FLOAT, "refire" ),
-	DEFINE_KEYFIELD( m_iszListener, FIELD_STRING, "listener" ),
-
-	DEFINE_KEYFIELD( m_TempAttenuation, FIELD_INTEGER, "attenuation" ),
-
-	DEFINE_FIELD( m_iSoundLevel, FIELD_INTEGER ),
-	DEFINE_FIELD( m_flVolume, FIELD_FLOAT ),
-	DEFINE_FIELD( m_active, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_pActivator, FIELD_EHANDLE ),
-
-	// Function Pointers
-	DEFINE_FUNCTION( FindThink ),
-	DEFINE_FUNCTION( DelayThink ),
-
-	// Inputs
-	DEFINE_INPUTFUNC(FIELD_VOID, "BeginSentence", InputBeginSentence),
-
-	// Outputs
-	DEFINE_OUTPUT(m_OnBeginSentence, "OnBeginSentence"),
-	DEFINE_OUTPUT(m_OnEndSentence, "OnEndSentence"),
-
-END_DATADESC()
-
-
-
-LINK_ENTITY_TO_CLASS( scripted_sentence, CAI_ScriptedSentence );
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : szKeyName - 
-//			szValue - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CAI_ScriptedSentence::KeyValue( const char *szKeyName, const char *szValue )
-{
-	if(FStrEq(szKeyName, "volume"))
-	{
-		m_flVolume = atof( szValue ) * 0.1;
-	}
-	else
-	{
-		return BaseClass::KeyValue( szKeyName, szValue );
-	}
-
-	return true;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Input handler for starting the scripted sentence.
-//-----------------------------------------------------------------------------
-void CAI_ScriptedSentence::InputBeginSentence( inputdata_t &inputdata )
-{
-	if ( !m_active )
-		return;
-
-	m_pActivator = inputdata.pActivator;
-
-	//Msg( "Firing sentence: %s\n", STRING( m_iszSentence ));
-	SetThink( &CAI_ScriptedSentence::FindThink );
-	SetNextThink( gpGlobals->curtime );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_ScriptedSentence::Spawn( void )
-{
-	SetSolid( SOLID_NONE );
-	
-	m_active = true;
-	// if no targetname, start now
-	if ( !GetEntityName() )
-	{
-		SetThink( &CAI_ScriptedSentence::FindThink );
-		SetNextThink( gpGlobals->curtime + 1.0f );
-	}
-
-	switch( m_TempAttenuation )
-	{
-	case 1: // Medium radius
-		m_iSoundLevel = SNDLVL_80dB;
-		break;
-	
-	case 2:	// Large radius
-		m_iSoundLevel = SNDLVL_85dB;
-		break;
-
-	case 3:	//EVERYWHERE
-		m_iSoundLevel = SNDLVL_NONE;
-		break;
-	
-	default:
-	case 0: // Small radius
-		m_iSoundLevel = SNDLVL_70dB;
-		break;
-	}
-	m_TempAttenuation = 0;
-
-	// No volume, use normal
-	if ( m_flVolume <= 0 )
-		m_flVolume = 1.0;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_ScriptedSentence::FindThink( void )
-{
-	CAI_BaseNPC *pNPC = FindEntity();
-	if ( pNPC )
-	{
-		int index = StartSentence( pNPC );
-		float length = engine->SentenceLength(index);
-		
-		m_OnEndSentence.FireOutput(NULL, this, length + m_flRepeat);
-
-		if ( m_spawnflags & SF_SENTENCE_ONCE )
-			UTIL_Remove( this );
-		
-		float delay = m_flDelay + length + 0.1;
-		if ( delay < 0 )
-			delay = 0;
-
-		SetThink( &CAI_ScriptedSentence::DelayThink );
-		// calculate delay dynamically because this could play a sentence group
-		// rather than a single sentence.
-		// add 0.1 because the sound engine mixes ahead -- the sentence will actually start ~0.1 secs from now
-		SetNextThink( gpGlobals->curtime + delay + m_flRepeat );
-		m_active = false;
-		//Msg( "%s: found NPC %s\n", STRING(m_iszSentence), STRING(m_iszEntity) );
-	}
-	else
-	{
-		//Msg( "%s: can't find NPC %s\n", STRING(m_iszSentence), STRING(m_iszEntity) );
-		SetNextThink( gpGlobals->curtime + m_flRepeat + 0.5 );
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_ScriptedSentence::DelayThink( void )
-{
-	m_active = true;
-	if ( !GetEntityName() )
-		SetNextThink( gpGlobals->curtime + 0.1f );
-	SetThink( &CAI_ScriptedSentence::FindThink );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pNPC - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CAI_ScriptedSentence::AcceptableSpeaker( CAI_BaseNPC *pNPC )
-{
-	if ( pNPC )
-	{
-		if ( m_spawnflags & SF_SENTENCE_FOLLOWERS )
-		{
-			if ( pNPC->GetTarget() == NULL || !pNPC->GetTarget()->IsPlayer() )
-				return false;
-		}
-		bool override;
-		if ( m_spawnflags & SF_SENTENCE_INTERRUPT )
-			override = true;
-		else
-			override = false;
-		if ( pNPC->CanPlaySentence( override ) )
-			return true;
-	}
-	return false;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Output : 
-//-----------------------------------------------------------------------------
-CAI_BaseNPC *CAI_ScriptedSentence::FindEntity( void )
-{
-	CBaseEntity *pentTarget;
-	CAI_BaseNPC *pNPC;
-
-	pentTarget = gEntList.FindEntityByName( NULL, m_iszEntity );
-	pNPC = NULL;
-
-	while (pentTarget)
-	{
-		pNPC = pentTarget->MyNPCPointer();
-		if ( pNPC != NULL )
-		{
-			if ( AcceptableSpeaker( pNPC ) )
-				return pNPC;
-			//Msg( "%s (%s), not acceptable\n", pNPC->GetClassname(), pNPC->GetDebugName() );
-		}
-		pentTarget = gEntList.FindEntityByName( pentTarget, m_iszEntity );
-	}
-	
-	CBaseEntity *pEntity = NULL;
-	for ( CEntitySphereQuery sphere( GetAbsOrigin(), m_flRadius, FL_NPC ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
-	{
-		if (FClassnameIs( pEntity, STRING(m_iszEntity)))
-		{
-			pNPC = pEntity->MyNPCPointer( );
-			if ( AcceptableSpeaker( pNPC ) )
-				return pNPC;
-		}
-	}
-	
-	return NULL;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : pTarget - 
-// Output : 
-//-----------------------------------------------------------------------------
-int CAI_ScriptedSentence::StartSentence( CAI_BaseNPC *pTarget )
-{
-	if ( !pTarget )
-	{
-		DevMsg( 2, "Not Playing sentence %s\n", STRING(m_iszSentence) );
-		return -1;
-	}
-
-	bool bConcurrent = false;
-	if ( !(m_spawnflags & SF_SENTENCE_CONCURRENT) )
-		bConcurrent = true;
-
-	CBaseEntity *pListener = NULL;
-
-	if ( m_spawnflags & SF_SENTENCE_SPEAKTOACTIVATOR )
-	{
-		pListener = m_pActivator;
-	}
-	else if (m_iszListener != NULL_STRING)
-	{
-		float radius = m_flRadius;
-
-		if ( FStrEq( STRING(m_iszListener ), "!player" ) )
-			radius = MAX_TRACE_LENGTH;	// Always find the player
-
-		pListener = gEntList.FindEntityGenericNearest( STRING( m_iszListener ), pTarget->GetAbsOrigin(), radius, this, NULL );
-	}
-
-	int sentenceIndex = pTarget->PlayScriptedSentence( STRING(m_iszSentence), m_flDelay,  m_flVolume, m_iSoundLevel, bConcurrent, pListener );
-	DevMsg( 2, "Playing sentence %s\n", STRING(m_iszSentence) );
-
-	m_OnBeginSentence.FireOutput(NULL, this);
-
-	return sentenceIndex;
-}
-
-
 
 // HACKHACK: This is a little expensive with the dynamic_cast<> and all, but it lets us solve
 // the problem of matching scripts back to entities without new state.

@@ -22,7 +22,6 @@
 class CBaseFire : public CBaseEntity
 {
 public:
-	DECLARE_DATADESC();
 	DECLARE_CLASS( CBaseFire, CBaseEntity );
 
 	CBaseFire( void );
@@ -64,7 +63,6 @@ public:
 	void	EnableVisibleFromAbove( int state = true );
 	
 	DECLARE_SERVERCLASS();
-	DECLARE_DATADESC();
 
 public:
 

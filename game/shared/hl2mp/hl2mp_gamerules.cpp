@@ -8,15 +8,10 @@
 #include "cbase.h"
 #include "hl2mp_gamerules.h"
 #include "viewport_panel_names.h"
-#include "gameeventdefs.h"
 #include <KeyValues.h>
 #include "ammodef.h"
 #include "GameBase_Shared.h"
 #include "random_extended.h"
-
-#ifdef BB2_AI
-#include "hl2_shareddefs.h"
-#endif //BB2_AI
 
 #ifdef CLIENT_DLL
 #include "c_hl2mp_player.h"
@@ -36,7 +31,6 @@
 #include "in_buttons.h"
 #include <ctype.h>
 #include "voice_gamemgr.h"
-#include "iscorer.h"
 #include "hl2mp_player.h"
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
 #include "team.h"
@@ -198,8 +192,6 @@ IMPLEMENT_NETWORKCLASS_ALIASED( HL2MPGameRulesProxy, DT_HL2MPGameRulesProxy )
 
 static const char *s_PreserveEnts[] =
 {
-	"ai_network",
-	"ai_hint",
 	"hl2mp_gamerules",
 	"team_manager",
 	"player_manager",
@@ -215,9 +207,7 @@ static const char *s_PreserveEnts[] =
 	"func_reflective_glass",
 	"infodecal",
 	"info_projecteddecal",
-	"info_node",
 	"info_target",
-	"info_node_hint",
 	"info_player_deathmatch",
 	"info_player_start",
 	"info_start_camera",
@@ -2195,7 +2185,7 @@ bool CHL2MPRules::ShouldCollide(int collisionGroup0, int collisionGroup1)
 	if (collisionGroup1 == COLLISION_GROUP_NPC_ACTOR && collisionGroup0 != COLLISION_GROUP_PLAYER)
 		collisionGroup1 = COLLISION_GROUP_NPC;
 
-	if (collisionGroup1 == HL2COLLISION_GROUP_CROW)
+	if (collisionGroup1 == COLLISION_GROUP_NPC_CROW)
 	{
 		if (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_NPC ||
 			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE ||
@@ -2203,13 +2193,9 @@ bool CHL2MPRules::ShouldCollide(int collisionGroup0, int collisionGroup1)
 			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING ||
 			collisionGroup0 == COLLISION_GROUP_NPC_MILITARY ||
 			collisionGroup0 == COLLISION_GROUP_NPC_MERCENARY ||
-			collisionGroup0 == HL2COLLISION_GROUP_CROW)
+			collisionGroup0 == COLLISION_GROUP_NPC_CROW)
 			return false;
 	}
-
-	// gunships don't collide with other gunships
-	if (collisionGroup0 == HL2COLLISION_GROUP_GUNSHIP && collisionGroup1 == HL2COLLISION_GROUP_GUNSHIP)
-		return false;
 
 	// players don't collide against NPC Actors.
 	// I could've done this up where I check if collisionGroup0 is NOT a player but I decided to just

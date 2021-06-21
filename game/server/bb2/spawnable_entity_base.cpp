@@ -17,7 +17,6 @@
 #include "tier0/memdbgon.h"
 
 BEGIN_DATADESC(CSpawnableEntity)
-DEFINE_FIELD(m_bShouldCreate, FIELD_BOOLEAN),
 
 DEFINE_KEYFIELD(m_flMinRespawnDelay, FIELD_FLOAT, "MinRespawnDelay"),
 DEFINE_KEYFIELD(m_flMaxRespawnDelay, FIELD_FLOAT, "MaxRespawnDelay"),

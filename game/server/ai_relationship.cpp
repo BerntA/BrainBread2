@@ -41,7 +41,6 @@ public:
 	void RevertToDefaultRelationship( CBaseEntity *pActivator = NULL, CBaseEntity *pCaller = NULL );
 
 	void UpdateOnRemove();
-	void OnRestore();
 
 	bool IsASubject( CBaseEntity *pEntity );
 	bool IsATarget( CBaseEntity *pEntity );
@@ -83,10 +82,7 @@ BEGIN_DATADESC( CAI_Relationship )
 	DEFINE_KEYFIELD( m_iDisposition, FIELD_INTEGER, "disposition" ),
 	DEFINE_KEYFIELD( m_iRank, FIELD_INTEGER, "rank" ),
 	DEFINE_KEYFIELD( m_fStartActive, FIELD_BOOLEAN, "StartActive" ),
-	DEFINE_FIELD( m_bIsActive, FIELD_BOOLEAN ),
 	DEFINE_KEYFIELD( m_flRadius, FIELD_FLOAT, "radius" ),
-	DEFINE_FIELD( m_iPreviousDisposition, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iPreviousRank, FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_bReciprocal, FIELD_BOOLEAN, "reciprocal" ),
 
 	// Inputs
@@ -244,18 +240,6 @@ void CAI_Relationship::UpdateOnRemove()
 	// RevertRelationship();
 	BaseClass::UpdateOnRemove();
 }
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-void CAI_Relationship::OnRestore()
-{
-	BaseClass::OnRestore();
-	if ( m_bIsActive )
-	{
-		gEntList.AddListenerEntity( this );
-	}
-}
-
 
 //---------------------------------------------------------
 //---------------------------------------------------------

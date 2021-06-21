@@ -54,7 +54,6 @@ public:
 
 class RocketTrail : public CBaseParticleEntity
 {
-	DECLARE_DATADESC();
 public:
 	DECLARE_CLASS( RocketTrail, CBaseParticleEntity );
 	DECLARE_SERVERCLASS();
@@ -94,7 +93,6 @@ public:
 
 class SporeTrail : public CBaseParticleEntity
 {
-	DECLARE_DATADESC();
 public:
 	DECLARE_CLASS( SporeTrail, CBaseParticleEntity );
 	DECLARE_SERVERCLASS();
@@ -157,7 +155,6 @@ public:
 
 class CFireTrail : public CBaseParticleEntity
 {
-	DECLARE_DATADESC();
 public:
 	DECLARE_CLASS( CFireTrail, CBaseParticleEntity );
 	DECLARE_SERVERCLASS();

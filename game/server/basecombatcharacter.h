@@ -94,8 +94,6 @@ struct Relationship_t
 	Class_T			classType;		// Relationship to a class  CLASS_NONE = not class based (Def. in baseentity.h)
 	Disposition_t	disposition;	// D_HT (Hate), D_FR (Fear), D_LI (Like), D_NT (Neutral)
 	int				priority;		// Relative importance of this relationship (higher numbers mean more important)
-
-	DECLARE_SIMPLE_DATADESC();
 };
 
 //-----------------------------------------------------------------------------
@@ -118,8 +116,6 @@ public:
 
 	virtual void		Spawn( void );
 	virtual void		Precache();
-
-	virtual int			Restore( IRestore &restore );
 
 	virtual const impactdamagetable_t	&GetPhysicsImpactDamageTable( void );
 
@@ -201,8 +197,6 @@ public:
 	virtual void		Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTarget = NULL, const Vector *pVelocity = NULL );
 	virtual	bool		Weapon_Switch(CBaseCombatWeapon *pWeapon, bool bWantDraw = false);		// Switch to given weapon if has ammo (false if failed)
 	virtual	Vector		Weapon_ShootPosition( );		// gun position at current position/orientation
-	bool				Weapon_IsOnGround( CBaseCombatWeapon *pWeapon );
-	CBaseEntity*		Weapon_FindUsable( const Vector &range );			// search for a usable weapon in this range
 	virtual	bool		Weapon_CanSwitchTo(CBaseCombatWeapon *pWeapon);
 	virtual bool		Weapon_SlotOccupied( CBaseCombatWeapon *pWeapon );
 	virtual CBaseCombatWeapon *Weapon_GetSlot( int slot ) const;
@@ -240,7 +234,6 @@ public:
 	Vector					CalcDamageForceVector( const CTakeDamageInfo &info );
 
 	virtual int				BloodColor();
-	virtual Activity		GetDeathActivity( void );
 
 	float GetDamageAccumulator() { return m_flDamageAccumulator; }
 	int	  GetDamageCount( void ) { return m_iDamageCount; }	// # of times NPC has been damaged.  used for tracking 1-shot kills.

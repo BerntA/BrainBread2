@@ -27,10 +27,6 @@ ConVar g_CV_SmokeTrail("smoke_trail", "1", 0); // temporary dust explosion switc
 
 BEGIN_DATADESC( CGrenadeAR2 )
 
-	DEFINE_FIELD( m_hSmokeTrail, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_fSpawnTime, FIELD_TIME ),
-	DEFINE_FIELD( m_fDangerRadius, FIELD_FLOAT ),
-
 	// Function pointers
 	DEFINE_ENTITYFUNC( GrenadeAR2Touch ),
 	DEFINE_THINKFUNC( GrenadeAR2Think ),

@@ -124,9 +124,6 @@ public:
 	
 	void						ResetHUD( void );
 
-	// A saved game has just been loaded
-	void						OnRestore();
-
 	void						Think();
 
 	void						ProcessInput( bool bActive );

@@ -33,7 +33,6 @@ LINK_ENTITY_TO_CLASS( func_weight_button, CWeightButton );
 BEGIN_DATADESC( CWeightButton )
 
 	DEFINE_KEYFIELD( m_fStressToActivate, FIELD_FLOAT, "WeightToActivate" ),
-	DEFINE_FIELD( m_bHasBeenPressed, FIELD_BOOLEAN ),
 
 	DEFINE_OUTPUT( m_OnPressed, "OnPressed" ),
 	DEFINE_OUTPUT( m_OnReleased, "OnReleased" ),

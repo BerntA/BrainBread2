@@ -14,24 +14,16 @@
 // A sphere around the player used for backface culling of areaportals.
 #define VIEWER_PADDING	80
 
-
 CUtlLinkedList<CFuncAreaPortalBase*, unsigned short> g_AreaPortals;
-
-
 
 //---------------------------------------------------------
 // Save/Restore
 //---------------------------------------------------------
 BEGIN_DATADESC( CFuncAreaPortalBase )
 
-	DEFINE_FIELD( m_portalNumber,			FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_iPortalVersion,		FIELD_INTEGER, "PortalVersion" )
-//	DEFINE_FIELD( m_AreaPortalsElement,		FIELD_SHORT ),
 
 END_DATADESC()
-
-
-
 
 CFuncAreaPortalBase::CFuncAreaPortalBase()
 {
@@ -40,12 +32,10 @@ CFuncAreaPortalBase::CFuncAreaPortalBase()
 	m_iPortalVersion = 0;
 }
 
-
 CFuncAreaPortalBase::~CFuncAreaPortalBase()
 {
 	g_AreaPortals.Remove( m_AreaPortalsElement );
 }
-
 
 bool CFuncAreaPortalBase::UpdateVisibility( const Vector &vOrigin, float fovDistanceAdjustFactor, bool &bIsOpenOnClient )
 {

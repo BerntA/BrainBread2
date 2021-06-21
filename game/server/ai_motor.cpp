@@ -14,7 +14,6 @@
 #include "ai_basenpc.h"
 #include "ai_localnavigator.h"
 #include "ai_moveprobe.h"
-#include "saverestore_utlvector.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -22,8 +21,6 @@
 #ifdef DEBUG
 ConVar	ai_draw_motor_movement( "ai_draw_motor_movement","0" );
 #endif
-
-extern float	GetFloorZ(const Vector &origin);
 
 //-----------------------------------------------------------------------------
 
@@ -66,20 +63,6 @@ AIMoveResult_t DbgResult( AIMoveResult_t result )
 //
 // class CAI_Motor
 //
-
-BEGIN_SIMPLE_DATADESC( CAI_Motor )
-	//							m_flMoveInterval	(think transient)
-  	DEFINE_FIELD( m_IdealYaw,			FIELD_FLOAT ),
-  	DEFINE_FIELD( m_YawSpeed,			FIELD_FLOAT ),
-  	DEFINE_FIELD( m_vecVelocity,		FIELD_VECTOR ),
-  	DEFINE_FIELD( m_vecAngularVelocity, FIELD_VECTOR ),
-	DEFINE_FIELD( m_nDismountSequence,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_vecDismount,		FIELD_VECTOR ),
-	DEFINE_UTLVECTOR( m_facingQueue,	FIELD_EMBEDDED ), 
-	DEFINE_FIELD( m_bYawLocked,			FIELD_BOOLEAN ),
-	//							m_pMoveProbe
-END_DATADESC()
-
 //-----------------------------------------------------------------------------
 
 CAI_Motor::CAI_Motor(CAI_BaseNPC *pOuter)

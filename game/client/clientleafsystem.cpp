@@ -84,8 +84,6 @@ public:
 	void LevelShutdownPreEntity();
 	void LevelShutdownPostEntity();
 
-	virtual void OnSave() {}
-	virtual void OnRestore() {}
 	virtual void SafeRemoveIfDesired() {}
 
 // Methods of IClientLeafSystem

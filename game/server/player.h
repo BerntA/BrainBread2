@@ -78,7 +78,6 @@ class IPhysicsPlayerController;
 class CUserCmd;
 class CNavArea;
 class CHintSystem;
-class CAI_Expresser;
 
 // for step sounds
 struct surfacedata_t;
@@ -358,11 +357,6 @@ public:
 	virtual float			CalcRoll (const QAngle& angles, const Vector& velocity, float rollangle, float rollspeed);
 	void					CalcViewRoll( QAngle& eyeAngles );
 
-	virtual int				Save( ISave &save );
-	virtual int				Restore( IRestore &restore );
-	virtual bool			ShouldSavePhysics();
-	virtual void			OnRestore( void );
-
 	virtual void			RemoveAllItems();
 	bool					IsDead() const;
 	bool					HasPhysicsFlag( unsigned int flag ) { return (m_afPhysicsFlags & flag) != 0; }
@@ -386,8 +380,6 @@ public:
 	virtual void			UpdateClientData( void );
 	void					RumbleEffect( unsigned char index, unsigned char rumbleData, unsigned char rumbleFlags );
 	
-	// Player is moved across the transition by other means
-	virtual int				ObjectCaps( void ) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 	virtual void			Precache( void );
 	bool					IsOnLadder( void );
 	virtual void			ExitLadder() {}
@@ -527,11 +519,8 @@ public:
 
 	// say/sayteam allowed?
 	virtual bool		CanHearAndReadChatFrom( CBasePlayer *pPlayer ) { return true; }
-	virtual bool		CanSpeak( void ) { return true; }
 
 	audioparams_t			&GetAudioParams() { return m_Local.m_audio; }
-
-	virtual void 			ModifyOrAppendPlayerCriteria( AI_CriteriaSet& set );
 
 	const QAngle& GetPunchAngle();
 	void SetPunchAngle( const QAngle &punchAngle );
@@ -664,9 +653,6 @@ public:
 	void	InputSetHUDVisibility( inputdata_t &inputdata );
 
 	surfacedata_t *GetSurfaceData( void ) { return m_pSurfaceData; }
-
-	// Here so that derived classes can use the expresser
-	virtual CAI_Expresser *GetExpresser() { return NULL; };
 
 #if !defined(NO_STEAM)
 	//----------------------------

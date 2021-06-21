@@ -91,6 +91,8 @@ private:
 	COutputEvent m_OnEnd;
 	COutputEvent m_OnFail;
 	COutputEvent m_OnTimeOver;
+
+	int m_iCurrIndex;
 };
 
 #endif // LOGIC_OBJECTIVE_H

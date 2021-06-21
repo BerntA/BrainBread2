@@ -50,7 +50,6 @@ END_PREDICTION_DATA()
 #endif
 
 BEGIN_DATADESC( CHL2MPMachineGun )
-DEFINE_FIELD( m_flNextSoundTime, FIELD_TIME ),
 END_DATADESC()
 
 CHL2MPMachineGun::CHL2MPMachineGun( void )

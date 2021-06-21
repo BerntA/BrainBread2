@@ -53,8 +53,6 @@ public:
 	virtual void LevelShutdownPreEntity();
 	virtual void LevelShutdownPostEntity();
 
-	virtual void OnSave() {}
-	virtual void OnRestore() {}
 	virtual void SafeRemoveIfDesired() {}
 
 	void Register( IClientEffect *effect );

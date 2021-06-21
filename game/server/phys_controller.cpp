@@ -9,7 +9,6 @@
 #include "entitylist.h"
 #include "physics.h"
 #include "vphysics/constraints.h"
-#include "physics_saverestore.h"
 #include "phys_controller.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -30,8 +29,6 @@ class CPhysThruster;
 //-----------------------------------------------------------------------------
 class CConstantForceController : public IMotionEvent
 {
-	DECLARE_SIMPLE_DATADESC();
-
 public:
 	void Init( IMotionEvent::simresult_e controlType ) 
 	{ 
@@ -48,15 +45,6 @@ public:
 	Vector			m_linearSave;
 	AngularImpulse	m_angularSave;
 };
-
-BEGIN_SIMPLE_DATADESC( CConstantForceController )
-	DEFINE_FIELD( m_controlType,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_linear,		FIELD_VECTOR ),
-	DEFINE_FIELD( m_angular,		FIELD_VECTOR ),
-	DEFINE_FIELD( m_linearSave,	FIELD_VECTOR ),
-	DEFINE_FIELD( m_angularSave,	FIELD_VECTOR ),
-END_DATADESC()
-
 
 void CConstantForceController::SetConstantForce( const Vector &linear, const AngularImpulse &angular )
 {
@@ -97,7 +85,6 @@ public:
 
 	DECLARE_DATADESC();
 
-	virtual void OnRestore( );
 	void Spawn( void );
 	void Activate( void );
 
@@ -133,14 +120,9 @@ protected:
 
 BEGIN_DATADESC( CPhysForce )
 
-	DEFINE_PHYSPTR( m_pController ),
 	DEFINE_KEYFIELD( m_nameAttach, FIELD_STRING, "attach1" ),
 	DEFINE_KEYFIELD( m_force, FIELD_FLOAT, "force" ),
 	DEFINE_KEYFIELD( m_forceTime, FIELD_FLOAT, "forcetime" ),
-
-	DEFINE_FIELD( m_attachedObject, FIELD_EHANDLE ),
-	//DEFINE_FIELD( m_wasRestored, FIELD_BOOLEAN ), // NOTE: DO NOT save/load this - it's used to detect loads
-	DEFINE_EMBEDDED( m_integrator ),
 	
 	DEFINE_INPUTFUNC( FIELD_VOID, "Activate", InputActivate ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Deactivate", InputDeactivate ),
@@ -176,17 +158,6 @@ void CPhysForce::Spawn( void )
 	{
 		m_integrator.Init( IMotionEvent::SIM_GLOBAL_ACCELERATION );
 	}
-}
-
-void CPhysForce::OnRestore( )
-{
-	BaseClass::OnRestore();
-
-	if ( m_pController )
-	{
-		m_pController->SetEventHandler( &m_integrator );
-	}
-	m_wasRestored = true;
 }
 
 void CPhysForce::Activate( void )
@@ -322,7 +293,6 @@ class CPhysThruster : public CPhysForce
 {
 	DECLARE_CLASS( CPhysThruster, CPhysForce );
 public:
-	DECLARE_DATADESC();
 
 	virtual void OnActivate( void );
 	virtual void SetupForces( IPhysicsObject *pPhys, Vector &linear, AngularImpulse &angular );
@@ -332,14 +302,6 @@ private:
 };
 
 LINK_ENTITY_TO_CLASS( phys_thruster, CPhysThruster );
-
-BEGIN_DATADESC( CPhysThruster )
-
-	DEFINE_FIELD( m_localOrigin, FIELD_VECTOR ),
-
-END_DATADESC()
-
-
 
 void CPhysThruster::OnActivate( void )
 {
@@ -486,18 +448,9 @@ public:
 };
 
 BEGIN_SIMPLE_DATADESC( CMotorController )
-
-	DEFINE_FIELD( m_speed,				FIELD_FLOAT ),
-	DEFINE_FIELD( m_maxTorque,			FIELD_FLOAT ),
 	DEFINE_KEYFIELD( m_axis,				FIELD_VECTOR, "axis" ),
 	DEFINE_KEYFIELD( m_inertiaFactor,		FIELD_FLOAT, "inertiafactor" ),
-	DEFINE_FIELD( m_lastSpeed,			FIELD_FLOAT ),
-	DEFINE_FIELD( m_lastAcceleration,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_lastForce,			FIELD_FLOAT ),
-	DEFINE_FIELD( m_restistanceDamping,	FIELD_FLOAT ),
-
 END_DATADESC()
-
 
 IMotionEvent::simresult_e CMotorController::Simulate( IPhysicsMotionController *pController, IPhysicsObject *pObject, float deltaTime, Vector &linear, AngularImpulse &angular )
 {
@@ -592,7 +545,6 @@ public:
 
 	void TurnOn( void );
 	void TargetSpeedChanged( void );
-	void OnRestore();
 
 	void InputSetTargetSpeed( inputdata_t &inputdata );
 	void InputTurnOn( inputdata_t &inputdata );
@@ -617,13 +569,8 @@ public:
 BEGIN_DATADESC( CPhysMotor )
 
 	DEFINE_KEYFIELD( m_nameAttach, FIELD_STRING, "attach1" ),
-	DEFINE_FIELD( m_attachedObject, FIELD_EHANDLE ),
 	DEFINE_KEYFIELD( m_spinUp, FIELD_FLOAT, "spinup" ),
 	DEFINE_KEYFIELD( m_additionalAcceleration, FIELD_FLOAT, "addangaccel" ),
-	DEFINE_FIELD( m_angularAcceleration, FIELD_FLOAT ),
-	DEFINE_FIELD( m_lastTime, FIELD_TIME ),
-	DEFINE_PHYSPTR( m_pHinge ),
-	DEFINE_PHYSPTR( m_pController ),
 	
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetSpeed", InputSetTargetSpeed ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOn", InputTurnOn ),
@@ -812,16 +759,6 @@ void CPhysMotor::Activate( void )
 	}
 }
 
-void CPhysMotor::OnRestore()
-{
-	BaseClass::OnRestore();
-	// Need to do this on restore since there's no good way to save this
-	if ( m_pController )
-	{
-		m_pController->SetEventHandler( &m_motor );
-	}
-}
-
 void CPhysMotor::Think( void )
 {
 	// angular acceleration is always positive - it should be treated as a magnitude - the controller 
@@ -888,14 +825,8 @@ LINK_ENTITY_TO_CLASS( phys_keepupright, CKeepUpright );
 
 BEGIN_DATADESC( CKeepUpright )
 
-	DEFINE_FIELD( m_worldGoalAxis, FIELD_VECTOR ),
-	DEFINE_FIELD( m_localTestAxis, FIELD_VECTOR ),
-	DEFINE_PHYSPTR( m_pController ),
 	DEFINE_KEYFIELD( m_nameAttach, FIELD_STRING, "attach1" ),
-	DEFINE_FIELD( m_attachedObject, FIELD_EHANDLE ),
 	DEFINE_KEYFIELD( m_angularLimit, FIELD_FLOAT, "angularlimit" ),
-	DEFINE_FIELD( m_bActive, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bDampAllRotation, FIELD_BOOLEAN ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOn", InputTurnOn ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOff", InputTurnOff ),

@@ -13,7 +13,6 @@
 #include <KeyValues.h>
 #include "studio.h"
 #include "vguiscreen.h"
-#include "saverestore_utlvector.h"
 #include "hltvdirector.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -21,38 +20,6 @@
 
 void SendProxy_AnimTime( const void *pStruct, const void *pVarData, DVariant *pOut, int iElement, int objectID );
 void SendProxy_SequenceChanged( const void *pStruct, const void *pVarData, DVariant *pOut, int iElement, int objectID );
-
-//-----------------------------------------------------------------------------
-// Purpose: Save Data for Base Weapon object
-//-----------------------------------------------------------------------------// 
-BEGIN_DATADESC( CBaseViewModel )
-
-	DEFINE_FIELD( m_hOwner, FIELD_EHANDLE ),
-
-// Client only
-//	DEFINE_FIELD( m_LagAnglesHistory, CInterpolatedVar < QAngle > ),
-//	DEFINE_FIELD( m_vLagAngles, FIELD_VECTOR ),
-
-	DEFINE_FIELD( m_flTimeWeaponIdle, FIELD_FLOAT ),
-	DEFINE_FIELD( m_nAnimationParity, FIELD_INTEGER ),
-
-	// Client only
-//	DEFINE_FIELD( m_nOldAnimationParity, FIELD_INTEGER ),
-
-	DEFINE_FIELD( m_vecLastFacing, FIELD_VECTOR ),
-	DEFINE_FIELD( m_hWeapon, FIELD_EHANDLE ),
-	DEFINE_UTLVECTOR( m_hScreens, FIELD_EHANDLE ),
-
-// Read from weapons file
-//	DEFINE_FIELD( m_sVMName, FIELD_STRING ),
-//	DEFINE_FIELD( m_sAnimationPrefix, FIELD_STRING ),
-
-// ---------------------------------------------------------------------
-
-// Don't save these, init to 0 and regenerate
-//	DEFINE_FIELD( m_Activity, FIELD_INTEGER ),
-
-END_DATADESC()
 
 int CBaseViewModel::UpdateTransmitState()
 {

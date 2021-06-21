@@ -6,13 +6,11 @@
 
 #include "cbase.h"
 #include "npc_BaseZombie.h"
-#include "ai_network.h"
 #include "ai_navigator.h"
 #include "ai_motor.h"
 #include "ai_default.h"
 #include "ai_schedule.h"
 #include "ai_hull.h"
-#include "ai_node.h"
 #include "ai_memory.h"
 #include "ai_senses.h"
 #include "bitstring.h"
@@ -85,19 +83,6 @@ int AE_ZOMBIE_ATTACK_SCREAM;
 int AE_ZOMBIE_GET_UP;
 int AE_ZOMBIE_POUND;
 int AE_ZOMBIE_ALERTSOUND;
-
-BEGIN_DATADESC( CNPC_BaseZombie )
-
-	DEFINE_FIELD(m_flNextFlinch, FIELD_TIME),
-	DEFINE_FIELD(m_flBurnDamage, FIELD_FLOAT),
-	DEFINE_FIELD(m_flBurnDamageResetTime, FIELD_TIME),
-	DEFINE_FIELD(m_flNextMoanSound, FIELD_TIME),
-	DEFINE_FIELD(m_bUseNormalSpeed, FIELD_BOOLEAN),
-	DEFINE_FIELD(m_bMarkedForDeath, FIELD_BOOLEAN),
-	DEFINE_FIELD(m_bLifeTimeOver, FIELD_BOOLEAN),
-	DEFINE_FIELD(m_flSpawnTime, FIELD_TIME),
-
-END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST(CNPC_BaseZombie, DT_AI_BaseZombie)
 SendPropExclude("DT_BaseCombatCharacter", "m_hActiveWeapon"),
@@ -675,7 +660,7 @@ void CNPC_BaseZombie::HandleAnimEvent( animevent_t *pEvent )
 void CNPC_BaseZombie::Spawn( void )
 {
 	// Customized:
-	if (ParseNPC(entindex()))
+	if (ParseNPC(this))
 	{
 		SetHealth(m_iTotalHP);
 		SetMaxHealth(m_iTotalHP);

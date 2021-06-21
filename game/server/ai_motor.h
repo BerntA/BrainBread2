@@ -214,10 +214,6 @@ protected: // made protected while animation transition details worked out, priv
 	CAI_MoveProbe *		m_pMoveProbe;
 
 	bool				m_bYawLocked;
-
-	//---------------------------------
-public:
-	DECLARE_SIMPLE_DATADESC();
 };
 
 //=============================================================================

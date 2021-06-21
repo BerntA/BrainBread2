@@ -32,7 +32,6 @@
 #include "shareddefs.h"
 #include "networkvar.h"
 
-struct levellist_t;
 class IServerNetworkable;
 class IEntityFactory;
 
@@ -529,18 +528,7 @@ float UTIL_ScaleForGravity( float desiredGravity );
 
 enum soundlevel_t;
 
-void SENTENCEG_Init();
-void SENTENCEG_Stop(edict_t *entity, int isentenceg, int ipick);
-int SENTENCEG_PlayRndI(edict_t *entity, int isentenceg, float volume, soundlevel_t soundlevel, int flags, int pitch);
-int SENTENCEG_PlayRndSz(edict_t *entity, const char *szrootname, float volume, soundlevel_t soundlevel, int flags, int pitch);
-int SENTENCEG_PlaySequentialSz(edict_t *entity, const char *szrootname, float volume, soundlevel_t soundlevel, int flags, int pitch, int ipick, int freset);
-void SENTENCEG_PlaySentenceIndex( edict_t *entity, int iSentenceIndex, float volume, soundlevel_t soundlevel, int flags, int pitch );
-int SENTENCEG_PickRndSz(const char *szrootname);
-int SENTENCEG_GetIndex(const char *szrootname);
-int SENTENCEG_Lookup(const char *sample);
-
 char TEXTURETYPE_Find( trace_t *ptr );
-
 void UTIL_RestartAmbientSounds( void );
 
 class EntityMatrix : public VMatrix
@@ -608,7 +596,6 @@ bool UTIL_IsFacingWithinTolerance( CBaseEntity *pViewer, CBaseEntity *pTarget, f
 void UTIL_GetDebugColorForRelationship( int nRelationship, int &r, int &g, int &b );
 
 struct datamap_t;
-extern const char	*UTIL_FunctionToName( datamap_t *pMap, inputfunc_t *function );
 
 int UTIL_GetCommandClientIndex( void );
 CBasePlayer *UTIL_GetCommandClient( void );

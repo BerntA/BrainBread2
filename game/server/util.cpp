@@ -6,7 +6,7 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "saverestore.h"
+#include "filesystem.h"
 #include <stdarg.h>
 #include "shake.h"
 #include "decals.h"
@@ -20,7 +20,6 @@
 #include "soundflags.h"
 #include "ispatialpartition.h"
 #include "igamesystem.h"
-#include "saverestoretypes.h"
 #include "checksum_crc.h"
 #include "hierarchy.h"
 #include "te_effect_dispatch.h"

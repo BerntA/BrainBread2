@@ -44,7 +44,6 @@ BEGIN_DATADESC( CFuncSmokeVolume )
 	// Save/restore Keyvalue fields
 	DEFINE_KEYFIELD( m_Color1, FIELD_COLOR32, "Color1" ),
 	DEFINE_KEYFIELD( m_Color2, FIELD_COLOR32, "Color2" ),
-//	DEFINE_ARRAY( m_MaterialName, FIELD_STRING, 255 ),
 	DEFINE_KEYFIELD( m_String_tMaterialName, FIELD_STRING, "Material" ),
 	DEFINE_KEYFIELD( m_ParticleDrawWidth, FIELD_FLOAT, "ParticleDrawWidth" ),
 	DEFINE_KEYFIELD( m_ParticleSpacingDistance, FIELD_FLOAT, "ParticleSpacingDistance" ),
@@ -52,6 +51,7 @@ BEGIN_DATADESC( CFuncSmokeVolume )
 	DEFINE_KEYFIELD( m_RotationSpeed, FIELD_FLOAT, "RotationSpeed" ),
 	DEFINE_KEYFIELD( m_MovementSpeed, FIELD_FLOAT, "MovementSpeed" ),
 	DEFINE_KEYFIELD( m_Density, FIELD_FLOAT, "Density" ),
+
 	// inputs
 	DEFINE_INPUT( m_RotationSpeed, FIELD_FLOAT, "SetRotationSpeed"),
 	DEFINE_INPUT( m_MovementSpeed, FIELD_FLOAT, "SetMovementSpeed"),

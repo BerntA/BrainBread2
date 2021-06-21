@@ -79,15 +79,6 @@ DEFINE_KEYFIELD(cszMessageProgressHalted, FIELD_STRING, "CaptureHaltedMessage"),
 
 DEFINE_OUTPUT(m_OnCaptured, "OnCaptured"),
 
-DEFINE_FIELD(m_bIsCaptured, FIELD_BOOLEAN),
-DEFINE_FIELD(m_bIsBeingCaptured, FIELD_BOOLEAN),
-DEFINE_FIELD(m_bShouldHaltProgress, FIELD_BOOLEAN),
-
-DEFINE_FIELD(m_flCaptureTimeStart, FIELD_FLOAT),
-DEFINE_FIELD(m_flCaptureTimeEnd, FIELD_FLOAT),
-DEFINE_FIELD(m_flElapsedTime, FIELD_FLOAT),
-DEFINE_FIELD(m_flTimeLeft, FIELD_FLOAT),
-
 DEFINE_THINKFUNC(CapturePointThink),
 END_DATADESC()
 

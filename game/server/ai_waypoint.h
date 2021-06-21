@@ -34,6 +34,8 @@ enum WaypointFlags_t
 	bits_WP_DONT_SIMPLIFY =		0x20, // Don't let the route code simplify this waypoint
 };
 
+#define NO_NODE -1
+
 // ----------------------------------------------------------------------------
 // Purpose: Waypoints that make up an NPC's route. 
 // ----------------------------------------------------------------------------
@@ -147,9 +149,6 @@ private:
 	AI_Waypoint_t *pPrev;
 
 	DECLARE_FIXEDSIZE_ALLOCATOR(AI_Waypoint_t);
-
-public:
-	DECLARE_SIMPLE_DATADESC();
 };
 
 

@@ -9,8 +9,6 @@
 #include "ai_activity.h"
 #include "activitylist.h"
 #include "stringregistry.h"
-#include "isaverestore.h"
-
 #include "filesystem.h"
 #include <KeyValues.h>
 #include "utldict.h"
@@ -32,8 +30,6 @@ struct activitylist_t
 
 CUtlVector<activitylist_t> g_ActivityList;
 
-static CUtlDict< CActivityRemapCache, int > m_ActivityRemapDatabase;
-
 // This stores the actual activity names.  Also, the string ID in the registry is simply an index 
 // into the g_ActivityList array.
 CStringRegistry	g_ActivityStrings;
@@ -53,7 +49,6 @@ void ActivityList_Free( void )
 {
 	g_ActivityStrings.ClearStrings();
 	g_ActivityList.Purge();
-	m_ActivityRemapDatabase.Purge();
 
 	// So studiohdrs can reindex activity indices
 	++g_nActivityListVersion;
@@ -136,7 +131,6 @@ bool ActivityList_RegisterSharedActivity( const char *pszActivityName, int iActi
 	return true;
 }
 
-
 Activity ActivityList_RegisterPrivateActivity( const char *pszActivityName )
 {
 	activitylist_t *pList = ListFromString( pszActivityName );
@@ -195,7 +189,6 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE);
 	REGISTER_SHARED_ACTIVITY(ACT_TRANSITION);
 	REGISTER_SHARED_ACTIVITY(ACT_COVER);					// FIXME: obsolete? redundant with ACT_COVER_LOW?
-	REGISTER_SHARED_ACTIVITY(ACT_COVER_MED);				// FIXME: unsupported?
 	REGISTER_SHARED_ACTIVITY(ACT_COVER_LOW);				// FIXME: rename ACT_IDLE_CROUCH?
 	REGISTER_SHARED_ACTIVITY(ACT_WALK);
 	REGISTER_SHARED_ACTIVITY(ACT_WALK_AIM);
@@ -213,9 +206,6 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_RANGE_ATTACK1_LOW);		// FIXME: not used yet, crouched versions of the range attack
 	REGISTER_SHARED_ACTIVITY(ACT_RANGE_ATTACK2_LOW);		// FIXME: not used yet, crouched versions of the range attack
 	REGISTER_SHARED_ACTIVITY(ACT_DIESIMPLE);
-	REGISTER_SHARED_ACTIVITY(ACT_DIEBACKWARD);
-	REGISTER_SHARED_ACTIVITY(ACT_DIEFORWARD);
-	REGISTER_SHARED_ACTIVITY(ACT_DIEVIOLENT);
 	REGISTER_SHARED_ACTIVITY(ACT_DIERAGDOLL);
 	REGISTER_SHARED_ACTIVITY(ACT_FLY);				// Fly (and flap if appropriate)
 	REGISTER_SHARED_ACTIVITY(ACT_HOVER);
@@ -241,17 +231,6 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_CROUCHIDLE);			// FIXME: obsolete? only used be soldier (holding body in crouched position (loops))
 	REGISTER_SHARED_ACTIVITY(ACT_STAND);				// FIXME: obsolete? should be transition (the act of standing from a crouched position)
 	REGISTER_SHARED_ACTIVITY(ACT_USE);
-	REGISTER_SHARED_ACTIVITY(ACT_SIGNAL1);
-	REGISTER_SHARED_ACTIVITY(ACT_SIGNAL2);
-	REGISTER_SHARED_ACTIVITY(ACT_SIGNAL3);
-
-	REGISTER_SHARED_ACTIVITY(ACT_SIGNAL_ADVANCE);		// Squad handsignals); specific.
-	REGISTER_SHARED_ACTIVITY(ACT_SIGNAL_FORWARD);
-	REGISTER_SHARED_ACTIVITY(ACT_SIGNAL_GROUP);
-	REGISTER_SHARED_ACTIVITY(ACT_SIGNAL_HALT);
-	REGISTER_SHARED_ACTIVITY(ACT_SIGNAL_LEFT);
-	REGISTER_SHARED_ACTIVITY(ACT_SIGNAL_RIGHT);
-	REGISTER_SHARED_ACTIVITY(ACT_SIGNAL_TAKECOVER);
 
 	REGISTER_SHARED_ACTIVITY(ACT_LOOKBACK_RIGHT);		// look back over shoulder without turning around.
 	REGISTER_SHARED_ACTIVITY(ACT_LOOKBACK_LEFT);
@@ -267,7 +246,6 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_ARM);				// pull out gun, for instance
 	REGISTER_SHARED_ACTIVITY(ACT_DISARM);				// reholster gun
 	REGISTER_SHARED_ACTIVITY(ACT_DROP_WEAPON);
-	REGISTER_SHARED_ACTIVITY(ACT_DROP_WEAPON_SHOTGUN);
 	REGISTER_SHARED_ACTIVITY(ACT_PICKUP_GROUND);		// pick up something in front of you on the ground
 	REGISTER_SHARED_ACTIVITY(ACT_PICKUP_RACK);		// pick up something from a rack or shelf in front of you.
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_ANGRY);			// FIXME: being used as an combat ready idle?  alternate idle animation in which the monster is clearly agitated. (loop)
@@ -275,33 +253,27 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_RELAXED);
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_STIMULATED);
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_AGITATED);
-	REGISTER_SHARED_ACTIVITY(ACT_IDLE_STEALTH);
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_HURT);
 
 	REGISTER_SHARED_ACTIVITY(ACT_WALK_RELAXED);
 	REGISTER_SHARED_ACTIVITY(ACT_WALK_STIMULATED);
 	REGISTER_SHARED_ACTIVITY(ACT_WALK_AGITATED);
-	REGISTER_SHARED_ACTIVITY(ACT_WALK_STEALTH);
 
 	REGISTER_SHARED_ACTIVITY(ACT_RUN_RELAXED);
 	REGISTER_SHARED_ACTIVITY(ACT_RUN_STIMULATED);
 	REGISTER_SHARED_ACTIVITY(ACT_RUN_AGITATED);
-	REGISTER_SHARED_ACTIVITY(ACT_RUN_STEALTH);
 
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_AIM_RELAXED);
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_AIM_STIMULATED);
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_AIM_AGITATED);
-	REGISTER_SHARED_ACTIVITY(ACT_IDLE_AIM_STEALTH);
 
 	REGISTER_SHARED_ACTIVITY(ACT_WALK_AIM_RELAXED);
 	REGISTER_SHARED_ACTIVITY(ACT_WALK_AIM_STIMULATED);
 	REGISTER_SHARED_ACTIVITY(ACT_WALK_AIM_AGITATED);
-	REGISTER_SHARED_ACTIVITY(ACT_WALK_AIM_STEALTH);
 
 	REGISTER_SHARED_ACTIVITY(ACT_RUN_AIM_RELAXED);
 	REGISTER_SHARED_ACTIVITY(ACT_RUN_AIM_STIMULATED);
 	REGISTER_SHARED_ACTIVITY(ACT_RUN_AIM_AGITATED);
-	REGISTER_SHARED_ACTIVITY(ACT_RUN_AIM_STEALTH);
 
 	REGISTER_SHARED_ACTIVITY(ACT_CROUCHIDLE_STIMULATED);
 	REGISTER_SHARED_ACTIVITY(ACT_CROUCHIDLE_AIM_STIMULATED);
@@ -315,10 +287,6 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_WALK_SCARED);
 	REGISTER_SHARED_ACTIVITY(ACT_RUN_SCARED);
 	REGISTER_SHARED_ACTIVITY(ACT_VICTORY_DANCE);		// killed a player); do a victory dance.
-	REGISTER_SHARED_ACTIVITY(ACT_DIE_HEADSHOT);		// die, hit in head. 
-	REGISTER_SHARED_ACTIVITY(ACT_DIE_CHESTSHOT);		// die, hit in chest
-	REGISTER_SHARED_ACTIVITY(ACT_DIE_GUTSHOT);		// die, hit in gut
-	REGISTER_SHARED_ACTIVITY(ACT_DIE_BACKSHOT);		// die, hit in back
 	REGISTER_SHARED_ACTIVITY(ACT_FLINCH_HEAD);
 	REGISTER_SHARED_ACTIVITY(ACT_FLINCH_CHEST);
 	REGISTER_SHARED_ACTIVITY(ACT_FLINCH_STOMACH);
@@ -535,15 +503,6 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_SHOTGUN_RELOAD_FINISH_EMPTY);
 	REGISTER_SHARED_ACTIVITY(ACT_SHOTGUN_PUMP);
 
-	// SMG2 special activities
-	REGISTER_SHARED_ACTIVITY(ACT_SMG2_IDLE2);
-	REGISTER_SHARED_ACTIVITY(ACT_SMG2_FIRE2);
-	REGISTER_SHARED_ACTIVITY(ACT_SMG2_DRAW2);
-	REGISTER_SHARED_ACTIVITY(ACT_SMG2_RELOAD2);
-	REGISTER_SHARED_ACTIVITY(ACT_SMG2_DRYFIRE2);
-	REGISTER_SHARED_ACTIVITY(ACT_SMG2_TOAUTO);
-	REGISTER_SHARED_ACTIVITY(ACT_SMG2_TOBURST);
-
 	// weapon override activities
 	REGISTER_SHARED_ACTIVITY(ACT_RANGE_ATTACK_AR1);
 	REGISTER_SHARED_ACTIVITY(ACT_RANGE_ATTACK_AR2);
@@ -553,7 +512,6 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_RANGE_ATTACK_ML);
 	REGISTER_SHARED_ACTIVITY(ACT_RANGE_ATTACK_SMG1);
 	REGISTER_SHARED_ACTIVITY(ACT_RANGE_ATTACK_SMG1_LOW);
-	REGISTER_SHARED_ACTIVITY(ACT_RANGE_ATTACK_SMG2);
 	REGISTER_SHARED_ACTIVITY(ACT_RANGE_ATTACK_SHOTGUN);
 	REGISTER_SHARED_ACTIVITY(ACT_RANGE_ATTACK_SHOTGUN_LOW);
 	REGISTER_SHARED_ACTIVITY(ACT_RANGE_ATTACK_PISTOL);
@@ -562,7 +520,6 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_RANGE_ATTACK_TRIPWIRE);
 	REGISTER_SHARED_ACTIVITY(ACT_RANGE_ATTACK_THROW);
 	REGISTER_SHARED_ACTIVITY(ACT_RANGE_ATTACK_SNIPER_RIFLE);
-	REGISTER_SHARED_ACTIVITY(ACT_RANGE_ATTACK_RPG);
 	REGISTER_SHARED_ACTIVITY(ACT_MELEE_ATTACK_SWING);
 
 	REGISTER_SHARED_ACTIVITY(ACT_RANGE_AIM_LOW);
@@ -581,7 +538,6 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_GESTURE_RANGE_ATTACK_ML);
 	REGISTER_SHARED_ACTIVITY(ACT_GESTURE_RANGE_ATTACK_SMG1);
 	REGISTER_SHARED_ACTIVITY(ACT_GESTURE_RANGE_ATTACK_SMG1_LOW);
-	REGISTER_SHARED_ACTIVITY(ACT_GESTURE_RANGE_ATTACK_SMG2);
 	REGISTER_SHARED_ACTIVITY(ACT_GESTURE_RANGE_ATTACK_SHOTGUN);
 	REGISTER_SHARED_ACTIVITY(ACT_GESTURE_RANGE_ATTACK_PISTOL);
 	REGISTER_SHARED_ACTIVITY(ACT_GESTURE_RANGE_ATTACK_PISTOL_LOW);
@@ -597,12 +553,6 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_PISTOL);
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_ANGRY_PISTOL);
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_ANGRY_SHOTGUN);
-	REGISTER_SHARED_ACTIVITY(ACT_IDLE_STEALTH_PISTOL);
-
-	REGISTER_SHARED_ACTIVITY(ACT_IDLE_PACKAGE);
-	REGISTER_SHARED_ACTIVITY(ACT_WALK_PACKAGE);
-	REGISTER_SHARED_ACTIVITY(ACT_IDLE_SUITCASE);
-	REGISTER_SHARED_ACTIVITY(ACT_WALK_SUITCASE);
 
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_SMG1_RELAXED);
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_SMG1_STIMULATED);
@@ -619,29 +569,12 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_SHOTGUN_STIMULATED);
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_SHOTGUN_AGITATED);
 
-	// Policing activities
-	REGISTER_SHARED_ACTIVITY(ACT_WALK_ANGRY);
-	REGISTER_SHARED_ACTIVITY(ACT_POLICE_HARASS1);
-	REGISTER_SHARED_ACTIVITY(ACT_POLICE_HARASS2);
-
 	// Manned guns
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_MANNEDGUN);
 
 	// Melee weapon
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_MELEE);
 	REGISTER_SHARED_ACTIVITY(ACT_IDLE_ANGRY_MELEE);
-
-	// RPG activities
-	REGISTER_SHARED_ACTIVITY(ACT_IDLE_RPG_RELAXED);
-	REGISTER_SHARED_ACTIVITY(ACT_IDLE_RPG);
-	REGISTER_SHARED_ACTIVITY(ACT_IDLE_ANGRY_RPG);
-	REGISTER_SHARED_ACTIVITY(ACT_COVER_LOW_RPG);
-	REGISTER_SHARED_ACTIVITY(ACT_WALK_RPG);
-	REGISTER_SHARED_ACTIVITY(ACT_RUN_RPG);
-	REGISTER_SHARED_ACTIVITY(ACT_WALK_CROUCH_RPG);
-	REGISTER_SHARED_ACTIVITY(ACT_RUN_CROUCH_RPG);
-	REGISTER_SHARED_ACTIVITY(ACT_WALK_RPG_RELAXED);
-	REGISTER_SHARED_ACTIVITY(ACT_RUN_RPG_RELAXED);
 
 	REGISTER_SHARED_ACTIVITY(ACT_WALK_RIFLE);
 	REGISTER_SHARED_ACTIVITY(ACT_WALK_AIM_RIFLE);
@@ -651,7 +584,6 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_RUN_AIM_RIFLE);
 	REGISTER_SHARED_ACTIVITY(ACT_RUN_CROUCH_RIFLE);
 	REGISTER_SHARED_ACTIVITY(ACT_RUN_CROUCH_AIM_RIFLE);
-	REGISTER_SHARED_ACTIVITY(ACT_RUN_STEALTH_PISTOL);
 
 	REGISTER_SHARED_ACTIVITY(ACT_WALK_AIM_SHOTGUN);
 	REGISTER_SHARED_ACTIVITY(ACT_RUN_AIM_SHOTGUN);
@@ -660,9 +592,6 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_RUN_PISTOL);
 	REGISTER_SHARED_ACTIVITY(ACT_WALK_AIM_PISTOL);
 	REGISTER_SHARED_ACTIVITY(ACT_RUN_AIM_PISTOL);
-	REGISTER_SHARED_ACTIVITY(ACT_WALK_STEALTH_PISTOL);
-	REGISTER_SHARED_ACTIVITY(ACT_WALK_AIM_STEALTH_PISTOL);
-	REGISTER_SHARED_ACTIVITY(ACT_RUN_AIM_STEALTH_PISTOL);
 
 	// Reloads
 	REGISTER_SHARED_ACTIVITY(ACT_RELOAD_PISTOL);
@@ -677,22 +606,6 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_GESTURE_RELOAD_SMG1);
 	REGISTER_SHARED_ACTIVITY(ACT_GESTURE_RELOAD_SHOTGUN);
 
-	// Busy animations
-	REGISTER_SHARED_ACTIVITY(ACT_BUSY_LEAN_LEFT);
-	REGISTER_SHARED_ACTIVITY(ACT_BUSY_LEAN_LEFT_ENTRY);
-	REGISTER_SHARED_ACTIVITY(ACT_BUSY_LEAN_LEFT_EXIT);
-	REGISTER_SHARED_ACTIVITY(ACT_BUSY_LEAN_BACK);
-	REGISTER_SHARED_ACTIVITY(ACT_BUSY_LEAN_BACK_ENTRY);
-	REGISTER_SHARED_ACTIVITY(ACT_BUSY_LEAN_BACK_EXIT);
-	REGISTER_SHARED_ACTIVITY(ACT_BUSY_SIT_GROUND);
-	REGISTER_SHARED_ACTIVITY(ACT_BUSY_SIT_GROUND_ENTRY);
-	REGISTER_SHARED_ACTIVITY(ACT_BUSY_SIT_GROUND_EXIT);
-	REGISTER_SHARED_ACTIVITY(ACT_BUSY_SIT_CHAIR);
-	REGISTER_SHARED_ACTIVITY(ACT_BUSY_SIT_CHAIR_ENTRY);
-	REGISTER_SHARED_ACTIVITY(ACT_BUSY_SIT_CHAIR_EXIT);
-	REGISTER_SHARED_ACTIVITY(ACT_BUSY_STAND);
-	REGISTER_SHARED_ACTIVITY(ACT_BUSY_QUEUE);
-
 	// Dodge animations
 	REGISTER_SHARED_ACTIVITY(ACT_DUCK_DODGE);
 
@@ -701,25 +614,7 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_PHYSCANNON_ANIMATE_PRE);	// An activity to be played by an object being picked up with the physcannon); before playing the ACT_PHYSCANNON_ANIMATE
 	REGISTER_SHARED_ACTIVITY(ACT_PHYSCANNON_ANIMATE_POST);// An activity to be played by an object being picked up with the physcannon); after playing the ACT_PHYSCANNON_ANIMATE
 
-	REGISTER_SHARED_ACTIVITY(ACT_DIE_FRONTSIDE);
-	REGISTER_SHARED_ACTIVITY(ACT_DIE_RIGHTSIDE);
-	REGISTER_SHARED_ACTIVITY(ACT_DIE_BACKSIDE);
-	REGISTER_SHARED_ACTIVITY(ACT_DIE_LEFTSIDE);
-
 	REGISTER_SHARED_ACTIVITY(ACT_OPEN_DOOR);
-
-	REGISTER_SHARED_ACTIVITY(ACT_READINESS_RELAXED_TO_STIMULATED);
-	REGISTER_SHARED_ACTIVITY(ACT_READINESS_RELAXED_TO_STIMULATED_WALK);
-	REGISTER_SHARED_ACTIVITY(ACT_READINESS_AGITATED_TO_STIMULATED);
-	REGISTER_SHARED_ACTIVITY(ACT_READINESS_STIMULATED_TO_RELAXED);
-
-	REGISTER_SHARED_ACTIVITY(ACT_READINESS_PISTOL_RELAXED_TO_STIMULATED);
-	REGISTER_SHARED_ACTIVITY(ACT_READINESS_PISTOL_RELAXED_TO_STIMULATED_WALK);
-	REGISTER_SHARED_ACTIVITY(ACT_READINESS_PISTOL_AGITATED_TO_STIMULATED);
-	REGISTER_SHARED_ACTIVITY(ACT_READINESS_PISTOL_STIMULATED_TO_RELAXED);
-
-	REGISTER_SHARED_ACTIVITY(ACT_IDLE_CARRY);
-	REGISTER_SHARED_ACTIVITY(ACT_WALK_CARRY);
 
 	// HL2MP
 	REGISTER_SHARED_ACTIVITY(ACT_HL2MP_IDLE);
@@ -966,144 +861,6 @@ void ActivityList_RegisterSharedActivities( void )
 
 	AssertMsg( g_HighestActivity == LAST_SHARED_ACTIVITY - 1, "Not all activities from ai_activity.h registered in activitylist.cpp" ); 
 } 
-
-// HACKHACK: Keep backwards compatibility on broken activities temporarily
-#define ACTIVITY_FILE_TAG 0x80800000
-
-class CActivityDataOps : public CDefSaveRestoreOps
-{
-public:
-	// save data type interface
-	virtual void Save( const SaveRestoreFieldInfo_t &fieldInfo, ISave *pSave ) 
-	{
-		int activityIndex = *((int *)fieldInfo.pField);
-		const char *pActivityName = ActivityList_NameForIndex( activityIndex );
-		if ( !pActivityName )
-		{
-			AssertOnce( activityIndex == -1 ); // FIXME: whatever activity this was, it's now being saved out as ACT_RESET
-			pActivityName = ActivityList_NameForIndex( 0 );
-		}
-		int len = strlen(pActivityName) + 1;
-		
-		// Use the high 16-bits of this int to signify this file format
-		// this makes this backwards compatible.
-		// UNDONE: Remove after playtest save files are no longer needed
-		len |= ACTIVITY_FILE_TAG;
-		pSave->WriteInt( &len );
-		pSave->WriteString( pActivityName );
-	}
-
-	virtual void Restore( const SaveRestoreFieldInfo_t &fieldInfo, IRestore *pRestore ) 
-	{
-		char nameBuf[1024];
-
-		int *pActivityIndex = (int *)fieldInfo.pField;
-
-		int nameLen = pRestore->ReadInt();
-		if ( (nameLen & 0xFFFF0000) != ACTIVITY_FILE_TAG )
-		{
-			// old save file, this is an index, not a name
-			*pActivityIndex = nameLen;
-			return;
-		}
-		nameLen &= 0xFFFF;
-		pRestore->ReadString( nameBuf, sizeof(nameBuf), nameLen );
-		*pActivityIndex = ActivityList_IndexForName( nameBuf );
-		if ( *pActivityIndex < 0 )
-		{
-			*pActivityIndex = 0;
-		}
-	}
-
-	virtual bool IsEmpty( const SaveRestoreFieldInfo_t &fieldInfo ) 
-	{ 
-		int *pActivityIndex = (int *)fieldInfo.pField;
-		return (*pActivityIndex == 0);
-	}
-
-	virtual void MakeEmpty( const SaveRestoreFieldInfo_t &fieldInfo ) 
-	{
-		int *pActivityIndex = (int *)fieldInfo.pField;
-		*pActivityIndex = 0;
-	}
-};
-
-static CActivityDataOps g_ActivityDataOps;
-
-ISaveRestoreOps* ActivityDataOps()
-{
-	return &g_ActivityDataOps;
-}
-
-
-
-
-void UTIL_LoadActivityRemapFile( const char *filename, const char *section, CUtlVector <CActivityRemap> &entries )
-{
-	int iIndex = m_ActivityRemapDatabase.Find( filename );
-
-	if ( iIndex != m_ActivityRemapDatabase.InvalidIndex() )
-	{
-		CActivityRemapCache *actRemap = &m_ActivityRemapDatabase[iIndex];
-		entries.AddVectorToTail( actRemap->m_cachedActivityRemaps );
-		return;
-	}
-
-	KeyValues *pkvFile = new KeyValues( section );
-
-	if ( pkvFile->LoadFromFile( filesystem, filename, NULL ) )
-	{
-		KeyValues *pTestKey = pkvFile->GetFirstSubKey();
-
-		CActivityRemapCache actRemap;
-
-		while ( pTestKey )
-		{
-			Activity ActBase = (Activity)ActivityList_IndexForName( pTestKey->GetName() );
-
-			if ( ActBase != ACT_INVALID )
-			{
-				KeyValues *pRemapKey = pTestKey->GetFirstSubKey();
-
-				CActivityRemap actMap;
-				actMap.activity = ActBase;
-
-				while ( pRemapKey )
-				{
-					const char *pKeyName = pRemapKey->GetName();
-					const char *pKeyValue = pRemapKey->GetString();
-
-					if ( !stricmp( pKeyName, "remapactivity" ) )
-					{
-						Activity Act = (Activity)ActivityList_IndexForName( pKeyValue );
-
-						if ( Act == ACT_INVALID )
-						{
-							actMap.mappedActivity = ActivityList_RegisterPrivateActivity( pKeyValue );
-						}
-						else
-						{
-							actMap.mappedActivity = Act;
-						}
-					}
-					else if ( !stricmp( pKeyName, "extra" ) )
-					{
-						actMap.SetExtraKeyValueBlock( pRemapKey->MakeCopy() );
-					}
-
-					pRemapKey = pRemapKey->GetNextKey();
-				}
-
-				entries.AddToTail( actMap );
-			}
-
-			pTestKey = pTestKey->GetNextKey();
-		}
-
-		actRemap.m_cachedActivityRemaps.AddVectorToTail( entries );
-		m_ActivityRemapDatabase.Insert( filename, actRemap );
-	}
-}
 
 int ActivityList_HighestIndex()
 {

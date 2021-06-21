@@ -11,9 +11,7 @@
 #include "KeyValues.h"
 #include "icliententity.h"
 #include "iserverentity.h"
-#include "sceneentity.h"
 #include "particles/particles.h"
-
 
 //-----------------------------------------------------------------------------
 // Interface from engine to tools for manipulating entities
@@ -462,7 +460,6 @@ CBaseEntity *CServerTools::FindEntityProcedural( const char *szName, CBaseEntity
 	return gEntList.FindEntityProcedural( szName, pSearchingEntity, pActivator, pCaller );
 }
 
-
 // Interface from engine to tools for manipulating entities
 class CServerChoreoTools : public IServerChoreoTools
 {
@@ -470,47 +467,27 @@ public:
 	// Iterates through ALL entities (separate list for client vs. server)
 	virtual EntitySearchResult	NextChoreoEntity( EntitySearchResult currentEnt )
 	{
-		CBaseEntity *ent = reinterpret_cast< CBaseEntity* >( currentEnt );
-		ent = gEntList.FindEntityByClassname( ent, "logic_choreographed_scene" );
-		return reinterpret_cast< EntitySearchResult >( ent );
+		return NULL;
 	}
 
 	virtual const char			*GetSceneFile( EntitySearchResult sr )
 	{
-		CBaseEntity *ent = reinterpret_cast< CBaseEntity* >( sr );
-		if ( !sr )
-			return "";
-
-		if ( Q_stricmp( ent->GetClassname(), "logic_choreographed_scene" ) )
-			return "";
-
-		return GetSceneFilename( ent );
+		return "";
 	}
 
 	// For interactive editing
 	virtual int	GetEntIndex( EntitySearchResult sr )
 	{
-		CBaseEntity *ent = reinterpret_cast< CBaseEntity* >( sr );
-		if ( !ent )
-			return -1;
-
-		return ent->entindex();
+		return -1;
 	}
 
 	virtual void ReloadSceneFromDisk( int entindex )
 	{
-		CBaseEntity *ent = CBaseEntity::Instance( entindex );
-		if ( !ent )
-			return;
-
-		::ReloadSceneFromDisk( ent );
 	}
 };
 
-
 static CServerChoreoTools g_ServerChoreoTools;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR( CServerChoreoTools, IServerChoreoTools, VSERVERCHOREOTOOLS_INTERFACE_VERSION, g_ServerChoreoTools );
-
 
 //------------------------------------------------------------------------------
 // Applies keyvalues to the entity by hammer ID.

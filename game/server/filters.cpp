@@ -105,23 +105,15 @@ LINK_ENTITY_TO_CLASS(filter_multi, CFilterMultiple);
 
 BEGIN_DATADESC( CFilterMultiple )
 
-
 	// Keys
 	DEFINE_KEYFIELD(m_nFilterType, FIELD_INTEGER, "FilterType"),
-
-	// Silence, Classcheck!
-//	DEFINE_ARRAY( m_iFilterName, FIELD_STRING, MAX_FILTERS ),
-
 	DEFINE_KEYFIELD(m_iFilterName[0], FIELD_STRING, "Filter01"),
 	DEFINE_KEYFIELD(m_iFilterName[1], FIELD_STRING, "Filter02"),
 	DEFINE_KEYFIELD(m_iFilterName[2], FIELD_STRING, "Filter03"),
 	DEFINE_KEYFIELD(m_iFilterName[3], FIELD_STRING, "Filter04"),
 	DEFINE_KEYFIELD(m_iFilterName[4], FIELD_STRING, "Filter05"),
-	DEFINE_ARRAY( m_hFilter, FIELD_EHANDLE, MAX_FILTERS ),
 
 END_DATADESC()
-
-
 
 //------------------------------------------------------------------------------
 // Purpose : Called after all entities have been loaded
@@ -626,6 +618,5 @@ BEGIN_DATADESC( CFilterEnemy )
 	DEFINE_KEYFIELD( m_flRadius, FIELD_FLOAT, "filter_radius" ),
 	DEFINE_KEYFIELD( m_flOuterRadius, FIELD_FLOAT, "filter_outer_radius" ),
 	DEFINE_KEYFIELD( m_nMaxSquadmatesPerEnemy, FIELD_INTEGER, "filter_max_per_enemy" ),
-	DEFINE_FIELD( m_iszPlayerName, FIELD_STRING ),
 
 END_DATADESC()

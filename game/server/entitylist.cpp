@@ -14,19 +14,12 @@
 #include "tier0/vprof.h"
 #include "mapentities.h"
 #include "client.h"
-#include "ai_initutils.h"
 #include "datacache/imdlcache.h"
-
-#ifdef HL2_DLL
-#include "npc_playercompanion.h"
-#endif // HL2_DLL
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 CBaseEntity *FindPickerEntity( CBasePlayer *pPlayer );
-void SceneManager_ClientActive( CBasePlayer *player );
-
 static CUtlVector<IServerNetworkable*> g_DeleteList;
 
 CGlobalEntityList gEntList;
@@ -1415,9 +1408,6 @@ public:
 		g_TouchManager.LevelInitPreEntity();
 		g_AimManager.LevelInitPreEntity();
 		g_SimThinkManager.LevelInitPreEntity();
-#ifdef HL2_DLL
-		OverrideMoveCache_LevelInitPreEntity();
-#endif	// HL2_DLL
 	}
 	void LevelShutdownPreEntity()
 	{
@@ -1428,9 +1418,6 @@ public:
 		g_TouchManager.LevelShutdownPostEntity();
 		g_AimManager.LevelShutdownPostEntity();
 		g_SimThinkManager.LevelShutdownPostEntity();
-#ifdef HL2_DLL
-		OverrideMoveCache_LevelShutdownPostEntity();
-#endif // HL2_DLL
 		CBaseEntityClassList *pClassList = s_pClassLists;
 		while ( pClassList )
 		{
@@ -1469,9 +1456,6 @@ public:
 			// Allows us to immediately re-use the edict indices we just freed to avoid edict overflow
 			engine->AllowImmediateEdictReuse();
 
-			// Reset node counter used during load
-			CNodeEnt::m_nNodeCount = 0;
-
 			CRespawnEntitiesFilter filter;
 			MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &filter, true );
 
@@ -1481,9 +1465,6 @@ public:
 				edict_t *pEdict = engine->PEntityOfEntIndex( nPlayerIndex );
 				ClientPutInServer( pEdict, "unnamed" );
 				ClientActive( pEdict, false );
-
-				CBasePlayer *pPlayer = ( CBasePlayer * )CBaseEntity::Instance( pEdict );
-				SceneManager_ClientActive( pPlayer );
 			}
 		}
 	}

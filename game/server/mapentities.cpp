@@ -10,14 +10,13 @@
 #include "soundent.h"
 #include "TemplateEntities.h"
 #include "point_template.h"
-#include "ai_initutils.h"
 #include "lights.h"
 #include "mapentities.h"
-#include "wcedit.h"
 #include "stringregistry.h"
 #include "datacache/imdlcache.h"
 #include "world.h"
 #include "toolframework/iserverenginetools.h"
+#include "vprof.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -229,21 +228,6 @@ void SetupParentsForSpawnList( int nEntities, HierarchicalSpawn_t *pSpawnList )
 	}
 }
 
-// this is a hook for edit mode
-void RememberInitialEntityPositions( int nEntities, HierarchicalSpawn_t *pSpawnList )
-{
-	for (int nEntity = 0; nEntity < nEntities; nEntity++)
-	{
-		CBaseEntity *pEntity = pSpawnList[nEntity].m_pEntity;
-
-		if ( pEntity )
-		{
-			NWCEdit::RememberEntityPosition( pEntity );
-		}
-	}
-}
-
-
 void SpawnAllEntities( int nEntities, HierarchicalSpawn_t *pSpawnList, bool bActivateEntities )
 {
 	int nEntity;
@@ -378,26 +362,6 @@ void MapEntity_ParseAllEntities(const char *pMapData, IMapEntityFilter *pFilter,
 			DispatchSpawn(pEntity);
 			continue;
 		}
-				
-		CNodeEnt *pNode = dynamic_cast<CNodeEnt*>(pEntity);
-		if ( pNode )
-		{
-			VPROF( "MapEntity_ParseAllEntities_SpawnTransients");
-
-			// We overflow the max edicts on large maps that have lots of entities.
-			// Nodes & Lights remove themselves immediately on Spawn(), so dispatch their
-			// spawn now, to free up the slot inside this loop.
-			// NOTE: This solution prevents nodes & lights from being used inside point_templates.
-			//
-			// NOTE: Nodes spawn other entities (ai_hint) if they need to have a persistent presence.
-			//		 To ensure keys are copied over into the new entity, we pass the mapdata into the
-			//		 node spawn function.
-			if ( pNode->Spawn( pCurMapData ) < 0 )
-			{
-				gEntList.CleanupDeleteList();
-			}
-			continue;
-		}
 
 		if ( dynamic_cast<CLight*>(pEntity) )
 		{
@@ -497,11 +461,6 @@ void SpawnHierarchicalList( int nEntities, HierarchicalSpawn_t *pSpawnList, bool
 	// it can properly set up anything that relies on hierarchy.
 	SortSpawnListByHierarchy( nEntities, pSpawnList );
 
-	// save off entity positions if in edit mode
-	if ( engine->IsInEditMode() )
-	{
-		RememberInitialEntityPositions( nEntities, pSpawnList );
-	}
 	// Set up entity movement hierarchy in reverse hierarchy depth order. This allows each entity
 	// to use its parent's world spawn origin to calculate its local origin.
 	SetupParentsForSpawnList( nEntities, pSpawnList );

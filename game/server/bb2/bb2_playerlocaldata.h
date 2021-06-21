@@ -17,8 +17,6 @@
 class CBB2PlayerLocalData
 {
 public:
-	// Save/restore
-	DECLARE_SIMPLE_DATADESC();
 	DECLARE_CLASS_NOBASE(CBB2PlayerLocalData);
 	DECLARE_EMBEDDED_NETWORKVAR();
 

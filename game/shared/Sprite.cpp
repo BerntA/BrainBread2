@@ -34,30 +34,11 @@ LINK_ENTITY_TO_CLASS( env_glow, CSprite ); // For backwards compatibility, remov
 #if !defined( CLIENT_DLL )
 BEGIN_DATADESC( CSprite )
 
-	DEFINE_FIELD( m_flLastTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flMaxFrame, FIELD_FLOAT ),
-	DEFINE_FIELD( m_hAttachedToEntity, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_nAttachment, FIELD_INTEGER ),
-	DEFINE_FIELD( m_flDieTime, FIELD_TIME ),
-
-	DEFINE_FIELD( m_nBrightness,		FIELD_INTEGER ),
-	DEFINE_FIELD( m_flBrightnessTime,	FIELD_FLOAT ),
-
 	DEFINE_KEYFIELD( m_flSpriteScale, FIELD_FLOAT, "scale" ),
 	DEFINE_KEYFIELD( m_flSpriteFramerate, FIELD_FLOAT, "framerate" ),
 	DEFINE_KEYFIELD( m_flFrame, FIELD_FLOAT, "frame" ),
 	DEFINE_KEYFIELD( m_flHDRColorScale, FIELD_FLOAT, "HDRColorScale" ),
-
 	DEFINE_KEYFIELD( m_flGlowProxySize,	FIELD_FLOAT, "GlowProxySize" ),
-	
-	DEFINE_FIELD( m_flScaleTime,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_flStartScale,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_flDestScale,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_flScaleTimeStart,	FIELD_TIME ),
-	DEFINE_FIELD( m_nStartBrightness,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_nDestBrightness,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_flBrightnessTimeStart, FIELD_TIME ),
-	DEFINE_FIELD( m_bWorldSpaceScale,	FIELD_BOOLEAN ),
 
 	// Function Pointers
 	DEFINE_FUNCTION( AnimateThink ),
@@ -332,26 +313,6 @@ int CSprite::ShouldTransmit( const CCheckTransmitInfo *pInfo )
 	}
 	
 	return FL_EDICT_ALWAYS;
-}
- 
-//-----------------------------------------------------------------------------
-// Purpose: Fixup parent after restore
-//-----------------------------------------------------------------------------
-void CSprite::OnRestore()
-{
-	BaseClass::OnRestore();
-
-	// Reset attachment after save/restore
-	if ( GetFollowedEntity() )
-	{
-		SetAttachment( GetFollowedEntity(), m_nAttachment );
-	}
-	else
-	{
-		// Clear attachment
-		m_hAttachedToEntity = NULL;
-		m_nAttachment = 0;
-	}
 }
 
 //-----------------------------------------------------------------------------

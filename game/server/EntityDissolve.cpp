@@ -41,15 +41,7 @@ static const char *s_pElectroThinkContext = "ElectroThinkContext";
 //-----------------------------------------------------------------------------
 BEGIN_DATADESC( CEntityDissolve )
 
-	DEFINE_FIELD( m_flStartTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flFadeInStart, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flFadeInLength, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flFadeOutModelStart, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flFadeOutModelLength, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flFadeOutStart, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flFadeOutLength, FIELD_FLOAT ),
 	DEFINE_KEYFIELD( m_nDissolveType, FIELD_INTEGER, "dissolvetype" ),
-	DEFINE_FIELD( m_vDissolverOrigin, FIELD_VECTOR ),
 	DEFINE_KEYFIELD( m_nMagnitude, FIELD_INTEGER, "magnitude" ),
 
 	DEFINE_FUNCTION( DissolveThink ),
@@ -260,15 +252,6 @@ CEntityDissolve *CEntityDissolve::Create( CBaseEntity *pTarget, const char *pMat
 	// Send to the client even though we don't have a model
 	pDissolve->AddEFlags( EFL_FORCE_CHECK_TRANSMIT );
 
-	// Play any appropriate noises when we start to dissolve
-	if ( (nDissolveType == ENTITY_DISSOLVE_ELECTRICAL) || (nDissolveType == ENTITY_DISSOLVE_ELECTRICAL_LIGHT) )
-	{
-		pTarget->DispatchResponse( "TLK_ELECTROCUTESCREAM" );
-	}
-	else
-	{
-		pTarget->DispatchResponse( "TLK_DISSOLVESCREAM" );
-	}
 	return pDissolve;
 }
 

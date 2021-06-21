@@ -146,7 +146,6 @@ DEFINE_KEYFIELD(m_iItemType, FIELD_INTEGER, "WeaponType"),
 DEFINE_KEYFIELD(m_bShouldRefresh, FIELD_BOOLEAN, "ShouldRefresh"),
 DEFINE_KEYFIELD(m_iSpawnListType, FIELD_INTEGER, "SpawnType"),
 DEFINE_KEYFIELD(szSpawnList, FIELD_STRING, "SpawnList"),
-DEFINE_FIELD(m_flTimeSinceLastSpawn, FIELD_FLOAT),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(item_weapon_randomizer, CItemWeaponRandomizer);

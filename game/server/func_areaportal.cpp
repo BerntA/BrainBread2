@@ -55,7 +55,6 @@ LINK_ENTITY_TO_CLASS( func_areaportal, CAreaPortal );
 BEGIN_DATADESC( CAreaPortal )
 
 	DEFINE_KEYFIELD( m_portalNumber, FIELD_INTEGER, "portalnumber" ),
-	DEFINE_FIELD( m_state, FIELD_INTEGER ),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "Open",  InputOpen ),

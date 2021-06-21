@@ -34,7 +34,6 @@ LINK_ENTITY_TO_CLASS(item_powerup, CItemPowerup);
 
 BEGIN_DATADESC(CItemPowerup)
 DEFINE_KEYFIELD(czPowerupName, FIELD_STRING, "PowerupName"),
-DEFINE_FIELD(m_flPowerUpDuration, FIELD_FLOAT),
 END_DATADESC()
 
 CItemPowerup::CItemPowerup()

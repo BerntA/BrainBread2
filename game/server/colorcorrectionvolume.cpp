@@ -39,8 +39,6 @@ public:
 	virtual bool PassesTriggerFilters(CBaseEntity *pOther);
 	virtual void StartTouch( CBaseEntity *pEntity );
 	virtual void EndTouch( CBaseEntity *pEntity );
-
-	virtual int	ObjectCaps( void ) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 	
 	// Inputs
 	void	InputEnable( inputdata_t &inputdata );
@@ -76,12 +74,6 @@ BEGIN_DATADESC( CColorCorrectionVolume )
 
 	DEFINE_KEYFIELD( m_bEnabled,		  FIELD_BOOLEAN, "enabled" ),
 	DEFINE_KEYFIELD( m_bStartDisabled,    FIELD_BOOLEAN, "StartDisabled" ),
-
-	DEFINE_FIELD( m_Weight,          FIELD_FLOAT ),
-	DEFINE_FIELD( m_LastEnterWeight, FIELD_FLOAT ),
-	DEFINE_FIELD( m_LastEnterTime,   FIELD_FLOAT ),
-	DEFINE_FIELD( m_LastExitWeight,  FIELD_FLOAT ),
-	DEFINE_FIELD( m_LastExitTime,    FIELD_FLOAT ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),

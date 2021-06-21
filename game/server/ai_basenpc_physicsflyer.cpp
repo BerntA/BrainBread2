@@ -10,23 +10,9 @@
 #include "ai_route.h"
 #include "ai_navigator.h"
 #include "ai_motor.h"
-#include "physics_saverestore.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-BEGIN_DATADESC( CAI_BasePhysicsFlyingBot )
-
-	DEFINE_FIELD( m_vCurrentVelocity,			FIELD_VECTOR),
-	DEFINE_FIELD( m_vCurrentBanking,			FIELD_VECTOR),
-	DEFINE_FIELD( m_vNoiseMod,				FIELD_VECTOR),
-	DEFINE_FIELD( m_fHeadYaw,					FIELD_FLOAT),
-	DEFINE_FIELD( m_vLastPatrolDir,			FIELD_VECTOR),
-
-	DEFINE_PHYSPTR( m_pMotionController ),
-
-END_DATADESC()
-
 
 //------------------------------------------------------------------------------
 // Purpose : Override to return correct velocity
@@ -201,15 +187,6 @@ void CAI_BasePhysicsFlyingBot::StartTask( const Task_t *pTask )
 				}
 			}
 			TaskComplete();
-			break;
-		}
-		// Override to get more to get a directional path
-		case TASK_GET_PATH_TO_RANDOM_NODE:  
-		{
-			if ( GetNavigator()->SetRandomGoal( pTask->flTaskData, m_vLastPatrolDir ) )
-				TaskComplete();
-			else
-				TaskFail(FAIL_NO_REACHABLE_NODE);
 			break;
 		}
 		default:

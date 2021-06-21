@@ -44,7 +44,18 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-extern Vector PointOnLineNearestPoint(const Vector& vStartPos, const Vector& vEndPos, const Vector& vPoint);
+Vector PointOnLineNearestPoint(const Vector& vStartPos, const Vector& vEndPos, const Vector& vPoint)
+{
+	Vector	vEndToStart = (vEndPos - vStartPos);
+	Vector	vOrgToStart = (vPoint - vStartPos);
+	float	fNumerator = DotProduct(vEndToStart, vOrgToStart);
+	float	fDenominator = vEndToStart.Length() * vOrgToStart.Length();
+	float	fIntersectDist = vOrgToStart.Length()*(fNumerator / fDenominator);
+	VectorNormalize(vEndToStart);
+	Vector	vIntersectPos = vStartPos + vEndToStart * fIntersectDist;
+
+	return vIntersectPos;
+}
 
 ConVar mortar_visualize("mortar_visualize", "0" );
 
@@ -56,19 +67,15 @@ BEGIN_DATADESC( CFuncTank )
 	DEFINE_KEYFIELD( m_pitchRange, FIELD_FLOAT, "pitchrange" ),
 	DEFINE_KEYFIELD( m_pitchTolerance, FIELD_FLOAT, "pitchtolerance" ),
 	DEFINE_KEYFIELD( m_fireRate, FIELD_FLOAT, "firerate" ),
-	DEFINE_FIELD( m_fireTime, FIELD_TIME ),
 	DEFINE_KEYFIELD( m_persist, FIELD_FLOAT, "persistence" ),
 	DEFINE_KEYFIELD( m_persist2, FIELD_FLOAT, "persistence2" ),
 	DEFINE_KEYFIELD( m_minRange, FIELD_FLOAT, "minRange" ),
 	DEFINE_KEYFIELD( m_maxRange, FIELD_FLOAT, "maxRange" ),
-	DEFINE_FIELD( m_flMinRange2, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flMaxRange2, FIELD_FLOAT ),
 	DEFINE_KEYFIELD( m_iAmmoCount, FIELD_INTEGER, "ammo_count" ),
 	DEFINE_KEYFIELD( m_spriteScale, FIELD_FLOAT, "spritescale" ),
 	DEFINE_KEYFIELD( m_iszSpriteSmoke, FIELD_STRING, "spritesmoke" ),
 	DEFINE_KEYFIELD( m_iszSpriteFlash, FIELD_STRING, "spriteflash" ),
 	DEFINE_KEYFIELD( m_bulletType, FIELD_INTEGER, "bullet" ),
-	DEFINE_FIELD( m_nBulletCount, FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_spread, FIELD_INTEGER, "firespread" ),
 	DEFINE_KEYFIELD( m_iBulletDamage, FIELD_INTEGER, "bullet_damage" ),
 	DEFINE_KEYFIELD( m_iBulletDamageVsPlayer, FIELD_INTEGER, "bullet_damage_vs_player" ),
@@ -76,63 +83,25 @@ BEGIN_DATADESC( CFuncTank )
 	
 	// We enable all ammo types so that we can have both the old style mounted guns (which players can use) and the new combine cannons (which players can't use, and rely on the new ammo code).
 	DEFINE_KEYFIELD( m_iszAmmoType, FIELD_STRING, "ammotype" ),
-	DEFINE_FIELD( m_iAmmoType, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iSmallAmmoType, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iMediumAmmoType, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iLargeAmmoType, FIELD_INTEGER ),
-
 	DEFINE_KEYFIELD( m_soundStartRotate, FIELD_SOUNDNAME, "rotatestartsound" ),
 	DEFINE_KEYFIELD( m_soundStopRotate, FIELD_SOUNDNAME, "rotatestopsound" ),
 	DEFINE_KEYFIELD( m_soundLoopRotate, FIELD_SOUNDNAME, "rotatesound" ),
 	DEFINE_KEYFIELD( m_flPlayerGracePeriod, FIELD_FLOAT, "playergraceperiod" ),
 	DEFINE_KEYFIELD( m_flIgnoreGraceUpto, FIELD_FLOAT, "ignoregraceupto" ),
 	DEFINE_KEYFIELD( m_flPlayerLockTimeBeforeFire, FIELD_FLOAT, "playerlocktimebeforefire" ),
-	DEFINE_FIELD( m_flLastSawNonPlayer, FIELD_TIME ),
-
-	DEFINE_FIELD( m_yawCenter, FIELD_FLOAT ),
-	DEFINE_FIELD( m_yawCenterWorld, FIELD_FLOAT ),
-	DEFINE_FIELD( m_pitchCenter, FIELD_FLOAT ),
-	DEFINE_FIELD( m_pitchCenterWorld, FIELD_FLOAT ),
-	DEFINE_FIELD( m_fireLast, FIELD_TIME ),
-	DEFINE_FIELD( m_lastSightTime, FIELD_TIME ),
-	DEFINE_FIELD( m_barrelPos, FIELD_VECTOR ),
-	DEFINE_FIELD( m_sightOrigin, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_hFuncTankTarget, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hController, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_vecControllerUsePos, FIELD_VECTOR ),
-	DEFINE_FIELD( m_flNextAttack, FIELD_TIME ),
-	DEFINE_FIELD( m_targetEntityName, FIELD_STRING ),
-	DEFINE_FIELD( m_hTarget, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_vTargetPosition, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_vecNPCIdleTarget, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_persist2burst, FIELD_FLOAT),
-	//DEFINE_FIELD( m_parentMatrix, FIELD_MATRIX ), // DON'T SAVE
-	DEFINE_FIELD( m_hControlVolume, FIELD_EHANDLE ),
 	DEFINE_KEYFIELD( m_iszControlVolume, FIELD_STRING, "control_volume" ),
-	DEFINE_FIELD( m_flNextControllerSearch, FIELD_TIME ),
-	DEFINE_FIELD( m_bShouldFindNPCs, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bNPCInRoute, FIELD_BOOLEAN ),
 	DEFINE_KEYFIELD( m_iszNPCManPoint, FIELD_STRING, "npc_man_point" ),
-	DEFINE_FIELD( m_bReadyToFire, FIELD_BOOLEAN ),
-
 	DEFINE_KEYFIELD( m_bPerformLeading, FIELD_BOOLEAN, "LeadTarget" ),
-	DEFINE_FIELD( m_flStartLeadFactor, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flStartLeadFactorTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flNextLeadFactor, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flNextLeadFactorTime, FIELD_TIME ),
 
 	// Used for when the gun is attached to another entity
 	DEFINE_KEYFIELD( m_iszBaseAttachment, FIELD_STRING, "gun_base_attach" ),
 	DEFINE_KEYFIELD( m_iszBarrelAttachment, FIELD_STRING, "gun_barrel_attach" ),
-//	DEFINE_FIELD( m_nBarrelAttachment, FIELD_INTEGER ),
 
 	// Used when the gun is actually a part of the parent entity, and pose params aim it
 	DEFINE_KEYFIELD( m_iszYawPoseParam, FIELD_STRING, "gun_yaw_pose_param" ),
 	DEFINE_KEYFIELD( m_iszPitchPoseParam, FIELD_STRING, "gun_pitch_pose_param" ),
 	DEFINE_KEYFIELD( m_flYawPoseCenter, FIELD_FLOAT, "gun_yaw_pose_center" ),
 	DEFINE_KEYFIELD( m_flPitchPoseCenter, FIELD_FLOAT, "gun_pitch_pose_center" ),
-	DEFINE_FIELD( m_bUsePoseParameters, FIELD_BOOLEAN ),
-
 	DEFINE_KEYFIELD( m_iEffectHandling, FIELD_INTEGER, "effecthandling" ),
 
 	// Inputs
@@ -2593,9 +2562,6 @@ BEGIN_DATADESC( CFuncTankLaser )
 
 	DEFINE_KEYFIELD( m_iszLaserName, FIELD_STRING, "laserentity" ),
 
-	DEFINE_FIELD( m_pLaser, FIELD_CLASSPTR ),
-	DEFINE_FIELD( m_laserTime, FIELD_TIME ),
-
 END_DATADESC()
 
 
@@ -2761,13 +2727,7 @@ private:
 //-----------------------------------------------------------------------------
 BEGIN_DATADESC( CFuncTankAirboatGun )
 
-	DEFINE_SOUNDPATCH( m_pGunFiringSound ),
-	DEFINE_FIELD( m_flNextHeavyShotTime,	FIELD_TIME ),
-	DEFINE_FIELD( m_bIsFiring,				FIELD_BOOLEAN ),
 	DEFINE_KEYFIELD( m_iszAirboatGunModel,	FIELD_STRING, "airboat_gun_model" ),
-//	DEFINE_FIELD( m_hAirboatGunModel,		FIELD_EHANDLE ),
-//	DEFINE_FIELD( m_nGunBarrelAttachment,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_flLastImpactEffectTime,	FIELD_TIME ),
 
 END_DATADESC()
 
@@ -3036,9 +2996,7 @@ protected:
 BEGIN_DATADESC( CFuncTankAPCRocket )
 
 	DEFINE_KEYFIELD( m_flRocketSpeed, FIELD_FLOAT, "rocketspeed" ),
-	DEFINE_FIELD( m_nSide, FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_nBurstCount, FIELD_INTEGER, "burstcount" ),
-	DEFINE_FIELD( m_bDying, FIELD_BOOLEAN ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "DeathVolley", InputDeathVolley ),
 
@@ -3212,22 +3170,7 @@ private:
 
 LINK_ENTITY_TO_CLASS( mortarshell, CMortarShell );
 
-BEGIN_DATADESC( CMortarShell )
-	DEFINE_FIELD( m_flImpactTime,	FIELD_TIME ),
-	DEFINE_FIELD( m_flFadeTime,		FIELD_TIME ),
-	DEFINE_FIELD( m_flWarnTime,		FIELD_TIME ),
-	DEFINE_FIELD( m_flNPCWarnTime, 	FIELD_TIME ),
-	DEFINE_FIELD( m_warnSound,		FIELD_STRING ),
-	DEFINE_FIELD( m_iSpriteTexture,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_bHasWarned,		FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flLifespan,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_vecFiredFrom,	FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_vecFlyDir,		FIELD_VECTOR ),
-	DEFINE_FIELD( m_flSpawnedTime,	FIELD_TIME ),
-	DEFINE_AUTO_ARRAY( m_pBeamEffect,	FIELD_EHANDLE),
-	DEFINE_FIELD( m_flRadius,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_vecSurfaceNormal, FIELD_VECTOR ),
-	
+BEGIN_DATADESC( CMortarShell )	
 	DEFINE_FUNCTION( FlyThink ),
 	DEFINE_FUNCTION( FadeThink ),
 END_DATADESC()
@@ -3761,10 +3704,6 @@ BEGIN_DATADESC( CFuncTankMortar )
 	DEFINE_KEYFIELD( m_flWarningTime, FIELD_TIME, "warningtime" ),
 	DEFINE_KEYFIELD( m_flFireVariance, FIELD_TIME, "firevariance" ),
 
-	DEFINE_FIELD( m_fLastShotMissed, FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_pAttacker, FIELD_CLASSPTR ),
-
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "ShootGun", InputShootGun ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "FireAtWill", InputFireAtWill ),
@@ -3951,7 +3890,6 @@ LINK_ENTITY_TO_CLASS( func_tankphyscannister, CFuncTankPhysCannister );
 BEGIN_DATADESC( CFuncTankPhysCannister )
 
 	DEFINE_KEYFIELD( m_iszBarrelVolume, FIELD_STRING, "barrel_volume" ),
-	DEFINE_FIELD( m_hBarrelVolume, FIELD_EHANDLE ),
 
 END_DATADESC()
 
@@ -4030,14 +3968,8 @@ private:
 };
 
 BEGIN_DATADESC( CFuncTankCombineCannon )
-	DEFINE_FIELD( m_originalFireRate, FIELD_FLOAT ),
+
 	DEFINE_THINKFUNC( UpdateBeamThink ),
-	DEFINE_FIELD( m_flTimeNextSweep, FIELD_TIME ),
-	DEFINE_FIELD( m_flTimeBeamOn, FIELD_TIME ),
-	DEFINE_FIELD( m_hBeam, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_vecTrueForward, FIELD_VECTOR ),
-	DEFINE_FIELD( m_bShouldHarrass, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bLastTargetWasNPC, FIELD_BOOLEAN ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "EnableHarrass", InputEnableHarrass ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "DisableHarrass", InputDisableHarrass ),

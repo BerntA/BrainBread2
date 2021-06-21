@@ -79,7 +79,6 @@ class C_BreakableSurface : public C_BaseEntity, public IBrushRenderer
 public:
 	DECLARE_CLIENTCLASS();
 	DECLARE_CLASS( C_BreakableSurface, C_BaseEntity );
-	DECLARE_DATADESC();
 
 	int				m_nNumWide;
 	int				m_nNumHigh;
@@ -111,8 +110,6 @@ public:
 	bool		RenderBrushModelSurface( IClientEntity* pBaseEntity, IBrushSurface* pBrushSurface ); 
 	int			DrawModel( int flags );
 	void		DrawSolidBlocks( IBrushSurface* pBrushSurface );
-
-	virtual void	OnRestore();
 
 	virtual bool	ShouldReceiveProjectedTextures( int flags );
 
@@ -177,28 +174,6 @@ private:
 	void		UpdateEdgeType(int nWidth, int nHeight, int forceStyle = -1 );
 };
 
-BEGIN_DATADESC( C_BreakableSurface )
-
-	DEFINE_ARRAY( m_nPanelBits, FIELD_CHARACTER, MAX_NUM_PANELS * MAX_NUM_PANELS ),
-
-//	DEFINE_FIELD( m_nNumWide, FIELD_INTEGER ),
-//	DEFINE_FIELD( m_nNumHigh, FIELD_INTEGER ),
-//	DEFINE_FIELD( m_flPanelWidth, FIELD_FLOAT ),
-//	DEFINE_FIELD( m_flPanelHeight, FIELD_FLOAT ),
-//	DEFINE_FIELD( m_vNormal, FIELD_VECTOR ),
-//	DEFINE_FIELD( m_vCorner, FIELD_VECTOR ),
-//	DEFINE_FIELD( m_bIsBroken, FIELD_BOOLEAN ),
-//	DEFINE_FIELD( m_nSurfaceType, FIELD_INTEGER ),
-	// DEFINE_FIELD( m_pCurrentDetailTexture, ITexture* ),
-	// DEFINE_FIELD( m_RenderList, CUtlLinkedList < Panel_t , unsigned short > ),
-	// DEFINE_FIELD( m_pMaterialBox, CMaterialReference ),
-	// DEFINE_FIELD( m_pSolid, EdgeTexture_t ),
-	// DEFINE_ARRAY( m_pEdge, EdgeTexture_t, NUM_EDGE_TYPES][NUM_EDGE_STYLES ),
-	// DEFINE_FIELD( m_pCrackedMaterial, CMaterialReference ),
-	// DEFINE_FIELD( m_pMaterialBoxTexture, CTextureReference ),
-
-END_DATADESC()
-
 bool C_BreakableSurface::InLegalRange(int nWidth, int nHeight)
 { 
 	return (nWidth < m_nNumWide && nHeight < m_nNumHigh && 
@@ -245,27 +220,6 @@ void C_BreakableSurface::SetPanelStale(int nWidth, int nHeight, bool value)
 	}
 }
 
-void C_BreakableSurface::OnRestore()
-{
-	BaseClass::OnRestore();
-
-	// FIXME:  This restores the general state, but not the random edge bits
-	//  those would need to be serialized separately...
-	// traverse everthing and restore bits
-	// Initialize panels
-	for (int w=0;w<m_nNumWide;w++)
-	{ 
-		for (int h=0;h<m_nNumHigh;h++)
-		{
-			// Force recomputation
-			SetPanelSolid(w,h,IsPanelSolid(w,h));
-			SetPanelStale(w,h,true);
-			UpdateEdgeType( w, h, GetStyleType(w,h ) );
-		}
-	}
-}
-
-
 //Receive datatable
 IMPLEMENT_CLIENTCLASS_DT( C_BreakableSurface, DT_BreakableSurface, CBreakableSurface )
 	RecvPropInt( RECVINFO( m_nNumWide ) ),
@@ -277,7 +231,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_BreakableSurface, DT_BreakableSurface, CBreakableSur
 	RecvPropInt( RECVINFO( m_bIsBroken )),
 	RecvPropInt( RECVINFO( m_nSurfaceType )),
 	RecvPropArray3( RECVINFO_ARRAY(m_RawPanelBitVec), RecvPropInt( RECVINFO( m_RawPanelBitVec[ 0 ] ))),
-
 END_RECV_TABLE()
 
 //-----------------------------------------------------------------------------

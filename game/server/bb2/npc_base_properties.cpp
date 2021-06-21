@@ -29,15 +29,17 @@ CNPCBaseProperties::CNPCBaseProperties()
 	m_bGender = false;
 	pszModelName[0] = 0;
 	m_pNPCData = NULL;
+	m_pOuter = NULL;
 
 	ListenForGameEvent("reload_game_data");
 	ListenForGameEvent("player_connection");
 	ListenForGameEvent("round_started");
 }
 
-bool CNPCBaseProperties::ParseNPC(int index)
+bool CNPCBaseProperties::ParseNPC(CBaseEntity *pEntity)
 {
 	m_flSpeedFactorValue = 1.0f;
+	m_pOuter = pEntity;
 
 	if (!GameBaseShared() || !GameBaseShared()->GetNPCData())
 		return false;
@@ -46,7 +48,6 @@ bool CNPCBaseProperties::ParseNPC(int index)
 	if (npcData)
 	{
 		m_pNPCData = npcData;
-		m_iEntIndex = index;
 
 		const NPCModelItem_t *modelItem = npcData->GetModelItem();
 		Assert(modelItem != NULL);
@@ -119,15 +120,14 @@ void CNPCBaseProperties::UpdateNPCScaling()
 	float newXPValue = ((flHealthScaleAmount + flDamageScaleAmount) * (defaultXP / 100.0f)) + defaultXP;
 	m_iXPToGive = (int)newXPValue;
 
-	CBaseEntity *pEntity = UTIL_EntityByIndex(GetEntIndex());
-	if (pEntity)
+	if (m_pOuter)
 	{
-		float hpPercentLeft = (((float)pEntity->GetHealth()) / ((float)pEntity->GetMaxHealth()));
+		float hpPercentLeft = (((float)m_pOuter->GetHealth()) / ((float)m_pOuter->GetMaxHealth()));
 		hpPercentLeft = clamp(hpPercentLeft, 0.0f, 1.0f);
 		float newHP = clamp(round(flTotal * hpPercentLeft), 1.0f, flTotal);
 
-		pEntity->SetHealth((int)newHP);
-		pEntity->SetMaxHealth(m_iTotalHP);
+		m_pOuter->SetHealth((int)newHP);
+		m_pOuter->SetMaxHealth(m_iTotalHP);
 	}
 
 	m_flDamageScaleValue = flDamageScaleAmount;
@@ -161,13 +161,9 @@ void CNPCBaseProperties::FireGameEvent(IGameEvent *event)
 	}
 
 	// Human Events:
-	CBaseEntity *pEntity = UTIL_EntityByIndex(GetEntIndex());
-	if (!pEntity)
-		return;
-
-	if (pEntity->Classify() != CLASS_COMBINE)
+	if (!m_pOuter || (m_pOuter->Classify() != CLASS_COMBINE))
 		return;
 
 	if (!strcmp(type, "round_started"))
-		HL2MPRules()->EmitSoundToClient(pEntity, "Ready", GetNPCType(), GetGender());
+		HL2MPRules()->EmitSoundToClient(m_pOuter, "Ready", GetNPCType(), GetGender());
 }

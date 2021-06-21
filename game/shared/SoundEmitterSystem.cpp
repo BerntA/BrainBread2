@@ -18,7 +18,6 @@
 
 #ifndef CLIENT_DLL
 #include "envmicrophone.h"
-#include "sceneentity.h"
 #else
 #include <vgui_controls/Controls.h>
 #include <vgui/IVGui.h>
@@ -49,6 +48,38 @@ static bool g_bPermitDirectSoundPrecache = false;
 void ClearModelSoundsCache();
 
 #endif // !CLIENT_DLL
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *token - 
+//			listener - 
+//			soundorigins - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool AttenuateCaption(const char *token, const Vector& listener, CUtlVector< Vector >& soundorigins)
+{
+	if (sv_caption_distance.GetFloat() <= 0.0f)	
+		return false;	
+
+	int c = soundorigins.Count();
+
+	if (c <= 0)
+	{
+		return false;
+	}
+
+	const float maxdistSqr = sv_caption_distance.GetFloat() * sv_caption_distance.GetFloat();
+	for (int i = 0; i < c; ++i)
+	{
+		const Vector& org = soundorigins[i];
+		float distSqr = (org - listener).LengthSqr();
+		if (distSqr <= maxdistSqr)		
+			return false;		
+	}
+
+	// All sound sources too far, don't show caption...
+	return true;
+}
 
 void WaveTrace( char const *wavname, char const *funcname )
 {
@@ -657,9 +688,6 @@ public:
 
 #if !defined( CLIENT_DLL )
 		{
-			// Defined in sceneentity.cpp
-			bool AttenuateCaption( const char *token, const Vector& listener, CUtlVector< Vector >& soundorigins );
-
 			if ( filterCopy.GetRecipientCount() > 0 )
 			{
 				int c = filterCopy.GetRecipientCount();
@@ -1339,14 +1367,6 @@ void CBaseEntity::EmitAmbientSound( int entindex, const Vector& origin, const ch
 	g_SoundEmitterSystem.EmitAmbientSound( entindex, origin, soundname, 0.0, flags, 0, soundtime, duration );
 }
 
-// HACK HACK:  Do we need to pull the entire SENTENCEG_* wrapper over to the client .dll?
-#if defined( CLIENT_DLL )
-int SENTENCEG_Lookup(const char *sample)
-{
-	return engine->SentenceIndexFromName( sample + 1 );
-}
-#endif
-
 void UTIL_EmitAmbientSound( int entindex, const Vector &vecOrigin, const char *samp, float vol, soundlevel_t soundlevel, int fFlags, int pitch, float soundtime /*= 0.0f*/, float *duration /*=NULL*/ )
 {
 #ifdef STAGING_ONLY
@@ -1356,31 +1376,7 @@ void UTIL_EmitAmbientSound( int entindex, const Vector &vecOrigin, const char *s
 	}
 #endif // STAGING_ONLY
 
-	if (samp && *samp == '!')
-	{
-		int sentenceIndex = SENTENCEG_Lookup(samp);
-		if (sentenceIndex >= 0)
-		{
-			char name[32];
-			Q_snprintf( name, sizeof(name), "!%d", sentenceIndex );
-#if !defined( CLIENT_DLL )
-			engine->EmitAmbientSound( entindex, vecOrigin, name, vol, soundlevel, fFlags, pitch, soundtime );
-#else
-			enginesound->EmitAmbientSound( name, vol, pitch, fFlags, soundtime );
-#endif
-			if ( duration )
-			{
-				*duration = enginesound->GetSoundDuration( name );
-			}
-
-			g_SoundEmitterSystem.TraceEmitSound( "UTIL_EmitAmbientSound:  Sentence emitted '%s' (ent %i)\n",
-				name, entindex );
-		}
-	}
-	else
-	{
-		g_SoundEmitterSystem.EmitAmbientSound( entindex, vecOrigin, samp, vol, soundlevel, fFlags, pitch, soundtime, duration );
-	}
+	g_SoundEmitterSystem.EmitAmbientSound(entindex, vecOrigin, samp, vol, soundlevel, fFlags, pitch, soundtime, duration);
 }
 
 static const char *UTIL_TranslateSoundName( const char *soundname, const char *actormodel )

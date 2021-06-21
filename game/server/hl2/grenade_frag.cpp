@@ -54,10 +54,6 @@ LINK_ENTITY_TO_CLASS( npc_grenade_frag, CGrenadeFrag );
 
 BEGIN_DATADESC( CGrenadeFrag )
 
-	// Fields
-	DEFINE_FIELD( m_inSolid, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_combineSpawned, FIELD_BOOLEAN ),
-	
 	// Function Pointers
 	DEFINE_THINKFUNC( DelayThink ),
 

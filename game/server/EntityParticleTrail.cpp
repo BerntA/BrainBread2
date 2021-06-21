@@ -22,12 +22,7 @@ static const char *s_pRetireContext = "RetireContext";
 //-----------------------------------------------------------------------------
 BEGIN_DATADESC( CEntityParticleTrail )
 
-	DEFINE_FIELD( m_iMaterialName, FIELD_MATERIALINDEX ),
 	DEFINE_EMBEDDED( m_Info ),
-	DEFINE_FIELD( m_hConstraintEntity, FIELD_EHANDLE ),
-
-	// Think this should be handled by StartTouch/etc.
-//	DEFINE_FIELD( m_nRefCount, FIELD_INTEGER ),
 
 END_DATADESC()
 

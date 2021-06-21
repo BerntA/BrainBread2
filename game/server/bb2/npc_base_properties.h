@@ -22,7 +22,7 @@ public:
 	CNPCBaseProperties();
 
 	// Parses the npc data from data/npc.
-	virtual bool ParseNPC(int index);
+	virtual bool ParseNPC(CBaseEntity *pEntity);
 
 	// Every NPC will scale up with the amount of players in game to make sure it always is a challenge! (also take the player's level into account?)
 	virtual void UpdateNPCScaling();
@@ -36,11 +36,7 @@ public:
 	// Every NPC should override this!
 	virtual const char *GetNPCName() { return "UNKNOWN"; }
 
-	virtual int GetEntIndex() { return m_iEntIndex; }
-
 	const char *GetNPCModelName() { return pszModelName; }
-
-	void SetEntIndex(int index) { m_iEntIndex = index; }
 
 protected:
 
@@ -57,7 +53,6 @@ protected:
 	int m_iDamageOneHand;
 	int m_iDamageBothHands;
 	int m_iDamageKick;
-	int m_iEntIndex;
 	float m_flRange;
 	bool m_bGender;
 
@@ -75,6 +70,8 @@ private:
 	int m_iDefaultDamage1H;
 	int m_iDefaultDamage2H;
 	int m_iDefaultKickDamage;
+
+	CBaseEntity *m_pOuter;
 };
 
 #endif // NPC_BASE_PROPERTIES_H

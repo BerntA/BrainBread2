@@ -21,30 +21,9 @@
 #define SOUNDLISTTYPE_FREE		1
 #define SOUNDLISTTYPE_ACTIVE	2
 
-
-
 LINK_ENTITY_TO_CLASS( soundent, CSoundEnt );
 
 static CSoundEnt *g_pSoundEnt = NULL;
-
-BEGIN_SIMPLE_DATADESC( CSound )
-
-	DEFINE_FIELD( m_hOwner,				FIELD_EHANDLE ),
-	DEFINE_FIELD( m_iVolume,			FIELD_INTEGER ),
-	DEFINE_FIELD( m_flOcclusionScale,	FIELD_FLOAT ),
-	DEFINE_FIELD( m_iType,				FIELD_INTEGER ),
-//	DEFINE_FIELD( m_iNextAudible,		FIELD_INTEGER ),
-	DEFINE_FIELD( m_bNoExpirationTime,	FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flExpireTime,		FIELD_TIME ),
-	DEFINE_FIELD( m_iNext,				FIELD_SHORT ),
-	DEFINE_FIELD( m_ownerChannelIndex,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_vecOrigin,			FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_bHasOwner,			FIELD_BOOLEAN ),
-//	DEFINE_FIELD( m_iMyIndex,			FIELD_INTEGER ),
-	DEFINE_FIELD( m_hTarget,			FIELD_EHANDLE ),
-
-END_DATADESC()
-
 
 //=========================================================
 // CSound - Clear - zeros all fields for a sound
@@ -178,21 +157,6 @@ const Vector &CSound::GetSoundReactOrigin( void )
 	return GetSoundOrigin();
 }
 
-
-
-//-----------------------------------------------------------------------------
-// Save/load
-//-----------------------------------------------------------------------------
-BEGIN_DATADESC( CSoundEnt )
-
-	DEFINE_FIELD( m_iFreeSound,			FIELD_INTEGER ),
-	DEFINE_FIELD( m_iActiveSound,		FIELD_INTEGER ),
-	DEFINE_FIELD( m_cLastActiveSounds,	FIELD_INTEGER ),
-	DEFINE_EMBEDDED_ARRAY( m_SoundPool, MAX_WORLD_SOUNDS_SP ),
-
-END_DATADESC()
-
-
 //-----------------------------------------------------------------------------
 // Class factory methods
 //-----------------------------------------------------------------------------
@@ -241,20 +205,6 @@ void CSoundEnt::Spawn( void )
 
 	SetNextThink( gpGlobals->curtime + 1 );
 }
-
-void CSoundEnt::OnRestore()
-{
-	BaseClass::OnRestore();
-
-	// Make sure the singleton points to the restored version of this.
-	if ( g_pSoundEnt )
-	{
-		Assert( g_pSoundEnt != this );
-		UTIL_Remove( g_pSoundEnt );
-	}
-	g_pSoundEnt = this;
-}
-
 
 //=========================================================
 // Think - at interval, the entire active sound list is checked

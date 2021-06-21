@@ -76,8 +76,6 @@ enum SCOND_t
 	COND_WEAPON_PLAYER_IN_SPREAD,	// Player in shooting direction
 	COND_WEAPON_PLAYER_NEAR_TARGET,	// Player near shooting position
 	COND_WEAPON_SIGHT_OCCLUDED,
-	COND_BETTER_WEAPON_AVAILABLE,
-	COND_HEALTH_ITEM_AVAILABLE,		// There's a healthkit available.
 	COND_GIVE_WAY,					// Another npc requested that I give way
 	COND_WAY_CLEAR,					// I no longer have to give way
 	COND_HEAR_DANGER,
@@ -97,18 +95,9 @@ enum SCOND_t
 
 	COND_MOBBED_BY_ENEMIES,			// Surrounded by a large number of enemies melee attacking me. (Zombies or Antlions, usually).
 
-	// Commander stuff
-	COND_RECEIVED_ORDERS,
-	COND_PLAYER_ADDED_TO_SQUAD,
-	COND_PLAYER_REMOVED_FROM_SQUAD,
-
 	COND_PLAYER_PUSHING,
 	COND_NPC_FREEZE,				// We received an npc_freeze command while we were unfrozen
 	COND_NPC_UNFREEZE,				// We received an npc_freeze command while we were frozen
-
-	// This is a talker condition, but done here because we need to handle it in base AI
-	// due to it's interaction with behaviors.
-	COND_TALKER_RESPOND_TO_QUESTION,
 	
 	COND_NO_CUSTOM_INTERRUPTS,		// Don't call BuildScheduleTestBits for this schedule. Used for schedules that must strictly control their interruptibility.
 

@@ -41,7 +41,6 @@ END_SEND_TABLE()
 LINK_ENTITY_TO_CLASS( env_rotorwash_emitter, CRotorWashEmitter );
 
 BEGIN_DATADESC( CRotorWashEmitter )
-	DEFINE_FIELD( 		m_bEmit, 		FIELD_BOOLEAN ),
 	DEFINE_KEYFIELD( m_flAltitude, 	FIELD_FLOAT, "altitude" ),
 END_DATADESC()
 

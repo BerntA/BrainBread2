@@ -22,19 +22,8 @@ LINK_ENTITY_TO_CLASS(env_flare, CFlare);
 
 BEGIN_DATADESC(CFlare)
 
-DEFINE_FIELD(m_pOwner, FIELD_CLASSPTR),
-DEFINE_FIELD(m_nBounces, FIELD_INTEGER),
-DEFINE_FIELD(m_flTimeBurnOut, FIELD_TIME),
 DEFINE_KEYFIELD(m_flScale, FIELD_FLOAT, "scale"),
 DEFINE_KEYFIELD(m_flDuration, FIELD_FLOAT, "duration"),
-DEFINE_FIELD(m_flNextDamage, FIELD_TIME),
-DEFINE_SOUNDPATCH(m_pBurnSound),
-DEFINE_FIELD(m_bFading, FIELD_BOOLEAN),
-DEFINE_FIELD(m_bLight, FIELD_BOOLEAN),
-DEFINE_FIELD(m_bSmoke, FIELD_BOOLEAN),
-DEFINE_FIELD(m_bPropFlare, FIELD_BOOLEAN),
-DEFINE_FIELD(m_bInActiveList, FIELD_BOOLEAN),
-DEFINE_FIELD(m_pNextFlare, FIELD_CLASSPTR),
 
 //Input functions
 DEFINE_INPUTFUNC(FIELD_FLOAT, "Start", InputStart),
@@ -134,28 +123,6 @@ void CFlare::Precache(void)
 
 	// FIXME: needed to precache the fire model.  Shouldn't have to do this.
 	UTIL_PrecacheOther("_firesmoke");
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : &restore - 
-// Output : int
-//-----------------------------------------------------------------------------
-int CFlare::Restore(IRestore &restore)
-{
-	int result = BaseClass::Restore(restore);
-
-	if (m_spawnflags & SF_FLARE_NO_DLIGHT)
-	{
-		m_bLight = false;
-	}
-
-	if (m_spawnflags & SF_FLARE_NO_SMOKE)
-	{
-		m_bSmoke = false;
-	}
-
-	return result;
 }
 
 //-----------------------------------------------------------------------------

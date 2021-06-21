@@ -102,7 +102,7 @@ C_ClientSideGibBase::~C_ClientSideGibBase()
 
 bool C_ClientSideGibBase::Initialize(int type)
 {
-	if (engine->IsInEditMode() || (InitializeAsClientEntity(STRING(GetModelName()), RENDER_GROUP_OPAQUE_ENTITY) == false))
+	if (InitializeAsClientEntity(STRING(GetModelName()), RENDER_GROUP_OPAQUE_ENTITY) == false)
 		return false;
 
 	AddEFlags(EFL_USE_PARTITION_WHEN_NOT_SOLID);
@@ -114,7 +114,7 @@ bool C_ClientSideGibBase::Initialize(int type)
 
 bool C_ClientSideGibBase::Initialize(int type, const model_t *model)
 {
-	if (engine->IsInEditMode() || (InitializeAsClientEntity(NULL, RENDER_GROUP_OPAQUE_ENTITY) == false))
+	if (InitializeAsClientEntity(NULL, RENDER_GROUP_OPAQUE_ENTITY) == false)
 		return false;
 
 	SetModelName(modelinfo->GetModelName(model));

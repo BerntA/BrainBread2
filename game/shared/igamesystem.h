@@ -45,12 +45,6 @@ public:
 	// Entities are deleted / released here...
 	virtual void LevelShutdownPostEntity() = 0;
 	// end of level shutdown
-	
-	// Called during game save
-	virtual void OnSave() = 0;
-
-	// Called during game restore, after the local player has connected and entities have been fully restored
-	virtual void OnRestore() = 0;
 
 	// Called every frame. It's safe to remove an igamesystem from within this callback.
 	virtual void SafeRemoveIfDesired() = 0;
@@ -79,9 +73,6 @@ public:
 	static void LevelShutdownPreClearSteamAPIContextAllSystems(); // Called prior to steamgameserverapicontext->Clear()
 	static void LevelShutdownPreEntityAllSystems();
 	static void LevelShutdownPostEntityAllSystems();
-
-	static void OnSaveAllSystems();
-	static void OnRestoreAllSystems();
 
 	static void SafeRemoveIfDesiredAllSystems();
 
@@ -145,8 +136,6 @@ public:
 	virtual void LevelShutdownPreEntity() {}
 	virtual void LevelShutdownPostEntity() {}
 
-	virtual void OnSave() {}
-	virtual void OnRestore() {}
 	virtual void SafeRemoveIfDesired() {}
 
 	virtual bool	IsPerFrame() { return false; }
@@ -192,8 +181,6 @@ public:
 	virtual void LevelShutdownPreEntity() {}
 	virtual void LevelShutdownPostEntity() {}
 
-	virtual void OnSave() {}
-	virtual void OnRestore() {}
 	virtual void SafeRemoveIfDesired() {}
 
 	virtual bool	IsPerFrame() { return true; }

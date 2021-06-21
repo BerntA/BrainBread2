@@ -22,13 +22,6 @@ BEGIN_DATADESC( CEntityFlame )
 
 	DEFINE_KEYFIELD( m_flLifetime, FIELD_FLOAT, "lifetime" ),
 
-	DEFINE_FIELD( m_flSize, FIELD_FLOAT ),
-	DEFINE_FIELD( m_hEntAttached, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_bUseHitboxes, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_iNumHitboxFires, FIELD_INTEGER ),
-	DEFINE_FIELD( m_flHitboxFireScale, FIELD_FLOAT ),
-	// DEFINE_FIELD( m_bPlayingSound, FIELD_BOOLEAN ),
-	
 	DEFINE_FUNCTION( FlameThink ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Ignite", InputIgnite ),

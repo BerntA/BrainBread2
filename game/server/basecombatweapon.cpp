@@ -543,70 +543,6 @@ void CBaseCombatWeapon::CheckRespawn( void )
 	}
 }
 
-class CWeaponList : public CAutoGameSystem
-{
-public:
-	CWeaponList( char const *name ) : CAutoGameSystem( name )
-	{
-	}
-
-
-	virtual void LevelShutdownPostEntity()  
-	{ 
-		m_list.Purge();
-	}
-
-	void AddWeapon( CBaseCombatWeapon *pWeapon )
-	{
-		m_list.AddToTail( pWeapon );
-	}
-
-	void RemoveWeapon( CBaseCombatWeapon *pWeapon )
-	{
-		m_list.FindAndRemove( pWeapon );
-	}
-	CUtlLinkedList< CBaseCombatWeapon * > m_list;
-};
-
-CWeaponList g_WeaponList( "CWeaponList" );
-
-void OnBaseCombatWeaponCreated( CBaseCombatWeapon *pWeapon )
-{
-	g_WeaponList.AddWeapon( pWeapon );
-}
-
-void OnBaseCombatWeaponDestroyed( CBaseCombatWeapon *pWeapon )
-{
-	g_WeaponList.RemoveWeapon( pWeapon );
-}
-
-int CBaseCombatWeapon::GetAvailableWeaponsInBox( CBaseCombatWeapon **pList, int listMax, const Vector &mins, const Vector &maxs )
-{
-	// linear search all weapons
-	int count = 0;
-	int index = g_WeaponList.m_list.Head();
-	while ( index != g_WeaponList.m_list.InvalidIndex() )
-	{
-		CBaseCombatWeapon *pWeapon = g_WeaponList.m_list[index];
-		// skip any held weapon
-		if ( !pWeapon->GetOwner() )
-		{
-			// restrict to mins/maxs
-			if ( IsPointInBox( pWeapon->GetAbsOrigin(), mins, maxs ) )
-			{
-				if ( count < listMax )
-				{
-					pList[count] = pWeapon;
-					count++;
-				}
-			}
-		}
-		index = g_WeaponList.m_list.Next( index );
-	}
-
-	return count;
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -620,7 +556,6 @@ int	CBaseCombatWeapon::ObjectCaps( void )
 
 	return caps;
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 

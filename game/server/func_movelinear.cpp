@@ -11,7 +11,6 @@
 #include "locksounds.h"
 #include "ndebugoverlay.h"
 #include "engine/IEngineSound.h"
-#include "physics_saverestore.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -35,11 +34,9 @@ BEGIN_DATADESC( CFuncMoveLinear )
 	DEFINE_KEYFIELD( m_vecMoveDir,		 FIELD_VECTOR, "movedir" ),
 	DEFINE_KEYFIELD( m_soundStart,		 FIELD_SOUNDNAME, "StartSound" ),
 	DEFINE_KEYFIELD( m_soundStop,		 FIELD_SOUNDNAME, "StopSound" ),
-	DEFINE_FIELD( m_currentSound, FIELD_SOUNDNAME ),
 	DEFINE_KEYFIELD( m_flBlockDamage,	 FIELD_FLOAT,	"BlockDamage"),
 	DEFINE_KEYFIELD( m_flStartPosition, FIELD_FLOAT,	"StartPosition"),
 	DEFINE_KEYFIELD( m_flMoveDistance,  FIELD_FLOAT,	"MoveDistance"),
-//	DEFINE_PHYSPTR( m_pFluidController ),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID,  "Open", InputOpen ),
@@ -106,14 +103,6 @@ void CFuncMoveLinear::Spawn( void )
 	}
 
 	CreateVPhysics();
-}
-
-
-bool CFuncMoveLinear::ShouldSavePhysics( void )
-{
-	// don't save physics for func_water_analog, regen
-	return !FClassnameIs( this, "func_water_analog" );
-		
 }
 
 //-----------------------------------------------------------------------------

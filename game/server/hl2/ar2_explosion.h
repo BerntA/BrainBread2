@@ -15,8 +15,6 @@
 
 class AR2Explosion : public CBaseParticleEntity
 {
-	DECLARE_DATADESC();
-
 public:
 	DECLARE_CLASS( AR2Explosion, CBaseParticleEntity );
 	DECLARE_SERVERCLASS();

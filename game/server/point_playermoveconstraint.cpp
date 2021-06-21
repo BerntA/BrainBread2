@@ -5,7 +5,6 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "saverestore_utlvector.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -44,8 +43,6 @@ BEGIN_DATADESC( CPointPlayerMoveConstraint )
 	DEFINE_KEYFIELD( m_flRadius, FIELD_FLOAT, "radius" ),
 	DEFINE_KEYFIELD( m_flConstraintWidth, FIELD_FLOAT, "width" ),
 	DEFINE_KEYFIELD( m_flSpeedFactor, FIELD_FLOAT, "speedfactor" ),
-	// DEFINE_FIELD( m_flRadiusSquared, FIELD_FLOAT ),		// Don't Save
-	DEFINE_UTLVECTOR( m_hConstrainedPlayers, FIELD_EHANDLE ),
 
 	DEFINE_THINKFUNC( ConstraintThink ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOn", InputTurnOn ),

@@ -45,9 +45,6 @@ DEFINE_INPUTFUNC(FIELD_VOID, "Start", InputStartQuest),
 DEFINE_INPUTFUNC(FIELD_COLOR32, "Progress", InputProgressQuest),
 DEFINE_INPUTFUNC(FIELD_VOID, "Fail", InputFailQuest),
 
-DEFINE_FIELD(m_iQuestStatusOverall, FIELD_INTEGER),
-DEFINE_FIELD(m_iProgressValue, FIELD_INTEGER),
-
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(logic_quest, CLogicQuest);

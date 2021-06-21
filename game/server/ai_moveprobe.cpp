@@ -64,16 +64,6 @@ CON_COMMAND( ai_set_move_height_epsilon, "Set how high AI bumps up ground walker
 }
 
 //-----------------------------------------------------------------------------
-
-BEGIN_SIMPLE_DATADESC(CAI_MoveProbe)
-	//					m_pTraceListData (not saved, a cached item)
-	DEFINE_FIELD( m_bIgnoreTransientEntities,		FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_hLastBlockingEnt,				FIELD_EHANDLE ),
-
-END_DATADESC();
-
-
-//-----------------------------------------------------------------------------
 // Categorizes the blocker and sets the appropriate bits
 //-----------------------------------------------------------------------------
 AIMoveResult_t AIComputeBlockerMoveResult( CBaseEntity *pBlocker )

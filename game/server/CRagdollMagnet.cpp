@@ -23,7 +23,6 @@ BEGIN_DATADESC( CRagdollMagnet )
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),
-
 END_DATADESC()
 
 //-----------------------------------------------------------------------------

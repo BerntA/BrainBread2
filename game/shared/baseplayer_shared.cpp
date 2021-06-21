@@ -69,11 +69,6 @@
 	};
 #endif
 
-bool UseHWMorphModels()
-{
-	return false;
-}
-
 void CopySoundNameWithModifierToken( char *pchDest, const char *pchSource, int nMaxLenInChars, const char *pchToken )
 {
 	// Copy the sound name

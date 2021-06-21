@@ -7,7 +7,6 @@
 #include "cbase.h"
 #include "ai_basenpc.h"
 #include "player.h"
-#include "saverestore.h"
 #include "gamerules.h"
 #include "entityapi.h"
 #include "entitylist.h"
@@ -15,11 +14,8 @@
 #include "filters.h"
 #include "vstdlib/random.h"
 #include "triggers.h"
-#include "saverestoretypes.h"
 #include "hierarchy.h"
 #include "bspfile.h"
-#include "saverestore_utlvector.h"
-#include "physics_saverestore.h"
 #include "te_effect_dispatch.h"
 #include "ammodef.h"
 #include "movevars_shared.h"
@@ -28,8 +24,6 @@
 #include "RagdollBoogie.h"
 #include "EntityParticleTrail.h"
 #include "in_buttons.h"
-#include "ai_behavior_follow.h"
-#include "ai_behavior_lead.h"
 #include "gameinterface.h"
 
 #ifdef HL2_DLL
@@ -91,9 +85,7 @@ BEGIN_DATADESC( CBaseTrigger )
 
 	// Keyfields
 	DEFINE_KEYFIELD( m_iFilterName,	FIELD_STRING,	"filtername" ),
-	DEFINE_FIELD( m_hFilter,	FIELD_EHANDLE ),
 	DEFINE_KEYFIELD( m_bDisabled,		FIELD_BOOLEAN,	"StartDisabled" ),
-	DEFINE_UTLVECTOR( m_hTouchingEntities, FIELD_EHANDLE ),
 
 	// Inputs	
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
@@ -590,16 +582,11 @@ BEGIN_DATADESC( CTriggerHurt )
 	DEFINE_THINKFUNC(HurtThink),
 
 	// Fields
-	DEFINE_FIELD( m_flOriginalDamage, FIELD_FLOAT ),
 	DEFINE_KEYFIELD( m_flDamage, FIELD_FLOAT, "damage" ),
 	DEFINE_KEYFIELD( m_flDamageCap, FIELD_FLOAT, "damagecap" ),
 	DEFINE_KEYFIELD( m_bitsDamageInflict, FIELD_INTEGER, "damagetype" ),
 	DEFINE_KEYFIELD( m_damageModel, FIELD_INTEGER, "damagemodel" ),
 	DEFINE_KEYFIELD( m_bNoDmgForce, FIELD_BOOLEAN, "nodmgforce" ),
-
-	DEFINE_FIELD( m_flLastDmgTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flDmgResetTime, FIELD_TIME ),
-	DEFINE_UTLVECTOR( m_hurtEntities, FIELD_EHANDLE ),
 
 	// Inputs
 	DEFINE_INPUT( m_flDamage, FIELD_FLOAT, "SetDamage" ),
@@ -989,12 +976,7 @@ private:
 LINK_ENTITY_TO_CLASS( trigger_look, CTriggerLook );
 BEGIN_DATADESC( CTriggerLook )
 
-	DEFINE_FIELD( m_hLookTarget, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_flLookTimeTotal, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flLookTimeLast, FIELD_TIME ),
 	DEFINE_KEYFIELD( m_flTimeoutDuration, FIELD_FLOAT, "timeout" ),
-	DEFINE_FIELD( m_bTimeoutFired, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_hActivator, FIELD_EHANDLE ),
 
 	DEFINE_OUTPUT( m_OnTimeout, "OnTimeout" ),
 
@@ -1212,7 +1194,6 @@ public:
 BEGIN_DATADESC( CTriggerPush )
 	DEFINE_KEYFIELD( m_vecPushDir, FIELD_VECTOR, "pushdir" ),
 	DEFINE_KEYFIELD( m_flAlternateTicksFix, FIELD_FLOAT, "alternateticksfix" ),
-	//DEFINE_FIELD( m_flPushSpeed, FIELD_FLOAT ),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( trigger_push, CTriggerPush );
@@ -1501,8 +1482,6 @@ public:
 	// Input handlers.
 	void InputActivate( inputdata_t &inputdata );
 
-	int ObjectCaps( void ) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
-
 	DECLARE_DATADESC();
 
 private:
@@ -1519,7 +1498,6 @@ BEGIN_DATADESC( CAI_ChangeTarget )
 
 END_DATADESC()
 
-
 void CAI_ChangeTarget::InputActivate( inputdata_t &inputdata )
 {
 	CBaseEntity *pTarget = NULL;
@@ -1535,107 +1513,6 @@ void CAI_ChangeTarget::InputActivate( inputdata_t &inputdata )
 	}
 }
 
-
-
-
-
-
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Change an NPC's hint group to something new
-//-----------------------------------------------------------------------------
-class CAI_ChangeHintGroup : public CBaseEntity
-{
-public:
-	DECLARE_CLASS( CAI_ChangeHintGroup, CBaseEntity );
-
-	int ObjectCaps( void ) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
-
-	// Input handlers.
-	void InputActivate( inputdata_t &inputdata );
-
-	DECLARE_DATADESC();
-
-private:
-	CAI_BaseNPC *FindQualifiedNPC( CAI_BaseNPC *pPrev, CBaseEntity *pActivator, CBaseEntity *pCaller );
-
-	int			m_iSearchType;
-	string_t	m_strSearchName;
-	string_t	m_strNewHintGroup;
-	float		m_flRadius;
-	bool		m_bHintGroupNavLimiting;
-};
-LINK_ENTITY_TO_CLASS( ai_changehintgroup, CAI_ChangeHintGroup );
-
-BEGIN_DATADESC( CAI_ChangeHintGroup )
-
-	DEFINE_KEYFIELD( m_iSearchType, FIELD_INTEGER, "SearchType" ),
-	DEFINE_KEYFIELD( m_strSearchName, FIELD_STRING, "SearchName" ),
-	DEFINE_KEYFIELD( m_strNewHintGroup, FIELD_STRING, "NewHintGroup" ),
-	DEFINE_KEYFIELD( m_flRadius, FIELD_FLOAT, "Radius" ),
-	DEFINE_KEYFIELD( m_bHintGroupNavLimiting,	FIELD_BOOLEAN, "hintlimiting" ),
-
-	DEFINE_INPUTFUNC( FIELD_VOID, "Activate", InputActivate ),
-
-END_DATADESC()
-
-CAI_BaseNPC *CAI_ChangeHintGroup::FindQualifiedNPC( CAI_BaseNPC *pPrev, CBaseEntity *pActivator, CBaseEntity *pCaller )
-{
-	CBaseEntity *pEntity = pPrev;
-	CAI_BaseNPC *pResult = NULL;
-	const char *pszSearchName = STRING(m_strSearchName);
-	while ( !pResult )
-	{
-		// Find a candidate
-		switch ( m_iSearchType )
-		{
-			case 0:
-			{
-				pEntity = gEntList.FindEntityByNameWithin( pEntity, pszSearchName, GetLocalOrigin(), m_flRadius, NULL, pActivator, pCaller );
-				break;
-			}
-			
-			case 1:
-			{
-				pEntity = gEntList.FindEntityByClassnameWithin( pEntity, pszSearchName, GetLocalOrigin(), m_flRadius );
-				break;
-			}
-
-			case 2:
-			{
-				pEntity = gEntList.FindEntityInSphere( pEntity, GetLocalOrigin(), ( m_flRadius != 0.0 ) ? m_flRadius : FLT_MAX );
-				break;
-			}
-		}
-
-		if ( !pEntity )
-			return NULL;
-
-		// Qualify
-		pResult = pEntity->MyNPCPointer();
-		if ( pResult && m_iSearchType == 2 && (!FStrEq( STRING(pResult->GetHintGroup()), pszSearchName ) ) )
-		{
-			pResult = NULL;
-		}
-	}
-
-	return pResult;
-}
-
-void CAI_ChangeHintGroup::InputActivate( inputdata_t &inputdata )
-{
-	CAI_BaseNPC *pTarget = NULL;
-
-	while((pTarget = FindQualifiedNPC( pTarget, inputdata.pActivator, inputdata.pCaller )) != NULL)
-	{
-		pTarget->SetHintGroup( m_strNewHintGroup, m_bHintGroupNavLimiting );
-	}
-}
-
-
-
-
 #define SF_CAMERA_PLAYER_POSITION		1
 #define SF_CAMERA_PLAYER_TARGET			2
 #define SF_CAMERA_PLAYER_TAKECONTROL	4
@@ -1643,7 +1520,6 @@ void CAI_ChangeHintGroup::InputActivate( inputdata_t &inputdata )
 #define SF_CAMERA_PLAYER_SNAP_TO		16
 #define SF_CAMERA_PLAYER_NOT_SOLID		32
 #define SF_CAMERA_PLAYER_INTERRUPT		64
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1704,25 +1580,7 @@ LINK_ENTITY_TO_CLASS( point_viewcontrol, CTriggerCamera );
 
 BEGIN_DATADESC( CTriggerCamera )
 
-	DEFINE_FIELD( m_hPlayer, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hTarget, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_pPath, FIELD_CLASSPTR ),
-	DEFINE_FIELD( m_sPath, FIELD_STRING ),
-	DEFINE_FIELD( m_flWait, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flReturnTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flStopTime, FIELD_TIME ),
-	DEFINE_FIELD( m_moveDistance, FIELD_FLOAT ),
-	DEFINE_FIELD( m_targetSpeed, FIELD_FLOAT ),
-	DEFINE_FIELD( m_initialSpeed, FIELD_FLOAT ),
-	DEFINE_FIELD( m_acceleration, FIELD_FLOAT ),
-	DEFINE_FIELD( m_deceleration, FIELD_FLOAT ),
-	DEFINE_FIELD( m_state, FIELD_INTEGER ),
-	DEFINE_FIELD( m_vecMoveDir, FIELD_VECTOR ),
 	DEFINE_KEYFIELD( m_iszTargetAttachment, FIELD_STRING, "targetattachment" ),
-	DEFINE_FIELD( m_iAttachmentIndex, FIELD_INTEGER ),
-	DEFINE_FIELD( m_bSnapToGoal, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_nPlayerButtons, FIELD_INTEGER ),
-	DEFINE_FIELD( m_nOldTakeDamage, FIELD_INTEGER ),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
@@ -2346,9 +2204,7 @@ BEGIN_DATADESC( CTriggerProximity )
 
 	// Keys
 	DEFINE_KEYFIELD(m_iszMeasureTarget, FIELD_STRING, "measuretarget"),
-	DEFINE_FIELD( m_hMeasureTarget, FIELD_EHANDLE ),
 	DEFINE_KEYFIELD(m_fRadius, FIELD_FLOAT, "radius"),
-	DEFINE_FIELD( m_nTouchers, FIELD_INTEGER ),
 
 	// Outputs
 	DEFINE_OUTPUT(m_NearestEntityDistance, "NearestEntityDistance"),
@@ -2510,8 +2366,6 @@ void CTriggerProximity::MeasureThink( void )
 //------------------------------------------------------------------------------
 class CPhysicsWind : public IMotionEvent
 {
-	DECLARE_SIMPLE_DATADESC();
-
 public:
 	simresult_e Simulate( IPhysicsMotionController *pController, IPhysicsObject *pObject, float deltaTime, Vector &linear, AngularImpulse &angular )
 	{
@@ -2540,16 +2394,7 @@ public:
 	float	m_flWindSpeed;
 };
 
-BEGIN_SIMPLE_DATADESC( CPhysicsWind )
-
-	DEFINE_FIELD( m_nWindYaw,		FIELD_INTEGER ),
-	DEFINE_FIELD( m_flWindSpeed,	FIELD_FLOAT ),
-
-END_DATADESC()
-
-
 extern short g_sModelIndexSmoke;
-extern float	GetFloorZ(const Vector &origin);
 #define WIND_THINK_CONTEXT		"WindThinkContext"
 
 //-----------------------------------------------------------------------------
@@ -2563,7 +2408,6 @@ public:
 
 	void	Spawn( void );
 	bool	KeyValue( const char *szKeyName, const char *szValue );
-	void	OnRestore();
 	void	UpdateOnRemove();
 	bool	CreateVPhysics();
 	void	StartTouch( CBaseEntity *pOther );
@@ -2600,21 +2444,10 @@ LINK_ENTITY_TO_CLASS( trigger_wind, CTriggerWind );
 
 BEGIN_DATADESC( CTriggerWind )
 
-	DEFINE_FIELD( m_nSpeedCurrent, FIELD_INTEGER),
-	DEFINE_FIELD( m_nSpeedTarget,	FIELD_INTEGER),
-	DEFINE_FIELD( m_nDirBase,		FIELD_INTEGER),
-	DEFINE_FIELD( m_nDirCurrent,	FIELD_INTEGER),
-	DEFINE_FIELD( m_nDirTarget,	FIELD_INTEGER),
-	DEFINE_FIELD( m_bSwitch,		FIELD_BOOLEAN),
-
-	DEFINE_FIELD( m_nSpeedBase,		FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_nSpeedNoise,	FIELD_INTEGER, "SpeedNoise"),
 	DEFINE_KEYFIELD( m_nDirNoise,	FIELD_INTEGER, "DirectionNoise"),
 	DEFINE_KEYFIELD( m_nHoldBase,	FIELD_INTEGER, "HoldTime"),
 	DEFINE_KEYFIELD( m_nHoldNoise,	FIELD_INTEGER, "HoldNoise"),
-
-	DEFINE_PHYSPTR( m_pWindController ),
-	DEFINE_EMBEDDED( m_WindCallback ),
 
 	DEFINE_FUNCTION( WindThink ),
 
@@ -2679,19 +2512,6 @@ void CTriggerWind::UpdateOnRemove()
 
 	BaseClass::UpdateOnRemove();
 }
-
-//------------------------------------------------------------------------------
-// Purpose:
-//------------------------------------------------------------------------------
-void CTriggerWind::OnRestore()
-{
-	BaseClass::OnRestore();
-	if ( m_pWindController )
-	{
-		m_pWindController->SetEventHandler( &m_WindCallback );
-	}
-}
-
 
 //------------------------------------------------------------------------------
 // Purpose:
@@ -2989,18 +2809,9 @@ public:
 	void Spawn( void );
 	void StartTouch( CBaseEntity *pOther );
 	void EndTouch( CBaseEntity *pOther );
-	
-	DECLARE_DATADESC();
-
 };
 
-BEGIN_DATADESC( CTriggerPlayerMovement )
-
-END_DATADESC()
-
-
 LINK_ENTITY_TO_CLASS( trigger_playermovement, CTriggerPlayerMovement );
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Called when spawning, after keyvalues have been handled.
@@ -3074,7 +2885,6 @@ void CTriggerPlayerMovement::EndTouch( CBaseEntity *pOther )
 BEGIN_DATADESC( CBaseVPhysicsTrigger )
 	DEFINE_KEYFIELD( m_bDisabled,		FIELD_BOOLEAN,	"StartDisabled" ),
 	DEFINE_KEYFIELD( m_iFilterName,	FIELD_STRING,	"filtername" ),
-	DEFINE_FIELD( m_hFilter,	FIELD_EHANDLE ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),
@@ -3255,7 +3065,6 @@ public:
 	void Precache();
 	virtual void UpdateOnRemove();
 	bool CreateVPhysics();
-	void OnRestore();
 
 	// UNDONE: Pass trigger event in or change Start/EndTouch.  Add ITriggerVPhysics perhaps?
 	// BUGBUG: If a player touches two of these, his movement will screw up.
@@ -3305,7 +3114,6 @@ private:
 // Save/load
 //------------------------------------------------------------------------------
 BEGIN_DATADESC( CTriggerVPhysicsMotion )
-	DEFINE_PHYSPTR( m_pController ),
 #ifndef _XBOX
 	DEFINE_EMBEDDED( m_ParticleTrail ),
 #endif //!_XBOX
@@ -3313,9 +3121,6 @@ BEGIN_DATADESC( CTriggerVPhysicsMotion )
 	DEFINE_INPUT( m_addAirDensity, FIELD_FLOAT, "SetAdditionalAirDensity" ),
 	DEFINE_INPUT( m_linearLimit, FIELD_FLOAT, "SetVelocityLimit" ),
 	DEFINE_INPUT( m_linearLimitDelta, FIELD_FLOAT, "SetVelocityLimitDelta" ),
-	DEFINE_FIELD( m_linearLimitTime, FIELD_FLOAT ),
-	DEFINE_FIELD( m_linearLimitStart, FIELD_TIME ),
-	DEFINE_FIELD( m_linearLimitStartTime, FIELD_TIME ),
 	DEFINE_INPUT( m_linearScale, FIELD_FLOAT, "SetVelocityScale" ),
 	DEFINE_INPUT( m_angularLimit, FIELD_FLOAT, "SetAngVelocityLimit" ),
 	DEFINE_INPUT( m_angularScale, FIELD_FLOAT, "SetAngVelocityScale" ),
@@ -3396,19 +3201,6 @@ void CTriggerVPhysicsMotion::UpdateOnRemove()
 	}
 
 	BaseClass::UpdateOnRemove();
-}
-
-
-//------------------------------------------------------------------------------
-// Restore
-//------------------------------------------------------------------------------
-void CTriggerVPhysicsMotion::OnRestore()
-{
-	BaseClass::OnRestore();
-	if ( m_pController )
-	{
-		m_pController->SetEventHandler( this );
-	}
 }
 
 //------------------------------------------------------------------------------

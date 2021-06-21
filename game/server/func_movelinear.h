@@ -25,7 +25,6 @@ public:
 	void		Spawn( void );
 	void		Precache( void );
 	bool		CreateVPhysics( void );
-	bool		ShouldSavePhysics( void );
 
 	void		MoveTo(Vector vPosition, float flSpeed);
 	void		Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );

@@ -404,21 +404,9 @@ public:
 	// Simply here for game shared 
 	bool					IsFloating();
 
-	virtual bool					ShouldSavePhysics();
-
-	// save/restore stuff
-	virtual void					OnSave();
-	virtual void					OnRestore();
-	// capabilities for save/restore
-	virtual int						ObjectCaps(void);
-	// only overload these if you have special data to serialize
-	virtual int						Save(ISave &save);
-	virtual int						Restore(IRestore &restore);
+	virtual int ObjectCaps(void);
 
 private:
-
-	int SaveDataDescBlock(ISave &save, datamap_t *dmap);
-	int RestoreDataDescBlock(IRestore &restore, datamap_t *dmap);
 
 	// Called after restoring data into prediction slots. This function is used in place of proxies
 	// on the variables, so if some variable like m_nModelIndex needs to update other state (like 

@@ -35,10 +35,7 @@ END_SEND_TABLE()
 BEGIN_DATADESC( CParticleSystem )
 	DEFINE_KEYFIELD( m_bStartActive,	FIELD_BOOLEAN, "start_active" ),
 	DEFINE_KEYFIELD( m_bWeatherEffect,	FIELD_BOOLEAN, "flag_as_weather" ),
-	DEFINE_FIELD( m_bActive,			FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flStartTime,		FIELD_TIME ),
 	DEFINE_KEYFIELD( m_iszEffectName,	FIELD_STRING, "effect_name" ),
-	//DEFINE_FIELD( m_iEffectIndex, FIELD_INTEGER ),	// Don't save. Refind after loading.
 
 	DEFINE_KEYFIELD( m_iszControlPointNames[0], FIELD_STRING, "cpoint1" ),
 	DEFINE_KEYFIELD( m_iszControlPointNames[1], FIELD_STRING, "cpoint2" ),
@@ -111,8 +108,6 @@ BEGIN_DATADESC( CParticleSystem )
 	DEFINE_KEYFIELD( m_iControlPointParents[4], FIELD_CHARACTER, "cpoint5_parent" ),
 	DEFINE_KEYFIELD( m_iControlPointParents[5], FIELD_CHARACTER, "cpoint6_parent" ),
 	DEFINE_KEYFIELD( m_iControlPointParents[6], FIELD_CHARACTER, "cpoint7_parent" ),
-	
-	DEFINE_AUTO_ARRAY( m_hControlPointEnts, FIELD_EHANDLE ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Start", InputStart ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Stop", InputStop ),

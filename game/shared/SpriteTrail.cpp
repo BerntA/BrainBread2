@@ -30,26 +30,6 @@ extern CEngineSprite *Draw_SetSpriteTexture( const model_t *pSpriteModel, int fr
 //-----------------------------------------------------------------------------
 #define SCREEN_SPACE_TRAILS 0
 
-
-//-----------------------------------------------------------------------------
-// Save/Restore
-//-----------------------------------------------------------------------------
-#if defined( CLIENT_DLL )
-
-BEGIN_SIMPLE_DATADESC( TrailPoint_t )
-#if SCREEN_SPACE_TRAILS
-	DEFINE_FIELD( m_vecScreenPos,	FIELD_VECTOR ),
-#else
-	DEFINE_FIELD( m_vecScreenPos,	FIELD_POSITION_VECTOR ),
-#endif
-
-	DEFINE_FIELD( m_flDieTime,		FIELD_TIME ),
-	DEFINE_FIELD( m_flTexCoord,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_flWidthVariance,FIELD_FLOAT ),
-END_DATADESC()
-
-#endif
-
 BEGIN_DATADESC( CSpriteTrail )
 
 	DEFINE_KEYFIELD( m_flLifeTime,			FIELD_FLOAT, "lifetime" ),
@@ -57,23 +37,6 @@ BEGIN_DATADESC( CSpriteTrail )
 	DEFINE_KEYFIELD( m_flEndWidth,			FIELD_FLOAT, "endwidth" ),
 	DEFINE_KEYFIELD( m_iszSpriteName,		FIELD_STRING, "spritename" ),
 	DEFINE_KEYFIELD( m_bAnimate,			FIELD_BOOLEAN, "animate" ),
-	DEFINE_FIELD( m_flStartWidthVariance,	FIELD_FLOAT ),
-	DEFINE_FIELD( m_flTextureRes,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_flMinFadeLength,	FIELD_FLOAT ),
-	DEFINE_FIELD( m_vecSkyboxOrigin,	FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_flSkyboxScale,		FIELD_FLOAT ),
-
-	// These are client-only
-#if defined( CLIENT_DLL )
-	DEFINE_EMBEDDED_AUTO_ARRAY( m_vecSteps ),
-	DEFINE_FIELD( m_nFirstStep, FIELD_INTEGER ),
-	DEFINE_FIELD( m_nStepCount, FIELD_INTEGER ),
-	DEFINE_FIELD( m_flUpdateTime, FIELD_TIME ),
-	DEFINE_FIELD( m_vecPrevSkyboxOrigin, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_flPrevSkyboxScale, FIELD_FLOAT ),
-	DEFINE_FIELD( m_vecRenderMins, FIELD_VECTOR ),
-	DEFINE_FIELD( m_vecRenderMaxs, FIELD_VECTOR ),
-#endif
 
 END_DATADESC()
 

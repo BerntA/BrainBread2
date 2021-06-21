@@ -530,31 +530,15 @@ bool FireSystem_GetFireDamageDimensions( CBaseEntity *pEntity, Vector *pFireMins
 //==================================================
 BEGIN_DATADESC( CFire )
 
-	DEFINE_FIELD( m_hEffect, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hOwner, FIELD_EHANDLE ),
 	DEFINE_KEYFIELD( m_nFireType,	FIELD_INTEGER, "firetype" ),
-
-	DEFINE_FIELD( m_flFuel, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flDamageTime, FIELD_TIME ),
-	DEFINE_FIELD( m_lastDamage, FIELD_TIME ),
 	DEFINE_KEYFIELD( m_flFireSize,	FIELD_FLOAT, "firesize" ),
-
 	DEFINE_KEYFIELD( m_flHeatLevel,	FIELD_FLOAT,	"ignitionpoint" ),
- 	DEFINE_FIELD( m_flHeatAbsorb, FIELD_FLOAT ),
  	DEFINE_KEYFIELD( m_flDamageScale,FIELD_FLOAT,	"damagescale" ),
-
-	DEFINE_FIELD( m_flMaxHeat, FIELD_FLOAT ),
-	//DEFINE_FIELD( m_flLastHeatLevel,	FIELD_FLOAT  ),
-
 	DEFINE_KEYFIELD( m_flAttackTime, FIELD_FLOAT, "fireattack" ),
-	DEFINE_FIELD( m_bEnabled, FIELD_BOOLEAN ),
 	DEFINE_KEYFIELD( m_bStartDisabled, FIELD_BOOLEAN, "StartDisabled" ),
-	DEFINE_FIELD( m_bDidActivate, FIELD_BOOLEAN ),
 
 	DEFINE_FUNCTION( BurnThink ),
 	DEFINE_FUNCTION( GoOutThink ),
-
-
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "StartFire", InputStartFire ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "Extinguish", InputExtinguish ),
@@ -1238,13 +1222,11 @@ private:
 
 BEGIN_DATADESC( CEnvFireSource )
 
-	DEFINE_FIELD( m_bEnabled, FIELD_BOOLEAN ),
 	DEFINE_KEYFIELD( m_radius,	FIELD_FLOAT, "fireradius" ),
 	DEFINE_KEYFIELD( m_damage,FIELD_FLOAT, "firedamage" ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),
-
 
 END_DATADESC()
 
@@ -1338,10 +1320,6 @@ BEGIN_DATADESC( CEnvFireSensor )
 	DEFINE_KEYFIELD( m_radius,	FIELD_FLOAT, "fireradius" ),
 	DEFINE_KEYFIELD( m_targetLevel, FIELD_FLOAT, "heatlevel" ),
 	DEFINE_KEYFIELD( m_targetTime, FIELD_FLOAT, "heattime" ),
-
-	DEFINE_FIELD( m_bEnabled, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bHeatAtLevel, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_levelTime, FIELD_FLOAT ),
 	
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),

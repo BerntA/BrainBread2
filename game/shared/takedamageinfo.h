@@ -133,8 +133,6 @@ protected:
 	int				m_iWeaponIDForced;
 	int				m_cRelationshipLink; // Useful in case the attacker goes NULL.
 	int				m_nMiscFlags; // Misc DMG Flag Stuff.
-
-	DECLARE_SIMPLE_DATADESC();
 };
 
 //-----------------------------------------------------------------------------
@@ -154,8 +152,6 @@ public:
 
 protected:
 	EHANDLE			m_hTarget;
-
-	DECLARE_SIMPLE_DATADESC();
 };
 
 extern CMultiDamage g_MultiDamage;

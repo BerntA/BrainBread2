@@ -13,7 +13,6 @@
 
 class CFunc_LOD : public CBaseEntity
 {
-	DECLARE_DATADESC();
 	DECLARE_CLASS( CFunc_LOD, CBaseEntity );
 public:
 	DECLARE_SERVERCLASS();
@@ -38,24 +37,11 @@ public:
 	virtual bool	KeyValue( const char *szKeyName, const char *szValue );
 };
 
-
 IMPLEMENT_SERVERCLASS_ST(CFunc_LOD, DT_Func_LOD)
 	SendPropFloat(SENDINFO(m_fDisappearDist), 0, SPROP_NOSCALE),
 END_SEND_TABLE()
 
-
 LINK_ENTITY_TO_CLASS(func_lod, CFunc_LOD);
-
-
-//---------------------------------------------------------
-// Save/Restore
-//---------------------------------------------------------
-BEGIN_DATADESC( CFunc_LOD )
-
-	DEFINE_FIELD( m_fDisappearDist,	FIELD_FLOAT ),
-
-END_DATADESC()
-
 
 // ------------------------------------------------------------------------------------- //
 // CFunc_LOD implementation.
@@ -64,11 +50,9 @@ CFunc_LOD::CFunc_LOD()
 {
 }
 
-
 CFunc_LOD::~CFunc_LOD()
 {
 }
-
 
 void CFunc_LOD::Spawn()
 {
