@@ -129,15 +129,6 @@ IMPLEMENT_SERVERCLASS_ST(CBaseCombatCharacter, DT_BaseCombatCharacter)
 END_SEND_TABLE()
 
 //-----------------------------------------------------------------------------
-// Interactions
-//-----------------------------------------------------------------------------
-void CBaseCombatCharacter::InitInteractionSystem()
-{
-	// interaction ids continue to go up with every map load, otherwise you get
-	// collisions if a future map has a different set of NPCs from a current map
-}
-
-//-----------------------------------------------------------------------------
 // Visibility caching
 //-----------------------------------------------------------------------------
 
@@ -839,7 +830,6 @@ bool CBaseCombatCharacter::BecomeRagdoll( const CTakeDamageInfo &info, const Vec
 	newinfo.SetDamageForce( forceVector );
 	return BecomeRagdollOnClient( forceVector );
 }
-
 
 /*
 ============
@@ -2013,30 +2003,6 @@ Vector CBaseCombatCharacter::Weapon_ShootPosition( )
 	return vecSrc;
 }
 
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CBaseEntity *CBaseCombatCharacter::FindHealthItem( const Vector &vecPosition, const Vector &range )
-{
-	CBaseEntity *list[1024];
-	int count = UTIL_EntitiesInBox( list, 1024, vecPosition - range, vecPosition + range, 0 );
-
-	for ( int i = 0; i < count; i++ )
-	{
-		CItem *pItem = dynamic_cast<CItem *>(list[ i ]);
-
-		if( pItem )
-		{
-			// Healthkits and healthvials
-			if( pItem->ClassMatches( "item_health*" ) && FVisible( pItem ) )
-			{
-				return pItem;
-			}
-		}
-	}
-
-	return NULL;
-}
-
 ConVar	phys_stressbodyweights( "phys_stressbodyweights", "5.0" );
 void CBaseCombatCharacter::VPhysicsUpdate( IPhysicsObject *pPhysics )
 {
@@ -2279,92 +2245,12 @@ void CBaseCombatCharacter::DoMuzzleFlash()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: return true if given target cant be seen because of fog
-//-----------------------------------------------------------------------------
-bool CBaseCombatCharacter::IsHiddenByFog( const Vector &target ) const
-{
-	float range = EyePosition().DistTo( target );
-	return IsHiddenByFog( range );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: return true if given target cant be seen because of fog
-//-----------------------------------------------------------------------------
-bool CBaseCombatCharacter::IsHiddenByFog( CBaseEntity *target ) const
-{
-	if ( !target )
-		return false;
-
-	float range = EyePosition().DistTo( target->WorldSpaceCenter() );
-	return IsHiddenByFog( range );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: return true if given target cant be seen because of fog
-//-----------------------------------------------------------------------------
-bool CBaseCombatCharacter::IsHiddenByFog( float range ) const
-{
-	if ( GetFogObscuredRatio( range ) >= 1.0f )
-		return true;
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: return 0-1 ratio where zero is not obscured, and 1 is completely obscured
-//-----------------------------------------------------------------------------
-float CBaseCombatCharacter::GetFogObscuredRatio( const Vector &target ) const
-{
-	float range = EyePosition().DistTo( target );
-	return GetFogObscuredRatio( range );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: return 0-1 ratio where zero is not obscured, and 1 is completely obscured
-//-----------------------------------------------------------------------------
-float CBaseCombatCharacter::GetFogObscuredRatio( CBaseEntity *target ) const
-{
-	if ( !target )
-		return false;
-
-	float range = EyePosition().DistTo( target->WorldSpaceCenter() );
-	return GetFogObscuredRatio( range );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: return 0-1 ratio where zero is not obscured, and 1 is completely obscured
-//-----------------------------------------------------------------------------
-float CBaseCombatCharacter::GetFogObscuredRatio( float range ) const
-{
-/* TODO: Get global fog from map somehow since nav mesh fog is gone
-	fogparams_t fog;
-	GetFogParams( &fog );
-
-	if ( !fog.enable )
-		return 0.0f;
-
-	if ( range <= fog.start )
-		return 0.0f;
-
-	if ( range >= fog.end )
-		return 1.0f;
-
-	float ratio = (range - fog.start) / (fog.end - fog.start);
-	ratio = MIN( ratio, fog.maxdensity );
-	return ratio;
-*/
-	return 0.0f;
-}
-
-
-//-----------------------------------------------------------------------------
 // Purpose: Invoke this to update our last known nav area 
 // (since there is no think method chained to CBaseCombatCharacter)
 //-----------------------------------------------------------------------------
 void CBaseCombatCharacter::UpdateLastKnownArea( void )
 {
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Return true if we can use (walk through) the given area 
@@ -2373,7 +2259,6 @@ bool CBaseCombatCharacter::IsAreaTraversable( const CNavArea *area ) const
 {
 	return area ? !area->IsBlocked( GetTeamNumber() ) : false;
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Leaving the nav mesh
@@ -2391,7 +2276,6 @@ void CBaseCombatCharacter::ClearLastKnownArea( void )
 	}
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Handling editor removing the area we're standing upon
 //-----------------------------------------------------------------------------
@@ -2403,7 +2287,6 @@ void CBaseCombatCharacter::OnNavAreaRemoved( CNavArea *removedArea )
 	}
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Changing team, maintain associated data
 //-----------------------------------------------------------------------------
@@ -2414,7 +2297,6 @@ void CBaseCombatCharacter::ChangeTeam( int iTeamNum )
 
 	BaseClass::ChangeTeam( iTeamNum );
 }
-
 
 //-----------------------------------------------------------------------------
 // Return true if we have ever been injured by a member of the given team
@@ -2435,7 +2317,6 @@ bool CBaseCombatCharacter::HasEverBeenInjured( int team /*= TEAM_ANY */ ) const
 
 	return false;
 }
-
 
 //-----------------------------------------------------------------------------
 // Return time since we were hurt by a member of the given team

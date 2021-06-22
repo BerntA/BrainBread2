@@ -657,7 +657,6 @@ void CWorld::Precache( void )
 	//	Initialize NPC Relationships
 	// =================================================
 	g_pGameRules->InitDefaultAIRelationships();
-	CBaseCombatCharacter::InitInteractionSystem();
 
 	// Call all registered precachers.
 	CPrecacheRegister::Precache();	

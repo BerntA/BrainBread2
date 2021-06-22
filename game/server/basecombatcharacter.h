@@ -145,40 +145,6 @@ public:
 
 	virtual void SetTransmit( CCheckTransmitInfo *pInfo, bool bAlways );
 
-	// -----------------------
-	// Fog
-	// -----------------------
-	virtual bool		IsHiddenByFog( const Vector &target ) const;	///< return true if given target cant be seen because of fog
-	virtual bool		IsHiddenByFog( CBaseEntity *target ) const;		///< return true if given target cant be seen because of fog
-	virtual bool		IsHiddenByFog( float range ) const;				///< return true if given distance is too far to see through the fog
-	virtual float		GetFogObscuredRatio( const Vector &target ) const;///< return 0-1 ratio where zero is not obscured, and 1 is completely obscured
-	virtual float		GetFogObscuredRatio( CBaseEntity *target ) const;	///< return 0-1 ratio where zero is not obscured, and 1 is completely obscured
-	virtual float		GetFogObscuredRatio( float range ) const;		///< return 0-1 ratio where zero is not obscured, and 1 is completely obscured
-
-
-	// -----------------------
-	// Vision
-	// -----------------------
-	enum FieldOfViewCheckType { USE_FOV, DISREGARD_FOV };
-
-	// Visible starts with line of sight, and adds all the extra game checks like fog, smoke, camo...
-	bool IsAbleToSee( const CBaseEntity *entity, FieldOfViewCheckType checkFOV );
-	bool IsAbleToSee( CBaseCombatCharacter *pBCC, FieldOfViewCheckType checkFOV );
-
-	virtual bool IsLookingTowards( const CBaseEntity *target, float cosTolerance = BCC_DEFAULT_LOOK_TOWARDS_TOLERANCE ) const;	// return true if our view direction is pointing at the given target, within the cosine of the angular tolerance. LINE OF SIGHT IS NOT CHECKED.
-	virtual bool IsLookingTowards( const Vector &target, float cosTolerance = BCC_DEFAULT_LOOK_TOWARDS_TOLERANCE ) const;	// return true if our view direction is pointing at the given target, within the cosine of the angular tolerance. LINE OF SIGHT IS NOT CHECKED.
-
-	virtual bool IsInFieldOfView( CBaseEntity *entity ) const;	// Calls IsLookingTowards with the current field of view.  
-	virtual bool IsInFieldOfView( const Vector &pos ) const;
-
-	enum LineOfSightCheckType
-	{
-		IGNORE_NOTHING,
-		IGNORE_ACTORS
-	};
-	virtual bool IsLineOfSightClear( CBaseEntity *entity, LineOfSightCheckType checkType = IGNORE_NOTHING ) const;// strictly LOS check with no other considerations
-	virtual bool IsLineOfSightClear( const Vector &pos, LineOfSightCheckType checkType = IGNORE_NOTHING, CBaseEntity *entityToIgnore = NULL ) const;
-
 	virtual Activity	NPC_TranslateActivity( Activity baseAct );
 
 	// -----------------------
@@ -206,7 +172,6 @@ public:
 
 	virtual bool			AddPlayerItem( CBaseCombatWeapon *pItem ) { return false; }
 	virtual bool			RemovePlayerItem( CBaseCombatWeapon *pItem ) { return false; }
-
 	virtual bool			CanBecomeServerRagdoll( void ) { return true; }
 
 	// -----------------------
@@ -226,9 +191,6 @@ public:
 	virtual void 			NotifyFriendsOfDamage( CBaseEntity *pAttackerEntity ) {}
 	virtual bool			HasEverBeenInjured( int team = TEAM_ANY ) const;			// return true if we have ever been injured by a member of the given team
 	virtual float			GetTimeSinceLastInjury( int team = TEAM_ANY ) const;		// return time since we were hurt by a member of the given team
-
-
-	virtual void			OnPlayerKilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &info ) {}
 
 		// utility function to calc damage force
 	Vector					CalcDamageForceVector( const CTakeDamageInfo &info );
@@ -254,9 +216,6 @@ public:
 	virtual void			FixupBurningServerRagdoll( CBaseEntity *pRagdoll );
 
 	virtual bool			BecomeRagdollBoogie( CBaseEntity *pKiller, const Vector &forceVector, float duration, int flags );
-
-	CBaseEntity				*FindHealthItem( const Vector &vecPosition, const Vector &range );
-
 
 	virtual CBaseEntity		*CheckTraceHullAttack( float flDist, const Vector &mins, const Vector &maxs, int iDamage, int iDmgType, float forceScale = 1.0f, bool bDamageAnyNPC = false );
 	virtual CBaseEntity		*CheckTraceHullAttack( const Vector &vStart, const Vector &vEnd, const Vector &mins, const Vector &maxs, int iDamage, int iDmgType, float flForceScale = 1.0f, bool bDamageAnyNPC = false );
@@ -349,9 +308,6 @@ public:
 	virtual	float		GetSpreadBias(  CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget );
 	virtual void		DoMuzzleFlash();
 
-	// Interactions
-	static void			InitInteractionSystem();
-
 	// Relationships
 	static void			AllocateDefaultRelationships( );
 	static void			SetDefaultRelationship( Class_T nClass, Class_T nClassTarget,  Disposition_t nDisposition, int nPriority );
@@ -395,11 +351,6 @@ public:
 	virtual void OnNavAreaChanged( CNavArea *enteredArea, CNavArea *leftArea ) { }	// invoked (by UpdateLastKnownArea) when we enter a new nav area (or it is reset to NULL)
 	virtual void OnNavAreaRemoved( CNavArea *removedArea );
 
-	// -----------------------
-	// Notification from INextBots.
-	// -----------------------
-	virtual void		OnPursuedBy( INextBot * RESTRICT pPursuer ){} // called every frame while pursued by a bot in DirectChase.
-
 public:
 	// returns the last body region that took damage
 	int	LastHitGroup() const				{ return m_LastHitGroup; }
@@ -423,9 +374,6 @@ protected:
 	string_t	m_RelationshipString;	// Used to load up relationship keyvalues
 	float		m_impactEnergyScale;// scale the amount of energy used to calculate damage this ent takes due to physics
 
-protected:
-	// Visibility-related stuff
-	bool ComputeLOS( const Vector &vecEyePosition, const Vector &vecTarget ) const;
 private:
 	// For weapon strip
 	void ThrowDirForWeaponStrip( CBaseCombatWeapon *pWeapon, const Vector &vecForward, Vector *pVecThrowDir );

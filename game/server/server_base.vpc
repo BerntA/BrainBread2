@@ -270,6 +270,14 @@ $Project
 			$File "$SRCDIR\game\shared\bb2\weapon_rex_akimbo.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_sawedoff_akimbo.cpp"
 			$File "$SRCDIR\game\shared\bb2\weapon_mp5.cpp"
+			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase.cpp"
+			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase.h"
+			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.cpp"
+			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.h"
+			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.cpp"
+			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.h"
+			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.cpp"
+			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.h"
 		}
 	}
 	
@@ -914,7 +922,6 @@ $Project
 		$File	"$SRCDIR\game\shared\imovehelper.h"
 		$File	"$SRCDIR\game\shared\in_buttons.h"
 		$File	"$SRCDIR\public\inetchannelinfo.h"
-		$File	"$SRCDIR\game\shared\iplayeranimstate.h"
 		$File	"$SRCDIR\game\shared\ipredictionsystem.h"
 		$File	"$SRCDIR\public\irecipientfilter.h"
 		$File	"$SRCDIR\public\iserverentity.h"

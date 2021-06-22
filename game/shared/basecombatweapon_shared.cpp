@@ -2434,7 +2434,6 @@ BEGIN_DATADESC( CBaseCombatWeapon )
 	DEFINE_OUTPUT( m_OnPlayerUse, "OnPlayerUse"),
 	DEFINE_OUTPUT( m_OnPlayerPickup, "OnPlayerPickup"),
 	DEFINE_OUTPUT( m_OnNPCPickup, "OnNPCPickup"),
-	DEFINE_OUTPUT( m_OnCacheInteraction, "OnCacheInteraction" ),
 
 	// Hammer Keyfields
 	DEFINE_KEYFIELD(m_iDefaultAmmoCount, FIELD_INTEGER, "AmmoCount"),

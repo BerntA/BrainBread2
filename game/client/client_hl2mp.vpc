@@ -67,20 +67,6 @@ $Project "Client"
 			$File	"$SRCDIR\game\shared\hl2mp\hl2mp_weapon_parse.h"			
 			$File	"$SRCDIR\game\shared\hl2mp\hl2mp_playeranimstate.cpp"
 			$File	"$SRCDIR\game\shared\hl2mp\hl2mp_playeranimstate.h"
-			$File	"$SRCDIR\game\shared\hl2mp\multiplayer_animstate.cpp"
-			$File	"$SRCDIR\game\shared\hl2mp\multiplayer_animstate.h"
-
-			$Folder	"Weapons"
-			{
-				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase.cpp"
-				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase.h"
-				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.cpp"
-				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.h"
-				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.cpp"
-				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.h"
-				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.cpp"
-				$File	"$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.h"
-			}
 
 			$Folder	"UI"
 			{

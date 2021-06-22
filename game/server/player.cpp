@@ -656,9 +656,12 @@ void CBasePlayer::DamageEffect(float flDamage, int fDamageType)
 		// Sonic damage sound 
 		HL2MPRules()->EmitSoundToClient(this, "SonicDamage", GetSoundType(), GetSoundsetGender());
 	}
-	else if ( fDamageType & DMG_BULLET )
+	else if (fDamageType & DMG_BULLET)
 	{
-		EmitSound("Flesh.BulletImpact");
+		if (IsHuman() && (m_ArmorValue.Get() > 0) && ((LastHitGroup() == HITGROUP_CHEST) || (LastHitGroup() == HITGROUP_GENERIC) || (LastHitGroup() == HITGROUP_STOMACH)))
+			EmitSound("Player.ArmorImpact");
+		else
+			EmitSound("Flesh.BulletImpact");
 	}
 }
 

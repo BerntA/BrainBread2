@@ -2423,12 +2423,11 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 
 int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 {
-	CTakeDamageInfo damageCopy = inputInfo;
-
 	// Spawn Protection:
 	if (gpGlobals->curtime < m_flSpawnProtection)
 		return 0;
 
+	CTakeDamageInfo damageCopy = inputInfo;
 	CBaseEntity *pAttacker = damageCopy.GetAttacker();
 	if (pAttacker)
 	{
@@ -2438,14 +2437,7 @@ int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 
 	m_vecTotalBulletForce += damageCopy.GetDamageForce();
 
-	int ret = BaseClass::OnTakeDamage(damageCopy);
-	if (ret)
-	{
-		if (IsHuman() && m_BB2Local.m_iActiveArmorType && ((LastHitGroup() == HITGROUP_CHEST) || (LastHitGroup() == HITGROUP_GENERIC) || (LastHitGroup() == HITGROUP_STOMACH)))
-			EmitSound("Player.ArmorImpact");
-	}
-
-	return ret;
+	return BaseClass::OnTakeDamage(damageCopy);
 }
 
 void CHL2MP_Player::DeathSound(const CTakeDamageInfo &info)
@@ -2880,15 +2872,10 @@ void CHL2MP_Player::RefreshSpeed(void)
 	StopWalking();
 
 	float flSpeed = GetPlayerSpeed();
-
 	if (IsWalking())
-		SetMaxSpeed((flSpeed / 2.0f));
-	else
-		SetMaxSpeed(flSpeed);
+		flSpeed /= 2.0f;
 
-	// Update Anim State
-	m_PlayerAnimState->SetRunSpeed(flSpeed);
-	m_PlayerAnimState->SetWalkSpeed((flSpeed / 2.0f));
+	SetMaxSpeed(flSpeed);
 }
 
 bool CHL2MP_Player::HandleLocalProfile(bool bSave)
