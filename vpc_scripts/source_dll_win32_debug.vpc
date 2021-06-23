@@ -61,7 +61,7 @@ $Configuration "Debug"
 		$DebugInformationFormat				"Program Database (/Zi)" [$WIN64]
 		$SuppressStartupBanner		
 		$WarningLevel						"Level 4 (/W4)"
-		$TreatWarningsAsErrors
+		$TreatWarningsAsErrors				"No"
 		$UseUNICODEResponseFiles
 
 		// Optimization

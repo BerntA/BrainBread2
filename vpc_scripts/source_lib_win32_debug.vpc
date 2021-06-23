@@ -61,7 +61,7 @@ $Configuration "Debug"
 		$SuppressStartupBanner		
 		$WarningLevel						"Level 4 (/W4)"
 		$Detect64bitPortabilityIssues		"Yes (/Wp64)"
-		$TreatWarningsAsErrors
+		$TreatWarningsAsErrors				"No"
 		$UseUNICODEResponseFiles			"No"
 
 		// Optimization
