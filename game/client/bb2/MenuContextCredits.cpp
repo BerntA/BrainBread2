@@ -10,6 +10,8 @@
 #include <vgui_controls/Button.h>
 #include <vgui_controls/ImagePanel.h>
 #include <vgui_controls/AnimationController.h>
+#include <vgui/ISurface.h>
+#include <vgui/ILocalize.h>
 #include "GameBase_Client.h"
 #include "GameBase_Shared.h"
 #include "fmod_manager.h"
@@ -18,6 +20,48 @@
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
+
+namespace vgui
+{
+	class CCreditsObject
+	{
+	public:
+		CCreditsObject()
+		{
+			name[0] = 0;
+		}
+
+		CCreditsObject(const char *inName, const char *inDesc)
+		{
+			Q_strncpy(this->name, inName, sizeof(this->name));
+			V_SplitString(inDesc, ",", this->desc);
+		}
+
+		~CCreditsObject()
+		{
+			ClearCharVectorList(this->desc);
+		}
+
+		char name[64];
+		CUtlVector<char*> desc;
+
+	private:
+		CCreditsObject(const CCreditsObject &);
+	};
+
+	struct SectionItem
+	{
+		const char *name;
+		CUtlVector<CCreditsObject*> *pList;
+	};
+
+	void ClearSectionList(CUtlVector<CCreditsObject*> &list)
+	{
+		for (int i = 0; i < list.Count(); i++)
+			delete list[i];
+		list.RemoveAll();
+	}
+}
 
 MenuContextCredits::MenuContextCredits(vgui::Panel *parent, char const *panelName) : BaseClass(parent, panelName, 0.5f)
 {
@@ -29,24 +73,33 @@ MenuContextCredits::MenuContextCredits(vgui::Panel *parent, char const *panelNam
 	SetProportional(true);
 
 	m_DefaultFont = NULL;
+	m_DefaultColor = COLOR_WHITE;
+	m_flScrollRate = 100.0f;
+	m_flCurrentScrollRate = 0.0f;
+	m_iPosY = 0;
+	m_iLastYPos = 1;
+
 	SetScheme("BaseScheme");
 
-	for (int i = 0; i < _ARRAYSIZE(m_pLabelMessage); i++)
 	{
-		m_pLabelMessage[i] = vgui::SETUP_PANEL(new vgui::Label(this, "", ""));
-		m_pLabelMessage[i]->SetZPos(210);
-		m_pLabelMessage[i]->SetText("");
+		KeyValues *pkvCreditsFile = new KeyValues("Credits");
+		KeyValues *pkvSection = NULL;
+		SectionItem sections[] = { { "developers", &m_listDevelopers }, { "contributors", &m_listContributors }, { "testers", &m_listTesters }, { "special", &m_listSpecialThanks } };
+		if (pkvCreditsFile->LoadFromFile(filesystem, "data/settings/credits.txt", "MOD"))
+		{
+			for (int s = 0; s < _ARRAYSIZE(sections); s++)
+			{
+				SectionItem &item = sections[s];
+				pkvSection = pkvCreditsFile->FindKey(item.name);
+				if (pkvSection)
+				{
+					for (KeyValues *sub = pkvSection->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+						item.pList->AddToTail(new CCreditsObject(sub->GetName(), sub->GetString()));
+				}
+			}
+		}
+		pkvCreditsFile->deleteThis();
 	}
-
-	pchDeveloperList[0] = 0;
-	pchContributorList[0] = 0;
-	pchTesterList[0] = 0;
-	pchSpecialThanksList[0] = 0;
-
-	GameBaseShared()->GetFileContent("data/settings/credits_developers.txt", pchDeveloperList, 2048);
-	GameBaseShared()->GetFileContent("data/settings/credits_contributors.txt", pchContributorList, 2048);
-	GameBaseShared()->GetFileContent("data/settings/credits_testers.txt", pchTesterList, 2048);
-	GameBaseShared()->GetFileContent("data/settings/credits_specialthanks.txt", pchSpecialThanksList, 2048);
 
 	InvalidateLayout();
 	PerformLayout();
@@ -54,86 +107,32 @@ MenuContextCredits::MenuContextCredits(vgui::Panel *parent, char const *panelNam
 
 MenuContextCredits::~MenuContextCredits()
 {
-}
-
-int MenuContextCredits::GetNumberOfLinesInString(const char *pszStr)
-{
-	int stringLines = 0;
-	int strSize = strlen(pszStr);
-	for (int i = 0; i < strSize; i++)
-	{
-		if (pszStr[i] == '\n')
-			stringLines++;
-	}
-
-	return stringLines;
+	ClearSectionList(m_listDevelopers);
+	ClearSectionList(m_listContributors);
+	ClearSectionList(m_listTesters);
+	ClearSectionList(m_listSpecialThanks);
 }
 
 void MenuContextCredits::SetupLayout(void)
 {
 	BaseClass::SetupLayout();
-
-	int w, h;
-	GetSize(w, h);
-
-	if (!m_DefaultFont)
-		return;
-
-	int iSizeOffset = 12;
-	int iLabelHeight = (surface()->GetFontTall(m_DefaultFont) * GetNumberOfLinesInString(pchDeveloperList)) + scheme()->GetProportionalScaledValue(iSizeOffset);
-	m_pLabelMessage[0]->SetSize(w, iLabelHeight);
-	m_pLabelMessage[0]->SetText(pchDeveloperList);
-	m_iSizeH[0] = iLabelHeight;
-
-	iLabelHeight = (surface()->GetFontTall(m_DefaultFont) * GetNumberOfLinesInString(pchContributorList)) + scheme()->GetProportionalScaledValue(iSizeOffset);
-	m_pLabelMessage[1]->SetSize(w, iLabelHeight);
-	m_pLabelMessage[1]->SetText(pchContributorList);
-	m_iSizeH[1] = iLabelHeight;
-
-	iLabelHeight = (surface()->GetFontTall(m_DefaultFont) * GetNumberOfLinesInString(pchTesterList)) + scheme()->GetProportionalScaledValue(iSizeOffset);
-	m_pLabelMessage[2]->SetSize(w, iLabelHeight);
-	m_pLabelMessage[2]->SetText(pchTesterList);
-	m_iSizeH[2] = iLabelHeight;
-
-	iLabelHeight = (surface()->GetFontTall(m_DefaultFont) * GetNumberOfLinesInString(pchSpecialThanksList)) + scheme()->GetProportionalScaledValue(iSizeOffset);
-	m_pLabelMessage[3]->SetSize(w, iLabelHeight);
-	m_pLabelMessage[3]->SetText(pchSpecialThanksList);
-	m_iSizeH[3] = iLabelHeight;
-
-	for (int i = 0; i < _ARRAYSIZE(m_pLabelMessage); i++)
-		m_pLabelMessage[i]->SetContentAlignment(vgui::Label::a_center);
 }
 
 void MenuContextCredits::OnUpdate(bool bInGame)
 {
 	if (IsVisible())
 	{
-		if (m_flPosY >= 1)
+		if (m_iLastYPos < 0)
 		{
-			m_flPosY = 0.0f;
-			GetAnimationController()->RunAnimationCommand(this, "LabelPosition", 1.0f, GetFadeTime(), 60.0f, AnimationController::INTERPOLATOR_LINEAR);
 			GameBaseClient->RunCommand(COMMAND_RETURN);
+			m_iLastYPos = 1;
 		}
-
-		int iPosYMax = -(ScreenHeight() + m_iSizeH[0] + m_iSizeH[1] + m_iSizeH[2] + m_iSizeH[3]);
-
-		int iPosOffset[] =
-		{
-			0,
-			m_iSizeH[0],
-			(m_iSizeH[0] + m_iSizeH[1]),
-			(m_iSizeH[0] + m_iSizeH[1] + m_iSizeH[2]),
-		};
-
-		for (int i = 0; i < _ARRAYSIZE(m_pLabelMessage); i++)
-			m_pLabelMessage[i]->SetPos(0, (ScreenHeight() + iPosOffset[i]) + (m_flPosY * iPosYMax));
 	}
 }
 
 void MenuContextCredits::PerformLayout()
 {
 	BaseClass::PerformLayout();
-	m_flPosY = 0.0f;
 }
 
 void MenuContextCredits::OnShowPanel(bool bShow)
@@ -141,7 +140,11 @@ void MenuContextCredits::OnShowPanel(bool bShow)
 	BaseClass::OnShowPanel(bShow);
 
 	if (bShow)
-		m_flPosY = 0.0f;
+	{
+		m_iLastYPos = 1;
+		m_flCurrentScrollRate = 0.0f;
+		m_flScrollRate = 100.0f;
+	}
 
 	if (!engine->IsInGame())
 	{
@@ -152,8 +155,6 @@ void MenuContextCredits::OnShowPanel(bool bShow)
 		else
 			FMODManager()->TransitionAmbientSound("ui/mainmenu_theme.mp3");
 	}
-
-	GetAnimationController()->RunAnimationCommand(this, "LabelPosition", 1.0f, GetFadeTime(), m_flCreditsScrollTime, AnimationController::INTERPOLATOR_LINEAR);
 }
 
 void MenuContextCredits::ApplySchemeSettings(vgui::IScheme *pScheme)
@@ -161,15 +162,82 @@ void MenuContextCredits::ApplySchemeSettings(vgui::IScheme *pScheme)
 	BaseClass::ApplySchemeSettings(pScheme);
 
 	// Get the time we'll use to move the credits list from down to up.
-	m_flCreditsScrollTime = atof(pScheme->GetResourceString("CreditsScrollTime"));
-	if (!m_flCreditsScrollTime)
-		m_flCreditsScrollTime = 40.0f;
+	//m_flCreditsScrollTime = atof(pScheme->GetResourceString("CreditsScrollTime"));
 
 	m_DefaultFont = pScheme->GetFont("OptionTextMedium");
+	m_DefaultColor = pScheme->GetColor("CreditsLabelColor", Color(255, 255, 255, 255));
+}
 
-	for (int i = 0; i < _ARRAYSIZE(m_pLabelMessage); i++)
+void MenuContextCredits::OnMouseWheeled(int delta)
+{
+	BaseClass::OnMouseWheeled(delta);
+	float flDelta = ((float)delta) * 20.0f;
+	m_flScrollRate += flDelta;
+	m_flScrollRate = clamp(m_flScrollRate, 50.0f, 100000.0f);
+}
+
+#define XPOS_START scheme()->GetProportionalScaledValue(210)
+
+void MenuContextCredits::Paint()
+{
+	BaseClass::Paint();
+	if (m_DefaultFont == NULL)
+		return;
+
+	m_iPosY = 0;
+	wchar_t unicode[128];
+	const int fontTall = surface()->GetFontTall(m_DefaultFont);
+	surface()->DrawSetColor(m_DefaultColor);
+	surface()->DrawSetTextColor(m_DefaultColor);
+	surface()->DrawSetTextFont(m_DefaultFont);
+
+	SectionItem sections[] = { { "DEVELOPERS", &m_listDevelopers }, { "CONTRIBUTORS", &m_listContributors }, { "TESTERS", &m_listTesters }, { "SPECIAL THANKS", &m_listSpecialThanks } };
+	for (int s = 0; s < _ARRAYSIZE(sections); s++)
 	{
-		m_pLabelMessage[i]->SetFgColor(pScheme->GetColor("CreditsLabelColor", Color(255, 255, 255, 255)));
-		m_pLabelMessage[i]->SetFont(m_DefaultFont);
+		const SectionItem &item = sections[s];
+
+		g_pVGuiLocalize->ConvertANSIToUnicode(item.name, unicode, sizeof(unicode));
+		surface()->DrawSetTextPos(XPOS_START, GetYPos(m_iPosY));
+		surface()->DrawUnicodeString(unicode);
+		m_iPosY += fontTall + scheme()->GetProportionalScaledValue(8);
+
+		for (int i = 0; i < item.pList->Count(); i++)
+			PaintCreditObject(item.pList->Element(i));
+
+		m_iPosY += fontTall;
 	}
+
+	m_flCurrentScrollRate += (gpGlobals->frametime * m_flScrollRate);
+}
+
+void MenuContextCredits::PaintCreditObject(CCreditsObject *item)
+{
+	wchar_t unicode[128];
+	const int fontTall = surface()->GetFontTall(m_DefaultFont);
+
+	surface()->DrawSetColor(m_DefaultColor);
+	surface()->DrawSetTextColor(m_DefaultColor);
+	surface()->DrawSetTextFont(m_DefaultFont);
+
+	g_pVGuiLocalize->ConvertANSIToUnicode(item->name, unicode, sizeof(unicode));
+	surface()->DrawSetTextPos(XPOS_START + scheme()->GetProportionalScaledValue(2), GetYPos(m_iPosY));
+	surface()->DrawUnicodeString(unicode);
+	m_iPosY += fontTall;
+
+	for (int i = 0; i < item->desc.Count(); i++)
+	{
+		const char *desc = item->desc[i];
+		g_pVGuiLocalize->ConvertANSIToUnicode(desc, unicode, sizeof(unicode));
+		surface()->DrawSetTextPos(XPOS_START + scheme()->GetProportionalScaledValue(4), GetYPos(m_iPosY));
+		surface()->DrawUnicodeString(unicode);
+		m_iPosY += fontTall;
+	}
+
+	m_iLastYPos = GetYPos(m_iPosY);
+	m_iPosY += (fontTall / 2);
+}
+
+int MenuContextCredits::GetYPos(int offset)
+{
+	return ((ScreenHeight() + offset) - ceil(m_flCurrentScrollRate));
 }

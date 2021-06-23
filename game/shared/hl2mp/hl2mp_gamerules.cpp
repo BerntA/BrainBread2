@@ -65,10 +65,7 @@ int GetExperienceReward(CBaseEntity *pEntity)
 	if (pStaticHumanoid)
 		reward = pStaticHumanoid->GetXP();
 
-	if (pEntity->IsPlayer())
-		reward = 3;
-
-	return reward;
+	return (pEntity->IsPlayer() ? 3 : reward);
 }
 
 int GetZombieCredits(CBaseEntity *pEntity)
@@ -76,12 +73,7 @@ int GetZombieCredits(CBaseEntity *pEntity)
 	if (!pEntity)
 		return 0;
 
-	int reward = 1;
-
-	if (pEntity->IsPlayer())
-		reward = 2;
-
-	return reward;
+	return (pEntity->IsPlayer() ? 2 : 1);
 }
 
 CBaseCombatWeapon *GetActiveWeaponFromEntity(CBaseEntity *pEntity)
@@ -211,13 +203,11 @@ static const char *s_PreserveEnts[] =
 	"info_player_deathmatch",
 	"info_player_start",
 	"info_start_camera",
-	"info_map_parameters",
 	"keyframe_rope",
 	"move_rope",
 	"info_ladder",
 	"player",
 	"point_viewcontrol",
-	"scene_manager",
 	"shadow_control",
 	"sky_camera",
 	"soundent",
@@ -2413,7 +2403,6 @@ void CHL2MPRules::CleanUpMap()
 			}
 		}
 
-
 		virtual CBaseEntity* CreateNextEntity( const char *pClassname )
 		{
 			if ( m_iIterator == g_MapEntityRefs.InvalidIndex() )
@@ -2447,11 +2436,9 @@ void CHL2MPRules::CleanUpMap()
 	public:
 		int m_iIterator; // Iterator into g_MapEntityRefs.
 	};
+
 	CHL2MPMapEntityFilter filter;
 	filter.m_iIterator = g_MapEntityRefs.Head();
-
-	// DO NOT CALL SPAWN ON info_node ENTITIES!
-
 	MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &filter, true );
 }
 

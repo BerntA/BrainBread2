@@ -841,17 +841,6 @@ bool CMultiplayRules::Init()
 		}
 	}
 
-	void CMultiplayRules::FreeMapCycleFileVector( CUtlVector<char *> &mapList )
-	{
-		// Clear out existing map list. Not using Purge() or PurgeAndDeleteAll() because they won't delete [] each element.
-		for ( int i = 0; i < mapList.Count(); i++ )
-		{
-			delete [] mapList[i];
-		}
-
-		mapList.RemoveAll();
-	}
-
 	bool CMultiplayRules::IsManualMapChangeOkay( const char **pszReason )
 	{
 		if ( HLTVDirector()->IsActive() && ( HLTVDirector()->GetDelay() >= HLTV_MIN_DIRECTOR_DELAY ) )
@@ -910,8 +899,7 @@ bool CMultiplayRules::Init()
 
 		char mapcfile[MAX_PATH];
 		DetermineMapCycleFilename( mapcfile, sizeof(mapcfile), false );
-
-		FreeMapCycleFileVector( m_MapList );
+		ClearCharVectorList(m_MapList);
 
 		const int nMapCycleTimeStamp = filesystem->GetPathTime( mapcfile, "GAME" );
 		m_nMapCycleTimeStamp = nMapCycleTimeStamp;

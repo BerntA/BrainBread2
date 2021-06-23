@@ -199,7 +199,6 @@ public:
 
 	static void DetermineMapCycleFilename( char *pszResult, int nSizeResult, bool bForceSpew );
 	virtual void LoadMapCycleFileIntoVector ( const char *pszMapCycleFile, CUtlVector<char *> &mapList );
-	static void FreeMapCycleFileVector ( CUtlVector<char *> &mapList );
 
 	// LoadMapCycleFileIntoVector without the fixups inherited versions of gamerules may provide
 	static void RawLoadMapCycleFileIntoVector ( const char *pszMapCycleFile, CUtlVector<char *> &mapList );

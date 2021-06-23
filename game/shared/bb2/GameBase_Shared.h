@@ -328,6 +328,7 @@ private:
 	CGameDefinitionsQuestData *m_pSharedQuestData;
 };
 
+void ClearCharVectorList(CUtlVector<char*> &list);
 extern CGameBaseShared* GameBaseShared();
 
 #endif // GAME_BASE_SHARED_H

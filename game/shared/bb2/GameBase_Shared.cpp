@@ -19,6 +19,13 @@
 #include "hud_macros.h"
 #endif
 
+void ClearCharVectorList(CUtlVector<char*> &list)
+{
+	for (int i = 0; i < list.Count(); i++)
+		delete[] list[i];
+	list.RemoveAll();
+}
+
 #ifdef CLIENT_DLL
 ConVar bb2_preview_debugging("bb2_preview_debugging", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Enable character preview debugging.");
 ConVar bb2_preview_origin_x("bb2_preview_origin_x", "0", FCVAR_CLIENTDLL, "Changes the origin of all model preview.");

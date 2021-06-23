@@ -20,6 +20,7 @@
 
 namespace vgui
 {
+	class CCreditsObject;
 	class MenuContextCredits;
 	class MenuContextCredits : public vgui::CVGUIBasePanel
 	{
@@ -35,23 +36,26 @@ namespace vgui
 
 	private:
 
-		char pchDeveloperList[2048];
-		char pchContributorList[2048];
-		char pchTesterList[2048];
-		char pchSpecialThanksList[2048];
-
-		vgui::Label *m_pLabelMessage[4];
 		vgui::HFont m_DefaultFont;
+		Color m_DefaultColor;
 
-		CPanelAnimationVar(float, m_flPosY, "LabelPosition", "0.0f");
-		float m_flCreditsScrollTime;
-		int m_iSizeH[4];
+		float m_flScrollRate;
+		float m_flCurrentScrollRate;
+		int m_iPosY;
+		int m_iLastYPos;
 
-		int GetNumberOfLinesInString(const char *pszStr);
+		CUtlVector<CCreditsObject*> m_listDevelopers;
+		CUtlVector<CCreditsObject*> m_listContributors;
+		CUtlVector<CCreditsObject*> m_listTesters;
+		CUtlVector<CCreditsObject*> m_listSpecialThanks;
 
 	protected:
-		virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
-		virtual void PerformLayout();
+		void ApplySchemeSettings(vgui::IScheme *pScheme);
+		void PerformLayout();
+		void OnMouseWheeled(int delta);
+		void Paint();
+		void PaintCreditObject(CCreditsObject *item);
+		int GetYPos(int offset);
 	};
 }
 
