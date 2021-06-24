@@ -73,7 +73,7 @@ void CLeaderboardHandler::FetchLeaderboardHandle(void)
 {
 	m_hGlobalLeaderboardHandle = NULL;
 
-	if (!steamapicontext || (steamapicontext && !steamapicontext->SteamUserStats()))
+	if (!steamapicontext || !steamapicontext->SteamUserStats())
 		return;
 
 	SteamAPICall_t hSteamAPICall = NULL;

@@ -75,7 +75,7 @@ void CSteamServerLister::RefreshComplete(HServerListRequest hReq, EMatchMakingSe
 //-----------------------------------------------------------------------------
 void CSteamServerLister::RequestServersByType(int type)
 {
-	if (!steamapicontext || (steamapicontext && !steamapicontext->SteamMatchmakingServers()))
+	if (!steamapicontext || !steamapicontext->SteamMatchmakingServers() || !steamapicontext->SteamUtils())
 		return;
 
 	// If we are still finishing the previous refresh, then ignore this new request

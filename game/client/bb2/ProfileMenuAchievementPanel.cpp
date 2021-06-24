@@ -297,10 +297,7 @@ void ProfileMenuAchievementPanel::CreateAchievementList(void)
 			if (!(GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement && GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement[0]))
 				continue;
 
-			if (!steamapicontext)
-				continue;
-
-			if (!steamapicontext->SteamUserStats())
+			if (!steamapicontext || !steamapicontext->SteamUserStats())
 				continue;
 
 			bool bAchieved = false;

@@ -116,7 +116,7 @@ void TopPlayersPanel::FindAndSetAvatarForPlayer(int playerIndex, int panelIndex)
 	player_info_t pi;
 	if (engine->GetPlayerInfo(playerIndex, &pi))
 	{
-		if (!pi.fakeplayer && pi.friendsID)
+		if (!pi.fakeplayer && pi.friendsID && steamapicontext && steamapicontext->SteamUtils())
 		{
 			CSteamID steamIDForPlayer(pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual);
 			m_pSteamAvatars[panelIndex] = new CAvatarImage();

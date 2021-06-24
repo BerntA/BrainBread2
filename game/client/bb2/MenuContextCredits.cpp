@@ -74,7 +74,7 @@ MenuContextCredits::MenuContextCredits(vgui::Panel *parent, char const *panelNam
 
 	m_DefaultFont = NULL;
 	m_DefaultColor = COLOR_WHITE;
-	m_flScrollRate = 100.0f;
+	m_flScrollRate = 200.0f;
 	m_flCurrentScrollRate = 0.0f;
 	m_iPosY = 0;
 	m_iLastYPos = 1;
@@ -143,7 +143,7 @@ void MenuContextCredits::OnShowPanel(bool bShow)
 	{
 		m_iLastYPos = 1;
 		m_flCurrentScrollRate = 0.0f;
-		m_flScrollRate = 100.0f;
+		m_flScrollRate = 200.0f;
 	}
 
 	if (!engine->IsInGame())

@@ -786,10 +786,7 @@ void CGameBaseClient::ScoreboardRefreshComplete(int maxEntries)
 
 void CGameBaseClient::LoadGameLocalization(void)
 {
-	if (!steamapicontext)
-		return;
-
-	if (!steamapicontext->SteamApps())
+	if (!steamapicontext || !steamapicontext->SteamApps())
 		return;
 
 	const char *currentSelectedLanguage = steamapicontext->SteamApps()->GetCurrentGameLanguage();
@@ -967,6 +964,9 @@ CON_COMMAND(vote_menu, "Open Vote Menu")
 
 CON_COMMAND(dev_reset_achievements, "Reset Achievements")
 {
+	if (!steamapicontext || !steamapicontext->SteamUserStats())
+		return;
+
 	C_HL2MP_Player *pClient = C_HL2MP_Player::GetLocalHL2MPPlayer();
 	if (!pClient || !g_PR)
 	{

@@ -1088,7 +1088,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 		int m_iIndex = event->GetInt("index");
 		int m_iType = event->GetInt("type");
 
-		if (g_PR)
+		if (g_PR && steamapicontext && steamapicontext->SteamUserStats())
 		{
 			wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
 			g_pVGuiLocalize->ConvertANSIToUnicode(g_PR->GetPlayerName(m_iIndex), wszPlayerName, sizeof(wszPlayerName));

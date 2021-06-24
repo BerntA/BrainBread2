@@ -65,7 +65,7 @@ ScoreboardItem::ScoreboardItem(vgui::Panel *parent, char const *panelName, KeyVa
 	player_info_t pi;
 	if (engine->GetPlayerInfo(m_iPlayerIndex, &pi))
 	{
-		if (!pi.fakeplayer && pi.friendsID)
+		if (!pi.fakeplayer && pi.friendsID && steamapicontext && steamapicontext->SteamUtils())
 		{
 			CSteamID steamIDForPlayer(pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual);
 			m_pAvatarIMG = new CAvatarImage();
@@ -323,7 +323,7 @@ void ScoreboardItem::OnCommand(const char* pcCommand)
 	// Redirect to community link / steam profile. From Id 32 to Id 64
 	if (!Q_stricmp(pcCommand, "Redirect"))
 	{
-		if (m_bIsBot == false)
+		if (!m_bIsBot && steamapicontext && steamapicontext->SteamFriends())
 			steamapicontext->SteamFriends()->ActivateGameOverlayToWebPage(VarArgs("http://steamcommunity.com/profiles/%s", szSteamID));
 	}
 	else if (!Q_stricmp(pcCommand, "Mute"))

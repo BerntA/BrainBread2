@@ -839,7 +839,7 @@ void PlayMenuServerBrowser::RefreshServerList(int type)
 
 void PlayMenuServerBrowser::HandleFavoriteStateOfServer(void)
 {
-	if (!steamapicontext || (steamapicontext && !steamapicontext->SteamMatchmaking()))
+	if (!steamapicontext || !steamapicontext->SteamMatchmaking())
 		return;
 
 	int itemID = m_pServerList->GetSelectedItem();
@@ -910,7 +910,7 @@ void PlayMenuServerBrowser::PlayersRefreshComplete()
 
 void PlayMenuServerBrowser::OnSelectItem(KeyValues *data)
 {
-	if (!steamapicontext || (steamapicontext && !steamapicontext->SteamMatchmakingServers()))
+	if (!steamapicontext || !steamapicontext->SteamMatchmakingServers())
 		return;
 
 	int itemID = m_pServerList->GetSelectedItem();
