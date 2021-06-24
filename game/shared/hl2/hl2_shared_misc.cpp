@@ -1192,159 +1192,6 @@ CMissile *CMissile::Create(const Vector &vecOrigin, const QAngle &vecAngles, edi
 }
 
 //-----------------------------------------------------------------------------
-// This entity is used to create little force boxes that the helicopter
-// should avoid. 
-//-----------------------------------------------------------------------------
-class CInfoAPCMissileHint : public CBaseEntity
-{
-public:
-	DECLARE_CLASS(CInfoAPCMissileHint, CBaseEntity);
-
-	virtual void Spawn();
-	virtual void Activate();
-	virtual void UpdateOnRemove();
-
-	static CBaseEntity *FindAimTarget(CBaseEntity *pMissile, const char *pTargetName,
-		const Vector &vecCurrentTargetPos, const Vector &vecCurrentTargetVel);
-
-private:
-	EHANDLE	m_hTarget;
-
-	typedef CHandle<CInfoAPCMissileHint> APCMissileHintHandle_t;
-	static CUtlVector< APCMissileHintHandle_t > s_APCMissileHints;
-};
-
-//-----------------------------------------------------------------------------
-//
-// This entity is used to create little force boxes that the helicopters should avoid. 
-//
-//-----------------------------------------------------------------------------
-CUtlVector< CInfoAPCMissileHint::APCMissileHintHandle_t > CInfoAPCMissileHint::s_APCMissileHints;
-
-LINK_ENTITY_TO_CLASS(info_apc_missile_hint, CInfoAPCMissileHint);
-
-//-----------------------------------------------------------------------------
-// Spawn, remove
-//-----------------------------------------------------------------------------
-void CInfoAPCMissileHint::Spawn()
-{
-	SetModel(STRING(GetModelName()));
-	SetSolid(SOLID_BSP);
-	AddSolidFlags(FSOLID_NOT_SOLID);
-	AddEffects(EF_NODRAW);
-}
-
-void CInfoAPCMissileHint::Activate()
-{
-	BaseClass::Activate();
-
-	m_hTarget = gEntList.FindEntityByName(NULL, m_target);
-	if (m_hTarget == NULL)
-	{
-		DevWarning("%s: Could not find target '%s'!\n", GetClassname(), STRING(m_target));
-	}
-	else
-	{
-		s_APCMissileHints.AddToTail(this);
-	}
-}
-
-void CInfoAPCMissileHint::UpdateOnRemove()
-{
-	s_APCMissileHints.FindAndRemove(this);
-	BaseClass::UpdateOnRemove();
-}
-
-//-----------------------------------------------------------------------------
-// Where are how should we avoid?
-//-----------------------------------------------------------------------------
-#define HINT_PREDICTION_TIME 3.0f
-
-CBaseEntity *CInfoAPCMissileHint::FindAimTarget(CBaseEntity *pMissile, const char *pTargetName, const Vector &vecCurrentEnemyPos, const Vector &vecCurrentEnemyVel)
-{
-	if (!pTargetName)
-		return NULL;
-
-	float flOOSpeed = pMissile->GetAbsVelocity().Length();
-	if (flOOSpeed != 0.0f)
-	{
-		flOOSpeed = 1.0f / flOOSpeed;
-	}
-
-	for (int i = s_APCMissileHints.Count(); --i >= 0;)
-	{
-		CInfoAPCMissileHint *pHint = s_APCMissileHints[i];
-		if (!pHint->NameMatches(pTargetName))
-			continue;
-
-		if (!pHint->m_hTarget)
-			continue;
-
-		Vector vecMissileToHint, vecMissileToEnemy;
-		VectorSubtract(pHint->m_hTarget->WorldSpaceCenter(), pMissile->GetAbsOrigin(), vecMissileToHint);
-		VectorSubtract(vecCurrentEnemyPos, pMissile->GetAbsOrigin(), vecMissileToEnemy);
-		float flDistMissileToHint = VectorNormalize(vecMissileToHint);
-		VectorNormalize(vecMissileToEnemy);
-		if (DotProduct(vecMissileToHint, vecMissileToEnemy) < 0.866f)
-			continue;
-
-		// Determine when the target will be inside the volume.
-		// Project at most 3 seconds in advance
-		Vector vecRayDelta;
-		VectorMultiply(vecCurrentEnemyVel, HINT_PREDICTION_TIME, vecRayDelta);
-
-		BoxTraceInfo_t trace;
-		if (!IntersectRayWithOBB(vecCurrentEnemyPos, vecRayDelta, pHint->CollisionProp()->CollisionToWorldTransform(),
-			pHint->CollisionProp()->OBBMins(), pHint->CollisionProp()->OBBMaxs(), 0.0f, &trace))
-		{
-			continue;
-		}
-
-		// Determine the amount of time it would take the missile to reach the target
-		// If we can reach the target within the time it takes for the enemy to reach the 
-		float tSqr = flDistMissileToHint * flOOSpeed / HINT_PREDICTION_TIME;
-		if ((tSqr < (trace.t1 * trace.t1)) || (tSqr >(trace.t2 * trace.t2)))
-			continue;
-
-		return pHint->m_hTarget;
-	}
-
-	return NULL;
-}
-
-//-----------------------------------------------------------------------------
-// a list of missiles to search quickly
-//-----------------------------------------------------------------------------
-CEntityClassList<CAPCMissile> g_APCMissileList;
-template <> CAPCMissile *CEntityClassList<CAPCMissile>::m_pClassList = NULL;
-CAPCMissile *GetAPCMissileList()
-{
-	return g_APCMissileList.m_pClassList;
-}
-
-//-----------------------------------------------------------------------------
-// Finds apc missiles in cone
-//-----------------------------------------------------------------------------
-CAPCMissile *FindAPCMissileInCone(const Vector &vecOrigin, const Vector &vecDirection, float flAngle)
-{
-	float flCosAngle = cos(DEG2RAD(flAngle));
-	for (CAPCMissile *pEnt = GetAPCMissileList(); pEnt != NULL; pEnt = pEnt->m_pNext)
-	{
-		if (!pEnt->IsSolid())
-			continue;
-
-		Vector vecDelta;
-		VectorSubtract(pEnt->GetAbsOrigin(), vecOrigin, vecDelta);
-		VectorNormalize(vecDelta);
-		float flDot = DotProduct(vecDelta, vecDirection);
-		if (flDot > flCosAngle)
-			return pEnt;
-	}
-
-	return NULL;
-}
-
-//-----------------------------------------------------------------------------
 //
 // Specialized version of the missile
 //
@@ -1372,12 +1219,10 @@ CAPCMissile *CAPCMissile::Create(const Vector &vecOrigin, const QAngle &vecAngle
 
 CAPCMissile::CAPCMissile()
 {
-	g_APCMissileList.Insert(this);
 }
 
 CAPCMissile::~CAPCMissile()
 {
-	g_APCMissileList.Remove(this);
 }
 
 //-----------------------------------------------------------------------------

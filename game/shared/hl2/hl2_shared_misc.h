@@ -122,10 +122,6 @@ private:
 	virtual void ExplodeThink();
 };
 
-//-----------------------------------------------------------------------------
-// Finds apc missiles in cone
-//-----------------------------------------------------------------------------
-CAPCMissile *FindAPCMissileInCone(const Vector &vecOrigin, const Vector &vecDirection, float flAngle);
 #endif
 
 #endif // HL2_SHARED_MISC_H
