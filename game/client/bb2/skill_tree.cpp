@@ -60,7 +60,7 @@ CSkillTree::CSkillTree(IViewPort *pViewPort) : Frame(NULL, PANEL_SKILL)
 	m_pBackground->SetShouldScaleImage(true);
 
 	KeyValues *pkvSkillData = new KeyValues("SkillData");
-	if (pkvSkillData->LoadFromFile(filesystem, "scripts/skills/skill_base.txt", "MOD"))
+	if (pkvSkillData->LoadFromFile(filesystem, "scripts/skills.txt", "MOD"))
 	{
 		KeyValues *pkvHumanSkills = pkvSkillData->FindKey("Humans");
 		if (pkvHumanSkills)

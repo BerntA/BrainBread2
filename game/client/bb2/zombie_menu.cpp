@@ -63,7 +63,7 @@ CZombieMenu::CZombieMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_ZOMBIE)
 	m_pToolTip->SetZPos(70);
 
 	KeyValues *pkvSkillData = new KeyValues("SkillData");
-	if (pkvSkillData->LoadFromFile(filesystem, "scripts/skills/skill_base.txt", "MOD"))
+	if (pkvSkillData->LoadFromFile(filesystem, "scripts/skills.txt", "MOD"))
 	{
 		KeyValues *pkvZombieSkills = pkvSkillData->FindKey("Zombies");
 		if (pkvZombieSkills)
