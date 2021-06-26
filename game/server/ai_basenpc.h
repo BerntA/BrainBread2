@@ -955,7 +955,6 @@ public:
 	virtual void		FearSound( void )				 			{ return; };
 	virtual void		LostEnemySound( void ) 						{ return; };
 	virtual void		FoundEnemySound( void ) 					{ return; };
-	virtual void		BarnacleDeathSound( void )					{ CTakeDamageInfo info;	PainSound( info ); }
 	virtual bool		ShouldPlayIdleSound( void );
 
 	virtual void		MakeAIFootstepSound( float volume, float duration = 0.5f );

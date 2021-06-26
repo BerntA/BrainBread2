@@ -46,8 +46,7 @@ static int AE_CROW_HOP;
 //
 // Skill settings.
 //
-ConVar sk_crow_health( "sk_crow_health","1");
-ConVar sk_crow_melee_dmg( "sk_crow_melee_dmg","0");
+ConVar sk_crow_health("sk_crow_health", "1");
 
 LINK_ENTITY_TO_CLASS( npc_crow, CNPC_Crow );
 LINK_ENTITY_TO_CLASS( npc_seagull, CNPC_Seagull );
@@ -89,7 +88,7 @@ void CNPC_Crow::Spawn( void )
 	m_iHealth = sk_crow_health.GetFloat();
 
 	SetHullType(HULL_TINY);
-	SetHullSizeNormal();
+	SetHullSizeNormal(true);
 
 	SetSolid( SOLID_BBOX );
 	SetMoveType( MOVETYPE_STEP );
@@ -101,8 +100,6 @@ void CNPC_Crow::Spawn( void )
 
 	SetBloodColor( BLOOD_COLOR_RED );
 	m_NPCState = NPC_STATE_NONE;
-
-	m_nMorale = random->RandomInt( 0, 12 );
 	
 	SetCollisionGroup(COLLISION_GROUP_NPC_CROW);
 
@@ -115,7 +112,6 @@ void CNPC_Crow::Spawn( void )
 	AddClassRelationship( CLASS_ZOMBIE, D_NU, 0 );
 
 	m_bSoar = false;
-	m_bOnJeep = false;
 	m_flSoarTime = gpGlobals->curtime;
 
 	NPCInit();
@@ -250,12 +246,6 @@ void CNPC_Crow::HandleAnimEvent( animevent_t *pEvent )
 			vecJumpDir = vecJumpDir * ( 650.0 / distance );
 		}
 
-		m_nMorale -= random->RandomInt( 1, 6 );
-		if ( m_nMorale <= 0 )
-		{
-			m_nMorale = 0;
-		}
-
 		// Play a hop flap sound.
 		EmitSound( "NPC_Crow.Hop" );
 
@@ -318,7 +308,7 @@ void CNPC_Crow::InputFlyAway( inputdata_t &inputdata )
 		if ( pEnt )
 		{
 			trace_t tr;
-			AI_TraceLine ( EyePosition(), pEnt->GetAbsOrigin(), MASK_NPCSOLID, this, COLLISION_GROUP_NONE, &tr );
+			AI_TraceLine(EyePosition(), pEnt->GetAbsOrigin(), MASK_NPCSOLID, this, GetCollisionGroup(), &tr);
 
 			if ( tr.fraction != 1.0f )
 				 return;
@@ -605,7 +595,7 @@ bool CNPC_Crow::Probe( const Vector &vecMoveDir, float flSpeed, Vector &vecDefle
 	// Look 1/2 second ahead.
 	//
 	trace_t tr;
-	AI_TraceHull(GetAbsOrigin(), GetAbsOrigin() + vecMoveDir * flSpeed, GetHullMins(), GetHullMaxs(), MASK_NPCSOLID, this, COLLISION_GROUP_NPC_CROW, &tr);
+	AI_TraceHull(GetAbsOrigin(), GetAbsOrigin() + vecMoveDir * flSpeed, GetHullMins(), GetHullMaxs(), MASK_NPCSOLID, this, GetCollisionGroup(), &tr);
 	if ( tr.fraction < 1.0f )
 	{
 		//
@@ -796,6 +786,25 @@ void CNPC_Crow::StartTask( const Task_t *pTask )
 			break;
 		}
 
+		case TASK_CROW_FINDPATH:
+		{
+			// How did this happen?!
+			if ((GetGoalEnt() == this) || !GetGoalEnt())
+			{
+				SetGoalEnt(NULL);
+				TaskFail(FAIL_NO_ROUTE);
+			}
+			else
+			{
+				SetFlyingState(FlyState_Flying);
+				StartTargetHandling(GetGoalEnt());
+				m_bReachedMoveGoal = false;
+				TaskComplete();
+			}
+
+			break;
+		}
+
 		//
 		// We have failed to fly normally. Pick a random "up" direction and fly that way.
 		//
@@ -826,11 +835,6 @@ void CNPC_Crow::StartTask( const Task_t *pTask )
 		{
 			SetIdealActivity( ACT_HOP );
 			m_flHopStartZ = GetLocalOrigin().z;
-			break;
-		}
-
-		case TASK_CROW_WAIT_FOR_BARNACLE_KILL:
-		{
 			break;
 		}
 
@@ -885,7 +889,7 @@ void CNPC_Crow::RunTask( const Task_t *pTask )
 				// We've hopped off of something! See if we're going to fall very far.
 				//
 				trace_t tr;
-				AI_TraceLine(GetAbsOrigin(), GetAbsOrigin() + Vector(0, 0, -32), MASK_SOLID, this, COLLISION_GROUP_NPC_CROW, &tr);
+				AI_TraceLine(GetAbsOrigin(), GetAbsOrigin() + Vector(0, 0, -32), MASK_SOLID, this, GetCollisionGroup(), &tr);
 				if ( tr.fraction == 1.0f )
 				{
 					//
@@ -922,18 +926,6 @@ void CNPC_Crow::RunTask( const Task_t *pTask )
 			{
 				SetFlyingState( FlyState_Walking );
 				TaskComplete();
-			}
-			break;
-		}
-
-		case TASK_CROW_WAIT_FOR_BARNACLE_KILL:
-		{
-			if ( m_flNextFlinchTime < gpGlobals->curtime )
-			{
-				m_flNextFlinchTime = gpGlobals->curtime + random->RandomFloat( 0.5f, 2.0f );
-				// dvs: TODO: squirm
-				// dvs: TODO: spawn feathers
-				EmitSound( "NPC_Crow.Squawk" );
 			}
 			break;
 		}
@@ -983,12 +975,6 @@ int CNPC_Crow::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 int CNPC_Crow::SelectSchedule( void )
 {
-	if ( HasCondition( COND_CROW_BARNACLED ) )
-	{
-		// Caught by a barnacle!
-		return SCHED_CROW_BARNACLED;
-	}
-
 	//
 	// If we're flying, just find somewhere to fly to.
 	//
@@ -1011,7 +997,7 @@ int CNPC_Crow::SelectSchedule( void )
 	// Maybe we hopped off of something? Don't do this immediately upon
 	// because we may be falling to the ground on spawn.
 	//
-	if ( !( GetFlags() & FL_ONGROUND ) && ( gpGlobals->curtime > 2.0 ) && m_bOnJeep == false )
+	if (!(GetFlags() & FL_ONGROUND) && (gpGlobals->curtime > 2.0))
 	{
 		return SCHED_CROW_FLY_AWAY;
 	}
@@ -1039,8 +1025,6 @@ int CNPC_Crow::SelectSchedule( void )
 	if ( HasCondition( COND_CROW_ENEMY_WAY_TOO_CLOSE ) )
 	{
 		ClearCondition( COND_CROW_ENEMY_WAY_TOO_CLOSE );
-
-		m_nMorale = 0;
 		return SCHED_CROW_FLY_AWAY;
 	}
 
@@ -1051,19 +1035,12 @@ int CNPC_Crow::SelectSchedule( void )
 	{
 		ClearCondition( COND_CROW_ENEMY_TOO_CLOSE );
 
-		if ( m_bOnJeep == true )
-		{
-			m_nMorale = 0;
-			return SCHED_CROW_FLY_AWAY;
-		}
-
 		if ( m_flEnemyDist > 400 )
 		{
 			return SCHED_CROW_WALK_AWAY;
 		}
 		else if ( m_flEnemyDist > 300 )
 		{
-			m_nMorale -= 1;
 			return SCHED_CROW_RUN_AWAY;
 		}
 	}
@@ -1076,9 +1053,6 @@ int CNPC_Crow::SelectSchedule( void )
 		{
 			if ( !IsFlying() )
 			{
-				if ( m_bOnJeep == true )
-				     return SCHED_IDLE_STAND;
-
 				//
 				// If we are hanging out on the ground, see if it is time to pick a new place to walk to.
 				//
@@ -1174,38 +1148,12 @@ void CNPC_Crow::FlapSound( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int CNPC_Crow::DrawDebugTextOverlays( void )
-{
-	int nOffset = BaseClass::DrawDebugTextOverlays();
-
-	if (m_debugOverlays & OVERLAY_TEXT_BIT) 
-	{
-		char tempstr[512];
-		Q_snprintf( tempstr, sizeof( tempstr ), "morale: %d", m_nMorale );
-		EntityText( nOffset, tempstr, 0 );
-		nOffset++;
-
-		if ( GetEnemy() != NULL )
-		{
-			Q_snprintf( tempstr, sizeof( tempstr ), "enemy (dist): %s (%g)", GetEnemy()->GetClassname(), ( double )m_flEnemyDist );
-			EntityText( nOffset, tempstr, 0 );
-			nOffset++;
-		}
-	}
-
-	return nOffset;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Determines which sounds the crow cares about.
 //-----------------------------------------------------------------------------
 int CNPC_Crow::GetSoundInterests( void )
 {
 	return	SOUND_WORLD | SOUND_COMBAT | SOUND_PLAYER | SOUND_DANGER;
 }
-
 
 //-----------------------------------------------------------------------------
 //
@@ -1215,18 +1163,15 @@ int CNPC_Crow::GetSoundInterests( void )
 
 AI_BEGIN_CUSTOM_NPC( npc_crow, CNPC_Crow )
 
-	DECLARE_TASK( TASK_CROW_FIND_FLYTO_NODE )
-	//DECLARE_TASK( TASK_CROW_PREPARE_TO_FLY )
 	DECLARE_TASK( TASK_CROW_TAKEOFF )
 	DECLARE_TASK( TASK_CROW_FLY )
 	DECLARE_TASK( TASK_CROW_PICK_RANDOM_GOAL )
 	DECLARE_TASK( TASK_CROW_HOP )
 	DECLARE_TASK( TASK_CROW_PICK_EVADE_GOAL )
-	DECLARE_TASK( TASK_CROW_WAIT_FOR_BARNACLE_KILL )
+	DECLARE_TASK(TASK_CROW_FINDPATH)
 
 	// experiment
 	DECLARE_TASK( TASK_CROW_FALL_TO_GROUND )
-	DECLARE_TASK( TASK_CROW_PREPARE_TO_FLY_RANDOM )
 
 	DECLARE_ACTIVITY( ACT_CROW_TAKEOFF )
 	DECLARE_ACTIVITY( ACT_CROW_SOAR )
@@ -1240,7 +1185,6 @@ AI_BEGIN_CUSTOM_NPC( npc_crow, CNPC_Crow )
 	DECLARE_CONDITION( COND_CROW_ENEMY_TOO_CLOSE )
 	DECLARE_CONDITION( COND_CROW_ENEMY_WAY_TOO_CLOSE )
 	DECLARE_CONDITION( COND_CROW_FORCED_FLY )
-	DECLARE_CONDITION( COND_CROW_BARNACLED )
 
 	//=========================================================
 	DEFINE_SCHEDULE
@@ -1260,7 +1204,6 @@ AI_BEGIN_CUSTOM_NPC( npc_crow, CNPC_Crow )
 		"		COND_PROVOKED"
 		"		COND_CROW_ENEMY_TOO_CLOSE"
 		"		COND_NEW_ENEMY"
-		"		COND_HEAVY_DAMAGE"
 		"		COND_LIGHT_DAMAGE"
 		"		COND_HEAVY_DAMAGE"
 		"		COND_HEAR_DANGER"
@@ -1283,7 +1226,6 @@ AI_BEGIN_CUSTOM_NPC( npc_crow, CNPC_Crow )
 		"		COND_CROW_FORCED_FLY"
 		"		COND_CROW_ENEMY_WAY_TOO_CLOSE"
 		"		COND_NEW_ENEMY"
-		"		COND_HEAVY_DAMAGE"
 		"		COND_LIGHT_DAMAGE"
 		"		COND_HEAVY_DAMAGE"
 		"		COND_HEAR_DANGER"
@@ -1306,7 +1248,6 @@ AI_BEGIN_CUSTOM_NPC( npc_crow, CNPC_Crow )
 		"		COND_CROW_FORCED_FLY"
 		"		COND_CROW_ENEMY_WAY_TOO_CLOSE"
 		"		COND_NEW_ENEMY"
-		"		COND_HEAVY_DAMAGE"
 		"		COND_LIGHT_DAMAGE"
 		"		COND_HEAVY_DAMAGE"
 		"		COND_HEAR_DANGER"
@@ -1327,7 +1268,6 @@ AI_BEGIN_CUSTOM_NPC( npc_crow, CNPC_Crow )
 		"	"
 		"	Interrupts"
 		"		COND_CROW_FORCED_FLY"
-		"		COND_HEAVY_DAMAGE"
 		"		COND_LIGHT_DAMAGE"
 		"		COND_HEAVY_DAMAGE"
 		"		COND_HEAR_DANGER"
@@ -1340,6 +1280,7 @@ AI_BEGIN_CUSTOM_NPC( npc_crow, CNPC_Crow )
 		SCHED_CROW_IDLE_FLY,
 		
 		"	Tasks"
+		"		TASK_CROW_FINDPATH				0"
 		"		TASK_WAIT_FOR_MOVEMENT			0"
 		"		"
 		"	Interrupts"
@@ -1353,6 +1294,7 @@ AI_BEGIN_CUSTOM_NPC( npc_crow, CNPC_Crow )
 		"	Tasks"
 		"		TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHED_CROW_FLY_FAIL"
 		"		TASK_STOP_MOVING				0"
+		"		TASK_CROW_FINDPATH				0"
 		"		TASK_CROW_TAKEOFF				0"
 		"		TASK_WAIT_FOR_MOVEMENT			0"
 		"	"
@@ -1384,20 +1326,5 @@ AI_BEGIN_CUSTOM_NPC( npc_crow, CNPC_Crow )
 		"	"
 		"	Interrupts"
 	)
-
-	//=========================================================
-	// Crow is in the clutches of a barnacle
-	DEFINE_SCHEDULE
-	(
-		SCHED_CROW_BARNACLED,
-
-		"	Tasks"
-		"		TASK_STOP_MOVING						0"
-		"		TASK_SET_ACTIVITY						ACTIVITY:ACT_HOP"
-		"		TASK_CROW_WAIT_FOR_BARNACLE_KILL		0"
-
-		"	Interrupts"
-	)
-
 
 AI_END_CUSTOM_NPC()

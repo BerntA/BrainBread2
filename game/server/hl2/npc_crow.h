@@ -18,7 +18,6 @@
 // Spawnflags.
 //
 #define SF_CROW_FLYING		16
-
 #define CROW_TAKEOFF_SPEED		170
 #define CROW_AIRSPEED			220 // FIXME: should be about 440, but I need to add acceleration
 
@@ -41,32 +40,21 @@ enum
 
 	SCHED_CROW_FLY,
 	SCHED_CROW_FLY_FAIL,
-
-	SCHED_CROW_BARNACLED,
 };
-
 
 //
 // Custom tasks.
 //
 enum 
 {
-	TASK_CROW_FIND_FLYTO_NODE = LAST_SHARED_TASK,
-	//TASK_CROW_PREPARE_TO_FLY,
-	TASK_CROW_TAKEOFF,
-	//TASK_CROW_LAND,
+	TASK_CROW_TAKEOFF = LAST_SHARED_TASK,
 	TASK_CROW_FLY,
-	TASK_CROW_FLY_TO_HINT,
 	TASK_CROW_PICK_RANDOM_GOAL,
 	TASK_CROW_PICK_EVADE_GOAL,
 	TASK_CROW_HOP,
-
+	TASK_CROW_FINDPATH,
 	TASK_CROW_FALL_TO_GROUND,
-	TASK_CROW_PREPARE_TO_FLY_RANDOM,
-
-	TASK_CROW_WAIT_FOR_BARNACLE_KILL,
 };
-
 
 //
 // Custom conditions.
@@ -76,7 +64,6 @@ enum
 	COND_CROW_ENEMY_TOO_CLOSE = LAST_SHARED_CONDITION,
 	COND_CROW_ENEMY_WAY_TOO_CLOSE,
 	COND_CROW_FORCED_FLY,
-	COND_CROW_BARNACLED,
 };
 
 enum FlyState_t
@@ -86,7 +73,6 @@ enum FlyState_t
 	FlyState_Falling,
 	FlyState_Landing,
 };
-
 
 //-----------------------------------------------------------------------------
 // The crow class.
@@ -104,8 +90,6 @@ public:
 	virtual void Precache( void );
 
 	virtual Vector BodyTarget( const Vector &posSrc, bool bNoisy = true );
-
-	virtual int DrawDebugTextOverlays( void );
 
 	//
 	// CBaseCombatCharacter:
@@ -149,7 +133,6 @@ public:
 	DECLARE_DATADESC();
 
 	int			m_iBirdType;
-	bool		m_bOnJeep;
 
 protected:
 	void SetFlyingState( FlyState_t eState );
@@ -167,7 +150,6 @@ protected:
 	float m_flGroundIdleMoveTime;
 
 	float m_flEnemyDist;		// Distance to GetEnemy(), cached in GatherEnemyConditions.
-	int m_nMorale;				// Used to determine which avoidance schedule to pick. Degrades as I pick avoidance schedules.
 	
 	bool m_bReachedMoveGoal;
 
