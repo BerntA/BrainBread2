@@ -422,7 +422,7 @@ float CGameBaseShared::GetPlaybackSpeedThirdperson(CHL2MP_Player *pClient, int v
 		return 1.0f;
 
 	float durationViewmodel = GetSequenceDuration(pClient->GetViewModel()->GetModelPtr(), viewmodelActivity);
-	float durationThirdperson = GetSequenceDuration(pClient->GetModelPtr(), (int)pClient->GetActiveWeapon()->ActivityOverride((Activity)thirdpersonActivity, NULL));
+	float durationThirdperson = GetSequenceDuration(pClient->GetModelPtr(), (int)pClient->GetActiveWeapon()->ActivityOverride((Activity)thirdpersonActivity));
 	if ((durationViewmodel > 0.0f) && (durationThirdperson > 0.0f))
 		return (1.0f / (durationViewmodel / durationThirdperson));
 

@@ -4686,16 +4686,6 @@ void CBasePlayer::GetAimVectors(Vector& forward, Vector& right, Vector& up)
 // ==========================================================================
 
 //-----------------------------------------------------------------------------
-// Purpose: Override base class, player can always use weapon
-// Input  : A weapon
-// Output :	true or false
-//-----------------------------------------------------------------------------
-bool CBasePlayer::Weapon_CanUse( CBaseCombatWeapon *pWeapon )
-{
-	return true;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Override to clear dropped weapon from the hud
 //-----------------------------------------------------------------------------
 void CBasePlayer::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTarget /* = NULL */, const Vector *pVelocity /* = NULL */ )
@@ -4754,7 +4744,6 @@ void CBasePlayer::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 {
 	BaseClass::Weapon_Equip( pWeapon );
 }
-
 
 //=========================================================
 // HasNamedPlayerItem Does the player already have this item?

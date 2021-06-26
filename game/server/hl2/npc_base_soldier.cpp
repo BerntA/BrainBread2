@@ -425,7 +425,6 @@ float CNPC_BaseSoldier::MaxYawSpeed( void )
 		return 45;
 		break;
 	case ACT_RUN:
-	case ACT_RUN_HURT:
 		return 15;
 		break;
 	case ACT_WALK:

@@ -309,7 +309,7 @@ void CBB2PlayerShared::BodyRestartGesture(C_HL2MP_Player *pOwner, Activity activ
 	if ((slot < 0) || (slot >= m_pPlayerBody->GetNumAnimOverlays()))
 		return;
 
-	int iSequence = m_pPlayerBody->SelectWeightedSequence(pWeapon->ActivityOverride(activity, NULL));
+	int iSequence = m_pPlayerBody->SelectWeightedSequence(pWeapon->ActivityOverride(activity));
 	if (iSequence >= 0)
 	{
 		C_AnimationLayer *pLayer = m_pPlayerBody->GetAnimOverlay(slot);

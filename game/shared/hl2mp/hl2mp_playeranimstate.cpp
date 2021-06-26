@@ -1013,7 +1013,7 @@ Activity CHL2MPPlayerAnimState::TranslateActivity(Activity actDesired)
 	Activity translateActivity = actDesired;
 
 	if (GetBasePlayer()->GetActiveWeapon())
-		translateActivity = GetBasePlayer()->GetActiveWeapon()->ActivityOverride(translateActivity, NULL);
+		translateActivity = GetBasePlayer()->GetActiveWeapon()->ActivityOverride(translateActivity);
 
 	// No act change? Must be bugged! Prevent t-posing... Can happen during wep selection when the client thinks no wep is available during the switching!!
 	if ((GetBasePlayer()->GetActiveWeapon() == NULL) || (translateActivity == actDesired))

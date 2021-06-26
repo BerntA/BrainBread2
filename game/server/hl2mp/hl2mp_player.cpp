@@ -1226,7 +1226,7 @@ bool CHL2MP_Player::BumpWeapon(CBaseCombatWeapon *pWeapon)
 		return false;
 
 	CBaseCombatCharacter *pOwner = pWeapon->GetOwner();
-	if (pOwner || !Weapon_CanUse(pWeapon) || !Weapon_CanSwitchTo(pWeapon))
+	if (pOwner || !Weapon_CanSwitchTo(pWeapon))
 		return false;
 
 	bool bHasWeapon = false;

@@ -687,13 +687,6 @@ bool CHL2_Player::ShouldShootMissTarget( CBaseCombatCharacter *pAttacker )
 }
 
 //-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-bool CHL2_Player::Weapon_CanUse( CBaseCombatWeapon *pWeapon )
-{
-	return BaseClass::Weapon_CanUse( pWeapon );
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pWeapon - 
 //-----------------------------------------------------------------------------

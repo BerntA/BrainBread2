@@ -2259,21 +2259,14 @@ bool CBaseCombatWeapon::IsLocked( CBaseEntity *pAsker )
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-Activity CBaseCombatWeapon::ActivityOverride( Activity baseAct, bool *pRequired )
+Activity CBaseCombatWeapon::ActivityOverride(Activity baseAct)
 {
 	acttable_t *pTable = ActivityList();
 	int actCount = ActivityListCount();
-
-	for ( int i = 0; i < actCount; i++, pTable++ )
+	for (int i = 0; i < actCount; i++, pTable++)
 	{
-		if ( baseAct == pTable->baseAct )
-		{
-			if (pRequired)
-			{
-				*pRequired = pTable->required;
-			}
+		if (baseAct == pTable->baseAct)
 			return (Activity)pTable->weaponAct;
-		}
 	}
 	return baseAct;
 }

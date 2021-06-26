@@ -91,8 +91,7 @@ private:
 
 acttable_t	CWeaponFrag::m_acttable[] = 
 {
-#ifdef BB2_AI
-{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SLAM, true }, 
+	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SLAM, true }, 
 
 	{ ACT_MP_STAND_IDLE,				ACT_HL2MP_IDLE_GRENADE,					false },
 	{ ACT_MP_CROUCH_IDLE,				ACT_HL2MP_IDLE_CROUCH_GRENADE,			false },
@@ -113,7 +112,6 @@ acttable_t	CWeaponFrag::m_acttable[] =
 	{ ACT_MP_RELOAD_CROUCH,				ACT_HL2MP_GESTURE_RELOAD_GRENADE,		false },
 
 	{ ACT_MP_JUMP,						ACT_HL2MP_JUMP_GRENADE,					false },
-#endif //BB2_AI
 };
 
 IMPLEMENT_ACTTABLE(CWeaponFrag);

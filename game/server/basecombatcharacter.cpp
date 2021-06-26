@@ -469,18 +469,12 @@ void CBaseCombatCharacter::UpdateOnRemove( void )
 }
 
 // UNDONE: Should these operate on a list of weapon/items
-Activity CBaseCombatCharacter::Weapon_TranslateActivity( Activity baseAct, bool *pRequired )
+Activity CBaseCombatCharacter::Weapon_TranslateActivity(Activity baseAct)
 {
 	Activity translated = baseAct;
 
-	if ( m_hActiveWeapon )
-	{
-		translated = m_hActiveWeapon->ActivityOverride( baseAct, pRequired );
-	}
-	else if (pRequired)
-	{
-		*pRequired = false;
-	}
+	if (m_hActiveWeapon)
+		translated = m_hActiveWeapon->ActivityOverride(baseAct);
 
 	return translated;
 }
@@ -1307,39 +1301,6 @@ CBaseCombatWeapon *CBaseCombatCharacter::Weapon_GetSlot( int slot ) const
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Can this character operate this weapon?
-// Input  : A weapon
-// Output :	true or false
-//-----------------------------------------------------------------------------
-bool CBaseCombatCharacter::Weapon_CanUse( CBaseCombatWeapon *pWeapon )
-{
-	acttable_t *pTable		= pWeapon->ActivityList();
-	int			actCount	= pWeapon->ActivityListCount();
-
-	if( actCount < 1 )
-	{
-		// If the weapon has no activity table, it definitely cannot be used.
-		return false;
-	}
-
-	for ( int i = 0; i < actCount; i++, pTable++ )
-	{
-		if ( pTable->required )
-		{
-			// The NPC might translate the weapon activity into another activity
-			Activity translatedActivity = NPC_TranslateActivity( (Activity)(pTable->weaponAct) );
-
-			if ( SelectWeightedSequence(translatedActivity) == ACTIVITY_NOT_AVAILABLE )
-			{
-				return false;
-			}
-		}
-	}
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose:
 // Input  :
 // Output :
@@ -1347,7 +1308,6 @@ bool CBaseCombatCharacter::Weapon_CanUse( CBaseCombatWeapon *pWeapon )
 CBaseCombatWeapon *CBaseCombatCharacter::Weapon_Create( const char *pWeaponName )
 {
 	CBaseCombatWeapon *pWeapon = static_cast<CBaseCombatWeapon *>( Create( pWeaponName, GetLocalOrigin(), GetLocalAngles(), this ) );
-
 	return pWeapon;
 }
 

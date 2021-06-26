@@ -151,13 +151,12 @@ public:
 	// Weapons
 	// -----------------------
 	CBaseCombatWeapon*	Weapon_Create( const char *pWeaponName );
-	virtual Activity	Weapon_TranslateActivity( Activity baseAct, bool *pRequired = NULL );
+	virtual Activity	Weapon_TranslateActivity(Activity baseAct);
 	void				Weapon_SetActivity( Activity newActivity, float duration );
 	virtual void		Weapon_FrameUpdate( void );
 	virtual void		Weapon_HandleAnimEvent( animevent_t *pEvent );
 	CBaseCombatWeapon*	Weapon_OwnsThisType( const char *pszWeapon ) const;  // True if already owns a weapon of this class
 	CBaseCombatWeapon*	Weapon_GetBySlot(int slot) const;
-	virtual bool		Weapon_CanUse( CBaseCombatWeapon *pWeapon );		// True is allowed to use this class of weapon
 	virtual void		Weapon_Equip( CBaseCombatWeapon *pWeapon );			// Adds weapon to player
 	bool				Weapon_Detach( CBaseCombatWeapon *pWeapon );		// Clear any pointers to the weapon.
 	virtual void		Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTarget = NULL, const Vector *pVelocity = NULL );

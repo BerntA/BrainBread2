@@ -363,7 +363,6 @@ public:
 
 	// Weapon stuff
 	virtual Vector			Weapon_ShootPosition( );
-	virtual bool			Weapon_CanUse( CBaseCombatWeapon *pWeapon );
 	virtual void			Weapon_Equip( CBaseCombatWeapon *pWeapon );
 	virtual	void			Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTarget /* = NULL */, const Vector *pVelocity /* = NULL */ );
 	virtual	bool			Weapon_Switch(CBaseCombatWeapon *pWeapon, bool bWantDraw = false);		// Switch to given weapon if has ammo (false if failed)

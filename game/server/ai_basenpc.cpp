@@ -5513,15 +5513,13 @@ Activity CAI_BaseNPC::TranslateActivity( Activity idealActivity, Activity *pIdea
 	const int MAX_TRIES = 5;
 	int count = 0;
 
-	bool bIdealWeaponRequired = false;
 	Activity idealWeaponActivity;
 	Activity baseTranslation;
-	bool bWeaponRequired = false;
 	Activity weaponTranslation;
 	Activity last;
 	Activity current;
 
-	idealWeaponActivity = Weapon_TranslateActivity( idealActivity, &bIdealWeaponRequired );
+	idealWeaponActivity = Weapon_TranslateActivity( idealActivity );
 	if ( pIdealWeaponActivity )
 		*pIdealWeaponActivity = idealWeaponActivity;
 
@@ -5534,7 +5532,7 @@ Activity CAI_BaseNPC::TranslateActivity( Activity idealActivity, Activity *pIdea
 		if ( current != last )
 			baseTranslation = current;
 
-		weaponTranslation = Weapon_TranslateActivity( current, &bWeaponRequired );
+		weaponTranslation = Weapon_TranslateActivity( current );
 
 		if ( weaponTranslation == last )
 			break;
@@ -5548,21 +5546,6 @@ Activity CAI_BaseNPC::TranslateActivity( Activity idealActivity, Activity *pIdea
 	
 	if ( HaveSequenceForActivity( weaponTranslation ) )
 		return weaponTranslation;
-	
-	if ( bWeaponRequired )
-	{
-		// only complain about an activity once
-		static CUtlVector< Activity > sUniqueActivities;
-
-		if (!sUniqueActivities.Find( weaponTranslation))
-		{
-			// FIXME: warning
-			DevWarning( "%s missing activity \"%s\" needed by weapon\"%s\"\n", 
-				GetClassname(), GetActivityName( weaponTranslation ), GetActiveWeapon()->GetClassname() );
-
-			sUniqueActivities.AddToTail( weaponTranslation );
-		}
-	}
 
 	if ( baseTranslation != weaponTranslation && HaveSequenceForActivity( baseTranslation ) )
 		return baseTranslation;
@@ -5934,7 +5917,6 @@ bool CAI_BaseNPC::IsActivityMovementPhased( Activity activity )
 	case ACT_RUN_AIM:
 	case ACT_RUN_CROUCH:
 	case ACT_RUN_CROUCH_AIM:
-	case ACT_RUN_PROTECTED:
 		return true;
 	}
 	return false;
@@ -7948,7 +7930,7 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
 					if (act == ACT_INVALID)
 					{
 						// Try and translate it
-						act = Weapon_TranslateActivity( (Activity)CAI_BaseNPC::GetActivityID(pEvent->options), NULL );
+						act = Weapon_TranslateActivity( (Activity)CAI_BaseNPC::GetActivityID(pEvent->options) );
 					}
 
 					if (act != ACT_INVALID)

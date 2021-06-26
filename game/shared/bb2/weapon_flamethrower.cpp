@@ -160,41 +160,11 @@ acttable_t CWeaponFlamethrower::m_acttable[] =
 
 	{ ACT_MP_JUMP, ACT_HL2MP_JUMP_MINIGUN, false },
 
-#ifndef CLIENT_DLL
 	// HL2
 	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_MINIGUN, true },
-
 	{ ACT_IDLE, ACT_IDLE_MINIGUN, true },		// FIXME: hook to AR2 unique
 	{ ACT_IDLE_ANGRY, ACT_IDLE_MINIGUN, true },		// FIXME: hook to AR2 unique
 	{ ACT_WALK, ACT_WALK_MINIGUN, true },
-
-	// Readiness activities (not aiming)
-	{ ACT_IDLE_RELAXED, ACT_IDLE_MINIGUN, false },//never aims
-	{ ACT_IDLE_STIMULATED, ACT_IDLE_MINIGUN, false },
-	{ ACT_IDLE_AGITATED, ACT_IDLE_MINIGUN, false },//always aims
-
-	{ ACT_WALK_RELAXED, ACT_WALK_MINIGUN, false },//never aims
-	{ ACT_WALK_STIMULATED, ACT_WALK_MINIGUN, false },
-	{ ACT_WALK_AGITATED, ACT_WALK_MINIGUN, false },//always aims
-
-	{ ACT_RUN_RELAXED, ACT_WALK_MINIGUN, false },//never aims
-	{ ACT_RUN_STIMULATED, ACT_WALK_MINIGUN, false },
-	{ ACT_RUN_AGITATED, ACT_WALK_MINIGUN, false },//always aims
-
-	// Readiness activities (aiming)
-	{ ACT_IDLE_AIM_RELAXED, ACT_IDLE_MINIGUN, false },//never aims	
-	{ ACT_IDLE_AIM_STIMULATED, ACT_IDLE_MINIGUN, false },
-	{ ACT_IDLE_AIM_AGITATED, ACT_IDLE_MINIGUN, false },//always aims
-
-	{ ACT_WALK_AIM_RELAXED, ACT_WALK_MINIGUN, false },//never aims
-	{ ACT_WALK_AIM_STIMULATED, ACT_WALK_MINIGUN, false },
-	{ ACT_WALK_AIM_AGITATED, ACT_WALK_MINIGUN, false },//always aims
-
-	{ ACT_RUN_AIM_RELAXED, ACT_WALK_MINIGUN, false },//never aims
-	{ ACT_RUN_AIM_STIMULATED, ACT_WALK_MINIGUN, false },
-	{ ACT_RUN_AIM_AGITATED, ACT_WALK_MINIGUN, false },//always aims
-	//End readiness activities
-
 	{ ACT_WALK_AIM, ACT_WALK_MINIGUN, true },
 	{ ACT_WALK_CROUCH, ACT_WALK_CROUCH_MINIGUN, true },
 	{ ACT_WALK_CROUCH_AIM, ACT_WALK_CROUCH_MINIGUN, true },
@@ -206,7 +176,6 @@ acttable_t CWeaponFlamethrower::m_acttable[] =
 	{ ACT_COVER_LOW, ACT_COVER_MINIGUN, false },		// FIXME: hook to AR2 unique
 	{ ACT_RANGE_AIM_LOW, ACT_IDLE_MINIGUN, false },
 	{ ACT_RANGE_ATTACK1_LOW, ACT_RANGE_ATTACK_MINIGUN, true },		// FIXME: hook to AR2 unique
-#endif
 };
 
 IMPLEMENT_ACTTABLE(CWeaponFlamethrower);

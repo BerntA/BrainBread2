@@ -86,7 +86,6 @@ public:
 	virtual void		OnDamagedByExplosion( const CTakeDamageInfo &info );
 	bool				ShouldShootMissTarget( CBaseCombatCharacter *pAttacker );
 	
-	virtual bool		Weapon_CanUse( CBaseCombatWeapon *pWeapon );
 	virtual void		Weapon_Equip( CBaseCombatWeapon *pWeapon );
 	virtual bool		Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon );
 

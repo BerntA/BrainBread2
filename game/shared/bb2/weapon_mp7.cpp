@@ -51,7 +51,6 @@ PRECACHE_WEAPON_REGISTER(weapon_mp7);
 
 acttable_t CWeaponMP7::m_acttable[] =
 {
-#ifdef BB2_AI
 	{ ACT_MP_STAND_IDLE, ACT_HL2MP_IDLE_PISTOL, false },
 	{ ACT_MP_CROUCH_IDLE, ACT_HL2MP_IDLE_CROUCH_PISTOL, false },
 
@@ -88,7 +87,6 @@ acttable_t CWeaponMP7::m_acttable[] =
 	{ ACT_COVER_LOW, ACT_COVER_PISTOL_LOW, false },
 	{ ACT_RANGE_AIM_LOW, ACT_RANGE_AIM_PISTOL_LOW, false },
 	{ ACT_GESTURE_RELOAD, ACT_GESTURE_RELOAD_PISTOL, false },
-#endif //BB2_AI
 };
 
 IMPLEMENT_ACTTABLE(CWeaponMP7);

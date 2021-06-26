@@ -55,7 +55,6 @@ PRECACHE_WEAPON_REGISTER(weapon_famas);
 
 acttable_t CWeaponFamas::m_acttable[] =
 {
-#ifdef BB2_AI
 	{ ACT_MP_STAND_IDLE, ACT_HL2MP_IDLE_FAMAS, false },
 	{ ACT_MP_CROUCH_IDLE, ACT_HL2MP_IDLE_CROUCH_FAMAS, false },
 
@@ -78,45 +77,11 @@ acttable_t CWeaponFamas::m_acttable[] =
 	{ ACT_MP_JUMP, ACT_HL2MP_JUMP_FAMAS, false },
 
 	//NPC Stuff.
-
-#ifndef CLIENT_DLL
-	// HL2
 	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_AR2, true },
-
 	{ ACT_RELOAD, ACT_RELOAD_SMG1, true },		// FIXME: hook to AR2 unique
 	{ ACT_IDLE, ACT_IDLE_SMG1, true },		// FIXME: hook to AR2 unique
 	{ ACT_IDLE_ANGRY, ACT_IDLE_ANGRY_SMG1, true },		// FIXME: hook to AR2 unique
-
 	{ ACT_WALK, ACT_WALK_RIFLE, true },
-
-	// Readiness activities (not aiming)
-	{ ACT_IDLE_RELAXED, ACT_IDLE_SMG1_RELAXED, false },//never aims
-	{ ACT_IDLE_STIMULATED, ACT_IDLE_SMG1_STIMULATED, false },
-	{ ACT_IDLE_AGITATED, ACT_IDLE_ANGRY_SMG1, false },//always aims
-
-
-	{ ACT_WALK_RELAXED, ACT_WALK_RIFLE_RELAXED, false },//never aims
-	{ ACT_WALK_STIMULATED, ACT_WALK_RIFLE_STIMULATED, false },
-	{ ACT_WALK_AGITATED, ACT_WALK_AIM_RIFLE, false },//always aims
-
-	{ ACT_RUN_RELAXED, ACT_RUN_RIFLE_RELAXED, false },//never aims
-	{ ACT_RUN_STIMULATED, ACT_RUN_RIFLE_STIMULATED, false },
-	{ ACT_RUN_AGITATED, ACT_RUN_AIM_RIFLE, false },//always aims
-
-	// Readiness activities (aiming)
-	{ ACT_IDLE_AIM_RELAXED, ACT_IDLE_SMG1_RELAXED, false },//never aims	
-	{ ACT_IDLE_AIM_STIMULATED, ACT_IDLE_AIM_RIFLE_STIMULATED, false },
-	{ ACT_IDLE_AIM_AGITATED, ACT_IDLE_ANGRY_SMG1, false },//always aims
-
-	{ ACT_WALK_AIM_RELAXED, ACT_WALK_RIFLE_RELAXED, false },//never aims
-	{ ACT_WALK_AIM_STIMULATED, ACT_WALK_AIM_RIFLE_STIMULATED, false },
-	{ ACT_WALK_AIM_AGITATED, ACT_WALK_AIM_RIFLE, false },//always aims
-
-	{ ACT_RUN_AIM_RELAXED, ACT_RUN_RIFLE_RELAXED, false },//never aims
-	{ ACT_RUN_AIM_STIMULATED, ACT_RUN_AIM_RIFLE_STIMULATED, false },
-	{ ACT_RUN_AIM_AGITATED, ACT_RUN_AIM_RIFLE, false },//always aims
-	//End readiness activities
-
 	{ ACT_WALK_AIM, ACT_WALK_AIM_RIFLE, true },
 	{ ACT_WALK_CROUCH, ACT_WALK_CROUCH_RIFLE, true },
 	{ ACT_WALK_CROUCH_AIM, ACT_WALK_CROUCH_AIM_RIFLE, true },
@@ -130,8 +95,6 @@ acttable_t CWeaponFamas::m_acttable[] =
 	{ ACT_RANGE_ATTACK1_LOW, ACT_RANGE_ATTACK_SMG1_LOW, true },		// FIXME: hook to AR2 unique
 	{ ACT_RELOAD_LOW, ACT_RELOAD_SMG1_LOW, false },
 	{ ACT_GESTURE_RELOAD, ACT_GESTURE_RELOAD_SMG1, true },
-#endif
-#endif // BB2_AI
 };
 
 IMPLEMENT_ACTTABLE(CWeaponFamas);

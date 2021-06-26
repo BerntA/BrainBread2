@@ -370,7 +370,7 @@ public:
 	virtual CHudTexture const	*GetSpriteInactive( void ) const;
 	virtual CHudTexture const	*GetSpriteAmmo( void ) const;
 
-	virtual Activity		ActivityOverride( Activity baseAct, bool *pRequired );
+	virtual Activity		ActivityOverride(Activity baseAct);
 	virtual	acttable_t*		ActivityList( void ) { return NULL; }
 	virtual	int				ActivityListCount( void ) { return 0; }
 
