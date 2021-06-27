@@ -9,6 +9,7 @@
 #include "entitylist.h"
 #include "ai_squad.h"
 #include "ai_basenpc.h"
+#include "smart_trigger.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -619,4 +620,32 @@ BEGIN_DATADESC( CFilterEnemy )
 	DEFINE_KEYFIELD( m_flOuterRadius, FIELD_FLOAT, "filter_outer_radius" ),
 	DEFINE_KEYFIELD( m_nMaxSquadmatesPerEnemy, FIELD_INTEGER, "filter_max_per_enemy" ),
 
+END_DATADESC()
+
+class CFilterEntityType : public CBaseFilter
+{
+	DECLARE_CLASS(CFilterEntityType, CBaseFilter);
+	DECLARE_DATADESC();
+
+public:
+
+	bool PassesFilterImpl(CBaseEntity *pCaller, CBaseEntity *pEntity)
+	{
+		return CSmartTrigger::IsAllowedToTrigger(pEntity, m_iTargetType);
+	}
+
+	bool PassesDamageFilterImpl(const CTakeDamageInfo &info)
+	{
+		return PassesFilterImpl(NULL, info.GetAttacker());
+	}
+
+private:
+
+	int m_iTargetType;
+};
+
+LINK_ENTITY_TO_CLASS(filter_character_type, CFilterEntityType);
+
+BEGIN_DATADESC(CFilterEntityType)
+DEFINE_KEYFIELD(m_iTargetType, FIELD_INTEGER, "filter_value"),
 END_DATADESC()

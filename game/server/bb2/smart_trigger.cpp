@@ -36,12 +36,23 @@ void CSmartTrigger::Spawn()
 	BaseClass::Spawn();
 }
 
-bool CSmartTrigger::PassesTriggerFilters(CBaseEntity *pOther)
+void CSmartTrigger::Touch(CBaseEntity *pOther)
 {
-	if (m_bDisabled)
+	if (m_bDisabled || !IsAllowedToTrigger(pOther, m_iExtraFilter) || !PassesTriggerFilters(pOther))
+		return;
+
+	m_OnTouching.FireOutput(this, this);
+
+	// Only once ? If so we delete the entity on fire.
+	if (m_bTouchOnlyOnce)
+		UTIL_Remove(this);
+}
+
+/*static*/ bool CSmartTrigger::IsAllowedToTrigger(CBaseEntity *pOther, int filter)
+{
+	if (pOther == NULL)
 		return false;
 
-	int filter = m_iExtraFilter;
 	if (filter == 1)
 	{
 		if (!pOther->IsHuman())
@@ -73,17 +84,5 @@ bool CSmartTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 			return false;
 	}
 
-	return BaseClass::PassesTriggerFilters(pOther);
-}
-
-void CSmartTrigger::Touch(CBaseEntity *pOther)
-{
-	if (!PassesTriggerFilters(pOther))
-		return;
-
-	m_OnTouching.FireOutput(this, this);
-
-	// Only once ? If so we delete the entity on fire.
-	if (m_bTouchOnlyOnce)
-		UTIL_Remove(this);
+	return true;
 }

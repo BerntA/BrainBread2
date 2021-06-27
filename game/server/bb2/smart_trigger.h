@@ -21,8 +21,8 @@ public:
 	CSmartTrigger(void);
 
 	void Spawn(void);
-	bool PassesTriggerFilters(CBaseEntity *pOther);
 	void Touch(CBaseEntity *pOther);
+	static bool IsAllowedToTrigger(CBaseEntity *pOther, int type);
 
 protected:
 	int m_iExtraFilter;
