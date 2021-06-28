@@ -91,6 +91,7 @@ public:
 	virtual QAngle PreferredCarryAngles( void ) { return m_preferredCarryAngles; }
 
 	virtual void Ignite( float flFlameLifetime, bool bNPCOnly, float flSize = 0.0f, bool bCalledByLevelDesigner = false );
+	virtual bool IsObstruction(void) { return (m_iHealth > 0); }
 
 	// Specific interactions
 	void	HandleFirstCollisionInteractions( int index, gamevcollisionevent_t *pEvent );

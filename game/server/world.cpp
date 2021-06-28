@@ -404,9 +404,6 @@ bool CWorld::KeyValue( const char *szKeyName, const char *szValue )
 		ConVarRef skyname( "sv_skyname" );
 		skyname.SetValue( szValue );
 	}
-	else if ( FStrEq(szKeyName, "newunit") )
-	{
-	}
 	else if ( FStrEq(szKeyName, "world_mins") )
 	{
 		Vector vec;

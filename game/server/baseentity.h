@@ -848,6 +848,8 @@ public:
 	virtual bool	IsWearable( void ) const { return false; }
 	virtual CBaseCombatWeapon *MyCombatWeaponPointer( void ) { return NULL; }
 
+	virtual bool	IsObstruction(void) { return false; }
+
 	// UNDONE: Make this data instead of procedural?
 	virtual bool	IsViewable( void );					// is this something that would be looked at (model, sprite, etc.)?
 

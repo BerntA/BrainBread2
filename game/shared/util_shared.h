@@ -247,6 +247,21 @@ public:
 protected:
 	CHandle<CBaseCombatWeapon> m_hWeaponLink;
 };
+
+class CTraceFilterNAVObstacle : public CTraceFilterSimple
+{
+public:
+	CTraceFilterNAVObstacle(const IHandleEntity *passentity, int collisionGroup) : CTraceFilterSimple(passentity, collisionGroup)
+	{
+	}
+
+	TraceType_t	GetTraceType() const
+	{
+		return TRACE_ENTITIES_ONLY;
+	}
+
+	bool ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask);
+};
 #endif
 
 // helper

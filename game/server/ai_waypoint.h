@@ -43,7 +43,7 @@ struct AI_Waypoint_t
 {
 public:
 	AI_Waypoint_t();
-	AI_Waypoint_t( const Vector &vecPosition, float flYaw, Navigation_t navType, int fWaypointFlags, int nNodeID );
+	AI_Waypoint_t(const Vector &vecPosition, float flYaw, Navigation_t navType, int fWaypointFlags, int nNodeID, CBaseEntity *pObstacle = NULL);
 	AI_Waypoint_t( const AI_Waypoint_t &from )
 	{
 		memcpy( this, &from, sizeof(*this) );
@@ -140,6 +140,9 @@ public:
 	// PATHCORNER:	The path corner entity.
 	// DOOR:		If moving to position to open a door, the handle of the door to open.
 	EHANDLE			m_hData;
+
+	// Obstacle between two nodes.
+	EHANDLE			m_hObstacle;
 
 private:
 	int				m_fWaypointFlags;	// See WaypointFlags_t

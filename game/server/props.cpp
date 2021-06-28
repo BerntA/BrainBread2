@@ -5971,6 +5971,7 @@ public:
 	void SpawnGibs(int newHealth, int oldHealth, const CTakeDamageInfo &info);
 	void Event_Killed(const CTakeDamageInfo &info);
 	void UpdatePhysics(void);
+	bool IsObstruction(void) { return ((m_iHealth > 0) && (IsDoorClosed() || IsDoorClosing() || IsDoorLocked())); }
 
 protected:
 	bool CanEntityUseDoor(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);

@@ -525,6 +525,25 @@ bool CTraceFilterRealtime::ShouldHitEntity(IHandleEntity *pHandleEntity, int con
 
 	return BaseClass::ShouldHitEntity(pHandleEntity, contentsMask);
 }
+
+bool CTraceFilterNAVObstacle::ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask)
+{
+	CBaseEntity *pEntity = EntityFromEntityHandle(pHandleEntity);
+	if (pEntity)
+	{
+		const int collisionGRP = pEntity->GetCollisionGroup();
+		if (
+			pEntity->IsNPC() || pEntity->IsPlayer() || pEntity->IsBaseCombatWeapon() || pEntity->IsCombatCharacter() ||
+			(collisionGRP == COLLISION_GROUP_WEAPON) || (collisionGRP == COLLISION_GROUP_DEBRIS) ||
+			(pEntity->m_takedamage != DAMAGE_YES)
+			)
+			return false;
+
+		return (pEntity->IsObstruction() && CTraceFilterSimple::ShouldHitEntity(pHandleEntity, contentsMask));
+	}
+
+	return false;
+}
 #endif
 
 //-----------------------------------------------------------------------------

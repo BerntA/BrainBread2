@@ -29,11 +29,12 @@ AI_Waypoint_t::AI_Waypoint_t()
 	vecLocation	= vec3_invalid;
 	iNodeID		= NO_NODE;
 	flPathDistGoal = -1;
+	m_hObstacle = NULL;
 }
 
 //-------------------------------------
 
-AI_Waypoint_t::AI_Waypoint_t( const Vector &initPosition, float initYaw, Navigation_t initNavType, int initWaypointFlags, int initNodeID )
+AI_Waypoint_t::AI_Waypoint_t(const Vector &initPosition, float initYaw, Navigation_t initNavType, int initWaypointFlags, int initNodeID, CBaseEntity *pObstacle)
 {
 	memset( this, 0, sizeof(*this) );
 
@@ -43,6 +44,7 @@ AI_Waypoint_t::AI_Waypoint_t( const Vector &initPosition, float initYaw, Navigat
 	m_iWPType	= initNavType;
 	m_fWaypointFlags = initWaypointFlags;
 	iNodeID		= initNodeID;
+	m_hObstacle = pObstacle;
 
 	flPathDistGoal = -1;
 }
