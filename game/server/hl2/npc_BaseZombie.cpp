@@ -29,6 +29,7 @@
 #include "GameBase_Server.h"
 #include "random_extended.h"
 #include "ZombieVolume.h"
+#include "GameDefinitions_Shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -210,16 +211,13 @@ int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flDist)
 	if (flDot < 0.7)
 		return COND_NOT_FACING_ATTACK;
 
-	const Vector &vecStart = EyePosition();
-	const Vector &vecEnd = pEnemy->EyePosition();
-	Vector vecAttackDir = (vecEnd - vecStart);
-	const float flDistToEnemy2D = vecAttackDir.Length();
-	VectorNormalize(vecAttackDir);
+	const Vector vecStart = EyePosition();
+	const Vector vecEnd = pEnemy->EyePosition();
 
 	trace_t	tr;
-	CTraceFilterNoNPCsOrPlayer worldCheckFilter(this, GetCollisionGroup());
-	AI_TraceHull(vecStart, vecStart + vecAttackDir * flDistToEnemy2D, -Vector(2, 2, 2), Vector(2, 2, 2), MASK_SOLID, &worldCheckFilter, &tr);
-	if (tr.DidHit()) // Behind a wall or object?
+	CTraceFilterWorldAndPropsOnly worldCheckFilter;
+	AI_TraceLine(vecStart, vecEnd, MASK_SOLID, &worldCheckFilter, &tr);
+	if (tr.DidHit()) // Behind a wall or object, and you cannot penetrate thru it? && (TryPenetrateSurface(&tr, &worldCheckFilter) == vec3_invalid)
 		return COND_TOO_FAR_TO_ATTACK;
 
 	return COND_CAN_MELEE_ATTACK1;
@@ -410,7 +408,7 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack(float flDist, int iDamage, QAngle &qaVi
 	else
 	{
 		// LoS check, kinda redundant, similar to attack conditions check, we need this to prevent runners from wall hacking... if you trigger this attack in a run anim etc..
-		const Vector &vecStart = EyePosition();
+		const Vector vecStart = EyePosition();
 		Vector vecAttackDir = vec3_origin;
 		float flDistTo = GetClawAttackRange();
 
@@ -427,7 +425,7 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack(float flDist, int iDamage, QAngle &qaVi
 		trace_t	tr;
 		CTraceFilterNoNPCsOrPlayer worldCheckFilter(this, GetCollisionGroup());
 		AI_TraceHull(vecStart, vecStart + vecAttackDir * flDistTo, -Vector(2, 2, 2), Vector(2, 2, 2), MASK_SOLID, &worldCheckFilter, &tr);
-		if (tr.DidHit() && (tr.m_pEnt != m_hBlockingEntity.Get())) // We were obstructed, but can we see the enemy through it?		
+		if (tr.DidHit() && (TryPenetrateSurface(&tr, &worldCheckFilter) == vec3_invalid)) // We were obstructed and could not do a penetration thru it, don't wallhax!
 			return NULL;
 
 		//
