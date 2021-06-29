@@ -872,31 +872,33 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 		bool bBuildSpecial = false;
 
 		Vector vecObstacleStartCheck = closestpoint + Vector(0.0f, 0.0f, 5.0f);
-		AI_TraceLine(vecObstacleStartCheck, vecObstacleStartCheck + vecDir * 70.0f, MASK_SOLID, &traceObstacle, &trace);
+		AI_TraceLine(vecObstacleStartCheck, vecObstacleStartCheck + vecDir * 85.0f, MASK_SOLID, &traceObstacle, &trace);
 		CBaseEntity *pPossibleObstruction = (trace.DidHitNonWorldEntity() ? trace.m_pEnt : NULL);
 		bool bFoundNPCObstacle = (pPossibleObstruction && (pPossibleObstruction->GetObstruction() == ENTITY_OBSTRUCTION_NPC_OBSTACLE) && pPossibleObstruction->CollisionProp());
 
 		if (pPossibleObstruction && ai_debug_obstacles.GetBool())
 		{
+			const int alpha = 150;
+			const float duration = 3.0f;
 			switch (pPossibleObstruction->GetObstruction())
 			{
 			case ENTITY_OBSTRUCTION_FUNC_BREAKABLE:
-				debugoverlay->AddBoxOverlay(pPossibleObstruction->GetAbsOrigin(), pPossibleObstruction->WorldAlignMins(), pPossibleObstruction->WorldAlignMaxs(), pPossibleObstruction->GetAbsAngles(), 0, 200, 0, 240, 3.0f);
+				debugoverlay->AddBoxOverlay(pPossibleObstruction->GetAbsOrigin(), pPossibleObstruction->WorldAlignMins(), pPossibleObstruction->WorldAlignMaxs(), pPossibleObstruction->GetAbsAngles(), 0, 200, 0, alpha, duration);
 				break;
 
 			case ENTITY_OBSTRUCTION_PROP_BREAKABLE:
-				debugoverlay->AddBoxOverlay(pPossibleObstruction->GetAbsOrigin(), pPossibleObstruction->WorldAlignMins(), pPossibleObstruction->WorldAlignMaxs(), pPossibleObstruction->GetAbsAngles(), 200, 200, 0, 240, 3.0f);
+				debugoverlay->AddBoxOverlay(pPossibleObstruction->GetAbsOrigin(), pPossibleObstruction->WorldAlignMins(), pPossibleObstruction->WorldAlignMaxs(), pPossibleObstruction->GetAbsAngles(), 200, 200, 0, alpha, duration);
 				break;
 
 			case ENTITY_OBSTRUCTION_DOOR:
-				debugoverlay->AddBoxOverlay(pPossibleObstruction->GetAbsOrigin(), pPossibleObstruction->WorldAlignMins(), pPossibleObstruction->WorldAlignMaxs(), pPossibleObstruction->GetAbsAngles(), 200, 0, 0, 240, 3.0f);
+				debugoverlay->AddBoxOverlay(pPossibleObstruction->GetAbsOrigin(), pPossibleObstruction->WorldAlignMins(), pPossibleObstruction->WorldAlignMaxs(), pPossibleObstruction->GetAbsAngles(), 200, 0, 0, alpha, duration);
 				break;
 
 			case ENTITY_OBSTRUCTION_NPC_OBSTACLE:
-				debugoverlay->AddBoxOverlay(pPossibleObstruction->GetAbsOrigin(), pPossibleObstruction->WorldAlignMins(), pPossibleObstruction->WorldAlignMaxs(), pPossibleObstruction->GetAbsAngles(), 0, 0, 200, 240, 3.0f);
+				debugoverlay->AddBoxOverlay(pPossibleObstruction->GetAbsOrigin(), pPossibleObstruction->WorldAlignMins(), pPossibleObstruction->WorldAlignMaxs(), pPossibleObstruction->GetAbsAngles(), 0, 0, 200, alpha, duration);
 				break;
 			}
-		}		
+		}
 
 		// Check if this route can be jumped to/from etc...
 		if ((buildFlags & bits_BUILD_JUMP) && (CapabilitiesGet() & bits_CAP_MOVE_JUMP) && ((abs(heightDiff) >= GetOuter()->StepHeight()) || bFoundNPCObstacle))

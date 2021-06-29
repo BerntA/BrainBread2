@@ -211,13 +211,10 @@ int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flDist)
 	if (flDot < 0.7)
 		return COND_NOT_FACING_ATTACK;
 
-	const Vector vecStart = EyePosition();
-	const Vector vecEnd = pEnemy->EyePosition();
-
 	trace_t	tr;
 	CTraceFilterWorldAndPropsOnly worldCheckFilter;
-	AI_TraceLine(vecStart, vecEnd, MASK_SOLID, &worldCheckFilter, &tr);
-	if (tr.DidHit()) // Behind a wall or object, and you cannot penetrate thru it? && (TryPenetrateSurface(&tr, &worldCheckFilter) == vec3_invalid)
+	AI_TraceLine(EyePosition(), pEnemy->GetAbsOrigin(), MASK_SOLID, &worldCheckFilter, &tr);
+	if (tr.DidHit()) // Behind a wall or object, move closer!
 		return COND_TOO_FAR_TO_ATTACK;
 
 	return COND_CAN_MELEE_ATTACK1;
