@@ -210,15 +210,15 @@ int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flDist)
 	if (flDot < 0.7)
 		return COND_NOT_FACING_ATTACK;
 
-	const Vector &vecStart = WorldSpaceCenter();
-	const Vector &vecEnd = pEnemy->WorldSpaceCenter();
+	const Vector &vecStart = EyePosition();
+	const Vector &vecEnd = pEnemy->EyePosition();
 	Vector vecAttackDir = (vecEnd - vecStart);
 	const float flDistToEnemy2D = vecAttackDir.Length();
 	VectorNormalize(vecAttackDir);
 
 	trace_t	tr;
 	CTraceFilterNoNPCsOrPlayer worldCheckFilter(this, GetCollisionGroup());
-	AI_TraceHull(vecStart, vecStart + vecAttackDir * flDistToEnemy2D, -Vector(4, 4, 4), Vector(4, 4, 4), MASK_SOLID, &worldCheckFilter, &tr);
+	AI_TraceHull(vecStart, vecStart + vecAttackDir * flDistToEnemy2D, -Vector(2, 2, 2), Vector(2, 2, 2), MASK_SOLID, &worldCheckFilter, &tr);
 	if (tr.DidHit()) // Behind a wall or object?
 		return COND_TOO_FAR_TO_ATTACK;
 
@@ -410,14 +410,14 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack(float flDist, int iDamage, QAngle &qaVi
 	else
 	{
 		// LoS check, kinda redundant, similar to attack conditions check, we need this to prevent runners from wall hacking... if you trigger this attack in a run anim etc..
-		const Vector &vecStart = WorldSpaceCenter();
+		const Vector &vecStart = EyePosition();
 		Vector vecAttackDir = vec3_origin;
 		float flDistTo = GetClawAttackRange();
 
 		CBaseEntity *pEnemy = GetEnemy();
 		if (pEnemy)
 		{
-			vecAttackDir = (pEnemy->WorldSpaceCenter() - vecStart);
+			vecAttackDir = (pEnemy->EyePosition() - vecStart);
 			flDistTo = vecAttackDir.Length();
 			VectorNormalize(vecAttackDir);
 		}
