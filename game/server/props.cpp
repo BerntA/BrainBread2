@@ -5971,7 +5971,7 @@ public:
 	void SpawnGibs(int newHealth, int oldHealth, const CTakeDamageInfo &info);
 	void Event_Killed(const CTakeDamageInfo &info);
 	void UpdatePhysics(void);
-	bool IsObstruction(void) { return ((m_iHealth > 0) && (IsDoorClosed() || IsDoorClosing() || IsDoorLocked())); }
+	int	GetObstruction(void) { return (((m_iHealth > 0) && (IsDoorClosed() || IsDoorClosing() || IsDoorLocked())) ? ENTITY_OBSTRUCTION_DOOR : ENTITY_OBSTRUCTION_NONE); }
 
 protected:
 	bool CanEntityUseDoor(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
@@ -6019,11 +6019,7 @@ CPropDoorBreakable::~CPropDoorBreakable()
 {
 	for (int i = (m_pDoorData.Count() - 1); i >= 0; i--)
 		delete m_pDoorData[i];
-
 	m_pDoorData.Purge();
-
-	if (HL2MPRules())
-		HL2MPRules()->RemoveBreakableDoor(this);
 }
 
 void CPropDoorBreakable::Spawn()
@@ -6056,9 +6052,6 @@ void CPropDoorBreakable::Spawn()
 
 	int doorhandle = FindBodygroupByName("handle01");
 	SetBodygroup(doorhandle, m_iDoorHandle);
-
-	if (HL2MPRules())
-		HL2MPRules()->AddBreakableDoor(this);
 }
 
 void CPropDoorBreakable::UpdatePhysics(void)

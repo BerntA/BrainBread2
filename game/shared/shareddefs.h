@@ -812,6 +812,15 @@ enum WeaponUniqueIDs
 	WEAPON_ID_COUNT
 };
 
+enum EntityObstructionType
+{
+	ENTITY_OBSTRUCTION_NONE = 0,
+	ENTITY_OBSTRUCTION_FUNC_BREAKABLE,
+	ENTITY_OBSTRUCTION_PROP_BREAKABLE,
+	ENTITY_OBSTRUCTION_DOOR,
+	ENTITY_OBSTRUCTION_NPC_OBSTACLE,
+};
+
 #define DEFAULT_PLAYER_MODEL(team) ( ( team == TEAM_DECEASED ) ? ( "models/characters/player/marine_zombie.mdl" ) : ( "models/characters/player/marine.mdl" ) )
 
 #endif // SHAREDDEFS_H

@@ -30,6 +30,7 @@ AI_Waypoint_t::AI_Waypoint_t()
 	iNodeID		= NO_NODE;
 	flPathDistGoal = -1;
 	m_hObstacle = NULL;
+	m_iObstructionType = ENTITY_OBSTRUCTION_NONE;
 }
 
 //-------------------------------------
@@ -45,6 +46,7 @@ AI_Waypoint_t::AI_Waypoint_t(const Vector &initPosition, float initYaw, Navigati
 	m_fWaypointFlags = initWaypointFlags;
 	iNodeID		= initNodeID;
 	m_hObstacle = pObstacle;
+	m_iObstructionType = (pObstacle ? pObstacle->GetObstruction() : ENTITY_OBSTRUCTION_NONE);
 
 	flPathDistGoal = -1;
 }

@@ -459,6 +459,7 @@ public:
 	virtual bool		ShouldPlayerAvoid( void );
 	virtual void		SetPlayerAvoidState( void );
 	virtual void		PlayerPenetratingVPhysics( void );
+	virtual void		HandleMovementObstruction(CBaseEntity *pEntity, int type) { }
 
 	virtual bool		ShouldAlwaysThink();
 	virtual void		SpawnDirectly(void) { } // Used for npcs spawning inside volumes, we want to spawn them fast + efficiently.
@@ -1094,7 +1095,6 @@ public:
 											float distClear,
 											AIMoveResult_t *pResult );
 
-	virtual CBaseEntity *GetObstructionBreakableEntity(void);
 	virtual bool IsBreakingDownObstacle(void) { return false; }
 
 	void	OpenPropDoorBegin( CBasePropDoor *pDoor );

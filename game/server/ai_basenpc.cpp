@@ -10910,12 +10910,6 @@ bool CAI_BaseNPC::OnUpcomingPropDoor( AILocalMoveGoal_t *pMoveGoal,
 	return false;
 }
 
-// Check if we're obstructed by some breakable entity.
-CBaseEntity *CAI_BaseNPC::GetObstructionBreakableEntity(void)
-{
-	return HL2MPRules()->GetNearbyBreakableDoorEntity(this);
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Called by the navigator to initiate the opening of a prop_door
 //			that is in our way.

@@ -143,6 +143,7 @@ public:
 
 	// Obstacle between two nodes.
 	EHANDLE			m_hObstacle;
+	int				m_iObstructionType;
 
 private:
 	int				m_fWaypointFlags;	// See WaypointFlags_t

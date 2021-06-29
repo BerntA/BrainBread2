@@ -2418,6 +2418,10 @@ void CAI_Navigator::AdvancePath()
 	if ( GetPath()->CurWaypointIsGoal() )
 		return;
 
+	CBaseEntity *pObstacle = pCurWaypoint->m_hObstacle.Get();
+	if (pObstacle)
+		GetOuter()->HandleMovementObstruction(pObstacle, pCurWaypoint->m_iObstructionType);
+
 	if ( pCurWaypoint->Flags() & bits_WP_TO_DOOR )
 	{
 		CBasePropDoor *pDoor = (CBasePropDoor *)(CBaseEntity *)pCurWaypoint->GetEHandleData();

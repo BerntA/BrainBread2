@@ -830,8 +830,6 @@ public:
 		return false;
 	}
 
-	virtual bool	IsNPCObstacle(void) { return false; }
-
 	virtual bool	OnControls( CBaseEntity *pControls ) { return false; }
 	virtual bool	HasTarget( string_t targetname );
 	virtual	bool	IsPlayer( void ) const { return false; }
@@ -848,7 +846,7 @@ public:
 	virtual bool	IsWearable( void ) const { return false; }
 	virtual CBaseCombatWeapon *MyCombatWeaponPointer( void ) { return NULL; }
 
-	virtual bool	IsObstruction(void) { return false; }
+	virtual int	GetObstruction(void) { return ENTITY_OBSTRUCTION_NONE; }
 
 	// UNDONE: Make this data instead of procedural?
 	virtual bool	IsViewable( void );					// is this something that would be looked at (model, sprite, etc.)?

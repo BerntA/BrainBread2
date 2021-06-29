@@ -12,7 +12,7 @@ class CFuncNPCLadder : public CFuncBrush
 {
 public:
 	DECLARE_CLASS(CFuncNPCLadder, CFuncBrush);
-	bool IsNPCObstacle(void) { return true; }
+	int	GetObstruction(void) { return ENTITY_OBSTRUCTION_NPC_OBSTACLE; }
 };
 
 LINK_ENTITY_TO_CLASS(func_npc_obstacle, CFuncNPCLadder);

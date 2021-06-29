@@ -203,34 +203,24 @@ bool CNPC_BaseZombie::OverrideMoveFacing( const AILocalMoveGoal_t &move, float f
 //-----------------------------------------------------------------------------
 int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flDist)
 {
-	if (flDist > GetClawAttackRange())
+	CBaseEntity *pEnemy = GetEnemy();
+	if (!pEnemy || (flDist > GetClawAttackRange()))
 		return COND_TOO_FAR_TO_ATTACK;
 
 	if (flDot < 0.7)
 		return COND_NOT_FACING_ATTACK;
 
-	Vector vecAttackDir, vecStart = WorldSpaceCenter();
-	GetVectors(&vecAttackDir, NULL, NULL);
-	float flDistToEnemy2D = (GetEnemy() ? (GetEnemy()->WorldSpaceCenter() - vecStart).Length2D() : MAX_COORD_FLOAT);
+	const Vector &vecStart = WorldSpaceCenter();
+	const Vector &vecEnd = pEnemy->WorldSpaceCenter();
+	Vector vecAttackDir = (vecEnd - vecStart);
+	const float flDistToEnemy2D = vecAttackDir.Length();
+	VectorNormalize(vecAttackDir);
 
 	trace_t	tr;
 	CTraceFilterNoNPCsOrPlayer worldCheckFilter(this, GetCollisionGroup());
-	AI_TraceHull(vecStart, vecStart + vecAttackDir * MIN(GetClawAttackRange(), flDistToEnemy2D), -Vector(4, 4, 4), Vector(4, 4, 4), MASK_SOLID_BRUSHONLY, &worldCheckFilter, &tr);
+	AI_TraceHull(vecStart, vecStart + vecAttackDir * flDistToEnemy2D, -Vector(4, 4, 4), Vector(4, 4, 4), MASK_SOLID, &worldCheckFilter, &tr);
 	if (tr.DidHit()) // Behind a wall or object?
-	{
-		CBasePropDoor *pDoor = dynamic_cast<CBasePropDoor*> (tr.m_pEnt);
-		if (pDoor && HL2MPRules()->IsBreakableDoor(tr.m_pEnt))
-		{
-			m_hBlockingEntity = pDoor;
-			return COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT;
-		}
-
-		// I did not hit an obstruction I can break, can I see through this obstruction?
-		vecStart = EyePosition();
-		AI_TraceLine(vecStart, vecStart + vecAttackDir * MIN(GetClawAttackRange(), flDistToEnemy2D), MASK_SOLID_BRUSHONLY, &worldCheckFilter, &tr);
-		if (tr.DidHit()) // Yup, we're not able to see our enemy...
-			return COND_TOO_FAR_TO_ATTACK;
-	}
+		return COND_TOO_FAR_TO_ATTACK;
 
 	return COND_CAN_MELEE_ATTACK1;
 }
@@ -405,36 +395,40 @@ void CNPC_BaseZombie::CopyRenderColorTo( CBaseEntity *pOther )
 CBaseEntity *CNPC_BaseZombie::ClawAttack(float flDist, int iDamage, QAngle &qaViewPunch, Vector &vecVelocityPunch, int BloodOrigin)
 {
 	CBaseEntity *pHurt = NULL;
-	CBasePropDoor *pDoor = m_hBlockingEntity.Get();
+	CBaseEntity *pObstruction = m_hBlockingEntity.Get();
 
-	if (pDoor && IsCurSchedule(SCHED_ZOMBIE_BASH_DOOR)) // Force a hit @doors when we engage.
+	if (pObstruction && IsCurSchedule(SCHED_ZOMBIE_BASH_DOOR)) // Force a hit @obstruction when we engage.
 	{
 		const Vector &vecAttackerOrigin = WorldSpaceCenter();
 		CTakeDamageInfo	damageInfo(this, this, iDamage, DMG_ZOMBIE);
-		Vector attackDir = (pDoor->WorldSpaceCenter() - vecAttackerOrigin);
+		Vector attackDir = (pObstruction->WorldSpaceCenter() - vecAttackerOrigin);
 		VectorNormalize(attackDir);
 		CalculateMeleeDamageForce(&damageInfo, attackDir, vecAttackerOrigin);
-		pDoor->TakeDamage(damageInfo);
-		pHurt = pDoor;
+		pObstruction->TakeDamage(damageInfo);
+		pHurt = pObstruction;
 	}
 	else
 	{
 		// LoS check, kinda redundant, similar to attack conditions check, we need this to prevent runners from wall hacking... if you trigger this attack in a run anim etc..
-		Vector vecAttackDir, vecStart = WorldSpaceCenter();
-		const Vector &vecPosEnemy = (GetEnemy() ? GetEnemy()->WorldSpaceCenter() : vec3_origin);
-		GetVectors(&vecAttackDir, NULL, NULL);
-		float flDistToEnemy2D = (GetEnemy() ? (vecPosEnemy - vecStart).Length2D() : MAX_COORD_FLOAT);
+		const Vector &vecStart = WorldSpaceCenter();
+		Vector vecAttackDir = vec3_origin;
+		float flDistTo = GetClawAttackRange();
+
+		CBaseEntity *pEnemy = GetEnemy();
+		if (pEnemy)
+		{
+			vecAttackDir = (pEnemy->WorldSpaceCenter() - vecStart);
+			flDistTo = vecAttackDir.Length();
+			VectorNormalize(vecAttackDir);
+		}
+		else
+			GetVectors(&vecAttackDir, NULL, NULL);
 
 		trace_t	tr;
 		CTraceFilterNoNPCsOrPlayer worldCheckFilter(this, GetCollisionGroup());
-		AI_TraceHull(vecStart, vecStart + vecAttackDir * MIN(GetClawAttackRange(), flDistToEnemy2D), -Vector(4, 4, 4), Vector(4, 4, 4), MASK_SOLID_BRUSHONLY, &worldCheckFilter, &tr);
-		if (tr.DidHit()) // We were obstructed, but can we see the enemy through it?
-		{
-			vecStart = EyePosition();
-			AI_TraceLine(vecStart, vecStart + vecAttackDir * MIN(GetClawAttackRange(), flDistToEnemy2D), MASK_SOLID_BRUSHONLY, &worldCheckFilter, &tr);
-			if (tr.DidHit() && !HL2MPRules()->IsBreakableDoor(tr.m_pEnt)) // Yup, we're not able to see our enemy...
-				return NULL;
-		}
+		AI_TraceHull(vecStart, vecStart + vecAttackDir * flDistTo, -Vector(2, 2, 2), Vector(2, 2, 2), MASK_SOLID, &worldCheckFilter, &tr);
+		if (tr.DidHit() && (tr.m_pEnt != m_hBlockingEntity.Get())) // We were obstructed, but can we see the enemy through it?		
+			return NULL;
 
 		//
 		// Trace out a cubic section of our hull and see what we hit.
@@ -728,8 +722,6 @@ void CNPC_BaseZombie::Spawn( void )
 		UTIL_Remove(this);
 	}
 
-	m_flLastObstructionCheck = 0.0f;
-
 	OnSetGibHealth();
 }
 
@@ -842,14 +834,7 @@ void CNPC_BaseZombie::OnStartSchedule(int scheduleType)
 int	CNPC_BaseZombie::SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode )
 {
 	if( failedSchedule == SCHED_ZOMBIE_WANDER_MEDIUM )	
-		return SCHED_ZOMBIE_WANDER_FAIL;	
-
-	// If pathing failed for chasing, check if we have an obstruction!
-	if ((failedSchedule == SCHED_ZOMBIE_CHASE_ENEMY) && (failedTask == 4))
-		SetCondition(COND_ZOMBIE_CHECK_FOR_OBSTRUCTION);
-
-	if (failedSchedule == SCHED_ZOMBIE_BASH_DOOR)	
-		ClearCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT);
+		return SCHED_ZOMBIE_WANDER_FAIL;
 
 	return BaseClass::SelectFailSchedule( failedSchedule, failedTask, taskFailCode );
 }
@@ -895,27 +880,10 @@ void CNPC_BaseZombie::GatherConditions( void )
 {
 	BaseClass::GatherConditions();
 
-	if (IsAllowedToBreakDoors() && (GetEnemy() != NULL) && GetEnemy()->IsPlayer() && (gpGlobals->curtime >= m_flLastObstructionCheck) && !IsCurSchedule(SCHED_ZOMBIE_BASH_DOOR) && !HasCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT))
-	{
-		m_flLastObstructionCheck = gpGlobals->curtime + 0.1f;
-
-		if (HasCondition(COND_ZOMBIE_CHECK_FOR_OBSTRUCTION) || HasCondition(COND_ENEMY_OCCLUDED) || !HasCondition(COND_HAVE_ENEMY_LOS) || (HasCondition(COND_ENEMY_UNREACHABLE) && HasCondition(COND_SEE_ENEMY)))
-		{
-			ClearCondition(COND_ZOMBIE_CHECK_FOR_OBSTRUCTION);
-			CBasePropDoor *pObstruction = dynamic_cast<CBasePropDoor*>(GetObstructionBreakableEntity());
-			if (pObstruction)
-			{
-				m_hBlockingEntity = pObstruction;
-				SetCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT);
-			}
-		}
-	}
-
-	if (IsAllowedToBreakDoors() == false)
-	{
+	if (m_hBlockingEntity.Get())
+		SetCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT);
+	else
 		ClearCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT);
-		ClearCondition(COND_ZOMBIE_CHECK_FOR_OBSTRUCTION);
-	}
 
 	if (HasCondition(COND_SEE_ENEMY) && (!HasCondition(COND_ENEMY_TOO_FAR) || CanAlwaysSeePlayers()))
 		SetCondition(COND_ZOMBIE_ENEMY_IN_SIGHT);
@@ -966,7 +934,7 @@ void CNPC_BaseZombie::StartTask( const Task_t *pTask )
 	{
 	case TASK_ZOMBIE_YAW_TO_DOOR:
 	{
-		CBasePropDoor *pObstruction = m_hBlockingEntity.Get();
+		CBaseEntity *pObstruction = m_hBlockingEntity.Get();
 		AssertMsg(pObstruction != NULL, "Expected condition handling to break schedule before landing here");
 		if (pObstruction != NULL)
 		{
@@ -980,7 +948,7 @@ void CNPC_BaseZombie::StartTask( const Task_t *pTask )
 
 	case TASK_ZOMBIE_PATH_TO_OBSTRUCTION:
 	{
-		CBasePropDoor *pObstruction = m_hBlockingEntity.Get();
+		CBaseEntity *pObstruction = m_hBlockingEntity.Get();
 		if (pObstruction)
 		{
 			if (GetNavigator()->SetVectorGoalFromTarget(pObstruction->WorldSpaceCenter()))
@@ -1002,8 +970,6 @@ void CNPC_BaseZombie::StartTask( const Task_t *pTask )
 
 	case TASK_ZOMBIE_OBSTRUCTION_CLEARED:
 	{
-		ClearCondition(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT);
-		ClearCondition(COND_ZOMBIE_CHECK_FOR_OBSTRUCTION);
 		m_hBlockingEntity = NULL;
 		TaskComplete();
 		break;
@@ -1025,11 +991,11 @@ void CNPC_BaseZombie::RunTask( const Task_t *pTask )
 	{
 		if (IsActivityFinished())
 		{
-			CBasePropDoor *pDoor = m_hBlockingEntity.Get();
-			if ((m_hBlockingEntity == NULL) || (pDoor == NULL) || (pDoor->m_iHealth <= 0) || pDoor->IsDoorOpen() || pDoor->IsDoorOpening())
+			CBaseEntity *pObstruction = m_hBlockingEntity.Get();
+			if ((pObstruction == NULL) || (pObstruction->GetObstruction() == ENTITY_OBSTRUCTION_NONE))
 				TaskComplete();
-			else			
-				ResetIdealActivity(SelectDoorBash());		
+			else
+				ResetIdealActivity(SelectDoorBash());
 		}
 		break;
 	}
@@ -1210,6 +1176,17 @@ float CNPC_BaseZombie::GetIdealAccel() const
 	return (BaseClass::GetIdealAccel() * m_flSpeedFactorValue);
 }
 
+void CNPC_BaseZombie::HandleMovementObstruction(CBaseEntity *pEntity, int type)
+{
+	if (type == ENTITY_OBSTRUCTION_NPC_OBSTACLE)
+		return;
+
+	if ((GetEnemy() == NULL) || !IsAllowedToBreakDoors()) // If you cannot break doors you cannot break anything else, you also need an enemy!
+		return;
+
+	m_hBlockingEntity = pEntity;	
+}
+
 //-----------------------------------------------------------------------------
 //
 // Schedules
@@ -1224,7 +1201,6 @@ DECLARE_TASK(TASK_ZOMBIE_PATH_TO_OBSTRUCTION)
 DECLARE_TASK(TASK_ZOMBIE_OBSTRUCTION_CLEARED)
 
 DECLARE_CONDITION(COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT)
-DECLARE_CONDITION(COND_ZOMBIE_CHECK_FOR_OBSTRUCTION)
 DECLARE_CONDITION(COND_ZOMBIE_ENEMY_IN_SIGHT)
 
 DECLARE_ANIMEVENT( AE_ZOMBIE_ATTACK_RIGHT )

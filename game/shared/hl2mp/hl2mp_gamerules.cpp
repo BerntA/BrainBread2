@@ -303,8 +303,6 @@ CHL2MPRules::CHL2MPRules()
 	m_flIntermissionEndTime = 0.0f;
 	m_flScoreBoardTime = 0;
 	m_bShouldShowScores = false;
-
-	m_hBreakableDoors.RemoveAll();
 	m_bChangelevelDone = false;
 
 	// BB2
@@ -2753,67 +2751,6 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA, CLASS_EARTH_FAUNA, D_NU, 0);
 }
 #endif // BB2_AI
-
-void CHL2MPRules::AddBreakableDoor(CBaseEntity *pEntity)
-{
-	if (m_hBreakableDoors.Find(pEntity) == -1)
-	{
-		m_hBreakableDoors.AddToTail(pEntity);
-	}
-}
-
-void CHL2MPRules::RemoveBreakableDoor(CBaseEntity *pEntity)
-{
-	m_hBreakableDoors.FindAndRemove(pEntity);
-}
-
-bool CHL2MPRules::IsBreakableDoor(CBaseEntity *pEntity)
-{
-	bool bIsBreakableDoor = (m_hBreakableDoors.Find(pEntity) != -1);
-	if (bIsBreakableDoor)
-	{
-		CBasePropDoor *pDoor = dynamic_cast<CBasePropDoor*> (pEntity);
-		if (pDoor && (pDoor->m_iHealth > 0) && (pDoor->IsDoorClosed() || pDoor->IsDoorLocked()))
-			return true;
-	}
-
-	return false;
-}
-
-CBaseEntity *CHL2MPRules::GetNearbyBreakableDoorEntity(CBaseEntity *pChecker)
-{
-	if (pChecker && m_hBreakableDoors.Count())
-	{
-		const Vector &vecPos = pChecker->GetAbsOrigin();
-		for (int i = 0; i < m_hBreakableDoors.Count(); i++)
-		{
-			CBaseEntity *pObstruction = m_hBreakableDoors[i].Get();
-			if (!pObstruction)
-				continue;
-
-			CBasePropDoor *pDoor = dynamic_cast<CBasePropDoor*> (pObstruction);
-			if (!pDoor)
-				continue;
-
-			if (pDoor->m_iHealth <= 0 ||
-				!(pDoor->IsDoorClosed() || pDoor->IsDoorClosing() || pDoor->IsDoorLocked()))
-				continue;
-
-			const Vector &vecDoor = pDoor->GetLocalOrigin();
-			float dist = vecPos.AsVector2D().DistTo(vecDoor.AsVector2D());
-			float zDist = (vecDoor.z - vecPos.z);
-			float collisionHeightDoor = abs(pDoor->WorldAlignMaxs().z) + abs(pDoor->WorldAlignMins().z);
-
-			if ((dist > 120.0f) || (zDist <= -10.0f) || (zDist >= ((collisionHeightDoor / 2.0f) + 10.0f)))
-				continue;
-
-			return pObstruction;
-		}
-	}
-
-	return NULL;
-}
-
 #endif 
 
 #ifndef CLIENT_DLL

@@ -539,7 +539,7 @@ bool CTraceFilterNAVObstacle::ShouldHitEntity(IHandleEntity *pHandleEntity, int 
 			)
 			return false;
 
-		return (pEntity->IsObstruction() && CTraceFilterSimple::ShouldHitEntity(pHandleEntity, contentsMask));
+		return (pEntity->GetObstruction() && CTraceFilterSimple::ShouldHitEntity(pHandleEntity, contentsMask));
 	}
 
 	return false;

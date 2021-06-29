@@ -289,11 +289,6 @@ public:
 	void InitDefaultAIRelationships( void );
 #endif //BB2_AI
 
-	void AddBreakableDoor(CBaseEntity *pEntity);
-	void RemoveBreakableDoor(CBaseEntity *pEntity);
-	bool IsBreakableDoor(CBaseEntity *pEntity);
-	CBaseEntity *GetNearbyBreakableDoorEntity(CBaseEntity *pChecker);
-
 	char szCurrentMap[MAX_MAP_NAME];
 	unsigned long long m_ulMapSize;
 #endif
@@ -321,7 +316,6 @@ private:
 
 #ifndef CLIENT_DLL
 	CUtlVector<uint64> m_uDisconnectedClients;
-	CUtlVector<EHANDLE> m_hBreakableDoors;
 	float m_flRoundStartTime;
 	float m_flScoreBoardTime;
 	float m_flTimeRoundStarted;

@@ -46,7 +46,7 @@ public:
 	virtual void Precache( void );
 	virtual bool KeyValue( const char *szKeyName, const char *szValue );
 	virtual void VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
-	virtual bool IsObstruction(void) { return (m_iHealth > 0); }
+	virtual int	GetObstruction(void) { return ((m_iHealth > 0) ? ENTITY_OBSTRUCTION_FUNC_BREAKABLE : ENTITY_OBSTRUCTION_NONE); }
 
 	void BreakTouch( CBaseEntity *pOther );
 	void DamageSound( void );

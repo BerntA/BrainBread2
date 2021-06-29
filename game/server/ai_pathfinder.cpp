@@ -807,6 +807,8 @@ static Vector FindEdgeFromPos(const Vector &origin, const Vector &dir, float flF
 	return vec3_invalid;
 }
 
+ConVar ai_debug_obstacles("ai_debug_obstacles", "0");
+
 AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *area, const Vector &start, const Vector &end, int buildFlags)
 {
 	CUtlVector<CNavArea*> pNavAreas;
@@ -827,7 +829,6 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 
 	trace_t trace;
 	CTraceFilterWorldAndPropsOnly traceFilter;
-	CTraceFilterNoNPCsOrPlayer traceFilterNoNPCPlayer(GetOuter(), GetCollisionGroup());
 	CTraceFilterNAVObstacle traceObstacle(GetOuter(), GetCollisionGroup());
 
 	const Vector &vMins = WorldAlignMins();
@@ -862,6 +863,7 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 				closestpoint = closestpoint + ((hullWide / delta.Length()) * delta);
 		}
 
+		closestpoint.z = pCurrentArea->GetZ(closestpoint);
 		Vector vecDir;
 		DirectionToVector2D(dir, (Vector2D*)&vecDir);
 		vecDir.z = 0.0f;
@@ -869,10 +871,32 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 		float heightDiff = ((vecEnd.z - vecStart.z) + 2.0f);
 		bool bBuildSpecial = false;
 
-		Vector vecObstacleStartCheck = vecStart + Vector(0.0f, 0.0f, 4.0f);
-		AI_TraceLine(vecObstacleStartCheck, vecObstacleStartCheck + vecDir * MAX_TRACE_LENGTH, MASK_SOLID_BRUSHONLY, &traceFilterNoNPCPlayer, &trace);
-		CBaseEntity *pDynamicObstacle = trace.m_pEnt;
-		bool bFoundNPCObstacle = (trace.DidHitNonWorldEntity() && pDynamicObstacle && pDynamicObstacle->IsNPCObstacle() && pDynamicObstacle->CollisionProp());
+		Vector vecObstacleStartCheck = closestpoint + Vector(0.0f, 0.0f, 5.0f);
+		AI_TraceLine(vecObstacleStartCheck, vecObstacleStartCheck + vecDir * 70.0f, MASK_SOLID, &traceObstacle, &trace);
+		CBaseEntity *pPossibleObstruction = (trace.DidHitNonWorldEntity() ? trace.m_pEnt : NULL);
+		bool bFoundNPCObstacle = (pPossibleObstruction && (pPossibleObstruction->GetObstruction() == ENTITY_OBSTRUCTION_NPC_OBSTACLE) && pPossibleObstruction->CollisionProp());
+
+		if (pPossibleObstruction && ai_debug_obstacles.GetBool())
+		{
+			switch (pPossibleObstruction->GetObstruction())
+			{
+			case ENTITY_OBSTRUCTION_FUNC_BREAKABLE:
+				debugoverlay->AddBoxOverlay(pPossibleObstruction->GetAbsOrigin(), pPossibleObstruction->WorldAlignMins(), pPossibleObstruction->WorldAlignMaxs(), pPossibleObstruction->GetAbsAngles(), 0, 200, 0, 240, 3.0f);
+				break;
+
+			case ENTITY_OBSTRUCTION_PROP_BREAKABLE:
+				debugoverlay->AddBoxOverlay(pPossibleObstruction->GetAbsOrigin(), pPossibleObstruction->WorldAlignMins(), pPossibleObstruction->WorldAlignMaxs(), pPossibleObstruction->GetAbsAngles(), 200, 200, 0, 240, 3.0f);
+				break;
+
+			case ENTITY_OBSTRUCTION_DOOR:
+				debugoverlay->AddBoxOverlay(pPossibleObstruction->GetAbsOrigin(), pPossibleObstruction->WorldAlignMins(), pPossibleObstruction->WorldAlignMaxs(), pPossibleObstruction->GetAbsAngles(), 200, 0, 0, 240, 3.0f);
+				break;
+
+			case ENTITY_OBSTRUCTION_NPC_OBSTACLE:
+				debugoverlay->AddBoxOverlay(pPossibleObstruction->GetAbsOrigin(), pPossibleObstruction->WorldAlignMins(), pPossibleObstruction->WorldAlignMaxs(), pPossibleObstruction->GetAbsAngles(), 0, 0, 200, 240, 3.0f);
+				break;
+			}
+		}		
 
 		// Check if this route can be jumped to/from etc...
 		if ((buildFlags & bits_BUILD_JUMP) && (CapabilitiesGet() & bits_CAP_MOVE_JUMP) && ((abs(heightDiff) >= GetOuter()->StepHeight()) || bFoundNPCObstacle))
@@ -898,10 +922,10 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 				bBuildSpecial = true; // found obstacle, yeah we can climb it, I thinks!!
 				float distToEnd, distToStart;
 
-				const Vector &objMins = pDynamicObstacle->WorldAlignMins();
-				const Vector &objMaxs = pDynamicObstacle->WorldAlignMaxs();
-				const Vector &objSize = pDynamicObstacle->WorldAlignSize();
-				const Vector &objOrigin = pDynamicObstacle->GetAbsOrigin();
+				const Vector &objMins = pPossibleObstruction->WorldAlignMins();
+				const Vector &objMaxs = pPossibleObstruction->WorldAlignMaxs();
+				const Vector &objSize = pPossibleObstruction->WorldAlignSize();
+				const Vector &objOrigin = pPossibleObstruction->GetAbsOrigin();
 				Vector objTemp;
 
 				float maxExtents = MAX(objSize.x, objSize.y);
@@ -974,12 +998,6 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 			// Try to build a crawl/crouch route if possible:
 			if ((CapabilitiesGet() & bits_CAP_MOVE_CRAWL) && (pCurrentArea->HasAttributes(NAV_MESH_CROUCH) || pNextArea->HasAttributes(NAV_MESH_CROUCH)))
 				currentNAVType = NAV_CRAWL;
-
-			closestpoint.z = pCurrentArea->GetZ(closestpoint);
-			vecObstacleStartCheck = closestpoint + Vector(0.0f, 0.0f, 5.0f);
-			AI_TraceLine(vecObstacleStartCheck, vecObstacleStartCheck + vecDir * 64.0f, MASK_SOLID, &traceObstacle, &trace);
-			CBaseEntity *pPossibleObstruction = (trace.DidHitNonWorldEntity() ? trace.m_pEnt : NULL);
-
 			ADDWAYPOINT(new AI_Waypoint_t(closestpoint, 0, currentNAVType, bits_WP_TO_NODE, NO_NODE, pPossibleObstruction));
 		}
 

@@ -67,7 +67,6 @@ enum
 enum 
 {
 	COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT = LAST_SHARED_CONDITION,
-	COND_ZOMBIE_CHECK_FOR_OBSTRUCTION,
 	COND_ZOMBIE_ENEMY_IN_SIGHT,
 
 	LAST_BASE_ZOMBIE_CONDITION,
@@ -174,6 +173,8 @@ public:
 
 	virtual bool		IsMarkedForDeath(void) { return m_bMarkedForDeath; }
 
+	virtual void		HandleMovementObstruction(CBaseEntity *pEntity, int type);
+
 	static void			MarkOldestNPCForDeath(void);
 
 protected:
@@ -195,11 +196,10 @@ protected:
 	virtual bool ShouldUseNormalSpeedForSchedule(int scheduleType);
 
 	EHANDLE m_hLastIgnitionSource;
-	CHandle<CBasePropDoor> m_hBlockingEntity;
+	EHANDLE m_hBlockingEntity;
 
 private:
 
-	float m_flLastObstructionCheck;
 	float m_flSpawnTime;
 	bool m_bLifeTimeOver;
 	bool m_bMarkedForDeath; // Zombie volume wants to spawn, but too many zombs are alive! Mark us for quick deletion.
