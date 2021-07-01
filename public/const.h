@@ -383,7 +383,7 @@ enum Collision_Group_t
 	COLLISION_GROUP_NPC_MERCENARY, // Used for humanoid enemy npcs.
 	COLLISION_GROUP_NPC_ZOMBIE_SPAWNING, // Used for spawning zombies, non-bosses of course.
 	COLLISION_GROUP_PLAYER_REALITY_PHASE, // Used when reality phase is active... (perk)
-
+	COLLISION_GROUP_NPC_ZOMBIE_CRAWLER, // A crawling zombo, let's not get cock blocked by this guy.
 	COLLISION_GROUP_NPC_CROW,
 
 	LAST_SHARED_COLLISION_GROUP

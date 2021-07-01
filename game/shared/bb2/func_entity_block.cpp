@@ -115,22 +115,22 @@ bool CFuncEntityBlock::ShouldCollide(int collisionGroup, int contentsMask) const
 	if (m_bDisabled.Get()) // We're disabled, by default block all ents, block nothing otherwise.
 		return (m_iBlockState.Get() == DYN_BLOCK_ALL);
 
-	if ((m_iCollisionGroup == 30) && (collisionGroup == COLLISION_GROUP_PLAYER || collisionGroup == COLLISION_GROUP_PLAYER_REALITY_PHASE || collisionGroup == COLLISION_GROUP_NPC || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_BOSS || collisionGroup == COLLISION_GROUP_NPC_MILITARY || collisionGroup == COLLISION_GROUP_NPC_MERCENARY))
+	if ((m_iCollisionGroup == 30) && (collisionGroup == COLLISION_GROUP_PLAYER || collisionGroup == COLLISION_GROUP_PLAYER_REALITY_PHASE || collisionGroup == COLLISION_GROUP_NPC || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_BOSS || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER || collisionGroup == COLLISION_GROUP_NPC_MILITARY || collisionGroup == COLLISION_GROUP_NPC_MERCENARY))
 		return false;
 
-	if ((m_iCollisionGroup == 31) && (collisionGroup == COLLISION_GROUP_PLAYER_ZOMBIE || collisionGroup == COLLISION_GROUP_NPC || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_BOSS || collisionGroup == COLLISION_GROUP_NPC_MILITARY || collisionGroup == COLLISION_GROUP_NPC_MERCENARY))
+	if ((m_iCollisionGroup == 31) && (collisionGroup == COLLISION_GROUP_PLAYER_ZOMBIE || collisionGroup == COLLISION_GROUP_NPC || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_BOSS || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER || collisionGroup == COLLISION_GROUP_NPC_MILITARY || collisionGroup == COLLISION_GROUP_NPC_MERCENARY))
 		return false;
 
 	if ((m_iCollisionGroup == 32) && (collisionGroup == COLLISION_GROUP_PLAYER || collisionGroup == COLLISION_GROUP_PLAYER_REALITY_PHASE || collisionGroup == COLLISION_GROUP_NPC_MILITARY))
 		return false;
 
-	if ((m_iCollisionGroup == 33) && (collisionGroup == COLLISION_GROUP_PLAYER_ZOMBIE || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_BOSS))
+	if ((m_iCollisionGroup == 33) && (collisionGroup == COLLISION_GROUP_PLAYER_ZOMBIE || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_BOSS || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER))
 		return false;
 
 	// We have more types of npcs so we do an in-depth check:
 	if (m_iCollisionGroup == COLLISION_GROUP_NPC)
 	{
-		if ((collisionGroup == COLLISION_GROUP_NPC_ZOMBIE) || (collisionGroup == COLLISION_GROUP_NPC_MILITARY) || (collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_BOSS)
+		if ((collisionGroup == COLLISION_GROUP_NPC_ZOMBIE) || (collisionGroup == COLLISION_GROUP_NPC_MILITARY) || (collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_BOSS) || (collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER)
 			|| (collisionGroup == COLLISION_GROUP_NPC_ACTOR) || (collisionGroup == COLLISION_GROUP_NPC_SCRIPTED) || (collisionGroup == COLLISION_GROUP_NPC_MERCENARY) ||
 			(collisionGroup == COLLISION_GROUP_NPC))
 			return false;

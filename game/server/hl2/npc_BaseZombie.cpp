@@ -211,7 +211,7 @@ static bool IsEnemyOnTop(CNPC_BaseZombie *pOuter, CBaseEntity *pEnemy, const flo
 			return true;
 
 		// If the enemy is standing on a nearby friend, help him.
-		if ((flDist <= ZOMBIE_MAX_REACH) && pEnemyGroundEntity && pEnemyGroundEntity->IsCombatCharacter() && (pOuter->IRelationType(pEnemyGroundEntity) == D_LI) && pOuter->FVisible(pEnemyGroundEntity))
+		if ((flDist <= ZOMBIE_MAX_REACH) && pEnemyGroundEntity && pEnemyGroundEntity->IsZombie(true) && pOuter->FVisible(pEnemy))
 			return true;
 	}
 
@@ -257,33 +257,36 @@ static bool CanAttackEntity(CNPC_BaseZombie *pOuter, CBaseEntity *pEnemy, trace_
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flDist)
+int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flFullDist)
 {
 	CBaseEntity *pEnemy = GetEnemy();
 	if (!pEnemy)
 		return COND_TOO_FAR_TO_ATTACK;
 
-	const bool bIsEnemyOnTop = IsEnemyOnTop(this, pEnemy, flDist);
 	const float flRange = GetClawAttackRange();
 	const float flNPCHeight = WorldAlignSize().z;
 	float flHeightDiff = 0.0f;
-	Vector vStomachPos = WorldSpaceCenter();
 	Vector vFeetPos = GetAbsOrigin();
-	Vector vEyePos = vFeetPos + Vector(0.0f, 0.0f, (flNPCHeight - 12.0f));
 	Vector vEnemyPos = pEnemy->GetAbsOrigin();
 	Vector vEnemyEyes = pEnemy->EyePosition();
+	const float flDist = (vEnemyPos - vFeetPos).Length2D();
+	const bool bIsEnemyOnTop = IsEnemyOnTop(this, pEnemy, flDist);
 
 	flHeightDiff = (vEnemyEyes.z - vFeetPos.z);
 	if (flHeightDiff < 0.0f) // He is under me? there is no way...
 		return COND_TOO_FAR_TO_ATTACK;
 
+	const bool bIsEnemyVisible = FVisible(vEnemyEyes);
 	flHeightDiff = (vEnemyPos.z - vFeetPos.z);
-	if ((flHeightDiff > 0.0f) && (flHeightDiff > (flNPCHeight + flRange)) && !FVisible(vEnemyEyes) && !bIsEnemyOnTop) // Enemy is above me! How far can we reach?	
+	if ((flHeightDiff > 0.0f) && (flHeightDiff > (flNPCHeight + flRange)) && !bIsEnemyVisible && !bIsEnemyOnTop) // Enemy is above me! How far can we reach?	
 		return COND_TOO_FAR_TO_ATTACK;
 
-	if (bIsEnemyOnTop)
+	if (bIsEnemyOnTop || (bIsEnemyVisible && (flDist <= flRange)))
 		return ((flDot < 0.7) ? COND_NOT_FACING_ATTACK : COND_CAN_MELEE_ATTACK1);
-	
+
+	Vector vStomachPos = WorldSpaceCenter();
+	Vector vEyePos = vFeetPos + Vector(0.0f, 0.0f, (flNPCHeight - 12.0f));
+
 	Vector forward;
 	GetVectors(&forward, NULL, NULL);
 
@@ -500,7 +503,7 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack(float flDist, int iDamage, QAngle &qaVi
 		Vector forward;
 		GetVectors(&forward, NULL, NULL);
 
-		CTraceFilterNav traceFilter(this, false, this, GetCollisionGroup());
+		CTraceFilterNav traceFilter(this, false, this, (GetCollisionGroup() == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER) ? COLLISION_GROUP_NPC_ZOMBIE : GetCollisionGroup());
 		trace_t	tr1, tr2, tr3;
 
 		AI_TraceHull(vEyePos, vEyePos + forward * flRange, -ZOMBIE_BBOX, ZOMBIE_BBOX, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr1);

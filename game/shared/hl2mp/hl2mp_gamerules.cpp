@@ -2128,13 +2128,13 @@ bool CHL2MPRules::ShouldCollide(int collisionGroup0, int collisionGroup1)
 		return false;
 
 	// Zombie NPCS
-	if (collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE && collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE)
+	if (collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE && ((collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE) || (collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_BOSS) || (collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER)))
 		return false;
 
-	if (collisionGroup0 == COLLISION_GROUP_PLAYER_ZOMBIE && collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_BOSS)
+	if (collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE && ((collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_BOSS) || (collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER)))
 		return false;
 
-	if (collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE && collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_BOSS)
+	if ((collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER) && (collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER)) // These crawlers can stack up, good or bad?
 		return false;
 
 	// Spawning Zombos
@@ -2152,6 +2152,10 @@ bool CHL2MPRules::ShouldCollide(int collisionGroup0, int collisionGroup1)
 
 	// Zombo Bosses won't be blocked by human NPCs.
 	if (collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_BOSS && ((collisionGroup1 == COLLISION_GROUP_NPC_MERCENARY) || (collisionGroup1 == COLLISION_GROUP_NPC_MILITARY)))
+		return false;
+
+	// Humans don't care about crawlers...
+	if (((collisionGroup0 == COLLISION_GROUP_NPC_MERCENARY) || (collisionGroup0 == COLLISION_GROUP_PLAYER) || (collisionGroup0 == COLLISION_GROUP_NPC_MILITARY)) && (collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER))
 		return false;
 
 	// Zombie Players
@@ -2178,6 +2182,7 @@ bool CHL2MPRules::ShouldCollide(int collisionGroup0, int collisionGroup1)
 		if (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_NPC ||
 			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE ||
 			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_BOSS ||
+			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER ||
 			collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING ||
 			collisionGroup0 == COLLISION_GROUP_NPC_MILITARY ||
 			collisionGroup0 == COLLISION_GROUP_NPC_MERCENARY ||

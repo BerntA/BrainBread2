@@ -544,7 +544,7 @@ bool CGameRules::ShouldCollide(int collisionGroup0, int collisionGroup1)
 	if ((collisionGroup1 == COLLISION_GROUP_DOOR_BLOCKER) && (collisionGroup0 != COLLISION_GROUP_NPC))
 		return false;
 
-	if ((collisionGroup0 == COLLISION_GROUP_DOOR_BLOCKER) && ((collisionGroup1 != COLLISION_GROUP_NPC_ZOMBIE) && (collisionGroup1 != COLLISION_GROUP_NPC_ZOMBIE_BOSS) && (collisionGroup1 != COLLISION_GROUP_NPC_MILITARY) && (collisionGroup1 != COLLISION_GROUP_NPC_MERCENARY)))
+	if ((collisionGroup0 == COLLISION_GROUP_DOOR_BLOCKER) && ((collisionGroup1 != COLLISION_GROUP_NPC_ZOMBIE) && (collisionGroup1 != COLLISION_GROUP_NPC_ZOMBIE_CRAWLER) && (collisionGroup1 != COLLISION_GROUP_NPC_ZOMBIE_BOSS) && (collisionGroup1 != COLLISION_GROUP_NPC_MILITARY) && (collisionGroup1 != COLLISION_GROUP_NPC_MERCENARY)))
 		return false;
 
 	if ((collisionGroup0 == COLLISION_GROUP_PLAYER) && (collisionGroup1 == COLLISION_GROUP_PASSABLE_DOOR))

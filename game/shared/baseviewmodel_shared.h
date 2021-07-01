@@ -85,19 +85,6 @@ public:
 
 	virtual RenderGroup_t	GetRenderGroup();
 
-// Only supported in TF2 right now
-#if defined( INVASION_CLIENT_DLL )
-
-	virtual bool ShouldPredict( void )
-	{
-		if ( GetOwner() && GetOwner() == C_BasePlayer::GetLocalPlayer() )
-			return true;
-
-		return BaseClass::ShouldPredict();
-	}
-
-#endif
-
 #if defined( CLIENT_DLL )
 	virtual bool IsPlayerHands(void) { return false; }
 #endif

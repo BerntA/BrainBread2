@@ -490,7 +490,8 @@ void CNPCWalker::BecomeCrawler(void)
 	if (VPhysicsGetObject())	
 		SetupVPhysicsHull();	
 
-	HullChangeUnstuck();
+	SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE_CRAWLER);
+	UpdateMeleeRange(NAI_Hull::Bounds(GetHullType(), IsUsingSmallHull()));
 	ResetIdealActivity((Activity)ACT_CRAWL_NOLEGS_IDLE);
 
 	if (bWasMoving)
