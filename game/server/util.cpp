@@ -355,7 +355,7 @@ int UTIL_DropToFloor( CBaseEntity *pEntity, unsigned int mask, CBaseEntity *pIgn
 		return 0;
 
 	pEntity->SetAbsOrigin( trace.endpos );
-	pEntity->SetGroundEntity( trace.m_pEnt );
+	pEntity->SetGroundEntity(trace.m_pEnt, &trace);
 
 	return 1;
 }

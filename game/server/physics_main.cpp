@@ -1067,7 +1067,7 @@ int CBaseEntity::PhysicsTryMove( float flTime, trace_t *steptrace )
 					SetGroundChangeTime( gpGlobals->curtime + (flTime - (1 - trace.fraction) * time_left) );
 				}
 
-				SetGroundEntity( trace.m_pEnt );
+				SetGroundEntity(trace.m_pEnt, &trace);
 			}
 		}
 		if (!trace.plane.normal[2])
@@ -1821,7 +1821,7 @@ void CBaseEntity::PhysicsStepRecheckGround()
 
 			if ( trace.startsolid )
 			{
-				SetGroundEntity( trace.m_pEnt );
+				SetGroundEntity(trace.m_pEnt, &trace);
 				return;
 			}
 		}

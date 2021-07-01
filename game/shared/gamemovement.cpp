@@ -3714,7 +3714,7 @@ void CGameMovement::SetGroundEntity( trace_t *pm )
 	}
 
 	player->SetBaseVelocity( vecBaseVelocity );
-	player->SetGroundEntity( newGround );
+	player->SetGroundEntity(newGround, pm);
 
 	// If we are on something...
 

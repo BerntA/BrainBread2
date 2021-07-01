@@ -1134,9 +1134,10 @@ public:
  	void					SetCheckUntouch( bool check );
 	bool					GetCheckUntouch() const;
 
-	void					SetGroundEntity( CBaseEntity *ground );
+	void					SetGroundEntity(CBaseEntity *ground, const trace_t *trace = NULL);
 	CBaseEntity				*GetGroundEntity( void );
 	CBaseEntity				*GetGroundEntity( void ) const { return const_cast<CBaseEntity *>(this)->GetGroundEntity(); }
+	int						GetGroundStaticPropIndex(void) const { return m_iGroundStaticPropIndex; }
 
 	// Gets the velocity we impart to a player standing on us
 	virtual void			GetGroundVelocityToApply( Vector &vecGroundVel ) { vecGroundVel = vec3_origin; }
@@ -1541,6 +1542,7 @@ private:
 	float			m_flNavIgnoreUntilTime;
 
 	CNetworkHandleForDerived( CBaseEntity, m_hGroundEntity );
+	int				m_iGroundStaticPropIndex;
 	float			m_flGroundChangeTime; // Time that the ground entity changed
 	
 	string_t		m_ModelName;

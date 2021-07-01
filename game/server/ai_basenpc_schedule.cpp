@@ -3499,7 +3499,7 @@ void CAI_BaseNPC::RunTask( const Task_t *pTask )
 				if( trace.m_pEnt )
 				{
 					// Found something!
-					SetGroundEntity( trace.m_pEnt );
+					SetGroundEntity(trace.m_pEnt, &trace);
 					TaskComplete();
 				}
 				else

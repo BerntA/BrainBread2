@@ -522,28 +522,8 @@ CBaseEntity *CBaseCombatCharacter::CheckTraceHullAttack(float flDist, const Vect
 {
 	Vector forward;
 	Vector vStart = GetAbsOrigin();
-	CBaseEntity *pEnemy = GetEnemy();
-	if (pEnemy)
-	{
-		forward = (pEnemy->WorldSpaceCenter() - WorldSpaceCenter());
-		VectorNormalize(forward);
-	}
-	else
-		AngleVectors(GetAbsAngles(), &forward);
-
-	// The ideal place to start the trace is in the center of the attacker's bounding box.
-	// however, we need to make sure there's enough clearance. Some of the smaller monsters aren't 
-	// as big as the hull we try to trace with. (SJB)
-	float flVerticalOffset = WorldAlignSize().z * 0.5;
-
-	if (flVerticalOffset < maxs.z)
-	{
-		// There isn't enough room to trace this hull, it's going to drag the ground.
-		// so make the vertical offset just enough to clear the ground.
-		flVerticalOffset = maxs.z + 1.0;
-	}
-
-	vStart.z += flVerticalOffset;
+	vStart.z += (WorldAlignSize().z - maxs.z) + 4.0f;
+	AngleVectors(GetAbsAngles(), &forward);
 	Vector vEnd = vStart + (forward * flDist);
 	return CheckTraceHullAttack(vStart, vEnd, mins, maxs, iDamage, iDmgType, forceScale, bDamageAnyNPC);
 }

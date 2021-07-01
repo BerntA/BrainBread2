@@ -281,7 +281,7 @@ private:
 class CTraceFilterNav : public CTraceFilterSimple
 {
 public:
-	CTraceFilterNav( CAI_BaseNPC *pProber, bool bIgnoreTransientEntities, const IServerEntity *passedict, int collisionGroup, bool m_bAllowPlayerAvoid = true );
+	CTraceFilterNav( CAI_BaseNPC *pProber, bool bIgnoreTransientEntities, const IServerEntity *passedict, int collisionGroup, bool bAllowPlayerAvoid = true, bool bOnlyLookForEnemy = false );
 	bool ShouldHitEntity( IHandleEntity *pServerEntity, int contentsMask );
 
 private:
@@ -289,6 +289,7 @@ private:
 	bool m_bIgnoreTransientEntities;
 	bool m_bCheckCollisionTable;
 	bool m_bAllowPlayerAvoid;
+	bool m_bOnlyLookForEnemy;
 };
 
 extern string_t g_iszFuncBrushClassname;

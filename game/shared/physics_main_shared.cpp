@@ -1393,7 +1393,7 @@ void CBaseEntity::ResolveFlyCollisionBounce( trace_t &trace, Vector &vecVelocity
 		{
 			if ( pEntity->IsStandable() )
 			{
-				SetGroundEntity( pEntity );
+				SetGroundEntity(pEntity, &trace);
 			}
 
 			// Reset velocities.
@@ -1473,7 +1473,7 @@ void CBaseEntity::ResolveFlyCollisionSlide( trace_t &trace, Vector &vecVelocity 
 	{
 		if ( pEntity->IsStandable() )
 		{
-			SetGroundEntity( pEntity );
+			SetGroundEntity(pEntity, &trace);
 		}
 
 		// Reset velocities.
@@ -1514,7 +1514,7 @@ void CBaseEntity::ResolveFlyCollisionCustom( trace_t &trace, Vector &vecVelocity
 
 		if ( pEntity->IsStandable() )
 		{
-			SetGroundEntity( pEntity );
+			SetGroundEntity(pEntity, &trace);
 		}
 	}
 }
@@ -2103,8 +2103,10 @@ bool CBaseEntity::PhysicsRunSpecificThink( int nContextIndex, BASEPTR thinkFunc 
 	return ( !IsMarkedForDeletion() );
 }
 
-void CBaseEntity::SetGroundEntity( CBaseEntity *ground )
+void CBaseEntity::SetGroundEntity(CBaseEntity *ground, const trace_t *trace)
 {
+	m_iGroundStaticPropIndex = (trace && trace->DidHitWorld() && (trace->hitbox > 0)) ? (trace->hitbox - 1) : -1;
+
 	if ( m_hGroundEntity.Get() == ground )
 		return;
 

@@ -484,11 +484,12 @@ bool CAI_FreePass::ShouldAllowFVisible(bool bBaseResult )
 string_t g_iszFuncBrushClassname = NULL_STRING;
 
 //-----------------------------------------------------------------------------
-CTraceFilterNav::CTraceFilterNav( CAI_BaseNPC *pProber, bool bIgnoreTransientEntities, const IServerEntity *passedict, int collisionGroup, bool bAllowPlayerAvoid ) : 
+CTraceFilterNav::CTraceFilterNav(CAI_BaseNPC *pProber, bool bIgnoreTransientEntities, const IServerEntity *passedict, int collisionGroup, bool bAllowPlayerAvoid, bool bOnlyLookForEnemy) :
 	CTraceFilterSimple( passedict, collisionGroup ),
 	m_pProber(pProber),
 	m_bIgnoreTransientEntities(bIgnoreTransientEntities),
-	m_bAllowPlayerAvoid(bAllowPlayerAvoid)
+	m_bAllowPlayerAvoid(bAllowPlayerAvoid),
+	m_bOnlyLookForEnemy(bOnlyLookForEnemy)
 {
 	m_bCheckCollisionTable = g_EntityCollisionHash->IsObjectInHash( pProber );
 }
@@ -498,6 +499,7 @@ bool CTraceFilterNav::ShouldHitEntity( IHandleEntity *pHandleEntity, int content
 {
 	IServerEntity *pServerEntity = (IServerEntity*)pHandleEntity;
 	CBaseEntity *pEntity = (CBaseEntity *)pServerEntity;
+	CBaseEntity *pEnemy = m_pProber->GetEnemy();
 
 	if ( m_pProber == pEntity )
 		return false;
@@ -505,8 +507,11 @@ bool CTraceFilterNav::ShouldHitEntity( IHandleEntity *pHandleEntity, int content
 	if ( m_pProber->GetMoveProbe()->ShouldBrushBeIgnored( pEntity ) == true )
 		return false;
 
-	if ( m_bIgnoreTransientEntities && (pEntity->IsPlayer() || pEntity->IsNPC() ) )
+	if (m_bIgnoreTransientEntities && (pEntity->IsPlayer() || pEntity->IsNPC()))
 		return false;
+
+	if (m_bOnlyLookForEnemy && pEnemy && (pEntity->IsPlayer() || pEntity->IsNPC()))
+		return (pEnemy == pEntity);
 
 	//Adrian - If I'm flagged as using the new collision method, then ignore the player when trying
 	//to check if I can get somewhere.

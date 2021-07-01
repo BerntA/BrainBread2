@@ -4195,7 +4195,7 @@ void CAI_BaseNPC::CheckOnGround( void )
 						// Check to see if someone changed the ground on us...
 						if ( trace.m_pEnt && trace.m_pEnt != GetGroundEntity() )
 						{
-							SetGroundEntity( trace.m_pEnt );
+							SetGroundEntity(trace.m_pEnt, &trace);
 						}
 					}
 				}
@@ -11094,7 +11094,7 @@ int CAI_BaseNPC::WalkMove( const Vector& vecPosition, unsigned int mask )
 	}
 
 	// the move is ok
-	SetGroundEntity( trace.m_pEnt );
+	SetGroundEntity(trace.m_pEnt, &trace);
 	PhysicsTouchTriggers();
 	return true;
 }

@@ -2677,9 +2677,9 @@ inline void CAI_Component::RemoveEntFlag( int flagsToRemove )
 // Input  : *ground - 
 // Output : inline void	
 //-----------------------------------------------------------------------------
-inline void	 CAI_Component::SetGroundEntity( CBaseEntity *ground )
+inline void	 CAI_Component::SetGroundEntity(CBaseEntity *ground, const trace_t *trace)
 {
-	GetOuter()->SetGroundEntity( ground );
+	GetOuter()->SetGroundEntity(ground, trace);
 }
 
 //-----------------------------------------------------------------------------

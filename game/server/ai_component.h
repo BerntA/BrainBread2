@@ -99,7 +99,7 @@ protected:
 	void				RemoveEntFlag( int flagsToRemove );
 	void				ToggleEntFlag( int flagToToggle );
 
-	void				SetGroundEntity( CBaseEntity *ground );
+	void				SetGroundEntity(CBaseEntity *ground, const trace_t *trace = NULL);
 
 	CBaseEntity*		GetGoalEnt();
 	void				SetGoalEnt( CBaseEntity *pGoalEnt );

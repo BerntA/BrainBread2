@@ -515,6 +515,7 @@ void CNPCWalker::HullChangeUnstuck(void)
 
 	SetGroundEntity(NULL);
 	UTIL_SetOrigin(this, tr.endpos);
+	SetGroundEntity(tr.m_pEnt, &tr);
 	UpdateMeleeRange(NAI_Hull::Bounds(GetHullType(), IsUsingSmallHull()));
 }
 

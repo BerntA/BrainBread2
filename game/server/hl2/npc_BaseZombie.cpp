@@ -41,6 +41,9 @@
 #define ZOMBIE_BURN_TIME_NOISE	2  // Give or take this many seconds.
 #define ZOMBIE_LIFETIME (gpGlobals->curtime + (((float)RandomDoubleNumber(bb2_zombie_lifespan_min.GetFloat(), bb2_zombie_lifespan_max.GetFloat())) * 60.0f))
 
+#define ZOMBIE_BBOX Vector(3.0f, 3.0f, 3.0f)
+#define ZOMBIE_MAX_REACH 100.0f
+
 #define HEALTH_REGEN_SUSPEND 10.0f // How many seconds to suspend hp regen when taking dmg?
 
 ConVar zombie_moanfreq( "zombie_moanfreq", "1" );
@@ -197,6 +200,58 @@ bool CNPC_BaseZombie::OverrideMoveFacing( const AILocalMoveGoal_t &move, float f
 	return true;
 }
 
+static bool IsEnemyOnTop(CNPC_BaseZombie *pOuter, CBaseEntity *pEnemy, const float &flDist)
+{
+	if (pOuter && pEnemy)
+	{
+		CBaseEntity *pEnemyGroundEntity = pEnemy->GetGroundEntity();
+
+		// Enemy is on our head or vice versa.
+		if ((pEnemyGroundEntity == pOuter) || (pOuter->GetGroundEntity() == pEnemy))
+			return true;
+
+		// If the enemy is standing on a nearby friend, help him.
+		if ((flDist <= ZOMBIE_MAX_REACH) && pEnemyGroundEntity && pEnemyGroundEntity->IsCombatCharacter() && (pOuter->IRelationType(pEnemyGroundEntity) == D_LI) && pOuter->FVisible(pEnemyGroundEntity))
+			return true;
+	}
+
+	return false;
+}
+
+static bool IsAbleToHitEnemy(CNPC_BaseZombie *pOuter, CBaseEntity *pEnemy, trace_t &tr, const float &flDist)
+{
+	if (pEnemy && tr.m_pEnt && (tr.fraction != 1.0))
+	{
+		// I might be too far away but our target is standing on a static prop which i just traced against!
+		if (tr.DidHitWorld() && (tr.hitbox > 0) && ((tr.hitbox - 1) == pEnemy->GetGroundStaticPropIndex()) && (flDist <= ZOMBIE_MAX_REACH))
+			return true;
+
+		// If we hit our enemy or hit smth that the enemy stands on (non world ent) then keep trying to hit!
+		if ((tr.m_pEnt == pEnemy) || (!tr.m_pEnt->IsWorld() && (pEnemy->GetGroundEntity() == tr.m_pEnt)))
+			return true;
+	}
+
+	return false;
+}
+
+static bool CanAttackEntity(CNPC_BaseZombie *pOuter, CBaseEntity *pEnemy, trace_t &tr)
+{
+	CBaseEntity *pHit = tr.m_pEnt;
+	if (pOuter && pHit && (tr.fraction != 1.0))
+	{
+		if (
+			pHit->IsNPC() || pHit->IsPlayer() || pHit->GetObstruction() || // These are valid.
+			(pEnemy && pHit->IsWorld() && (tr.hitbox > 0) && ((tr.hitbox - 1) == pEnemy->GetGroundStaticPropIndex())) || // I can attack anything which my enemy stands on, in this case some static prop.
+			(pEnemy && !pHit->IsWorld() && (pHit == pEnemy->GetGroundEntity())) || // I can attack anything which my enemy stands on.
+			(pEnemy && ((pEnemy->GetGroundEntity() == pOuter) || (pOuter->GetGroundEntity() == pEnemy))) || // I can attack my enemys ground ent if it is me or him.
+			(!pHit->IsWorld() && (pHit->GetGroundEntity() == pOuter)) // I can attack anything which stands on me.
+			)
+			return true;
+	}
+
+	return false;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: For innate melee attack
 // Input  :
@@ -205,19 +260,50 @@ bool CNPC_BaseZombie::OverrideMoveFacing( const AILocalMoveGoal_t &move, float f
 int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flDist)
 {
 	CBaseEntity *pEnemy = GetEnemy();
-	if (!pEnemy || (flDist > GetClawAttackRange()))
+	if (!pEnemy)
 		return COND_TOO_FAR_TO_ATTACK;
 
-	if (flDot < 0.7)
-		return COND_NOT_FACING_ATTACK;
+	const bool bIsEnemyOnTop = IsEnemyOnTop(this, pEnemy, flDist);
+	const float flRange = GetClawAttackRange();
+	const float flNPCHeight = WorldAlignSize().z;
+	float flHeightDiff = 0.0f;
+	Vector vStomachPos = WorldSpaceCenter();
+	Vector vFeetPos = GetAbsOrigin();
+	Vector vEyePos = vFeetPos + Vector(0.0f, 0.0f, (flNPCHeight - 12.0f));
+	Vector vEnemyPos = pEnemy->GetAbsOrigin();
+	Vector vEnemyEyes = pEnemy->EyePosition();
+
+	flHeightDiff = (vEnemyEyes.z - vFeetPos.z);
+	if (flHeightDiff < 0.0f) // He is under me? there is no way...
+		return COND_TOO_FAR_TO_ATTACK;
+
+	flHeightDiff = (vEnemyPos.z - vFeetPos.z);
+	if ((flHeightDiff > 0.0f) && (flHeightDiff > (flNPCHeight + flRange)) && !FVisible(vEnemyEyes) && !bIsEnemyOnTop) // Enemy is above me! How far can we reach?	
+		return COND_TOO_FAR_TO_ATTACK;
+
+	if (bIsEnemyOnTop)
+		return ((flDot < 0.7) ? COND_NOT_FACING_ATTACK : COND_CAN_MELEE_ATTACK1);
+	
+	Vector forward;
+	GetVectors(&forward, NULL, NULL);
 
 	trace_t	tr;
-	CTraceFilterWorldAndPropsOnly worldCheckFilter;
-	AI_TraceLine(EyePosition(), pEnemy->GetAbsOrigin(), MASK_SOLID, &worldCheckFilter, &tr);
-	if (tr.DidHit()) // Behind a wall or object, move closer!
-		return COND_TOO_FAR_TO_ATTACK;
+	CTraceFilterNav traceFilter(this, false, this, GetCollisionGroup(), true, true);
 
-	return COND_CAN_MELEE_ATTACK1;
+	AI_TraceHull(vEyePos, vEyePos + forward * flRange, -ZOMBIE_BBOX, ZOMBIE_BBOX, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr);
+	if (IsAbleToHitEnemy(this, pEnemy, tr, flDist)) // Check if we're able to, or have the right to try and attack!
+		return ((flDot < 0.7) ? COND_NOT_FACING_ATTACK : COND_CAN_MELEE_ATTACK1);
+
+	AI_TraceHull(vStomachPos, vStomachPos + forward * flRange, -ZOMBIE_BBOX, ZOMBIE_BBOX, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr);
+	if (IsAbleToHitEnemy(this, pEnemy, tr, flDist)) // Check if we're able to, or have the right to try and attack!
+		return ((flDot < 0.7) ? COND_NOT_FACING_ATTACK : COND_CAN_MELEE_ATTACK1);
+
+	vFeetPos.z += 6.0f;
+	AI_TraceHull(vFeetPos, vFeetPos + forward * flRange, -ZOMBIE_BBOX, ZOMBIE_BBOX, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr);
+	if (IsAbleToHitEnemy(this, pEnemy, tr, flDist)) // Check if we're able to, or have the right to try and attack!
+		return ((flDot < 0.7) ? COND_NOT_FACING_ATTACK : COND_CAN_MELEE_ATTACK1);
+
+	return COND_TOO_FAR_TO_ATTACK;
 }
 
 //-----------------------------------------------------------------------------
@@ -405,24 +491,23 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack(float flDist, int iDamage, QAngle &qaVi
 	else
 	{
 		// LoS check, kinda redundant, similar to attack conditions check, we need this to prevent runners from wall hacking... if you trigger this attack in a run anim etc..
-		const Vector vecStart = EyePosition();
-		Vector vecAttackDir = vec3_origin;
-		float flDistTo = GetClawAttackRange();
-
 		CBaseEntity *pEnemy = GetEnemy();
-		if (pEnemy)
-		{
-			vecAttackDir = (pEnemy->EyePosition() - vecStart);
-			flDistTo = vecAttackDir.Length();
-			VectorNormalize(vecAttackDir);
-		}
-		else
-			GetVectors(&vecAttackDir, NULL, NULL);
+		const Vector vEyePos = EyePosition();
+		const Vector &vStomachPos = WorldSpaceCenter();
+		const Vector vFeetPos = GetAbsOrigin() + Vector(0.0f, 0.0f, 6.0f);
+		const float flRange = GetClawAttackRange();
 
-		trace_t	tr;
-		CTraceFilterNoNPCsOrPlayer worldCheckFilter(this, GetCollisionGroup());
-		AI_TraceHull(vecStart, vecStart + vecAttackDir * flDistTo, -Vector(2, 2, 2), Vector(2, 2, 2), MASK_SOLID, &worldCheckFilter, &tr);
-		if (tr.DidHit() && (TryPenetrateSurface(&tr, &worldCheckFilter) == vec3_invalid)) // We were obstructed and could not do a penetration thru it, don't wallhax!
+		Vector forward;
+		GetVectors(&forward, NULL, NULL);
+
+		CTraceFilterNav traceFilter(this, false, this, GetCollisionGroup());
+		trace_t	tr1, tr2, tr3;
+
+		AI_TraceHull(vEyePos, vEyePos + forward * flRange, -ZOMBIE_BBOX, ZOMBIE_BBOX, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr1);
+		AI_TraceHull(vStomachPos, vStomachPos + forward * flRange, -ZOMBIE_BBOX, ZOMBIE_BBOX, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr2);
+		AI_TraceHull(vFeetPos, vFeetPos + forward * flRange, -ZOMBIE_BBOX, ZOMBIE_BBOX, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr3);
+
+		if (!CanAttackEntity(this, pEnemy, tr1) && !CanAttackEntity(this, pEnemy, tr2) && !CanAttackEntity(this, pEnemy, tr3))
 			return NULL;
 
 		//
@@ -430,8 +515,8 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack(float flDist, int iDamage, QAngle &qaVi
 		//
 		Vector vecMins = GetHullMins();
 		Vector vecMaxs = GetHullMaxs();
-		float height = (vecMaxs.z - vecMins.z) - 2.0f;
-		height /= 2.0f;
+		float height = ((vecMaxs.z - vecMins.z) / 2.0f);
+		height = ceil(height);
 		vecMins.z = -height;
 		vecMaxs.z = height;
 
@@ -1109,6 +1194,8 @@ static ConVar bb2_zombie_lifetime_advanced("bb2_zombie_lifetime_advanced", "1", 
 //-----------------------------------------------------------------------------
 Activity CNPC_BaseZombie::NPC_TranslateActivity( Activity baseAct )
 {
+	if (baseAct == ACT_RUN_AIM)
+		return ACT_RUN;
 	return BaseClass::NPC_TranslateActivity( baseAct );
 }
 

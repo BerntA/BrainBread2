@@ -949,8 +949,9 @@ public:
 
 	virtual unsigned int	PhysicsSolidMaskForEntity(void) const;
 
-	void					SetGroundEntity(C_BaseEntity *ground);
+	void					SetGroundEntity(C_BaseEntity *ground, const trace_t *trace = NULL);
 	C_BaseEntity			*GetGroundEntity(void);
+	int						GetGroundStaticPropIndex(void) const { return m_iGroundStaticPropIndex; }
 
 	void					PhysicsPushEntity(const Vector& push, trace_t *pTrace);
 	void					PhysicsCheckWaterTransition(void);
@@ -1587,6 +1588,7 @@ private:
 	EHANDLE							m_ShadowDirUseOtherEntity;
 
 	EHANDLE							m_hGroundEntity;
+	int								m_iGroundStaticPropIndex;
 	float							m_flGroundChangeTime;
 
 

@@ -840,8 +840,7 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 	pCurrentArea = pNavAreas.Count() ? pNavAreas[index] : NULL;
 	while (pCurrentArea)
 	{
-		pNextArea = pNavAreas.IsValidIndex(index + 1) ? pNavAreas[index + 1] : NULL;
-		currentNAVType = NAV_GROUND;
+		pNextArea = pNavAreas.IsValidIndex(index + 1) ? pNavAreas[index + 1] : NULL;		
 		if (!pNextArea)
 			break;		
 
@@ -997,6 +996,7 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 
 		if (!bBuildSpecial)
 		{
+			currentNAVType = NAV_GROUND;
 			// Try to build a crawl/crouch route if possible:
 			if ((CapabilitiesGet() & bits_CAP_MOVE_CRAWL) && (pCurrentArea->HasAttributes(NAV_MESH_CROUCH) || pNextArea->HasAttributes(NAV_MESH_CROUCH)))
 				currentNAVType = NAV_CRAWL;
