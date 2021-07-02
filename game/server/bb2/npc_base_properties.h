@@ -37,6 +37,7 @@ public:
 	virtual const char *GetNPCName() { return "UNKNOWN"; }
 
 	const char *GetNPCModelName() { return pszModelName; }
+	const char *GetOverridenSoundSet() { return pszSoundsetOverride; }
 
 protected:
 
@@ -61,6 +62,7 @@ protected:
 	float m_flHealthScaleValue;
 
 	char pszModelName[MAX_WEAPON_STRING];
+	char pszSoundsetOverride[MAX_WEAPON_STRING];
 
 	CNPCDataItem *m_pNPCData;
 

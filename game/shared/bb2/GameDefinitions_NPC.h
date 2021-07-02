@@ -15,16 +15,37 @@
 // Everything here is original values we need when we scale up or down the npcs depending on the player count in the server! We also use these when npcs spawn.
 struct NPCModelItem_t
 {
+	NPCModelItem_t()
+	{
+		szModelPath[0] = 0;
+
+		szGibHead[0] = 0;
+		szGibArmLeft[0] = 0;
+		szGibArmRight[0] = 0;
+		szGibLegLeft[0] = 0;
+		szGibLegRight[0] = 0;
+
+		szSoundsetOverride[0] = 0;
+
+		iSkinMin = iSkinMax = 0;
+	}
+
+	// Model
 	char szModelPath[MAX_WEAPON_STRING];
-	// GIBS:
+
+	// GIBS
 	char szGibHead[MAX_WEAPON_STRING];
 	char szGibArmLeft[MAX_WEAPON_STRING];
 	char szGibArmRight[MAX_WEAPON_STRING];
 	char szGibLegLeft[MAX_WEAPON_STRING];
 	char szGibLegRight[MAX_WEAPON_STRING];
 
+	// Skin & Body
 	int iSkinMax;
 	int iSkinMin;
+
+	// Misc
+	char szSoundsetOverride[MAX_WEAPON_STRING];
 };
 
 struct NPCWeaponItem_t

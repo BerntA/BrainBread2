@@ -33,8 +33,6 @@ IPhysicsSurfaceProps *physprops = NULL;
 // UNDONE: Split into separate hashes?
 IPhysicsObjectPairHash *g_EntityCollisionHash = NULL;
 
-const char *SURFACEPROP_MANIFEST_FILE = "scripts/surfaceproperties_manifest.txt";
-
 const objectparams_t g_PhysDefaultObjectParams =
 {
 	NULL,
@@ -49,7 +47,6 @@ const objectparams_t g_PhysDefaultObjectParams =
 	1.0f, // drag coefficient
 	true,// enable collisions?
 };
-
 
 void CSolidSetDefaults::ParseKeyValue( void *pData, const char *pKey, const char *pValue )
 {
@@ -542,34 +539,25 @@ void AddSurfacepropFile( const char *pFileName, IPhysicsSurfaceProps *pProps, IF
 	}
 	else
 	{
-		Error( "Unable to load surface prop file '%s' (referenced by manifest file '%s')\n", pFileName, SURFACEPROP_MANIFEST_FILE );
+		Error("Unable to load surface prop file '%s'\n", pFileName);
 	}
 }
 
-void PhysParseSurfaceData( IPhysicsSurfaceProps *pProps, IFileSystem *pFileSystem )
+void PhysParseSurfaceData(IPhysicsSurfaceProps *pProps, IFileSystem *pFileSystem)
 {
-	KeyValues *manifest = new KeyValues( SURFACEPROP_MANIFEST_FILE );
-	if ( manifest->LoadFromFile( pFileSystem, SURFACEPROP_MANIFEST_FILE, "GAME" ) )
+	char filePath[MAX_WEAPON_STRING];
+	FileFindHandle_t findHandle;
+	const char *pFilename = filesystem->FindFirstEx("data/surfaceproperties/*.txt", "MOD", &findHandle);
+	while (pFilename)
 	{
-		for ( KeyValues *sub = manifest->GetFirstSubKey(); sub != NULL; sub = sub->GetNextKey() )
+		if (!filesystem->IsDirectory(pFilename, "MOD"))
 		{
-			if ( !Q_stricmp( sub->GetName(), "file" ) )
-			{
-				// Add
-				AddSurfacepropFile( sub->GetString(), pProps, pFileSystem );
-				continue;
-			}
-
-			Warning( "surfaceprops::Init:  Manifest '%s' with bogus file type '%s', expecting 'file'\n", 
-				SURFACEPROP_MANIFEST_FILE, sub->GetName() );
+			Q_snprintf(filePath, MAX_WEAPON_STRING, "data/surfaceproperties/%s", pFilename);
+			AddSurfacepropFile(filePath, pProps, pFileSystem);
 		}
+		pFilename = filesystem->FindNext(findHandle);
 	}
-	else
-	{
-		Error( "Unable to load manifest file '%s'\n", SURFACEPROP_MANIFEST_FILE );
-	}
-
-	manifest->deleteThis();
+	filesystem->FindClose(findHandle);
 }
 
 void PhysCreateVirtualTerrain( CBaseEntity *pWorld, const objectparams_t &defaultParams )

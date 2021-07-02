@@ -778,11 +778,14 @@ bool CHL2MPRules::IsTeamplay(void)
 void CHL2MPRules::EmitSoundToClient(CBaseEntity *pAnnouncer, const char *szOriginalSound, int iType, bool bGenderMale, int playerIndex)
 {
 	// Disable stuff when waiting for transfer.
-	if (IsGameoverOrScoresVisible())
+	if (IsGameoverOrScoresVisible() || !szOriginalSound || !szOriginalSound[0])
 		return;
 
 	int entindex = -1;
 	const char *survivorModel = "", *survivorPrefix = "";
+	char pchOriginalSound[MAX_WEAPON_STRING];
+	Q_strncpy(pchOriginalSound, szOriginalSound, MAX_WEAPON_STRING);
+
 	if (iType != BB2_SoundTypes::TYPE_ANNOUNCER)
 	{
 		if (!pAnnouncer)
@@ -799,6 +802,17 @@ void CHL2MPRules::EmitSoundToClient(CBaseEntity *pAnnouncer, const char *szOrigi
 				return;
 
 			pAnnouncer->MyNPCPointer()->SetSoundPenaltyTime(4.0f);
+		}
+
+		if (pAnnouncer->IsNPC() && pAnnouncer->MyNPCPointer()) // Mappers can override the soundsets of NPCs.
+		{
+			CNPCBaseProperties *pNPCProperties = dynamic_cast<CNPCBaseProperties*> (pAnnouncer);
+			const char *overridenSoundset = (pNPCProperties ? pNPCProperties->GetOverridenSoundSet() : "");
+			if (overridenSoundset && overridenSoundset[0])
+			{
+				iType = TYPE_CUSTOM;
+				Q_snprintf(pchOriginalSound, MAX_WEAPON_STRING, "%s.%s", overridenSoundset, szOriginalSound);
+			}
 		}
 
 		CHL2MP_Player *pPlayer = ToHL2MPPlayer(pAnnouncer);
@@ -820,7 +834,7 @@ void CHL2MPRules::EmitSoundToClient(CBaseEntity *pAnnouncer, const char *szOrigi
 	if (event)
 	{
 		event->SetInt("entity", entindex);
-		event->SetString("original", szOriginalSound);
+		event->SetString("original", pchOriginalSound);
 		event->SetBool("gender", bGenderMale);
 		event->SetInt("type", iType);
 		event->SetString("survivorprefix", survivorPrefix);

@@ -182,6 +182,13 @@ void CNPCFred::Spawn(void)
 	SetHullType(HULL_MEDIUM_TALL);
 	SetHullSizeNormal(true);
 	SetDefaultEyeOffset();
+
+	if (pszSoundsetOverride && pszSoundsetOverride[0])
+	{
+		char pchOverriden[MAX_WEAPON_STRING];
+		Q_snprintf(pchOverriden, MAX_WEAPON_STRING, "Custom.%s.%s.Shockwave", GetNPCName(), pszSoundsetOverride);
+		PrecacheScriptSound(pchOverriden);
+	}
 }
 
 Activity CNPCFred::NPC_TranslateActivity(Activity newActivity)
@@ -366,7 +373,15 @@ void CNPCFred::StartTask(const Task_t *pTask)
 	{
 		DispatchParticleEffect("bb2_healing_effect", GetLocalOrigin(), vec3_angle, this);
 		HL2MPRules()->EmitSoundToClient(this, "Laugh", GetNPCType(), GetGender());
-		EmitSound("Fred.Shockwave");
+
+		if (pszSoundsetOverride && pszSoundsetOverride[0])
+		{
+			char pchOverriden[MAX_WEAPON_STRING];
+			Q_snprintf(pchOverriden, MAX_WEAPON_STRING, "Custom.%s.%s.Shockwave", GetNPCName(), pszSoundsetOverride);
+			EmitSound(pchOverriden);
+		}
+		else
+			EmitSound("Fred.Shockwave");
 
 		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{

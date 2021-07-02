@@ -28,6 +28,7 @@ CNPCBaseProperties::CNPCBaseProperties()
 	m_flRange = 50.0f;
 	m_bGender = false;
 	pszModelName[0] = 0;
+	pszSoundsetOverride[0] = 0;
 	m_pNPCData = NULL;
 	m_pOuter = NULL;
 
@@ -53,6 +54,8 @@ bool CNPCBaseProperties::ParseNPC(CBaseEntity *pEntity)
 		Assert(modelItem != NULL);
 
 		Q_strncpy(pszModelName, modelItem ? modelItem->szModelPath : "", MAX_WEAPON_STRING);
+		Q_strncpy(pszSoundsetOverride, modelItem ? modelItem->szSoundsetOverride : "", MAX_WEAPON_STRING);
+
 		m_bGender = (Q_stristr(pszModelName, "female")) ? false : true;
 
 		m_iDefaultHealth = random->RandomInt(npcData->iHealthMin, npcData->iHealthMax);

@@ -457,6 +457,8 @@ void CGameDefinitionsNPC::LoadNPCOverrideData(KeyValues *pkvData)
 				Q_strncpy(modelItem.szGibLegRight, model->GetString("legs_right"), MAX_WEAPON_STRING);
 				Q_strncpy(modelItem.szGibLegLeft, model->GetString("legs_left"), MAX_WEAPON_STRING);
 
+				Q_strncpy(modelItem.szSoundsetOverride, model->GetString("soundset"), MAX_WEAPON_STRING);
+
 				modelItem.iSkinMax = model->GetInt("skin_max");
 				modelItem.iSkinMin = model->GetInt("skin_min");
 
