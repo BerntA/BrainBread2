@@ -950,8 +950,9 @@ class CTraceFilterWeaponsAndItems : public CTraceFilterSimple
 public:
 	DECLARE_CLASS(CTraceFilterWeaponsAndItems, CTraceFilterSimple);
 
-	CTraceFilterWeaponsAndItems(IHandleEntity *pHandleEntity, int collisionGroup) : BaseClass(pHandleEntity, collisionGroup)
+	CTraceFilterWeaponsAndItems(IHandleEntity *pHandleEntity, int collisionGroup, int priority) : BaseClass(pHandleEntity, collisionGroup)
 	{
+		m_iItemPriority = priority;
 	}
 
 	virtual bool ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask)
@@ -962,12 +963,23 @@ public:
 			if (pEntity->IsCombatCharacter())
 				return false;
 
-			if (pEntity->IsBaseCombatWeapon() || pEntity->IsCombatItem())
+			if (m_iItemPriority > 0)
+			{
+				if (pEntity->IsBaseCombatWeapon() || (pEntity->GetItemPrio() && (pEntity->GetItemPrio() != m_iItemPriority)))
+					return false; // Don't care.
+
+				if (pEntity->GetItemPrio() == m_iItemPriority)
+					return true;
+			}
+			else if (pEntity->IsBaseCombatWeapon() || pEntity->GetItemPrio())
 				return true;
 		}
 
 		return BaseClass::ShouldHitEntity(pHandleEntity, contentsMask);
 	}
+
+private:
+	int m_iItemPriority;
 };
 #endif
 
@@ -996,6 +1008,16 @@ CBaseEntity *CBasePlayer::FindUseEntity()
 	float nearestDist = FLT_MAX;
 	// try the hit entity if there is one, or the ground entity if there isn't.
 	CBaseEntity *pNearest = NULL;
+
+#ifndef CLIENT_DLL
+	{ // Quick inv. item scan. Prevent pickup bugs!
+		trace_t trHighPrioItems;
+		CTraceFilterWeaponsAndItems invItemFilter(this, COLLISION_GROUP_NONE, ITEM_PRIORITY_OBJECTIVE);
+		UTIL_TraceHull(searchCenter, searchCenter + forward * PLAYER_USE_RADIUS, -Vector(2, 2, 2), Vector(2, 2, 2), MASK_SHOT_HULL, &invItemFilter, &trHighPrioItems);
+		if (trHighPrioItems.m_pEnt && IsUseableEntity(trHighPrioItems.m_pEnt, 0) && (trHighPrioItems.m_pEnt->GetItemPrio() == ITEM_PRIORITY_OBJECTIVE))
+			return trHighPrioItems.m_pEnt;
+	}
+#endif
 
 	const int NUM_TANGENTS = 8;
 	// trace a box at successive angles down
@@ -1056,7 +1078,7 @@ CBaseEntity *CBasePlayer::FindUseEntity()
 				pNearest = pObject;
 				
 				// if this is directly under the cursor just return it now
-				if ( i == 0 )
+				if (i == 0)
 					return pObject;
 			}
 		}
@@ -1147,7 +1169,7 @@ CBaseEntity *CBasePlayer::FindUseEntity()
 	if (!pNearest)
 	{
 		trace_t trWeaponsAndItems;
-		CTraceFilterWeaponsAndItems wepItemFilter(this, COLLISION_GROUP_NONE);
+		CTraceFilterWeaponsAndItems wepItemFilter(this, COLLISION_GROUP_NONE, ITEM_PRIORITY_NO);
 		UTIL_TraceLine(searchCenter, searchCenter + forward * PLAYER_USE_RADIUS, MASK_SHOT, &wepItemFilter, &trWeaponsAndItems);
 		if (trWeaponsAndItems.m_pEnt && IsUseableEntity(trWeaponsAndItems.m_pEnt, 0))
 			pNearest = trWeaponsAndItems.m_pEnt;

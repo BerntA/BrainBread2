@@ -1002,13 +1002,8 @@ public:
 	virtual C_BaseCombatCharacter	*MyCombatCharacterPointer(void) { return NULL; }
 	virtual bool					IsNPC(void) { return false; }
 	C_AI_BaseNPC					*MyNPCPointer(void);
-	virtual bool					IsNextBot() { return false; }
-	// TF2 specific
-	virtual bool					IsBaseObject(void) const { return false; }
 	virtual bool					IsBaseCombatWeapon(void) const { return false; }
 	virtual class C_BaseCombatWeapon		*MyCombatWeaponPointer() { return NULL; }
-	virtual bool					IsCombatItem(void) const { return false; }
-
 	virtual bool					IsBaseTrain(void) const { return false; }
 
 	// Returns the eye point + angles (used for viewing + shooting)

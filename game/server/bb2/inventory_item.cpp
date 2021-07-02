@@ -267,6 +267,11 @@ bool CInventoryItem::MyTouch(CBasePlayer *pPlayer)
 	return false;
 }
 
+int CInventoryItem::GetItemPrio(void) const
+{
+	return ((m_pData && (m_pData->iType == TYPE_OBJECTIVE)) ? ITEM_PRIORITY_OBJECTIVE : ITEM_PRIORITY_GENERIC);
+}
+
 void CInventoryItem::FireGameEvent(IGameEvent *event)
 {
 	const char *type = event->GetName();

@@ -39,10 +39,7 @@ bool IsAllowedToSpawn(CBaseEntity *pEntity, float distance, float zDiff, bool bC
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-		if (!pClient)
-			continue;
-
-		if ((pClient->Classify() != CLASS_PLAYER) || !pClient->IsAlive() || pClient->IsObserver())
+		if (!pClient || (pClient->Classify() != CLASS_PLAYER) || !pClient->IsAlive() || pClient->IsObserver())
 			continue;
 
 		if (pEntity->GetLocalOrigin().DistTo(pClient->GetLocalOrigin()) > distance)
@@ -248,7 +245,8 @@ void CZombieVolume::SpawnWave()
 		Vector(random->RandomFloat(vecBoundsMins.x, vecBoundsMaxs.x), random->RandomFloat(vecBoundsMins.y, vecBoundsMaxs.y), 0);
 
 	trace_t tr;
-	UTIL_TraceLine(newPos, newPos + vecDown * MAX_TRACE_LENGTH, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NPC_ZOMBIE, &tr);
+	CTraceFilterWorldOnly worldFilter;
+	UTIL_TraceLine(newPos, newPos + vecDown * MAX_TRACE_LENGTH, MASK_SOLID_BRUSHONLY, &worldFilter, &tr);
 	newPos.z = ceil(tr.endpos.z + 2.0f);
 
 	TraceZombieBBox(newPos, newPos, MASK_NPCSOLID, COLLISION_GROUP_NPC_ZOMBIE, tr, this);

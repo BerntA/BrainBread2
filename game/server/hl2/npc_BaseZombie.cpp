@@ -276,7 +276,7 @@ int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flFullDist)
 	if (flHeightDiff < 0.0f) // He is under me? there is no way...
 		return COND_TOO_FAR_TO_ATTACK;
 
-	const bool bIsEnemyVisible = FVisible(vEnemyEyes);
+	const bool bIsEnemyVisible = FVisible(pEnemy);
 	flHeightDiff = (vEnemyPos.z - vFeetPos.z);
 	if ((flHeightDiff > 0.0f) && (flHeightDiff > (flNPCHeight + flRange)) && !bIsEnemyVisible && !bIsEnemyOnTop) // Enemy is above me! How far can we reach?	
 		return COND_TOO_FAR_TO_ATTACK;

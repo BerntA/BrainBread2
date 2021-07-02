@@ -1260,13 +1260,6 @@ void C_BasePlayer::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 		}
 	}
 
-	if ( target && !target->IsPlayer() && target->IsNextBot() )
-	{
-		// if this is a boss, we want to be back a little further so we can see more of it
-		flMaxDistance *= 2.5f;
-		m_flObserverChaseDistance = flMaxDistance;
-	}
-
 	m_flObserverChaseDistance = clamp( m_flObserverChaseDistance, flMinDistance, flMaxDistance );
 	
 	AngleVectors( viewangles, &forward );

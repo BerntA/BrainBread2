@@ -28,8 +28,9 @@ public:
 	void	Spawn(void);
 	void	Precache(void);
 	bool	CreateVPhysics(void);
+	int		GetItemPrio(void) const { return ITEM_PRIORITY_GENERIC; }
 
-	virtual void HandleAnimEvent(animevent_t *pEvent);
+	void	HandleAnimEvent(animevent_t *pEvent);
 
 	//FIXME: May not want to have this used in a radius
 	int		ObjectCaps(void) { return (BaseClass::ObjectCaps() | (FCAP_IMPULSE_USE | FCAP_USE_IN_RADIUS)); };
@@ -38,7 +39,7 @@ public:
 	void	InputKill(inputdata_t &data);
 	void	CrateThink(void);
 
-	virtual int OnTakeDamage(const CTakeDamageInfo &info);
+	int		OnTakeDamage(const CTakeDamageInfo &info);
 
 protected:
 

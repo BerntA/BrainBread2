@@ -821,6 +821,13 @@ enum EntityObstructionType
 	ENTITY_OBSTRUCTION_NPC_OBSTACLE,
 };
 
+enum ItemPriorityType
+{
+	ITEM_PRIORITY_NO = 0,
+	ITEM_PRIORITY_GENERIC,
+	ITEM_PRIORITY_OBJECTIVE,
+};
+
 #define DEFAULT_PLAYER_MODEL(team) ( ( team == TEAM_DECEASED ) ? ( "models/characters/player/marine_zombie.mdl" ) : ( "models/characters/player/marine.mdl" ) )
 
 #endif // SHAREDDEFS_H

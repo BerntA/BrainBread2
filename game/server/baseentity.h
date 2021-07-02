@@ -835,15 +835,12 @@ public:
 	virtual	bool	IsPlayer( void ) const { return false; }
 	virtual bool	IsNetClient( void ) const { return false; }
 	virtual bool	IsTemplate( void ) { return false; }
-	virtual bool	IsBaseObject( void ) const { return false; }
 	virtual bool	IsBaseTrain( void ) const { return false; }
 	bool			IsBSPModel() const;
 	bool			IsCombatCharacter() { return MyCombatCharacterPointer() == NULL ? false : true; }
 	bool			IsInWorld( void ) const;
-	virtual bool	IsCombatItem( void ) const { return false; }
-
+	virtual int		GetItemPrio(void) const { return ITEM_PRIORITY_NO; }
 	virtual bool	IsBaseCombatWeapon( void ) const { return false; }
-	virtual bool	IsWearable( void ) const { return false; }
 	virtual CBaseCombatWeapon *MyCombatWeaponPointer( void ) { return NULL; }
 
 	virtual int	GetObstruction(void) { return ENTITY_OBSTRUCTION_NONE; }

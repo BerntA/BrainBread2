@@ -33,6 +33,7 @@ public:
 	virtual bool CanPickup() { return !(GetEffects() & EF_NODRAW); }
 	virtual void Spawn(void);
 	virtual void Precache();
+	virtual int GetItemPrio(void) const { return ITEM_PRIORITY_GENERIC; }
 
 	virtual unsigned int PhysicsSolidMaskForEntity(void) const;
 
