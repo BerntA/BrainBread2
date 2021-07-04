@@ -178,6 +178,7 @@ public:
 
 	// Read in the data from the prop data file
 	void ParsePropDataFile( void );
+	KeyValues *LookupPropData(const char *key);
 
 	// Parse a keyvalues section into the prop
 	int ParsePropFromKV( CBaseEntity *pProp, KeyValues *pSection, KeyValues *pInteractionSection );
@@ -189,7 +190,7 @@ public:
 	const char *GetRandomChunkModel( const char *pszBreakableSection, int iMaxSize = -1 );
 
 protected:
-	KeyValues	*m_pKVPropData;
+	CUtlVector<KeyValues*> m_pPropData;
 	bool		m_bPropDataLoaded;
 
 	struct propdata_breakablechunk_t

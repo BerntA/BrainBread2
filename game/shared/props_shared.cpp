@@ -184,7 +184,6 @@ CPropData::CPropData( void ) :
 	CAutoGameSystem( "CPropData" )
 {
 	m_bPropDataLoaded = false;
-	m_pKVPropData = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -201,11 +200,9 @@ void CPropData::LevelInitPreEntity( void )
 //-----------------------------------------------------------------------------
 void CPropData::LevelShutdownPostEntity( void )
 {
-	if ( m_pKVPropData )
-	{
-		m_pKVPropData->deleteThis();
-		m_pKVPropData = NULL;
-	}
+	for (int i = 0; i < m_pPropData.Count(); i++)
+		m_pPropData[i]->deleteThis();
+	m_pPropData.RemoveAll();
 }
 
 //-----------------------------------------------------------------------------
@@ -213,44 +210,77 @@ void CPropData::LevelShutdownPostEntity( void )
 //-----------------------------------------------------------------------------
 void CPropData::ParsePropDataFile( void )
 {
-	m_pKVPropData = new KeyValues( "PropDatafile" );
-	if ( !m_pKVPropData->LoadFromFile( filesystem, "scripts/propdata.txt" ) )
+	char filePath[MAX_WEAPON_STRING];
+	FileFindHandle_t findHandle;
+	const char *pFilename = filesystem->FindFirstEx("data/propdata/*.txt", "MOD", &findHandle);
+	while (pFilename)
 	{
-		m_pKVPropData->deleteThis();
-		m_pKVPropData = NULL;
-		return;
+		if (!filesystem->IsDirectory(pFilename, "MOD"))
+		{
+			Q_snprintf(filePath, MAX_WEAPON_STRING, "data/propdata/%s", pFilename);
+			KeyValues *pkvPropData = new KeyValues("PropDatafile");
+			if (pkvPropData->LoadFromFile(filesystem, filePath))
+			{
+				m_pPropData.AddToTail(pkvPropData);
+				m_bPropDataLoaded = true;
+			}
+			else
+				pkvPropData->deleteThis();
+		}
+		pFilename = filesystem->FindNext(findHandle);
 	}
+	filesystem->FindClose(findHandle);
 
-	m_bPropDataLoaded = true;
+	if (!m_bPropDataLoaded)
+		return;
 
 	// Now try and parse out the breakable section
-	KeyValues *pBreakableSection = m_pKVPropData->FindKey( "BreakableModels" );
-	if ( pBreakableSection )
+	for (int i = 0; i < m_pPropData.Count(); i++)
 	{
-		KeyValues *pChunkSection = pBreakableSection->GetFirstSubKey();
-		while ( pChunkSection )
+		KeyValues *pkvBase = m_pPropData[i];
+		Assert(pkvBase != NULL);
+		KeyValues *pBreakableSection = pkvBase->FindKey("BreakableModels");
+		if (pBreakableSection)
 		{
-			// Create a new chunk section and add it to our list
-			int index = m_BreakableChunks.AddToTail();
-			propdata_breakablechunk_t *pBreakableChunk = &m_BreakableChunks[index];
-			pBreakableChunk->iszChunkType = AllocPooledString( pChunkSection->GetName() );
-
-			// Read in all the model names
-			KeyValues *pModelName = pChunkSection->GetFirstSubKey();
-			while ( pModelName )
+			KeyValues *pChunkSection = pBreakableSection->GetFirstSubKey();
+			while (pChunkSection)
 			{
-				const char *pModel = pModelName->GetName();
-				string_t pooledName = AllocPooledString( pModel );
-				pBreakableChunk->iszChunkModels.AddToTail( pooledName );
-				CBaseEntity::PrecacheModel( STRING( pooledName ) );
+				// Create a new chunk section and add it to our list
+				int index = m_BreakableChunks.AddToTail();
+				propdata_breakablechunk_t *pBreakableChunk = &m_BreakableChunks[index];
+				pBreakableChunk->iszChunkType = AllocPooledString(pChunkSection->GetName());
 
-				pModelName = pModelName->GetNextKey();
+				// Read in all the model names
+				KeyValues *pModelName = pChunkSection->GetFirstSubKey();
+				while (pModelName)
+				{
+					const char *pModel = pModelName->GetName();
+					string_t pooledName = AllocPooledString(pModel);
+					pBreakableChunk->iszChunkModels.AddToTail(pooledName);
+					CBaseEntity::PrecacheModel(STRING(pooledName));
+
+					pModelName = pModelName->GetNextKey();
+				}
+
+				pChunkSection = pChunkSection->GetNextKey();
 			}
-
-			pChunkSection = pChunkSection->GetNextKey();
 		}
 	}
 }	
+
+KeyValues *CPropData::LookupPropData(const char *key)
+{
+	if (key && key[0])
+	{
+		for (int i = 0; i < m_pPropData.Count(); i++)
+		{
+			KeyValues *pkv = m_pPropData[i]->FindKey(key);
+			if (pkv)
+				return pkv;
+		}
+	}
+	return NULL;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Parse a keyvalues section into the prop
@@ -421,38 +451,32 @@ int CPropData::ParsePropFromKV( CBaseEntity *pProp, KeyValues *pSection, KeyValu
 //-----------------------------------------------------------------------------
 // Purpose: Fill out a prop's with base data parsed from the propdata file
 //-----------------------------------------------------------------------------
-int CPropData::ParsePropFromBase( CBaseEntity *pProp, const char *pszPropData )
+int CPropData::ParsePropFromBase(CBaseEntity *pProp, const char *pszPropData)
 {
-	if ( !m_bPropDataLoaded )
+	if (!m_bPropDataLoaded)
 		return PARSE_FAILED_NO_DATA;
 
 	IBreakableWithPropData *pBreakableInterface = dynamic_cast<IBreakableWithPropData*>(pProp);
-	
-	if ( !pBreakableInterface )
-	{
-		return PARSE_FAILED_BAD_DATA;
-	}
 
-	if ( !m_pKVPropData )
-	{
+	if (!pBreakableInterface)
 		return PARSE_FAILED_BAD_DATA;
-	}
-	
+
+	if (m_pPropData.Count() == 0)
+		return PARSE_FAILED_BAD_DATA;
+
 	// Find the specified propdata
-	KeyValues *pSection = m_pKVPropData->FindKey( pszPropData );
-	if ( !pSection )
+	KeyValues *pSection = LookupPropData(pszPropData);
+	if (!pSection)
 	{
-		Warning("%s '%s' has a base specified as '%s', but there is no matching entry in propdata.txt.\n", pProp->GetClassname(), STRING( pProp->GetModelName() ), pszPropData );
+		Warning("%s '%s' has a base specified as '%s', but there is no matching entry in propdata.txt.\n", pProp->GetClassname(), STRING(pProp->GetModelName()), pszPropData);
 		return PARSE_FAILED_BAD_DATA;
 	}
 
 	// Store off the first base data for debugging
-	if ( pBreakableInterface->GetBasePropData() == NULL_STRING )
-	{
-		pBreakableInterface->SetBasePropData( AllocPooledString( pszPropData ) );
-	}
+	if (pBreakableInterface->GetBasePropData() == NULL_STRING)
+		pBreakableInterface->SetBasePropData(AllocPooledString(pszPropData));
 
-	return ParsePropFromKV( pProp, pSection, pSection );
+	return ParsePropFromKV(pProp, pSection, pSection);
 }
 
 //-----------------------------------------------------------------------------
