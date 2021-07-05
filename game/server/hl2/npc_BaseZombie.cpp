@@ -263,6 +263,7 @@ int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flFullDist)
 	if (!pEnemy)
 		return COND_TOO_FAR_TO_ATTACK;
 
+	const bool bIsNotFacing = (flDot < 0.7);
 	const float flRange = GetClawAttackRange();
 	const float flNPCHeight = WorldAlignSize().z;
 	float flHeightDiff = 0.0f;
@@ -282,7 +283,7 @@ int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flFullDist)
 		return COND_TOO_FAR_TO_ATTACK;
 
 	if (bIsEnemyOnTop || (bIsEnemyVisible && (flDist <= flRange)))
-		return ((flDot < 0.7) ? COND_NOT_FACING_ATTACK : COND_CAN_MELEE_ATTACK1);
+		return (bIsNotFacing ? COND_NOT_FACING_ATTACK : COND_CAN_MELEE_ATTACK1);
 
 	Vector vStomachPos = WorldSpaceCenter();
 	Vector vEyePos = vFeetPos + Vector(0.0f, 0.0f, (flNPCHeight - 12.0f));
@@ -295,16 +296,16 @@ int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flFullDist)
 
 	AI_TraceHull(vEyePos, vEyePos + forward * flRange, -ZOMBIE_BBOX, ZOMBIE_BBOX, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr);
 	if (IsAbleToHitEnemy(this, pEnemy, tr, flDist)) // Check if we're able to, or have the right to try and attack!
-		return ((flDot < 0.7) ? COND_NOT_FACING_ATTACK : COND_CAN_MELEE_ATTACK1);
+		return (bIsNotFacing ? COND_NOT_FACING_ATTACK : COND_CAN_MELEE_ATTACK1);
 
 	AI_TraceHull(vStomachPos, vStomachPos + forward * flRange, -ZOMBIE_BBOX, ZOMBIE_BBOX, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr);
 	if (IsAbleToHitEnemy(this, pEnemy, tr, flDist)) // Check if we're able to, or have the right to try and attack!
-		return ((flDot < 0.7) ? COND_NOT_FACING_ATTACK : COND_CAN_MELEE_ATTACK1);
+		return (bIsNotFacing ? COND_NOT_FACING_ATTACK : COND_CAN_MELEE_ATTACK1);
 
 	vFeetPos.z += 6.0f;
 	AI_TraceHull(vFeetPos, vFeetPos + forward * flRange, -ZOMBIE_BBOX, ZOMBIE_BBOX, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr);
 	if (IsAbleToHitEnemy(this, pEnemy, tr, flDist)) // Check if we're able to, or have the right to try and attack!
-		return ((flDot < 0.7) ? COND_NOT_FACING_ATTACK : COND_CAN_MELEE_ATTACK1);
+		return (bIsNotFacing ? COND_NOT_FACING_ATTACK : COND_CAN_MELEE_ATTACK1);
 
 	return COND_TOO_FAR_TO_ATTACK;
 }
@@ -495,23 +496,27 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack(float flDist, int iDamage, QAngle &qaVi
 	{
 		// LoS check, kinda redundant, similar to attack conditions check, we need this to prevent runners from wall hacking... if you trigger this attack in a run anim etc..
 		CBaseEntity *pEnemy = GetEnemy();
-		const Vector vEyePos = EyePosition();
-		const Vector &vStomachPos = WorldSpaceCenter();
-		const Vector vFeetPos = GetAbsOrigin() + Vector(0.0f, 0.0f, 6.0f);
-		const float flRange = GetClawAttackRange();
+		bool bEnemyAlreadyInSight = (pEnemy && HasCondition(COND_CAN_MELEE_ATTACK1));
+		if (bEnemyAlreadyInSight == false)
+		{
+			const Vector vEyePos = EyePosition();
+			const Vector &vStomachPos = WorldSpaceCenter();
+			const Vector vFeetPos = GetAbsOrigin() + Vector(0.0f, 0.0f, 6.0f);
+			const float flRange = GetClawAttackRange();
 
-		Vector forward;
-		GetVectors(&forward, NULL, NULL);
+			Vector forward;
+			GetVectors(&forward, NULL, NULL);
 
-		CTraceFilterNav traceFilter(this, false, this, (GetCollisionGroup() == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER) ? COLLISION_GROUP_NPC_ZOMBIE : GetCollisionGroup());
-		trace_t	tr1, tr2, tr3;
+			CTraceFilterNav traceFilter(this, false, this, (GetCollisionGroup() == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER) ? COLLISION_GROUP_NPC_ZOMBIE : GetCollisionGroup());
+			trace_t	tr1, tr2, tr3;
 
-		AI_TraceHull(vEyePos, vEyePos + forward * flRange, -ZOMBIE_BBOX, ZOMBIE_BBOX, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr1);
-		AI_TraceHull(vStomachPos, vStomachPos + forward * flRange, -ZOMBIE_BBOX, ZOMBIE_BBOX, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr2);
-		AI_TraceHull(vFeetPos, vFeetPos + forward * flRange, -ZOMBIE_BBOX, ZOMBIE_BBOX, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr3);
+			AI_TraceHull(vEyePos, vEyePos + forward * flRange, -ZOMBIE_BBOX, ZOMBIE_BBOX, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr1);
+			AI_TraceHull(vStomachPos, vStomachPos + forward * flRange, -ZOMBIE_BBOX, ZOMBIE_BBOX, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr2);
+			AI_TraceHull(vFeetPos, vFeetPos + forward * flRange, -ZOMBIE_BBOX, ZOMBIE_BBOX, MASK_BLOCKLOS_AND_NPCS, &traceFilter, &tr3);
 
-		if (!CanAttackEntity(this, pEnemy, tr1) && !CanAttackEntity(this, pEnemy, tr2) && !CanAttackEntity(this, pEnemy, tr3))
-			return NULL;
+			if (!CanAttackEntity(this, pEnemy, tr1) && !CanAttackEntity(this, pEnemy, tr2) && !CanAttackEntity(this, pEnemy, tr3))
+				return NULL;
+		}
 
 		//
 		// Trace out a cubic section of our hull and see what we hit.
@@ -524,7 +529,7 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack(float flDist, int iDamage, QAngle &qaVi
 		vecMaxs.z = height;
 
 		// Try to hit them with a trace
-		pHurt = CheckTraceHullAttack(flDist, vecMins, vecMaxs, iDamage, DMG_ZOMBIE);
+		pHurt = CheckTraceHullAttack(flDist, vecMins, vecMaxs, iDamage, DMG_ZOMBIE, 1.0f, false, bEnemyAlreadyInSight);
 	}
 
 	if (pHurt)
@@ -1218,16 +1223,6 @@ Vector CNPC_BaseZombie::BodyTarget( const Vector &posSrc, bool bNoisy )
 	}
 
 	return BaseClass::BodyTarget( posSrc, bNoisy );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pEnemy - 
-//			&chasePosition - 
-//-----------------------------------------------------------------------------
-void CNPC_BaseZombie::TranslateNavGoal( CBaseEntity *pEnemy, Vector &chasePosition )
-{
-	BaseClass::TranslateNavGoal(pEnemy, chasePosition);
 }
 
 bool CNPC_BaseZombie::OverrideShouldAddToLookList(CBaseEntity *pEntity)

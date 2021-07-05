@@ -2165,8 +2165,8 @@ bool CHL2MPRules::ShouldCollide(int collisionGroup0, int collisionGroup1)
 		return false;
 
 	// Zombo Bosses won't be blocked by human NPCs.
-	if (collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_BOSS && ((collisionGroup1 == COLLISION_GROUP_NPC_MERCENARY) || (collisionGroup1 == COLLISION_GROUP_NPC_MILITARY)))
-		return false;
+	//if (collisionGroup0 == COLLISION_GROUP_NPC_ZOMBIE_BOSS && ((collisionGroup1 == COLLISION_GROUP_NPC_MERCENARY) || (collisionGroup1 == COLLISION_GROUP_NPC_MILITARY)))
+	//	return false;
 
 	// Humans don't care about crawlers...
 	if (((collisionGroup0 == COLLISION_GROUP_NPC_MERCENARY) || (collisionGroup0 == COLLISION_GROUP_PLAYER) || (collisionGroup0 == COLLISION_GROUP_NPC_MILITARY)) && (collisionGroup1 == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER))
@@ -2523,7 +2523,6 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSEYE, CLASS_PLAYER_ZOMB, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSEYE, CLASS_BULLSEYE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSEYE, CLASS_COMBINE, D_NU, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSEYE, CLASS_CONSCRIPT, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSEYE, CLASS_FLARE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSEYE, CLASS_MILITARY, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSEYE, CLASS_MISSILE, D_NU, 0);
@@ -2541,7 +2540,6 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE, CLASS_PLAYER_INFECTED, D_LI, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE, CLASS_BULLSEYE, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE, CLASS_COMBINE, D_LI, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE, CLASS_CONSCRIPT, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE, CLASS_FLARE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE, CLASS_MILITARY, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE, CLASS_MISSILE, D_NU, 0);
@@ -2549,24 +2547,6 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE, CLASS_ZOMBIE_BOSS, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE, CLASS_PLAYER_ZOMB, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE, CLASS_EARTH_FAUNA, D_NU, 0);
-
-	// ------------------------------------------------------------
-	//	> CLASS_CONSCRIPT
-	// ------------------------------------------------------------
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT, CLASS_NONE, D_NU, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT, CLASS_MILITARY_VEHICLE, D_NU, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT, CLASS_PLAYER, D_NU, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT, CLASS_PLAYER_INFECTED, D_NU, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT, CLASS_BULLSEYE, D_NU, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT, CLASS_COMBINE, D_HT, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT, CLASS_CONSCRIPT, D_NU, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT, CLASS_FLARE, D_NU, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT, CLASS_MILITARY, D_HT, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT, CLASS_MISSILE, D_NU, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT, CLASS_ZOMBIE, D_HT, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT, CLASS_PLAYER_ZOMB, D_HT, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT, CLASS_ZOMBIE_BOSS, D_HT, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT, CLASS_EARTH_FAUNA, D_NU, 0);
 
 	// ------------------------------------------------------------
 	//	> CLASS_FLARE
@@ -2577,7 +2557,6 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_FLARE, CLASS_PLAYER_INFECTED, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_FLARE, CLASS_BULLSEYE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_FLARE, CLASS_COMBINE, D_NU, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_FLARE, CLASS_CONSCRIPT, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_FLARE, CLASS_FLARE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_FLARE, CLASS_PLAYER_ZOMB, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_FLARE, CLASS_MILITARY, D_NU, 0);
@@ -2597,7 +2576,6 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY, CLASS_PLAYER_INFECTED, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY, CLASS_BULLSEYE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY, CLASS_COMBINE, D_HT, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY, CLASS_CONSCRIPT, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY, CLASS_FLARE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY, CLASS_MILITARY, D_LI, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY, CLASS_MISSILE, D_NU, 0);
@@ -2615,7 +2593,6 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MISSILE, CLASS_PLAYER_INFECTED, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MISSILE, CLASS_BULLSEYE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MISSILE, CLASS_COMBINE, D_NU, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MISSILE, CLASS_CONSCRIPT, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MISSILE, CLASS_FLARE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MISSILE, CLASS_MILITARY, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MISSILE, CLASS_MISSILE, D_NU, 0);
@@ -2633,7 +2610,6 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_NONE, CLASS_PLAYER_INFECTED, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_NONE, CLASS_BULLSEYE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_NONE, CLASS_COMBINE, D_NU, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_NONE, CLASS_CONSCRIPT, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_NONE, CLASS_FLARE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_NONE, CLASS_MILITARY, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_NONE, CLASS_ZOMBIE, D_NU, 0);
@@ -2650,7 +2626,6 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER, CLASS_PLAYER_INFECTED, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER, CLASS_BULLSEYE, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER, CLASS_COMBINE, D_LI, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER, CLASS_CONSCRIPT, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER, CLASS_FLARE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER, CLASS_MILITARY, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER, CLASS_MISSILE, D_NU, 0);
@@ -2668,7 +2643,6 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE, CLASS_PLAYER_INFECTED, D_LI, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE, CLASS_BULLSEYE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE, CLASS_COMBINE, D_HT, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE, CLASS_CONSCRIPT, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE, CLASS_FLARE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE, CLASS_MILITARY, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE, CLASS_MISSILE, D_NU, 0);
@@ -2680,13 +2654,12 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	//	> CLASS_ZOMBIE_BOSS
 	// ------------------------------------------------------------	
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_NONE, D_NU, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_MILITARY_VEHICLE, D_HT, 1);
+	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_MILITARY_VEHICLE, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_PLAYER, D_HT, 2);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_PLAYER_ZOMB, D_LI, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_PLAYER_INFECTED, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_BULLSEYE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_COMBINE, D_HT, 1);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_CONSCRIPT, D_HT, 1);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_FLARE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_MILITARY, D_HT, 1);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE_BOSS, CLASS_MISSILE, D_NU, 0);
@@ -2704,7 +2677,6 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ZOMB, CLASS_PLAYER_INFECTED, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ZOMB, CLASS_BULLSEYE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ZOMB, CLASS_COMBINE, D_HT, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ZOMB, CLASS_CONSCRIPT, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ZOMB, CLASS_FLARE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ZOMB, CLASS_MILITARY, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ZOMB, CLASS_MISSILE, D_NU, 0);
@@ -2722,7 +2694,6 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY_VEHICLE, CLASS_PLAYER_ZOMB, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY_VEHICLE, CLASS_BULLSEYE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY_VEHICLE, CLASS_COMBINE, D_LI, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY_VEHICLE, CLASS_CONSCRIPT, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY_VEHICLE, CLASS_FLARE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY_VEHICLE, CLASS_MILITARY, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY_VEHICLE, CLASS_MISSILE, D_NU, 0);
@@ -2740,7 +2711,6 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_INFECTED, CLASS_PLAYER_ZOMB, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_INFECTED, CLASS_BULLSEYE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_INFECTED, CLASS_COMBINE, D_LI, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_INFECTED, CLASS_CONSCRIPT, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_INFECTED, CLASS_FLARE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_INFECTED, CLASS_MILITARY, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_INFECTED, CLASS_MISSILE, D_NU, 0);
@@ -2759,7 +2729,6 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA, CLASS_PLAYER_INFECTED, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA, CLASS_BULLSEYE, D_NU, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA, CLASS_COMBINE, D_HT, 0);
-	CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA, CLASS_CONSCRIPT, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA, CLASS_FLARE, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA, CLASS_MILITARY, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA, CLASS_MISSILE, D_HT, 0);

@@ -518,12 +518,18 @@ void CBaseCombatCharacter::Weapon_FrameUpdate( void )
 // Input   :
 // Output  :
 //------------------------------------------------------------------------------
-CBaseEntity *CBaseCombatCharacter::CheckTraceHullAttack(float flDist, const Vector &mins, const Vector &maxs, int iDamage, int iDmgType, float forceScale, bool bDamageAnyNPC)
+CBaseEntity *CBaseCombatCharacter::CheckTraceHullAttack(float flDist, const Vector &mins, const Vector &maxs, int iDamage, int iDmgType, float forceScale, bool bDamageAnyNPC, bool bDirect)
 {
 	Vector forward;
 	Vector vStart = GetAbsOrigin();
 	vStart.z += (WorldAlignSize().z - maxs.z) + 4.0f;
-	AngleVectors(GetAbsAngles(), &forward);
+	if (bDirect && GetEnemy())
+	{
+		forward = (GetEnemy()->WorldSpaceCenter() - WorldSpaceCenter());
+		VectorNormalize(forward);
+	}
+	else
+		AngleVectors(GetAbsAngles(), &forward);
 	Vector vEnd = vStart + (forward * flDist);
 	return CheckTraceHullAttack(vStart, vEnd, mins, maxs, iDamage, iDmgType, forceScale, bDamageAnyNPC);
 }

@@ -5780,46 +5780,48 @@ void CAI_BaseNPC::SetIdealActivity( Activity NewActivity )
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::AdvanceToIdealActivity(void)
 {
-	// If there is a transition sequence between the current sequence and the ideal sequence...
-	int nNextSequence = FindTransitionSequence(GetSequence(), m_nIdealSequence, NULL);
-	if (nNextSequence != -1)
-	{
-		// We found a transition sequence or possibly went straight to
-		// the ideal sequence.
-		if (nNextSequence != m_nIdealSequence)
-		{
-//			DevMsg("%s: TRANSITION %s -> %s -> %s\n", GetClassname(), GetSequenceName(GetSequence()), GetSequenceName(nNextSequence), GetSequenceName(m_nIdealSequence));
+	SetActivity(m_IdealActivity); // BB2 has no transition crap even tho some anims might use node standing, crouching, etc!
 
-			Activity eWeaponActivity = ACT_TRANSITION;
-			Activity eTranslatedActivity = ACT_TRANSITION;
-
-			// Figure out if the transition sequence has an associated activity that
-			// we can use for our weapon. Do activity translation also.
-			Activity eTransitionActivity = GetSequenceActivity(nNextSequence);
-			if (eTransitionActivity != ACT_INVALID)
-			{
-				int nDiscard;
-				ResolveActivityToSequence(eTransitionActivity, nDiscard, eTranslatedActivity, eWeaponActivity);
-			}
-
-			// Set activity and sequence to the transition stuff. Set the activity to ACT_TRANSITION
-			// so we know we're in a transition.
-			SetActivityAndSequence(ACT_TRANSITION, nNextSequence, eTranslatedActivity, eWeaponActivity);
-		}
-		else
-		{
-			//DevMsg("%s: IDEAL %s -> %s\n", GetClassname(), GetSequenceName(GetSequence()), GetSequenceName(m_nIdealSequence));
-
-			// Set activity and sequence to the ideal stuff that was set up in MaintainActivity.
-			SetActivityAndSequence(m_IdealActivity, m_nIdealSequence, m_IdealTranslatedActivity, m_IdealWeaponActivity);
-		}
-	}
-	// Else go straight there to the ideal activity.
-	else
-	{
-		//DevMsg("%s: Unable to get from sequence %s to %s!\n", GetClassname(), GetSequenceName(GetSequence()), GetSequenceName(m_nIdealSequence));
-		SetActivity(m_IdealActivity);
-	}
+//	// If there is a transition sequence between the current sequence and the ideal sequence...
+//	int nNextSequence = FindTransitionSequence(GetSequence(), m_nIdealSequence, NULL);
+//	if (nNextSequence != -1)
+//	{
+//		// We found a transition sequence or possibly went straight to
+//		// the ideal sequence.
+//		if (nNextSequence != m_nIdealSequence)
+//		{
+////			DevMsg("%s: TRANSITION %s -> %s -> %s\n", GetClassname(), GetSequenceName(GetSequence()), GetSequenceName(nNextSequence), GetSequenceName(m_nIdealSequence));
+//
+//			Activity eWeaponActivity = ACT_TRANSITION;
+//			Activity eTranslatedActivity = ACT_TRANSITION;
+//
+//			// Figure out if the transition sequence has an associated activity that
+//			// we can use for our weapon. Do activity translation also.
+//			Activity eTransitionActivity = GetSequenceActivity(nNextSequence);
+//			if (eTransitionActivity != ACT_INVALID)
+//			{
+//				int nDiscard;
+//				ResolveActivityToSequence(eTransitionActivity, nDiscard, eTranslatedActivity, eWeaponActivity);
+//			}
+//
+//			// Set activity and sequence to the transition stuff. Set the activity to ACT_TRANSITION
+//			// so we know we're in a transition.
+//			SetActivityAndSequence(ACT_TRANSITION, nNextSequence, eTranslatedActivity, eWeaponActivity);
+//		}
+//		else
+//		{
+//			//DevMsg("%s: IDEAL %s -> %s\n", GetClassname(), GetSequenceName(GetSequence()), GetSequenceName(m_nIdealSequence));
+//
+//			// Set activity and sequence to the ideal stuff that was set up in MaintainActivity.
+//			SetActivityAndSequence(m_IdealActivity, m_nIdealSequence, m_IdealTranslatedActivity, m_IdealWeaponActivity);
+//		}
+//	}
+//	// Else go straight there to the ideal activity.
+//	else
+//	{
+//		//DevMsg("%s: Unable to get from sequence %s to %s!\n", GetClassname(), GetSequenceName(GetSequence()), GetSequenceName(m_nIdealSequence));
+//		SetActivity(m_IdealActivity);
+//	}
 }
 
 
@@ -10017,6 +10019,7 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 	m_hTargetSchedEntity = NULL;
 	m_actTargetMovement = ACT_RUN;
 	m_schedInterruptability = Interruptability_t::GENERAL_INTERRUPTABILITY;
+	m_bIsPathCornerRoute = false;
 
 #ifdef _DEBUG
 	// necessary since in debug, we initialize vectors to NAN for debugging

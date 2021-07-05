@@ -2487,13 +2487,13 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 	{
 		CBaseEntity *pTargetOverride = m_hTargetSchedEntity.Get();
 		if (pTargetOverride == NULL)
-		{
 			TaskFail(FAIL_NO_TARGET);
-		}
 		else
 		{
 			AI_NavGoal_t goal(pTargetOverride->GetAbsOrigin());
 			goal.pTarget = pTargetOverride;
+			goal.type = (m_bIsPathCornerRoute ? GOALTYPE_PATHCORNER : GOALTYPE_LOCATION);
+			TranslateNavGoal(pTargetOverride, goal.dest);
 			GetNavigator()->SetGoal(goal);
 			GetNavigator()->SetMovementActivity(m_actTargetMovement);
 			Forget(bits_MEMORY_INCOVER);

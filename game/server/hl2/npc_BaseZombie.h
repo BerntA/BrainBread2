@@ -162,7 +162,6 @@ public:
 	virtual bool ShouldPlayIdleSound(void) { return false; }
 
 	virtual Vector BodyTarget(const Vector &posSrc, bool bNoisy);
-	virtual void TranslateNavGoal(CBaseEntity *pEnemy, Vector &chasePosition);
 
 	virtual	bool		AllowedToIgnite(void) { return true; }
 	virtual bool		OverrideShouldAddToLookList(CBaseEntity *pEntity);

@@ -3178,7 +3178,10 @@ bool CAI_Navigator::DoFindPathToPos(void)
 CBaseEntity *CAI_Navigator::GetNextPathcorner(CBaseEntity *pPathCorner)
 {
 	Assert(pPathCorner);
-	return (pPathCorner ? pPathCorner->GetNextTarget() : NULL);
+	CBaseEntity *pNext = (pPathCorner ? pPathCorner->GetNextTarget() : NULL);
+	if (pNext)
+		GetOuter()->SetScheduleTarget(pNext);
+	return pNext;
 }
 
 //-----------------------------------------------------------------------------

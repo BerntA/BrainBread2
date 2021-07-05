@@ -967,8 +967,11 @@ protected:
 	EHANDLE m_hTargetSchedEntity;
 	Activity m_actTargetMovement;
 	Interruptability_t m_schedInterruptability;
+	bool m_bIsPathCornerRoute;
 
 public:
+	void SetScheduleTarget(CBaseEntity *pEntity) { m_hTargetSchedEntity = pEntity; } // Vital target.
+
 	//-----------------------------------------------------
 	//
 	// Capabilities report (from CBaseCombatCharacter)

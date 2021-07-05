@@ -31,7 +31,7 @@ int CAI_BaseNPC::SelectHighPrioSchedule()
 
 	const Vector &vTargetPos = pTargetOverride->GetAbsOrigin();
 	const float flDist = (vTargetPos - WorldSpaceCenter()).Length();
-	if ((flDist <= 70.0f) && CBaseCombatCharacter::FVisible(vTargetPos)) // Can we see the target, and are we close enuff?	
+	if ((flDist <= 72.0f) && CBaseCombatCharacter::FVisible(vTargetPos)) // Can we see the target, and are we close enuff?	
 	{
 		m_hTargetSchedEntity = NULL;
 		return SCHED_NONE;
@@ -44,6 +44,7 @@ bool CAI_BaseNPC::ScheduledMoveToGoalEntity(int scheduleType, CBaseEntity *pGoal
 {
 	m_hTargetSchedEntity = pGoalEntity;
 	m_actTargetMovement = movementActivity;
+	m_bIsPathCornerRoute = false;
 
 	if (m_NPCState == NPC_STATE_NONE)
 	{
@@ -59,7 +60,6 @@ bool CAI_BaseNPC::ScheduledMoveToGoalEntity(int scheduleType, CBaseEntity *pGoal
 	// movement system instead of when they are specified.
 	AI_NavGoal_t goal(pGoalEntity->GetAbsOrigin(), movementActivity, AIN_DEF_TOLERANCE, AIN_YAW_TO_DEST);
 	TranslateNavGoal(pGoalEntity, goal.dest);
-
 	return GetNavigator()->SetGoal(goal);
 }
 
@@ -67,6 +67,10 @@ bool CAI_BaseNPC::ScheduledMoveToGoalEntity(int scheduleType, CBaseEntity *pGoal
 //-----------------------------------------------------------------------------
 bool CAI_BaseNPC::ScheduledFollowPath( int scheduleType, CBaseEntity *pPathStart, Activity movementActivity )
 {
+	m_hTargetSchedEntity = pPathStart;
+	m_actTargetMovement = movementActivity;
+	m_bIsPathCornerRoute = true;
+
 	if ( m_NPCState == NPC_STATE_NONE )
 	{
 		// More than likely being grabbed before first think. Set ideal state to prevent schedule stomp
@@ -74,14 +78,11 @@ bool CAI_BaseNPC::ScheduledFollowPath( int scheduleType, CBaseEntity *pPathStart
 	}
 
 	SetSchedule( scheduleType );
-
 	SetGoalEnt( pPathStart );
 
 	// HACKHACK: Call through TranslateNavGoal to fixup this goal position
 	AI_NavGoal_t goal(GOALTYPE_PATHCORNER, pPathStart->GetLocalOrigin(), movementActivity, AIN_DEF_TOLERANCE, AIN_YAW_TO_DEST);
-
 	TranslateNavGoal( pPathStart, goal.dest );
-
 	return GetNavigator()->SetGoal( goal );
 }
 
