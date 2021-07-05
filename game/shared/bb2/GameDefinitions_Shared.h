@@ -423,6 +423,7 @@ public:
 
 	// Player Model Data:
 #ifdef CLIENT_DLL
+	void ParseCharacterFile(const char *file);
 	const DataPlayerItem_Survivor_Shared_t *GetSurvivorDataForIndex(int index);
 	const DataPlayerItem_Survivor_Shared_t *GetSurvivorDataForIndex(const char *name, bool bNoDefault = false);
 	CUtlVector<DataPlayerItem_Survivor_Shared_t> &GetSurvivorDataList(void) { return pszPlayerSurvivorData; }
@@ -444,6 +445,7 @@ public:
 
 	// Sound Data
 #ifdef CLIENT_DLL
+	void ParseSoundsetFile(const char *file);
 	const char *GetSoundPrefix(int iType, int index, const char *survivor = "survivor1");
 	int GetConVarValueForEntitySoundType(int iType);
 	const char *GetEntityNameFromEntitySoundType(int iType);

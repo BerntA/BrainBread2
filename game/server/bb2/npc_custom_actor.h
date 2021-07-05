@@ -24,6 +24,7 @@ public:
 	Class_T 		Classify();
 	bool            GetGender() { return m_bGender; }
 	bool            UsesNavMesh(void) { return true; }
+	int				SelectSchedule(void);
 
 	Activity		NPC_TranslateActivity(Activity eNewActivity);
 	void 			HandleAnimEvent(animevent_t *pEvent);

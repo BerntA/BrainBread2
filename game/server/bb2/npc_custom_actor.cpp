@@ -149,6 +149,15 @@ Class_T	CNPC_CustomActor::Classify()
 	return (m_bIsAlly ? CLASS_COMBINE : CLASS_MILITARY);
 }
 
+int CNPC_CustomActor::SelectSchedule(void)
+{
+	int schedHighPrio = SelectHighPrioSchedule();
+	if (schedHighPrio != SCHED_NONE)
+		return schedHighPrio;
+
+	return BaseClass::SelectSchedule();
+}
+
 void CNPC_CustomActor::PlaySound(const char *sound, float eventtime)
 {
 	char pchSoundScript[32];

@@ -23,26 +23,44 @@
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-bool CAI_BaseNPC::ScheduledMoveToGoalEntity( int scheduleType, CBaseEntity *pGoalEntity, Activity movementActivity )
+int CAI_BaseNPC::SelectHighPrioSchedule()
 {
-	if ( m_NPCState == NPC_STATE_NONE )
+	CBaseEntity *pTargetOverride = m_hTargetSchedEntity.Get();
+	if (!IsAlive() || (m_schedInterruptability < Interruptability_t::DEATH_INTERRUPTABILITY) || !pTargetOverride)
+		return SCHED_NONE;
+
+	const Vector &vTargetPos = pTargetOverride->GetAbsOrigin();
+	const float flDist = (vTargetPos - WorldSpaceCenter()).Length();
+	if ((flDist <= 70.0f) && CBaseCombatCharacter::FVisible(vTargetPos)) // Can we see the target, and are we close enuff?	
+	{
+		m_hTargetSchedEntity = NULL;
+		return SCHED_NONE;
+	}
+
+	return SCHED_MOVE_TO_TARGET_VITAL;
+}
+
+bool CAI_BaseNPC::ScheduledMoveToGoalEntity(int scheduleType, CBaseEntity *pGoalEntity, Activity movementActivity)
+{
+	m_hTargetSchedEntity = pGoalEntity;
+	m_actTargetMovement = movementActivity;
+
+	if (m_NPCState == NPC_STATE_NONE)
 	{
 		// More than likely being grabbed before first think. Set ideal state to prevent schedule stomp
 		m_NPCState = m_IdealNPCState;
 	}
 
-	SetSchedule( scheduleType );
-
-	SetGoalEnt( pGoalEntity );
+	SetSchedule(scheduleType);
+	SetGoalEnt(pGoalEntity);
 
 	// HACKHACK: Call through TranslateNavGoal to fixup this goal position
 	// UNDONE: Remove this and have NPCs that need this functionality fix up paths in the 
 	// movement system instead of when they are specified.
 	AI_NavGoal_t goal(pGoalEntity->GetAbsOrigin(), movementActivity, AIN_DEF_TOLERANCE, AIN_YAW_TO_DEST);
+	TranslateNavGoal(pGoalEntity, goal.dest);
 
-	TranslateNavGoal( pGoalEntity, goal.dest );
-	
-	return GetNavigator()->SetGoal( goal );
+	return GetNavigator()->SetGoal(goal);
 }
 
 //-----------------------------------------------------------------------------

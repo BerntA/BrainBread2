@@ -606,35 +606,18 @@ bool CGameDefinitionsShared::LoadData(void)
 		Warning("Failed to parse: data/game/inventory_items!\n");
 
 #ifdef CLIENT_DLL
+	ParseSoundsetFile("data/soundsets/default.txt"); // Load default soundsets first!
+
 	char filePath[MAX_WEAPON_STRING];
 	FileFindHandle_t findHandle;
 	const char *pFilename = filesystem->FindFirstEx("data/soundsets/*.txt", "MOD", &findHandle);
 	while (pFilename)
 	{
-		Q_snprintf(filePath, MAX_WEAPON_STRING, "data/soundsets/%s", pFilename);
-		KeyValues *soundPrefixData = new KeyValues("CustomSoundSet");
-		if (soundPrefixData->LoadFromFile(filesystem, filePath, "MOD"))
+		if (Q_strcmp(pFilename, "default.txt"))
 		{
-			for (KeyValues *sub = soundPrefixData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-			{
-				int npcType = GetEntitySoundTypeFromEntityName(sub->GetName());
-				if (npcType == BB2_SoundTypes::TYPE_UNKNOWN)
-					continue;
-
-				const char *charLink = sub->GetString("CharacterLink");
-				DataSoundPrefixItem_t item;
-				item.iType = npcType;
-				item.iID = GetNextIndexForSoundSet(npcType, charLink);
-				Q_strncpy(item.szFriendlyName, sub->GetString("Name"), MAX_MAP_NAME);
-				Q_strncpy(item.szScriptName, sub->GetString("Prefix"), MAX_MAP_NAME);
-				Q_strncpy(item.szSurvivorLink, charLink, MAX_MAP_NAME);
-				pszSoundPrefixesData.AddToTail(item);
-			}
+			Q_snprintf(filePath, MAX_WEAPON_STRING, "data/soundsets/%s", pFilename);
+			ParseSoundsetFile(filePath);
 		}
-		else
-			Warning("Failed to parse custom: %s!\n", filePath);
-
-		soundPrefixData->deleteThis();
 		pFilename = filesystem->FindNext(findHandle);
 	}
 	filesystem->FindClose(findHandle);
@@ -659,65 +642,7 @@ bool CGameDefinitionsShared::LoadData(void)
 	while (pFilename)
 	{
 		Q_snprintf(filePath, MAX_WEAPON_STRING, "data/characters/%s", pFilename);
-		KeyValues *survivorData = new KeyValues("CharacterInfo");
-		if (survivorData->LoadFromFile(filesystem, filePath, "MOD"))
-		{
-			for (KeyValues *sub = survivorData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-			{
-				DataPlayerItem_Survivor_Shared_t item;
-				Q_strncpy(item.szSurvivorName, sub->GetName(), MAX_MAP_NAME);
-				item.bGender = (sub->GetInt("gender", 1) >= 1); // TRUE = male, FALSE = female...
-
-				// Model Info
-				Q_strncpy(item.szHumanModelPath, sub->GetString("modelname"), MAX_WEAPON_STRING);
-				Q_strncpy(item.szHumanHandsPath, sub->GetString("hands"), MAX_WEAPON_STRING);
-				Q_strncpy(item.szHumanBodyPath, sub->GetString("body"), MAX_WEAPON_STRING);
-
-				Q_strncpy(item.szZombieModelPath, sub->GetString("modelname_zmb"), MAX_WEAPON_STRING);
-				Q_strncpy(item.szZombieHandsPath, sub->GetString("hands_zmb"), MAX_WEAPON_STRING);
-				Q_strncpy(item.szZombieBodyPath, sub->GetString("body_zmb"), MAX_WEAPON_STRING);
-
-				// Gib Info
-				KeyValues *pkvGibInfo = sub->FindKey("GibInfoHuman");
-				Q_strncpy(item.szHumanGibHead, pkvGibInfo ? pkvGibInfo->GetString("head") : "", MAX_WEAPON_STRING);
-				Q_strncpy(item.szHumanGibArmRight, pkvGibInfo ? pkvGibInfo->GetString("arms_right") : "", MAX_WEAPON_STRING);
-				Q_strncpy(item.szHumanGibArmLeft, pkvGibInfo ? pkvGibInfo->GetString("arms_left") : "", MAX_WEAPON_STRING);
-				Q_strncpy(item.szHumanGibLegRight, pkvGibInfo ? pkvGibInfo->GetString("legs_right") : "", MAX_WEAPON_STRING);
-				Q_strncpy(item.szHumanGibLegLeft, pkvGibInfo ? pkvGibInfo->GetString("legs_left") : "", MAX_WEAPON_STRING);
-
-				pkvGibInfo = sub->FindKey("GibInfoZombie");
-				Q_strncpy(item.szDeceasedGibHead, pkvGibInfo ? pkvGibInfo->GetString("head") : "", MAX_WEAPON_STRING);
-				Q_strncpy(item.szDeceasedGibArmRight, pkvGibInfo ? pkvGibInfo->GetString("arms_right") : "", MAX_WEAPON_STRING);
-				Q_strncpy(item.szDeceasedGibArmLeft, pkvGibInfo ? pkvGibInfo->GetString("arms_left") : "", MAX_WEAPON_STRING);
-				Q_strncpy(item.szDeceasedGibLegRight, pkvGibInfo ? pkvGibInfo->GetString("legs_right") : "", MAX_WEAPON_STRING);
-				Q_strncpy(item.szDeceasedGibLegLeft, pkvGibInfo ? pkvGibInfo->GetString("legs_left") : "", MAX_WEAPON_STRING);
-
-				Q_strncpy(item.szFriendlySurvivorName, sub->GetString("name"), MAX_MAP_NAME);
-				Q_strncpy(item.szFriendlyDescription, sub->GetString("description"), 128);
-				Q_strncpy(item.szSequence, sub->GetString("sequence"), MAX_MAP_NAME);
-
-				// Customization Info
-				KeyValues *pkvCustomizationInfo = sub->FindKey("CustomizationInfo");
-				item.iSkins = pkvCustomizationInfo ? pkvCustomizationInfo->GetInt("skins") : 0;
-				item.iSpecialHeadItems = pkvCustomizationInfo ? pkvCustomizationInfo->GetInt("extra_head") : 0;
-				item.iSpecialBodyItems = pkvCustomizationInfo ? pkvCustomizationInfo->GetInt("extra_body") : 0;
-				item.iSpecialLeftLegItems = pkvCustomizationInfo ? pkvCustomizationInfo->GetInt("extra_leg_left") : 0;
-				item.iSpecialRightLegItems = pkvCustomizationInfo ? pkvCustomizationInfo->GetInt("extra_leg_right") : 0;
-
-				// Camera Info
-				item.vecPosition = Vector(sub->GetFloat("origin_x"), sub->GetFloat("origin_y"), sub->GetFloat("origin_z"));
-				item.angAngles = QAngle(sub->GetFloat("angles_x"), sub->GetFloat("angles_y"), sub->GetFloat("angles_z"));
-
-				item.m_pClientModelPtrHuman = engine->LoadModel(item.szHumanModelPath);
-				item.m_pClientModelPtrZombie = engine->LoadModel(item.szZombieModelPath);
-
-				pszPlayerSurvivorData.AddToTail(item);
-			}
-		}
-		else
-			Warning("Failed to parse custom: %s!\n", filePath);
-
-		survivorData->deleteThis();
+		ParseCharacterFile(filePath);
 		pFilename = filesystem->FindNext(findHandle);
 	}
 	filesystem->FindClose(findHandle);
@@ -942,6 +867,68 @@ const DataPlayerItem_ZombieRageMode_t *CGameDefinitionsShared::GetPlayerZombieRa
 }
 
 #ifdef CLIENT_DLL
+void CGameDefinitionsShared::ParseCharacterFile(const char *file)
+{
+	KeyValues *survivorData = new KeyValues("CharacterInfo");
+	if (survivorData->LoadFromFile(filesystem, file, "MOD"))
+	{
+		for (KeyValues *sub = survivorData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+		{
+			DataPlayerItem_Survivor_Shared_t item;
+			Q_strncpy(item.szSurvivorName, sub->GetName(), MAX_MAP_NAME);
+			item.bGender = (sub->GetInt("gender", 1) >= 1); // TRUE = male, FALSE = female...
+
+			// Model Info
+			Q_strncpy(item.szHumanModelPath, sub->GetString("modelname"), MAX_WEAPON_STRING);
+			Q_strncpy(item.szHumanHandsPath, sub->GetString("hands"), MAX_WEAPON_STRING);
+			Q_strncpy(item.szHumanBodyPath, sub->GetString("body"), MAX_WEAPON_STRING);
+
+			Q_strncpy(item.szZombieModelPath, sub->GetString("modelname_zmb"), MAX_WEAPON_STRING);
+			Q_strncpy(item.szZombieHandsPath, sub->GetString("hands_zmb"), MAX_WEAPON_STRING);
+			Q_strncpy(item.szZombieBodyPath, sub->GetString("body_zmb"), MAX_WEAPON_STRING);
+
+			// Gib Info
+			KeyValues *pkvGibInfo = sub->FindKey("GibInfoHuman");
+			Q_strncpy(item.szHumanGibHead, pkvGibInfo ? pkvGibInfo->GetString("head") : "", MAX_WEAPON_STRING);
+			Q_strncpy(item.szHumanGibArmRight, pkvGibInfo ? pkvGibInfo->GetString("arms_right") : "", MAX_WEAPON_STRING);
+			Q_strncpy(item.szHumanGibArmLeft, pkvGibInfo ? pkvGibInfo->GetString("arms_left") : "", MAX_WEAPON_STRING);
+			Q_strncpy(item.szHumanGibLegRight, pkvGibInfo ? pkvGibInfo->GetString("legs_right") : "", MAX_WEAPON_STRING);
+			Q_strncpy(item.szHumanGibLegLeft, pkvGibInfo ? pkvGibInfo->GetString("legs_left") : "", MAX_WEAPON_STRING);
+
+			pkvGibInfo = sub->FindKey("GibInfoZombie");
+			Q_strncpy(item.szDeceasedGibHead, pkvGibInfo ? pkvGibInfo->GetString("head") : "", MAX_WEAPON_STRING);
+			Q_strncpy(item.szDeceasedGibArmRight, pkvGibInfo ? pkvGibInfo->GetString("arms_right") : "", MAX_WEAPON_STRING);
+			Q_strncpy(item.szDeceasedGibArmLeft, pkvGibInfo ? pkvGibInfo->GetString("arms_left") : "", MAX_WEAPON_STRING);
+			Q_strncpy(item.szDeceasedGibLegRight, pkvGibInfo ? pkvGibInfo->GetString("legs_right") : "", MAX_WEAPON_STRING);
+			Q_strncpy(item.szDeceasedGibLegLeft, pkvGibInfo ? pkvGibInfo->GetString("legs_left") : "", MAX_WEAPON_STRING);
+
+			Q_strncpy(item.szFriendlySurvivorName, sub->GetString("name"), MAX_MAP_NAME);
+			Q_strncpy(item.szFriendlyDescription, sub->GetString("description"), 128);
+			Q_strncpy(item.szSequence, sub->GetString("sequence"), MAX_MAP_NAME);
+
+			// Customization Info
+			KeyValues *pkvCustomizationInfo = sub->FindKey("CustomizationInfo");
+			item.iSkins = pkvCustomizationInfo ? pkvCustomizationInfo->GetInt("skins") : 0;
+			item.iSpecialHeadItems = pkvCustomizationInfo ? pkvCustomizationInfo->GetInt("extra_head") : 0;
+			item.iSpecialBodyItems = pkvCustomizationInfo ? pkvCustomizationInfo->GetInt("extra_body") : 0;
+			item.iSpecialLeftLegItems = pkvCustomizationInfo ? pkvCustomizationInfo->GetInt("extra_leg_left") : 0;
+			item.iSpecialRightLegItems = pkvCustomizationInfo ? pkvCustomizationInfo->GetInt("extra_leg_right") : 0;
+
+			// Camera Info
+			item.vecPosition = Vector(sub->GetFloat("origin_x"), sub->GetFloat("origin_y"), sub->GetFloat("origin_z"));
+			item.angAngles = QAngle(sub->GetFloat("angles_x"), sub->GetFloat("angles_y"), sub->GetFloat("angles_z"));
+
+			item.m_pClientModelPtrHuman = engine->LoadModel(item.szHumanModelPath);
+			item.m_pClientModelPtrZombie = engine->LoadModel(item.szZombieModelPath);
+
+			pszPlayerSurvivorData.AddToTail(item);
+		}
+	}
+	else
+		Warning("Failed to parse custom: %s!\n", file);
+	survivorData->deleteThis();
+}
+
 const DataPlayerItem_Survivor_Shared_t *CGameDefinitionsShared::GetSurvivorDataForIndex(int index)
 {
 	if ((index >= 0) && (index < pszPlayerSurvivorData.Count()))
@@ -1437,6 +1424,32 @@ const DataInventoryItem_Base_t *CGameDefinitionsShared::GetInventoryData(uint it
 
 // Sound Data
 #ifdef CLIENT_DLL
+void CGameDefinitionsShared::ParseSoundsetFile(const char *file)
+{
+	KeyValues *soundPrefixData = new KeyValues("CustomSoundSet");
+	if (soundPrefixData->LoadFromFile(filesystem, file, "MOD"))
+	{
+		for (KeyValues *sub = soundPrefixData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+		{
+			int npcType = GetEntitySoundTypeFromEntityName(sub->GetName());
+			if (npcType == BB2_SoundTypes::TYPE_UNKNOWN)
+				continue;
+
+			const char *charLink = sub->GetString("CharacterLink");
+			DataSoundPrefixItem_t item;
+			item.iType = npcType;
+			item.iID = GetNextIndexForSoundSet(npcType, charLink);
+			Q_strncpy(item.szFriendlyName, sub->GetString("Name"), MAX_MAP_NAME);
+			Q_strncpy(item.szScriptName, sub->GetString("Prefix"), MAX_MAP_NAME);
+			Q_strncpy(item.szSurvivorLink, charLink, MAX_MAP_NAME);
+			pszSoundPrefixesData.AddToTail(item);
+		}
+	}
+	else
+		Warning("Failed to parse custom: %s!\n", file);
+	soundPrefixData->deleteThis();
+}
+
 const char *CGameDefinitionsShared::GetSoundPrefix(int iType, int index, const char *survivor)
 {
 	const char *szDefault = "";

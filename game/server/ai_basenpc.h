@@ -963,6 +963,11 @@ public:
 protected:
 	float		SoundWaitTime() const { return m_flSoundWaitTime; }
 
+protected:
+	EHANDLE m_hTargetSchedEntity;
+	Activity m_actTargetMovement;
+	Interruptability_t m_schedInterruptability;
+
 public:
 	//-----------------------------------------------------
 	//
@@ -1240,6 +1245,7 @@ public:
 	virtual void		Teleport( const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity );
 
 	// forces movement and sets a new schedule
+	int					SelectHighPrioSchedule();
 	virtual bool		ScheduledMoveToGoalEntity( int scheduleType, CBaseEntity *pGoalEntity, Activity movementActivity );
 	virtual bool		ScheduledFollowPath( int scheduleType, CBaseEntity *pPathStart, Activity movementActivity );
 

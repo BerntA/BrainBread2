@@ -358,6 +358,10 @@ int CNPCFred::SelectSchedule(void)
 		return SCHED_FRED_SHOCKWAVE;
 	}
 
+	int schedHighPrio = SelectHighPrioSchedule();
+	if (schedHighPrio != SCHED_NONE)
+		return schedHighPrio;
+
 	//if (HasCondition(COND_PHYSICS_DAMAGE) && CanFlinch())
 	//	return SCHED_FLINCH_PHYSICS;
 

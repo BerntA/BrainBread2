@@ -1670,6 +1670,8 @@ void CAI_BaseNPC::SetScriptedScheduleIgnoreConditions( Interruptability_t interr
 
 	if ( interrupt > DAMAGEORDEATH_INTERRUPTABILITY )
 		SetIgnoreConditions( g_DamageConditions, ARRAYSIZE(g_DamageConditions) );
+
+	m_schedInterruptability = interrupt;
 }
 
 //-----------------------------------------------------------------------------
@@ -10011,6 +10013,10 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 
 	m_pSchedule = NULL;
 	m_IdealSchedule = SCHED_NONE;
+
+	m_hTargetSchedEntity = NULL;
+	m_actTargetMovement = ACT_RUN;
+	m_schedInterruptability = Interruptability_t::GENERAL_INTERRUPTABILITY;
 
 #ifdef _DEBUG
 	// necessary since in debug, we initialize vectors to NAN for debugging

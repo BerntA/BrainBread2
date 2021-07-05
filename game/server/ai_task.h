@@ -426,6 +426,8 @@ enum sharedtasks_e
 		// First task of all schedules for playing back scripted sequences
 		TASK_PRE_SCRIPT,
 
+		TASK_GET_VITAL_PATH,
+
 		// ======================================
 		// IMPORTANT: This must be the last enum
 		// ======================================

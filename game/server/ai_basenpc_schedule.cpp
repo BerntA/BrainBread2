@@ -2483,6 +2483,24 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 			break;
 		}
 
+	case TASK_GET_VITAL_PATH:
+	{
+		CBaseEntity *pTargetOverride = m_hTargetSchedEntity.Get();
+		if (pTargetOverride == NULL)
+		{
+			TaskFail(FAIL_NO_TARGET);
+		}
+		else
+		{
+			AI_NavGoal_t goal(pTargetOverride->GetAbsOrigin());
+			goal.pTarget = pTargetOverride;
+			GetNavigator()->SetGoal(goal);
+			GetNavigator()->SetMovementActivity(m_actTargetMovement);
+			Forget(bits_MEMORY_INCOVER);
+		}
+		break;
+	}
+
 	case TASK_ENABLE_SCRIPT:
 		{
 			//
