@@ -176,6 +176,7 @@ public:
 	bool					IsViewModelSequenceFinished( void ); // Returns if the viewmodel's current animation is finished
 
 	// BB2
+	virtual bool			CheckShouldReload(CBasePlayer *pOwner);
 	virtual bool			CanRespawnWeapon() { return true; }
 	virtual bool			CanPickupWeaponAsAmmo() { return false; }
 	virtual void			SetViewModel();

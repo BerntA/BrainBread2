@@ -38,6 +38,9 @@ static ConVar bb2_survivor_choice_extra_body("bb2_survivor_choice_extra_body", "
 static ConVar bb2_survivor_choice_extra_leg_right("bb2_survivor_choice_extra_leg_right", "0", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_SERVER_CAN_EXECUTE, "Selected player model bodygroup for extra right leg.");
 static ConVar bb2_survivor_choice_extra_leg_left("bb2_survivor_choice_extra_leg_left", "0", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_SERVER_CAN_EXECUTE, "Selected player model bodygroup for extra left leg.");
 
+// Misc
+static ConVar bb2_weapon_autoreload("bb2_weapon_autoreload", "0", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_SERVER_CAN_EXECUTE, "Enables auto reloading, if possible.");
+
 #define CLIENT_MODEL_START_INDEX 8192 // Make sure we don't collide with anything edict related! Must be > 4096!
 struct ClientModelItem
 {

@@ -33,6 +33,7 @@ SendPropFloat(SENDINFO(m_flInfectionTimer), -1, SPROP_CHANGES_OFTEN, 0.0f, 2048.
 SendPropFloat(SENDINFO(m_flCarryWeight)),
 SendPropFloat(SENDINFO(m_flPlayerRespawnTime), -1, SPROP_CHANGES_OFTEN, 0.0f, 2048.0f),
 SendPropFloat(SENDINFO(m_flPerkTimer)),
+SendPropBool(SENDINFO(m_bEnableAutoReload)),
 
 SendPropFloat(SENDINFO(m_flPlayerSpeed)),
 SendPropFloat(SENDINFO(m_flLeapLength)),
@@ -70,6 +71,7 @@ CBB2PlayerLocalData::CBB2PlayerLocalData()
 	m_flCarryWeight = 0.0f;
 	m_flPlayerRespawnTime = 0.0f;
 	m_flPerkTimer = 0.0f;
+	m_bEnableAutoReload = false;
 
 	m_flPlayerSpeed = 0.0f;
 	m_flLeapLength = 0.0f;

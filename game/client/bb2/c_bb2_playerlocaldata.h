@@ -46,6 +46,7 @@ public:
 	float m_flCarryWeight;
 	float m_flPlayerRespawnTime;
 	float m_flPerkTimer;
+	bool m_bEnableAutoReload;
 
 	// Movement:
 	float m_flPlayerSpeed;

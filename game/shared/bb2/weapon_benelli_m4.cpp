@@ -254,7 +254,7 @@ void CWeaponBenelliM4::ItemPostFrame(void)
 		}
 	}
 
-	if ((pOwner->m_nButtons & IN_RELOAD) && UsesClipsForAmmo() && !m_bInReload && HasAnyAmmo() && (m_flNextPrimaryAttack <= gpGlobals->curtime))
+	if (CheckShouldReload(pOwner) && UsesClipsForAmmo() && !m_bInReload && HasAnyAmmo() && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 	{
 		m_bShouldReloadEmpty = (m_iClip <= 0);
 		StartReload();

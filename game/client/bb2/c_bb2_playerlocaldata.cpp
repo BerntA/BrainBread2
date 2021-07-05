@@ -15,7 +15,7 @@ BEGIN_RECV_TABLE_NOBASE(C_BB2PlayerLocalData, DT_BB2Local)
 
 RecvPropInt(RECVINFO(m_iSkill_XPCurrent)),
 RecvPropInt(RECVINFO(m_iSkill_XPLeft)),
-RecvPropInt(RECVINFO(m_iSkill_Talents)), 
+RecvPropInt(RECVINFO(m_iSkill_Talents)),
 
 RecvPropInt(RECVINFO(m_iZombieCredits)),
 RecvPropFloat(RECVINFO(m_flZombieRageThresholdDamage)),
@@ -31,6 +31,7 @@ RecvPropFloat(RECVINFO(m_flInfectionTimer)),
 RecvPropFloat(RECVINFO(m_flCarryWeight)),
 RecvPropFloat(RECVINFO(m_flPlayerRespawnTime)),
 RecvPropFloat(RECVINFO(m_flPerkTimer)),
+RecvPropBool(RECVINFO(m_bEnableAutoReload)),
 
 RecvPropFloat(RECVINFO(m_flPlayerSpeed)),
 RecvPropFloat(RECVINFO(m_flLeapLength)),
@@ -81,6 +82,7 @@ C_BB2PlayerLocalData::C_BB2PlayerLocalData()
 	m_flCarryWeight = 0.0f;
 	m_flPlayerRespawnTime = 0.0f;
 	m_flPerkTimer = 0.0f;
+	m_bEnableAutoReload = false;
 
 	m_flPlayerSpeed = 0.0f;
 	m_flLeapLength = 0.0f;

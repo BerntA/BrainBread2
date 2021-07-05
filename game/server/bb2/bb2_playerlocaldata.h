@@ -44,6 +44,7 @@ public:
 	CNetworkVar(float, m_flCarryWeight);
 	CNetworkVar(float, m_flPlayerRespawnTime);
 	CNetworkVar(float, m_flPerkTimer);
+	CNetworkVar(bool, m_bEnableAutoReload);
 
 	// Movement:
 	CNetworkVar(float, m_flPlayerSpeed);

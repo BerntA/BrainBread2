@@ -290,7 +290,7 @@ void CWeaponSawedOff::ItemPostFrame(void)
 		}
 	}
 
-	if ((pOwner->m_nButtons & IN_RELOAD) && UsesClipsForAmmo() && !m_bInReload)
+	if (CheckShouldReload(pOwner) && UsesClipsForAmmo() && !m_bInReload)
 	{
 		if ((Clip() < GetMaxClip()) && (GetAmmoCount() >= 1))
 			Reload();

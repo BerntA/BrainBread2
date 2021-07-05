@@ -948,6 +948,24 @@ bool CBaseCombatWeapon::IsViewModelSequenceFinished( void )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Check if reload should be initiated.
+//-----------------------------------------------------------------------------
+bool CBaseCombatWeapon::CheckShouldReload(CBasePlayer *pOwner)
+{
+	if (pOwner == NULL)
+		return false;
+
+	if (pOwner->m_nButtons & IN_RELOAD)
+		return true;
+
+	if (m_iClip.Get() > 0)
+		return false;
+
+	CHL2MP_Player *pHL2MP = ToHL2MPPlayer(pOwner);
+	return (pHL2MP && pHL2MP->m_BB2Local.m_bEnableAutoReload);
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CBaseCombatWeapon::SetViewModel()
@@ -1444,7 +1462,7 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 	// -----------------------
 	//  Reload pressed / Clip Empty
 	// -----------------------
-	if ( ( pOwner->m_nButtons & IN_RELOAD ) && UsesClipsForAmmo() && !m_bInReload ) 
+	if (CheckShouldReload(pOwner) && UsesClipsForAmmo() && !m_bInReload)
 	{
 		// reload when reload is pressed
 		Reload();
