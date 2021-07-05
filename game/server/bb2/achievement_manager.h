@@ -23,7 +23,7 @@ public:
 
 	void AnnounceAchievement(int plIndex, const char *pcAchievement, int iAchievementType = 0);
 	bool WriteToAchievement(CHL2MP_Player *pPlayer, const char *szAchievement, int iAchievementType = 0);
-	bool WriteToStat(CHL2MP_Player *pPlayer, const char *szStat, int iForceValue = 0);
+	bool WriteToStat(CHL2MP_Player *pPlayer, const char *szStat, int iForceValue = 0, bool bAddTo = false);
 	bool SaveGlobalStats(CHL2MP_Player *pPlayer);
 	bool LoadGlobalStats(CHL2MP_Player *pPlayer);
 	int GetMaxValueForStat(const char *szStat);

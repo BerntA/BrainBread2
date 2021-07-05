@@ -226,6 +226,7 @@ END_SEND_TABLE()
 CHL2MP_Player::CHL2MP_Player()
 {
 	m_PlayerAnimState = CreateHL2MPPlayerAnimState(this);
+	m_achievStats = new CPlayerAchievStats(this);
 	UseClientSideAnimation();
 
 	m_angEyeAngles.Init();
@@ -293,6 +294,8 @@ CHL2MP_Player::~CHL2MP_Player()
 	pszWeaponPenaltyList.Purge();
 	CleanupAssociatedAmmoEntities();
 	m_PlayerAnimState->Release();
+	delete m_achievStats;
+	m_achievStats = NULL;
 	m_hLastKiller = NULL;
 }
 
@@ -625,6 +628,8 @@ void CHL2MP_Player::Spawn(void)
 	ExecuteClientEffect(PLAYER_EFFECT_FULLCHECK, 1);
 
 	DoAnimationEvent(PLAYERANIMEVENT_SPAWN, 0, true);
+
+	m_achievStats->OnSpawned();
 }
 
 // Perform reasonable updates at a cheap interval:
@@ -2419,6 +2424,8 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 	GameBaseShared()->GetAchievementManager()->WriteToStat(this, "BBX_ST_DEATHS");
 
 	ExecuteClientEffect(PLAYER_EFFECT_DEATH, 1);
+
+	m_achievStats->OnDeath(subinfo);
 }
 
 int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
@@ -2436,6 +2443,9 @@ int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	}
 
 	m_vecTotalBulletForce += damageCopy.GetDamageForce();
+	
+	if (pAttacker != this)
+		m_achievStats->OnTookDamage(damageCopy);
 
 	return BaseClass::OnTakeDamage(damageCopy);
 }

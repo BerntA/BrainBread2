@@ -127,7 +127,7 @@ bool CAchievementManager::WriteToAchievement(CHL2MP_Player *pPlayer, const char 
 }
 
 // Write to a stat
-bool CAchievementManager::WriteToStat(CHL2MP_Player *pPlayer, const char *szStat, int iForceValue)
+bool CAchievementManager::WriteToStat(CHL2MP_Player *pPlayer, const char *szStat, int iForceValue, bool bAddTo)
 {
 	if (!CanWrite(pPlayer, szStat, true))
 	{
@@ -150,9 +150,15 @@ bool CAchievementManager::WriteToStat(CHL2MP_Player *pPlayer, const char *szStat
 	if (iMaxValue <= iCurrentValue)
 		return false;
 
-	iCurrentValue++;
 	if (iForceValue > 0)
-		iCurrentValue = iForceValue;
+	{
+		if (bAddTo)
+			iCurrentValue += iForceValue;
+		else
+			iCurrentValue = iForceValue;
+	}
+	else
+		iCurrentValue++;
 
 	// Give us achievements if the stats related to certain achievs have been surpassed.
 	for (int i = 0; i < CURRENT_ACHIEVEMENT_NUMBER; i++)

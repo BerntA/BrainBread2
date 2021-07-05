@@ -1950,6 +1950,11 @@ void CHL2MPRules::DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info)
 	if (pVictim->MyCombatCharacterPointer())
 		iLastHitGroup = pVictim->MyCombatCharacterPointer()->LastHitGroup();
 
+	if (pKillerPlayer)
+		pKillerPlayer->GetAchievementStats()->OnKilled(pVictim, pInflictor, info, iLastHitGroup);
+	else if (pInflictor && pInflictor->IsPlayer() && ToHL2MPPlayer(pInflictor))
+		ToHL2MPPlayer(pInflictor)->GetAchievementStats()->OnKilled(pVictim, pInflictor, info, iLastHitGroup);
+
 	int iKillerID = pKiller->entindex();
 	int iVictimID = pVictim->entindex();
 

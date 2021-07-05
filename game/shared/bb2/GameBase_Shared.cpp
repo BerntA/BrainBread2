@@ -642,6 +642,7 @@ bool CGameBaseShared::UseInventoryItem(int iPlayerIndex, uint iItemID, bool bIsM
 	if (!HasObjectiveGlowItems(pClient))
 		pClient->SetGlowMode(GLOW_MODE_NONE);
 
+	pClient->GetAchievementStats()->OnPickupItem(itemData);
 	return true;
 }
 
@@ -817,10 +818,7 @@ bool CGameBaseShared::HasObjectiveGlowItems(CHL2MP_Player *pClient)
 ///////////////////////////////////////////////
 void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pVictim, CBaseEntity *pInflictor, int forcedWeaponID)
 {
-	if (!pKiller || !pVictim || !pInflictor || !GetAchievementManager())
-		return;
-
-	if (!pKiller->IsPlayer())
+	if (!pKiller || !pKiller->IsPlayer() || !pVictim || !pInflictor || !GetAchievementManager())
 		return;
 
 	CHL2MP_Player *pClient = ToHL2MPPlayer(pKiller);

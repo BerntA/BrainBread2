@@ -21,6 +21,7 @@ class CLogicPlayerEquipper;
 #include "utldict.h"
 #include "skills_shareddefs.h"
 #include "bb2_playerlocaldata.h"
+#include "player_achiev_stats.h"
 
 struct WeaponPickupItem_t
 {
@@ -289,6 +290,8 @@ public:
 
 	static bool IsWeaponEquippedByDefault(const char *weaponName);
 
+	CPlayerAchievStats *GetAchievementStats(void) { return m_achievStats; }
+
 private:
 
 	// Player Shared Info
@@ -333,6 +336,7 @@ private:
 
 	HL2MPPlayerState m_iPlayerState;
 	CHL2MPPlayerStateInfo *m_pCurStateInfo;
+	CPlayerAchievStats *m_achievStats;
 
 	// This lets us rate limit the commands the players can execute so they don't overflow things like reliable buffers.
 	CUtlDict<float, int>	m_RateLimitLastCommandTimes;

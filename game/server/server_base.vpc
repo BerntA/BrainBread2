@@ -112,7 +112,9 @@ $Project
 			$File "bb2/html_data_handler.cpp"
 			$File "bb2/html_data_handler.h"
 			$File "bb2/achievement_manager.cpp"
-			$File "bb2/achievement_manager.h"		
+			$File "bb2/achievement_manager.h"				
+			$File "bb2/player_achiev_stats.cpp"
+			$File "bb2/player_achiev_stats.h"
 		}		
 		
 		$Folder "Entities"

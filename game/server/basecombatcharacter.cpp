@@ -1502,6 +1502,9 @@ int CBaseCombatCharacter::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 				pClient->DispatchDamageText(this, (int)healAmount);
 			}
 		}
+
+		if (pClient != this)
+			pClient->GetAchievementStats()->OnDidDamage(info);
 	}
 
 	// Blood Splats on player.
