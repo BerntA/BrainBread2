@@ -75,7 +75,9 @@ void CPlayerAchievStats::OnKilled(CBaseEntity *pVictim, CBaseEntity *pInflictor,
 		m_iTotalHeadshots++;
 		if (pVictim->IsZombie())
 			m_iZombiePlayerHeadshots++;
-		ACHMGR->WriteToStat(m_pOuter, "BBX_RZ_HEADSHOT");
+
+		if (pActiveWeapon && pActiveWeapon->IsMeleeWeapon() && (weaponID != WEAPON_ID_KICK))
+			ACHMGR->WriteToStat(m_pOuter, "BBX_RZ_HEADSHOT");
 	}
 
 	if (m_iTotalHeadshots >= 69)

@@ -116,9 +116,9 @@ bool CAchievementManager::WriteToAchievement(CHL2MP_Player *pPlayer, const char 
 		AnnounceAchievement(pPlayer->entindex(), szAchievement, iAchievementType);
 
 		// Give Some Reward:
-		int achIndex = GetIndexOfAchievement(szAchievement);
-		if ((achIndex != -1) && GAME_STAT_AND_ACHIEVEMENT_DATA[achIndex].rewardValue)
-			pPlayer->CanLevelUp(GAME_STAT_AND_ACHIEVEMENT_DATA[achIndex].rewardValue, NULL);
+		const achievementStatItem_t *pAchiev = ACHIEVEMENTS::GetAchievementItem(szAchievement);
+		if (pAchiev && pAchiev->rewardValue)
+			pPlayer->CanLevelUp(pAchiev->rewardValue, NULL);
 
 		return true;
 	}
@@ -161,10 +161,11 @@ bool CAchievementManager::WriteToStat(CHL2MP_Player *pPlayer, const char *szStat
 		iCurrentValue++;
 
 	// Give us achievements if the stats related to certain achievs have been surpassed.
-	for (int i = 0; i < CURRENT_ACHIEVEMENT_NUMBER; i++)
+	for (int i = 0; i < ACHIEVEMENTS::GetNumAchievements(); i++)
 	{
-		if ((GAME_STAT_AND_ACHIEVEMENT_DATA[i].maxValue <= iCurrentValue) && GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement && GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement[0] && !strcmp(szStat, GAME_STAT_AND_ACHIEVEMENT_DATA[i].szStat))
-			WriteToAchievement(pPlayer, GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement);
+		const achievementStatItem_t *pAchiev = ACHIEVEMENTS::GetAchievementItem(i);
+		if (pAchiev && (pAchiev->maxValue <= iCurrentValue) && pAchiev->szAchievement && pAchiev->szAchievement[0] && !strcmp(szStat, pAchiev->szStat))
+			WriteToAchievement(pPlayer, pAchiev->szAchievement);
 	}
 
 	steamgameserverapicontext->SteamGameServerStats()->SetUserStat(pSteamClient, szStat, iCurrentValue);
@@ -220,9 +221,10 @@ bool CAchievementManager::CanWrite(CHL2MP_Player *pClient, const char *param, bo
 
 	if (param && param[0])
 	{
-		for (int i = 0; i < CURRENT_ACHIEVEMENT_NUMBER; i++)
+		for (int i = 0; i < ACHIEVEMENTS::GetNumAchievements(); i++)
 		{
-			if ((bIsStat && !strcmp(param, GAME_STAT_AND_ACHIEVEMENT_DATA[i].szStat)) || (!bIsStat && !strcmp(param, GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement)))
+			const achievementStatItem_t *pAchiev = ACHIEVEMENTS::GetAchievementItem(i);
+			if ((bIsStat && pAchiev && !strcmp(param, pAchiev->szStat)) || (!bIsStat && pAchiev && !strcmp(param, pAchiev->szAchievement)))
 				return true;
 		}
 
@@ -238,10 +240,14 @@ bool CAchievementManager::CanWriteToType(const char *param, int iType)
 	if (iType <= 0)
 		return true;
 
-	for (int i = 0; i < CURRENT_ACHIEVEMENT_NUMBER; i++)
+	if (param && param[0])
 	{
-		if ((iType == GAME_STAT_AND_ACHIEVEMENT_DATA[i].type) && !strcmp(GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement, param))
-			return true;
+		for (int i = 0; i < ACHIEVEMENTS::GetNumAchievements(); i++)
+		{
+			const achievementStatItem_t *pAchiev = ACHIEVEMENTS::GetAchievementItem(i);
+			if (pAchiev && (iType == pAchiev->type) && !strcmp(pAchiev->szAchievement, param))
+				return true;
+		}
 	}
 
 	return false;
@@ -251,25 +257,13 @@ bool CAchievementManager::CanWriteToType(const char *param, int iType)
 int CAchievementManager::GetMaxValueForStat(const char *szStat)
 {
 	int iValue = 0;
-	for (int i = 0; i < CURRENT_ACHIEVEMENT_NUMBER; i++)
+	for (int i = 0; i < ACHIEVEMENTS::GetNumAchievements(); i++)
 	{
-		if ((iValue < GAME_STAT_AND_ACHIEVEMENT_DATA[i].maxValue) && !strcmp(szStat, GAME_STAT_AND_ACHIEVEMENT_DATA[i].szStat))
-			iValue = GAME_STAT_AND_ACHIEVEMENT_DATA[i].maxValue;
+		const achievementStatItem_t *pAchiev = ACHIEVEMENTS::GetAchievementItem(i);
+		if (pAchiev && (iValue < pAchiev->maxValue) && !strcmp(szStat, pAchiev->szStat))
+			iValue = pAchiev->maxValue;
 	}
-
 	return iValue;
-}
-
-// Get the index for a certain achievement.
-int CAchievementManager::GetIndexOfAchievement(const char *pcAchievement)
-{
-	for (int i = 0; i < CURRENT_ACHIEVEMENT_NUMBER; i++)
-	{
-		if (!strcmp(GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement, pcAchievement))
-			return i;
-	}
-
-	return -1;
 }
 
 CON_COMMAND(dev_reset_stats, "Reset Stats")
@@ -308,10 +302,11 @@ CON_COMMAND(dev_reset_stats, "Reset Stats")
 	for (int i = 0; i < MAX_SKILL_ARRAY; i++)
 		pPlayer->m_BB2Local.m_iPlayerSkills.Set(i, 0);
 
-	for (int i = 0; i < CURRENT_ACHIEVEMENT_NUMBER; i++)
+	for (int i = 0; i < ACHIEVEMENTS::GetNumAchievements(); i++)
 	{
-		if (GAME_STAT_AND_ACHIEVEMENT_DATA[i].szStat && GAME_STAT_AND_ACHIEVEMENT_DATA[i].szStat[0])
-			steamgameserverapicontext->SteamGameServerStats()->SetUserStat(pSteamClient, GAME_STAT_AND_ACHIEVEMENT_DATA[i].szStat, 0);
+		const achievementStatItem_t *pAchiev = ACHIEVEMENTS::GetAchievementItem(i);
+		if (pAchiev && pAchiev->szStat && pAchiev->szStat[0])
+			steamgameserverapicontext->SteamGameServerStats()->SetUserStat(pSteamClient, pAchiev->szStat, 0);
 	}
 
 	for (int i = 0; i < _ARRAYSIZE(szGameStats); i++)

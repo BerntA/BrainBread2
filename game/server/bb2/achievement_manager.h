@@ -27,7 +27,6 @@ public:
 	bool SaveGlobalStats(CHL2MP_Player *pPlayer);
 	bool LoadGlobalStats(CHL2MP_Player *pPlayer);
 	int GetMaxValueForStat(const char *szStat);
-	int GetIndexOfAchievement(const char *pcAchievement);
 
 private:
 

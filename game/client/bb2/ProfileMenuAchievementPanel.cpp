@@ -107,22 +107,23 @@ void AchievementItem::OnUpdate(void)
 				SetAchievementIcon();
 			}
 
-			if (m_iAchievementIndex >= 0 && m_iAchievementIndex < CURRENT_ACHIEVEMENT_NUMBER)
+			const achievementStatItem_t *pAchiev = ACHIEVEMENTS::GetAchievementItem(m_iAchievementIndex);
+			if (pAchiev)
 			{
-				bool bBoolean = (!(GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].szStat && GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].szStat[0]));
+				bool bBoolean = (!(pAchiev->szStat && pAchiev->szStat[0]));
 				float flProgress = 0.0f;
 				if (!bBoolean)
 				{
 					int iValue = 0;
-					if (steamapicontext->SteamUserStats()->GetStat(GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].szStat, &iValue))
+					if (steamapicontext->SteamUserStats()->GetStat(pAchiev->szStat, &iValue))
 					{
-						if (iValue > GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].maxValue)
-							iValue = GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].maxValue;
+						if (iValue > pAchiev->maxValue)
+							iValue = pAchiev->maxValue;
 
-						flProgress = ((float)iValue / (float)GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].maxValue);
+						flProgress = ((float)iValue / (float)pAchiev->maxValue);
 					}
 
-					m_pLabelProgress->SetText(VarArgs("%i / %i", iValue, GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].maxValue));
+					m_pLabelProgress->SetText(VarArgs("%i / %i", iValue, pAchiev->maxValue));
 				}
 				else if (m_bAchieved)
 				{
@@ -139,7 +140,7 @@ void AchievementItem::OnUpdate(void)
 				m_pLabelDate->SetText(GetUnlockDate());
 
 				char pchXPLabel[16];
-				Q_snprintf(pchXPLabel, 16, "%i XP", GAME_STAT_AND_ACHIEVEMENT_DATA[m_iAchievementIndex].rewardValue);
+				Q_snprintf(pchXPLabel, 16, "%i XP", pAchiev->rewardValue);
 				m_pLabelEXP->SetText(pchXPLabel);
 			}
 		}
@@ -290,32 +291,36 @@ ProfileMenuAchievementPanel::~ProfileMenuAchievementPanel()
 void ProfileMenuAchievementPanel::CreateAchievementList(void)
 {
 	bool bOnlyAddHiddenAchievements = (pszAchievementList.Count() > 0);
-	for (int i = 0; i < CURRENT_ACHIEVEMENT_NUMBER; i++)
+	for (int i = 0; i < ACHIEVEMENTS::GetNumAchievements(); i++)
 	{
-		if (GAME_STAT_AND_ACHIEVEMENT_DATA[i].hidden)
+		const achievementStatItem_t *pAchiev = ACHIEVEMENTS::GetAchievementItem(i);
+		if (pAchiev == NULL)
+			continue;
+
+		if (pAchiev->hidden)
 		{
-			if (!(GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement && GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement[0]))
+			if (!(pAchiev->szAchievement && pAchiev->szAchievement[0]))
 				continue;
 
 			if (!steamapicontext || !steamapicontext->SteamUserStats())
 				continue;
 
 			bool bAchieved = false;
-			steamapicontext->SteamUserStats()->GetAchievement(GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement, &bAchieved);
+			steamapicontext->SteamUserStats()->GetAchievement(pAchiev->szAchievement, &bAchieved);
 			if (!bAchieved)
 				continue;
 		}
 
 		if (bOnlyAddHiddenAchievements)
 		{
-			if (!GAME_STAT_AND_ACHIEVEMENT_DATA[i].hidden)
+			if (!pAchiev->hidden)
 				continue;
 
 			if (HasAchievementInList(pszAchievementList, i))
 				continue;
 		}
 
-		AchievementItem *pAchItem = vgui::SETUP_PANEL(new AchievementItem(this, "AchievementItem", GAME_STAT_AND_ACHIEVEMENT_DATA[i].szAchievement, i));
+		AchievementItem *pAchItem = vgui::SETUP_PANEL(new AchievementItem(this, "AchievementItem", pAchiev->szAchievement, i));
 		pAchItem->SetZPos(10);
 		pAchItem->MoveToFront();
 		pszAchievementList.AddToTail(pAchItem);
