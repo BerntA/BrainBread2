@@ -101,17 +101,9 @@ bool CBaseButton::KeyValue( const char *szKeyName, const char *szValue )
 	{
 		m_bLockedSound = atof(szValue);
 	}
-	else if (FStrEq(szKeyName, "locked_sentence"))
-	{
-		m_bLockedSentence = atof(szValue);
-	}
 	else if (FStrEq(szKeyName, "unlocked_sound"))
 	{
 		m_bUnlockedSound = atof(szValue);
-	}
-	else if (FStrEq(szKeyName, "unlocked_sentence"))
-	{
-		m_bUnlockedSentence = atof(szValue);
 	}
 	else
 	{

@@ -68,6 +68,13 @@ enum TankPoseParams
 	TANK_POSEPARAM_COUNT
 };
 
+enum TankClassifications // 0 = No allies...
+{
+	TANK_CLASS_NONE = 0,
+	TANK_CLASS_PLAYER,
+	TANK_CLASS_MERCENARY,
+};
+
 class CNPCM1A1 : public CBaseAnimating
 {
 public:
@@ -162,7 +169,7 @@ CNPCM1A1::CNPCM1A1()
 	m_flRangeMax = 1000.0f;
 	m_flRangeMin = 250.0f;
 
-	m_iClassification = CLASS_MILITARY_VEHICLE;
+	m_iClassification = TANK_CLASS_PLAYER;
 }
 
 CNPCM1A1::~CNPCM1A1()
@@ -251,7 +258,16 @@ void CNPCM1A1::Precache(void)
 
 Class_T CNPCM1A1::Classify(void)
 {
-	return ((Class_T)m_iClassification);
+	switch (m_iClassification)
+	{
+	case TANK_CLASS_PLAYER:
+		return CLASS_MILITARY_VEHICLE;
+
+	case TANK_CLASS_MERCENARY:
+		return CLASS_MILITARY;
+	}
+
+	return CLASS_NONE;
 }
 
 int	CNPCM1A1::GetTracerAttachment(void)
@@ -550,7 +566,7 @@ void CNPCM1A1::TankLogicThinkFrame(void)
 		if (GetAttachment(iAttachment, vecPos, angPos))
 		{
 			DispatchParticleEffect("muzzleflash_smg", PATTACH_POINT_FOLLOW, this, iAttachment); // Muzzle + Smoke
-			CMissile *pMissile = CMissile::Create(vecPos, angPos, edict(), (m_iClassification == CLASS_MILITARY_VEHICLE));
+			CMissile *pMissile = CMissile::Create(vecPos, angPos, edict(), (m_iClassification == TANK_CLASS_PLAYER));
 			pMissile->SetGracePeriod(0.25);
 			pMissile->SetDamage(bb2_m1a1_damage.GetFloat());
 			pMissile->SetRadius(bb2_m1a1_radius.GetFloat());

@@ -122,7 +122,7 @@ CZombieVolume::CZombieVolume()
 	m_spawnflags = 0;
 
 	goalEntity = NULL_STRING;
-	goalActivity = ACT_WALK;
+	goalActivity = 1;
 	goalType = 0;
 	goalInterruptType = DAMAGEORDEATH_INTERRUPTABILITY;
 
@@ -280,7 +280,7 @@ void CZombieVolume::SpawnWave()
 				pTarget = gEntList.FindEntityByClassname(NULL, STRING(goalEntity));
 
 			if (pTarget)
-				npcZombie->SpawnRunSchedule(pTarget, ((Activity)goalActivity), (goalType >= 1), goalInterruptType);
+				npcZombie->SpawnRunSchedule(pTarget, ((goalActivity >= 1) ? ACT_RUN : ACT_WALK), (goalType >= 1), goalInterruptType);
 		}
 
 		if (HasSpawnFlags(SF_RESPAWN_ONLY_IF_DEAD))

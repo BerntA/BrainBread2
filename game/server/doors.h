@@ -106,9 +106,6 @@ public:
 
 	locksound_t m_ls;			// door lock sounds
 	
-	byte	m_bLockedSentence;	
-	byte	m_bUnlockedSentence;
-
 	bool	m_bForceClosed;			// If set, always close, even if we're blocked.
 	bool	m_bDoorGroup;
 	bool	m_bLocked;				// Whether the door is locked

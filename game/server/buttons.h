@@ -70,9 +70,7 @@ protected:
 	locksound_t m_ls;			// door lock sounds
 	
 	byte	m_bLockedSound;		// ordinals from entity selection
-	byte	m_bLockedSentence;	
 	byte	m_bUnlockedSound;	
-	byte	m_bUnlockedSentence;
 	bool	m_bLocked;
 	int		m_sounds;
 	float	m_flUseLockedTime;		// Controls how often we fire the OnUseLocked output.

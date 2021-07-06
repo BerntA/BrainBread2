@@ -545,19 +545,30 @@ void AddSurfacepropFile( const char *pFileName, IPhysicsSurfaceProps *pProps, IF
 
 void PhysParseSurfaceData(IPhysicsSurfaceProps *pProps, IFileSystem *pFileSystem)
 {
+	KeyValues *pkvNewManifest = new KeyValues("surfaceproperties_manifest");
+	pkvNewManifest->SetString("file", "data/surfaceproperties/surfaceproperties.txt");
+	AddSurfacepropFile("data/surfaceproperties/surfaceproperties.txt", pProps, pFileSystem); // Load base first.
+
 	char filePath[MAX_WEAPON_STRING];
 	FileFindHandle_t findHandle;
 	const char *pFilename = filesystem->FindFirstEx("data/surfaceproperties/*.txt", "MOD", &findHandle);
 	while (pFilename)
 	{
-		if (!filesystem->IsDirectory(pFilename, "MOD"))
+		if (!filesystem->IsDirectory(pFilename, "MOD") && Q_strcmp(pFilename, "surfaceproperties.txt"))
 		{
 			Q_snprintf(filePath, MAX_WEAPON_STRING, "data/surfaceproperties/%s", pFilename);
 			AddSurfacepropFile(filePath, pProps, pFileSystem);
+
+			KeyValues *pkvSub = new KeyValues("file");
+			pkvSub->SetStringValue(filePath);
+			pkvNewManifest->AddSubKey(pkvSub);
 		}
 		pFilename = filesystem->FindNext(findHandle);
 	}
 	filesystem->FindClose(findHandle);
+
+	pkvNewManifest->SaveToFile(pFileSystem, "scripts/surfaceproperties_manifest.txt", "MOD");
+	pkvNewManifest->deleteThis();
 }
 
 void PhysCreateVirtualTerrain( CBaseEntity *pWorld, const objectparams_t &defaultParams )

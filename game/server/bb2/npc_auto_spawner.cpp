@@ -73,7 +73,7 @@ CNPCAutoSpawner::CNPCAutoSpawner()
 	szClassname = NULL_STRING;
 	szWeapon = NULL_STRING;
 	goalEntity = NULL_STRING;
-	goalActivity = ACT_WALK;
+	goalActivity = 1;
 	goalType = 0;
 	goalInterruptType = DAMAGEORDEATH_INTERRUPTABILITY;
 }
@@ -117,7 +117,7 @@ CBaseEntity *CNPCAutoSpawner::SpawnNewEntity(void)
 			pTarget = gEntList.FindEntityByClassname(NULL, STRING(goalEntity));
 
 		if (pTarget)
-			pEntity->MyNPCPointer()->SpawnRunSchedule(pTarget, ((Activity)goalActivity), (goalType >= 1), goalInterruptType);
+			pEntity->MyNPCPointer()->SpawnRunSchedule(pTarget, ((goalActivity >= 1) ? ACT_RUN : ACT_WALK), (goalType >= 1), goalInterruptType);
 	}
 
 	return pEntity;

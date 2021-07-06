@@ -78,10 +78,8 @@ IMPLEMENT_SERVERCLASS_ST(CBaseDoor, DT_BaseDoor)
 	SendPropFloat	(SENDINFO(m_flWaveHeight),		8,	SPROP_ROUNDUP,	0.0f,	8.0f),
 END_SEND_TABLE()
 
-#define DOOR_SENTENCEWAIT	6
 #define DOOR_SOUNDWAIT		1
 #define BUTTON_SOUNDWAIT	0.5
-
 
 //-----------------------------------------------------------------------------
 // Purpose: play door or button locked or unlocked sounds. 
@@ -142,7 +140,6 @@ void PlayLockSounds(CBaseEntity *pEdict, locksound_t *pls, int flocked, int fbut
 	}
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Cache user-entity-field values until spawn is called.
 // Input  : szKeyName - 
@@ -151,20 +148,8 @@ void PlayLockSounds(CBaseEntity *pEdict, locksound_t *pls, int flocked, int fbut
 //-----------------------------------------------------------------------------
 bool CBaseDoor::KeyValue( const char *szKeyName, const char *szValue )
 {
-	if (FStrEq(szKeyName, "locked_sentence"))
-	{
-		m_bLockedSentence = atof(szValue);
-	}
-	else if (FStrEq(szKeyName, "unlocked_sentence"))
-	{
-		m_bUnlockedSentence = atof(szValue);
-	}
-	else
-		return BaseClass::KeyValue( szKeyName, szValue );
-
-	return true;
+	return BaseClass::KeyValue(szKeyName, szValue);
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
