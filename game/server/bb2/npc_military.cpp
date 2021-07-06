@@ -31,16 +31,17 @@ LINK_ENTITY_TO_CLASS( npc_military, CNPCMilitary );
 int CNPCMilitary::OnTakeDamage( const CTakeDamageInfo &info )
 {
 	CBaseEntity *pAttacker = info.GetAttacker();
-	if (pAttacker && pAttacker->IsHuman())
+	if (pAttacker != this)
 	{
-		HL2MPRules()->EmitSoundToClient(this, "FriendlyFire", GetNPCType(), GetGender());
-		return 0;
+		if (pAttacker && pAttacker->IsHuman())
+		{
+			HL2MPRules()->EmitSoundToClient(this, "FriendlyFire", GetNPCType(), GetGender());
+			return 0;
+		}
+		else
+			HL2MPRules()->EmitSoundToClient(this, "Pain", GetNPCType(), GetGender());
 	}
-	else
-		HL2MPRules()->EmitSoundToClient(this, "Pain", GetNPCType(), GetGender());
-
-	int tookDamage = BaseClass::OnTakeDamage(info);
-	return tookDamage;
+	return BaseClass::OnTakeDamage(info);
 }
 
 //-----------------------------------------------------------------------------

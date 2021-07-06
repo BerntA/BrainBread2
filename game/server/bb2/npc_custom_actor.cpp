@@ -288,16 +288,19 @@ void CNPC_CustomActor::OnChangeActiveWeapon(CBaseCombatWeapon *pOldWeapon, CBase
 int CNPC_CustomActor::OnTakeDamage(const CTakeDamageInfo &info)
 {
 	CBaseEntity *pAttacker = info.GetAttacker();
-	if (pAttacker && (pAttacker->Classify() == Classify()))
-		return 0;
-
-	if (pAttacker && pAttacker->IsHuman() && m_bIsAlly)
+	if (pAttacker != this)
 	{
-		PlaySound("FriendlyFire");
-		return 0;
-	}
+		if (pAttacker && (pAttacker->Classify() == Classify()))
+			return 0;
 
-	PlaySound("Pain");
+		if (pAttacker && pAttacker->IsHuman() && m_bIsAlly)
+		{
+			PlaySound("FriendlyFire");
+			return 0;
+		}
+
+		PlaySound("Pain");
+	}
 	return BaseClass::OnTakeDamage(info);
 }
 
