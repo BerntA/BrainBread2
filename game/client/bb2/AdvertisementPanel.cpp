@@ -63,14 +63,12 @@ const char *AdvertisementPanel::GetAdvertisementURL(int iIndex)
 {
 	switch (iIndex)
 	{
-	case 0:
-		return "http://brainbread2.eu/"; // BB2 Site
 	case 1:
 		return "http://steamcommunity.com/app/346330"; // Steam Community
 	case 2:
 		return "http://steamcommunity.com/games/brainbread2/"; // Steam Group
 	default:
-		return "http://brainbread2.eu/"; // BB2 Site (default)
+		return "https://www.moddb.com/mods/brainbread2"; // BB2 Moddb (default)
 	}
 }
 

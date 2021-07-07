@@ -990,7 +990,7 @@ AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(CBaseEntity *pTarget, CNavArea *are
 			// Try to build a crawl/crouch route if possible:
 			if ((CapabilitiesGet() & bits_CAP_MOVE_CRAWL) && (pCurrentArea->HasAttributes(NAV_MESH_CROUCH) || pNextArea->HasAttributes(NAV_MESH_CROUCH)))
 				currentNAVType = NAV_CRAWL;
-			ADDWAYPOINT(new AI_Waypoint_t(closestpoint, 0, currentNAVType, bits_WP_TO_NODE, NO_NODE, pPossibleObstruction));
+			ADDWAYPOINT(new AI_Waypoint_t(closestpoint, 0, currentNAVType, 0, NO_NODE, pPossibleObstruction));
 		}
 
 		index++;

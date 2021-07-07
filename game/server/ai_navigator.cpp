@@ -2667,12 +2667,9 @@ bool CAI_Navigator::SimplifyPathBacktrack()
 	// connecting the first two waypoints
 	// ------------------------------------------------------------------------
 	if (pCurWaypoint->GetNext() &&
-		(pNextWaypoint->Flags() & bits_WP_TO_NODE) &&
 		(pNextWaypoint->NavType() == NAV_GROUND) &&
-		(pCurWaypoint->NavType() == NAV_GROUND)	&&
-		(pCurWaypoint->Flags() & bits_WP_TO_NODE) )	
+		(pCurWaypoint->NavType() == NAV_GROUND))
 	{
-
 		Vector firstToMe	= (GetLocalOrigin()			   - pCurWaypoint->GetPos());
 		Vector firstToNext	= pNextWaypoint->GetPos() - pCurWaypoint->GetPos();
 		VectorNormalize(firstToNext);
@@ -3455,7 +3452,7 @@ bool CAI_Navigator::GetStoppingPath( CAI_WaypointList *	pClippedWaypoints )
 						pNewWaypoint->hPathCorner = NULL;
 					}
 
-					pNewWaypoint->ModifyFlags( bits_WP_TO_GOAL | bits_WP_TO_NODE, false );
+					pNewWaypoint->ModifyFlags( bits_WP_TO_GOAL, false );
 					pNewWaypoint->iNodeID = NO_NODE;
 
 					if ( pLastSavedWaypoint )
@@ -3594,31 +3591,13 @@ bool CAI_Navigator::SetGoalFromStoppingPath()
 static Vector GetRouteColor(Navigation_t navType, int waypointFlags)
 {
 	if (navType == NAV_JUMP)
-	{
-		return Vector(255,0,0);
-	}
-
-	if (waypointFlags & bits_WP_TO_GOAL)
-	{
-		return Vector(200,0,255);
-	}
-	
-	if (waypointFlags & bits_WP_TO_DETOUR)
-	{
-		return Vector(0,200,255);
-	}
-	
-	if (waypointFlags & bits_WP_TO_NODE)
-	{
-		return Vector(0,0,255);
-	}
-
-	else //if (waypointBits & bits_WP_TO_PATHCORNER)
-	{
-		return Vector(0,255,150);
-	}
+		return Vector(255, 0, 0);
+	else if (waypointFlags & bits_WP_TO_GOAL)
+		return Vector(200, 0, 255);
+	else if (waypointFlags & bits_WP_TO_DETOUR)
+		return Vector(0, 200, 255);
+	return Vector(0, 255, 150);
 }
-
 
 //-----------------------------------------------------------------------------
 // Returns a color for debugging purposes

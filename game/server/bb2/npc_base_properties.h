@@ -12,9 +12,9 @@
 
 #include "GameEventListener.h"
 
-extern ConVar ai_show_active_military_activities;
-
 class CNPCDataItem;
+class CAI_BaseNPC;
+
 abstract_class CNPCBaseProperties : public CGameEventListener
 {
 public:
@@ -38,6 +38,8 @@ public:
 
 	const char *GetNPCModelName() { return pszModelName; }
 	const char *GetOverridenSoundSet() { return pszSoundsetOverride; }
+
+	static void OnActivityDebug(CAI_BaseNPC *pNPC, Activity value);
 
 protected:
 

@@ -26,7 +26,7 @@ enum WaypointFlags_t
 	// The type of waypoint
 	bits_WP_TO_DETOUR =			0x01, // move to detour point.
 	bits_WP_TO_PATHCORNER =		0x02, // move to a path corner
-	bits_WP_TO_NODE =			0x04, // move to a node
+	//bits_WP_TO_<> =			0x04, // FREE
 	bits_WP_TO_GOAL =			0x08, // move to an arbitrary point
 	bits_WP_TO_DOOR =			0x10, // move to position to open a door
 

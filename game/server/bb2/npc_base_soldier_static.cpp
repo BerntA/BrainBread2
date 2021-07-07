@@ -516,8 +516,7 @@ void CNPCBaseSoldierStatic::BuildScheduleTestBits(void)
 
 Activity CNPCBaseSoldierStatic::NPC_TranslateActivity(Activity eNewActivity)
 {
-	if (ai_show_active_military_activities.GetBool())
-		Msg("Running Activity %i Act Name: %s\n", eNewActivity, GetActivityName(eNewActivity));
+	OnActivityDebug(this, eNewActivity);
 
 	if (eNewActivity == ACT_RANGE_ATTACK2)
 	{
@@ -531,7 +530,10 @@ Activity CNPCBaseSoldierStatic::NPC_TranslateActivity(Activity eNewActivity)
 		}
 	}
 
-	return BaseClass::NPC_TranslateActivity(eNewActivity);
+	Activity res = BaseClass::NPC_TranslateActivity(eNewActivity);
+	OnActivityDebug(this, res);
+
+	return res;
 }
 
 int CNPCBaseSoldierStatic::GetSoundInterests(void)

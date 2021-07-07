@@ -11,11 +11,12 @@
 #include "GameBase_Server.h"
 #include "hl2mp_player.h"
 #include "hl2mp_gamerules.h"
+#include "ai_basenpc.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar ai_show_active_military_activities("ai_show_active_military_activities", "0", FCVAR_GAMEDLL | FCVAR_CHEAT, "Print out which activities are being executed by the military npcs.", true, 0.0f, true, 1.0f);
+static ConVar ai_show_active_military_activities("ai_show_active_military_activities", "0", FCVAR_GAMEDLL | FCVAR_CHEAT, "Print out which activities are being executed by the military npcs.", true, 0.0f, true, 1.0f);
 
 CNPCBaseProperties::CNPCBaseProperties()
 {
@@ -169,4 +170,15 @@ void CNPCBaseProperties::FireGameEvent(IGameEvent *event)
 
 	if (!strcmp(type, "round_started"))
 		HL2MPRules()->EmitSoundToClient(m_pOuter, "Ready", GetNPCType(), GetGender());
+}
+
+/*static*/ void CNPCBaseProperties::OnActivityDebug(CAI_BaseNPC *pNPC, Activity value)
+{
+	if (!pNPC || (ai_show_active_military_activities.GetBool() == false))
+		return;
+
+	if (pNPC->HaveSequenceForActivity(value))
+		return; // Valid, skip!
+
+	Msg("!! %s - %i, %s\n", pNPC->GetClassname(), value, CAI_BaseNPC::GetActivityName(value));
 }

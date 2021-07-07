@@ -1067,31 +1067,43 @@ void CNPC_BaseSoldier::BuildScheduleTestBits( void )
 //-----------------------------------------------------------------------------
 Activity CNPC_BaseSoldier::NPC_TranslateActivity(Activity eNewActivity)
 {
-	if (ai_show_active_military_activities.GetBool())
-		Msg("Running Activity %i Act Name: %s\n", eNewActivity, GetActivityName(eNewActivity));
+	OnActivityDebug(this, eNewActivity);
 
 	if (eNewActivity == ACT_RAPPEL_LOOP || eNewActivity == ACT_COWER || eNewActivity == ACT_COVER)
 		return ACT_IDLE;
 
+	Activity soldierTranslated = ACT_INVALID;
 	switch (eNewActivity)
 	{
 	case ACT_WALK_CROUCH_RIFLE:
-		return ACT_WALK_RIFLE;
+		soldierTranslated = ACT_WALK_RIFLE;
+		break;
 
 	case ACT_WALK_CROUCH_AIM_RIFLE:
-		return ACT_WALK_AIM_RIFLE;
+		soldierTranslated = ACT_WALK_AIM_RIFLE;
+		break;
 
 	case ACT_RUN_CROUCH_RIFLE:
-		return ACT_RUN_RIFLE;
+		soldierTranslated = ACT_RUN_RIFLE;
+		break;
 
 	case ACT_RUN_CROUCH_AIM_RIFLE:
-		return ACT_RUN_AIM_RIFLE;
+		soldierTranslated = ACT_RUN_AIM_RIFLE;
+		break;
 
 	case ACT_IDLE_ANGRY_PISTOL:
-		return ACT_IDLE_PISTOL;
+		soldierTranslated = ACT_IDLE_PISTOL;
+		break;
 
 	case ACT_RANGE_ATTACK2:
-		return (Activity)ACT_COMBINE_THROW_GRENADE;
+		soldierTranslated = (Activity)ACT_COMBINE_THROW_GRENADE;
+		break;
+	}
+
+	if (soldierTranslated != ACT_INVALID)
+	{
+		OnActivityDebug(this, soldierTranslated);
+		return soldierTranslated;
 	}
 
 	if (eNewActivity == ACT_IDLE)
@@ -1100,9 +1112,11 @@ Activity CNPC_BaseSoldier::NPC_TranslateActivity(Activity eNewActivity)
 			eNewActivity = ACT_IDLE_ANGRY;
 	}
 
-	return BaseClass::NPC_TranslateActivity(eNewActivity);
-}
+	Activity res = BaseClass::NPC_TranslateActivity(eNewActivity);
+	OnActivityDebug(this, res);
 
+	return res;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Overidden for human grunts because they  hear the DANGER sound

@@ -26,7 +26,7 @@
 int CAI_BaseNPC::SelectHighPrioSchedule()
 {
 	CBaseEntity *pTargetOverride = m_hTargetSchedEntity.Get();
-	if (!IsAlive() || (m_schedInterruptability < Interruptability_t::DEATH_INTERRUPTABILITY) || !pTargetOverride)
+	if (!IsAlive() || (m_schedInterruptability < Interruptability_t::DEATH_INTERRUPTABILITY) || !pTargetOverride || pTargetOverride->IsNPC() || pTargetOverride->IsPlayer())
 		return SCHED_NONE;
 
 	const Vector &vTargetPos = pTargetOverride->GetAbsOrigin();
