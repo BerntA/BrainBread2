@@ -5971,7 +5971,11 @@ public:
 	void SpawnGibs(int newHealth, int oldHealth, const CTakeDamageInfo &info);
 	void Event_Killed(const CTakeDamageInfo &info);
 	void UpdatePhysics(void);
-	int	GetObstruction(void) { return (((m_iHealth > 0) && (IsDoorClosed() || IsDoorClosing() || IsDoorLocked())) ? ENTITY_OBSTRUCTION_DOOR : ENTITY_OBSTRUCTION_NONE); }
+	int	GetObstruction(void) { return ((CanBreak() && (IsDoorClosed() || IsDoorClosing() || IsDoorLocked())) ? ENTITY_OBSTRUCTION_DOOR : ENTITY_OBSTRUCTION_NONE); }
+
+	void SetBreakable(inputdata_t &inputdata);
+	void SetUnBreakable(inputdata_t &inputdata);
+	bool CanBreak(void) { return (m_bCanBreak && (m_iHealth > 0)); }
 
 protected:
 	bool CanEntityUseDoor(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
@@ -5983,6 +5987,7 @@ private:
 	int m_iDoorHandle;
 	int m_iMinDamageToHurt;
 	float m_flDamageScale;
+	bool m_bCanBreak;
 
 	color32 m_clrGlow;
 
@@ -5994,10 +5999,15 @@ private:
 BEGIN_DATADESC(CPropDoorBreakable)
 DEFINE_KEYFIELD(pszScriptFile, FIELD_STRING, "Script"),
 DEFINE_KEYFIELD(m_iMinDamageToHurt, FIELD_INTEGER, "MinDamage"),
+DEFINE_KEYFIELD(m_bCanBreak, FIELD_INTEGER, "CanBreak"),
 DEFINE_KEYFIELD(m_flDamageScale, FIELD_FLOAT, "DamageScale"),
 DEFINE_KEYFIELD(m_iDoorHandle, FIELD_INTEGER, "DoorHandle"),
 DEFINE_KEYFIELD(m_iDoorHealth, FIELD_INTEGER, "DoorHealth"),
 DEFINE_KEYFIELD(m_clrGlow, FIELD_COLOR32, "GlowOverlayColor"),
+
+DEFINE_INPUTFUNC(FIELD_VOID, "SetBreakable", SetBreakable),
+DEFINE_INPUTFUNC(FIELD_VOID, "SetUnBreakable", SetUnBreakable),
+
 DEFINE_OUTPUT(m_OnBreak, "OnBreak"),
 END_DATADESC()
 
@@ -6012,6 +6022,7 @@ CPropDoorBreakable::CPropDoorBreakable()
 	m_iMinDamageToHurt = 0;
 	m_iDoorHandle = 0;
 	m_flDamageScale = 1.0f;
+	m_bCanBreak = true;
 	m_pDoorData.Purge();
 }
 
@@ -6044,11 +6055,7 @@ void CPropDoorBreakable::Spawn()
 
 	m_iHealth = m_iDoorHealth;
 	m_iMaxHealth = (m_iHealth > 0) ? m_iHealth : 1;
-
-	if (m_iHealth <= 0)
-		m_takedamage = DAMAGE_EVENTS_ONLY;
-	else
-		m_takedamage = DAMAGE_YES;
+	m_takedamage = DAMAGE_YES;
 
 	int doorhandle = FindBodygroupByName("handle01");
 	SetBodygroup(doorhandle, m_iDoorHandle);
@@ -6061,12 +6068,21 @@ void CPropDoorBreakable::UpdatePhysics(void)
 		VPhysicsUpdate(physics);
 }
 
+void CPropDoorBreakable::SetBreakable(inputdata_t &inputdata)
+{
+	m_bCanBreak = true;
+}
+
+void CPropDoorBreakable::SetUnBreakable(inputdata_t &inputdata)
+{
+	m_bCanBreak = false;
+}
+
 bool CPropDoorBreakable::CanEntityUseDoor(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
 {
 	// Zombie Players can no longer open breakable doors, they gotta break'em!
-	if ((m_takedamage == DAMAGE_YES) && pActivator && pActivator->IsZombie(true))
+	if (CanBreak() && pActivator && pActivator->IsZombie(true))
 		return false;
-
 	return true;
 }
 
@@ -6101,12 +6117,11 @@ bool CPropDoorBreakable::ParseDoorData(const char *script)
 
 int CPropDoorBreakable::OnTakeDamage(const CTakeDamageInfo &info)
 {
-	float flDamage = info.GetDamage();
 	int iOldHealth = m_iHealth;
-
-	if (iOldHealth <= 0)
+	if ((iOldHealth <= 0) || !CanBreak())
 		return 0;
 
+	float flDamage = info.GetDamage();
 	if (flDamage < (float)m_iMinDamageToHurt)
 		return 0;
 
