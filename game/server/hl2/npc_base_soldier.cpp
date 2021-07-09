@@ -923,19 +923,15 @@ void CNPC_BaseSoldier::RunTask( const Task_t *pTask )
 
 			if ( gpGlobals->curtime >= m_flNextAttack )
 			{
-				bool bIsUsingShotgun = IsWeaponShotgun();
-				if (!bIsUsingShotgun || (bIsUsingShotgun && IsActivityFinished())) // If the NPC is using a shotgun, wait for the fire anim to finish!
+				if (--m_nShots > 0)
 				{
-					if (--m_nShots > 0)
-					{
-						m_flShotDelay = FireActiveWeapon(ACT_RANGE_ATTACK1);
-						m_flLastAttackTime = gpGlobals->curtime;
-						m_flNextAttack = (gpGlobals->curtime + m_flShotDelay);
-					}
-					else
-					{					
-						TaskComplete();
-					}
+					m_flShotDelay = FireActiveWeapon(ACT_RANGE_ATTACK1);
+					m_flLastAttackTime = gpGlobals->curtime;
+					m_flNextAttack = (gpGlobals->curtime + m_flShotDelay);
+				}
+				else
+				{
+					TaskComplete();
 				}
 			}
 			else

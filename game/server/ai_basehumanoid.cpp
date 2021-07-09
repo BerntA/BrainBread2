@@ -197,28 +197,24 @@ void CAI_BaseHumanoid::RunTaskRangeAttack1( const Task_t *pTask )
 		}
 	}
 
-	bool bIsUsingShotgun = IsWeaponShotgun();
-	if (!bIsUsingShotgun || (bIsUsingShotgun && IsActivityFinished())) // If the NPC is using a shotgun, wait for the fire anim to finish!
+	if (gpGlobals->curtime >= GetNextAttack())
 	{
-		if (gpGlobals->curtime >= GetNextAttack())
+		if (!GetEnemy() || !GetEnemy()->IsAlive())
 		{
-			if (!GetEnemy() || !GetEnemy()->IsAlive())
-			{
-				TaskComplete();
-				return;
-			}
-
-			if (!GetShotRegulator()->IsInRestInterval())
-			{
-				if (GetShotRegulator()->ShouldShoot())
-				{
-					OnRangeAttack1();
-					FireActiveWeapon(ACT_RANGE_ATTACK1);
-				}
-				return;
-			}
 			TaskComplete();
+			return;
 		}
+
+		if (!GetShotRegulator()->IsInRestInterval())
+		{
+			if (GetShotRegulator()->ShouldShoot())
+			{
+				OnRangeAttack1();
+				FireActiveWeapon(ACT_RANGE_ATTACK1);
+			}
+			return;
+		}
+		TaskComplete();
 	}
 }
 
