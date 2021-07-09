@@ -987,6 +987,8 @@ void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pV
 	}
 
 	GetAchievementManager()->WriteToStat(pClient, "BBX_ST_KILLS");
+	if (pVictim->IsNPC() && (pVictim->Classify() == CLASS_MILITARY))
+		GetAchievementManager()->WriteToStat(pClient, "BBX_KI_BANDITS");
 }
 
 ////////////////////////////////////////////////
@@ -1014,6 +1016,8 @@ void CGameBaseShared::OnGameOver(float timeLeft, int iWinner)
 			pAchievement = "ACH_MAP_MECKLENBURG";
 		else if (!strcmp(currMap, "bbc_compound"))
 			pAchievement = "ACH_MAP_COMPOUND";
+		else if (!strcmp(currMap, "bbc_nightclub"))
+			pAchievement = "ACH_MAP_NIGHTCLUB";
 		else if (!strcmp(currMap, "bbc_coltec"))
 			pAchievement = "ACH_MAP_COLTEC_C";
 		else if (!strcmp(currMap, "bbc_ikrom"))

@@ -1450,7 +1450,7 @@ bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
 		return false;
 	}
 
-	if (pVictim != NULL && m_bIsInfected && (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE))
+	if ((pVictim != NULL) && m_bIsInfected && (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE))
 		return false;
 
 	if (m_iSkill_Level < MAX_PLAYER_LEVEL)
