@@ -826,16 +826,13 @@ void CNPC_BaseSoldier::StartTask( const Task_t *pTask )
 			BaseClass::StartTask( pTask );
 		}
 		break;
+
 	case TASK_RANGE_ATTACK1:
 	{
 		if (GetActiveWeapon())
-		{
 			m_nShots = (IsWeaponShotgun() ? 1 : GetActiveWeapon()->GetRandomBurst());
-			m_flShotDelay = GetActiveWeapon()->GetFireRate();
-		}
-
+		m_flShotDelay = FireActiveWeapon(ACT_RANGE_ATTACK1);
 		m_flNextAttack = (gpGlobals->curtime + m_flShotDelay);
-		ResetIdealActivity(ACT_RANGE_ATTACK1);
 		m_flLastAttackTime = gpGlobals->curtime;
 	}
 	break;
@@ -931,14 +928,12 @@ void CNPC_BaseSoldier::RunTask( const Task_t *pTask )
 				{
 					if (--m_nShots > 0)
 					{
-						// DevMsg("ACT_RANGE_ATTACK1\n");
-						ResetIdealActivity(ACT_RANGE_ATTACK1);
+						m_flShotDelay = FireActiveWeapon(ACT_RANGE_ATTACK1);
 						m_flLastAttackTime = gpGlobals->curtime;
 						m_flNextAttack = (gpGlobals->curtime + m_flShotDelay);
 					}
 					else
-					{
-						// DevMsg("TASK_RANGE_ATTACK1 complete\n");
+					{					
 						TaskComplete();
 					}
 				}
@@ -1071,6 +1066,9 @@ Activity CNPC_BaseSoldier::NPC_TranslateActivity(Activity eNewActivity)
 
 	if (eNewActivity == ACT_RAPPEL_LOOP || eNewActivity == ACT_COWER || eNewActivity == ACT_COVER)
 		return ACT_IDLE;
+
+	if ((eNewActivity == ACT_RUN) && IsAffectedBySkillFlag(SKILL_FLAG_COLDSNAP))
+		return ACT_WALK;
 
 	Activity soldierTranslated = ACT_INVALID;
 	switch (eNewActivity)

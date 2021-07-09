@@ -9,7 +9,12 @@
 
 #include "npc_base_soldier.h"
 
-//-------------------------------------
+enum CustomActorMovementBehaviors
+{
+	CUSTOM_ACTOR_MOV_NA = 0,
+	CUSTOM_ACTOR_MOV_JUMP,
+	CUSTOM_ACTOR_MOV_STATIC,
+};
 
 class CNPC_CustomActor : public CNPC_BaseSoldier
 {
@@ -23,8 +28,11 @@ public:
 	bool			ParseNPC(CBaseEntity *pEntity);
 	Class_T 		Classify();
 	bool            GetGender() { return m_bGender; }
-	bool            UsesNavMesh(void) { return true; }
 	int				SelectSchedule(void);
+
+	bool			ShouldMoveAndShoot() { return (m_iMovementBehavior != CUSTOM_ACTOR_MOV_STATIC); }
+	bool			UsesNavMesh(void) { return (m_iMovementBehavior != CUSTOM_ACTOR_MOV_STATIC); }
+	bool			IsStaticNPC(void) { return (m_iMovementBehavior == CUSTOM_ACTOR_MOV_STATIC); }
 
 	Activity		NPC_TranslateActivity(Activity eNewActivity);
 	void 			HandleAnimEvent(animevent_t *pEvent);
@@ -80,6 +88,8 @@ private:
 
 	// Sound Logic
 	int m_iTimesGreeted;
+
+	int m_iMovementBehavior;
 
 	//-----------------------------------------------------
 	//	Outputs

@@ -904,6 +904,8 @@ public:
 
 	virtual	bool		AllowedToIgnite( void ) { return false; }
 
+	virtual float		FireActiveWeapon(Activity activity);
+
 protected:
 	virtual float 		GetGoalRepathTolerance( CBaseEntity *pGoalEnt, GoalType_t type, const Vector &curGoal, const Vector &curTargetPos );
 
@@ -1828,7 +1830,7 @@ public:
 	virtual bool IsBoss() { return false; }
 	virtual bool CanAlwaysSeePlayers() { return false; }
 	virtual bool OverrideShouldAddToLookList(CBaseEntity *pEntity) { return true; }
-	virtual bool UsesNavMesh(void) { return false; }
+	virtual bool UsesNavMesh(void) { return true; }
 
 	// Crawl Mode Logic
 	virtual void EnterCrawlMode(void) { }

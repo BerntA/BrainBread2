@@ -345,13 +345,9 @@ void CNPCBaseSoldierStatic::StartTask(const Task_t *pTask)
 	case TASK_RANGE_ATTACK1:
 	{
 		if (GetActiveWeapon())
-		{
 			m_nShots = (IsWeaponShotgun() ? 1 : GetActiveWeapon()->GetRandomBurst());
-			m_flShotDelay = GetActiveWeapon()->GetFireRate();
-		}
-
+		m_flShotDelay = FireActiveWeapon(ACT_RANGE_ATTACK1);
 		m_flNextAttack = (gpGlobals->curtime + m_flShotDelay);
-		ResetIdealActivity(ACT_RANGE_ATTACK1);
 		m_flLastAttackTime = gpGlobals->curtime;
 	}
 	break;
@@ -439,14 +435,12 @@ void CNPCBaseSoldierStatic::RunTask(const Task_t *pTask)
 			{
 				if (--m_nShots > 0)
 				{
-					// DevMsg("ACT_RANGE_ATTACK1\n");
-					ResetIdealActivity(ACT_RANGE_ATTACK1);
+					m_flShotDelay = FireActiveWeapon(ACT_RANGE_ATTACK1);
 					m_flLastAttackTime = gpGlobals->curtime;
 					m_flNextAttack = (gpGlobals->curtime + m_flShotDelay);
 				}
 				else
 				{
-					// DevMsg("TASK_RANGE_ATTACK1 complete\n");
 					TaskComplete();
 				}
 			}

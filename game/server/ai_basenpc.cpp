@@ -5453,6 +5453,19 @@ CAI_BaseNPC *CAI_BaseNPC::CreateCustomTarget( const Vector &vecOrigin, float dur
 #endif// HL2_DLL
 }
 
+float CAI_BaseNPC::FireActiveWeapon(Activity activity)
+{
+	CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+	if (!pWeapon)
+		return 0.0f;
+
+	ResetIdealActivity(activity);
+	if (pWeapon->GetWeaponType() == WEAPON_TYPE_SHOTGUN)
+		return MAX(SequenceDuration(m_nIdealSequence), pWeapon->GetFireRate());
+
+	return pWeapon->GetFireRate();
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : eNewActivity - 
@@ -6640,7 +6653,7 @@ void CAI_BaseNPC::OnRangeAttack1()
 	CBaseCombatWeapon *pWeapon = GetActiveWeapon();
 	if (pWeapon && (pWeapon->GetWeaponType() == WEAPON_TYPE_SHOTGUN))
 	{
-		SetNextAttack(gpGlobals->curtime + MAX(0.5f, pWeapon->GetFireRate())); // Fixes crazy auto-shotgun shit. (sometimes they wait for god, why?)
+		SetNextAttack(gpGlobals->curtime + MAX(0.75f, pWeapon->GetFireRate())); // Fixes crazy auto-shotgun shit. (sometimes they wait for god, why?)
 		m_ShotRegulator.FireNoEarlierThan(GetNextAttack());
 	}
 	else

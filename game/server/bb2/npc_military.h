@@ -27,7 +27,6 @@ public:
 	void		OnChangeActivity( Activity eNewActivity );
 	void		OnListened();
 	int			OnTakeDamage( const CTakeDamageInfo &info );
-	bool		UsesNavMesh(void) { return true; }
 	void		ClearAttackConditions( void );
 	bool		AllowedToIgnite( void ) { return true; }
 	const char *GetNPCName() { return "Military"; }

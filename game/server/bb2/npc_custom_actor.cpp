@@ -72,6 +72,7 @@ DEFINE_KEYFIELD(m_bGender, FIELD_BOOLEAN, "gender"),
 DEFINE_KEYFIELD(m_bBossState, FIELD_BOOLEAN, "boss"),
 DEFINE_KEYFIELD(m_iTotalHP, FIELD_INTEGER, "totalhealth"),
 DEFINE_KEYFIELD(m_iszNPCName, FIELD_STRING, "npcname"),
+DEFINE_KEYFIELD(m_iMovementBehavior, FIELD_INTEGER, "movbehavior"),
 
 DEFINE_KEYFIELD(m_flDamageScaleFactor, FIELD_FLOAT, "damageScale"),
 DEFINE_KEYFIELD(m_flHealthScaleFactor, FIELD_FLOAT, "healthScale"),
@@ -93,6 +94,8 @@ CNPC_CustomActor::CNPC_CustomActor()
 
 	m_flDamageScaleValue = m_flHealthScaleValue = 0.0f;
 	m_flDamageScaleFactor = m_flHealthScaleFactor = 1.0f;
+
+	m_iMovementBehavior = CUSTOM_ACTOR_MOV_NA;
 }
 
 //-----------------------------------------------------------------------------
@@ -121,6 +124,12 @@ void CNPC_CustomActor::Spawn()
 	SetCollisionGroup(m_bIsAlly ? COLLISION_GROUP_NPC_MILITARY : COLLISION_GROUP_NPC_MERCENARY);
 	m_iNumGrenades = 0;
 	CapabilitiesRemove(bits_CAP_INNATE_MELEE_ATTACK1);
+
+	if (m_iMovementBehavior != CUSTOM_ACTOR_MOV_JUMP)
+		CapabilitiesRemove(bits_CAP_MOVE_JUMP);
+
+	if (m_iMovementBehavior == CUSTOM_ACTOR_MOV_STATIC)
+		CapabilitiesRemove(bits_CAP_MOVE_JUMP | bits_CAP_MOVE_GROUND | bits_CAP_MOVE_SHOOT | bits_CAP_DOORS_GROUP);
 }
 
 bool CNPC_CustomActor::ParseNPC(CBaseEntity *pEntity)
@@ -151,6 +160,17 @@ Class_T	CNPC_CustomActor::Classify()
 
 int CNPC_CustomActor::SelectSchedule(void)
 {
+	if (IsStaticNPC())
+	{
+		if (GetEnemy())
+		{
+			if (HasCondition(COND_CAN_RANGE_ATTACK1))
+				return SCHED_RANGE_ATTACK1;
+			return SCHED_FEAR_FACE;
+		}
+		return SCHED_COMBAT_STAND;
+	}
+
 	int schedHighPrio = SelectHighPrioSchedule();
 	if (schedHighPrio != SCHED_NONE)
 		return schedHighPrio;
@@ -192,6 +212,13 @@ void CNPC_CustomActor::TaskFail(AI_TaskFailureCode_t code)
 //-----------------------------------------------------------------------------
 Activity CNPC_CustomActor::NPC_TranslateActivity(Activity activity)
 {
+	if (IsStaticNPC() && (
+		((activity >= ACT_RUN) && (activity <= ACT_RUNTOIDLE)) ||
+		((activity >= ACT_WALK) && (activity <= ACT_WALK_CROUCH_AIM)) ||
+		((activity >= ACT_WALK_RIFLE) && (activity <= ACT_RUN_AIM_PISTOL))
+		))
+		return ACT_IDLE;
+
 	// Fixes faulty / missing ACT's for BB1 survivors.
 
 	if (activity == ACT_MELEE_ATTACK1)

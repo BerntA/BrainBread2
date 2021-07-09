@@ -45,6 +45,7 @@ public:
 	float			MaxYawSpeed(void);
 
 	bool			ShouldMoveAndShoot() { return false; }
+	bool			UsesNavMesh(void) { return false; }
 	bool			IsStaticNPC(void) { return true; }
 
 	void			HandleAnimEvent(animevent_t *pEvent);

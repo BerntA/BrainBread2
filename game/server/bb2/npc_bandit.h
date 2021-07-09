@@ -28,7 +28,6 @@ public:
 	int			OnTakeDamage(const CTakeDamageInfo &info);
 	void		ClearAttackConditions(void);
 	bool		AllowedToIgnite(void) { return true; }
-	bool		UsesNavMesh(void) { return true; }
 	Class_T		Classify(void);
 	BB2_SoundTypes GetNPCType() { return TYPE_BANDIT; }
 	const char *GetNPCName() { return "Bandit"; }

@@ -114,6 +114,7 @@ public:
 	virtual void OnChangeActivity( Activity eNewActivity );
 
 	virtual bool OverrideMove( float flInterval );
+	virtual bool UsesNavMesh(void) { return false; }
 
 	virtual void PainSound( const CTakeDamageInfo &info );
 	virtual void DeathSound( const CTakeDamageInfo &info );

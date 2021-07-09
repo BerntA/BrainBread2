@@ -89,7 +89,8 @@ void CInventoryItem::Spawn()
 		SetModelScale(m_pData->flScale);
 	SetLocalAngles(m_pData->angOffset);
 
-	EnableRotationEffect();
+	if (m_pData->bDisableRotationFX == false)
+		EnableRotationEffect();
 
 	AddSolidFlags(FSOLID_TRIGGER);
 }

@@ -324,6 +324,8 @@ struct DataInventoryItem_Base_t
 
 	float flScale;
 	QAngle angOffset;
+
+	bool bDisableRotationFX;
 #endif
 };
 

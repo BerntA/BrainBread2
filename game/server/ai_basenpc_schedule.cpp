@@ -1594,7 +1594,7 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 
 	case TASK_RANGE_ATTACK1:
 		SetLastAttackTime( gpGlobals->curtime );
-		ResetIdealActivity( ACT_RANGE_ATTACK1 );
+		FireActiveWeapon(ACT_RANGE_ATTACK1);
 		break;
 
 	case TASK_RANGE_ATTACK2:

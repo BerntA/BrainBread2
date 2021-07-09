@@ -1278,6 +1278,7 @@ void CGameDefinitionsShared::ParseInventoryData(KeyValues *pkvData, bool bIsMapI
 #ifndef CLIENT_DLL
 			item.flScale = 1.0f;
 			item.angOffset = QAngle(0, 0, 0);
+			item.bDisableRotationFX = (sub->GetInt("DisableRotationFX") >= 1);
 #endif
 
 			KeyValues *pkvModel = sub->FindKey("model");

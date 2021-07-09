@@ -75,7 +75,6 @@ public:
 	bool IsBoss() { return true; }
 	bool CanAlwaysSeePlayers() { return true; }
 	bool AllowedToIgnite(void) { return false; }
-	bool UsesNavMesh(void) { return true; }
 	bool ShouldAlwaysThink() { return true; }
 	Class_T Classify(void) { return CLASS_ZOMBIE_BOSS; }
 
@@ -194,6 +193,9 @@ void CNPCFred::Spawn(void)
 Activity CNPCFred::NPC_TranslateActivity(Activity newActivity)
 {
 	Activity wantedActivity = BaseClass::NPC_TranslateActivity(newActivity);
+
+	if (((newActivity == ACT_RUN) || (wantedActivity == ACT_RUN)) && IsAffectedBySkillFlag(SKILL_FLAG_COLDSNAP))
+		return ACT_WALK;
 
 	if ((m_flRageTime > 0.0f) && (m_flRageTime > gpGlobals->curtime))
 	{

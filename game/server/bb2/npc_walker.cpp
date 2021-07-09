@@ -81,7 +81,6 @@ public:
 	}
 
 	bool CanAlwaysSeePlayers();
-	bool UsesNavMesh(void) { return true; }
 
 	bool IsAllowedToBreakDoors(void);
 	bool ShouldUseNormalSpeedForSchedule(int scheduleType);
@@ -624,7 +623,7 @@ Activity CNPCWalker::NPC_TranslateActivity( Activity newActivity )
 	if ((newActivity == ACT_IDLE) || (newActivity == (Activity)ACT_ZOMBIE_TANTRUM))
 		bIsIdle = true;
 
-	if ((newActivity == ACT_WALK || newActivity == ACT_RUN) && !GameBaseServer()->IsClassicMode() && !IsCrawlingWithNoLegs() && !m_bIsInCrawlMode && m_bIsRunner)
+	if ((newActivity == ACT_WALK || newActivity == ACT_RUN) && !GameBaseServer()->IsClassicMode() && !IsCrawlingWithNoLegs() && !m_bIsInCrawlMode && m_bIsRunner && !IsAffectedBySkillFlag(SKILL_FLAG_COLDSNAP))
 			return (Activity)ACT_MELEE_CHARGE;
 
 	if (IsCrawlingWithNoLegs())
