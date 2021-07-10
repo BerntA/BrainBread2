@@ -40,8 +40,10 @@ void CPlayerAchievStats::OnKilled(CBaseEntity *pVictim, CBaseEntity *pInflictor,
 	if (!IsValid() || !pVictim || !pInflictor || (pVictim == m_pOuter))
 		return;
 
-	const int weaponID = info.GetForcedWeaponID();
 	CBaseCombatWeapon *pActiveWeapon = m_pOuter->GetActiveWeapon();
+	int weaponID = info.GetForcedWeaponID();
+	if (weaponID == WEAPON_ID_NONE)
+		weaponID = pActiveWeapon->GetUniqueWeaponID();
 
 	switch (weaponID)
 	{
@@ -85,6 +87,8 @@ void CPlayerAchievStats::OnKilled(CBaseEntity *pVictim, CBaseEntity *pInflictor,
 
 	if (m_iZombiePlayerHeadshots >= 3)
 		ACHMGR->WriteToAchievement(m_pOuter, "ACH_RAZ_SWEEPER");
+
+	PrintDebugMsg();
 }
 
 void CPlayerAchievStats::OnTookDamage(const CTakeDamageInfo &info)
@@ -98,6 +102,8 @@ void CPlayerAchievStats::OnDidDamage(const CTakeDamageInfo &info)
 
 	int currDamage = ((int)ceil(info.GetDamage()));
 	ACHMGR->WriteToStat(m_pOuter, "BBX_RZ_PAIN", currDamage, true);
+
+	PrintDebugMsg();
 }
 
 void CPlayerAchievStats::OnPickupItem(const DataInventoryItem_Base_t *item)
@@ -114,4 +120,21 @@ void CPlayerAchievStats::OnPickupItem(const DataInventoryItem_Base_t *item)
 
 	if (m_iHealthKitsUsed >= 10)
 		ACHMGR->WriteToAchievement(m_pOuter, "ACH_RAZ_HEALTH_ADDICT");
+
+	PrintDebugMsg();
+}
+
+static ConVar bb2_debug_achievements("bb2_debug_achievements", "0", FCVAR_GAMEDLL, "Debug player achievements.");
+
+void CPlayerAchievStats::PrintDebugMsg(void)
+{
+	if (!bb2_debug_achievements.GetBool())
+		return;
+
+	Warning("Achievement Status for %s:\n", m_pOuter->GetPlayerName());
+	Warning("KUNGFLU: %i %i %i\n", m_iZombieKicks, m_iZombiePunches, m_iZombieUppercuts);
+	Warning("HEALTHADDICT: %i\n", m_iHealthKitsUsed);
+	Warning("MAZELTOV: %i\n", m_iTotalHeadshots);
+	Warning("SWEEPER: %i\n", m_iZombiePlayerHeadshots);
+	Msg("\n");
 }

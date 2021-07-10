@@ -29,6 +29,7 @@ public:
 	void OnTookDamage(const CTakeDamageInfo &info);
 	void OnDidDamage(const CTakeDamageInfo &info);
 	void OnPickupItem(const DataInventoryItem_Base_t *item);
+	void PrintDebugMsg(void);
 
 private:
 	CHL2MP_Player *m_pOuter;
