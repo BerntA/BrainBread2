@@ -57,12 +57,11 @@ void CInventoryItem::Spawn()
 	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
 	BaseClass::Spawn();
 
-	if (m_pData->bGlobalGlow)
+	SetGlowMode(m_pData->bGlobalGlow ? GLOW_MODE_GLOBAL : GLOW_MODE_RADIUS);
+	if (m_pData->bGlobalGlow || (m_pData->clGlowColor.a() > 0))
 	{
-		Color glowColor = m_pData->clGlowColor;
-		color32 col32 = { (byte)glowColor.r(), (byte)glowColor.g(), (byte)glowColor.b(), (byte)glowColor.a() };
+		color32 col32 = { (byte)m_pData->clGlowColor.r(), (byte)m_pData->clGlowColor.g(), (byte)m_pData->clGlowColor.b(), (byte)m_pData->clGlowColor.a() };
 		m_GlowColor = col32;
-		SetGlowMode(GLOW_MODE_GLOBAL);
 	}
 
 	bool bRenderObjIcon = m_pData->bEnableObjectiveIcon;
@@ -87,10 +86,12 @@ void CInventoryItem::Spawn()
 	m_nSkin = m_pData->iSkin;
 	if (m_pData->flScale != 1.0f)
 		SetModelScale(m_pData->flScale);
-	SetLocalAngles(m_pData->angOffset);
 
 	if (m_pData->bDisableRotationFX == false)
+	{
+		SetLocalAngles(m_pData->angOffset);
 		EnableRotationEffect();
+	}
 
 	AddSolidFlags(FSOLID_TRIGGER);
 }

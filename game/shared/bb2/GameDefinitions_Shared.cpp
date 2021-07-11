@@ -1324,7 +1324,6 @@ void CGameDefinitionsShared::ParseInventoryData(KeyValues *pkvData, bool bIsMapI
 			item.bEnableObjectiveIcon = (pszObjIconTexture && pszObjIconTexture[0]);
 			item.bAutoConsume = sub->GetBool("AutoConsume");
 			Q_strncpy(item.szObjectiveIconTexture, pszObjIconTexture, MAX_WEAPON_STRING);
-			item.clGlowColor = Color(255, 255, 255, 255);
 
 			KeyValues *pkvColor = sub->FindKey("GlobalGlow");
 			if (pkvColor)
@@ -1337,9 +1336,10 @@ void CGameDefinitionsShared::ParseInventoryData(KeyValues *pkvData, bool bIsMapI
 					pkvColor->GetInt("a", 255)
 					);
 			}
+			else
+				item.clGlowColor = sub->GetColor("LocalGlow");
 
 			const char *pszEntityLink = sub->GetString("EntityLink");
-
 			item.bHasEntityLink = (pszEntityLink && pszEntityLink[0]);
 			Q_strncpy(item.szEntityLink, pszEntityLink, 64);
 #endif
