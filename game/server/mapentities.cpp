@@ -291,10 +291,12 @@ void SpawnAllEntities( int nEntities, HierarchicalSpawn_t *pSpawnList, bool bAct
 // Purpose: Only called on BSP load. Parses and spawns all the entities in the BSP.
 // Input  : pMapData - Pointer to the entity data block to parse.
 //-----------------------------------------------------------------------------
+bool g_bIsCreatingMapEntities = false; // Hack
 void MapEntity_ParseAllEntities(const char *pMapData, IMapEntityFilter *pFilter, bool bActivateEntities)
 {
 	VPROF("MapEntity_ParseAllEntities");
 
+	g_bIsCreatingMapEntities = true;
 	HierarchicalSpawnMapData_t *pSpawnMapData = new HierarchicalSpawnMapData_t[NUM_ENT_ENTRIES];
 	HierarchicalSpawn_t *pSpawnList = new HierarchicalSpawn_t[NUM_ENT_ENTRIES];
 
@@ -449,6 +451,8 @@ void MapEntity_ParseAllEntities(const char *pMapData, IMapEntityFilter *pFilter,
 
 	delete [] pSpawnMapData;
 	delete [] pSpawnList;
+
+	g_bIsCreatingMapEntities = false;
 }
 
 void SpawnHierarchicalList( int nEntities, HierarchicalSpawn_t *pSpawnList, bool bActivateEntities )

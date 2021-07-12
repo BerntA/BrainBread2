@@ -23,6 +23,8 @@ END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(inventory_item, CInventoryItem);
 
+extern bool g_bIsCreatingMapEntities;
+
 CInventoryItem::CInventoryItem()
 {
 	color32 col32 = { 20, 100, 150, 240 };
@@ -92,6 +94,8 @@ void CInventoryItem::Spawn()
 		SetLocalAngles(m_pData->angOffset);
 		EnableRotationEffect();
 	}
+	else if (!g_bIsCreatingMapEntities)
+		SetLocalAngles(m_pData->angOffset);
 
 	AddSolidFlags(FSOLID_TRIGGER);
 }
