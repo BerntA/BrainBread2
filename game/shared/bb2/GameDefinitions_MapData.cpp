@@ -146,13 +146,13 @@ bool CGameDefinitionsMapData::FetchMapData(void)
 	m_bSatRequestInfo = false;
 
 	// Fetch the official map list!
-	KeyValues *pkvOfficialMapData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/game/officialmaps");
+	KeyValues *pkvOfficialMapData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/checksums", true);
 	if (pkvOfficialMapData)
 	{
-		// Verify that this is our list, password style.
-		if (!strcmp(pkvOfficialMapData->GetName(), "OfficialMapDataXfGZ"))
+		KeyValues *pkvMapField = pkvOfficialMapData->FindKey("Maps");
+		if (pkvMapField)
 		{
-			for (KeyValues *sub = pkvOfficialMapData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+			for (KeyValues *sub = pkvMapField->GetFirstSubKey(); sub; sub = sub->GetNextKey())
 			{
 				gameMapItem_t mapItem;
 
@@ -184,31 +184,28 @@ bool CGameDefinitionsMapData::FetchMapData(void)
 	// Add other unknown custom maps (non workshop)...
 	char pszFileName[80];
 	FileFindHandle_t findHandle;
-	const char *pFilename = filesystem->FindFirstEx("data/maps/*.*", "MOD", &findHandle);
+	const char *pFilename = filesystem->FindFirstEx("data/maps/*.txt", "MOD", &findHandle);
 	while (pFilename)
 	{
-		if (strlen(pFilename) > 4)
+		Q_snprintf(pszFileName, 80, "data/maps/%s", pFilename);
+		pszFileName[strlen(pszFileName) - 4] = 0; // strip the file extension!
+
+		KeyValues *pkvMapData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, pszFileName);
+		if (pkvMapData)
 		{
-			Q_snprintf(pszFileName, 80, "data/maps/%s", pFilename);
-			pszFileName[strlen(pszFileName) - 4] = 0; // strip the file extension!
-
-			KeyValues *pkvMapData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, pszFileName);
-			if (pkvMapData)
+			const char *mapName = pkvMapData->GetString("Name");
+			if (GetMapIndex(mapName) == -1)
 			{
-				const char *mapName = pkvMapData->GetString("Name");
-				if (GetMapIndex(mapName) == -1)
-				{
-					gameMapItem_t mapItem;
-					GetMapInfo(mapName, mapItem, pkvMapData);
-					mapItem.flScore = 0.0f;
-					mapItem.iMapVerification = MAP_VERIFIED_UNKNOWN;
-					mapItem.workshopID = 0;
-					Q_strncpy(mapItem.pszMapName, mapName, 32);
-					pszGameMaps.AddToTail(mapItem);
-				}
-
-				pkvMapData->deleteThis();
+				gameMapItem_t mapItem;
+				GetMapInfo(mapName, mapItem, pkvMapData);
+				mapItem.flScore = 0.0f;
+				mapItem.iMapVerification = MAP_VERIFIED_UNKNOWN;
+				mapItem.workshopID = 0;
+				Q_strncpy(mapItem.pszMapName, mapName, 32);
+				pszGameMaps.AddToTail(mapItem);
 			}
+
+			pkvMapData->deleteThis();
 		}
 
 		pFilename = filesystem->FindNext(findHandle);

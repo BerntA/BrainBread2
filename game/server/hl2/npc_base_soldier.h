@@ -83,8 +83,8 @@ public:
 	void			PostNPCInit();
 	virtual void	GatherConditions();
 	virtual void	PrescheduleThink();
-	virtual void FireBullets(const FireBulletsInfo_t &info);
-	virtual int AllowEntityToBeGibbed(void);
+	virtual void	FireBullets(const FireBulletsInfo_t &info);
+	virtual int		AllowEntityToBeGibbed(void);
 
 	Activity		NPC_TranslateActivity( Activity eNewActivity );
 	virtual void	BuildScheduleTestBits( void );

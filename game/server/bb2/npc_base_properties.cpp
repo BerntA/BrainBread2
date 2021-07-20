@@ -16,8 +16,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-static ConVar ai_show_active_military_activities("ai_show_active_military_activities", "0", FCVAR_GAMEDLL | FCVAR_CHEAT, "Print out which activities are being executed by the military npcs.", true, 0.0f, true, 1.0f);
-
 CNPCBaseProperties::CNPCBaseProperties()
 {
 	m_iXPToGive = 0;
@@ -46,7 +44,7 @@ bool CNPCBaseProperties::ParseNPC(CBaseEntity *pEntity)
 	if (!GameBaseShared() || !GameBaseShared()->GetNPCData())
 		return false;
 
-	CNPCDataItem *npcData = GameBaseShared()->GetNPCData()->GetNPCData(GetNPCName());
+	CNPCDataItem *npcData = GameBaseShared()->GetNPCData()->GetNPCData(GetNPCScript(GetNPCClassType()));
 	if (npcData)
 	{
 		m_pNPCData = npcData;
@@ -155,7 +153,7 @@ void CNPCBaseProperties::FireGameEvent(IGameEvent *event)
 
 	if (!strcmp(type, "reload_game_data"))
 	{
-		m_pNPCData = GameBaseShared()->GetNPCData()->GetNPCData(GetNPCName());
+		m_pNPCData = GameBaseShared()->GetNPCData()->GetNPCData(GetNPCScript(GetNPCClassType()));
 		return;
 	}
 	else if (!strcmp(type, "player_connection"))
@@ -172,13 +170,20 @@ void CNPCBaseProperties::FireGameEvent(IGameEvent *event)
 		HL2MPRules()->EmitSoundToClient(m_pOuter, "Ready", GetNPCType(), GetGender());
 }
 
-/*static*/ void CNPCBaseProperties::OnActivityDebug(CAI_BaseNPC *pNPC, Activity value)
+/*static*/ const char *CNPCBaseProperties::GetNPCScript(int type)
 {
-	if (!pNPC || (ai_show_active_military_activities.GetBool() == false))
-		return;
-
-	if (pNPC->HaveSequenceForActivity(value))
-		return; // Valid, skip!
-
-	Msg("!! %s - %i, %s\n", pNPC->GetClassname(), value, CAI_BaseNPC::GetActivityName(value));
+	switch (type)
+	{
+	case NPC_CLASS_WALKER: return "Walker";
+	case NPC_CLASS_RUNNER: return "Runner";
+	case NPC_CLASS_FRED: return "Fred";
+	case NPC_CLASS_BANDIT: return "Bandit";
+	case NPC_CLASS_BANDIT_LEADER: return "Bandit Leader";
+	case NPC_CLASS_BANDIT_JOHNSON: return "Johnson";
+	case NPC_CLASS_MILITARY: return "Military";
+	case NPC_CLASS_POLICE: return "Police";
+	case NPC_CLASS_RIOT: return "Riot Police";
+	case NPC_CLASS_SWAT: return "S.W.A.T Police";
+	}
+	return "UNKNOWN";
 }

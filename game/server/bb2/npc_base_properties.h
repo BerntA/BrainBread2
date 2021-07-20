@@ -15,6 +15,20 @@
 class CNPCDataItem;
 class CAI_BaseNPC;
 
+enum NPC_CLASS_TYPES
+{
+	NPC_CLASS_WALKER = 0,
+	NPC_CLASS_RUNNER,
+	NPC_CLASS_FRED,
+	NPC_CLASS_BANDIT,
+	NPC_CLASS_BANDIT_LEADER,
+	NPC_CLASS_BANDIT_JOHNSON,
+	NPC_CLASS_MILITARY,
+	NPC_CLASS_POLICE,
+	NPC_CLASS_RIOT,
+	NPC_CLASS_SWAT,
+};
+
 abstract_class CNPCBaseProperties : public CGameEventListener
 {
 public:
@@ -33,13 +47,13 @@ public:
 	virtual bool GetGender() { return m_bGender; }
 	virtual int GetXP() { return m_iXPToGive; }
 
-	// Every NPC should override this!
-	virtual const char *GetNPCName() { return "UNKNOWN"; }
+	static const char *GetNPCScript(int type);
+
+	virtual const char *GetNPCName() { return (m_pNPCData ? m_pNPCData->szIndex : "N/A"); }
+	virtual int GetNPCClassType() { return -1; }
 
 	const char *GetNPCModelName() { return pszModelName; }
 	const char *GetOverridenSoundSet() { return pszSoundsetOverride; }
-
-	static void OnActivityDebug(CAI_BaseNPC *pNPC, Activity value);
 
 protected:
 

@@ -148,3 +148,11 @@ Class_T	CNPCBandit::Classify(void)
 {
 	return CLASS_MILITARY;
 }
+
+class CNPCBanditLeader : public CNPCBandit
+{
+public:
+	DECLARE_CLASS(CNPCBanditLeader, CNPCBandit);
+	int GetNPCClassType() { return NPC_CLASS_BANDIT_LEADER; }
+};
+LINK_ENTITY_TO_CLASS(npc_bandit_leader, CNPCBanditLeader);

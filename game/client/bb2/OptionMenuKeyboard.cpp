@@ -211,9 +211,9 @@ void OptionMenuKeyboard::FillKeyboardList(bool bfullUpdate)
 	m_pKeyBoardList->DeleteAllItems(); // Reset...
 
 	// Create a new keyvalue, load our keyboard button def file. THIS IS THE NEW KB_ACT.LST FILE ( SEE MOD/SCRIPTS FOR EXAMPLE OF OLD STUFF ).
-	// NEW KEYS GOES IN KeyboardButtons.TXT!
+	// NEW KEYS GOES IN bindings.TXT!
 	KeyValues *kvGetData = new KeyValues("KeyboardData");
-	if (kvGetData->LoadFromFile(filesystem, "data/settings/KeyboardButtons.txt", "MOD"))
+	if (kvGetData->LoadFromFile(filesystem, "data/settings/bindings.txt", "MOD"))
 	{
 		KeyValues *pkvCombat = kvGetData->FindKey("Combat");
 		KeyValues *pkvMovement = kvGetData->FindKey("Movement");
@@ -325,7 +325,7 @@ void OptionMenuKeyboard::UpdateKeyboardListData(ButtonCode_t code)
 
 		// We load the keyboard file to find the binding related to the text in szOldKey.
 		KeyValues *kvGetData = new KeyValues("KeyboardData");
-		if (kvGetData->LoadFromFile(filesystem, "data/settings/KeyboardButtons.txt", "MOD"))
+		if (kvGetData->LoadFromFile(filesystem, "data/settings/bindings.txt", "MOD"))
 		{
 			KeyValues *pkvCombat = kvGetData->FindKey("Combat");
 			KeyValues *pkvMovement = kvGetData->FindKey("Movement");

@@ -29,8 +29,8 @@ public:
 	void		ClearAttackConditions(void);
 	bool		AllowedToIgnite(void) { return true; }
 	Class_T		Classify(void);
-	BB2_SoundTypes GetNPCType() { return TYPE_BANDIT; }
-	const char *GetNPCName() { return "Bandit"; }
+	virtual BB2_SoundTypes GetNPCType() { return TYPE_BANDIT; }
+	virtual int GetNPCClassType() { return NPC_CLASS_BANDIT; }
 
 	int GetIdleState(void) { return g_pBanditQuestion; }
 	void SetIdleState(int state) { g_pBanditQuestion = state; }
@@ -40,4 +40,5 @@ private:
 
 	static int g_pBanditQuestion;
 };
+
 #endif // NPC_BANDIT_H

@@ -1104,9 +1104,6 @@ void CFuncTank::StopControl()
 // Called each frame by the player's ItemPostFrame
 //-----------------------------------------------------------------------------
 
-// NVNT turret recoil
-ConVar hap_turret_mag("hap_turret_mag", "5", 0);
-
 void CFuncTank::ControllerPostFrame( void )
 {
 	// Make sure we have a contoller.

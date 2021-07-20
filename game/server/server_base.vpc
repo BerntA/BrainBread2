@@ -76,6 +76,8 @@ $Project
 		{
 			$File "bb2\GameBase_Server.cpp"
 			$File "bb2\GameBase_Server.h"
+			$File "bb2\GameChecksumManager.cpp"
+			$File "bb2\GameChecksumManager.h"
 			$File "$SRCDIR\game\shared\bb2\GameBase_Shared.cpp"
 			$File "$SRCDIR\game\shared\bb2\GameBase_Shared.h"
 			$File "$SRCDIR\game\shared\bb2\GameDefinitions_NPC.cpp"

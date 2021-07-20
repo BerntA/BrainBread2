@@ -11,6 +11,7 @@
 #include "GameBase_Shared.h"
 #include "inetchannelinfo.h"
 #include "ai_basenpc.h"
+#include "GameChecksumManager.h"
 #include "movevars_shared.h"
 #include "world.h"
 #include "tier0/icommandline.h"
@@ -58,7 +59,6 @@ void CGameBaseServer::Release()
 void CGameBaseServer::LoadSharedInfo(void)
 {
 	m_pSharedDataList.Purge();
-
 	KeyValues *pkvAdminData = new KeyValues("AdminList");
 	if (pkvAdminData->LoadFromFile(filesystem, "data/server/admins.txt", "MOD"))
 	{
@@ -524,7 +524,7 @@ int CGameBaseServer::CanStoreSkills()
 	{
 		// Blacklisted? Using sourcemod or similar? Using cheats? Not hosting whitelisted maps? Exploiting through convars like gravity? etc...
 		// Did this server ever have cheats on? If so we'll not allow this server to load any stats until you restart the map with sv_cheats off.
-		if (IsServerBlacklisted() || bFoundIllegalPlugin || !bAllowStatsForMap || HasIllegalConVarValues() ||
+		if (IsServerBlacklisted() || bFoundIllegalPlugin || !bAllowStatsForMap || HasIllegalConVarValues() || !IsChecksumsValid() ||
 			bFoundCheats || (gpGlobals->maxClients <= 1) || (sv_cheats && sv_cheats->GetBool()) || !engine->IsDedicatedServer())
 			return PROFILE_NONE;
 	}

@@ -26,6 +26,7 @@ class CNPCMilitaryStatic : public CNPCBaseSoldierStatic
 	DECLARE_CLASS(CNPCMilitaryStatic, CNPCBaseSoldierStatic);
 
 public:
+
 	void		Spawn(void);
 	void		Precache(void);
 	void		DeathSound(const CTakeDamageInfo &info);
@@ -33,7 +34,7 @@ public:
 	void		ClearAttackConditions(void);
 	bool		IsHeavyDamage(const CTakeDamageInfo &info);
 	bool		AllowedToIgnite(void) { return true; }
-	const char *GetNPCName() { return "Military"; }
+	virtual int GetNPCClassType() { return NPC_CLASS_MILITARY; }
 };
 
 LINK_ENTITY_TO_CLASS(npc_military_static, CNPCMilitaryStatic);
@@ -63,9 +64,7 @@ int CNPCMilitaryStatic::OnTakeDamage(const CTakeDamageInfo &info)
 void CNPCMilitaryStatic::Spawn(void)
 {
 	Precache();
-
 	BaseClass::Spawn();
-
 	SetCollisionGroup(COLLISION_GROUP_NPC_MILITARY);
 }
 
@@ -123,3 +122,28 @@ bool CNPCMilitaryStatic::IsHeavyDamage(const CTakeDamageInfo &info)
 
 	return BaseClass::IsHeavyDamage(info);
 }
+
+class CNPCPoliceStatic : public CNPCMilitaryStatic
+{
+public:
+	DECLARE_CLASS(CNPCPoliceStatic, CNPCMilitaryStatic);
+	int GetNPCClassType() { return NPC_CLASS_POLICE; }
+};
+
+class CNPCRiotStatic : public CNPCMilitaryStatic
+{
+public:
+	DECLARE_CLASS(CNPCRiotStatic, CNPCMilitaryStatic);
+	int GetNPCClassType() { return NPC_CLASS_RIOT; }
+};
+
+class CNPCSWATStatic : public CNPCMilitaryStatic
+{
+public:
+	DECLARE_CLASS(CNPCSWATStatic, CNPCMilitaryStatic);
+	int GetNPCClassType() { return NPC_CLASS_SWAT; }
+};
+
+LINK_ENTITY_TO_CLASS(npc_police_static, CNPCPoliceStatic);
+LINK_ENTITY_TO_CLASS(npc_riot_static, CNPCRiotStatic);
+LINK_ENTITY_TO_CLASS(npc_swat_static, CNPCSWATStatic);

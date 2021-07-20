@@ -1058,46 +1058,31 @@ void CNPC_BaseSoldier::BuildScheduleTestBits( void )
 //-----------------------------------------------------------------------------
 Activity CNPC_BaseSoldier::NPC_TranslateActivity(Activity eNewActivity)
 {
-	OnActivityDebug(this, eNewActivity);
-
 	if (eNewActivity == ACT_RAPPEL_LOOP || eNewActivity == ACT_COWER || eNewActivity == ACT_COVER)
 		return ACT_IDLE;
 
 	if ((eNewActivity == ACT_RUN) && IsAffectedBySkillFlag(SKILL_FLAG_COLDSNAP))
 		return ACT_WALK;
 
-	Activity soldierTranslated = ACT_INVALID;
 	switch (eNewActivity)
 	{
 	case ACT_WALK_CROUCH_RIFLE:
-		soldierTranslated = ACT_WALK_RIFLE;
-		break;
+		return ACT_WALK_RIFLE;
 
 	case ACT_WALK_CROUCH_AIM_RIFLE:
-		soldierTranslated = ACT_WALK_AIM_RIFLE;
-		break;
+		return ACT_WALK_AIM_RIFLE;
 
 	case ACT_RUN_CROUCH_RIFLE:
-		soldierTranslated = ACT_RUN_RIFLE;
-		break;
+		return ACT_RUN_RIFLE;
 
 	case ACT_RUN_CROUCH_AIM_RIFLE:
-		soldierTranslated = ACT_RUN_AIM_RIFLE;
-		break;
+		return ACT_RUN_AIM_RIFLE;
 
 	case ACT_IDLE_ANGRY_PISTOL:
-		soldierTranslated = ACT_IDLE_PISTOL;
-		break;
+		return ACT_IDLE_PISTOL;
 
 	case ACT_RANGE_ATTACK2:
-		soldierTranslated = (Activity)ACT_COMBINE_THROW_GRENADE;
-		break;
-	}
-
-	if (soldierTranslated != ACT_INVALID)
-	{
-		OnActivityDebug(this, soldierTranslated);
-		return soldierTranslated;
+		return (Activity)ACT_COMBINE_THROW_GRENADE;
 	}
 
 	if (eNewActivity == ACT_IDLE)
@@ -1106,10 +1091,7 @@ Activity CNPC_BaseSoldier::NPC_TranslateActivity(Activity eNewActivity)
 			eNewActivity = ACT_IDLE_ANGRY;
 	}
 
-	Activity res = BaseClass::NPC_TranslateActivity(eNewActivity);
-	OnActivityDebug(this, res);
-
-	return res;
+	return BaseClass::NPC_TranslateActivity(eNewActivity);
 }
 
 //-----------------------------------------------------------------------------

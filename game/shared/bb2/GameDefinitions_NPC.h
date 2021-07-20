@@ -84,7 +84,7 @@ public:
 	// An index of -1 or out of -1 will return a random item if available.
 	const NPCModelItem_t *GetModelItem(int index = -1);
 
-	char szNPCName[MAX_MAP_NAME_SAVE];
+	char szIndex[MAX_MAP_NAME_SAVE];
 
 	int iHealthMin;
 	int iHealthMax;
@@ -118,7 +118,7 @@ public:
 
 	CNPCOverrideModelData(const char *name)
 	{
-		Q_strncpy(szNPCName, name, MAX_MAP_NAME_SAVE);
+		Q_strncpy(szIndex, name, MAX_MAP_NAME_SAVE);
 		pszModelList.Purge();
 	}
 
@@ -127,7 +127,7 @@ public:
 		pszModelList.Purge();
 	}
 
-	char szNPCName[MAX_MAP_NAME_SAVE];
+	char szIndex[MAX_MAP_NAME_SAVE];
 	CUtlVector<NPCModelItem_t> pszModelList;
 };
 

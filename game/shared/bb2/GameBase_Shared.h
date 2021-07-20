@@ -239,8 +239,9 @@ public:
 	const unsigned char *GetEncryptionKey(void) { return (unsigned char *)"F3QxBzK6"; }
 
 	// Game Base
-	KeyValues *ReadEncryptedKeyValueFile(IFileSystem *filesystem, const char *filePath);
+	KeyValues *ReadEncryptedKeyValueFile(IFileSystem *filesystem, const char *filePath, bool bEncryption = false);
 	void EncryptKeyValueFile(const char *filePath, const char *fileContent);
+	const char *GetFileChecksum(const char *relativePath);
 
 	// Base Stat / Skill / Player Values: Base Models / Survivors / Character Profiles:
 	CGameDefinitionsShared *GetSharedGameDetails(void) { return m_pSharedGameDefinitions; }

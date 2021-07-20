@@ -649,7 +649,7 @@ float CServerGameDLL::GetTickInterval( void ) const
 bool CServerGameDLL::GameInit( void )
 {
 	GameBaseServer()->Init();
-	GameBaseShared()->Init();
+	GameBaseShared()->Init();	
 
 	engine->ServerCommand( "exec game.cfg\n" );
 	engine->ServerExecute( );

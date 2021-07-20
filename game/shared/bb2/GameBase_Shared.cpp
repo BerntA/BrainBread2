@@ -9,11 +9,13 @@
 #include "hl2mp_gamerules.h"
 #include "particle_parse.h"
 #include "random_extended.h"
+#include "checksum_sha1.h"
 
 #ifndef CLIENT_DLL
 #include "items.h"
 #include "GameBase_Server.h"
 #include "html_data_handler.h"
+#include "GameChecksumManager.h"
 #else
 #include "fmod_manager.h"
 #include "hud_macros.h"
@@ -123,6 +125,8 @@ void CGameBaseShared::LoadBase()
 #ifdef CLIENT_DLL
 	if (m_pMusicSystem)
 		m_pMusicSystem->ParseMusicData();
+#else
+	LoadChecksums();
 #endif
 
 #ifdef CLIENT_DLL
@@ -171,6 +175,8 @@ void CGameBaseShared::Release()
 
 	if (m_pPlayerLoadoutHandler)
 		delete m_pPlayerLoadoutHandler;
+
+	DeleteChecksums();
 #endif
 }
 
@@ -178,10 +184,8 @@ void CGameBaseShared::Release()
 // Purpose:
 // Decrypt and return a readable format @ a bbd file.
 ///////////////////////////////////////////////
-KeyValues *CGameBaseShared::ReadEncryptedKeyValueFile(IFileSystem *filesystem, const char *filePath)
+KeyValues *CGameBaseShared::ReadEncryptedKeyValueFile(IFileSystem *filesystem, const char *filePath, bool bEncryption)
 {
-	bool bEncryption = false;
-
 	char szFile[MAX_WEAPON_STRING];
 	Q_strncpy(szFile, filePath, MAX_WEAPON_STRING);
 
@@ -286,6 +290,35 @@ void CGameBaseShared::EncryptKeyValueFile(const char *filePath, const char *file
 	}
 
 	MemFreeScratch();
+}
+
+////////////////////////////////////////////////
+// Purpose: Generates a SHA1 checksum hash.
+///////////////////////////////////////////////
+const char *CGameBaseShared::GetFileChecksum(const char *relativePath)
+{
+	static char out[k_cchHash];
+	out[0] = 0;
+
+	char filePath[MAX_PATH];
+	filesystem->RelativePathToFullPath(relativePath, "MOD", filePath, sizeof(filePath));
+	Q_FixSlashes(filePath, '/');
+
+	CSHA1 checksum;
+	checksum.HashFile(filePath);
+	checksum.Final();
+
+	unsigned char hashDigest[k_cubHash];
+	char szTemp[12];
+	checksum.GetHash(hashDigest);
+	for (unsigned int i = 0; i < k_cubHash; i++)
+	{
+		Q_snprintf(szTemp, sizeof(szTemp), "%02X", hashDigest[i]);
+		Q_strncat(out, szTemp, sizeof(out), COPY_ALL_CHARACTERS);
+	}
+
+	Q_strupr(out);
+	return out;
 }
 
 ////////////////////////////////////////////////

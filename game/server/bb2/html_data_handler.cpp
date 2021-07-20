@@ -11,6 +11,7 @@
 #include "GameBase_Shared.h"
 #include "filesystem.h"
 #include "KeyValues.h"
+#include "GameChecksumManager.h"
 
 #ifndef OSX
 #include "../../../thirdparty/curl/curl.h"
@@ -169,11 +170,11 @@ void LoadSharedData(void)
 #ifndef OSX		
 	if (GameBaseServer()->IsUsingDBSystem())
 	{
-		KeyValues *pkvMiscData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/game/game_data_misc");
+		KeyValues *pkvMiscData = GetChecksumKeyValue("Tags");
 		GameBaseServer()->SetServerBlacklisted(!pkvMiscData);
 		if (!pkvMiscData)
 		{
-			Msg("Unable to locate/read 'data/game/game_data_misc', server will be blacklisted until this issue has been resolved.\n");
+			Msg("Unable to locate/read game data tags, server will be blacklisted until this issue has been resolved.\n");
 			return;
 		}
 

@@ -43,7 +43,7 @@ public:
 	void Spawn( void );
 	void SpawnDirectly(void);
 	Class_T Classify( void );
-	const char *GetNPCName();
+	int GetNPCClassType() { return (m_bIsRunner ? NPC_CLASS_RUNNER : NPC_CLASS_WALKER); }
 	int AllowEntityToBeGibbed(void);
 	void MoanSound(void);
 	int TranslateSchedule( int scheduleType );
@@ -180,14 +180,6 @@ Class_T	CNPCWalker::Classify( void )
 		return CLASS_NONE;
 
 	return CLASS_ZOMBIE;
-}
-
-const char *CNPCWalker::GetNPCName()
-{
-	if (m_bIsRunner)
-		return "Runner";
-
-	return "Walker";
 }
 
 int CNPCWalker::AllowEntityToBeGibbed(void)

@@ -156,110 +156,136 @@ void CGameDefinitionsShared::Cleanup(void)
 bool CGameDefinitionsShared::LoadData(void)
 {
 	Cleanup();
+	KeyValues *pkvParseData = NULL, *pkvOther = NULL;
 
-	KeyValues *pkvParseData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/game/game_base_player_shared");
+	pkvParseData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/game/game_base_player_shared");
 	if (pkvParseData)
 	{
-		KeyValues *pkvShared = pkvParseData->FindKey("Shared");
-		if (pkvShared)
+		pkvOther = pkvParseData->FindKey("Shared");
+		if (pkvOther)
 		{
-			pszPlayerSharedData.iMaxLevel = pkvShared->GetInt("MaxLevel", MAX_PLAYER_LEVEL);
-			pszPlayerSharedData.iXPIncreasePerLevel = pkvShared->GetInt("XPPerLevel", 65);
-			pszPlayerSharedData.iTeamBonusDamageIncrease = pkvShared->GetInt("TeamBonusDamageIncrease", 1);
-			pszPlayerSharedData.iTeamBonusXPIncrease = pkvShared->GetInt("TeamBonusXPIncrease", 1);
-			pszPlayerSharedData.flPerkTime = pkvShared->GetFloat("PerkTime", 10.0f);
-			pszPlayerSharedData.iLevel = pkvShared->GetInt("Level", 1);
-			pszPlayerSharedData.iInfectionStartPercent = pkvShared->GetInt("InfectionStart", 15);
-			pszPlayerSharedData.flInfectionDuration = pkvShared->GetFloat("InfectionTime", 30.0f);
+			pszPlayerSharedData.iMaxLevel = pkvOther->GetInt("MaxLevel", MAX_PLAYER_LEVEL);
+			pszPlayerSharedData.iXPIncreasePerLevel = pkvOther->GetInt("XPPerLevel", 65);
+			pszPlayerSharedData.iTeamBonusDamageIncrease = pkvOther->GetInt("TeamBonusDamageIncrease", 1);
+			pszPlayerSharedData.iTeamBonusXPIncrease = pkvOther->GetInt("TeamBonusXPIncrease", 1);
+			pszPlayerSharedData.flPerkTime = pkvOther->GetFloat("PerkTime", 10.0f);
+			pszPlayerSharedData.iLevel = pkvOther->GetInt("Level", 1);
+			pszPlayerSharedData.iInfectionStartPercent = pkvOther->GetInt("InfectionStart", 15);
+			pszPlayerSharedData.flInfectionDuration = pkvOther->GetFloat("InfectionTime", 30.0f);
 		}
 
-		KeyValues *pkvSkills = pkvParseData->FindKey("HumanSkills");
-		if (pkvSkills)
+		pkvOther = pkvParseData->FindKey("HumanSkills");
+		if (pkvOther)
 		{
-			pszHumanSkillData.flAgilitySpeed = pkvSkills->GetFloat("Speed", 3.0f);
-			pszHumanSkillData.flAgilityJump = pkvSkills->GetFloat("Jump", 3.0f);
-			pszHumanSkillData.flAgilityLeap = pkvSkills->GetFloat("Leap", 5.0f);
-			pszHumanSkillData.flAgilitySlide = pkvSkills->GetFloat("Slide", 5.0f);
-			pszHumanSkillData.flAgilityEnhancedReflexes = pkvSkills->GetFloat("Reflexes", 4.0f);
-			pszHumanSkillData.flAgilityMeleeSpeed = pkvSkills->GetFloat("MeleeSpeed", 2.0f);
-			pszHumanSkillData.flAgilityLightweight = pkvSkills->GetFloat("Lightweight", 2.0f);
-			pszHumanSkillData.flAgilityWeightless = pkvSkills->GetFloat("Weightless", 4.0f);
-			pszHumanSkillData.flAgilityHealthRegen = pkvSkills->GetFloat("HealthRegen", 0.35f);
-			pszHumanSkillData.flAgilityRealityPhase = pkvSkills->GetFloat("RealityPhase", 3.0f);
+			pszHumanSkillData.flAgilitySpeed = pkvOther->GetFloat("Speed", 3.0f);
+			pszHumanSkillData.flAgilityJump = pkvOther->GetFloat("Jump", 3.0f);
+			pszHumanSkillData.flAgilityLeap = pkvOther->GetFloat("Leap", 5.0f);
+			pszHumanSkillData.flAgilitySlide = pkvOther->GetFloat("Slide", 5.0f);
+			pszHumanSkillData.flAgilityEnhancedReflexes = pkvOther->GetFloat("Reflexes", 4.0f);
+			pszHumanSkillData.flAgilityMeleeSpeed = pkvOther->GetFloat("MeleeSpeed", 2.0f);
+			pszHumanSkillData.flAgilityLightweight = pkvOther->GetFloat("Lightweight", 2.0f);
+			pszHumanSkillData.flAgilityWeightless = pkvOther->GetFloat("Weightless", 4.0f);
+			pszHumanSkillData.flAgilityHealthRegen = pkvOther->GetFloat("HealthRegen", 0.35f);
+			pszHumanSkillData.flAgilityRealityPhase = pkvOther->GetFloat("RealityPhase", 3.0f);
 
-			pszHumanSkillData.flStrengthHealth = pkvSkills->GetFloat("Health", 10.0f);
-			pszHumanSkillData.flStrengthImpenetrable = pkvSkills->GetFloat("Impenetrable", 2.0f);
-			pszHumanSkillData.flStrengthPainkiller = pkvSkills->GetFloat("Painkiller", 5.0f);
-			pszHumanSkillData.flStrengthLifeLeech = pkvSkills->GetFloat("LifeLeech", 1.0f);
-			pszHumanSkillData.flStrengthPowerKick = pkvSkills->GetFloat("PowerKick", 10.0f);
-			pszHumanSkillData.flStrengthBleed = pkvSkills->GetFloat("Bleed", 5.0f);
-			pszHumanSkillData.flStrengthCripplingBlow = pkvSkills->GetFloat("CripplingBlow", 2.0f);
-			pszHumanSkillData.flStrengthArmorMaster = pkvSkills->GetFloat("ArmorMaster", 2.0f);
-			pszHumanSkillData.flStrengthBloodRage = pkvSkills->GetFloat("BloodRage", 2.0f);
+			pszHumanSkillData.flStrengthHealth = pkvOther->GetFloat("Health", 10.0f);
+			pszHumanSkillData.flStrengthImpenetrable = pkvOther->GetFloat("Impenetrable", 2.0f);
+			pszHumanSkillData.flStrengthPainkiller = pkvOther->GetFloat("Painkiller", 5.0f);
+			pszHumanSkillData.flStrengthLifeLeech = pkvOther->GetFloat("LifeLeech", 1.0f);
+			pszHumanSkillData.flStrengthPowerKick = pkvOther->GetFloat("PowerKick", 10.0f);
+			pszHumanSkillData.flStrengthBleed = pkvOther->GetFloat("Bleed", 5.0f);
+			pszHumanSkillData.flStrengthCripplingBlow = pkvOther->GetFloat("CripplingBlow", 2.0f);
+			pszHumanSkillData.flStrengthArmorMaster = pkvOther->GetFloat("ArmorMaster", 2.0f);
+			pszHumanSkillData.flStrengthBloodRage = pkvOther->GetFloat("BloodRage", 2.0f);
 
-			pszHumanSkillData.flFirearmResourceful = pkvSkills->GetFloat("Resourceful", 3.0f);
-			pszHumanSkillData.flFirearmBlazingAmmo = pkvSkills->GetFloat("BlazingAmmo", 2.0f);
-			pszHumanSkillData.flFirearmColdsnap = pkvSkills->GetFloat("Coldsnap", 2.0f);
-			pszHumanSkillData.flFirearmEmpoweredBullets = pkvSkills->GetFloat("EmpoweredBullets", 4.0f);
-			pszHumanSkillData.flFirearmMagazineRefill = pkvSkills->GetFloat("MagazineRefill", 1.0f);
-			pszHumanSkillData.flFirearmGunslinger = pkvSkills->GetFloat("Gunslinger", 2.0f);
+			pszHumanSkillData.flFirearmResourceful = pkvOther->GetFloat("Resourceful", 3.0f);
+			pszHumanSkillData.flFirearmBlazingAmmo = pkvOther->GetFloat("BlazingAmmo", 2.0f);
+			pszHumanSkillData.flFirearmColdsnap = pkvOther->GetFloat("Coldsnap", 2.0f);
+			pszHumanSkillData.flFirearmEmpoweredBullets = pkvOther->GetFloat("EmpoweredBullets", 4.0f);
+			pszHumanSkillData.flFirearmMagazineRefill = pkvOther->GetFloat("MagazineRefill", 1.0f);
+			pszHumanSkillData.flFirearmGunslinger = pkvOther->GetFloat("Gunslinger", 2.0f);
 		}
 
-		pkvSkills = pkvParseData->FindKey("ZombieSkills");
-		if (pkvSkills)
+		pkvOther = pkvParseData->FindKey("ZombieSkills");
+		if (pkvOther)
 		{
-			pszZombieSkillData.flHealth = pkvSkills->GetFloat("Health", 5.0f);
-			pszZombieSkillData.flDamage = pkvSkills->GetFloat("Damage", 2.0f);
-			pszZombieSkillData.flDamageReduction = pkvSkills->GetFloat("DamageReduction", 3.0f);
-			pszZombieSkillData.flSpeed = pkvSkills->GetFloat("Speed", 4.0f);
-			pszZombieSkillData.flJump = pkvSkills->GetFloat("Jump", 3.0f);
-			pszZombieSkillData.flLeap = pkvSkills->GetFloat("Leap", 1.0f);
-			pszZombieSkillData.flDeath = pkvSkills->GetFloat("Death", 2.0f);
-			pszZombieSkillData.flLifeLeech = pkvSkills->GetFloat("LifeLeech", 2.0f);
-			pszZombieSkillData.flHealthRegen = pkvSkills->GetFloat("HealthRegen", 4.0f);
-			pszZombieSkillData.flMassInvasion = pkvSkills->GetFloat("MassInvasion", 1.0f);
+			pszZombieSkillData.flHealth = pkvOther->GetFloat("Health", 5.0f);
+			pszZombieSkillData.flDamage = pkvOther->GetFloat("Damage", 2.0f);
+			pszZombieSkillData.flDamageReduction = pkvOther->GetFloat("DamageReduction", 3.0f);
+			pszZombieSkillData.flSpeed = pkvOther->GetFloat("Speed", 4.0f);
+			pszZombieSkillData.flJump = pkvOther->GetFloat("Jump", 3.0f);
+			pszZombieSkillData.flLeap = pkvOther->GetFloat("Leap", 1.0f);
+			pszZombieSkillData.flDeath = pkvOther->GetFloat("Death", 2.0f);
+			pszZombieSkillData.flLifeLeech = pkvOther->GetFloat("LifeLeech", 2.0f);
+			pszZombieSkillData.flHealthRegen = pkvOther->GetFloat("HealthRegen", 4.0f);
+			pszZombieSkillData.flMassInvasion = pkvOther->GetFloat("MassInvasion", 1.0f);
 		}
 
-		pkvSkills = pkvParseData->FindKey("ZombieRageMode");
-		if (pkvSkills)
+		pkvOther = pkvParseData->FindKey("ZombieRageMode");
+		if (pkvOther)
 		{
-			pszZombieRageModeData.flHealth = pkvSkills->GetFloat("Health", 50.0f);
-			pszZombieRageModeData.flHealthRegen = pkvSkills->GetFloat("HealthRegen", 5.0f);
-			pszZombieRageModeData.flSpeed = pkvSkills->GetFloat("Speed", 25.0f);
-			pszZombieRageModeData.flJump = pkvSkills->GetFloat("Jump", 5.0f);
-			pszZombieRageModeData.flLeap = pkvSkills->GetFloat("Leap", 5.0f);
-			pszZombieRageModeData.flDuration = pkvSkills->GetFloat("Duration", 15.0f);
-			pszZombieRageModeData.flRequiredDamageThreshold = pkvSkills->GetFloat("DamageRequired", 250.0f);
-			pszZombieRageModeData.flTimeUntilBarDepletes = pkvSkills->GetFloat("TimeUntilBarDepletes", 3.0f);
-			pszZombieRageModeData.flDepletionRate = pkvSkills->GetFloat("DepletionRate", 10.0f);
+			pszZombieRageModeData.flHealth = pkvOther->GetFloat("Health", 50.0f);
+			pszZombieRageModeData.flHealthRegen = pkvOther->GetFloat("HealthRegen", 5.0f);
+			pszZombieRageModeData.flSpeed = pkvOther->GetFloat("Speed", 25.0f);
+			pszZombieRageModeData.flJump = pkvOther->GetFloat("Jump", 5.0f);
+			pszZombieRageModeData.flLeap = pkvOther->GetFloat("Leap", 5.0f);
+			pszZombieRageModeData.flDuration = pkvOther->GetFloat("Duration", 15.0f);
+			pszZombieRageModeData.flRequiredDamageThreshold = pkvOther->GetFloat("DamageRequired", 250.0f);
+			pszZombieRageModeData.flTimeUntilBarDepletes = pkvOther->GetFloat("TimeUntilBarDepletes", 3.0f);
+			pszZombieRageModeData.flDepletionRate = pkvOther->GetFloat("DepletionRate", 10.0f);
 		}
 
-		pkvSkills = pkvParseData->FindKey("MiscSkillInfo");
-		if (pkvSkills)
+		pkvOther = pkvParseData->FindKey("MiscSkillInfo");
+		if (pkvOther)
 		{
-			pszPlayerMiscSkillData.flBleedDuration = pkvSkills->GetFloat("BleedDuration");
-			pszPlayerMiscSkillData.flBleedFrequency = pkvSkills->GetFloat("BleedFrequency");
+			pszPlayerMiscSkillData.flBleedDuration = pkvOther->GetFloat("BleedDuration");
+			pszPlayerMiscSkillData.flBleedFrequency = pkvOther->GetFloat("BleedFrequency");
 
-			pszPlayerMiscSkillData.flNPCBurnDuration = pkvSkills->GetFloat("BurnDurationNPC");
-			pszPlayerMiscSkillData.flNPCBurnDamage = pkvSkills->GetFloat("BurnDamageNPC");
-			pszPlayerMiscSkillData.flNPCBurnFrequency = pkvSkills->GetFloat("BurnFrequencyNPC");
+			pszPlayerMiscSkillData.flNPCBurnDuration = pkvOther->GetFloat("BurnDurationNPC");
+			pszPlayerMiscSkillData.flNPCBurnDamage = pkvOther->GetFloat("BurnDamageNPC");
+			pszPlayerMiscSkillData.flNPCBurnFrequency = pkvOther->GetFloat("BurnFrequencyNPC");
 
-			pszPlayerMiscSkillData.flPlayerBurnDuration = pkvSkills->GetFloat("BurnDurationPlayer");
-			pszPlayerMiscSkillData.flPlayerBurnDamage = pkvSkills->GetFloat("BurnDamagePlayer");
-			pszPlayerMiscSkillData.flPlayerBurnFrequency = pkvSkills->GetFloat("BurnFrequencyPlayer");
+			pszPlayerMiscSkillData.flPlayerBurnDuration = pkvOther->GetFloat("BurnDurationPlayer");
+			pszPlayerMiscSkillData.flPlayerBurnDamage = pkvOther->GetFloat("BurnDamagePlayer");
+			pszPlayerMiscSkillData.flPlayerBurnFrequency = pkvOther->GetFloat("BurnFrequencyPlayer");
 
-			pszPlayerMiscSkillData.flStunDuration = pkvSkills->GetFloat("StunDuration");
-			pszPlayerMiscSkillData.flSlowDownDuration = pkvSkills->GetFloat("SlowDownDuration");
-			pszPlayerMiscSkillData.flSlowDownPercent = pkvSkills->GetFloat("SlowDownPercent");
+			pszPlayerMiscSkillData.flStunDuration = pkvOther->GetFloat("StunDuration");
+			pszPlayerMiscSkillData.flSlowDownDuration = pkvOther->GetFloat("SlowDownDuration");
+			pszPlayerMiscSkillData.flSlowDownPercent = pkvOther->GetFloat("SlowDownPercent");
 
-			pszPlayerMiscSkillData.flKickDamage = pkvSkills->GetFloat("KickDamage");
-			pszPlayerMiscSkillData.flKickRange = pkvSkills->GetFloat("KickRange");
-			pszPlayerMiscSkillData.flKickKnockbackForce = pkvSkills->GetFloat("KickForce");
-			pszPlayerMiscSkillData.flKickCooldown = pkvSkills->GetFloat("KickCooldown");
+			pszPlayerMiscSkillData.flKickDamage = pkvOther->GetFloat("KickDamage");
+			pszPlayerMiscSkillData.flKickRange = pkvOther->GetFloat("KickRange");
+			pszPlayerMiscSkillData.flKickKnockbackForce = pkvOther->GetFloat("KickForce");
+			pszPlayerMiscSkillData.flKickCooldown = pkvOther->GetFloat("KickCooldown");
 
-			pszPlayerMiscSkillData.flSlideLength = pkvSkills->GetFloat("SlideLength");
-			pszPlayerMiscSkillData.flSlideSpeed = pkvSkills->GetFloat("SlideSpeed");
-			pszPlayerMiscSkillData.flSlideCooldown = pkvSkills->GetFloat("SlideCooldown");
+			pszPlayerMiscSkillData.flSlideLength = pkvOther->GetFloat("SlideLength");
+			pszPlayerMiscSkillData.flSlideSpeed = pkvOther->GetFloat("SlideSpeed");
+			pszPlayerMiscSkillData.flSlideCooldown = pkvOther->GetFloat("SlideCooldown");
+		}
+
+		pkvOther = pkvParseData->FindKey("ItemArmor");
+		if (pkvOther)
+		{
+			for (KeyValues *sub = pkvOther->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+			{
+				DataInventoryItem_Armor_t item;
+				item.iItemID = (uint)atol(sub->GetName());
+				item.iWeight = sub->GetInt("weight");
+				item.iReductionPercent = sub->GetInt("reduction");
+				pszItemArmorData.AddToTail(item);
+			}
+		}
+
+		pkvOther = pkvParseData->FindKey("ItemHealth");
+		if (pkvOther)
+		{
+			for (KeyValues *sub = pkvOther->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+			{
+				DataInventoryItem_Misc_t item;
+				item.iItemID = (uint)atol(sub->GetName());
+				item.iValue = sub->GetInt();
+				pszItemMiscData.AddToTail(item);
+			}
 		}
 
 		pkvParseData->deleteThis();
@@ -464,39 +490,6 @@ bool CGameDefinitionsShared::LoadData(void)
 	else
 		Warning("Failed to parse: data/game/gamemode_shared!\n");
 
-	pkvParseData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/game/items_misc_base");
-	if (pkvParseData)
-	{
-		for (KeyValues *sub = pkvParseData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-		{
-			DataInventoryItem_Misc_t item;
-			item.iItemID = (uint)atol(sub->GetName());
-			item.iValue = sub->GetInt();
-			pszItemMiscData.AddToTail(item);
-		}
-
-		pkvParseData->deleteThis();
-	}
-	else
-		Warning("Failed to parse: data/game/items_misc_base!\n");
-
-	pkvParseData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/game/items_armor_base");
-	if (pkvParseData)
-	{
-		for (KeyValues *sub = pkvParseData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-		{
-			DataInventoryItem_Armor_t item;
-			item.iItemID = (uint)atol(sub->GetName());
-			item.iWeight = sub->GetInt("weight");
-			item.iReductionPercent = sub->GetInt("reduction");
-			pszItemArmorData.AddToTail(item);
-		}
-
-		pkvParseData->deleteThis();
-	}
-	else
-		Warning("Failed to parse: data/game/items_armor_base!\n");
-
 	pkvParseData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/game/game_base_shared");
 	if (pkvParseData)
 	{
@@ -625,7 +618,7 @@ bool CGameDefinitionsShared::LoadData(void)
 	}
 	filesystem->FindClose(findHandle);
 
-	pkvParseData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/settings/Tips");
+	pkvParseData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/settings/tips");
 	if (pkvParseData)
 	{
 		for (KeyValues *sub = pkvParseData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
@@ -639,7 +632,7 @@ bool CGameDefinitionsShared::LoadData(void)
 		pkvParseData->deleteThis();
 	}
 	else
-		Warning("Failed to parse: data/settings/Tips!\n");
+		Warning("Failed to parse: data/settings/tips!\n");
 
 	pFilename = filesystem->FindFirstEx("data/characters/*.txt", "MOD", &findHandle);
 	while (pFilename)

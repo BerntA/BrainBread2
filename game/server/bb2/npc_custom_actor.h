@@ -66,6 +66,7 @@ public:
 	void			AnnounceEnemyKill(CBaseEntity *pEnemy);
 
 	BB2_SoundTypes GetNPCType() { return TYPE_CUSTOM; }
+	int GetNPCClassType() { return -1; }
 	const char *GetNPCName()
 	{
 		const char *name = STRING(m_iszNPCName);

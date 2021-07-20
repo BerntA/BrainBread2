@@ -47,114 +47,106 @@ void CGameDefinitionsNPC::CleanupOverrideData(void)
 bool CGameDefinitionsNPC::LoadNPCData(void)
 {
 	Cleanup();
-
+	char filePath[MAX_WEAPON_STRING];
 	FileFindHandle_t findHandle;
-	const char *pFilename = filesystem->FindFirstEx("data/npc/*.*", "MOD", &findHandle);
+	const char *pFilename = filesystem->FindFirstEx("data/npc/*.txt", "MOD", &findHandle);
 	while (pFilename)
 	{
-		if (strlen(pFilename) > 4)
+		Q_snprintf(filePath, MAX_WEAPON_STRING, "data/npc/%s", pFilename);
+		filePath[strlen(filePath) - 4] = 0; // null terminate here so we remove the file extension part.
+		KeyValues *npcData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, filePath);
+		if (npcData)
 		{
-			char npcName[MAX_MAP_NAME_SAVE];
-			Q_strncpy(npcName, pFilename, MAX_MAP_NAME_SAVE);
-			npcName[strlen(npcName) - 4] = 0; // strip the file extension!
+			CNPCDataItem *npcItem = new CNPCDataItem();
 
-			char filePath[MAX_WEAPON_STRING];
-			Q_snprintf(filePath, MAX_WEAPON_STRING, "data/npc/%s", pFilename);
-			filePath[strlen(filePath) - 4] = 0; // null terminate here so we remove the file extension part.
+			Q_strncpy(npcItem->szIndex, npcData->GetString("Name", "N/A"), MAX_MAP_NAME_SAVE);
 
-			KeyValues *npcData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, filePath);
-			if (npcData)
+			npcItem->iHealthMin = npcData->GetInt("HealthMin", 100);
+			npcItem->iHealthMax = npcData->GetInt("HealthMax", 100);
+
+			npcItem->iSlashDamageMin = npcData->GetInt("DamageSingleMin", 1);
+			npcItem->iSlashDamageMax = npcData->GetInt("DamageSingleMax", 1);
+
+			npcItem->iDoubleSlashDamageMin = npcData->GetInt("DamageBothMin", 1);
+			npcItem->iDoubleSlashDamageMax = npcData->GetInt("DamageBothMax", 1);
+
+			npcItem->flSpeedFactorMin = npcData->GetFloat("SpeedMin", 1.0f);
+			npcItem->flSpeedFactorMax = npcData->GetFloat("SpeedMax", 1.0f);
+
+			npcItem->iKickDamageMin = npcData->GetInt("KickDamageMin");
+			npcItem->iKickDamageMax = npcData->GetInt("KickDamageMax");
+
+			npcItem->iXP = npcData->GetInt("XP");
+			npcItem->flHealthScale = npcData->GetFloat("HealthScale", 10.0f);
+			npcItem->flDamageScale = npcData->GetFloat("DamageScale", 10.0f);
+			npcItem->flRange = npcData->GetFloat("Range", 50.0f);
+
+			KeyValues *pkvMdl = npcData->FindKey("Models");
+			if (pkvMdl)
 			{
-				CNPCDataItem *npcItem = new CNPCDataItem();
-				Q_strncpy(npcItem->szNPCName, npcName, MAX_MAP_NAME_SAVE);
-
-				npcItem->iHealthMin = npcData->GetInt("HealthMin", 100);
-				npcItem->iHealthMax = npcData->GetInt("HealthMax", 100);
-
-				npcItem->iSlashDamageMin = npcData->GetInt("DamageSingleMin", 1);
-				npcItem->iSlashDamageMax = npcData->GetInt("DamageSingleMax", 1);
-
-				npcItem->iDoubleSlashDamageMin = npcData->GetInt("DamageBothMin", 1);
-				npcItem->iDoubleSlashDamageMax = npcData->GetInt("DamageBothMax", 1);
-
-				npcItem->flSpeedFactorMin = npcData->GetFloat("SpeedMin", 1.0f);
-				npcItem->flSpeedFactorMax = npcData->GetFloat("SpeedMax", 1.0f);
-
-				npcItem->iKickDamageMin = npcData->GetInt("KickDamageMin");
-				npcItem->iKickDamageMax = npcData->GetInt("KickDamageMax");
-
-				npcItem->iXP = npcData->GetInt("XP");
-				npcItem->flHealthScale = npcData->GetFloat("HealthScale", 10.0f);
-				npcItem->flDamageScale = npcData->GetFloat("DamageScale", 10.0f);
-				npcItem->flRange = npcData->GetFloat("Range", 50.0f);
-
-				KeyValues *pkvMdl = npcData->FindKey("Models");
-				if (pkvMdl)
+				for (KeyValues *sub = pkvMdl->GetFirstSubKey(); sub; sub = sub->GetNextKey())
 				{
-					for (KeyValues *sub = pkvMdl->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-					{
-						NPCModelItem_t modelItem;
-						Q_strncpy(modelItem.szModelPath, sub->GetName(), MAX_WEAPON_STRING);
+					NPCModelItem_t modelItem;
+					Q_strncpy(modelItem.szModelPath, sub->GetName(), MAX_WEAPON_STRING);
 
-						// GIB Info:
-						Q_strncpy(modelItem.szGibHead, sub->GetString("head"), MAX_WEAPON_STRING);
-						Q_strncpy(modelItem.szGibArmRight, sub->GetString("arms_right"), MAX_WEAPON_STRING);
-						Q_strncpy(modelItem.szGibArmLeft, sub->GetString("arms_left"), MAX_WEAPON_STRING);
-						Q_strncpy(modelItem.szGibLegRight, sub->GetString("legs_right"), MAX_WEAPON_STRING);
-						Q_strncpy(modelItem.szGibLegLeft, sub->GetString("legs_left"), MAX_WEAPON_STRING);
+					// GIB Info:
+					Q_strncpy(modelItem.szGibHead, sub->GetString("head"), MAX_WEAPON_STRING);
+					Q_strncpy(modelItem.szGibArmRight, sub->GetString("arms_right"), MAX_WEAPON_STRING);
+					Q_strncpy(modelItem.szGibArmLeft, sub->GetString("arms_left"), MAX_WEAPON_STRING);
+					Q_strncpy(modelItem.szGibLegRight, sub->GetString("legs_right"), MAX_WEAPON_STRING);
+					Q_strncpy(modelItem.szGibLegLeft, sub->GetString("legs_left"), MAX_WEAPON_STRING);
 
-						modelItem.iSkinMax = sub->GetInt("skin_max");
-						modelItem.iSkinMin = sub->GetInt("skin_min");
+					modelItem.iSkinMax = sub->GetInt("skin_max");
+					modelItem.iSkinMin = sub->GetInt("skin_min");
 
-						npcItem->pszModelList.AddToTail(modelItem);
-					}
+					npcItem->pszModelList.AddToTail(modelItem);
 				}
-
-				KeyValues *pkvWeapons = npcData->FindKey("WeaponDefinitions");
-				if (pkvWeapons)
-				{
-					for (KeyValues *sub = pkvWeapons->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-					{
-						NPCWeaponItem_t weaponItem;
-						Q_strncpy(weaponItem.szWeaponClass, sub->GetName(), 32);
-						
-						if (sub->FindKey("damage"))
-							weaponItem.flDamageMin = weaponItem.flDamageMax = MAX(sub->GetFloat("damage"), 0.1f);
-						else if (sub->FindKey("damage_min") && sub->FindKey("damage_max"))
-						{
-							weaponItem.flDamageMin = MAX(sub->GetFloat("damage_min"), 0.1f);
-							weaponItem.flDamageMax = MAX(sub->GetFloat("damage_max"), 0.1f);
-						}
-						else
-							weaponItem.flDamageMin = weaponItem.flDamageMax = 1.0f;
-
-						weaponItem.flDamageScale[DAMAGE_SCALE_TO_PLAYER] = sub->GetFloat("scale_player", 1.0f);
-						weaponItem.flDamageScale[DAMAGE_SCALE_TO_PLAYER_ZOMBIE] = sub->GetFloat("scale_player_zombie", 1.0f);
-						weaponItem.flDamageScale[DAMAGE_SCALE_TO_NPC_ZOMBIES] = sub->GetFloat("scale_npc_zombies", 1.0f);
-						weaponItem.flDamageScale[DAMAGE_SCALE_TO_NPC_HUMANS] = sub->GetFloat("scale_npc_humans", 1.0f);
-						weaponItem.flDamageScale[DAMAGE_SCALE_TO_NPC_ZOMBIE_BOSSES] = sub->GetFloat("scale_npc_zombie_bosses", 1.0f);
-						weaponItem.flDamageScale[DAMAGE_SCALE_TO_NPC_HUMAN_BOSSES] = sub->GetFloat("scale_npc_human_bosses", 1.0f);
-						npcItem->pszWeaponList.AddToTail(weaponItem);
-					}
-				}
-
-				KeyValues *pkvLimbs = npcData->FindKey("LimbData");
-				if (pkvLimbs)
-				{
-					for (KeyValues *sub = pkvLimbs->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-					{
-						NPCLimbItem_t limbItem;
-						Q_strncpy(limbItem.szLimb, sub->GetName(), 32);
-						limbItem.flScale = sub->GetFloat("scale", 1.0f);
-						limbItem.flHealth = sub->GetFloat("health", 10.0f);
-						npcItem->pszLimbList.AddToTail(limbItem);
-					}
-				}
-
-				pszNPCItems.AddToTail(npcItem);
-
-				npcData->deleteThis();
 			}
+
+			KeyValues *pkvWeapons = npcData->FindKey("WeaponDefinitions");
+			if (pkvWeapons)
+			{
+				for (KeyValues *sub = pkvWeapons->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+				{
+					NPCWeaponItem_t weaponItem;
+					Q_strncpy(weaponItem.szWeaponClass, sub->GetName(), 32);
+
+					if (sub->FindKey("damage"))
+						weaponItem.flDamageMin = weaponItem.flDamageMax = MAX(sub->GetFloat("damage"), 0.1f);
+					else if (sub->FindKey("damage_min") && sub->FindKey("damage_max"))
+					{
+						weaponItem.flDamageMin = MAX(sub->GetFloat("damage_min"), 0.1f);
+						weaponItem.flDamageMax = MAX(sub->GetFloat("damage_max"), 0.1f);
+					}
+					else
+						weaponItem.flDamageMin = weaponItem.flDamageMax = 1.0f;
+
+					weaponItem.flDamageScale[DAMAGE_SCALE_TO_PLAYER] = sub->GetFloat("scale_player", 1.0f);
+					weaponItem.flDamageScale[DAMAGE_SCALE_TO_PLAYER_ZOMBIE] = sub->GetFloat("scale_player_zombie", 1.0f);
+					weaponItem.flDamageScale[DAMAGE_SCALE_TO_NPC_ZOMBIES] = sub->GetFloat("scale_npc_zombies", 1.0f);
+					weaponItem.flDamageScale[DAMAGE_SCALE_TO_NPC_HUMANS] = sub->GetFloat("scale_npc_humans", 1.0f);
+					weaponItem.flDamageScale[DAMAGE_SCALE_TO_NPC_ZOMBIE_BOSSES] = sub->GetFloat("scale_npc_zombie_bosses", 1.0f);
+					weaponItem.flDamageScale[DAMAGE_SCALE_TO_NPC_HUMAN_BOSSES] = sub->GetFloat("scale_npc_human_bosses", 1.0f);
+					npcItem->pszWeaponList.AddToTail(weaponItem);
+				}
+			}
+
+			KeyValues *pkvLimbs = npcData->FindKey("LimbData");
+			if (pkvLimbs)
+			{
+				for (KeyValues *sub = pkvLimbs->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+				{
+					NPCLimbItem_t limbItem;
+					Q_strncpy(limbItem.szLimb, sub->GetName(), 32);
+					limbItem.flScale = sub->GetFloat("scale", 1.0f);
+					limbItem.flHealth = sub->GetFloat("health", 10.0f);
+					npcItem->pszLimbList.AddToTail(limbItem);
+				}
+			}
+
+			pszNPCItems.AddToTail(npcItem);
+
+			npcData->deleteThis();
 		}
 
 		pFilename = filesystem->FindNext(findHandle);
@@ -224,12 +216,14 @@ bool CGameDefinitionsNPC::Precache(void)
 
 int CGameDefinitionsNPC::GetIndex(const char *name)
 {
-	for (int i = 0; i < pszNPCItems.Count(); ++i)
+	if (name && name[0])
 	{
-		if (!strcmp(pszNPCItems[i]->szNPCName, name))
-			return i;
+		for (int i = 0; i < pszNPCItems.Count(); ++i)
+		{
+			if (!strcmp(pszNPCItems[i]->szIndex, name))
+				return i;
+		}
 	}
-
 	return -1;
 }
 
@@ -472,12 +466,14 @@ void CGameDefinitionsNPC::LoadNPCOverrideData(KeyValues *pkvData)
 
 int CGameDefinitionsNPC::GetOverridedModelIndexForNPC(const char *name)
 {
-	for (int i = 0; i < m_pModelOverrideItems.Count(); ++i)
+	if (name && name[0])
 	{
-		if (!strcmp(m_pModelOverrideItems[i]->szNPCName, name))
-			return i;
+		for (int i = 0; i < m_pModelOverrideItems.Count(); ++i)
+		{
+			if (!strcmp(m_pModelOverrideItems[i]->szIndex, name))
+				return i;
+		}
 	}
-
 	return -1;
 }
 
@@ -492,7 +488,7 @@ const CNPCOverrideModelData *CGameDefinitionsNPC::GetOverridedModelDataForNPC(co
 
 const NPCModelItem_t *CNPCDataItem::GetModelItem(int index)
 {
-	const CNPCOverrideModelData *overrideData = GameBaseShared()->GetNPCData()->GetOverridedModelDataForNPC(szNPCName);
+	const CNPCOverrideModelData *overrideData = GameBaseShared()->GetNPCData()->GetOverridedModelDataForNPC(szIndex);
 
 	int mdlCount = overrideData ? overrideData->pszModelList.Count() : pszModelList.Count();
 	if (mdlCount <= 0)

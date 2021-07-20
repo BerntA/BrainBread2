@@ -506,24 +506,15 @@ void CNPCBaseSoldierStatic::BuildScheduleTestBits(void)
 
 Activity CNPCBaseSoldierStatic::NPC_TranslateActivity(Activity eNewActivity)
 {
-	OnActivityDebug(this, eNewActivity);
-
 	if (eNewActivity == ACT_RANGE_ATTACK2)
-	{
 		return (Activity)ACT_COMBINE_THROW_GRENADE;
-	}
 	else if (eNewActivity == ACT_IDLE)
 	{
 		if (!IsCrouching() && (m_NPCState == NPC_STATE_COMBAT || m_NPCState == NPC_STATE_ALERT))
-		{
 			eNewActivity = ACT_IDLE_ANGRY;
-		}
 	}
 
-	Activity res = BaseClass::NPC_TranslateActivity(eNewActivity);
-	OnActivityDebug(this, res);
-
-	return res;
+	return BaseClass::NPC_TranslateActivity(eNewActivity);
 }
 
 int CNPCBaseSoldierStatic::GetSoundInterests(void)

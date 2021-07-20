@@ -70,7 +70,7 @@ public:
 
 	void Spawn(void);
 	int AllowEntityToBeGibbed(void) { return GIB_FULL_GIBS; }
-	const char *GetNPCName() { return "Fred"; }
+	int GetNPCClassType() { return NPC_CLASS_FRED; }
 	BB2_SoundTypes GetNPCType() { return TYPE_FRED; }
 	bool IsBoss() { return true; }
 	bool CanAlwaysSeePlayers() { return true; }

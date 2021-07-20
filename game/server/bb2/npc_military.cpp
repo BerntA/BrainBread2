@@ -151,3 +151,28 @@ void CNPCMilitary::OnListened()
 		}
 	}
 }
+
+class CNPCPolice : public CNPCMilitary
+{
+public:
+	DECLARE_CLASS(CNPCPolice, CNPCMilitary);
+	int GetNPCClassType() { return NPC_CLASS_POLICE; }
+};
+
+class CNPCRiot : public CNPCMilitary
+{
+public:
+	DECLARE_CLASS(CNPCRiot, CNPCMilitary);
+	int GetNPCClassType() { return NPC_CLASS_RIOT; }
+};
+
+class CNPCSWAT : public CNPCMilitary
+{
+public:
+	DECLARE_CLASS(CNPCSWAT, CNPCMilitary);
+	int GetNPCClassType() { return NPC_CLASS_SWAT; }
+};
+
+LINK_ENTITY_TO_CLASS(npc_police, CNPCPolice);
+LINK_ENTITY_TO_CLASS(npc_riot, CNPCRiot);
+LINK_ENTITY_TO_CLASS(npc_swat, CNPCSWAT);

@@ -53,7 +53,7 @@ public:
 	int			AllowEntityToBeGibbed(void) { return GIB_NO_GIBS; }
 	Class_T		Classify(void);
 	BB2_SoundTypes GetNPCType() { return TYPE_CUSTOM; }
-	const char *GetNPCName() { return "Johnsson"; }
+	int GetNPCClassType() { return NPC_CLASS_BANDIT_JOHNSON; }
 
 private:
 
