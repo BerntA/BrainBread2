@@ -649,3 +649,33 @@ LINK_ENTITY_TO_CLASS(filter_character_type, CFilterEntityType);
 BEGIN_DATADESC(CFilterEntityType)
 DEFINE_KEYFIELD(m_iTargetType, FIELD_INTEGER, "filter_value"),
 END_DATADESC()
+
+class CFilterInventoryItem : public CBaseFilter
+{
+	DECLARE_CLASS(CFilterInventoryItem, CBaseFilter);
+	DECLARE_DATADESC();
+
+public:
+
+	bool PassesFilterImpl(CBaseEntity *pCaller, CBaseEntity *pEntity)
+	{
+		return (GameBaseShared() && pEntity && pEntity->IsPlayer() && (GameBaseShared()->GetInventoryItemForPlayer(pEntity->entindex(), m_iItemID, m_bIsMapItem) != -1));
+	}
+
+	bool PassesDamageFilterImpl(const CTakeDamageInfo &info)
+	{
+		return PassesFilterImpl(NULL, info.GetAttacker());
+	}
+
+private:
+
+	uint m_iItemID;
+	bool m_bIsMapItem;
+};
+
+LINK_ENTITY_TO_CLASS(filter_inventory_item, CFilterInventoryItem);
+
+BEGIN_DATADESC(CFilterInventoryItem)
+DEFINE_KEYFIELD(m_iItemID, FIELD_INTEGER, "ItemID"),
+DEFINE_KEYFIELD(m_bIsMapItem, FIELD_BOOLEAN, "MapItem"),
+END_DATADESC()

@@ -46,6 +46,7 @@ enum FredModeFlags
 class CNPCFred : public CAI_BlendingHost<CNPC_BaseZombie>
 {
 	DECLARE_CLASS(CNPCFred, CAI_BlendingHost<CNPC_BaseZombie>);
+	DECLARE_DATADESC();
 	DEFINE_CUSTOM_AI;
 
 public:
@@ -53,6 +54,7 @@ public:
 	{
 		m_flLastCamperCheck = m_flRageTime = 0.0f;
 		m_nModeFlags = 0;
+		m_bDisableJump = false;
 		m_vecShockwavePos = vec3_origin;
 	}
 
@@ -112,6 +114,7 @@ protected:
 	float m_flRageTime;
 	float m_flLastCamperCheck;
 	int m_nModeFlags;
+	bool m_bDisableJump;
 
 	float GetMaxJumpRise() const { return sk_npc_boss_fred_max_jump_height.GetFloat(); }
 	float GetMaxJumpDrop() const { return MAX_COORD_FLOAT; }
@@ -158,6 +161,10 @@ enum
 
 LINK_ENTITY_TO_CLASS(npc_fred, CNPCFred);
 
+BEGIN_DATADESC(CNPCFred)
+DEFINE_KEYFIELD(m_bDisableJump, FIELD_BOOLEAN, "DisableJump"),
+END_DATADESC()
+
 void CNPCFred::Spawn(void)
 {
 	Precache();
@@ -188,6 +195,9 @@ void CNPCFred::Spawn(void)
 		Q_snprintf(pchOverriden, MAX_WEAPON_STRING, "Custom.%s.%s.Shockwave", GetNPCName(), pszSoundsetOverride);
 		PrecacheScriptSound(pchOverriden);
 	}
+
+	if (m_bDisableJump)
+		CapabilitiesRemove(bits_CAP_MOVE_JUMP);
 }
 
 Activity CNPCFred::NPC_TranslateActivity(Activity newActivity)
