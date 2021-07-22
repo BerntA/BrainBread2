@@ -245,8 +245,8 @@ void CZombieVolume::SpawnWave()
 		Vector(random->RandomFloat(vecBoundsMins.x, vecBoundsMaxs.x), random->RandomFloat(vecBoundsMins.y, vecBoundsMaxs.y), 0);
 
 	trace_t tr;
-	CTraceFilterWorldOnly worldFilter;
-	UTIL_TraceLine(newPos, newPos + vecDown * MAX_TRACE_LENGTH, MASK_SOLID_BRUSHONLY, &worldFilter, &tr);
+	CTraceFilterWorldAndPropsOnly worldFilter;
+	UTIL_TraceLine(newPos, newPos + vecDown * MAX_TRACE_LENGTH, MASK_SOLID, &worldFilter, &tr);
 	newPos.z = ceil(tr.endpos.z + 2.0f);
 
 	TraceZombieBBox(newPos, newPos, MASK_NPCSOLID, COLLISION_GROUP_NPC_ZOMBIE, tr, this);

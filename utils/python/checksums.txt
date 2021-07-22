@@ -69,7 +69,7 @@
 		"bbc_compound" "14242964"
 		"bbc_laststand" "21257084"
 		"bbc_mecklenburg" "28497096"
-		"bbc_nightclub" "17497792"
+		"bbc_nightclub" "36342256"
 		"bbc_termoil" "34503792"
 		"bbd_backyard" "0"
 		"bbd_cargo" "0"
