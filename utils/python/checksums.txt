@@ -57,7 +57,7 @@
 	"Maps"
 	{
 		"bba_barracks" "6950420"
-		"bba_cargo" "6301584"
+		"bba_cargo" "6301556"
 		"bba_carnage" "11769620"
 		"bba_colosseum" "3598144"
 		"bba_coltec" "8218764"
@@ -69,7 +69,7 @@
 		"bbc_compound" "14242964"
 		"bbc_laststand" "21257084"
 		"bbc_mecklenburg" "28497096"
-		"bbc_nightclub" "36342256"
+		"bbc_nightclub" "36418952"
 		"bbc_termoil" "34503792"
 		"bbd_backyard" "0"
 		"bbd_cargo" "0"
@@ -79,6 +79,8 @@
 		"bbd_surgery" "0"
 		"bbd_termoil" "0"
 		"bbe_barracks" "0"
+		"bbe_fever" "0"
+		"bbe_rooftop" "0"
 		"bbe_surgery" "0"
 	}
 	"Tags"

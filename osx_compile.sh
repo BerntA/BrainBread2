@@ -1,6 +1,6 @@
 #!/bin/bash
 
-xcodebuild -project games.xcodeproj -alltargets -configuration Release
+xcodebuild -project brainbread.xcodeproj -alltargets -configuration Release
 
 exit
 
