@@ -174,17 +174,6 @@ bool CGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer  )
 	return true;
 }
 
-//=========================================================
-// load the SkillData struct with the proper values based on the skill level.
-//=========================================================
-void CGameRules::RefreshSkillData ( void )
-{
-#ifndef CLIENT_DLL
-	engine->ServerCommand("exec skill_manifest.cfg\n");
-	engine->ServerExecute();
-#endif // CLIENT_DLL
-}
-
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 bool IsExplosionTraceBlocked( trace_t *ptr )

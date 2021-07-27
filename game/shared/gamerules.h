@@ -175,8 +175,6 @@ public:
 	virtual void LevelShutdown( void ) { return; };
 
 	virtual void Precache( void ) { return; };
-
-	virtual void RefreshSkillData( void ); // fill skill data struct with proper values
 	
 	// Called each frame. This just forwards the call to Think().
 	virtual void FrameUpdatePostEntityThink();

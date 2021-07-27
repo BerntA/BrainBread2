@@ -924,6 +924,9 @@ void CHL2MP_Player::PostThink(void)
 	if (bb2_enable_high_ping_kicker.GetBool() && engine->IsDedicatedServer() && DoHighPingCheck())
 		return;
 
+	if (HL2MPRules() && HL2MPRules()->IsGameoverOrScoresVisible())
+		m_flLastTimeRanCommand = gpGlobals->curtime;
+
 	if (!IsBot() && bb2_enable_afk_kicker.GetBool() && engine->IsDedicatedServer() && !((GetTeamNumber() == TEAM_SPECTATOR) && m_bHasJoinedGame) && (m_flLastTimeRanCommand > 0.0f))
 	{
 		float flTimeSinceLastCMD = (gpGlobals->curtime - m_flLastTimeRanCommand);

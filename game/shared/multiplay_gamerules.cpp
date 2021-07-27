@@ -288,8 +288,6 @@ bool CMultiplayRules::Damage_ShouldNotBleed( int iDmgType )
 CMultiplayRules::CMultiplayRules()
 {
 #ifndef CLIENT_DLL
-	RefreshSkillData();
-
 	// 11/8/98
 	// Modified by YWB:  Server .cfg file is now a cvar, so that 
 	//  server ops can run multiple game servers, with different server .cfg files,
