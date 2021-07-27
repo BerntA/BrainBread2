@@ -42,7 +42,7 @@ void CPlayerAchievStats::OnKilled(CBaseEntity *pVictim, CBaseEntity *pInflictor,
 
 	CBaseCombatWeapon *pActiveWeapon = m_pOuter->GetActiveWeapon();
 	int weaponID = info.GetForcedWeaponID();
-	if (weaponID == WEAPON_ID_NONE)
+	if (pActiveWeapon && (weaponID == WEAPON_ID_NONE))
 		weaponID = pActiveWeapon->GetUniqueWeaponID();
 
 	switch (weaponID)
