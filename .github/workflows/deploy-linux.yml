@@ -25,6 +25,12 @@ jobs:
     - name: Create makefile
       run: sudo ./creategameprojects
       
+    - name: Show Contents
+      run: |
+        ls -la
+        cd runtime
+        ls -la
+      
     - name: Build
       run: |
         sudo ./runtime/shell-i386.sh
