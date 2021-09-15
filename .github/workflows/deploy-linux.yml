@@ -1,0 +1,49 @@
+name: Deploy on Linux
+
+on:
+  workflow_dispatch:
+
+# In case it cannot be installed into /valve/*
+# env:
+# STEAM_RUNTIME_PATH: './steam-runtime'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-18.04 
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: C/C++ dev tools
+      run: sudo apt-get install gcc-multilib g++-multilib
+      
+    - name: Create Valve Folder
+      working-directory: /
+      run: sudo mkdir valve
+      
+    - name: Install Steam Runtime
+      working-directory: /valve
+      run: sudo wget https://media.steampowered.com/client/runtime/steam-runtime-sdk_latest.tar.xz
+    
+    - name: Extract Steam Runtime
+      working-directory: /valve
+      run: sudo tar xvf steam-runtime-sdk_latest.tar.xz
+      
+    - name: Move Steam Runtime
+      working-directory: /valve
+      run: sudo mv steam-runtime-sdk_2013-09-05 steam-runtime
+    
+    - name: Update Steam Runtime
+      working-directory: /valve/steam-runtime
+      run: ./setup.sh --auto-update --target=i386 --release
+      
+    - name: Run Steam Runtime Env
+      working-directory: /valve/steam-runtime
+      run: ./shell.sh --arch=i386
+    
+    - name: Create makefile
+      run: ./creategameprojects
+      
+    - name: make
+      run: make -f brainbread.mak
