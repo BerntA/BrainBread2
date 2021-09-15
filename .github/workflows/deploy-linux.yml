@@ -45,7 +45,7 @@ jobs:
       run: sudo make -f brainbread.mak | sudo /valve/steam-runtime/shell-i386.sh
 
     - name: Upload Binaries
-    - uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v2
       with:
         name: Linux Binaries
         path: game/build/*.so
