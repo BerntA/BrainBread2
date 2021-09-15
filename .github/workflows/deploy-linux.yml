@@ -27,7 +27,6 @@ jobs:
       
     - name: Build
       run: |
-        export STEAM_RUNTIME_PATH=./runtime
         sudo ./runtime/shell-i386.sh
         sudo make -f brainbread.mak
 
