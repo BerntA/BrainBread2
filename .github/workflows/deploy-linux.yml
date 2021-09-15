@@ -36,14 +36,10 @@ jobs:
     
     - name: Update Steam Runtime
       working-directory: /valve/steam-runtime
-      run: sudo ./setup.sh --auto-update --target=i386 --release
-      
-    - name: Run Steam Runtime Env
-      working-directory: /valve/steam-runtime
-      run: ./shell-i386.sh
+      run: sudo ./setup.sh --auto-update --target=i386 --release    
     
     - name: Create makefile
-      run: ./creategameprojects
+      run: sudo ./creategameprojects
       
     - name: make
-      run: make -f brainbread.mak
+      run: make -f brainbread.mak | sudo /valve/steam-runtime/shell-i386.sh
