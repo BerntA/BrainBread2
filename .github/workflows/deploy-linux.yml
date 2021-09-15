@@ -18,7 +18,7 @@ jobs:
     - name: Setup Steam Runtime
       run: |
         sudo wget https://media.steampowered.com/client/runtime/steam-runtime-sdk_latest.tar.xz
-        sudo tar xvf /valve/steam-runtime-sdk_latest.tar.xz
+        sudo tar xvf steam-runtime-sdk_latest.tar.xz
         sudo mv steam-runtime-sdk_2013-09-05 runtime
         sudo ./runtime/setup.sh --auto-update --target=i386 --release
     
