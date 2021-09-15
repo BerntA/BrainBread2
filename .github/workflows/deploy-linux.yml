@@ -16,30 +16,25 @@ jobs:
         sudo apt-get install build-essential gcc-multilib g++-multilib
       
     - name: Create Valve Folder
-      working-directory: /
-      run: sudo mkdir valve
+      run: sudo mkdir /valve
       
     - name: Install Steam Runtime
-      working-directory: /valve
-      run: sudo wget https://media.steampowered.com/client/runtime/steam-runtime-sdk_latest.tar.xz
+      run: sudo wget https://media.steampowered.com/client/runtime/steam-runtime-sdk_latest.tar.xz -P /valve
     
     - name: Extract Steam Runtime
-      working-directory: /valve
-      run: sudo tar xvf steam-runtime-sdk_latest.tar.xz
+      run: sudo tar xvf /valve/steam-runtime-sdk_latest.tar.xz
       
     - name: Move Steam Runtime
-      working-directory: /valve
-      run: sudo mv steam-runtime-sdk_2013-09-05 steam-runtime
+      run: sudo mv /valve/steam-runtime-sdk_2013-09-05 /valve/steam-runtime
     
     - name: Update Steam Runtime
-      working-directory: /valve/steam-runtime
-      run: sudo ./setup.sh --auto-update --target=i386 --release    
+      run: sudo /valve/steam-runtime/setup.sh --auto-update --target=i386 --release
     
     - name: Create makefile
       run: sudo ./creategameprojects
       
     - name: make
-      run: make -f brainbread.mak | sudo /valve/steam-runtime/shell-i386.sh
+      run: sudo /valve/steam-runtime/shell-i386.sh && sudo make -f brainbread.mak
 
     - name: Upload Binaries
       uses: actions/upload-artifact@v2
