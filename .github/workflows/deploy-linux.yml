@@ -22,7 +22,7 @@ jobs:
       run: sudo wget https://media.steampowered.com/client/runtime/steam-runtime-sdk_latest.tar.xz -P /valve
     
     - name: Extract Steam Runtime
-      run: sudo tar xvf /valve/steam-runtime-sdk_latest.tar.xz
+      run: sudo tar xvf /valve/steam-runtime-sdk_latest.tar.xz -C /valve
       
     - name: Move Steam Runtime
       run: sudo mv /valve/steam-runtime-sdk_2013-09-05 /valve/steam-runtime
