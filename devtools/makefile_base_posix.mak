@@ -85,7 +85,7 @@ LDFLAGS += -Wl,--build-id
 # required chroot
 #
 ifdef MAKE_CHROOT
-	export STEAM_RUNTIME_PATH := ./runtime
+	export STEAM_RUNTIME_PATH := /home/runner/work/BrainBread2/BrainBread2/runtime
 	ifneq ("$(SCHROOT_CHROOT_NAME)", "$(CHROOT_NAME)")
         $(info '$(SCHROOT_CHROOT_NAME)' is not '$(CHROOT_NAME)')
         $(error This makefile should be run from within a chroot. 'schroot --chroot $(CHROOT_NAME) -- $(MAKE) $(MAKEFLAGS)')  
@@ -95,13 +95,13 @@ ifdef MAKE_CHROOT
 	CRYPTOPPDIR=ubuntu12_32_gcc48
 else ifeq ($(USE_VALVE_BINDIR),1)
 	# Using /valve/bin directory.
-	export STEAM_RUNTIME_PATH ?= ./runtime
+	export STEAM_RUNTIME_PATH ?= /home/runner/work/BrainBread2/BrainBread2/runtime
 	GCC_VER = -4.6
 	P4BIN = p4
 	CRYPTOPPDIR=linux32
 else
 	# Not using chroot, use old steam-runtime. (gcc 4.6.3)
-	export STEAM_RUNTIME_PATH ?= ./runtime
+	export STEAM_RUNTIME_PATH ?= /home/runner/work/BrainBread2/BrainBread2/runtime
 	GCC_VER =
 	P4BIN = p4
 	CRYPTOPPDIR=ubuntu12_32
