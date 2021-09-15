@@ -39,7 +39,7 @@ jobs:
       run: sudo ./creategameprojects
       
     - name: make
-      run: sudo make -f brainbread.mak | sudo /valve/steam-runtime/shell-i386.sh
+      run: make -f brainbread.mak | sudo /valve/steam-runtime/shell-i386.sh
 
     - name: Upload Binaries
       uses: actions/upload-artifact@v2
