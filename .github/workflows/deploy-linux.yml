@@ -40,10 +40,10 @@ jobs:
       
     - name: Run Steam Runtime Env
       working-directory: /valve/steam-runtime
-      run: sudo ./shell.sh --arch=i386
+      run: ./shell-i386.sh
     
     - name: Create makefile
-      run: sudo ./creategameprojects
+      run: ./creategameprojects
       
     - name: make
-      run: sudo make -f brainbread.mak
+      run: make -f brainbread.mak
