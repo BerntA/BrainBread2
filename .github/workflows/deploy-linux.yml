@@ -17,17 +17,17 @@ jobs:
       
     - name: Setup Steam Runtime
       run: |
+        sudo mkdir /valve
         wget https://media.steampowered.com/client/runtime/steam-runtime-sdk_latest.tar.xz
         tar xvf steam-runtime-sdk_latest.tar.xz
-        mv steam-runtime-sdk_2013-09-05 runtime
-        cd runtime
-        ./setup.sh --auto-update --target=i386 --release
+        mv steam-runtime-sdk_2013-09-05 /valve/steam-runtime
+        /valve/steam-runtime/setup.sh --auto-update --target=i386 --release
     
     - name: Create makefile
       run: ./creategameprojects
 
     - name: Build
-      run: cat build-linux.txt | sudo ./runtime/shell-i386.sh
+      run: cat build-linux.txt | sudo /valve/steam-runtime/shell-i386.sh
 
     - name: Upload Binaries
       uses: actions/upload-artifact@v2
