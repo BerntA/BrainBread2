@@ -27,11 +27,7 @@ jobs:
       run: ./creategameprojects
 
     - name: Build
-      run: |
-        cd runtime
-        ./shell-i386.sh
-        cd ../
-        make -f brainbread.mak
+      run: cat build-linux.txt | sudo ./runtime/shell-i386.sh
 
     - name: Upload Binaries
       uses: actions/upload-artifact@v2
