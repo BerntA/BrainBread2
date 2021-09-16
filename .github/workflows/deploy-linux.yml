@@ -18,10 +18,10 @@ jobs:
     - name: Setup Steam Runtime
       run: |
         sudo mkdir /valve
-        wget https://media.steampowered.com/client/runtime/steam-runtime-sdk_latest.tar.xz
-        tar xvf steam-runtime-sdk_latest.tar.xz
-        mv steam-runtime-sdk_2013-09-05 /valve/steam-runtime
-        /valve/steam-runtime/setup.sh --auto-update --target=i386 --release
+        sudo wget https://media.steampowered.com/client/runtime/steam-runtime-sdk_latest.tar.xz
+        sudo tar xvf steam-runtime-sdk_latest.tar.xz
+        sudo mv steam-runtime-sdk_2013-09-05 /valve/steam-runtime
+        sudo /valve/steam-runtime/setup.sh --auto-update --target=i386 --release
     
     - name: Create makefile
       run: ./creategameprojects
