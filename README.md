@@ -34,3 +34,6 @@ However, if you create a pull request, be sure to test your changes properly bef
 * When recording via HLTV, the objective HUD will be hidden.
 * Changing resolution while the motd is up will create unforeseen consequences.
 * Spectating starts inside the player, you have to refresh the spectate mode to fix this issue at this time.
+
+### CI
+[![Deploy on Linux](https://github.com/BerntA/BrainBread2/actions/workflows/deploy-linux.yml/badge.svg)](https://github.com/BerntA/BrainBread2/actions/workflows/deploy-linux.yml)
