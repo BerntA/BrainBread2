@@ -5792,7 +5792,7 @@ void CBasePlayer::InitFogController( void )
 void CBasePlayer::SetViewEntity(CBaseEntity *pEntity)
 {
 	m_hViewEntity = pEntity;
-	m_Local.m_bIsInOtherView = (pEntity != NULL);
+	m_Local.m_bIsInOtherView = ((pEntity != NULL) && (pEntity != this));
 	if (m_hViewEntity)
 		engine->SetView(edict(), m_hViewEntity->edict());
 	else
