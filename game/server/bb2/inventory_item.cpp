@@ -59,7 +59,9 @@ void CInventoryItem::Spawn()
 	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
 	BaseClass::Spawn();
 
-	SetGlowMode(m_pData->bGlobalGlow ? GLOW_MODE_GLOBAL : GLOW_MODE_RADIUS);
+	m_iOldGlowMode = (m_pData->bGlobalGlow ? GLOW_MODE_GLOBAL : GLOW_MODE_RADIUS);
+	SetGlowMode(m_bIsDisabled ? GLOW_MODE_NONE : m_iOldGlowMode);
+
 	if (m_pData->bGlobalGlow || (m_pData->clGlowColor.a() > 0))
 	{
 		color32 col32 = { (byte)m_pData->clGlowColor.r(), (byte)m_pData->clGlowColor.g(), (byte)m_pData->clGlowColor.b(), (byte)m_pData->clGlowColor.a() };
@@ -163,7 +165,7 @@ void CInventoryItem::DelayedUse(CBaseEntity *pActivator)
 
 CHL2MP_Player *CInventoryItem::GetHumanInteractor(CBaseEntity *pActivator)
 {
-	if (!pActivator || !pActivator->IsPlayer() || !pActivator->IsHuman())
+	if (!pActivator || !pActivator->IsPlayer() || !pActivator->IsHuman() || m_bIsDisabled)
 		return NULL;
 
 	if (!HL2MPRules()->m_bRoundStarted && HL2MPRules()->ShouldHideHUDDuringRoundWait())

@@ -61,6 +61,10 @@ public:
 	virtual bool CreateItemVPhysicsObject(void);
 	virtual bool ItemCanBeTouchedByPlayer(CBasePlayer *pPlayer);
 
+	void EnableItem(inputdata_t &inputData);
+	void DisableItem(inputdata_t &inputData);
+	virtual void OnItemStateUpdated(bool bDisabled) { }
+
 #if defined( HL2MP )
 	void	FallThink(void);
 #endif
@@ -77,6 +81,10 @@ private:
 
 	Vector		m_vOriginalSpawnOrigin;
 	QAngle		m_vOriginalSpawnAngles;
+
+protected:
+	int			m_iOldGlowMode;
+	bool		m_bIsDisabled;
 };
 
 #endif // ITEMS_H

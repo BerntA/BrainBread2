@@ -21,30 +21,35 @@
 
 #define ITEM_PICKUP_BOX_BLOAT 20.0f
 
-BEGIN_DATADESC( CItem )
+BEGIN_DATADESC(CItem)
 
-	// Function Pointers
-	DEFINE_ENTITYFUNC( ItemTouch ),
-	DEFINE_THINKFUNC( Materialize ),
-	DEFINE_THINKFUNC( ComeToRest ),
+// Function Pointers
+DEFINE_ENTITYFUNC(ItemTouch),
+DEFINE_THINKFUNC(Materialize),
+DEFINE_THINKFUNC(ComeToRest),
 
 #if defined( HL2MP ) 
-	DEFINE_THINKFUNC( FallThink ),
+DEFINE_THINKFUNC(FallThink),
 #endif
 
-	// Outputs
-	DEFINE_OUTPUT( m_OnPlayerTouch, "OnPlayerTouch" ),
-	DEFINE_OUTPUT( m_OnCacheInteraction, "OnCacheInteraction" ),
+// Keys
+DEFINE_KEYFIELD(m_bIsDisabled, FIELD_BOOLEAN, "StartDisabled"),
+
+// Inputs
+DEFINE_INPUTFUNC(FIELD_VOID, "Enable", EnableItem),
+DEFINE_INPUTFUNC(FIELD_VOID, "Disable", DisableItem),
+
+// Outputs
+DEFINE_OUTPUT(m_OnPlayerTouch, "OnPlayerTouch"),
+DEFINE_OUTPUT(m_OnCacheInteraction, "OnCacheInteraction"),
 
 END_DATADESC()
 
-
-//-----------------------------------------------------------------------------
-// Constructor 
-//-----------------------------------------------------------------------------
 CItem::CItem()
 {
+	m_bIsDisabled = false;
 	m_bActivateWhenAtRest = false;
+	m_iOldGlowMode = GLOW_MODE_RADIUS;
 	SetGlowMode(GLOW_MODE_RADIUS);
 }
 
@@ -368,4 +373,19 @@ void CItem::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )
 void CItem::OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t reason )
 {
 	CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT );
+}
+
+void CItem::EnableItem(inputdata_t &inputData)
+{
+	m_bIsDisabled = false;
+	SetGlowMode(m_iOldGlowMode);
+	OnItemStateUpdated(m_bIsDisabled);
+}
+
+void CItem::DisableItem(inputdata_t &inputData)
+{
+	m_bIsDisabled = true;
+	m_iOldGlowMode = GetGlowMode();
+	SetGlowMode(GLOW_MODE_NONE);
+	OnItemStateUpdated(m_bIsDisabled);
 }

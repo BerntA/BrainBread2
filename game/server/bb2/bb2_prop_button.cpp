@@ -28,7 +28,6 @@ DEFINE_KEYFIELD(ClassifyFor, FIELD_INTEGER, "Filter"),
 DEFINE_KEYFIELD(m_iGlowType, FIELD_INTEGER, "GlowType"),
 DEFINE_KEYFIELD(m_bStartGlowing, FIELD_BOOLEAN, "EnableGlow"),
 DEFINE_KEYFIELD(m_bShowModel, FIELD_BOOLEAN, "ShowModel"),
-DEFINE_KEYFIELD(m_iDisabled, FIELD_INTEGER, "StartDisabled"),
 DEFINE_KEYFIELD(szKeyPadCode, FIELD_STRING, "KeyPadCode"),
 DEFINE_KEYFIELD(m_bIsKeyPad, FIELD_BOOLEAN, "KeyPadMode"),
 DEFINE_KEYFIELD(m_clrGlow, FIELD_COLOR32, "GlowOverlayColor"),
@@ -38,8 +37,6 @@ DEFINE_INPUTFUNC(FIELD_VOID, "ShowModel", ShowModel),
 DEFINE_INPUTFUNC(FIELD_VOID, "HideModel", HideModel),
 DEFINE_INPUTFUNC(FIELD_VOID, "ShowGlow", ShowGlow),
 DEFINE_INPUTFUNC(FIELD_VOID, "HideGlow", HideGlow),
-DEFINE_INPUTFUNC(FIELD_VOID, "Enable", EnableButton),
-DEFINE_INPUTFUNC(FIELD_VOID, "Disable", DisableButton),
 DEFINE_INPUTFUNC(FIELD_INTEGER, "SetGlowType", SetGlowType),
 
 END_DATADESC()
@@ -49,12 +46,11 @@ LINK_ENTITY_TO_CLASS(bb2_prop_button, CPropButton);
 CPropButton::CPropButton(void) : CBaseKeyPadEntity()
 {
 	ClassifyFor = 0;
-	m_iGlowType = GLOW_MODE_GLOBAL;
+	m_iGlowType = m_iOldGlowMode = GLOW_MODE_GLOBAL;
 	m_clrGlow = { 255, 100, 100, 255 };
 	m_bStartGlowing = false;
 	m_bShowModel = true;
 	m_bIsKeyPad = false;
-	m_iDisabled = false;
 }
 
 void CPropButton::Spawn(void)
@@ -115,10 +111,7 @@ void CPropButton::UpdateThink(void)
 
 void CPropButton::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
 {
-	if (!m_bShowModel || m_iDisabled || !pActivator)
-		return;
-
-	if (!pActivator->IsPlayer())
+	if (!m_bShowModel || m_bIsDisabled || !pActivator || !pActivator->IsPlayer())
 		return;
 
 	CBasePlayer *pPlayer = ToHL2MPPlayer(pActivator);
@@ -161,8 +154,7 @@ void CPropButton::HideModel(inputdata_t &inputdata)
 void CPropButton::UnlockSuccess(CHL2MP_Player *pUnlocker)
 {
 	CBaseKeyPadEntity::UnlockSuccess(pUnlocker);
-
-	m_iDisabled = true;
+	m_bIsDisabled = true;
 	pUnlocker->ShowViewPortPanel("keypad", false);
 	m_OnKeyPadSuccess.FireOutput(pUnlocker, this);
 }
@@ -182,16 +174,6 @@ void CPropButton::ShowGlow(inputdata_t &inputdata)
 void CPropButton::HideGlow(inputdata_t &inputdata)
 {
 	SetGlowMode(GLOW_MODE_NONE);
-}
-
-void CPropButton::EnableButton(inputdata_t &inputdata)
-{
-	m_iDisabled = false;
-}
-
-void CPropButton::DisableButton(inputdata_t &inputdata)
-{
-	m_iDisabled = true;
 }
 
 void CPropButton::SetGlowType(inputdata_t &inputData)

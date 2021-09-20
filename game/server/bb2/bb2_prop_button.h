@@ -33,9 +33,6 @@ public:
 	void ShowGlow(inputdata_t &inputData);
 	void HideGlow(inputdata_t &inputData);
 
-	void EnableButton(inputdata_t &inputData);
-	void DisableButton(inputdata_t &inputData);
-
 	void SetGlowType(inputdata_t &inputData);
 
 	void UnlockSuccess(CHL2MP_Player *pUnlocker);
@@ -47,7 +44,6 @@ private:
 
 	int ClassifyFor;
 	int m_iGlowType;
-	int m_iDisabled;
 
 	bool m_bStartGlowing;
 	bool m_bShowModel;

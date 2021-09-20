@@ -45,9 +45,6 @@ DEFINE_OUTPUT(m_OnUse, "OnUse"),
 
 END_DATADESC()
 
-//-----------------------------------------------------------------------------
-// Purpose: Spawn
-//-----------------------------------------------------------------------------
 void CItemNote::Spawn(void)
 {
 	Precache();
@@ -56,22 +53,14 @@ void CItemNote::Spawn(void)
 	BaseClass::Spawn();
 }
 
-// Precache / Preload
 void CItemNote::Precache(void)
 {
 	PrecacheModel("models/props/note.mdl");
 }
 
-// Player clicked USE on the item :
 void CItemNote::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
 {
-	if (!pActivator)
-		return;
-
-	if (!pActivator->IsPlayer())
-		return;
-
-	if (!pActivator->IsHuman())
+	if (!pActivator || !pActivator->IsPlayer() || !pActivator->IsHuman() || m_bIsDisabled)
 		return;
 
 	CBasePlayer *pPlayer = ToBasePlayer(pActivator);
