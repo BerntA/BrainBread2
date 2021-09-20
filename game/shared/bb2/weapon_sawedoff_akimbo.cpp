@@ -28,6 +28,7 @@ public:
 	int GetOverloadCapacity() { return 2; }
 	int GetMinBurst() { return 1; }
 	int GetMaxBurst() { return 1; }
+	int GetMaxAmmoReplenish(void) { return 8; }
 	bool UsesEmptyAnimation() { return false; }
 
 	const char		*GetAmmoTypeName(void) { return "Buckshot"; }

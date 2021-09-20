@@ -34,6 +34,7 @@ public:
 
 	int GetOverloadCapacity() { return 1; }
 	int GetUniqueWeaponID() { return WEAPON_ID_SAWEDOFF; }
+	int GetMaxAmmoReplenish(void) { return 8; }
 
 	bool Reload(void);
 	void ItemPostFrame(void);

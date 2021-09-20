@@ -353,6 +353,7 @@ public:
 
 	virtual void SetupWeaponRanges(void);
 	virtual void AffectedByPlayerSkill(int skill) {}
+	virtual int GetMaxAmmoReplenish(void) { return GetMaxClip(); }
 
 	// Ammo quantity queries for weapons that do not use clips. These are only
 	// used to determine how much ammo is in a weapon that does not have an owner.

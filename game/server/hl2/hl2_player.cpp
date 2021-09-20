@@ -302,7 +302,7 @@ void CHL2_Player::PostThink( void )
 					for (int i = 0; i < MAX_WEAPONS; i++)
 					{
 						CBaseCombatWeapon* pWeapon = GetWeapon(i);
-						if ((pWeapon != NULL) && (pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL) && (pWeapon->GetAmmoTypeID() != -1) && pWeapon->GiveAmmo(pWeapon->GetMaxClip()))
+						if ((pWeapon != NULL) && (pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL) && (pWeapon->GetAmmoTypeID() != -1) && pWeapon->GiveAmmo(pWeapon->GetMaxAmmoReplenish()))
 							bDidReplenish = true;
 					}
 
