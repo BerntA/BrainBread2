@@ -12,9 +12,11 @@
 #include "GameBase_Server.h"
 #include "GameBase_Shared.h"
 
-int GetAmmoCountMultiplier(int wepType)
+int GetAmmoCountMultiplier(int wepType, int wepId)
 {
-	if (wepType == WEAPON_TYPE_SHOTGUN)
+	if (wepId == WEAPON_ID_SAWEDOFF)
+		return 8;
+	else if (wepType == WEAPON_TYPE_SHOTGUN)
 		return 3;
 
 	return 2;
@@ -33,8 +35,7 @@ bool CanReplenishAmmo(const char *ammoClassname, CBasePlayer *pPlayer, int amoun
 		if (!pWeapon || pWeapon->IsMeleeWeapon() || (pWeapon->GetAmmoTypeID() == -1) || strcmp(pWeapon->GetAmmoEntityLink(), ammoClassname))
 			continue;
 
-		int wepType = pWeapon->GetWeaponType();
-		int ammoCount = ((amountOverride > 0) ? amountOverride : (pWeapon->GetMaxClip() * GetAmmoCountMultiplier(wepType)));
+		int ammoCount = ((amountOverride > 0) ? amountOverride : (pWeapon->GetMaxClip() * GetAmmoCountMultiplier(pWeapon->GetWeaponType(), pWeapon->GetUniqueWeaponID())));
 		if (pWeapon->GiveAmmo(ammoCount, bSuppressSound))
 			bReceived = true;
 	}

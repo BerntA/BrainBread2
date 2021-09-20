@@ -140,7 +140,9 @@ void CHL2MPBasePistol::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombat
 
 		WeaponSound(SINGLE_NPC);
 		pOperator->FireBullets(1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, GetAmmoTypeID(), 2);
-		m_iClip--;
+
+		if (!npc->IsBoss())
+			m_iClip--;
 
 		break;
 	}

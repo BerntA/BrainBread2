@@ -759,10 +759,7 @@ void CGameBaseShared::RemoveInventoryItem(int iPlayerIndex, const Vector &vecAbs
 		}
 	}
 
-	if (!pClient)
-		return;
-
-	if (!HasObjectiveGlowItems(pClient))
+	if (pClient && !HasObjectiveGlowItems(pClient))
 		pClient->SetGlowMode(GLOW_MODE_NONE);
 }
 

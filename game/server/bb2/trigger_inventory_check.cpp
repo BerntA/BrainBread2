@@ -61,39 +61,30 @@ void CTriggerInventoryCheck::Spawn()
 
 void CTriggerInventoryCheck::StartTouch(CBaseEntity *pOther)
 {
-	if (!pOther || m_bDisabled)
-		return;
-
-	if (!pOther->IsPlayer() || ((m_iFilter > 0) && (pOther->GetTeamNumber() != m_iFilter)))
+	if (m_bDisabled || !pOther || !pOther->IsPlayer() || ((m_iFilter > 0) && (pOther->GetTeamNumber() != m_iFilter)))
 		return;
 
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(pOther);
-	if (pPlayer)
+	if (!pPlayer)
+		return;
+
+	for (int i = (GameBaseShared()->GetServerInventory().Count() - 1); i >= 0; i--)
 	{
-		int itemIndex = GameBaseShared()->GetInventoryItemForPlayer(pPlayer->entindex(), m_iItemID, m_bIsMapItem);
-		if ((itemIndex != -1) && m_iItemID)
-		{		
-			for (int i = (GameBaseShared()->GetServerInventory().Count() - 1); i >= 0; i--)
-			{
-				if (GameBaseShared()->GetServerInventory()[i].m_iPlayerIndex != pPlayer->entindex())
-					continue;
+		const InventoryItem_t *pItem = &GameBaseShared()->GetServerInventory()[i];
+		if ((pItem->bIsMapItem != m_bIsMapItem) || (pItem->m_iPlayerIndex != pPlayer->entindex()) || (pItem->m_iItemID != m_iItemID))
+			continue;
 
-				if (GameBaseShared()->GetServerInventory()[i].m_iItemID != m_iItemID)
-					continue;
-
-				if (GameBaseShared()->GetServerInventory()[i].bIsMapItem != m_bIsMapItem)
-					continue;
-
-				// Auto-Use item.
-				if (m_iAction == 1)
-					GameBaseShared()->UseInventoryItem(pPlayer->entindex(), m_iItemID, m_bIsMapItem, false, false, i);
-				else if (m_iAction == 2) // Auto-Drop Item.
-					GameBaseShared()->RemoveInventoryItem(pPlayer->entindex(), pPlayer->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID, false, i);
-				else if (m_iAction == 3) // Delete item.
-					GameBaseShared()->RemoveInventoryItem(pPlayer->entindex(), pPlayer->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID, true, i);
-
-				m_OnFoundItem.FireOutput(pPlayer, this);
-			}
+		switch (m_iAction)
+		{
+		case 1: // Auto-Use
+			GameBaseShared()->UseInventoryItem(pPlayer->entindex(), m_iItemID, m_bIsMapItem, false, false, i);
+			break;
+		case 2: // Drop
+		case 3: // Delete
+			GameBaseShared()->RemoveInventoryItem(pPlayer->entindex(), pPlayer->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID, (m_iAction == 3), i);
+			break;
 		}
+
+		m_OnFoundItem.FireOutput(pPlayer, this);
 	}
 }

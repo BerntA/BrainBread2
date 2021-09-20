@@ -74,30 +74,24 @@ void CLogicInventoryChecker::InputCheckForItem(inputdata_t &inData)
 		return;
 
 	bool bFound = false;
-	int itemIndex = GameBaseShared()->GetInventoryItemForPlayer(pActivator->entindex(), m_iItemID, m_bIsMapItem);
-	if ((itemIndex != -1) && m_iItemID)
+	for (int i = (GameBaseShared()->GetServerInventory().Count() - 1); i >= 0; i--)
 	{
-		for (int i = (GameBaseShared()->GetServerInventory().Count() - 1); i >= 0; i--)
+		const InventoryItem_t *pItem = &GameBaseShared()->GetServerInventory()[i];
+		if ((pItem->bIsMapItem != m_bIsMapItem) || (pItem->m_iPlayerIndex != pActivator->entindex()) || (pItem->m_iItemID != m_iItemID))
+			continue;
+
+		switch (m_iAction)
 		{
-			if (GameBaseShared()->GetServerInventory()[i].m_iPlayerIndex != pActivator->entindex())
-				continue;
-
-			if (GameBaseShared()->GetServerInventory()[i].m_iItemID != m_iItemID)
-				continue;
-
-			if (GameBaseShared()->GetServerInventory()[i].bIsMapItem != m_bIsMapItem)
-				continue;
-
-			// Auto-Use item.
-			if (m_iAction == 1)
-				GameBaseShared()->UseInventoryItem(pActivator->entindex(), m_iItemID, m_bIsMapItem, false, false, i);
-			else if (m_iAction == 2) // Auto-Drop Item.
-				GameBaseShared()->RemoveInventoryItem(pActivator->entindex(), pActivator->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID, false, i);
-			else if (m_iAction == 3) // Delete item.
-				GameBaseShared()->RemoveInventoryItem(pActivator->entindex(), pActivator->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID, true, i);
-
-			bFound = true;
+		case 1: // Auto-Use
+			GameBaseShared()->UseInventoryItem(pActivator->entindex(), m_iItemID, m_bIsMapItem, false, false, i);
+			break;
+		case 2: // Drop
+		case 3: // Delete
+			GameBaseShared()->RemoveInventoryItem(pActivator->entindex(), pActivator->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID, (m_iAction == 3), i);
+			break;
 		}
+
+		bFound = true;
 	}
 
 	if (bFound)

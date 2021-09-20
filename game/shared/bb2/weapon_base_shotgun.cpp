@@ -147,7 +147,9 @@ void CHL2MPBaseShotgun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bo
 	CAI_BaseNPC *npc = pOperator->MyNPCPointer();
 	Assert(npc != NULL);
 	WeaponSound(SINGLE_NPC);
-	m_iClip--;
+
+	if (!npc->IsBoss())
+		m_iClip--;
 
 	if (bUseWeaponAngles)
 	{
@@ -166,7 +168,8 @@ void CHL2MPBaseShotgun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bo
 
 void CHL2MPBaseShotgun::Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary)
 {
-	m_iClip++;
+	if (pOperator && pOperator->MyNPCPointer() && !pOperator->MyNPCPointer()->IsBoss())
+		m_iClip++;
 	FireNPCPrimaryAttack(pOperator, true);
 }
 

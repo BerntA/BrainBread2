@@ -248,12 +248,14 @@ void CHL2MPMachineGun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, Vec
 	pOperator->FireBullets(GetWpnData().m_iPellets, vecShootOrigin, vecShootDir, GetBulletSpread(),
 		MAX_TRACE_LENGTH, GetAmmoTypeID(), 2, entindex(), 0);
 
-	m_iClip--;
+	if (pOperator && pOperator->MyNPCPointer() && !pOperator->MyNPCPointer()->IsBoss())
+		m_iClip--;
 }
 
 void CHL2MPMachineGun::Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary)
 {
-	m_iClip++;
+	if (pOperator && pOperator->MyNPCPointer() && !pOperator->MyNPCPointer()->IsBoss())
+		m_iClip++;
 
 	Vector vecShootOrigin, vecShootDir;
 	QAngle	angShootDir;
