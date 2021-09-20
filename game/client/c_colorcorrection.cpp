@@ -122,12 +122,7 @@ void C_ColorCorrection::ClientThink()
 		return;
 	}
 
-#ifdef BB2_AI
-	CBaseEntity *pPlayer = C_BasePlayer::GetLocalPlayer();
-#else
-	CBaseEntity *pPlayer = UTIL_PlayerByIndex(1);
-#endif //BB2_AI
-
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 	if( !pPlayer )
 		return;
 

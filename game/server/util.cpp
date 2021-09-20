@@ -628,8 +628,7 @@ CBasePlayer* UTIL_PlayerByUserId( int userID )
 // Return the local player.
 // If this is a multiplayer game, return NULL.
 //
- 
-#ifdef BB2_AI
+
 CBasePlayer *UTIL_GetLocalPlayer( void )
 {
 	// first try getting the host, failing that, get *ANY* player
@@ -788,46 +787,17 @@ CBasePlayer *UTIL_FindPlayerWithinRange(CBaseEntity *pLooker, int mask)
 
 	return NULL;
 }
-#else
-CBasePlayer *UTIL_GetLocalPlayer( void )
-{
-	if ( gpGlobals->maxClients > 1 )
-	{
-		if ( developer.GetBool() )
-		{
-			Assert( !"UTIL_GetLocalPlayer" );
-			
-#ifdef	DEBUG
-			Warning( "UTIL_GetLocalPlayer() called in multiplayer game.\n" );
-#endif
-		}
-
-		return NULL;
-	}
-
-	return UTIL_PlayerByIndex( 1 );
-}
-#endif //BB2_AI
 
 //
 // Get the local player on a listen server - this is for multiplayer use only
 // 
-CBasePlayer *UTIL_GetListenServerHost( void )
+CBasePlayer *UTIL_GetListenServerHost(void)
 {
 	// no "local player" if this is a dedicated server or a single player game
 	if (engine->IsDedicatedServer())
-	{
-#ifndef BB2_AI
-		Assert( !"UTIL_GetListenServerHost" ); 
-		Warning( "UTIL_GetListenServerHost() called from a dedicated server or single-player game.\n" ); 
-#endif //BB2_AI
-
 		return NULL;
-	}
-
-	return UTIL_PlayerByIndex( 1 );
+	return UTIL_PlayerByIndex(1);
 }
-
 
 //--------------------------------------------------------------------------------------------------------------
 /**

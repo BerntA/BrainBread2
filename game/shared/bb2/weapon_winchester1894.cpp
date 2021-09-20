@@ -296,11 +296,9 @@ void CWeaponWinchester1894::PrimaryAttack(void)
 
 	// Fire the bullets, and force the first shot to be perfectly accuracy
 	pPlayer->FireBullets(info);
-#ifdef BB2_AI
 #ifndef CLIENT_DLL
 	CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2);
 #endif
-#endif //BB2_AI
 
 	pPlayer->ViewPunch(GetViewKickAngle());
 }

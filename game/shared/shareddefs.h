@@ -538,7 +538,6 @@ enum FireBulletsFlags_t
 	FIRE_BULLETS_TEMPORARY_DANGER_SOUND = 0x8,		// Danger sounds added from this impact can be stomped immediately if another is queued
 };
 
-
 struct FireBulletsInfo_t
 {
 	FireBulletsInfo_t()
@@ -711,8 +710,6 @@ struct EmitSound_t
 	mutable HSOUNDSCRIPTHANDLE		m_hSoundScriptHandle;
 };
 
-#define MAX_ACTORS_IN_SCENE 16
-
 // YWB:  3/12/2007
 // Changing the following #define for Prediction Error checking (See gamemovement.cpp for overview) will to 1 or 2 enables the system, 0 turns it off
 // Level 1 enables it, but doesn't force "full precision" networking, so you can still get lots of errors in position/velocity/etc.
@@ -745,10 +742,7 @@ enum
 };
 
 // BB2
-#define BB2_AI
-#define BB2_MISC_FIXES
 #define GLOWS_ENABLE
-#define BB2_GLOWS
 #define BB2_USE_NAVMESH
 #define BB2_LAGCOMP_HIT_MAX 4 // When figuring out which entities to hit, this is the max amount for now! During 1 comp. tick.
 

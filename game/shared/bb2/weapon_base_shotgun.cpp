@@ -93,11 +93,9 @@ void CHL2MPBaseShotgun::PrimaryAttack(Activity fireActivity, WeaponSound_t sound
 	info.m_flDropOffDist = GetWpnData().m_flDropOffDistance;
 	pPlayer->FireBullets(info);
 
-#ifdef BB2_AI
 #ifndef CLIENT_DLL
 	CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2);
 #endif
-#endif //BB2_AI
 
 	pPlayer->ViewPunch(GetViewKickAngle());
 }
@@ -140,7 +138,6 @@ void CHL2MPBaseShotgun::Drop(const Vector &vecVelocity)
 }
 
 #ifndef CLIENT_DLL
-#ifdef BB2_AI
 void CHL2MPBaseShotgun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool bUseWeaponAngles)
 {
 	Vector vecShootOrigin, vecShootDir;
@@ -186,5 +183,4 @@ void CHL2MPBaseShotgun::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseComba
 		break;
 	}
 }
-#endif // BB2_AI
 #endif

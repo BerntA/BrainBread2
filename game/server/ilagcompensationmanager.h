@@ -58,9 +58,7 @@ public:
 		float maxrange = MAX_TRACE_LENGTH
 	) = 0;
 
-#ifdef BB2_AI
 	virtual void RemoveNpcData(int index) = 0;
-#endif // BB2_AI
 };
 
 extern ILagCompensationManager* lagcompensation;

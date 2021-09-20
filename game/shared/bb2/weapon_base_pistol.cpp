@@ -118,7 +118,6 @@ bool CHL2MPBasePistol::Deploy(void)
 	return BaseClass::Deploy();
 }
 
-#ifdef BB2_AI
 #ifndef CLIENT_DLL
 void CHL2MPBasePistol::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator)
 {
@@ -153,4 +152,3 @@ void CHL2MPBasePistol::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombat
 	}
 }
 #endif
-#endif //BB2_AI

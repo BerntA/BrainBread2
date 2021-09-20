@@ -2131,12 +2131,7 @@ CBaseEntity *CBaseCombatCharacter::FindMissTarget( void )
 	CBaseEntity *pMissCandidates[ MAX_MISS_CANDIDATES ];
 	int numMissCandidates = 0;
 
-#ifdef BB2_AI
-	CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this); 
-#else
-	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-#endif //BB2_AI
-
+	CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this);
 	CBaseEntity *pEnts[256];
 	Vector		radius( 100, 100, 100);
 	Vector		vecSource = GetAbsOrigin();

@@ -98,11 +98,7 @@ void CMessage::InputShowMessage( inputdata_t &inputdata )
 		}
 		else
 		{
-#ifdef BB2_AI
 			pPlayer = UTIL_GetLocalPlayer(); // just show it to the host, if there is one 
-#else
-			pPlayer = (gpGlobals->maxClients > 1) ? NULL : UTIL_GetLocalPlayer();
-#endif //BB2_AI
 		}
 
 		if ( pPlayer && pPlayer->IsPlayer() )

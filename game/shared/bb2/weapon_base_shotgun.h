@@ -51,14 +51,12 @@ public:
 	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
 	virtual void Drop(const Vector &vecVelocity);
 
-#ifdef BB2_AI
 #ifndef CLIENT_DLL
 	virtual int CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
 	virtual void Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
 	virtual void Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary);
 	virtual void FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool bUseWeaponAngles);
 #endif
-#endif //BB2_AI
 
 	virtual const char		*GetAmmoTypeName(void) { return "Buckshot"; }
 	virtual int				GetAmmoMaxCarry(void) { return 32; }

@@ -23,15 +23,6 @@
 
 inline CBasePlayer *AI_GetSinglePlayer()
 {
-	#ifdef BB2_AI
-	//Do nothing here. 
-	#else
-	if ( gpGlobals->maxClients > 1 )
-	{
-		return NULL;
-	}
-	#endif //BB2_AI
-	
 	return UTIL_GetLocalPlayer();
 }
 
@@ -39,7 +30,6 @@ inline bool AI_IsSinglePlayer()
 {
 	return ( gpGlobals->maxClients == 1 );
 }
-
 
 //-----------------------------------------------------------------------------
 //

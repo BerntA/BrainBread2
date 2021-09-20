@@ -699,7 +699,7 @@ void CFuncTank::Spawn( void )
 {
 	Precache();
 
-// BB2_MISC_FIXES: We enable all ammo types so that we can have both the old style mounted guns (which players can use) and the new combine cannons (which players can't use, and rely on the new ammo code).
+//  BB2_MISC_FIXES: We enable all ammo types so that we can have both the old style mounted guns (which players can use) and the new combine cannons (which players can't use, and rely on the new ammo code).
 	m_iAmmoType = GetAmmoDef()->Index( STRING( m_iszAmmoType ) );
 	m_iSmallAmmoType	= GetAmmoDef()->Index("Pistol");	
 	m_iMediumAmmoType	= GetAmmoDef()->Index("Rifle");
@@ -1518,15 +1518,8 @@ void CFuncTank::Think( void )
 		}
 
 #ifdef FUNCTANK_AUTOUSE
-
-	#ifdef BB2_AI
-		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-	#else
-		CBasePlayer *pPlayer = UTIL_PlayerByIndex(1);
-	#endif //BB2_AI		
-
 		bool bThinkFast = false;
-
+		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
 		if( pPlayer )
 		{
 			if ( !m_hControlVolume )
@@ -2429,7 +2422,7 @@ void CFuncTankGun::Fire( int bulletCount, const Vector &barrelEnd, const Vector 
 
 		default:
 		case TANK_BULLET_NONE:
-			//BB2_MISC_FIXES: Since only guns without a tank_bullet setting will be episodic (and non-player controllable anyway), here we tell the code to use the episode 2 ammo code.
+			// BB2_MISC_FIXES: Since only guns without a tank_bullet setting will be episodic (and non-player controllable anyway), here we tell the code to use the episode 2 ammo code.
 			info.m_iAmmoType = m_iAmmoType;
 			FireBullets(info);
 			break;
@@ -3363,78 +3356,6 @@ void CMortarShell::Spawn()
 	AddEFlags( EFL_FORCE_CHECK_TRANSMIT );
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : type - 
-//			steps - 
-//			bias - 
-//-----------------------------------------------------------------------------
-ConVar curve_bias( "curve_bias", "0.5" );
-
-enum
-{
-	CURVE_BIAS,
-	CURVE_GAIN,
-	CURVE_SMOOTH,
-	CURVE_SMOOTH_TWEAK,
-};
-
-void UTIL_VisualizeCurve( int type, int steps, float bias )
-{
-	#ifdef BB2_AI
-	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-#else
-CBasePlayer *pPlayer = UTIL_PlayerByIndex( 1 );
-#endif //BB2_AI
-
-	Vector vForward, vRight, vUp;
-	
-	pPlayer->EyeVectors( &vForward, &vRight, &vUp );
-
-	Vector	renderOrigin = pPlayer->EyePosition() + ( vForward * 512.0f );
-
-	float renderScale = 8.0f;
-	float lastPerc, perc;
-
-	Vector	renderOffs, lastRenderOffs = vec3_origin;
-
-	for ( int i = 0; i < steps; i++ )
-	{
-		perc = RemapValClamped( i, 0, steps-1, 0.0f, 1.0f );
-		
-		switch( type )
-		{
-		case CURVE_BIAS:
-			perc = Bias( perc, bias );
-			break;
-
-		case CURVE_GAIN:
-			perc = Gain( perc, bias );
-			break;
-
-		case CURVE_SMOOTH:
-			perc = SmoothCurve( perc );
-			break;
-
-		case CURVE_SMOOTH_TWEAK:
-			perc = SmoothCurve_Tweak( perc, bias, 0.9f );
-			break;
-		}
-
-		renderOffs = ( vRight * (-steps*0.5f) * renderScale ) + ( vUp * (renderScale*-(steps*0.5f)) )+ ( vRight * i * renderScale ) + ( vUp * perc * (renderScale*steps) );
-
-		NDebugOverlay::Cross3D( renderOrigin + renderOffs, -Vector(2,2,2), Vector(2,2,2), 255, 0, 0, true, 0.05f );
-
-		if ( i > 0 )
-		{
-			NDebugOverlay::Line( renderOrigin + renderOffs, renderOrigin + lastRenderOffs, 255, 0, 0, true, 0.05f );
-		}
-
-		lastRenderOffs = renderOffs;
-		lastPerc = perc;
-	}
-}
-
 //---------------------------------------------------------
 //---------------------------------------------------------
 void CMortarShell::FlyThink()
@@ -3447,8 +3368,6 @@ void CMortarShell::FlyThink()
 		CSoundEnt::InsertSound ( SOUND_DANGER | SOUND_CONTEXT_MORTAR, GetAbsOrigin(), MORTAR_BLAST_RADIUS * 1.25, (m_flImpactTime - m_flNPCWarnTime) + 0.15 );
 		m_flNPCWarnTime = FLT_MAX;
 	}
-
-	//UTIL_VisualizeCurve( CURVE_GAIN, 64, curve_bias.GetFloat() );
 
 	float lifePerc = 1.0f - ( ( m_flImpactTime - gpGlobals->curtime ) / ( m_flImpactTime - m_flSpawnedTime ) );
 
@@ -4108,11 +4027,7 @@ void CFuncTankCombineCannon::FuncTankPostThink()
 			AddSpawnFlags( SF_TANK_AIM_AT_POS );
 
 			Vector vecTargetPosition = GetTargetPosition();
-#ifdef BB2_AI
 			CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this);
-#else
-			CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif //BB2_AI
 
 			// Fixing null pointers on ep2_outland_09.
 			if (pPlayer == NULL)
@@ -4138,7 +4053,7 @@ void CFuncTankCombineCannon::FuncTankPostThink()
 				m_hBeam->SetColor( 0,0, 0 );
 				vecTargetPosition = pPlayer->EyePosition();
 				Vector vecForwardCurrent = vecToPlayer;
-				Vector vecBarrelCurrentEnd = WorldBarrelPosition(); //BB2_MISC_FIXES had added to the barrel position + 1.0f;
+				Vector vecBarrelCurrentEnd = WorldBarrelPosition(); // BB2_MISC_FIXES had added to the barrel position + 1.0f;
 				BaseClass::Fire( 1, vecBarrelCurrentEnd, vecForwardCurrent, pPlayer, false );
 				bHarass = true;
 			}
@@ -4267,37 +4182,25 @@ void CFuncTankCombineCannon::Fire( int bulletCount, const Vector &barrelEnd, con
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-void CFuncTankCombineCannon::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType )
+void CFuncTankCombineCannon::MakeTracer(const Vector &vecTracerSrc, const trace_t &tr, int iTracerType)
 {
 	// If the shot passed near the player, shake the screen.
-	// Updated for multiplayer.
-#ifdef BB2_AI
 	CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this);
 	if (pPlayer == NULL)
 		return;
 
 	Vector vecPlayer = pPlayer->EyePosition();
-#else
-		if( AI_IsSinglePlayer() )
-		{
-		Vector vecPlayer = AI_GetSinglePlayer()->EyePosition();
-#endif //BB2_AI
+	Vector vecNearestPoint = PointOnLineNearestPoint(vecTracerSrc, tr.endpos, vecPlayer);
 
-		Vector vecNearestPoint = PointOnLineNearestPoint( vecTracerSrc, tr.endpos, vecPlayer );
-
-		float flDist = vecPlayer.DistTo( vecNearestPoint );
-
-		if( flDist >= 10.0f && flDist <= 120.0f )
-		{
-			// Don't shake the screen if we're hit (within 10 inches), but do shake if a shot otherwise comes within 10 feet.
-			UTIL_ScreenShake( vecNearestPoint, 10, 60, 0.3, 120.0f, SHAKE_START, false );
-		}
-	#ifndef BB2_AI
+	float flDist = vecPlayer.DistTo( vecNearestPoint );
+	if( flDist >= 10.0f && flDist <= 120.0f )
+	{
+		// Don't shake the screen if we're hit (within 10 inches), but do shake if a shot otherwise comes within 10 feet.
+		UTIL_ScreenShake(vecNearestPoint, 10, 60, 0.3, 120.0f, SHAKE_START, false);
 	}
-	#endif //BB2_AI
 
 	// Send the railgun effect
-	DispatchParticleEffect( "Weapon_Combine_Ion_Cannon", vecTracerSrc, tr.endpos, vec3_angle, NULL );
+	DispatchParticleEffect("Weapon_Combine_Ion_Cannon", vecTracerSrc, tr.endpos, vec3_angle, NULL);
 }
 
 //---------------------------------------------------------

@@ -68,11 +68,9 @@
 #include "datacache/imdlcache.h"
 #include "vstdlib/jobthread.h"
 
-#ifdef BB2_AI
 #include "ilagcompensationmanager.h" 
 #include "hl2mp_gamerules.h"
 #include "ai_blended_movement.h"
-#endif //BB2_AI
 
 #include "env_debughistory.h"
 #include "collisionutils.h"
@@ -3006,11 +3004,7 @@ void CAI_BaseNPC::UpdateSleepState(CBasePlayer *pPVSTarget)
 {
 	if ( GetSleepState() > AISS_AWAKE )
 	{
-#ifdef BB2_AI
-		CBasePlayer *pLocalPlayer = UTIL_GetNearestPlayer(GetAbsOrigin(), true); 
-#else
-		CBasePlayer *pLocalPlayer = AI_GetSinglePlayer();
-#endif //BB2_AI
+		CBasePlayer *pLocalPlayer = UTIL_GetNearestPlayer(GetAbsOrigin(), true);
 		if ( !pLocalPlayer )
 		{
 			if ( gpGlobals->maxClients > 1 )
@@ -3483,12 +3477,7 @@ void CAI_BaseNPC::SetPlayerAvoidState( void )
 
 		GetPlayerAvoidBounds( &vMins, &vMaxs );
 
-		#ifdef BB2_AI
-			CBasePlayer *pLocalPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-		#else
-			CBasePlayer *pLocalPlayer = AI_GetSinglePlayer();
-		#endif //BB2_AI
-
+		CBasePlayer *pLocalPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
 		if ( pLocalPlayer )
 		{
 			bShouldPlayerAvoid = IsBoxIntersectingBox( GetAbsOrigin() + vMins, GetAbsOrigin() + vMaxs, 
@@ -7995,25 +7984,17 @@ void CAI_BaseNPC::DrawDebugGeometryOverlays(void)
 	// ------------------------------
 	// properly kill an NPC.
 	// ------------------------------
-	if (m_debugOverlays & OVERLAY_NPC_KILL_BIT) 
+	if (m_debugOverlays & OVERLAY_NPC_KILL_BIT)
 	{
 		CTakeDamageInfo info;
-
-		info.SetDamage( m_iHealth );
-		info.SetAttacker( this );
-		#ifdef BB2_AI
-		info.SetInflictor( (CBaseEntity *)this ); 
-#else
-info.SetInflictor( ( AI_IsSinglePlayer() ) ? (CBaseEntity *)AI_GetSinglePlayer() : (CBaseEntity *)this );
-#endif //BB2_AI
-
-info.SetDamageType( DMG_GENERIC );
-
+		info.SetDamage(m_iHealth);
+		info.SetAttacker(this);
+		info.SetInflictor((CBaseEntity *)this);
+		info.SetDamageType(DMG_GENERIC);
 		m_debugOverlays &= ~OVERLAY_NPC_KILL_BIT;
-		TakeDamage( info );
+		TakeDamage(info);
 		return;
 	}
-
 
 	// ------------------------------
 	// Draw route if requested
@@ -9120,11 +9101,7 @@ CBaseEntity *CAI_BaseNPC::FindNamedEntity( const char *name, IEntityFindFilter *
 {
 	if ( !stricmp( name, "!player" ))
 	{
-#ifdef BB2_AI
-		return UTIL_GetNearestPlayer(GetAbsOrigin()); 
-#else
-		return ( CBaseEntity * )AI_GetSinglePlayer();
-#endif //BB2_AI
+		return UTIL_GetNearestPlayer(GetAbsOrigin());
 	}
 	else if ( !stricmp( name, "!enemy" ) )
 	{
@@ -9137,13 +9114,7 @@ CBaseEntity *CAI_BaseNPC::FindNamedEntity( const char *name, IEntityFindFilter *
 	}
 	else if ( !stricmp( name, "!nearestfriend" ) || !stricmp( name, "!friend" ) )
 	{
-		// FIXME: look at CBaseEntity *CNPCSimpleTalker::FindNearestFriend(bool fPlayer)
-		// punt for now
-#ifdef BB2_AI
-		return UTIL_GetNearestPlayer(GetAbsOrigin()); 
-#else
-		return ( CBaseEntity * )AI_GetSinglePlayer();
-#endif //BB2_AI
+		return UTIL_GetNearestPlayer(GetAbsOrigin());
 	}
 	else if (!stricmp( name, "self" ))
 	{
@@ -9163,11 +9134,7 @@ CBaseEntity *CAI_BaseNPC::FindNamedEntity( const char *name, IEntityFindFilter *
 		{
 			DevMsg( "ERROR: \"player\" is no longer used, use \"!player\" in vcd instead!\n" );
 		}
-#ifdef BB2_AI
-		return UTIL_GetNearestPlayer(GetAbsOrigin()); 
-#else
-		return ( CBaseEntity * )AI_GetSinglePlayer();
-#endif //BB2_AI
+		return UTIL_GetNearestPlayer(GetAbsOrigin());
 	}
 	else
 	{
@@ -10089,9 +10056,7 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 		return;
 	}
 
-#ifdef BB2_AI
 	lagcompensation->RemoveNpcData(GetAIIndex()); // make sure we're not inheriting anyone else's data 
-#endif
 
 	if (g_bFirstTimeSpawnedNPC == false)
 	{
@@ -10123,11 +10088,7 @@ CAI_BaseNPC::~CAI_BaseNPC(void)
 	if (iAIIndex >= 0)
 	{
 		g_AI_Manager.RemoveAI(this);
-
-#ifdef BB2_AI
-		// this should stop a crash occuring when our death immediately creates a new NPC (eg headcrab from zombie) 
 		lagcompensation->RemoveNpcData(iAIIndex);
-#endif //BB2_AI
 	}
 
 	delete m_pLockedBestSound;
@@ -10578,11 +10539,7 @@ bool CAI_BaseNPC::CineCleanup()
 			{
 				SetLocalOrigin( origin );
 
-#ifdef BB2_AI
 				int drop = UTIL_DropToFloor(this, MASK_NPCSOLID, UTIL_GetNearestVisiblePlayer(this));
-#else
-				int drop = UTIL_DropToFloor( this, MASK_NPCSOLID, UTIL_GetLocalPlayer() );
-#endif //BB2_AI
 
 				// Origin in solid?  Set to org at the end of the sequence
 				if ( ( drop < 0 ) || sv_test_scripted_sequences.GetBool() )
@@ -10653,14 +10610,9 @@ void CAI_BaseNPC::Teleport( const Vector *newPosition, const QAngle *newAngles, 
 
 bool CAI_BaseNPC::FindSpotForNPCInRadius( Vector *pResult, const Vector &vStartPos, CAI_BaseNPC *pNPC, float radius, bool bOutOfPlayerViewcone )
 {
-	#ifdef BB2_AI
-	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(pNPC->GetAbsOrigin()); 
-#else
-	CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif //BB2_AI
+	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(pNPC->GetAbsOrigin());
 
 	QAngle fan;
-
 	fan.x = 0;
 	fan.z = 0;
 
@@ -10699,6 +10651,7 @@ bool CAI_BaseNPC::FindSpotForNPCInRadius( Vector *pResult, const Vector &vStartP
 			return true;
 		}
 	}
+
 	return false;
 }
 

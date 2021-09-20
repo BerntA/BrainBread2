@@ -285,9 +285,7 @@ CHL2MPRules::CHL2MPRules()
 		g_Teams.AddToTail( pTeam );
 	}	
 
-#ifdef BB2_AI
 	InitDefaultAIRelationships();
-#endif //BB2_AI
 
 	Q_strncpy(szCurrentMap, STRING(gpGlobals->mapname), MAX_MAP_NAME);
 
@@ -2270,7 +2268,6 @@ CAmmoDef *GetAmmoDef()
 	{
 		bInitted = true;
 
-#ifdef BB2_AI
 		def.AddAmmoType("Sniper", DMG_BULLET, TRACER_LINE_AND_WHIZ, BULLET_IMPULSE(2500, 9500), 7, 12);
 		def.AddAmmoType("Rifle", DMG_BULLET, TRACER_LINE_AND_WHIZ, BULLET_IMPULSE(1200, 5000));
 		def.AddAmmoType("Minigun", DMG_BULLET, TRACER_LINE_AND_WHIZ, BULLET_IMPULSE(4000, 12500), 8, 14);
@@ -2286,7 +2283,6 @@ CAmmoDef *GetAmmoDef()
 
 		// func_tank related.
 		def.AddAmmoType("AR2", DMG_BULLET, TRACER_LINE_AND_WHIZ, BULLET_IMPULSE(200, 1225), 6, 10);
-#endif //BB2_AI
 	}
 
 	return &def;
@@ -2498,7 +2494,6 @@ const char *CHL2MPRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 	return pszFormat;
 }
 
-#ifdef BB2_AI
 void CHL2MPRules::InitDefaultAIRelationships( void )
 {
 	int i, j;
@@ -2743,7 +2738,6 @@ void CHL2MPRules::InitDefaultAIRelationships( void )
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA, CLASS_MILITARY_VEHICLE, D_HT, 0);
 	CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA, CLASS_EARTH_FAUNA, D_NU, 0);
 }
-#endif // BB2_AI
 #endif 
 
 #ifndef CLIENT_DLL

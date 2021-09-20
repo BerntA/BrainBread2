@@ -183,7 +183,6 @@ bool CHL2MPSniperRifle::CanPerformMeleeAttacks()
 	return true;
 }
 
-#ifdef BB2_AI
 #ifndef CLIENT_DLL
 void CHL2MPSniperRifle::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator)
 {
@@ -218,4 +217,3 @@ void CHL2MPSniperRifle::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseComba
 	}
 }
 #endif
-#endif //BB2_AI

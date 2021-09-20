@@ -36,10 +36,8 @@ class CMissile : public CBaseCombatCharacter
 
 public:
 
-#ifdef BB2_AI
 	static const int EXPLOSION_RADIUS = 200;
 	static const int EXPLOSION_DAMAGE = 200;
-#endif //BB2_AI
 
 	CMissile();
 	virtual ~CMissile();
@@ -71,9 +69,7 @@ public:
 
 	static CMissile *Create(const Vector &vecOrigin, const QAngle &vecAngles, edict_t *pentOwner, bool bFriendly = false);
 
-#ifdef BB2_AI
 	void CreateDangerSounds(bool bState){ m_bCreateDangerSounds = bState; }
-#endif //BB2_AI
 
 protected:
 	virtual void DoExplosion();
@@ -87,9 +83,7 @@ protected:
 
 private:
 	float					m_flGracePeriodEndsAt;
-#ifdef BB2_AI
 	bool					m_bCreateDangerSounds;
-#endif //BB2_AI
 
 	DECLARE_DATADESC();
 };

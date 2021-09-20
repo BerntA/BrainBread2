@@ -534,11 +534,7 @@ CBaseEntity *CGlobalEntityList::FindEntityProcedural( const char *szName, CBaseE
 					return (CBaseEntity *)UTIL_GetNearestPlayer(pSearchingEntity->GetAbsOrigin());
 
 				// FIXME: error condition?
-#ifdef BB2_AI
-				return (CBaseEntity *)UTIL_GetLocalPlayer(); 
-#else
-				return (CBaseEntity *)UTIL_PlayerByIndex(1);
-#endif //BB2_AI
+				return (CBaseEntity *)UTIL_GetLocalPlayer();
 			}
 		}
 		else if ( FStrEq( pName, "activator" ) )
@@ -554,11 +550,7 @@ CBaseEntity *CGlobalEntityList::FindEntityProcedural( const char *szName, CBaseE
 			if (pSearchingEntity)
 				return FindPickerEntity(UTIL_GetNearestPlayer(pSearchingEntity->GetAbsOrigin()));
 
-		#ifdef BB2_AI
-			return FindPickerEntity( UTIL_GetLocalPlayer() ); 
-		#else
-			return FindPickerEntity( UTIL_PlayerByIndex(1) );
-		#endif //BB2_AI
+			return FindPickerEntity(UTIL_GetLocalPlayer());
 		}
 		else if ( FStrEq( pName, "self" ) )
 		{

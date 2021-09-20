@@ -48,12 +48,10 @@ public:
 	virtual void Drop(const Vector &vecVelocity);
 	virtual bool Deploy(void);
 
-#ifdef BB2_AI
 #ifndef CLIENT_DLL
 	virtual void Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
 	virtual void Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary) { return; }
 #endif
-#endif //BB2_AI
 
 	virtual const char		*GetAmmoTypeName(void) { return "Pistol"; }
 

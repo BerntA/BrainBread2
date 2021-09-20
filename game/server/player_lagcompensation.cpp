@@ -13,11 +13,7 @@
 #include "BaseAnimatingOverlay.h"
 #include "collisionutils.h"
 #include "GameBase_Shared.h"
-
-#ifdef BB2_AI
 #include "ai_basenpc.h" 
-#endif //BB2_AI
-
 #include "tier0/vprof.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -207,13 +203,11 @@ public:
 		float maxrange
 		);
 
-#ifdef BB2_AI	
 	virtual void RemoveNpcData(int index) // clear specific NPC's history 
 	{
 		CUtlFixedLinkedList< LagRecord > *track = &m_EntityTrack[index];
 		track->Purge();
 	}
-#endif //BB2_AI
 
 private:
 	virtual float GetSimulationTime(CBasePlayer *player);
@@ -261,19 +255,15 @@ private:
 		for (int i = 0; i < MAX_PLAYERS; i++)
 			m_PlayerTrack[i].Purge();
 
-#ifdef BB2_AI
 		for (int j = 0; j < MAX_AIS; j++)
 			m_EntityTrack[j].Purge();
-#endif //BB2_AI
 
 		ClearLagCompList();
 	}
 
 	// keep a list of lag records for each player
 	CUtlFixedLinkedList< LagRecord > m_PlayerTrack[MAX_PLAYERS];
-#ifdef BB2_AI
 	CUtlFixedLinkedList< LagRecord > m_EntityTrack[MAX_AIS];
-#endif //BB2_AI
 
 	float m_flTeleportDistanceSqr;
 };
@@ -355,7 +345,6 @@ void CLagCompensationManager::FrameUpdatePostEntityThink()
 		record.m_absAngles = pPlayer->GetLocalAngles();
 	}
 
-#ifdef BB2_AI
 	// Iterate all active NPCs
 	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
 	int nAIs = g_AI_Manager.NumAIs();
@@ -411,7 +400,6 @@ void CLagCompensationManager::FrameUpdatePostEntityThink()
 		record.m_vecMinsPreScaled = pNPC->WorldAlignMins();
 		record.m_absAngles = pNPC->GetLocalAngles();
 	}
-#endif //BB2_AI
 }
 
 //
@@ -461,7 +449,6 @@ void CLagCompensationManager::BuildLagCompList(
 		lagActivator.m_pEntriesPerTick.AddToTail(item);
 	}
 
-#ifdef BB2_AI
 	CAI_BaseNPC** ppAIs = g_AI_Manager.AccessAIs();
 	int nAIs = g_AI_Manager.NumAIs();
 	for (int i = 0; i < nAIs; i++)
@@ -492,7 +479,6 @@ void CLagCompensationManager::BuildLagCompList(
 
 		lagActivator.m_pEntriesPerTick.AddToTail(item);
 	}
-#endif //BB2_AI
 }
 
 void CLagCompensationManager::TraceRealtime(

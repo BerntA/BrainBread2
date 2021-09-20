@@ -24,12 +24,7 @@ void Pickup_ForcePlayerToDropThisObject( CBaseEntity *pTarget )
 
 	if ( pPhysics->GetGameFlags() & FVPHYSICS_PLAYER_HELD )
 	{
-	#ifdef BB2_AI
-		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(pTarget->GetAbsOrigin()); 
-	#else
-		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-	#endif //BB2_AI
-
+		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(pTarget->GetAbsOrigin());
 		if (pPlayer == NULL)
 			return;
 

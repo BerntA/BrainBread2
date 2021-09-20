@@ -901,10 +901,7 @@ LINK_ENTITY_TO_CLASS(rpg_missile, CMissile);
 CMissile::CMissile()
 {
 	m_hRocketTrail = NULL;
-
-#ifdef BB2_AI
 	m_bCreateDangerSounds = false;
-#endif //BB2_AI
 }
 
 CMissile::~CMissile()
@@ -956,10 +953,8 @@ void CMissile::Spawn(void)
 	SetThink(&CMissile::IgniteThink);
 	SetNextThink(gpGlobals->curtime + 0.3f);
 
-#ifdef BB2_AI
 	SetDamage(EXPLOSION_DAMAGE);
 	SetRadius(EXPLOSION_RADIUS);
-#endif //BB2_AI
 
 	SetGravity(0.40f);
 
@@ -1146,7 +1141,7 @@ void CMissile::SeekThink(void)
 		// Strange circumstances have brought this missile to halt. Just blow it up.
 		if (m_takedamage)
 			Explode();
-		
+
 		return;
 	}
 
@@ -1155,14 +1150,12 @@ void CMissile::SeekThink(void)
 	VectorAngles(GetAbsVelocity(), angNewAngles);
 	SetAbsAngles(angNewAngles);
 
-#ifdef BB2_AI
 	if (m_bCreateDangerSounds)
 	{
 		trace_t tr;
 		UTIL_TraceLine(GetAbsOrigin(), GetAbsOrigin() + GetAbsVelocity() * 0.5, MASK_SOLID, this, COLLISION_GROUP_NONE, &tr);
 		CSoundEnt::InsertSound(SOUND_DANGER, tr.endpos, 100, 0.2, this, SOUNDENT_CHANNEL_REPEATED_DANGER);
 	}
-#endif //BB2_AI
 
 	SetNextThink(gpGlobals->curtime + 0.125f);
 }
@@ -1235,10 +1228,7 @@ void CAPCMissile::Init()
 	UTIL_SetSize(this, vec3_origin, vec3_origin);
 	CreateSmokeTrail();
 	SetTouch(&CMissile::MissileTouch);
-
-#ifdef BB2_AI
 	CreateDangerSounds(true);
-#endif //BB2_AI
 }
 
 //-----------------------------------------------------------------------------

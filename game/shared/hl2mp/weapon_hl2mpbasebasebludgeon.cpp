@@ -281,7 +281,6 @@ void CBaseHL2MPBludgeonWeapon::HandleAnimEventMeleeHit(animevent_t *pEvent, CBas
 	Vector vecDirection;
 	AngleVectors(GetAbsAngles(), &vecDirection);
 
-#ifdef BB2_AI
 	CBaseEntity *pEnemy = pOperator->MyNPCPointer() ? pOperator->MyNPCPointer()->GetEnemy() : NULL;
 	if (pEnemy)
 	{
@@ -296,7 +295,6 @@ void CBaseHL2MPBludgeonWeapon::HandleAnimEventMeleeHit(animevent_t *pEvent, CBas
 			vecDirection = vecDelta;
 		}
 	}
-#endif //BB2_AI
 
 	Vector vecEnd;
 	VectorMA(pOperator->Weapon_ShootPosition(), 50, vecDirection, vecEnd);

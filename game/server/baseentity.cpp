@@ -1481,12 +1481,11 @@ int CBaseEntity::VPhysicsTakeDamage( const CTakeDamageInfo &info )
 		Assert( force != vec3_origin && offset != vec3_origin );
 
 		unsigned short gameFlags = VPhysicsGetObject()->GetGameFlags();
-		if ( gameFlags & FVPHYSICS_PLAYER_HELD )
+		if (gameFlags & FVPHYSICS_PLAYER_HELD)
 		{
 			// if the player is holding the object, use it's real mass (player holding reduced the mass)
 			CBasePlayer *pPlayer = NULL;
 
-			#ifdef BB2_AI	
 			// See which MP player is holding the physics object and then use that player to get the real mass of the object.
 			// This is ugly but better than having linkage between an object and its "holding" player.
 			for (int i = 1; i <= gpGlobals->maxClients; i++)
@@ -1498,26 +1497,6 @@ int CBaseEntity::VPhysicsTakeDamage( const CTakeDamageInfo &info )
 					break;
 				}
 			}
-			#else
-						if ( AI_IsSinglePlayer() )
-						{
-							pPlayer = UTIL_GetLocalPlayer();
-						}
-						else
-						{
-							// See which MP player is holding the physics object and then use that player to get the real mass of the object.
-							// This is ugly but better than having linkage between an object and its "holding" player.
-							for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-							{
-								CBasePlayer *tempPlayer = UTIL_PlayerByIndex( i );
-								if ( tempPlayer && (tempPlayer->GetHeldObject() == this ) )
-								{
-									pPlayer = tempPlayer;
-									break;
-								}
-							}
-						}
-			#endif //BB2_AI
 
 			if ( pPlayer )
 			{
@@ -6378,12 +6357,7 @@ bool CBaseEntity::SUB_AllowedToFade( void )
 
 	// on Xbox, allow these to fade out
 #ifndef _XBOX
-#ifdef BB2_AI
-	CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this); 
-#else
-CBasePlayer *pPlayer = ( AI_IsSinglePlayer() ) ? UTIL_GetLocalPlayer() : NULL;
-#endif //BB2_AI
-
+	CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this);
 	if ( pPlayer && pPlayer->FInViewCone( this ) )
 		return false;
 #endif

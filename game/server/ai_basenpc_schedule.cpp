@@ -2888,12 +2888,7 @@ void CAI_BaseNPC::RunTask( const Task_t *pTask )
 		}
 	case TASK_FACE_PLAYER:
 		{
-			// Get edict for one player
-			#ifdef BB2_AI
-				CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this); 
-			#else
-				CBasePlayer *pPlayer = AI_GetSinglePlayer();
-			#endif //BB2_AI
+			CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this);
 			if ( pPlayer )
 			{
 				GetMotor()->SetIdealYawToTargetAndUpdate( pPlayer->GetAbsOrigin(), AI_KEEP_YAW_SPEED );

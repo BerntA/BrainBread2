@@ -412,12 +412,7 @@ Vector CBlood::BloodPosition( CBaseEntity *pActivator )
 		}
 		else
 		{
-		#ifdef BB2_AI
-			player = UTIL_GetNearestVisiblePlayer(this); 
-		#else
-			player = UTIL_GetLocalPlayer();
-		#endif //BB2_AI
-
+			player = UTIL_GetNearestVisiblePlayer(this);
 		}
 
 		if ( player )

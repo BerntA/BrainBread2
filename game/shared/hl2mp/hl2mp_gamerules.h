@@ -285,9 +285,7 @@ public:
 	// Zombie Limiting
 	bool CanSpawnZombie(void);
 
-#ifdef BB2_AI
 	void InitDefaultAIRelationships( void );
-#endif //BB2_AI
 
 	char szCurrentMap[MAX_MAP_NAME];
 	unsigned long long m_ulMapSize;

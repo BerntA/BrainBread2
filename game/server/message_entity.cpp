@@ -117,12 +117,7 @@ void CMessageEntity::Think( void )
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
 	// check for player distance
-	#ifdef BB2_AI
-		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-	#else
-		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-	#endif //BB2_AI
-
+	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
 	if ( !pPlayer || ( pPlayer->GetFlags() & FL_NOTARGET ) )
 		return;
 

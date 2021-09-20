@@ -1685,12 +1685,7 @@ void CTriggerCamera::Enable( void )
 
 	if ( !m_hPlayer || !m_hPlayer->IsPlayer() )
 	{
-#ifdef BB2_AI
-		m_hPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-#else
-		m_hPlayer = UTIL_GetLocalPlayer();
-#endif //BB2_AI
-
+		m_hPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
 	}
 
 	if ( !m_hPlayer )
@@ -1871,11 +1866,7 @@ void CTriggerCamera::Disable( void )
 		m_hPlayer->m_takedamage = m_nOldTakeDamage;
 	}
 
-	// BB2_MISC_FIXES 
-#ifdef BB2_AI	
 	CBasePlayer *m_hPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
-#endif //BB2_AI
-
 	// return the player to previous takedamage state
 	if (m_hPlayer)
 		m_hPlayer->m_takedamage = m_nOldTakeDamage;
@@ -2129,10 +2120,6 @@ static void PlayCDTrack( int iTrack )
 	// manually find the single player. 
 	pClient = engine->PEntityOfEntIndex( 1 );
 
-#ifndef BB2_AI
-	Assert(gpGlobals->maxClients == 1); 
-#endif //BB2_AI
-	
 	// Can't play if the client is not connected!
 	if ( !pClient )
 		return;

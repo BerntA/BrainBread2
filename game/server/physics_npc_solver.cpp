@@ -276,18 +276,11 @@ IMotionEvent::simresult_e CPhysicsNPCSolver::Simulate( IPhysicsMotionController 
 
 		if ( pObject->GetGameFlags() & FVPHYSICS_PLAYER_HELD )
 		{
-#ifdef BB2_AI
-	Vector origin; 
-	pObject->GetPosition(&origin,NULL); 
-	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(origin); 
-#else
-	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-#endif //BB2_AI
-
-			if ( pPlayer )
-			{
-				pPlayer->ForceDropOfCarriedPhysObjects( m_hEntity );
-			}
+			Vector origin;
+			pObject->GetPosition(&origin, NULL);
+			CBasePlayer *pPlayer = UTIL_GetNearestPlayer(origin);
+			if (pPlayer)
+				pPlayer->ForceDropOfCarriedPhysObjects(m_hEntity);
 		}
 
 		ResetCancelTime();

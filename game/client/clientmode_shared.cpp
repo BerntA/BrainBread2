@@ -63,21 +63,21 @@ extern IClientReplayContext *g_pClientReplayContext;
 extern ConVar replay_rendersetting_renderglow;
 #endif
 
-#ifdef BB2_GLOWS
+#ifdef GLOWS_ENABLE
 #include "clienteffectprecachesystem.h"
-#endif //BB2_GLOWS
+#endif // GLOWS_ENABLE
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 #define ACHIEVEMENT_ANNOUNCEMENT_MIN_TIME 10
 
-#ifdef BB2_GLOWS
+#ifdef GLOWS_ENABLE
 CLIENTEFFECT_REGISTER_BEGIN( PrecachePostProcessingEffectsGlow )
 	CLIENTEFFECT_MATERIAL( "dev/glow_color" )
 	CLIENTEFFECT_MATERIAL( "dev/halo_add_to_screen" )
 CLIENTEFFECT_REGISTER_END_CONDITIONAL( engine->GetDXSupportLevel() >= 90 )
-#endif //BB2_GLOWS
+#endif // GLOWS_ENABLE
 
 class CHudWeaponSelection;
 class CHudChat;
@@ -862,9 +862,9 @@ bool ClientModeShared::DoPostScreenSpaceEffects( const CViewSetup *pSetup )
 	}
 #endif 
 
-#ifdef BB2_GLOWS
+#ifdef GLOWS_ENABLE
 	g_GlowObjectManager.RenderGlowEffects( pSetup );
-#endif //BB2_GLOWS
+#endif // GLOWS_ENABLE
 
 	return true;
 }

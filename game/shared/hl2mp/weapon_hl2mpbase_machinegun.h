@@ -46,12 +46,10 @@ public:
 	virtual int GetBurstValue() { return 3; } // For players!
 
 #ifndef CLIENT_DLL
-#ifdef BB2_AI // NPC Firing
 	virtual int CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
 	virtual void Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);
 	virtual void FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir);
 	virtual void Operator_ForceNPCFire(CBaseCombatCharacter *pOperator, bool bSecondary);
-#endif //BB2_AI
 #endif
 
 	virtual const char		*GetAmmoTypeName(void) { return "Rifle"; }

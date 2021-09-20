@@ -337,8 +337,7 @@ void CWeaponFrag::OnThrewGrenade(bool bCheckRemove)
 	m_flNextPrimaryAttack = gpGlobals->curtime + RETHROW_DELAY;
 	m_flNextSecondaryAttack = gpGlobals->curtime + RETHROW_DELAY;
 	m_flTimeWeaponIdle = FLT_MAX; //NOTE: This is set once the animation has finished up!
-
-#ifdef BB2_AI			
+		
 	CBaseCombatCharacter *pOwner = GetOwner();
 	if (pOwner)
 	{
@@ -351,7 +350,6 @@ void CWeaponFrag::OnThrewGrenade(bool bCheckRemove)
 
 		CSoundEnt::InsertSound(SOUND_DANGER, tr.endpos, 384, 0.2, pOwner);
 	}
-#endif //BB2_AI
 
 	if (bCheckRemove && GetAmmoCount() <= 0)
 	{

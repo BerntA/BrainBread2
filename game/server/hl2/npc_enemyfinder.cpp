@@ -320,29 +320,22 @@ bool CNPC_EnemyFinder::IsValidEnemy( CBaseEntity *pTarget )
 // Input   :
 // Output  :
 //------------------------------------------------------------------------------
-void CNPC_EnemyFinder::StartNPC ( void )
+void CNPC_EnemyFinder::StartNPC(void)
 {
 	AddSpawnFlags(SF_NPC_FALL_TO_GROUND);	// this prevents CAI_BaseNPC from slamming the finder to 
-											// the ground just because it's not MOVETYPE_FLY
+	// the ground just because it's not MOVETYPE_FLY
 	BaseClass::StartNPC();
 
-	#ifdef BB2_AI
-		if ( m_PlayerFreePass.GetParams().duration > 0.1 ) 
-		{
-			m_PlayerFreePass.SetPassTarget( UTIL_GetNearestPlayer(GetAbsOrigin()) ); 
-	#else
-		if ( AI_IsSinglePlayer() && m_PlayerFreePass.GetParams().duration > 0.1 )
-		{
-			m_PlayerFreePass.SetPassTarget( UTIL_PlayerByIndex(1) );
-	#endif //BB2_AI
-
+	if (m_PlayerFreePass.GetParams().duration > 0.1)
+	{
+		m_PlayerFreePass.SetPassTarget(UTIL_GetNearestPlayer(GetAbsOrigin()));
 		AI_FreePassParams_t freePassParams = m_PlayerFreePass.GetParams();
 
 		freePassParams.coverDist = 120;
 		freePassParams.peekEyeDist = 1.75;
 		freePassParams.peekEyeDistZ = 4;
 
-		m_PlayerFreePass.SetParams( freePassParams );
+		m_PlayerFreePass.SetParams(freePassParams);
 	}
 
 	if (!m_nStartOn)
@@ -404,12 +397,7 @@ bool CNPC_EnemyFinder::ShouldAlwaysThink()
 	if ( BaseClass::ShouldAlwaysThink() )
 		return true;
 		
-	#ifdef BB2_AI
-		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-	#else
-		CBasePlayer *pPlayer = AI_GetSinglePlayer();
-	#endif //BB2_AI
-
+	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
 	if ( pPlayer && IRelationType( pPlayer ) == D_HT )
 	{
 		float playerDistSqr = GetAbsOrigin().DistToSqr( pPlayer->GetAbsOrigin() );

@@ -154,15 +154,7 @@ void CColorCorrectionVolume::Spawn( void )
 
 bool CColorCorrectionVolume::PassesTriggerFilters( CBaseEntity *pEntity )
 {
-#ifdef BB2_AI
-	if( pEntity->IsPlayer() ) 
-#else
-	if( pEntity == UTIL_GetLocalPlayer() )
-#endif //BB2_AI
-
-		return true;
-
-	return false;
+	return (pEntity && pEntity->IsPlayer());
 }
 
 void CColorCorrectionVolume::StartTouch( CBaseEntity *pEntity )

@@ -240,7 +240,6 @@ bool CHL2MPMachineGun::CanHolster(void)
 }
 
 #ifndef CLIENT_DLL
-#ifdef BB2_AI
 void CHL2MPMachineGun::FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir)
 {
 	WeaponSoundRealtime(SINGLE_NPC);
@@ -292,5 +291,4 @@ void CHL2MPMachineGun::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombat
 		break;
 	}
 }
-#endif // BB2_AI
 #endif

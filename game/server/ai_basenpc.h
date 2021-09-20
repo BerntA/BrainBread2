@@ -309,9 +309,7 @@ float ChangeDistance( float flInterval, float flGoalDistance, float flGoalVeloci
 //
 //=============================================================================
 
-#ifdef BB2_AI
-#define MAX_AIS	150 
-#endif //BB2_AI
+#define MAX_AIS	150
 
 class CAI_Manager
 {
@@ -1850,7 +1848,6 @@ public:
 	bool				m_bPlayerAvoidState;
 	void				GetPlayerAvoidBounds( Vector *pMins, Vector *pMaxs );
 
-	#ifdef BB2_AI
 	// used by lag compensation to be able to refer to & track specific NPCs, and detect changes in the AI list 
 	void				SetAIIndex(int i) { m_iAIIndex = i; } 
 	int					GetAIIndex() { return m_iAIIndex; } 
@@ -1867,10 +1864,8 @@ protected:
 	virtual void OnFullyFadedIn(void) { } // Override if you need to do smth when fade is done!
 
 private: 
-	int					m_iAIIndex; 
-	#endif //BB2_AI
+	int					m_iAIIndex;
  };
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Returns whether our ideal activity has started. If not, we are in
