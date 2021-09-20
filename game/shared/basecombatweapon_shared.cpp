@@ -52,6 +52,9 @@ ConVar viewpunch_x_max("viewpunch_x_max", "0", FCVAR_REPLICATED);
 ConVar viewpunch_y_max("viewpunch_y_max", "0.5", FCVAR_REPLICATED);
 ConVar viewpunch_z_max("viewpunch_z_max", "0.5", FCVAR_REPLICATED);
 
+static color32 WEAPON_GLOW = { 70, 130, 180, 255 };
+static color32 WEAPON_GLOW_NOAMMO = { 175, 15, 15, 255 };
+
 CBaseCombatWeapon::CBaseCombatWeapon()
 {
 	// Constructor must call this
@@ -79,8 +82,7 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 	m_iMeleeAttackType = 0;
 
 	// Default Glow Color
-	color32 col32 = { 70, 130, 180, 255 };
-	m_GlowColor = col32;
+	m_GlowColor = WEAPON_GLOW;
 
 #if defined( CLIENT_DLL )
 	m_iState = m_iOldState = WEAPON_NOT_CARRIED;
@@ -650,8 +652,10 @@ void CBaseCombatWeapon::Drop( const Vector &vecVelocity )
 			if (pPlayerOwner)
 				pPlayerOwner->CheckShouldEnableFlashlightOnSwitch();
 		}
-	}
+	}	
 #endif
+
+	m_GlowColor = ((Clip() <= 0) && (GetAmmoCount() <= 0)) ? WEAPON_GLOW_NOAMMO : WEAPON_GLOW;
 }
 
 //-----------------------------------------------------------------------------
