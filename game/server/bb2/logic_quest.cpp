@@ -328,8 +328,7 @@ bool CLogicQuest::ShouldShowEntityCounting(void)
 
 bool CLogicQuest::CheckCanProgressCountingObjective(int id)
 {
-	const char *szSubString = GetLinkedQuestData()->pObjectives[id].szTargetEntityToKill;
-	if (szSubString && szSubString[0])
+	if (GetLinkedQuestData()->pObjectives[id].iKillsNeeded > 0)
 	{
 		if (GetLinkedQuestData()->bShowInOrder)
 		{

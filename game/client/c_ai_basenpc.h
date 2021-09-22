@@ -45,6 +45,11 @@ public:
 		return (m_bIsFading ? m_cAlphaOverride : BaseClass::GetClientSideFade());
 	}
 
+	virtual ShadowType_t ShadowCastType(void)
+	{
+		return (m_bIsFading ? SHADOWS_NONE : BaseClass::ShadowCastType());
+	}
+
 protected:
 	virtual					void RegisterHUDHealthBar();
 
