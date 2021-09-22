@@ -56,7 +56,6 @@ private:
 	// Halting
 	bool m_bShouldHaltProgress;
 
-	string_t cszMessageCapturing;
 	string_t cszMessageTooFewPlayers;
 	string_t cszMessageFailed;
 	string_t cszMessageProgressHalted;
@@ -72,7 +71,6 @@ DEFINE_KEYFIELD(m_bShouldHaltWhenEnemiesTouchUs, FIELD_BOOLEAN, "CanHaltProgress
 DEFINE_KEYFIELD(m_flTimeToCapture, FIELD_FLOAT, "CaptureTime"),
 DEFINE_KEYFIELD(m_flPercentRequired, FIELD_FLOAT, "PercentRequired"),
 
-DEFINE_KEYFIELD(cszMessageCapturing, FIELD_STRING, "CapturingMessage"),
 DEFINE_KEYFIELD(cszMessageTooFewPlayers, FIELD_STRING, "TooFewPlayersMessage"),
 DEFINE_KEYFIELD(cszMessageFailed, FIELD_STRING, "CaptureFailedMessage"),
 DEFINE_KEYFIELD(cszMessageProgressHalted, FIELD_STRING, "CaptureHaltedMessage"),
@@ -91,15 +89,13 @@ CTriggerCapturePoint::CTriggerCapturePoint()
 	m_flTimeToCapture = 10.0f;
 	m_flCaptureTimeStart = m_flCaptureTimeEnd = m_flElapsedTime = m_flTimeLeft = 0.0f;
 
-	cszMessageCapturing = cszMessageTooFewPlayers = cszMessageFailed = cszMessageProgressHalted = NULL_STRING;
+	cszMessageTooFewPlayers = cszMessageFailed = cszMessageProgressHalted = NULL_STRING;
 }
 
 void CTriggerCapturePoint::Spawn()
 {
 	BaseClass::Spawn();
-
 	InitTrigger();
-
 	SetTouch(&CTriggerCapturePoint::OnTouch);
 	SetThink(&CTriggerCapturePoint::CapturePointThink);
 	SetNextThink(gpGlobals->curtime + CAPTURE_THINK_FREQ);
@@ -173,7 +169,7 @@ bool CTriggerCapturePoint::HasToHaltProgress(CBaseEntity *pOther)
 	if ((m_iTeamLink == TEAM_HUMANS) && (pOther->IsZombie(true) || pOther->IsMercenary()))
 		return true;
 
-	if ((m_iTeamLink == TEAM_DECEASED) && (pOther->IsHuman(true)))
+	if ((m_iTeamLink == TEAM_DECEASED) && pOther->IsHuman(true))
 		return true;
 
 	return false;
@@ -194,10 +190,7 @@ bool CTriggerCapturePoint::CanContinueProgress(void)
 		}
 	}
 
-	if (!IsEnoughPlayersInVolume())
-		return false;
-
-	return true;
+	return IsEnoughPlayersInVolume();
 }
 
 bool CTriggerCapturePoint::IsEnoughPlayersInVolume(void)
@@ -257,7 +250,6 @@ void CTriggerCapturePoint::EndTouch(CBaseEntity *pOther)
 		return;
 
 	BaseClass::EndTouch(pOther);
-
 	TransmitCaptureStatus(ToBasePlayer(pOther), false);
 }
 
@@ -285,11 +277,11 @@ void CTriggerCapturePoint::TransmitCaptureStatus(CBasePlayer *pPlayer, bool valu
 	if (timeElapsed > maxTime)
 		timeElapsed = maxTime;
 
+	float flFraction = clamp((timeElapsed / maxTime), 0.0f, 1.0f);
+
 	UserMessageBegin(filter, "CapturePointProgress");
-	WRITE_STRING(STRING(cszMessageCapturing));
 	WRITE_BYTE(value);
-	WRITE_FLOAT(maxTime);
-	WRITE_FLOAT(timeElapsed);
+	WRITE_FLOAT(flFraction);
 	MessageEnd();
 }
 

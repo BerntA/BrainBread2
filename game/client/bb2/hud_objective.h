@@ -67,7 +67,6 @@ public:
 
 protected:
 
-	wchar_t unicodeMessage[128];
 	bool m_bShouldDrawProgress;
 	float m_flProgressPercent;
 
@@ -76,11 +75,9 @@ protected:
 
 private:
 
-	int m_nTextureBarBackground;
-	int m_nTextureBarForeground;
-
 	CPanelAnimationVar(vgui::HFont, m_hDefaultFont, "DefaultFont", "BB2_PANEL");
-	CPanelAnimationVarAliasType(float, text_ypos_offset, "text_ypos_offset", "0", "proportional_float");
+	CPanelAnimationVar(Color, m_TextColor, "TextColor", "255 255 255 255");
+	CPanelAnimationVar(Color, m_BarColor, "ProgressColor", "255 255 255 255");
 };
 
 #endif // HUD_OBJECTIVE_H

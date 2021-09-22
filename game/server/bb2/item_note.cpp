@@ -10,6 +10,8 @@
 #include "hl2_player.h"
 #include "hl2mp_gamerules.h"
 
+#define NOTE_MODEL "models/props/note.mdl"
+
 class CItemNote : public CItem
 {
 public:
@@ -47,15 +49,22 @@ END_DATADESC()
 
 void CItemNote::Spawn(void)
 {
+	if (GetModelName() == NULL_STRING)
+	{
+		string_t lookupString = FindPooledString(NOTE_MODEL);
+		if (lookupString == NULL_STRING)
+			lookupString = AllocPooledString(NOTE_MODEL);
+		SetModelName(lookupString);
+	}
 	Precache();
-	SetModel("models/props/note.mdl");
-	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
+	SetModel(STRING(GetModelName()));
 	BaseClass::Spawn();
+	AddEffects(EF_NOSHADOW | EF_NORECEIVESHADOW);
 }
 
 void CItemNote::Precache(void)
 {
-	PrecacheModel("models/props/note.mdl");
+	PrecacheModel(STRING(GetModelName()));
 }
 
 void CItemNote::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
@@ -67,7 +76,6 @@ void CItemNote::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useT
 	if (pPlayer)
 	{
 		m_OnUse.FireOutput(this, this);
-
 		CSingleUserRecipientFilter filter(pPlayer);
 		filter.MakeReliable();
 		UserMessageBegin(filter, "ShowNote");

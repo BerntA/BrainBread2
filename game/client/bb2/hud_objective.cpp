@@ -346,13 +346,6 @@ CHudCaptureProgressBar::CHudCaptureProgressBar(const char * pElementName) : CHud
 {
 	vgui::Panel * pParent = g_pClientMode->GetViewport();
 	SetParent(pParent);
-
-	m_nTextureBarBackground = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_nTextureBarBackground, "vgui/hud/elimination/team_bar_bg", true, false);
-
-	m_nTextureBarForeground = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_nTextureBarForeground, "vgui/hud/elimination/team_bar_full", true, false);
-
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_ROUNDSTARTING);
 }
 
@@ -386,28 +379,26 @@ void CHudCaptureProgressBar::Paint()
 
 	CHudObjective *pElement = m_pObjectiveHUD;
 	if (pElement)
-	{
 		y = (pElement->GetYPosOffset() + YRES(2));
-	}
 
 	SetPos(x, y);
 
-	// Draw Progress:
-	surface()->DrawSetTexture(m_nTextureBarBackground);
-	surface()->DrawSetColor(GetFgColor());
-	surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
+	// Draw Progress:	
+	surface()->DrawSetColor(m_BarColor);
+	surface()->DrawFilledRect(0, 0, (int)(((float)GetWide()) * m_flProgressPercent), GetTall());
+	DrawHollowBox(0, 0, GetWide(), GetTall(), GetFgColor(), 1.0f, 1, 1);
 
-	surface()->DrawSetTexture(m_nTextureBarForeground);
-	surface()->DrawSetColor(GetFgColor());
-	surface()->DrawTexturedSubRect(0, 0, (int)((float)GetWide() * m_flProgressPercent), GetTall(),
-		0.0f, 0.0f, m_flProgressPercent, 1.0f);
-
-	surface()->DrawSetColor(GetFgColor());
+	surface()->DrawSetColor(m_TextColor);
+	surface()->DrawSetTextColor(m_TextColor);
 	surface()->DrawSetTextFont(m_hDefaultFont);
-	surface()->DrawSetTextColor(GetFgColor());
 
-	int iStrLen = UTIL_ComputeStringWidth(m_hDefaultFont, unicodeMessage);
-	surface()->DrawSetTextPos((GetWide() / 2) - (iStrLen / 2), text_ypos_offset + ((GetTall() / 2) - (surface()->GetFontTall(m_hDefaultFont) / 2)));
+	wchar_t unicodeMessage[32];
+	g_pVGuiLocalize->ConvertANSIToUnicode("SECURING", unicodeMessage, sizeof(unicodeMessage));
+
+	int txtWide, txtTall;
+	surface()->GetTextSize(m_hDefaultFont, unicodeMessage, txtWide, txtTall);
+
+	surface()->DrawSetTextPos((GetWide() / 2) - (txtWide / 2), (GetTall() / 2) - (txtTall / 2));
 	surface()->DrawPrintText(unicodeMessage, wcslen(unicodeMessage));
 }
 
@@ -421,14 +412,6 @@ void CHudCaptureProgressBar::ApplySchemeSettings(vgui::IScheme *scheme)
 
 void CHudCaptureProgressBar::MsgFunc_CapturePointProgress(bf_read &msg)
 {
-	char pchMessage[128];
-	msg.ReadString(pchMessage, 128);
-	g_pVGuiLocalize->ConvertANSIToUnicode(pchMessage, unicodeMessage, 128);
-
-	bool bDraw = msg.ReadByte();
-	float flTimeMax = msg.ReadFloat();
-	float flTimeElapsed = msg.ReadFloat();
-
-	m_bShouldDrawProgress = bDraw;
-	m_flProgressPercent = (flTimeElapsed / flTimeMax);
+	m_bShouldDrawProgress = msg.ReadByte();
+	m_flProgressPercent = msg.ReadFloat();
 }

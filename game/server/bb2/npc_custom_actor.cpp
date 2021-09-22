@@ -17,7 +17,6 @@
 #include "ai_pathfinder.h"
 #include "ai_route.h"
 #include "ai_senses.h"
-#include "ai_looktarget.h"
 #include "GameBase_Shared.h"
 #include "tier0/icommandline.h"
 

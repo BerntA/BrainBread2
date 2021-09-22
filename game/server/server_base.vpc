@@ -327,8 +327,6 @@ $Project
 		$File	"AI_Interest_Target.h"
 		$File	"ai_localnavigator.cpp"
 		$File	"ai_localnavigator.h"
-		$File	"ai_looktarget.cpp"
-		$File	"ai_looktarget.h"
 		$File	"ai_memory.cpp"
 		$File	"ai_memory.h"
 		$File	"ai_motor.cpp"
