@@ -89,6 +89,10 @@ extern ConVar bb2_high_ping_limit;
 
 extern ConVar bb2_active_workshop_item;
 
+#ifdef GAME_DLL
+extern ConVar mp_ammo_respawn_time;
+#endif
+
 //=========================================================
 // CMultiplayRules - rules for the basic half life multiplayer
 // competition

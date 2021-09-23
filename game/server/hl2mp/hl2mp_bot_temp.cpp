@@ -106,6 +106,7 @@ CBasePlayer *BotPutInServer( bool bFrozen, int iTeam )
 		pWeapon->AddSolidFlags(FSOLID_NOT_SOLID);
 		pPlayer->Weapon_Equip(pWeapon);
 		pPlayer->Weapon_Switch(pWeapon, true);
+		pWeapon->RemoveAmmo(pWeapon->GetAmmoMaxCarry() / 2);
 	}
 
 	g_BotData[pPlayer->entindex()-1].m_WantedTeam = iTeam;
@@ -233,6 +234,13 @@ void Bot_Think( CHL2MP_Player *pBot )
 	float frametime = gpGlobals->frametime;
 
 	vecViewAngles = pBot->GetLocalAngles();
+
+	CBaseCombatWeapon *pWeapon = pBot->GetActiveWeapon();
+	if (pWeapon)
+	{
+		pBot->m_iAmmoRequestID = pWeapon->GetAmmoTypeID();
+		pBot->m_flAmmoRequestTime = gpGlobals->curtime;
+	}
 
 	// Create some random values
 	if ( pBot->IsAlive() && (pBot->GetSolid() == SOLID_BBOX) )

@@ -264,8 +264,10 @@ CHL2MP_Player::CHL2MP_Player()
 	m_flNextResupplyTime = 0.0f;
 	m_flLastInfectionTwitchTime = 0.0f;
 	m_flLastTimeRanCommand = 0.0f;
-	m_flLastTimeDroppedAmmo = 0.0f;
 	m_flZombieRageTime = m_flZombieAttackTime = m_flZombieDamageThresholdDepletion = 0.0f;
+
+	m_flAmmoRequestTime = m_flLastTimeSharedAmmo = 0.0f;
+	m_iAmmoRequestID = 0;
 
 	m_iTotalPing = 0;
 	m_iTimesCheckedPing = 0;
@@ -292,7 +294,6 @@ CHL2MP_Player::~CHL2MP_Player()
 		HandleLocalProfile(true);
 
 	pszWeaponPenaltyList.Purge();
-	CleanupAssociatedAmmoEntities();
 	m_PlayerAnimState->Release();
 	delete m_achievStats;
 	m_achievStats = NULL;
@@ -577,13 +578,15 @@ void CHL2MP_Player::Spawn(void)
 
 	// Misc
 	m_flNextResupplyTime = 0.0f;
-	m_flLastTimeDroppedAmmo = 0.0f;
 	m_nMaterialOverlayFlags = 0;
 	m_bEnableFlashlighOnSwitch = false;
 
+	// Ammo Sharing
+	m_flAmmoRequestTime = m_flLastTimeSharedAmmo = 0.0f;
+	m_iAmmoRequestID = 0;
+
 	ResetSlideVars();
 	OnSetGibHealth();
-	CleanupAssociatedAmmoEntities();
 
 	if (!IsObserver())
 	{
@@ -2009,6 +2012,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 				Q_strncpy(pszVoiceMessage, GetVoiceCommandChatMessage(iCommand), 128);
 				Host_Say(edict(), pszVoiceMessage, true, CHAT_CMD_VOICE);
 				HL2MPRules()->EmitSoundToClient(this, GetVoiceCommandString(iCommand), BB2_SoundTypes::TYPE_PLAYER, GetSoundsetGender());
+				OnVoiceCommand(iCommand);
 			}
 		}
 
@@ -2233,6 +2237,19 @@ void CHL2MP_Player::CheatImpulseCommands(int iImpulse)
 	}
 }
 
+void CHL2MP_Player::OnVoiceCommand(int cmd)
+{
+	if (cmd == VOICE_COMMAND_OUTOFAMMO)
+	{
+		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+		if (pWeapon && !pWeapon->IsMeleeWeapon() && (pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL))
+		{
+			m_flAmmoRequestTime = gpGlobals->curtime;
+			m_iAmmoRequestID = pWeapon->GetAmmoTypeID();
+		}
+	}
+}
+
 bool CHL2MP_Player::ShouldRunRateLimitedCommand(const CCommand &args)
 {
 	int i = m_RateLimitLastCommandTimes.Find(args[0]);
@@ -2347,7 +2364,6 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 
 	// Drop our weps, give snacks to the living...:
 	DropAllWeapons(); 
-	CleanupAssociatedAmmoEntities();
 
 	m_iTotalDeaths++;
 	m_iRoundDeaths++;
@@ -2750,26 +2766,6 @@ void CHL2MP_Player::State_PreThink_ACTIVE()
 {
 	//we don't really need to do anything here. 
 	//This state_prethink structure came over from CS:S and was doing an assert check that fails the way hl2dm handles death
-}
-
-void CHL2MP_Player::AddAssociatedAmmoEnt(CBaseEntity *pEnt)
-{
-	EHANDLE m_hHandle = pEnt;
-	m_pAssociatedAmmoEntities.AddToTail(m_hHandle);
-}
-
-void CHL2MP_Player::CleanupAssociatedAmmoEntities(void)
-{
-	for (int i = 0; i < m_pAssociatedAmmoEntities.Count(); i++)
-	{
-		CBaseEntity *pEnt = m_pAssociatedAmmoEntities[i].Get();
-		if (!pEnt)
-			continue;
-
-		UTIL_Remove(pEnt);
-	}
-
-	m_pAssociatedAmmoEntities.RemoveAll();
 }
 
 void CHL2MP_Player::CheckShouldEnableFlashlightOnSwitch(void)

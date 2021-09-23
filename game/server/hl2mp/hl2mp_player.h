@@ -193,6 +193,8 @@ public:
 	void CheatImpulseCommands(int iImpulse);
 	void CreateRagdollEntity(void);
 
+	void OnVoiceCommand(int cmd);
+
 	void NoteWeaponFired(void);
 
 	void SetPlayerModel(int overrideTeam = -1);
@@ -277,12 +279,6 @@ public:
 
 	bool HasPlayerUsedFirearm(void) { return m_bPlayerUsedFirearm; }
 
-	void AddAssociatedAmmoEnt(CBaseEntity *pEnt);
-	void CleanupAssociatedAmmoEntities(void);
-
-	void OnDroppedAmmoNow(void) { m_flLastTimeDroppedAmmo = gpGlobals->curtime; }
-	float GetLastTimeDroppedAmmo(void) { return m_flLastTimeDroppedAmmo; }
-
 	void CheckShouldEnableFlashlightOnSwitch(void);
 	bool ShouldRunRateLimitedCommand(const CCommand &args);
 
@@ -291,6 +287,13 @@ public:
 	static bool IsWeaponEquippedByDefault(const char *weaponName);
 
 	CPlayerAchievStats *GetAchievementStats(void) { return m_achievStats; }
+
+	float GetAmmoRequestTime(void) { return m_flAmmoRequestTime; }
+	float GetLastTimeSharedAmmo(void) { return m_flLastTimeSharedAmmo; }
+	int GetAmmoRequestID(void) { return m_iAmmoRequestID; }
+	void SharedAmmoNow(void) { m_flLastTimeSharedAmmo = gpGlobals->curtime; }
+
+	friend void Bot_Think(CHL2MP_Player *pBot);
 
 private:
 
@@ -320,7 +323,6 @@ private:
 	float m_flSpawnProtection;
 	float m_flZombieVisionLockTime;
 	float m_flUpdateTime;
-	float m_flLastTimeDroppedAmmo;
 	bool m_bHasFullySpawned;
 	bool m_bHasJoinedGame;
 	bool m_bEnableFlashlighOnSwitch;
@@ -332,7 +334,6 @@ private:
 
 	// Weapon Pickup Fixes
 	CUtlVector<WeaponPickupItem_t> pszWeaponPenaltyList;
-	CUtlVector<EHANDLE> m_pAssociatedAmmoEntities;
 
 	HL2MPPlayerState m_iPlayerState;
 	CHL2MPPlayerStateInfo *m_pCurStateInfo;
@@ -355,6 +356,11 @@ private:
 	CNetworkArray(int, m_iCustomizationChoices, PLAYER_ACCESSORY_MAX);
 	CNetworkString(m_szModelChoice, MAX_MAP_NAME);
 	CNetworkVar(int, m_iModelIncrementor);
+
+	// Ammo Sharing Logic:
+	float m_flAmmoRequestTime;
+	float m_flLastTimeSharedAmmo;
+	int m_iAmmoRequestID;
 
 protected:
 	virtual void HandlePainSound(int iMajor, int iDamageTypeBits);

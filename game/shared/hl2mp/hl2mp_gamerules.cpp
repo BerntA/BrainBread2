@@ -1801,7 +1801,7 @@ QAngle CHL2MPRules::VecItemRespawnAngles( CItem *pItem )
 //=========================================================
 float CHL2MPRules::FlItemRespawnTime( CItem *pItem )
 {
-	return 1;
+	return mp_ammo_respawn_time.GetFloat();
 }
 
 #endif

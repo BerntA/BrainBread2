@@ -64,8 +64,6 @@ void CPropButton::Spawn(void)
 	}
 
 	m_GlowColor = m_clrGlow = { m_clrGlow.r, m_clrGlow.g, m_clrGlow.b, 255 };
-
-	PrecacheModel(szModel);
 	Precache();
 	SetModel(szModel);
 
@@ -74,8 +72,12 @@ void CPropButton::Spawn(void)
 	SetSolid(SOLID_BBOX);
 
 	// Further more effects:
+	m_iOldGlowMode = GLOW_MODE_NONE;
 	if (m_bStartGlowing && m_bShowModel)
+	{
 		SetGlowMode(m_iGlowType);
+		m_iOldGlowMode = GetGlowMode();
+	}
 	else
 		SetGlowMode(GLOW_MODE_NONE);
 
@@ -154,6 +156,7 @@ void CPropButton::HideModel(inputdata_t &inputdata)
 void CPropButton::UnlockSuccess(CHL2MP_Player *pUnlocker)
 {
 	CBaseKeyPadEntity::UnlockSuccess(pUnlocker);
+	SetGlowMode(GLOW_MODE_NONE);
 	m_bIsDisabled = true;
 	pUnlocker->ShowViewPortPanel("keypad", false);
 	m_OnKeyPadSuccess.FireOutput(pUnlocker, this);
@@ -162,7 +165,6 @@ void CPropButton::UnlockSuccess(CHL2MP_Player *pUnlocker)
 void CPropButton::UnlockFail(CHL2MP_Player *pUnlocker)
 {
 	CBaseKeyPadEntity::UnlockFail(pUnlocker);
-
 	m_OnKeyPadFail.FireOutput(pUnlocker, this);
 }
 

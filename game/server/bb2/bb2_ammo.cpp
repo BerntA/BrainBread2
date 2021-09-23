@@ -15,7 +15,7 @@
 int GetAmmoCountMultiplier(int wepType, int wepId)
 {
 	if (wepId == WEAPON_ID_SAWEDOFF)
-		return 8;
+		return 6;
 	else if (wepType == WEAPON_TYPE_SHOTGUN)
 		return 3;
 
@@ -341,9 +341,10 @@ void CAmmoCannister::Precache(void)
 	PrecacheModel("models/items/ammo_flamethrower.mdl");
 }
 
-#define AMMO_DROP_WAIT_TIME 1.0f
+#define AMMO_REQUEST_MAX_TIME 15.0f // Allow giving ammo within X sec after request.
+#define AMMO_SHARE_DELAY 2.5f // How often you may share ammo with other players.
 
-CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
+CON_COMMAND(drop_ammo, "Give ammo to a teammate who requested ammo.")
 {
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_GetCommandClient());
 	if (!pPlayer || !pPlayer->IsHuman() || !pPlayer->IsAlive() || !HL2MPRules()->IsTeamplay() || HL2MPRules()->IsGameoverOrScoresVisible())
@@ -353,54 +354,70 @@ CON_COMMAND(drop_ammo, "Drop ammo, give ammo to your teammates.")
 	if (!pWeapon || pWeapon->IsMeleeWeapon() || !pWeapon->UsesClipsForAmmo() || (pWeapon->GetAmmoTypeID() == -1) || (pWeapon->GetWeaponType() == WEAPON_TYPE_SPECIAL))
 		return;
 
-	int ammoCount = pWeapon->GetAmmoCount();
-	if (ammoCount <= 0)
-		return;
-
-	const char *classNew = pWeapon->GetAmmoEntityLink();
-	if (!classNew || !classNew[0])
-		return;
-
-	int ammoForItem = MIN(pWeapon->GetMaxClip(), ammoCount);
-	float timeSinceLastDrop = gpGlobals->curtime - pPlayer->GetLastTimeDroppedAmmo();
-	if (timeSinceLastDrop < AMMO_DROP_WAIT_TIME)
+	float timeLastShare = (gpGlobals->curtime - pPlayer->GetLastTimeSharedAmmo());
+	if (timeLastShare < AMMO_SHARE_DELAY)
 	{
 		char pchTime[16];
-		Q_snprintf(pchTime, 16, "%.1f", fabs((AMMO_DROP_WAIT_TIME - timeSinceLastDrop)));
-		GameBaseServer()->SendToolTip("#TOOLTIP_AMMO_DROP_DENY", GAME_TIP_WARNING, pPlayer->entindex(), pchTime);
+		Q_snprintf(pchTime, 16, "%.2f", fabs(AMMO_SHARE_DELAY - timeLastShare));
+		GameBaseServer()->SendToolTip("#TOOLTIP_AMMO_GIVE_DENY_WAIT", GAME_TIP_WARNING, pPlayer->entindex(), pchTime);
 		return;
 	}
 
-	pPlayer->OnDroppedAmmoNow();
-	pWeapon->RemoveAmmo(ammoForItem);
-	CAmmoItemBase *pEntity = (CAmmoItemBase*)CreateEntityByName(classNew);
-	if (pEntity)
+	const Vector vStart = pPlayer->EyePosition();
+	Vector vForward;
+	AngleVectors(pPlayer->EyeAngles(), &vForward);
+	VectorNormalize(vForward);
+
+	trace_t tr;
+	UTIL_TraceHull(vStart, vStart + vForward * PLAYER_USE_RADIUS, -Vector(2, 2, 2), Vector(2, 2, 2), MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &tr);
+	CHL2MP_Player *pTarget = ToHL2MPPlayer(tr.m_pEnt);
+	if (!pTarget)
+		return;
+
+	CBaseCombatWeapon *pOtherWeapon = pTarget->GetActiveWeapon();
+	if (!pOtherWeapon || pOtherWeapon->IsMeleeWeapon() || !pOtherWeapon->UsesClipsForAmmo() || (pOtherWeapon->GetAmmoTypeID() != pTarget->GetAmmoRequestID()) || (pOtherWeapon->GetWeaponType() == WEAPON_TYPE_SPECIAL))
+		return;
+
+	if ((gpGlobals->curtime - pTarget->GetAmmoRequestTime()) > AMMO_REQUEST_MAX_TIME)
 	{
-		Vector vecAbsOrigin = pPlayer->GetAbsOrigin();
-		int iCollisionGroup = pPlayer ? pPlayer->GetCollisionGroup() : COLLISION_GROUP_WEAPON;
-		Vector vecStartPos = vecAbsOrigin + Vector(0, 0, 20);
-		Vector vecEndPos = vecAbsOrigin;
-		Vector vecDir = (vecEndPos - vecStartPos);
-		VectorNormalize(vecDir);
-
-		trace_t tr;
-		CTraceFilterNoNPCsOrPlayer trFilter(pPlayer, iCollisionGroup);
-		UTIL_TraceLine(vecStartPos, vecEndPos + (vecDir * MAX_TRACE_LENGTH), MASK_SHOT, &trFilter, &tr);
-
-		pEntity->Spawn();
-		pEntity->AddSpawnFlags(SF_NORESPAWN);
-		pEntity->SetAmmoOverrideAmount(ammoForItem);
-
-		Vector endPoint = tr.endpos;
-		const model_t *pModel = modelinfo->GetModel(pEntity->GetModelIndex());
-		if (pModel)
-		{
-			Vector mins, maxs;
-			modelinfo->GetModelBounds(pModel, mins, maxs);
-			endPoint.z += maxs.z;
-		}
-		pEntity->SetLocalOrigin(endPoint);
-
-		pPlayer->AddAssociatedAmmoEnt(pEntity);
+		GameBaseServer()->SendToolTip("#TOOLTIP_AMMO_GIVE_DENY_LATE", GAME_TIP_WARNING, pPlayer->entindex());
+		return;
 	}
+
+	if (pWeapon->GetAmmoTypeID() != pTarget->GetAmmoRequestID())
+	{
+		GameBaseServer()->SendToolTip("#TOOLTIP_AMMO_GIVE_DENY_TYPE", GAME_TIP_WARNING, pPlayer->entindex());
+		return;
+	}
+
+	int ammoCount = pWeapon->GetAmmoCount();
+	if (ammoCount <= 0)
+	{
+		GameBaseServer()->SendToolTip("#TOOLTIP_AMMO_GIVE_DENY_EMPTY", GAME_TIP_WARNING, pPlayer->entindex());
+		return;
+	}
+
+	int clipAmount = pWeapon->GetMaxClip();
+	switch (pWeapon->GetUniqueWeaponID())
+	{
+	case WEAPON_ID_SAWEDOFF:
+		clipAmount *= 4;
+		break;
+
+	case WEAPON_ID_SAWEDOFF_AKIMBO:
+		clipAmount *= 2;
+		break;
+	}
+
+	int ammoToGive = MIN(clipAmount, ammoCount); // We always give this amount, even if the recipient does not need as much, if you share ammo you always share at least a clip.
+	if (pOtherWeapon->GiveAmmo(ammoToGive, true) <= 0)
+	{
+		GameBaseServer()->SendToolTip("#TOOLTIP_AMMO_GIVE_DENY_FULL", GAME_TIP_WARNING, pPlayer->entindex());
+		return;
+	}
+
+	pWeapon->RemoveAmmo(ammoToGive);
+	GameBaseServer()->SendToolTip("#TOOLTIP_AMMO_GIVE", GAME_TIP_INFO, pPlayer->entindex(), pTarget->GetPlayerName());
+	GameBaseServer()->SendToolTip("#TOOLTIP_AMMO_TAKE", GAME_TIP_INFO, pTarget->entindex(), pPlayer->GetPlayerName());
+	pPlayer->SharedAmmoNow();
 }

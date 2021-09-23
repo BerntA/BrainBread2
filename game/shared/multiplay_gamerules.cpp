@@ -132,6 +132,8 @@ ConVar bb2_high_ping_limit("bb2_high_ping_limit", "200", FCVAR_REPLICATED, "If t
 ConVar bb2_active_workshop_item("bb2_active_workshop_item", "0", FCVAR_REPLICATED|FCVAR_HIDDEN, "Fetch the active workshop map item ID running on the server.");
 
 #ifdef GAME_DLL
+ConVar mp_ammo_respawn_time("mp_ammo_respawn_time", "4", FCVAR_GAMEDLL, "Set how often ammo can respawn in sec.\n");
+
 ConVar tv_delaymapchange("tv_delaymapchange", "0", FCVAR_NONE, "Delays map change until broadcast is complete");
 ConVar tv_delaymapchange_protect("tv_delaymapchange_protect", "1", FCVAR_NONE, "Protect against doing a manual map change if HLTV is broadcasting and has not caught up with a major game event such as round_end");
 
