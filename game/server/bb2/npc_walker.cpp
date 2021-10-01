@@ -88,7 +88,7 @@ public:
 	void EnterCrawlMode(void);
 	void LeaveCrawlMode(void);
 	void BecomeCrawler(void);
-	void HullChangeUnstuck(void);
+	void UpdateHullState(bool bGibbed);
 	bool IsInCrawlMode(void)
 	{
 		return (IsCrawlingWithNoLegs() || m_bIsInCrawlMode || m_bGibbedForCrawl);
@@ -419,14 +419,7 @@ void CNPCWalker::EnterCrawlMode(void)
 	if (bWasMoving)
 		GetMotor()->MoveStop();
 
-	SetHullType(HULL_WIDE_SHORT);
-	SetHullSizeSmall(true);
-	SetDefaultEyeOffset();
-
-	if (VPhysicsGetObject())
-		SetupVPhysicsHull();
-
-	HullChangeUnstuck();
+	UpdateHullState(false);
 	ResetIdealActivity((Activity)ACT_CRAWL_IDLE);
 
 	if (bWasMoving)
@@ -453,9 +446,6 @@ void CNPCWalker::LeaveCrawlMode(void)
 	SetHullSizeNormal(true);
 	SetDefaultEyeOffset();
 
-	if (VPhysicsGetObject())
-		SetupVPhysicsHull();
-
 	UpdateMeleeRange(NAI_Hull::Bounds(GetHullType(), IsUsingSmallHull()));
 	ResetIdealActivity(ACT_IDLE);
 
@@ -473,16 +463,7 @@ void CNPCWalker::BecomeCrawler(void)
 		GetMotor()->MoveStop();
 
 	CapabilitiesRemove(bits_CAP_MOVE_CLIMB | bits_CAP_MOVE_JUMP | bits_CAP_MOVE_CRAWL | bits_CAP_DOORS_GROUP); // We also remove the crawl flag because we can already crawl by default in this state.
-	
-	SetHullType(HULL_WIDE_SHORT);
-	SetHullSizeSmall(true);
-	SetDefaultEyeOffset();
-
-	if (VPhysicsGetObject())	
-		SetupVPhysicsHull();	
-
-	SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE_CRAWLER);
-	UpdateMeleeRange(NAI_Hull::Bounds(GetHullType(), IsUsingSmallHull()));
+	UpdateHullState(true);
 	ResetIdealActivity((Activity)ACT_CRAWL_NOLEGS_IDLE);
 
 	if (bWasMoving)
@@ -491,24 +472,35 @@ void CNPCWalker::BecomeCrawler(void)
 	m_bGibbedForCrawl = true;
 }
 
-void CNPCWalker::HullChangeUnstuck(void)
+void CNPCWalker::UpdateHullState(bool bGibbed)
 {
-	m_nZombieSpawnFlags |= ZOMBIE_SPAWN_FLAG_CHECKCOLLISION;
-	SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE_SPAWNING);
+	const Vector vPos = WorldSpaceCenter();
 
-	const Vector &vMins = WorldAlignMins();
-	const Vector &vMaxs = WorldAlignMaxs();
-	const Vector &vOrigin = GetAbsOrigin();
-	Vector vStart = vOrigin + Vector(0, 0, 1.0f + (vMaxs.z - vMins.z));
+	SetHullType(HULL_WIDE_SHORT);
+	SetHullSizeSmall(true);
+	SetDefaultEyeOffset();
 
+	if (bGibbed)
+		SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE_CRAWLER);
+	else
+	{
+		m_nZombieSpawnFlags |= ZOMBIE_SPAWN_FLAG_CHECKCOLLISION;
+		SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE_SPAWNING);
+	}
+
+	const Vector &vMins = NAI_Hull::SmallMins(GetHullType());
+	const Vector &vMaxs = NAI_Hull::SmallMaxs(GetHullType());
 	CTraceFilterWorldAndPropsOnly filter;
 	trace_t tr;
-	AI_TraceHull(vStart, vStart + Vector(0, 0, -1.0f) * MAX_TRACE_LENGTH, vMins, vMaxs, MASK_SOLID_BRUSHONLY, &filter, &tr);
+	AI_TraceHull(vPos, vPos + Vector(0, 0, -1.0f) * MAX_TRACE_LENGTH, vMins, vMaxs, MASK_SOLID, &filter, &tr);
 
 	SetGroundEntity(NULL);
 	UTIL_SetOrigin(this, tr.endpos);
 	SetGroundEntity(tr.m_pEnt, &tr);
 	UpdateMeleeRange(NAI_Hull::Bounds(GetHullType(), IsUsingSmallHull()));
+
+	ForceChooseNewEnemy();
+	SetCondition(COND_HEAVY_DAMAGE);
 }
 
 float CNPCWalker::MaxYawSpeed(void)

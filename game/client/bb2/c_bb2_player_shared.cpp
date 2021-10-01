@@ -261,7 +261,7 @@ void CBB2PlayerShared::BodyUpdate(C_HL2MP_Player *pOwner)
 	}
 
 	// Adjust z position when ducking, duck-jumping... etc...
-	Vector origin = pOwner->GetRenderOrigin() + fwd * m_vecBodyOffset.x
+	Vector origin = pOwner->GetLocalOrigin() + fwd * m_vecBodyOffset.x
 		+ right * m_vecBodyOffset.y
 		+ up * m_vecBodyOffset.z;
 

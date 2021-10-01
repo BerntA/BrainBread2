@@ -41,9 +41,9 @@ enum RouteType
 class ShortestPathCost
 {
 public:
-	float operator() ( CNavArea *area, CNavArea *fromArea, const CNavLadder *ladder, const CFuncElevator *elevator, float length )
+	float operator() (CNavArea *area, CNavArea *fromArea, const CNavLadder *ladder, const CFuncElevator *elevator, float length)
 	{
-		if ( fromArea == NULL )
+		if (fromArea == NULL)
 		{
 			// first area in path, no cost
 			return 0.0f;
@@ -53,33 +53,33 @@ public:
 			// compute distance traveled along path so far
 			float dist;
 
-			if ( ladder )
-			{
-				dist = ladder->m_length;
-			}
-			else if ( length > 0.0 )
-			{
+			if (ladder)
+				dist = (ladder->m_length * 1.15f);
+			else if (length > 0.0)
 				dist = length;
-			}
 			else
-			{
-				dist = ( area->GetCenter() - fromArea->GetCenter() ).Length();
-			}
+				dist = (area->GetCenter() - fromArea->GetCenter()).Length();
 
 			float cost = dist + fromArea->GetCostSoFar();
 
 			// if this is a "crouch" area, add penalty
-			if ( area->GetAttributes() & NAV_MESH_CROUCH )
+			if (area->GetAttributes() & NAV_MESH_CROUCH)
 			{
-				const float crouchPenalty = 20.0f;		// 10
+				const float crouchPenalty = 10.0f;
 				cost += crouchPenalty * dist;
 			}
 
 			// if this is a "jump" area, add penalty
-			if ( area->GetAttributes() & NAV_MESH_JUMP )
+			if (area->GetAttributes() & NAV_MESH_JUMP)
 			{
 				const float jumpPenalty = 5.0f;
 				cost += jumpPenalty * dist;
+			}
+
+			if (area->GetAttributes() & NAV_MESH_LADDER_POINT)
+			{
+				const float climbPenalty = 4.0f;
+				cost += climbPenalty * dist;
 			}
 
 			return cost;

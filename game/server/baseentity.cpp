@@ -1728,22 +1728,7 @@ void CBaseEntity::UpdateOnRemove( void )
 
 	if ( edict() )
 	{
-		AddFlag( FL_KILLME );
-		if ( GetFlags() & FL_GRAPHED )
-		{
-			/*	<<TODO>>
-			// this entity was a LinkEnt in the world node graph, so we must remove it from
-			// the graph since we are removing it from the world.
-			for ( int i = 0 ; i < WorldGraph.m_cLinks ; i++ )
-			{
-				if ( WorldGraph.m_pLinkPool [ i ].m_pLinkEnt == pev )
-				{
-					// if this link has a link ent which is the same ent that is removing itself, remove it!
-					WorldGraph.m_pLinkPool [ i ].m_pLinkEnt = NULL;
-				}
-			}
-			*/
-		}
+		AddFlag(FL_KILLME);
 	}
 
 	VPhysicsDestroyObject();

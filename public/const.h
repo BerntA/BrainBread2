@@ -136,7 +136,7 @@
 #define	FL_AIMTARGET			(1<<17)	// set if the crosshair needs to aim onto the entity
 #define	FL_PARTIALGROUND		(1<<18)	// not all corners are valid
 #define FL_STATICPROP			(1<<19)	// Eetsa static prop!		
-#define FL_GRAPHED				(1<<20) // worldgraph has this ent listed as something that blocks a connection
+//#define FL_					(1<<20) // unused
 #define FL_GRENADE				(1<<21)
 #define FL_STEPMOVEMENT			(1<<22)	// Changes the SV_Movestep() behavior to not do any processing
 #define FL_DONTTOUCH			(1<<23)	// Doesn't generate touch functions, generates Untouch() for anything it was touching when this flag was set

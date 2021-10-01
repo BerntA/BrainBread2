@@ -3917,24 +3917,6 @@ void CBasePlayer::Precache( void )
 	PrecacheParticleSystem( "slime_splash_03" );
 	PrecacheParticleSystem("rain_impact_tfo");
 
-	// in the event that the player JUST spawned, and the level node graph
-	// was loaded, fix all of the node graph pointers before the game starts.
-	
-	// !!!BUGBUG - now that we have multiplayer, this needs to be moved!
-	/* todo - put in better spot and use new ainetowrk stuff
-	if ( WorldGraph.m_fGraphPresent && !WorldGraph.m_fGraphPointersSet )
-	{
-		if ( !WorldGraph.FSetGraphPointers() )
-		{
-			Msg( "**Graph pointers were not set!\n");
-		}
-		else
-		{
-			Msg( "**Graph Pointers Set!\n" );
-		} 
-	}
-	*/
-
 	// SOUNDS / MODELS ARE PRECACHED in ClientPrecache() (game specific)
 	// because they need to precache before any clients have connected
 

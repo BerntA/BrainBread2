@@ -1528,6 +1528,7 @@ bool CHL2MP_Player::ActivatePerk(int skill)
 
 	m_iNumPerkKills = 0;
 	m_BB2Local.m_bCanActivatePerk = false;
+	SetHealth(GetMaxHealth()); // Give full HP on activation!
 
 	switch (skill)
 	{
