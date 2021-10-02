@@ -34,6 +34,7 @@ namespace vgui
 		void SetMapLink(const char *map);
 		void SetSelection(bool value) { m_bSelected = value; PerformLayout(); }
 		int GetVoteType(void) { return m_iVoteType; }
+		const char *GetMapLink(void) { return pchMapLink; }
 
 	private:
 		vgui::Label *m_pLabelTitle;

@@ -1505,6 +1505,8 @@ void CHL2MPRules::GameEndVoteThink(void)
 void CHL2MPRules::StartEndMapVote(bool bRefresh)
 {
 	ResetEndMapVoting();
+	if (!bRefresh || (m_listPrevMapOptions.Count() >= m_MapList.Count()))
+		m_listPrevMapOptions.Purge();
 
 	m_bEndMapVotingEnabled = true;
 	m_flEndVoteTimeEnd = gpGlobals->curtime + bb2_vote_time_endgame.GetFloat();
@@ -1515,16 +1517,8 @@ void CHL2MPRules::StartEndMapVote(bool bRefresh)
 	Q_strncpy(pchMapOptions[2], GetRandomMapForVoteSys(MODE_ELIMINATION, bShouldShowRandom), MAX_MAP_NAME);
 	Q_strncpy(pchMapOptions[3], GetRandomMapForVoteSys(MODE_DEATHMATCH, bShouldShowRandom), MAX_MAP_NAME);
 
-	int iMapChoices = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		if (pchMapOptions[i] && pchMapOptions[i][0])
-			iMapChoices++;
-	}
-
 	KeyValues *data = new KeyValues("data");
 	data->SetBool("refresh", bRefresh);
-	data->SetInt("mapChoices", iMapChoices);
 
 	data->SetString("map1", pchMapOptions[0]);
 	data->SetString("map2", pchMapOptions[1]);
@@ -1609,7 +1603,7 @@ int CHL2MPRules::GetVoteTypeWithMostVotes(void)
 		return choice;
 	}
 
-	return 0; 
+	return 0;
 }
 
 bool CHL2MPRules::ShouldShowRandomMaps(void)
@@ -1620,14 +1614,14 @@ bool CHL2MPRules::ShouldShowRandomMaps(void)
 
 	for (int i = 0; i < m_MapList.Count(); i++)
 	{
-		if (!Q_stristr(m_MapList[i], "bba_") && !Q_stristr(m_MapList[i], "bbe_") && !Q_stristr(m_MapList[i], "bbd_"))
-			bMapTypes[0] = true;
-		else if (Q_stristr(m_MapList[i], "bba_"))
+		if (Q_stristr(m_MapList[i], "bba_"))
 			bMapTypes[1] = true;
 		else if (Q_stristr(m_MapList[i], "bbe_"))
 			bMapTypes[2] = true;
 		else if (Q_stristr(m_MapList[i], "bbd_"))
 			bMapTypes[3] = true;
+		else
+			bMapTypes[0] = true;
 	}
 
 	return !(bMapTypes[0] && bMapTypes[1] && bMapTypes[2] && bMapTypes[3]);
@@ -1635,39 +1629,36 @@ bool CHL2MPRules::ShouldShowRandomMaps(void)
 
 const char *CHL2MPRules::GetRandomMapForVoteSys(int mode, bool bRandom)
 {
-	CUtlVector<char*> pNewMapList;
+	CUtlVector<int> pNewMapList;
 
 	for (int i = 0; i < m_MapList.Count(); i++)
 	{
-		if (!strcmp(szCurrentMap, m_MapList[i]))
+		if (m_listPrevMapOptions.Find(i) != -1)
 			continue;
 
-		bool bAdd = false;
-		if (bRandom)
+		if (!strcmp(szCurrentMap, m_MapList[i]))
 		{
-			bAdd = true;
-			for (int x = 0; x < 4; x++)
-			{
-				if (pchMapOptions[x] && pchMapOptions[x][0] && !strcmp(pchMapOptions[x], m_MapList[i]))
-					bAdd = false;
-			}
-
-			if (bAdd)
-				pNewMapList.AddToTail(m_MapList[i]);
+			m_listPrevMapOptions.AddToTail(i);
+			continue;
 		}
+
+		if (bRandom)
+			pNewMapList.AddToTail(i);
 		else
 		{
-			if (!Q_stristr(m_MapList[i], "bba_") && !Q_stristr(m_MapList[i], "bbe_") && !Q_stristr(m_MapList[i], "bbd_") && (mode == MODE_OBJECTIVE))
+			bool bAdd = false;
+
+			if ((mode == MODE_OBJECTIVE) && !Q_stristr(m_MapList[i], "bba_") && !Q_stristr(m_MapList[i], "bbe_") && !Q_stristr(m_MapList[i], "bbd_"))
 				bAdd = true;
-			else if (Q_stristr(m_MapList[i], "bba_") && (mode == MODE_ARENA))
+			else if ((mode == MODE_ARENA) && Q_stristr(m_MapList[i], "bba_"))
 				bAdd = true;
-			else if (Q_stristr(m_MapList[i], "bbe_") && (mode == MODE_ELIMINATION))
+			else if ((mode == MODE_ELIMINATION) && Q_stristr(m_MapList[i], "bbe_"))
 				bAdd = true;
-			else if (Q_stristr(m_MapList[i], "bbd_") && (mode == MODE_DEATHMATCH))
+			else if ((mode == MODE_DEATHMATCH) && Q_stristr(m_MapList[i], "bbd_"))
 				bAdd = true;
 
 			if (bAdd)
-				pNewMapList.AddToTail(m_MapList[i]);
+				pNewMapList.AddToTail(i);
 		}
 	}
 
@@ -1676,8 +1667,9 @@ const char *CHL2MPRules::GetRandomMapForVoteSys(int mode, bool bRandom)
 
 	int index = random->RandomInt(0, (pNewMapList.Count() - 1));
 	char pchOut[MAX_MAP_NAME];
-	Q_strncpy(pchOut, pNewMapList[index], MAX_MAP_NAME);
-	pNewMapList.RemoveAll();
+	Q_strncpy(pchOut, m_MapList[pNewMapList[index]], MAX_MAP_NAME);
+	m_listPrevMapOptions.AddToTail(pNewMapList[index]);
+	pNewMapList.Purge();
 
 	const char *mapName = pchOut;
 	return mapName;

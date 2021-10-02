@@ -257,6 +257,7 @@ public:
 	float m_flEndVoteTimeEnd;
 	int m_iEndVotePlayerChoices[MAX_PLAYERS];
 	bool m_bEndMapVotingEnabled;
+	CUtlVector<int> m_listPrevMapOptions; // A list of idx from mapcycle list which imply that this map has already been checked, for refresh func to prevent the same map from appearing.
 
 	void EmitSoundToClient(CBaseEntity *pAnnouncer, const char *szOriginalSound, int iType, bool bGenderMale, int playerIndex = 0);
 	void DisplayScores(int iWinner = TEAM_HUMANS);
