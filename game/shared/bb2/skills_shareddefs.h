@@ -86,9 +86,9 @@ enum playerSkillWeaponTypes_t
 
 enum playerPerkFlags
 {
-	PERK_HUMAN_GUNSLINGER = 0x001,	
-	PERK_HUMAN_BLOODRAGE = 0x002,	
-	PERK_HUMAN_REALITYPHASE = 0x004,	
+	PERK_HUMAN_GUNSLINGER = 0x001,
+	PERK_HUMAN_BLOODRAGE = 0x002,
+	PERK_HUMAN_REALITYPHASE = 0x004,
 	PERK_POWERUP_CRITICAL = 0x008,
 	PERK_POWERUP_CHEETAH = 0x010,
 	PERK_POWERUP_PREDATOR = 0x020,
@@ -118,15 +118,10 @@ enum playerEffects_t
 };
 
 // Team Perk Definitions:
-enum teamHumanEliminationPerks_t
+enum EliminationPerks_t
 {
 	TEAM_HUMAN_PERK_UNLIMITED_AMMO = 1,
-	END_HUMAN_TEAM_PERKS,
-};
-
-enum teamDeceasedEliminationPerks_t
-{
-	TEAM_DECEASED_PERK_INCREASED_DAMAGE = END_HUMAN_TEAM_PERKS,
+	TEAM_DECEASED_PERK_INCREASED_STRENGTH,
 };
 
 struct playerSkillAffectionItem_t

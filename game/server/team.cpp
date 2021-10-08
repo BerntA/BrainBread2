@@ -94,18 +94,15 @@ CTeam::~CTeam( void )
 //-----------------------------------------------------------------------------
 // Purpose: Called every frame
 //-----------------------------------------------------------------------------
-void CTeam::Think( void )
+void CTeam::Think(void)
 {
 	if (HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION)
 	{
 		int currentPerk = GetActivePerk();
-		if (currentPerk)
+		if (currentPerk && (m_flTeamPerkTime < gpGlobals->curtime))
 		{
-			if (m_flTeamPerkTime < gpGlobals->curtime)
-			{
-				m_flTeamPerkTime = 0.0f;
-				m_nActivePerk = 0;
-			}
+			m_flTeamPerkTime = 0.0f;
+			m_nActivePerk = 0;
 		}
 	}
 }
@@ -248,15 +245,15 @@ void CTeam::ResetScores( void )
 	SetScore(0);
 }
 
-int CTeam::GetAliveMembers( void )
+int CTeam::GetAliveMembers(void)
 {
 	int iAlive = 0;
 
 	int iNumPlayers = GetNumPlayers();
 
-	for ( int i=0;i<iNumPlayers;i++ )
+	for (int i = 0; i < iNumPlayers; i++)
 	{
-		if ( GetPlayer(i) && GetPlayer(i)->IsAlive() )
+		if (GetPlayer(i) && GetPlayer(i)->IsAlive())
 		{
 			iAlive++;
 		}
@@ -276,16 +273,8 @@ bool CTeam::CanActivateTeamPerk(void)
 	m_iExtraScore = 0;
 	m_flTeamPerkTime = gpGlobals->curtime + bb2_elimination_teamperk_duration.GetFloat();
 
-	const char *teamName = "Human";
-	if (m_iTeamNum == TEAM_DECEASED)
-	{
-		teamName = "Zombie";
-		m_nActivePerk = random->RandomInt(teamDeceasedEliminationPerks_t::TEAM_DECEASED_PERK_INCREASED_DAMAGE, teamDeceasedEliminationPerks_t::TEAM_DECEASED_PERK_INCREASED_DAMAGE);
-	}
-	else if (m_iTeamNum == TEAM_HUMANS)
-	{
-		m_nActivePerk = random->RandomInt(teamHumanEliminationPerks_t::TEAM_HUMAN_PERK_UNLIMITED_AMMO, teamHumanEliminationPerks_t::TEAM_HUMAN_PERK_UNLIMITED_AMMO);
-	}
+	const char *teamName = (m_iTeamNum == TEAM_DECEASED) ? "Zombie" : "Human";
+	m_nActivePerk = (m_iTeamNum == TEAM_DECEASED) ? TEAM_DECEASED_PERK_INCREASED_STRENGTH : TEAM_HUMAN_PERK_UNLIMITED_AMMO;
 
 	// Announce this to everyone:
 	CRecipientFilter filter;
@@ -298,10 +287,7 @@ bool CTeam::CanActivateTeamPerk(void)
 
 int CTeam::GetActivePerk(void)
 {
-	if (HL2MPRules()->GetCurrentGamemode() != MODE_ELIMINATION)
-		return 0;
-
-	return m_nActivePerk;
+	return ((HL2MPRules()->GetCurrentGamemode() == MODE_ELIMINATION) ? m_nActivePerk : 0);
 }
 
 void CTeam::ResetTeamPerks(void)
@@ -309,4 +295,10 @@ void CTeam::ResetTeamPerks(void)
 	m_nActivePerk = 0;
 	m_flTeamPerkTime = 0.0f;
 	m_iExtraScore = 0;
+}
+
+/*static*/ int CTeam::GetActivePerk(int team)
+{
+	CTeam *pMyTeam = GetGlobalTeam(team);
+	return (pMyTeam ? pMyTeam->GetActivePerk() : 0);
 }

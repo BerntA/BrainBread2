@@ -71,6 +71,8 @@ public:
 	virtual int GetActivePerk(void);
 	virtual void ResetTeamPerks(void);
 
+	static int GetActivePerk(int team);
+
 public:
 	CUtlVector< CBasePlayer * >		m_aPlayers;
 

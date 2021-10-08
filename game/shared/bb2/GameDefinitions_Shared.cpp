@@ -1765,7 +1765,7 @@ const char *GetTeamPerkName(int perk)
 	{
 	case TEAM_HUMAN_PERK_UNLIMITED_AMMO:
 		return "#TEAM_PERK_UNLIMITED_AMMO";
-	case TEAM_DECEASED_PERK_INCREASED_DAMAGE:
+	case TEAM_DECEASED_PERK_INCREASED_STRENGTH:
 		return "#TEAM_PERK_INCREASED_DAMAGE";
 	default:
 		return "";

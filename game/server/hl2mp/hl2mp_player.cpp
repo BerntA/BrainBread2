@@ -981,25 +981,23 @@ void CHL2MP_Player::PostThink(void)
 		PerformPlayerUpdate();
 	}
 
-	CTeam *pMyTeam = GetGlobalTeam(GetTeamNumber());
-	if (pMyTeam)
+	switch (CTeam::GetActivePerk(GetTeamNumber()))
 	{
-		switch (pMyTeam->GetActivePerk())
+
+	case TEAM_HUMAN_PERK_UNLIMITED_AMMO:
+	{
+		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+		if (pWeapon)
 		{
-		case TEAM_HUMAN_PERK_UNLIMITED_AMMO:
-		{
-			CBaseCombatWeapon *pWeapon = GetActiveWeapon();
-			if (pWeapon)
+			if ((pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL) && !pWeapon->IsMeleeWeapon() && pWeapon->UsesClipsForAmmo())
 			{
-				if ((pWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL) && !pWeapon->IsMeleeWeapon() && pWeapon->UsesClipsForAmmo())
-				{
-					pWeapon->m_iClip = pWeapon->GetMaxClip();
-					pWeapon->AffectedByPlayerSkill(PLAYER_SKILL_HUMAN_GUNSLINGER);
-				}
+				pWeapon->m_iClip = pWeapon->GetMaxClip();
+				pWeapon->AffectedByPlayerSkill(PLAYER_SKILL_HUMAN_GUNSLINGER);
 			}
-			break;
 		}
-		}
+		break;
+	}
+
 	}
 
 	if (IsZombie())
@@ -2462,8 +2460,22 @@ int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		damageCopy.ScaleDamage(flDamageScale);
 	}
 
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer(pAttacker);
+	if (pPlayer && pPlayer->IsHuman() && IsZombie() && (CTeam::GetActivePerk(GetTeamNumber()) == TEAM_DECEASED_PERK_INCREASED_STRENGTH))
+	{
+		CBaseCombatWeapon *pWeaponUsed = pPlayer->GetActiveWeapon();
+		if (pWeaponUsed && !pWeaponUsed->IsMeleeWeapon())
+		{
+			float damageTaken = damageCopy.GetDamage();
+			float health = (GetMaxHealth() - GetHealth());
+			TakeHealth(MIN(damageTaken, health), DMG_GENERIC);
+			PlaySkillSoundCue(SKILL_SOUND_CUE_LIFE_LEECH);
+			return 0;
+		}
+	}
+
 	m_vecTotalBulletForce += damageCopy.GetDamageForce();
-	
+
 	if (pAttacker != this)
 		m_achievStats->OnTookDamage(damageCopy);
 
@@ -2803,20 +2815,11 @@ Vector CHL2MP_Player::GetAutoaimVector(void)
 
 float CHL2MP_Player::GetTeamPerkValue(float flOriginalValue)
 {
-	float flNewValue = flOriginalValue;
-	CTeam *pMyTeam = GetGlobalTeam(GetTeamNumber());
-	if (pMyTeam)
+	switch (CTeam::GetActivePerk(GetTeamNumber()))
 	{
-		switch (pMyTeam->GetActivePerk())
-		{
-		case TEAM_DECEASED_PERK_INCREASED_DAMAGE:
-		{
-			flNewValue *= 2;
-			return flNewValue;
-		}
-		}
+	case TEAM_DECEASED_PERK_INCREASED_STRENGTH:
+		return (flOriginalValue * 2.0f);
 	}
-
 	return 0.0f;
 }
 
