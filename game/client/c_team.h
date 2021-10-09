@@ -15,7 +15,6 @@
 #include "utlvector.h"
 #include "client_thinklist.h"
 
-
 class C_BasePlayer;
 
 class C_Team : public C_BaseEntity
@@ -33,8 +32,6 @@ public:
 	// Data Handling
 	virtual char	*Get_Name( void );
 	virtual int		Get_Score( void );
-	virtual int		Get_Deaths( void );
-	virtual int		Get_Ping( void );
 	virtual int     GetExtraScore(void) { return m_iExtraScore; }
 
 	// Player Handling
@@ -47,16 +44,12 @@ public:
 
 	int		GetTeamNumber() const;
 
-	int		GetRoundsWon(void) { return m_iRoundsWon; }
-
 	void	RemoveAllPlayers();
-
 
 // IClientThinkable overrides.
 public:
 
 	virtual	void				ClientThink();
-
 
 public:
 
@@ -65,15 +58,8 @@ public:
 	char	m_szTeamname[ MAX_TEAM_NAME_LENGTH ];
 	int		m_iScore;
 	int     m_iExtraScore;
-	int		m_iRoundsWon;
-
-	// Data for the scoreboard
-	int		m_iDeaths;
-	int		m_iPing;
-	int		m_iPacketloss;
 	int		m_iTeamNum;
 };
-
 
 // Global list of client side team entities
 extern CUtlVector< C_Team * > g_Teams;

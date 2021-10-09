@@ -2422,9 +2422,9 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 			if ((pAttacker != this) && pEnemyTeam)
 			{
 				if (IsHuman() && pAttacker->IsZombie())
-					pEnemyTeam->AddScore(bb2_elimination_score_zombies.GetInt());
+					pEnemyTeam->AddScore(bb2_elimination_score_zombies.GetInt(), this);
 				else if (IsZombie() && pAttacker->IsHuman())
-					pEnemyTeam->AddScore(bb2_elimination_score_humans.GetInt());
+					pEnemyTeam->AddScore(bb2_elimination_score_humans.GetInt(), this);
 			}
 		}
 	}

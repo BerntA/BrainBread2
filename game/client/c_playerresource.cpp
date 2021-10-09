@@ -67,7 +67,6 @@ IGameResources * GameResources(void) { return g_PR; }
 C_PlayerResource::C_PlayerResource()
 {
 	memset(m_iPing, 0, sizeof(m_iPing));
-	//	memset( m_iPacketloss, 0, sizeof( m_iPacketloss ) );
 	memset(m_nGroupID, 0, sizeof(m_nGroupID));
 	memset(m_iLevel, 0, sizeof(m_iLevel));
 	memset(m_iTotalScore, 0, sizeof(m_iTotalScore));

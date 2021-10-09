@@ -38,7 +38,8 @@ extern ConVar bb2_elimination_respawn_time_scale;
 extern ConVar bb2_elimination_score_from_extermination;
 extern ConVar bb2_elimination_score_zombies;
 extern ConVar bb2_elimination_score_humans;
-extern ConVar bb2_elimination_teamperk_kills_required;
+extern ConVar bb2_elimination_teamperk_zombies;
+extern ConVar bb2_elimination_teamperk_humans;
 extern ConVar bb2_elimination_teamperk_duration;
 extern ConVar bb2_elimination_teammate_distance;
 

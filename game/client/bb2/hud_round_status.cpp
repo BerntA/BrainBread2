@@ -151,7 +151,7 @@ void CHudRoundStatus::Paint()
 	surface()->DrawTexturedRect(newXPOS, bar_ypos, newXPOS + bar_wide, bar_ypos + bar_tall);
 
 	int iHumanScore = 0, iZombieScore = 0;
-	float flExtraScore = 0.0f;
+	float _progress = 0.0f;
 
 	C_Team *pHumanTeam = GetGlobalTeam(TEAM_HUMANS);
 	if (pHumanTeam)
@@ -163,12 +163,9 @@ void CHudRoundStatus::Paint()
 
 	C_Team *pMyTeam = GetGlobalTeam(pPlayer->GetTeamNumber());
 	if (pMyTeam)
-		flExtraScore = (float)pMyTeam->GetExtraScore();
+		_progress = ((float)pMyTeam->GetExtraScore()) / ((pPlayer->GetTeamNumber() == TEAM_DECEASED) ? bb2_elimination_teamperk_zombies.GetFloat() : bb2_elimination_teamperk_humans.GetFloat());
 
-	float _progress = flExtraScore / bb2_elimination_teamperk_kills_required.GetFloat();
-	if (_progress > 1)
-		_progress = 1.0f;
-
+	_progress = clamp(_progress, 0.0f, 1.0f);
 	surface()->DrawSetTexture(m_nTextureBarForeground);
 	surface()->DrawSetColor(GetFgColor());
 	surface()->DrawTexturedSubRect(newXPOS, bar_ypos, newXPOS + (int)(bar_wide * _progress), bar_ypos + bar_tall,

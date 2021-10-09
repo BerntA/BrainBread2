@@ -62,11 +62,12 @@ ConVar bb2_elimination_fraglimit("bb2_elimination_fraglimit", "200", FCVAR_REPLI
 ConVar bb2_elimination_respawn_time("bb2_elimination_respawn_time", "1.5", FCVAR_REPLICATED, "Set the default respawn time in seconds.", true, 1.0f, true, 30.0f);
 ConVar bb2_elimination_respawn_time_scale("bb2_elimination_respawn_time_scale", "0.5", FCVAR_REPLICATED, "Increase the respawn time by this many seconds for the teams.", true, 0.0f, true, 10.0f);
 ConVar bb2_elimination_score_from_extermination("bb2_elimination_score_from_extermination", "10", FCVAR_REPLICATED, "How much score should a team be awarded for exterminating the other team? (kill everyone and allow no one to respawn)", true, 0.0f, true, 50.0f);
-ConVar bb2_elimination_teamperk_kills_required("bb2_elimination_teamperk_kills_required", "10", FCVAR_REPLICATED, "How many kills does a team need to get in order to activate a team perk?", true, 10.0f, true, 100.0f);
 ConVar bb2_elimination_teamperk_duration("bb2_elimination_teamperk_duration", "12", FCVAR_REPLICATED, "How many seconds does a team perk last?", true, 10.0f, true, 30.0f);
-ConVar bb2_elimination_score_zombies("bb2_elimination_score_zombies", "4", FCVAR_REPLICATED, "Whenever the zombie team gets a kill this is the value to add.", true, 1.0f, true, 10.0f);
+ConVar bb2_elimination_score_zombies("bb2_elimination_score_zombies", "5", FCVAR_REPLICATED, "Whenever the zombie team gets a kill this is the value to add.", true, 1.0f, true, 10.0f);
 ConVar bb2_elimination_score_humans("bb2_elimination_score_humans", "1", FCVAR_REPLICATED, "Whenever the human team gets a zombie player kill this is the value to add.", true, 1.0f, true, 10.0f);
 ConVar bb2_elimination_teammate_distance("bb2_elimination_teammate_distance", "1000", FCVAR_REPLICATED, "When a teammate is this much away from me then I will glow him/her.", true, 500.0f, true, 4000.0f);
+ConVar bb2_elimination_teamperk_zombies("bb2_elimination_teamperk_zombies", "2", FCVAR_REPLICATED, "How many kills does the zombies need to activate a team perk?", true, 1.0f, true, 100.0f);
+ConVar bb2_elimination_teamperk_humans("bb2_elimination_teamperk_humans", "4", FCVAR_REPLICATED, "How many kills does the humans need to activate a team perk?", true, 1.0f, true, 100.0f);
 
 ConVar bb2_arena_respawn_time("bb2_arena_respawn_time", "40", FCVAR_REPLICATED, "Server respawn interval, respawns waiting reinforcements every X seconds! Minimum 20 sec.", true, 20.0f, false, 0.0f);
 ConVar bb2_arena_reinforcement_count("bb2_arena_reinforcement_count", "14", FCVAR_REPLICATED, "How many respawns will you allow?", true, 0.0f, true, 100.0f);

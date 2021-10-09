@@ -55,15 +55,10 @@ public:
 	//-----------------------------------------------------------------------------
 	// Scoring
 	//-----------------------------------------------------------------------------
-	virtual void AddScore( int iScore );
+	virtual void AddScore( int iScore, CBaseEntity *pVictim = NULL );
 	virtual void SetScore( int iScore );
 	virtual int  GetScore( void );
 	virtual void ResetScores( void );
-
-	// Round scoring
-	virtual int GetRoundsWon( void ) { return m_iRoundsWon; }
-	virtual void SetRoundsWon( int iRounds ) { m_iRoundsWon = iRounds; }
-	virtual void IncrementRoundsWon( void ) { m_iRoundsWon++; }
 
 	virtual int GetAliveMembers( void );
 
@@ -79,10 +74,7 @@ public:
 	// Data
 	CNetworkString( m_szTeamname, MAX_TEAM_NAME_LENGTH );
 	CNetworkVar( int, m_iScore );
-	CNetworkVar( int, m_iRoundsWon );
 	CNetworkVar(int, m_iExtraScore);
-	int		m_iDeaths;
-
 	CNetworkVar( int, m_iTeamNum );			// Which team is this?
 
 private:

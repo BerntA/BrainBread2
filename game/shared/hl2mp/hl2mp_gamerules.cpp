@@ -1025,14 +1025,12 @@ void CHL2MPRules::GameModeSharedThink(void)
 			if (pHumans)
 			{
 				pHumans->SetScore(0);
-				pHumans->SetRoundsWon(0);
 			}
 
 			CTeam *pZombies = GetGlobalTeam(TEAM_DECEASED);
 			if (pZombies)
 			{
 				pZombies->SetScore(0);
-				pZombies->SetRoundsWon(0);
 			}
 
 			IGameEvent * event = gameeventmanager->CreateEvent("round_end");

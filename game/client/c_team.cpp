@@ -33,7 +33,6 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt( RECVINFO(m_iTeamNum)),
 	RecvPropInt( RECVINFO(m_iScore)),
 	RecvPropInt(RECVINFO(m_iExtraScore)),
-	RecvPropInt( RECVINFO(m_iRoundsWon) ),
 	RecvPropString( RECVINFO(m_szTeamname)),
 	
 	RecvPropArray2( 
@@ -49,10 +48,6 @@ BEGIN_PREDICTION_DATA( C_Team )
 	DEFINE_PRED_ARRAY( m_szTeamname, FIELD_CHARACTER, MAX_TEAM_NAME_LENGTH, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_iScore, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD(m_iExtraScore, FIELD_INTEGER, FTYPEDESC_PRIVATE),
-	DEFINE_PRED_FIELD( m_iRoundsWon, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
-	DEFINE_PRED_FIELD( m_iDeaths, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
-	DEFINE_PRED_FIELD( m_iPing, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
-	DEFINE_PRED_FIELD( m_iPacketloss, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_iTeamNum, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
 END_PREDICTION_DATA();
 
@@ -69,12 +64,7 @@ C_Team::C_Team()
 {
 	m_iScore = 0;
 	m_iExtraScore = 0;
-	m_iRoundsWon = 0;
 	memset( m_szTeamname, 0, sizeof(m_szTeamname) );
-
-	m_iDeaths = 0;
-	m_iPing = 0;
-	m_iPacketloss = 0;
 
 	// Add myself to the global list of team entities
 	g_Teams.AddToTail( this );
@@ -131,22 +121,6 @@ char *C_Team::Get_Name( void )
 int C_Team::Get_Score( void )
 {
 	return m_iScore;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int C_Team::Get_Deaths( void )
-{
-	return m_iDeaths;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int C_Team::Get_Ping( void )
-{
-	return m_iPing;
 }
 
 //-----------------------------------------------------------------------------

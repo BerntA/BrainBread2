@@ -41,7 +41,6 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt( SENDINFO(m_iTeamNum), 5 ),
 	SendPropInt( SENDINFO(m_iScore), 0 ),
 	SendPropInt(SENDINFO(m_iExtraScore), 0),
-	SendPropInt( SENDINFO(m_iRoundsWon), 8 ),
 	SendPropString( SENDINFO( m_szTeamname ) ),
 
 	SendPropArray2( 
@@ -217,11 +216,14 @@ CBasePlayer *CTeam::GetPlayer( int iIndex )
 //-----------------------------------------------------------------------------
 // Purpose: Add / Remove score for this team
 //-----------------------------------------------------------------------------
-void CTeam::AddScore( int iScore )
+void CTeam::AddScore(int iScore, CBaseEntity *pVictim)
 {
 	m_iScore += iScore;
-	m_iExtraScore++;
-	CanActivateTeamPerk();
+	if (pVictim && pVictim->IsPlayer())
+	{
+		m_iExtraScore++;
+		CanActivateTeamPerk();
+	}
 }
 
 void CTeam::SetScore( int iScore )
@@ -267,7 +269,7 @@ bool CTeam::CanActivateTeamPerk(void)
 	if (HL2MPRules()->GetCurrentGamemode() != MODE_ELIMINATION)
 		return false;
 
-	if (m_iExtraScore < bb2_elimination_teamperk_kills_required.GetInt())
+	if (m_iExtraScore < ((m_iTeamNum == TEAM_DECEASED) ? bb2_elimination_teamperk_zombies.GetInt() : bb2_elimination_teamperk_humans.GetInt()))
 		return false;
 
 	m_iExtraScore = 0;
