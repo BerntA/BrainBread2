@@ -279,7 +279,7 @@ int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flFullDist)
 
 	const bool bIsEnemyVisible = FVisible(pEnemy);
 	flHeightDiff = (vEnemyPos.z - vFeetPos.z);
-	if ((flHeightDiff > 0.0f) && (flHeightDiff > (flNPCHeight + flRange)) && !bIsEnemyVisible && !bIsEnemyOnTop) // Enemy is above me! How far can we reach?	
+	if ((flHeightDiff > (flNPCHeight + flRange + 5.0f)) && !bIsEnemyOnTop) // Enemy is above me! How far can we reach?	
 		return COND_TOO_FAR_TO_ATTACK;
 
 	if (bIsEnemyOnTop || (bIsEnemyVisible && (flDist <= flRange)))
