@@ -69,11 +69,9 @@ private:
 	int m_iKillsNeeded;
 
 	// Scaling
-	float m_flKillScaleFactor;
 	float m_flMaxKillsNeeded;
 	float m_flMinKillsNeeded;
 
-	float m_flTimeScaleFactor;
 	float m_flMaxTime;
 	float m_flMinTime;
 

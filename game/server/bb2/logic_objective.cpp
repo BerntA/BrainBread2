@@ -29,14 +29,11 @@ DEFINE_KEYFIELD(szObjectiveIconLocation, FIELD_STRING, "IconLocation"),
 DEFINE_KEYFIELD(szGoalEntity, FIELD_STRING, "TargetEntity"),
 DEFINE_KEYFIELD(m_iKillsNeeded, FIELD_INTEGER, "KillsNeeded"),
 // Scaling
-DEFINE_KEYFIELD(m_flKillScaleFactor, FIELD_FLOAT, "KillScaleFactor"),
-DEFINE_KEYFIELD(m_flTimeScaleFactor, FIELD_FLOAT, "TimeScaleFactor"),
-
-DEFINE_KEYFIELD(m_flMaxKillsNeeded, FIELD_FLOAT, "MaxKillsNeeded"),
 DEFINE_KEYFIELD(m_flMinKillsNeeded, FIELD_FLOAT, "MinKillsNeeded"),
+DEFINE_KEYFIELD(m_flMaxKillsNeeded, FIELD_FLOAT, "MaxKillsNeeded"),
 
-DEFINE_KEYFIELD(m_flMaxTime, FIELD_FLOAT, "MaxTime"),
 DEFINE_KEYFIELD(m_flMinTime, FIELD_FLOAT, "MinTime"),
+DEFINE_KEYFIELD(m_flMaxTime, FIELD_FLOAT, "MaxTime"),
 // Inputs
 DEFINE_INPUTFUNC(FIELD_VOID, "Start", InputStart),
 DEFINE_INPUTFUNC(FIELD_VOID, "End", InputEnd),
@@ -69,8 +66,6 @@ CLogicObjective::CLogicObjective()
 	m_bShouldPinToMap = false;
 	m_bShouldFailOnTimerEnd = false;
 	m_iScaleType = OBJ_SCALING_NONE;
-	m_flKillScaleFactor = 0.0f;
-	m_flTimeScaleFactor = 0.0f;
 	m_iTeamLink = TEAM_HUMANS;
 
 	ListenForGameEvent("round_started");
@@ -298,21 +293,18 @@ bool CLogicObjective::DoObjectiveScaling(void)
 	if (m_iScaleType <= OBJ_SCALING_NONE || (m_iStatusOverall == STATUS_SUCCESS))
 		return false;
 
-	float flKillScaleAmount = 0.0f, flTimeScaleAmount = 0.0f;
-	float flNumPlayers = (float)GameBaseShared()->GetNumActivePlayers();
-
-	flKillScaleAmount = (flNumPlayers * m_flKillScaleFactor);
-	flTimeScaleAmount = (flNumPlayers * m_flTimeScaleFactor);
+	float flScaling = ((float)GameBaseShared()->GetNumActivePlayers()) / (MAX_PLAYERS - 2.0f);
+	flScaling = clamp(flScaling, 0.0f, 1.0f);
 
 	// Do we want kill scaling?
 	if (m_iOriginalKillCount > 0 && (m_iScaleType <= OBJ_SCALING_FIXED))
 	{
-		float newKillsRequired = (flKillScaleAmount * ((float)m_iOriginalKillCount / 100.0f)) + (float)m_iOriginalKillCount;
-		newKillsRequired = Clamp(newKillsRequired, m_flMinKillsNeeded, m_flMaxKillsNeeded);
-		float killsDone = ((float)m_iKillsNeeded - (float)m_iKillsLeft);
+		float newKillsRequired = ((float)m_iOriginalKillCount) + flScaling * (m_flMaxKillsNeeded - m_flMinKillsNeeded);
+		newKillsRequired = clamp(newKillsRequired, m_flMinKillsNeeded, m_flMaxKillsNeeded);
+		int killsDone = (m_iKillsNeeded - m_iKillsLeft);
 
-		m_iKillsNeeded = (int)newKillsRequired;
-		m_iKillsLeft = ((int)newKillsRequired - (int)killsDone);
+		m_iKillsNeeded = ((int)newKillsRequired);
+		m_iKillsLeft = (m_iKillsNeeded - killsDone);
 
 		if (m_iKillsLeft <= 0)
 		{
@@ -327,8 +319,8 @@ bool CLogicObjective::DoObjectiveScaling(void)
 		SetThink(NULL);
 
 		float timeElapsed = (gpGlobals->curtime - m_flTimeStarted);
-		float newTime = (flTimeScaleAmount * (m_flOriginalTime / 100.0f)) + m_flOriginalTime;
-		newTime = Clamp(newTime, m_flMinTime, m_flMaxTime);
+		float newTime = m_flOriginalTime + flScaling * (m_flMaxTime - m_flMinTime);
+		newTime = clamp(newTime, m_flMinTime, m_flMaxTime);
 		newTime -= timeElapsed;
 
 		if (newTime <= 0)
