@@ -219,7 +219,7 @@ CBasePlayer *CTeam::GetPlayer( int iIndex )
 void CTeam::AddScore(int iScore, CBaseEntity *pVictim)
 {
 	m_iScore += iScore;
-	if (pVictim && pVictim->IsPlayer())
+	if (pVictim && pVictim->IsPlayer() && !GetActivePerk())
 	{
 		m_iExtraScore++;
 		CanActivateTeamPerk();

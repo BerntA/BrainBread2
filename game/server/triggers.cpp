@@ -33,10 +33,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-// Global list of triggers that care about weapon fire
-// Doesn't need saving, the triggers re-add themselves on restore.
-CUtlVector< CHandle<CTriggerMultiple> >	g_hWeaponFireTriggers;
-
 ConVar showtriggers( "showtriggers", "0", FCVAR_CHEAT, "Shows trigger brushes" );
 
 bool IsTriggerClass( CBaseEntity *pEntity );
