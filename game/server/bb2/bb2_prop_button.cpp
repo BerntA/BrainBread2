@@ -69,7 +69,16 @@ void CPropButton::Spawn(void)
 
 	AddEffects(EF_NOSHADOW);
 	SetMoveType(MOVETYPE_NONE);
-	SetSolid(SOLID_BBOX);
+	SetSolid(SOLID_VPHYSICS);
+
+	IPhysicsObject *pEntity = VPhysicsInitStatic();
+	if (!pEntity)
+	{
+		SetSolid(SOLID_BBOX);
+		pEntity = VPhysicsInitStatic();
+		if (!pEntity)
+			SetSolid(SOLID_NONE);
+	}
 
 	// Further more effects:
 	m_iOldGlowMode = GLOW_MODE_NONE;
@@ -91,7 +100,8 @@ void CPropButton::Spawn(void)
 		return;
 	}
 
-	SetBlocksLOS(false);
+	if (m_bIsKeyPad || !pEntity || (GetSolid() == SOLID_BBOX))
+		SetBlocksLOS(false);
 }
 
 void CPropButton::Precache(void)
