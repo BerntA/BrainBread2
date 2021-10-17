@@ -81,14 +81,8 @@ void CPropButton::Spawn(void)
 	}
 
 	// Further more effects:
-	m_iOldGlowMode = GLOW_MODE_NONE;
-	if (m_bStartGlowing && m_bShowModel)
-	{
-		SetGlowMode(m_iGlowType);
-		m_iOldGlowMode = GetGlowMode();
-	}
-	else
-		SetGlowMode(GLOW_MODE_NONE);
+	m_iOldGlowMode = (m_bStartGlowing && m_bShowModel) ? m_iGlowType : GLOW_MODE_NONE;
+	SetGlowMode(m_bIsDisabled ? GLOW_MODE_NONE : m_iOldGlowMode);
 
 	if (!m_bShowModel)
 		AddEffects(EF_NODRAW);
