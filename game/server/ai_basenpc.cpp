@@ -9788,6 +9788,7 @@ IMPLEMENT_SERVERCLASS_ST(CAI_BaseNPC, DT_AI_BaseNPC)
 	SendPropExclude("DT_BaseEntity", "m_iGlowMethod"),
 	SendPropExclude("DT_BaseEntity", "m_GlowColor"),
 	SendPropExclude("DT_BaseEntity", "m_iGlowTeamLink"),
+	SendPropExclude("DT_BaseEntity", "m_iGlowRadiusOverride"),
 
 	SendPropExclude("DT_BCCLocalPlayerExclusive", "m_flNextAttack"),
 	SendPropExclude("DT_BaseEntity", "m_vecOrigin"),

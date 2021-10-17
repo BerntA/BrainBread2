@@ -52,7 +52,11 @@ public:
 	virtual void OnPhysGunPickup(CBasePlayer *pPhysGunUser, PhysGunPickup_t reason = PICKED_UP_BY_CANNON);
 	virtual void OnPhysGunDrop(CBasePlayer *pPhysGunUser, PhysGunDrop_t reason);
 
-	virtual int	ObjectCaps() { return (BaseClass::ObjectCaps() | FCAP_IMPULSE_USE); }
+	virtual int	ObjectCaps()
+	{
+		return (m_bIsDisabled ? BaseClass::ObjectCaps() : (BaseClass::ObjectCaps() | FCAP_IMPULSE_USE));
+	}
+
 	virtual void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 	virtual const Vector &GetOriginalSpawnOrigin(void) { return m_vOriginalSpawnOrigin; }
 	virtual const QAngle &GetOriginalSpawnAngles(void) { return m_vOriginalSpawnAngles; }

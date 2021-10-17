@@ -96,6 +96,14 @@ void CPropButton::Spawn(void)
 
 	if (m_bIsKeyPad || !pEntity || (GetSolid() == SOLID_BBOX))
 		SetBlocksLOS(false);
+
+	if (pEntity)
+	{
+		const Vector &vExtent = WorldAlignSize();
+		float flMaxRadiusRange = sqrtf((vExtent.x / 2.0f) * (vExtent.x / 2.0f) + (vExtent.y / 2.0f) * (vExtent.y / 2.0f)) + (vExtent.z / 2.0f) + 10.0f;
+		flMaxRadiusRange = ceil(flMaxRadiusRange);
+		m_iGlowRadiusOverride = flMaxRadiusRange;
+	}
 }
 
 void CPropButton::Precache(void)

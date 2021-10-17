@@ -292,6 +292,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE( CBaseEntity, DT_BaseEntity )
 	SendPropInt(SENDINFO(m_iGlowMethod), 3, SPROP_UNSIGNED),
 	SendPropInt( SENDINFO( m_GlowColor ), 32, SPROP_UNSIGNED, SendProxy_Color32ToInt ),
 	SendPropInt(SENDINFO(m_iGlowTeamLink), 2, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_iGlowRadiusOverride), 11, SPROP_UNSIGNED),
 #endif
 
 END_SEND_TABLE()
@@ -355,6 +356,7 @@ CBaseEntity::CBaseEntity( bool bServerOnly )
 	color32 col32 = { 255, 255, 255, 255 };
 	m_GlowColor.Set( col32 );
 	m_iGlowTeamLink.Set(0);
+	m_iGlowRadiusOverride.Set(0);
 #endif
 
 	m_CollisionGroup = COLLISION_GROUP_NONE;

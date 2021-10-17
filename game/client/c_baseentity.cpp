@@ -479,6 +479,7 @@ RecvPropBool(RECVINFO(m_bAlternateSorting)),
 RecvPropInt(RECVINFO(m_iGlowMethod)),
 RecvPropInt(RECVINFO(m_GlowColor), 0, RecvProxy_IntToColor32),
 RecvPropInt(RECVINFO(m_iGlowTeamLink)),
+RecvPropInt(RECVINFO(m_iGlowRadiusOverride)),
 #endif // GLOWS_ENABLE
 
 END_RECV_TABLE()
@@ -905,7 +906,7 @@ m_iv_vecVelocity("C_BaseEntity::m_iv_vecVelocity")
 	
 #ifdef GLOWS_ENABLE
 	m_iGlowMethod = m_iOldGlowMethod = GLOW_MODE_NONE;
-	m_iGlowTeamLink = 0;
+	m_iGlowTeamLink = m_iGlowRadiusOverride = 0;
 	m_bGlowSuppressRender = false;
 #endif
 
@@ -3253,7 +3254,8 @@ bool C_BaseEntity::CanGlowEntity()
 		if (!pLocal->IsAlive() || (pLocal->GetTeamNumber() != TEAM_HUMANS))
 			return false;
 
-		if (length > MAX_GLOW_RADIUS_DIST)
+		float maxRangeDist = ((float)m_iGlowRadiusOverride);
+		if (length > MAX(MAX_GLOW_RADIUS_DIST, maxRangeDist))
 			return false;
 	}
 

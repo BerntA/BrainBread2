@@ -1641,6 +1641,7 @@ public:
 	CNetworkVar(int, m_iGlowMethod);
     CNetworkVar( color32, m_GlowColor );
 	CNetworkVar(int, m_iGlowTeamLink);
+	CNetworkVar(int, m_iGlowRadiusOverride);
 #endif
 
 private:

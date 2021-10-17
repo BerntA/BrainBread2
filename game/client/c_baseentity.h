@@ -1674,6 +1674,7 @@ public:
 	int m_iGlowMethod;
 	int m_iOldGlowMethod;
 	int m_iGlowTeamLink; // 0/1 - Any, 2 - Humans, 3 - Zombies...
+	int m_iGlowRadiusOverride;
 	bool m_bGlowSuppressRender;
 	color32 m_GlowColor;
 	virtual bool CanGlowEntity();
