@@ -695,6 +695,8 @@ bool CGameDefinitionsShared::Precache(void)
 #ifndef CLIENT_DLL
 		CBaseAnimating::PrecacheScriptSound(pszItemSharedData[i].szSoundScriptSuccess);
 		CBaseAnimating::PrecacheScriptSound(pszItemSharedData[i].szSoundScriptFailure);
+		if (pszItemSharedData[i].szSoundScriptExchange && pszItemSharedData[i].szSoundScriptExchange[0])
+			CBaseAnimating::PrecacheScriptSound(pszItemSharedData[i].szSoundScriptExchange);
 #endif
 		CBaseAnimating::PrecacheModel(pszItemSharedData[i].szModelPath);
 	}
@@ -1310,6 +1312,7 @@ void CGameDefinitionsShared::ParseInventoryData(KeyValues *pkvData, bool bIsMapI
 
 			Q_strncpy(item.szSoundScriptSuccess, sub->GetString("PickupSound", "ItemShared.Pickup"), 32);
 			Q_strncpy(item.szSoundScriptFailure, sub->GetString("DenySound", "ItemShared.Deny"), 32);
+			Q_strncpy(item.szSoundScriptExchange, sub->GetString("ExchangeSound"), 32);
 
 			const char *pszObjIconTexture = sub->GetString("ObjectiveIconTexture");
 

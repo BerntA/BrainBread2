@@ -25,7 +25,9 @@ private:
 	int m_iAction;
 	int m_iFilter;
 	uint m_iItemID;
+	uint m_iExchangeItemID;
 	bool m_bIsMapItem;
+	bool m_bOneAtATime;
 
 	COutputEvent m_OnFoundItem;
 	COutputEvent m_OnNotFoundItem;
@@ -37,7 +39,9 @@ BEGIN_DATADESC(CLogicInventoryChecker)
 DEFINE_KEYFIELD(m_iAction, FIELD_INTEGER, "Action"),
 DEFINE_KEYFIELD(m_iFilter, FIELD_INTEGER, "Team"),
 DEFINE_KEYFIELD(m_iItemID, FIELD_INTEGER, "ItemID"),
+DEFINE_KEYFIELD(m_iExchangeItemID, FIELD_INTEGER, "ItemExchangeID"),
 DEFINE_KEYFIELD(m_bIsMapItem, FIELD_BOOLEAN, "MapItem"),
+DEFINE_KEYFIELD(m_bOneAtATime, FIELD_BOOLEAN, "OnePerCheck"),
 
 DEFINE_INPUTFUNC(FIELD_VOID, "CheckForItem", InputCheckForItem),
 DEFINE_OUTPUT(m_OnFoundItem, "OnFound"),
@@ -46,10 +50,9 @@ END_DATADESC()
 
 CLogicInventoryChecker::CLogicInventoryChecker()
 {
-	m_iAction = 0;
-	m_iFilter = 0;
-	m_iItemID = 0;
-	m_bIsMapItem = false;
+	m_iAction = m_iFilter = 0;
+	m_iItemID = m_iExchangeItemID = 0;
+	m_bIsMapItem = m_bOneAtATime = false;
 }
 
 void CLogicInventoryChecker::Spawn()
@@ -74,6 +77,9 @@ void CLogicInventoryChecker::InputCheckForItem(inputdata_t &inData)
 		return;
 
 	bool bFound = false;
+	const DataInventoryItem_Base_t *pInvItem = GameBaseShared()->GetSharedGameDetails()->GetInventoryData(m_iItemID, m_bIsMapItem);
+	const DataInventoryItem_Base_t *pExchangeItem = ((m_iExchangeItemID && m_bIsMapItem) ? GameBaseShared()->GetSharedGameDetails()->GetInventoryData(m_iExchangeItemID, m_bIsMapItem) : NULL);
+
 	for (int i = (GameBaseShared()->GetServerInventory().Count() - 1); i >= 0; i--)
 	{
 		const InventoryItem_t *pItem = &GameBaseShared()->GetServerInventory()[i];
@@ -82,16 +88,27 @@ void CLogicInventoryChecker::InputCheckForItem(inputdata_t &inData)
 
 		switch (m_iAction)
 		{
-		case 1: // Auto-Use
+		case INV_CHECK_USE: // Auto-Use
 			GameBaseShared()->UseInventoryItem(pActivator->entindex(), m_iItemID, m_bIsMapItem, false, false, i);
 			break;
-		case 2: // Drop
-		case 3: // Delete
-			GameBaseShared()->RemoveInventoryItem(pActivator->entindex(), pActivator->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID, (m_iAction == 3), i);
+		case INV_CHECK_DROP: // Drop
+		case INV_CHECK_DELETE: // Delete
+			GameBaseShared()->RemoveInventoryItem(pActivator->entindex(), pActivator->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID, (m_iAction == INV_CHECK_DELETE), i);
 			break;
 		}
 
+		if (pExchangeItem && (m_iAction == INV_CHECK_DELETE)) // Exchange prev. item for this new item!
+			GameBaseShared()->AddInventoryItem(pActivator->entindex(), pExchangeItem, m_bIsMapItem);
+
 		bFound = true;
+		if (m_bOneAtATime)
+			break;
+	}
+
+	if (bFound && pInvItem && pExchangeItem && (m_iAction == INV_CHECK_DELETE))
+	{
+		CSingleUserRecipientFilter filter(pActivator);
+		EmitSound(filter, pActivator->entindex(), pInvItem->szSoundScriptExchange);
 	}
 
 	if (bFound)

@@ -135,6 +135,13 @@ enum InventoryActions
 	INV_ACTION_UPD,
 };
 
+enum InventoryCheckType
+{
+	INV_CHECK_USE = 1,
+	INV_CHECK_DROP,
+	INV_CHECK_DELETE,
+};
+
 enum
 {
 	GROUPID_IS_DEVELOPER = 0x001,

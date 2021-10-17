@@ -39,6 +39,7 @@ public:
 	CHL2MP_Player *GetHumanInteractor(CBaseEntity *pActivator);
 	bool SetItem(const DataInventoryItem_Base_t &data, bool bMapItem);
 	bool SetItem(uint itemID, bool bMapItem);
+	void OnItemStateUpdated(bool bDisabled);
 
 	const DataInventoryItem_Base_t* GetItemData(void) { return m_pData; }
 

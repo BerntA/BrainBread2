@@ -311,6 +311,7 @@ struct DataInventoryItem_Base_t
 
 	char szSoundScriptSuccess[32];
 	char szSoundScriptFailure[32];
+	char szSoundScriptExchange[32];
 
 	Color clGlowColor;
 	bool bGlobalGlow;

@@ -76,12 +76,12 @@ void CTriggerInventoryCheck::StartTouch(CBaseEntity *pOther)
 
 		switch (m_iAction)
 		{
-		case 1: // Auto-Use
+		case INV_CHECK_USE: // Auto-Use
 			GameBaseShared()->UseInventoryItem(pPlayer->entindex(), m_iItemID, m_bIsMapItem, false, false, i);
 			break;
-		case 2: // Drop
-		case 3: // Delete
-			GameBaseShared()->RemoveInventoryItem(pPlayer->entindex(), pPlayer->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID, (m_iAction == 3), i);
+		case INV_CHECK_DROP: // Drop
+		case INV_CHECK_DELETE: // Delete
+			GameBaseShared()->RemoveInventoryItem(pPlayer->entindex(), pPlayer->GetAbsOrigin(), (m_bIsMapItem ? 1 : 0), m_iItemID, (m_iAction == INV_CHECK_DELETE), i);
 			break;
 		}
 

@@ -225,6 +225,13 @@ bool CInventoryItem::SetItem(uint itemID, bool bMapItem)
 	return SetItem((*data), bMapItem);
 }
 
+void CInventoryItem::OnItemStateUpdated(bool bDisabled)
+{
+	CObjectiveIcon *pEnt = dynamic_cast<CObjectiveIcon*>(m_pObjIcon.Get());
+	if (pEnt)
+		pEnt->HideIcon(bDisabled);
+}
+
 void CInventoryItem::OnRotationEffect(void)
 {
 	BaseClass::OnRotationEffect();
