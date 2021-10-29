@@ -66,6 +66,7 @@ public:
 	// those of this soundscape.
 	CHandle<CEnvSoundscape> m_hProxySoundscape;
 
+	bool m_bNoDistanceCheck; // No distance or vis check for this sndscape!
 
 private:
 

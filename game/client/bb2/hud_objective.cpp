@@ -376,11 +376,7 @@ void CHudCaptureProgressBar::Paint()
 {
 	int x, y;
 	GetPos(x, y);
-
-	CHudObjective *pElement = m_pObjectiveHUD;
-	if (pElement)
-		y = (pElement->GetYPosOffset() + YRES(2));
-
+	y = YRES(2) + (m_pObjectiveHUD ? MAX(m_pObjectiveHUD->GetYPosOffset(), 0) : 0);
 	SetPos(x, y);
 
 	// Draw Progress:	

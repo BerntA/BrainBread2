@@ -56,6 +56,9 @@ private:
 	// Halting
 	bool m_bShouldHaltProgress;
 
+	// Misc
+	float m_flTouchTimer;
+
 	string_t cszMessageTooFewPlayers;
 	string_t cszMessageFailed;
 	string_t cszMessageProgressHalted;
@@ -87,7 +90,8 @@ CTriggerCapturePoint::CTriggerCapturePoint()
 
 	m_flPercentRequired = 30.0f;
 	m_flTimeToCapture = 10.0f;
-	m_flCaptureTimeStart = m_flCaptureTimeEnd = m_flElapsedTime = m_flTimeLeft = 0.0f;
+	m_flCaptureTimeStart = m_flCaptureTimeEnd = m_flElapsedTime = m_flTimeLeft = m_flTouchTimer = 0.0f;
+	m_flWait = 0.2f;
 
 	cszMessageTooFewPlayers = cszMessageFailed = cszMessageProgressHalted = NULL_STRING;
 }
@@ -287,8 +291,11 @@ void CTriggerCapturePoint::TransmitCaptureStatus(CBasePlayer *pPlayer, bool valu
 
 void CTriggerCapturePoint::OnTouch(CBaseEntity *pOther)
 {
-	// TODO: Anything here? This is a 'think' frame which is called all the time for touching ents, they're not added into the ehandle utlvector, which means once that list is empty 
-	// it will refresh the halt progress and progress a tiny bit, meaning this func should not be used, ents who spawn in the volume will cause trouble.
+	if ((m_flTouchTimer > gpGlobals->curtime) || !pOther || m_bIsCaptured || m_bDisabled || !PassesTriggerFilters(pOther))
+		return;
+
+	m_flTouchTimer = (gpGlobals->curtime + m_flWait);
+	m_OnTouching.FireOutput(pOther, this);
 }
 
 void CTriggerCapturePoint::NotifyCaptureFailed(bool bEnemyEntered)

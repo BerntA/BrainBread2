@@ -51,6 +51,7 @@ void CEnvSoundscapeProxy::Activate()
 		m_soundscapeIndex = m_hProxySoundscape->m_soundscapeIndex;
 		for ( int i=0; i < ARRAYSIZE( m_positionNames ); i++ )
 			m_positionNames[i] = m_hProxySoundscape->m_positionNames[i];
+		m_bNoDistanceCheck = m_hProxySoundscape->m_bNoDistanceCheck;
 	}
 	else
 	{
@@ -95,7 +96,7 @@ CEnvSoundscape::CEnvSoundscape()
 	m_soundscapeName = NULL_STRING;
 	m_soundscapeIndex = -1;
 	m_soundscapeEntityId = -1;
-	m_bDisabled = false;
+	m_bDisabled = m_bNoDistanceCheck = false;
 	g_SoundscapeSystem.AddSoundscapeEntity( this );
 }
 
@@ -259,17 +260,14 @@ void CEnvSoundscape::UpdateForPlayer( ss_update_t &update )
 	if ( update.pCurrentSoundscape == this )
 	{
 		update.currentDistance = range;
-		update.bInRange = false;
-		if ( m_flRadius > range || m_flRadius == -1 )
+		update.bInRange = m_bNoDistanceCheck;
+		if (!update.bInRange && (m_flRadius > range || m_flRadius == -1))
 		{
 			trace_t tr;
-
 			update.traceCount++;
 			UTIL_TraceLine( target, update.playerPosition, MASK_SOLID_BRUSHONLY|MASK_WATER, update.pPlayer, COLLISION_GROUP_NONE, &tr );
-			if ( tr.fraction == 1 && !tr.startsolid )
-			{
-				update.bInRange = true;
-			}
+			if ( tr.fraction == 1 && !tr.startsolid )			
+				update.bInRange = true;			
 		}
 	}
 	else
@@ -277,10 +275,8 @@ void CEnvSoundscape::UpdateForPlayer( ss_update_t &update )
 		if ( (!update.bInRange || range < update.currentDistance ) && (m_flRadius > range || m_flRadius == -1) )
 		{
 			trace_t tr;
-
 			update.traceCount++;
 			UTIL_TraceLine( target, update.playerPosition, MASK_SOLID_BRUSHONLY|MASK_WATER, update.pPlayer, COLLISION_GROUP_NONE, &tr );
-
 			if ( tr.fraction == 1 && !tr.startsolid )
 			{
 				audioparams_t &audio = update.pPlayer->GetAudioParams();
@@ -291,7 +287,6 @@ void CEnvSoundscape::UpdateForPlayer( ss_update_t &update )
 			}
 		}
 	}
-
 
 	if ( soundscape_debug.GetBool() )
 	{
@@ -406,6 +401,7 @@ LINK_ENTITY_TO_CLASS( env_soundscape_triggerable, CEnvSoundscapeTriggerable );
 
 CEnvSoundscapeTriggerable::CEnvSoundscapeTriggerable()
 {
+	m_bNoDistanceCheck = true;
 }
 
 void CEnvSoundscapeTriggerable::DelegateStartTouch( CBaseEntity *pEnt )
@@ -451,12 +447,10 @@ void CEnvSoundscapeTriggerable::DelegateEndTouch( CBaseEntity *pEnt )
 	pPlayer->GetAudioParams().ent = NULL;
 }
 
-
 void CEnvSoundscapeTriggerable::Think()
 {
 	// Overrides the base class's think and prevents it from running at all.
 }
-
 
 // ---------------------------------------------------------------------------------------------------- //
 // CTriggerSoundscape
@@ -481,23 +475,22 @@ public:
 private:
 	CHandle<CEnvSoundscapeTriggerable> m_hSoundscape;
 	string_t m_SoundscapeName;
-
+	bool m_bNoEndCheck; // Only delegate further, never end touch, simply trigger the soundscape if you are in the trigger, never remove it if you leave.
 	CUtlVector<CBasePlayerHandle> m_spectators; // spectators in our volume
 };
-
 
 LINK_ENTITY_TO_CLASS( trigger_soundscape, CTriggerSoundscape );
 
 BEGIN_DATADESC( CTriggerSoundscape )
 	DEFINE_THINKFUNC( PlayerUpdateThink ),
 	DEFINE_KEYFIELD( m_SoundscapeName, FIELD_STRING, "soundscape" ),
+	DEFINE_KEYFIELD(m_bNoEndCheck, FIELD_BOOLEAN, "NoEndCheck"),
 END_DATADESC()
-
 
 CTriggerSoundscape::CTriggerSoundscape()
 {
+	m_bNoEndCheck = false;
 }
-
 
 void CTriggerSoundscape::StartTouch( CBaseEntity *pOther )
 {
@@ -507,25 +500,22 @@ void CTriggerSoundscape::StartTouch( CBaseEntity *pOther )
 	BaseClass::StartTouch( pOther );
 }
 
-
 void CTriggerSoundscape::EndTouch( CBaseEntity *pOther )
 {
-	if ( m_hSoundscape )
+	if ( m_hSoundscape && !m_bNoEndCheck )
 		m_hSoundscape->DelegateEndTouch( pOther );
 
 	BaseClass::EndTouch( pOther );
 }
-
 
 void CTriggerSoundscape::Spawn()
 {
 	BaseClass::Spawn();
 	InitTrigger();
 
-	SetThink( &CTriggerSoundscape::PlayerUpdateThink );
-	SetNextThink( gpGlobals->curtime + 0.2 );
+	SetThink(&CTriggerSoundscape::PlayerUpdateThink);
+	SetNextThink(gpGlobals->curtime + 0.2f);
 }
-
 
 void CTriggerSoundscape::Activate()
 {
@@ -533,49 +523,45 @@ void CTriggerSoundscape::Activate()
 	BaseClass::Activate();
 }
 
-
 // look for dead/spectating players in our volume, to call touch on
 void CTriggerSoundscape::PlayerUpdateThink()
 {
 	int i;
-	SetNextThink( gpGlobals->curtime + 0.2 );
+	SetNextThink(gpGlobals->curtime + 0.2f);
 
 	CUtlVector<CBasePlayerHandle> oldSpectators;
 	oldSpectators = m_spectators;
 	m_spectators.RemoveAll();
 
-	for ( i=1; i <= gpGlobals->maxClients; ++i )
+	for (i = 1; i <= gpGlobals->maxClients; ++i)
 	{
-		CBasePlayer *player = UTIL_PlayerByIndex( i );
+		CBasePlayer *player = UTIL_PlayerByIndex(i);
 
-		if ( !player )
-			continue;
-
-		if ( player->IsAlive() )
+		if (!player || player->IsAlive())
 			continue;
 
 		// if the spectator is intersecting the trigger, track it, and start a touch if it is just starting to touch
-		if ( Intersects( player ) )
+		if (Intersects(player))
 		{
-			if ( !oldSpectators.HasElement( player ) )
+			if (!oldSpectators.HasElement(player))
 			{
-				StartTouch( player );
+				StartTouch(player);
 			}
-			m_spectators.AddToTail( player );
+			m_spectators.AddToTail(player);
 		}
 	}
 
 	// check for spectators who are no longer intersecting
-	for ( i=0; i<oldSpectators.Count(); ++i )
+	for (i = 0; i < oldSpectators.Count(); ++i)
 	{
 		CBasePlayer *player = oldSpectators[i];
 
-		if ( !player )
+		if (!player)
 			continue;
 
-		if ( !m_spectators.HasElement( player ) )
+		if (!m_spectators.HasElement(player))
 		{
-			EndTouch( player );
+			EndTouch(player);
 		}
 	}
 }
