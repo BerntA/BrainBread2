@@ -33,6 +33,7 @@ CSmartTrigger::CSmartTrigger(void)
 
 void CSmartTrigger::Spawn()
 {
+	AddSpawnFlags(SF_TRIGGER_ALLOW_CLIENTS | SF_TRIGGER_ALLOW_NPCS);
 	BaseClass::Spawn();
 }
 

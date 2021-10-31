@@ -25,6 +25,7 @@
 #include "EntityParticleTrail.h"
 #include "in_buttons.h"
 #include "gameinterface.h"
+#include "team.h"
 
 #ifdef HL2_DLL
 #include "hl2_player.h"
@@ -82,6 +83,7 @@ BEGIN_DATADESC( CBaseTrigger )
 	// Keyfields
 	DEFINE_KEYFIELD( m_iFilterName,	FIELD_STRING,	"filtername" ),
 	DEFINE_KEYFIELD( m_bDisabled,		FIELD_BOOLEAN,	"StartDisabled" ),
+	DEFINE_KEYFIELD(m_flPercentRequired, FIELD_FLOAT, "PercentRequired"),
 
 	// Inputs	
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
@@ -109,6 +111,7 @@ LINK_ENTITY_TO_CLASS( trigger, CBaseTrigger );
 CBaseTrigger::CBaseTrigger()
 {
 	AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
+	m_bSkipFilterCheck = false;
 }
 
 //------------------------------------------------------------------------------
@@ -146,7 +149,6 @@ void CBaseTrigger::Spawn()
 	BaseClass::Spawn();
 }
 
-
 //------------------------------------------------------------------------------
 // Cleanup
 //------------------------------------------------------------------------------
@@ -178,7 +180,6 @@ void CBaseTrigger::Enable( void )
 		PhysicsTouchTriggers();
 	}
 }
-
 
 //------------------------------------------------------------------------------
 // Purpose :
@@ -287,7 +288,6 @@ bool CBaseTrigger::PointIsWithin( const Vector &vecPoint )
 	return ( tr.startsolid );
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -327,20 +327,20 @@ void CBaseTrigger::InitTrigger( )
 bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 {
 	// First test spawn flag filters
-	if ( HasSpawnFlags(SF_TRIGGER_ALLOW_ALL) ||
+	if (HasSpawnFlags(SF_TRIGGER_ALLOW_ALL) ||
 		(HasSpawnFlags(SF_TRIGGER_ALLOW_CLIENTS) && (pOther->GetFlags() & FL_CLIENT)) ||
 		(HasSpawnFlags(SF_TRIGGER_ALLOW_NPCS) && (pOther->GetFlags() & FL_NPC)) ||
 		(HasSpawnFlags(SF_TRIGGER_ALLOW_PUSHABLES) && FClassnameIs(pOther, "func_pushable")) ||
-		(HasSpawnFlags(SF_TRIGGER_ALLOW_PHYSICS) && pOther->GetMoveType() == MOVETYPE_VPHYSICS) 
+		(HasSpawnFlags(SF_TRIGGER_ALLOW_PHYSICS) && pOther->GetMoveType() == MOVETYPE_VPHYSICS)
 		)
 	{
-		if ( pOther->GetFlags() & FL_NPC )
+		if (pOther->GetFlags() & FL_NPC)
 		{
 			CAI_BaseNPC *pNPC = pOther->MyNPCPointer();
 
-			if ( HasSpawnFlags( SF_TRIGGER_ONLY_PLAYER_ALLY_NPCS ) )
+			if (HasSpawnFlags(SF_TRIGGER_ONLY_PLAYER_ALLY_NPCS))
 			{
-				if ( !pNPC || !pNPC->IsPlayerAlly() )
+				if (!pNPC || !pNPC->IsPlayerAlly())
 				{
 					return false;
 				}
@@ -349,21 +349,20 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 
 		bool bOtherIsPlayer = pOther->IsPlayer();
 
-		if ( bOtherIsPlayer )
+		if (bOtherIsPlayer)
 		{
 			CBasePlayer *pPlayer = (CBasePlayer*)pOther;
-			if ( !pPlayer->IsAlive() )
+			if (!pPlayer->IsAlive())
 				return false;
 
-			if ( HasSpawnFlags( SF_TRIGGER_DISALLOW_BOTS ) )
+			if (HasSpawnFlags(SF_TRIGGER_DISALLOW_BOTS))
 			{
-				if ( pPlayer->IsFakeClient() )
+				if (pPlayer->IsFakeClient())
 					return false;
 			}
 		}
 
-		CBaseFilter *pFilter = m_hFilter.Get();
-		return (!pFilter) ? true : pFilter->PassesFilter( this, pOther );
+		return (m_bSkipFilterCheck ? true : IsFilterPassing(pOther));
 	}
 	return false;
 }
@@ -517,6 +516,30 @@ void CBaseTrigger::InputToggle( inputdata_t &inputdata )
 	PhysicsTouchTriggers();
 }
 
+bool CBaseTrigger::IsEnoughPlayersInVolume(int iTeam)
+{
+	int players = 0;
+	for (int i = 0; i < m_hTouchingEntities.Count(); i++)
+	{
+		CBaseEntity *pToucher = m_hTouchingEntities[i].Get();
+		if (!pToucher || !pToucher->IsPlayer() || !pToucher->IsAlive() || (pToucher->GetTeamNumber() != iTeam) || !IsFilterPassing(pToucher))
+			continue;
+		players++;
+	}
+
+	CTeam *pTeam = GetGlobalTeam(iTeam);
+	float teamSize = (pTeam ? ((float)pTeam->GetNumPlayers()) : 0.0f),
+		teamSizeInVolume = ((float)players);
+	float flPercentInVolume = floor((teamSizeInVolume / teamSize) * 100.0f);
+
+	return (flPercentInVolume >= m_flPercentRequired);
+}
+
+bool CBaseTrigger::IsFilterPassing(CBaseEntity *pOther)
+{
+	CBaseFilter *pFilter = m_hFilter.Get();
+	return (pFilter ? pFilter->PassesFilter(this, pOther) : true);
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Removes anything that touches it. If the trigger has a targetname,

@@ -52,17 +52,11 @@ void CTriggerAchievement::Touch(CBaseEntity *pOther)
 		return;
 
 	CHL2MP_Player *pClient = ToHL2MPPlayer(pOther);
-	if (!pClient)
+	if (!pClient || pClient->IsBot())
 		return;
 
-	if (pClient->IsBot())
+	if ((m_iFilter > 0) && (pClient->GetTeamNumber() != m_iFilter))
 		return;
-
-	if (m_iFilter > 0)
-	{
-		if (pClient->GetTeamNumber() != m_iFilter)
-			return;
-	}
 
 	// Give the achievement to everyone or the first player who touched us:
 	GameBaseServer()->SendAchievement(szAchievementLink.ToCStr(), (m_bGiveToAll ? 0 : pClient->entindex()));

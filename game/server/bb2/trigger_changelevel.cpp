@@ -27,12 +27,10 @@ public:
 	void EndTouch(CBaseEntity *pOther);
 	void OnTouch(CBaseEntity *pOther);
 	void OnThink(void);
-	bool IsEnoughPlayersInVolume(void);
 
 private:
 
 	bool m_bChangeLevel;
-	float m_flPercentRequired;
 	string_t pchNextLevel;
 };
 
@@ -40,7 +38,6 @@ LINK_ENTITY_TO_CLASS(trigger_changelevel, CTriggerChangelevel);
 
 BEGIN_DATADESC(CTriggerChangelevel)
 DEFINE_KEYFIELD(pchNextLevel, FIELD_STRING, "NextMap"),
-DEFINE_KEYFIELD(m_flPercentRequired, FIELD_FLOAT, "PercentRequired"),
 DEFINE_THINKFUNC(OnThink),
 END_DATADESC()
 
@@ -83,7 +80,7 @@ void CTriggerChangelevel::OnThink(void)
 {
 	if (!m_bDisabled && !m_bChangeLevel)
 	{
-		if (IsEnoughPlayersInVolume())
+		if (IsEnoughPlayersInVolume(TEAM_HUMANS))
 		{
 			if (GameBaseShared()->GetPlayerLoadoutHandler())
 			{
@@ -111,29 +108,6 @@ void CTriggerChangelevel::OnThink(void)
 	SetNextThink(gpGlobals->curtime + CHANGELEVEL_THINK_FREQ);
 }
 
-bool CTriggerChangelevel::IsEnoughPlayersInVolume(void)
-{
-	int players = 0;
-	for (int i = 0; i < m_hTouchingEntities.Count(); i++)
-	{
-		CBaseEntity *pToucher = m_hTouchingEntities[i].Get();
-		if (!pToucher)
-			continue;
-
-		if (pToucher->IsPlayer() && (pToucher->GetTeamNumber() == TEAM_HUMANS))
-			players++;
-	}
-
-	float teamSize = 0, teamSizeInVolume = (float)players;
-	CTeam *pTeam = GetGlobalTeam(TEAM_HUMANS);
-	if (pTeam)
-		teamSize = (float)pTeam->GetNumPlayers();
-
-	float flPercentInVolume = ((teamSizeInVolume / teamSize) * 100.0f);
-
-	return (flPercentInVolume >= m_flPercentRequired);
-}
-
 void CTriggerChangelevel::StartTouch(CBaseEntity *pOther)
 {
 	if (!pOther || m_bDisabled)
@@ -142,19 +116,13 @@ void CTriggerChangelevel::StartTouch(CBaseEntity *pOther)
 	BaseClass::StartTouch(pOther);
 
 	CBasePlayer *pPlayer = ToBasePlayer(pOther);
-	if (pPlayer && pPlayer->IsAlive() && !IsEnoughPlayersInVolume())
+	if (pPlayer && pPlayer->IsAlive() && !IsEnoughPlayersInVolume(TEAM_HUMANS))
 	{
-		float flRequiredPlayers = 0;
 		CTeam *pTeam = GetGlobalTeam(TEAM_HUMANS);
-		if (pTeam)
-			flRequiredPlayers = (((float)pTeam->GetNumPlayers()) * (m_flPercentRequired / 100.0f));
-
+		float flRequiredPlayers = (pTeam ? (((float)pTeam->GetNumPlayers()) * (m_flPercentRequired / 100.0f)) : 0.0f);
 		if (flRequiredPlayers > 0)
 		{
-			const char *subMsg = "player";
-			if (flRequiredPlayers > 1)
-				subMsg = "players";
-
+			const char *subMsg = ((flRequiredPlayers > 1) ? "players" : "player");
 			char pchArg1[16];
 			Q_snprintf(pchArg1, 16, "%i", (int)flRequiredPlayers);
 			GameBaseServer()->SendToolTip("#TOOLTIP_CHANGELEVEL_FAIL", "", 3.0f, GAME_TIP_WARNING, pPlayer->entindex(), pchArg1, subMsg);

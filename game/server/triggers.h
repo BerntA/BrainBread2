@@ -74,6 +74,9 @@ public:
 
 	CBaseEntity *GetTouchedEntityOfType( const char *sClassName );
 
+	virtual bool IsEnoughPlayersInVolume(int iTeam);
+	virtual bool IsFilterPassing(CBaseEntity *pOther);
+
 	int	 DrawDebugTextOverlays(void);
 
 	// by default, triggers don't deal with TraceAttack
@@ -97,6 +100,11 @@ protected:
 
 	// Entities currently being touched by this trigger
 	CUtlVector< EHANDLE >	m_hTouchingEntities;
+
+	// Activate if enough players of a certain team is inside the volume.
+	float m_flPercentRequired;
+	// Do not do filter check in PassesTriggerFilters.
+	bool m_bSkipFilterCheck;
 
 	DECLARE_DATADESC();
 };

@@ -33,7 +33,6 @@ public:
 	void NotifyCaptureFailed(bool bEnemyEntered = false);
 	bool HasToHaltProgress(CBaseEntity *pOther);
 	bool CanContinueProgress(void);
-	bool IsEnoughPlayersInVolume(void);
 
 private:
 
@@ -44,7 +43,6 @@ private:
 
 	// Team 
 	int m_iTeamLink;
-	float m_flPercentRequired;
 
 	// Capture Time
 	float m_flTimeToCapture;
@@ -72,7 +70,6 @@ BEGIN_DATADESC(CTriggerCapturePoint)
 DEFINE_KEYFIELD(m_iTeamLink, FIELD_INTEGER, "TeamLink"),
 DEFINE_KEYFIELD(m_bShouldHaltWhenEnemiesTouchUs, FIELD_BOOLEAN, "CanHaltProgress"),
 DEFINE_KEYFIELD(m_flTimeToCapture, FIELD_FLOAT, "CaptureTime"),
-DEFINE_KEYFIELD(m_flPercentRequired, FIELD_FLOAT, "PercentRequired"),
 
 DEFINE_KEYFIELD(cszMessageTooFewPlayers, FIELD_STRING, "TooFewPlayersMessage"),
 DEFINE_KEYFIELD(cszMessageFailed, FIELD_STRING, "CaptureFailedMessage"),
@@ -94,10 +91,13 @@ CTriggerCapturePoint::CTriggerCapturePoint()
 	m_flWait = 0.2f;
 
 	cszMessageTooFewPlayers = cszMessageFailed = cszMessageProgressHalted = NULL_STRING;
+	m_bSkipFilterCheck = true;
 }
 
 void CTriggerCapturePoint::Spawn()
 {
+	m_bSkipFilterCheck = true;
+	AddSpawnFlags(SF_TRIGGER_ALLOW_CLIENTS | SF_TRIGGER_ALLOW_NPCS);
 	BaseClass::Spawn();
 	InitTrigger();
 	SetTouch(&CTriggerCapturePoint::OnTouch);
@@ -117,7 +117,7 @@ void CTriggerCapturePoint::CapturePointThink(void)
 	if (!m_bDisabled && !m_bIsCaptured)
 	{
 		bool bCanProceed = CanContinueProgress();
-		bool bShouldStartCapturing = IsEnoughPlayersInVolume();
+		bool bShouldStartCapturing = IsEnoughPlayersInVolume(m_iTeamLink);
 		if (bShouldStartCapturing && !m_bIsBeingCaptured && bCanProceed)
 		{
 			m_bIsBeingCaptured = true;
@@ -164,10 +164,7 @@ void CTriggerCapturePoint::CapturePointThink(void)
 
 bool CTriggerCapturePoint::HasToHaltProgress(CBaseEntity *pOther)
 {
-	if (!m_bShouldHaltWhenEnemiesTouchUs)
-		return false;
-
-	if (!pOther || !pOther->IsAlive())
+	if (!m_bShouldHaltWhenEnemiesTouchUs || !pOther || !pOther->IsAlive())
 		return false;
 
 	if ((m_iTeamLink == TEAM_HUMANS) && (pOther->IsZombie(true) || pOther->IsMercenary()))
@@ -194,30 +191,7 @@ bool CTriggerCapturePoint::CanContinueProgress(void)
 		}
 	}
 
-	return IsEnoughPlayersInVolume();
-}
-
-bool CTriggerCapturePoint::IsEnoughPlayersInVolume(void)
-{
-	int players = 0;
-	for (int i = 0; i < m_hTouchingEntities.Count(); i++)
-	{
-		CBaseEntity *pToucher = m_hTouchingEntities[i].Get();
-		if (!pToucher)
-			continue;
-
-		if (pToucher->IsPlayer() && (pToucher->GetTeamNumber() == m_iTeamLink))
-			players++;
-	}
-
-	float teamSize = 0, teamSizeInVolume = (float)players;
-	CTeam *pTeam = GetGlobalTeam(m_iTeamLink);
-	if (pTeam)
-		teamSize = (float)pTeam->GetNumPlayers();
-
-	float flPercentInVolume = floor((teamSizeInVolume / teamSize) * 100.0f);
-
-	return (flPercentInVolume >= m_flPercentRequired);
+	return IsEnoughPlayersInVolume(m_iTeamLink);
 }
 
 void CTriggerCapturePoint::StartTouch(CBaseEntity *pOther)
@@ -232,13 +206,10 @@ void CTriggerCapturePoint::StartTouch(CBaseEntity *pOther)
 		HaltProgress();
 
 	CBasePlayer *pPlayer = ToBasePlayer(pOther);
-	if (pPlayer && (pPlayer->GetTeamNumber() == m_iTeamLink) && pPlayer->IsAlive() && !IsEnoughPlayersInVolume())
+	if (pPlayer && (pPlayer->GetTeamNumber() == m_iTeamLink) && pPlayer->IsAlive() && !IsEnoughPlayersInVolume(m_iTeamLink))
 	{
-		float flRequiredPlayers = 0;
 		CTeam *pTeam = GetGlobalTeam(m_iTeamLink);
-		if (pTeam)
-			flRequiredPlayers = floor(((float)pTeam->GetNumPlayers()) * (m_flPercentRequired / 100.0f));
-
+		float flRequiredPlayers = (pTeam ? floor(((float)pTeam->GetNumPlayers()) * (m_flPercentRequired / 100.0f)) : 0.0f);
 		if (flRequiredPlayers > 0)
 		{
 			char pchArg1[16];
@@ -291,7 +262,7 @@ void CTriggerCapturePoint::TransmitCaptureStatus(CBasePlayer *pPlayer, bool valu
 
 void CTriggerCapturePoint::OnTouch(CBaseEntity *pOther)
 {
-	if ((m_flTouchTimer > gpGlobals->curtime) || !pOther || m_bIsCaptured || m_bDisabled || !PassesTriggerFilters(pOther))
+	if ((m_flTouchTimer > gpGlobals->curtime) || !pOther || m_bIsCaptured || m_bDisabled || !PassesTriggerFilters(pOther) || !IsFilterPassing(pOther))
 		return;
 
 	m_flTouchTimer = (gpGlobals->curtime + m_flWait);

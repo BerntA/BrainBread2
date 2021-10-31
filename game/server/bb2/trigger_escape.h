@@ -16,18 +16,15 @@ class CTriggerEscape : public CTriggerMultiple
 {
 public:
 	DECLARE_DATADESC();
-	DECLARE_CLASS( CTriggerEscape, CTriggerMultiple );
+	DECLARE_CLASS(CTriggerEscape, CTriggerMultiple);
 
 	CTriggerEscape();
 	virtual ~CTriggerEscape();
 
-	void Spawn();
-	void Touch( CBaseEntity *pOther );
+	void Touch(CBaseEntity *pOther);
 
+protected:
 	COutputEvent m_OnAddedPlayer;
-
-	void InputEnable(inputdata_t &inputdata);
-	void InputDisable(inputdata_t &inputdata);
 };
 
 #endif // TRIGGER_ESCAPE_H
