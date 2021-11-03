@@ -119,7 +119,7 @@ void CTriggerChangelevel::StartTouch(CBaseEntity *pOther)
 	if (pPlayer && pPlayer->IsAlive() && !IsEnoughPlayersInVolume(TEAM_HUMANS))
 	{
 		CTeam *pTeam = GetGlobalTeam(TEAM_HUMANS);
-		float flRequiredPlayers = (pTeam ? (((float)pTeam->GetNumPlayers()) * (m_flPercentRequired / 100.0f)) : 0.0f);
+		float flRequiredPlayers = (pTeam ? floor(((float)pTeam->GetNumPlayers()) * (m_flPercentRequired / 100.0f)) : 0.0f);
 		if (flRequiredPlayers > 0)
 		{
 			const char *subMsg = ((flRequiredPlayers > 1) ? "players" : "player");

@@ -36,6 +36,10 @@ bool IsAllowedToSpawn(CBaseEntity *pEntity, float distance, float zDiff, bool bC
 	if (!pEntity)
 		return false;
 
+	const Vector &vEntityPos = pEntity->WorldSpaceCenter();
+	CTraceFilterWorldOnly traceFilter;
+	trace_t tr;
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
@@ -64,8 +68,12 @@ bool IsAllowedToSpawn(CBaseEntity *pEntity, float distance, float zDiff, bool bC
 		if ((zDiff > 0.0f) && (diff > zDiff))
 			continue;
 
-		if (bCheckVisible && !pEntity->FVisible(pClient, MASK_BLOCKLOS))
-			continue;
+		if (bCheckVisible)
+		{
+			UTIL_TraceLine(vEntityPos, pClient->EyePosition(), MASK_BLOCKLOS, &traceFilter, &tr);
+			if (tr.fraction != 1.0 || tr.startsolid)
+				continue;
+		}
 
 		return true;
 	}

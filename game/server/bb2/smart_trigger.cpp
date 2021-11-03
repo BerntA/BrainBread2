@@ -16,6 +16,17 @@
 // A trigger once & multiple in one with added filters&stuffing.
 //-----------------------------------------------------------------------------
 
+enum SmartTriggerFilter
+{
+	SMART_TRIGGER_FILTER_HUMAN_PLAYERS = 1,
+	SMART_TRIGGER_FILTER_MILITARY_NPCS,
+	SMART_TRIGGER_FILTER_HUMANS,
+	SMART_TRIGGER_FILTER_ZOMBIE_PLAYERS,
+	SMART_TRIGGER_FILTER_ZOMBIE_NPCS,
+	SMART_TRIGGER_FILTER_ZOMBIES,
+	SMART_TRIGGER_FILTER_HUMAN_PLAYERS_NOINFECTED,
+};
+
 BEGIN_DATADESC(CSmartTrigger)
 
 DEFINE_KEYFIELD(m_bTouchOnlyOnce, FIELD_BOOLEAN, "TriggerOnce"),
@@ -54,35 +65,28 @@ void CSmartTrigger::Touch(CBaseEntity *pOther)
 	if (pOther == NULL)
 		return false;
 
-	if (filter == 1)
+	switch (filter)
 	{
-		if (!pOther->IsHuman())
-			return false;
-	}
-	else if (filter == 2)
-	{
-		if (pOther->Classify() != CLASS_COMBINE)
-			return false;
-	}
-	else if (filter == 3)
-	{
-		if (!pOther->IsHuman(true))
-			return false;
-	}
-	else if (filter == 4)
-	{
-		if (!pOther->IsZombie())
-			return false;
-	}
-	else if (filter == 5)
-	{
-		if (pOther->Classify() != CLASS_ZOMBIE)
-			return false;
-	}
-	else if (filter == 6)
-	{
-		if (!pOther->IsZombie(true))
-			return false;
+	case SMART_TRIGGER_FILTER_HUMAN_PLAYERS:
+		return pOther->IsHuman();
+
+	case SMART_TRIGGER_FILTER_MILITARY_NPCS:
+		return (pOther->Classify() == CLASS_COMBINE);
+
+	case SMART_TRIGGER_FILTER_HUMANS:
+		return pOther->IsHuman(true);
+
+	case SMART_TRIGGER_FILTER_ZOMBIE_PLAYERS:
+		return pOther->IsZombie();
+
+	case SMART_TRIGGER_FILTER_ZOMBIE_NPCS:
+		return (pOther->Classify() == CLASS_ZOMBIE);
+
+	case SMART_TRIGGER_FILTER_ZOMBIES:
+		return pOther->IsZombie(true);
+
+	case SMART_TRIGGER_FILTER_HUMAN_PLAYERS_NOINFECTED:
+		return (pOther->IsHuman() && (pOther->Classify() != CLASS_PLAYER_INFECTED));
 	}
 
 	return true;
