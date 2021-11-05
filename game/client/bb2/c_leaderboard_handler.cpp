@@ -19,7 +19,6 @@ CLeaderboardHandler::CLeaderboardHandler(const char *leaderboardName)
 	Q_strncpy(m_pchLeaderboardName, leaderboardName, sizeof(m_pchLeaderboardName));
 	m_hLeaderboardHandle = NULL;
 	m_bIsLoading = false;
-	OnReset();
 }
 
 CLeaderboardHandler::~CLeaderboardHandler()

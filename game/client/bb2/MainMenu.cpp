@@ -93,11 +93,11 @@ void CMainMenu::PerformLayout()
 	m_pContextMenuOptions->SetSize(scheme()->GetProportionalScaledValue(125), scheme()->GetProportionalScaledValue(270));
 	m_pContextMenuOptions->SetPos((w / 2) - (wz / 2) + scheme()->GetProportionalScaledValue(375), h - hz - scheme()->GetProportionalScaledValue(290));
 
-	m_pContextMenuPlay->SetSize(scheme()->GetProportionalScaledValue(125), scheme()->GetProportionalScaledValue(150));
-	m_pContextMenuPlay->SetPos((w / 2) - (wz / 2), h - hz - scheme()->GetProportionalScaledValue(170));
+	m_pContextMenuPlay->SetSize(scheme()->GetProportionalScaledValue(125), scheme()->GetProportionalScaledValue(120));
+	m_pContextMenuPlay->SetPos((w / 2) - (wz / 2), h - hz - scheme()->GetProportionalScaledValue(140));
 
-	m_pContextMenuProfile->SetSize(scheme()->GetProportionalScaledValue(125), scheme()->GetProportionalScaledValue(120));
-	m_pContextMenuProfile->SetPos((w / 2) - (wz / 2) + scheme()->GetProportionalScaledValue(125), h - hz - scheme()->GetProportionalScaledValue(140));
+	m_pContextMenuProfile->SetSize(scheme()->GetProportionalScaledValue(125), scheme()->GetProportionalScaledValue(150));
+	m_pContextMenuProfile->SetPos((w / 2) - (wz / 2) + scheme()->GetProportionalScaledValue(125), h - hz - scheme()->GetProportionalScaledValue(170));
 
 	m_pContextMenuCredits->SetSize(ScreenWidth(), scheme()->GetProportionalScaledValue(375));
 	m_pContextMenuCredits->SetPos(0, 0);
@@ -446,9 +446,14 @@ CVGUIBasePanel *CMainMenu::GetGameUIContextObject(int iMenuCommand)
 		return ToBasePanel(GetContextHandler()->m_pServerMenu);
 	case COMMAND_CREATEGAME:
 		return ToBasePanel(GetContextHandler()->m_pCreateGameMenu);
-	case COMMAND_SHOW_SCOREBOARD:
+	case COMMAND_SHOW_SCOREBOARD_PVE:
+	case COMMAND_SHOW_SCOREBOARD_PVP:
+	{
+		if (GetContextHandler()->m_pScoreboard)
+			GetContextHandler()->m_pScoreboard->SetMenuCommand(iMenuCommand);
 		return ToBasePanel(GetContextHandler()->m_pScoreboard);
-		// Option Menu
+	}
+	// Option Menu
 	case COMMAND_KEYBOARD:
 		return ToBasePanel(GetContextHandler()->m_pKeyboardOptions);
 	case COMMAND_MOUSE:

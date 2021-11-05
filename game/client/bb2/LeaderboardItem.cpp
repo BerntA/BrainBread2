@@ -11,13 +11,14 @@
 #include <vgui_controls/Button.h>
 #include <vgui_controls/ImagePanel.h>
 #include "hl2mp_gamerules.h"
+#include "GameBase_Client.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
 
-LeaderboardItem::LeaderboardItem(vgui::Panel *parent, char const *panelName, const char *pszPlayerName, const char *pszSteamID, int32 plLevel, int32 plKills, int32 plDeaths) : vgui::Panel(parent, panelName)
+LeaderboardItem::LeaderboardItem(vgui::Panel *parent, char const *panelName, const char *pszPlayerName, const char *pszSteamID, int32 plLevel, int32 plKills, int32 plDeaths, int iCommand) : vgui::Panel(parent, panelName)
 {
 	SetMouseInputEnabled(true);
 	SetKeyBoardInputEnabled(true);
@@ -61,6 +62,7 @@ LeaderboardItem::LeaderboardItem(vgui::Panel *parent, char const *panelName, con
 	m_pLevel->SetZPos(150);
 	m_pLevel->SetContentAlignment(vgui::Label::Alignment::a_center);
 	m_pLevel->SetText(VarArgs("%i", plLevel));
+	m_pLevel->SetVisible(iCommand == COMMAND_SHOW_SCOREBOARD_PVE);
 
 	m_pButton = vgui::SETUP_PANEL(new vgui::Button(this, "btnSteamProfile", ""));
 	m_pButton->SetPaintBorderEnabled(false);

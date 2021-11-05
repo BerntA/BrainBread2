@@ -34,7 +34,6 @@ MenuContextPlay::MenuContextPlay(vgui::Panel *parent, char const *panelName) : B
 		"#GameUI_ServerBrowserMenu",
 		"#GameUI_CreateGameMenu",
 		"#GameUI_TutorialMenu",
-		"#GameUI_LeaderboardsMenu",
 	};
 
 	int m_iCmds[] =
@@ -42,7 +41,6 @@ MenuContextPlay::MenuContextPlay(vgui::Panel *parent, char const *panelName) : B
 		COMMAND_SERVERBROWSER,
 		COMMAND_CREATEGAME,
 		COMMAND_START_TUTORIAL,
-		COMMAND_SHOW_SCOREBOARD,
 	};
 
 	const char *szIcoImg[] =
@@ -50,7 +48,6 @@ MenuContextPlay::MenuContextPlay(vgui::Panel *parent, char const *panelName) : B
 		"mainmenu/icons/list",
 		"mainmenu/icons/controller",
 		"mainmenu/icons/controller",
-		"mainmenu/icons/list",
 	};
 
 	for (int i = 0; i < _ARRAYSIZE(m_pMenuButton); i++)

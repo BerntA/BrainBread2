@@ -35,7 +35,7 @@ namespace vgui
 
 	private:
 		vgui::Label *m_pLabelTitle;
-		vgui::InlineMenuButton *m_pMenuButton[2];
+		vgui::InlineMenuButton *m_pMenuButton[4];
 		vgui::ImagePanel *m_pImgBackground;
 
 	protected:

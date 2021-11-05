@@ -30,6 +30,7 @@ namespace vgui
 
 		void OnUpdate(bool bInGame);
 		void SetupLayout(void);
+		void SetMenuCommand(int value) { m_iCommand = value; }
 
 		void RefreshScores(void);
 		void RefreshCallback(int iItems);
@@ -48,6 +49,7 @@ namespace vgui
 
 		int m_iPageNum;
 		int m_iCurrPage;
+		int m_iCommand;
 
 	protected:
 		virtual void OnKeyCodeTyped(KeyCode code);

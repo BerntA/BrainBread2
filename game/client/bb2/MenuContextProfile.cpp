@@ -33,18 +33,24 @@ MenuContextProfile::MenuContextProfile(vgui::Panel *parent, char const *panelNam
 	{
 		"#GameUI_AchievementMenu",
 		"#GameUI_CharacterMenu",
+		"#GameUI_LeaderboardsMenuPvE",
+		"#GameUI_LeaderboardsMenuPvP",
 	};
 
 	int m_iCmds[] =
 	{
 		COMMAND_ACHIEVEMENT_PANEL,
 		COMMAND_CHARACTER_PANEL,
+		COMMAND_SHOW_SCOREBOARD_PVE,
+		COMMAND_SHOW_SCOREBOARD_PVP,
 	};
 
 	const char *szIcoImg[] =
 	{
 		"mainmenu/icons/list",
 		"server/profile",
+		"mainmenu/icons/list",
+		"mainmenu/icons/list",
 	};
 
 	for (int i = 0; i < _ARRAYSIZE(m_pMenuButton); i++)

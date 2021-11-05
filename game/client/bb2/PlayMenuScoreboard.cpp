@@ -18,6 +18,8 @@ using namespace vgui;
 
 PlayMenuScoreboard::PlayMenuScoreboard(vgui::Panel *parent, char const *panelName) : BaseClass(parent, panelName, 0.5f)
 {
+	m_iCommand = COMMAND_SHOW_SCOREBOARD_PVE;
+
 	SetParent(parent);
 	SetName(panelName);
 
@@ -101,6 +103,8 @@ void PlayMenuScoreboard::OnUpdate(bool bInGame)
 
 		m_pImgArrowBox[0]->SetVisible(m_iCurrPage > 0);
 		m_pImgArrowBox[1]->SetVisible(m_iCurrPage < m_iPageNum);
+
+		m_pGridDetail[1]->SetVisible(m_iCommand == COMMAND_SHOW_SCOREBOARD_PVE);
 	}
 }
 
@@ -169,7 +173,7 @@ void PlayMenuScoreboard::RefreshScores(void)
 		}
 	}
 
-	GameBaseClient->RefreshScoreboard("Global", (m_iCurrPage * _ARRAYSIZE(m_pScoreItem)));
+	GameBaseClient->RefreshScoreboard((m_iCommand == COMMAND_SHOW_SCOREBOARD_PVP) ? "PvP" : "Global", (m_iCurrPage * _ARRAYSIZE(m_pScoreItem)));
 }
 
 void PlayMenuScoreboard::RefreshCallback(int iItems)
@@ -203,7 +207,7 @@ void PlayMenuScoreboard::AddScoreItem(const char *pszNickName, const char *pszSt
 	float wide = (((float)w) * 0.60f);
 	int width = (int)wide;
 
-	m_pScoreItem[iIndex] = vgui::SETUP_PANEL(new vgui::LeaderboardItem(this, "ScoreItem", pszNickName, pszSteamID, plLevel, plKills, plDeaths));
+	m_pScoreItem[iIndex] = vgui::SETUP_PANEL(new vgui::LeaderboardItem(this, "ScoreItem", pszNickName, pszSteamID, plLevel, plKills, plDeaths, m_iCommand));
 	m_pScoreItem[iIndex]->SetSize(width, scheme()->GetProportionalScaledValue(34));
 	m_pScoreItem[iIndex]->SetPos((w / 2) - (width / 2), scheme()->GetProportionalScaledValue(27) + (iIndex * scheme()->GetProportionalScaledValue(36)));
 	m_pScoreItem[iIndex]->MoveToFront();

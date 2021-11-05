@@ -247,6 +247,7 @@ void CGameBaseClient::Initialize(void)
 	ClientWorkshopInstallerPanel = new CAddonInstallerPanel(GameUiDll);
 	ClientWorkshopInstallerPanel->SetVisible(false);
 
+	CLeaderboardHandler::Reset();
 	PostInit();
 }
 

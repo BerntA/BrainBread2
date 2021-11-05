@@ -25,7 +25,7 @@ namespace vgui
 		DECLARE_CLASS_SIMPLE(LeaderboardItem, vgui::Panel);
 
 	public:
-		LeaderboardItem(vgui::Panel *parent, char const *panelName, const char *pszPlayerName, const char *pszSteamID, int32 plLevel, int32 plKills, int32 plDeaths);
+		LeaderboardItem(vgui::Panel *parent, char const *panelName, const char *pszPlayerName, const char *pszSteamID, int32 plLevel, int32 plKills, int32 plDeaths, int iCommand);
 		~LeaderboardItem();
 
 		virtual void SetSize(int wide, int tall);
