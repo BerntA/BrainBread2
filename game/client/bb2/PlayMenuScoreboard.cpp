@@ -169,7 +169,7 @@ void PlayMenuScoreboard::RefreshScores(void)
 		}
 	}
 
-	GameBaseClient->RefreshScoreboard((m_iCurrPage * _ARRAYSIZE(m_pScoreItem)));
+	GameBaseClient->RefreshScoreboard("Global", (m_iCurrPage * _ARRAYSIZE(m_pScoreItem)));
 }
 
 void PlayMenuScoreboard::RefreshCallback(int iItems)

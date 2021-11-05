@@ -111,7 +111,8 @@ $Project
 			$File "bb2/c_steam_server_lister.cpp"
 			$File "bb2/c_steam_server_lister.h"
 			$File "bb2/c_leaderboard_handler.cpp"
-			$File "bb2/c_leaderboard_handler.h"		
+			$File "bb2/c_leaderboard_handler.h"
+			$File "bb2/c_leaderboards.cpp"
 		}		
 		
 		$Folder "Entities"

@@ -120,8 +120,6 @@ private:
 	// GameUI accessor
 	IGameUI *GameUI;
 
-	CLeaderboardHandler *pLeaderboardHandler;
-
 	STEAM_CALLBACK(CGameBaseClient, Steam_OnUserStatsReceived, UserStatsReceived_t, m_CallbackUserStatsReceived);
 
 public:
@@ -184,7 +182,7 @@ public:
 	void OnUpdate(void);
 
 	// Scoreboard Handling
-	void RefreshScoreboard(int iOffset = 0);
+	void RefreshScoreboard(const char *name, int iOffset = 0);
 	void AddScoreboardItem(const char *pszSteamID, const char *playerName, int32 plLevel, int32 plKills, int32 plDeaths, int index);
 	void ScoreboardRefreshComplete(int maxEntries);
 
@@ -216,7 +214,6 @@ CGameBaseClient::CGameBaseClient(void) : m_CallbackUserStatsReceived(this, &CGam
 	VotePanel = NULL;
 	QuestPanel = NULL;
 	GameUI = NULL;
-	pLeaderboardHandler = NULL;
 
 	m_bIsMenuVisibleAndInGame = false;
 }
@@ -249,9 +246,6 @@ void CGameBaseClient::Initialize(void)
 	VPANEL GameUiDll = enginevgui->GetPanel(PANEL_GAMEUIDLL);
 	ClientWorkshopInstallerPanel = new CAddonInstallerPanel(GameUiDll);
 	ClientWorkshopInstallerPanel->SetVisible(false);
-
-	// Create our leaderboard handler.
-	pLeaderboardHandler = new CLeaderboardHandler();
 
 	PostInit();
 }
@@ -298,12 +292,6 @@ void CGameBaseClient::Destroy(void)
 	{
 		QuestPanel->SetParent((vgui::Panel *)NULL);
 		delete QuestPanel;
-	}
-
-	if (pLeaderboardHandler)
-	{
-		delete pLeaderboardHandler;
-		pLeaderboardHandler = NULL;
 	}
 
 	GlobalRenderEffects->Shutdown();
@@ -437,9 +425,7 @@ void CGameBaseClient::RunCommand(int iCommand)
 		FMODManager()->SetSoundVolume(1.0f);
 		FMODManager()->TransitionAmbientSound("ui/mainmenu_theme.mp3");
 
-		if (pLeaderboardHandler)
-			pLeaderboardHandler->UploadLeaderboardStats(true);
-
+		CLeaderboardHandler::UploadLeaderboardStats();
 		break;
 	case COMMAND_RESET:
 		engine->ClientCmd_Unrestricted("exec config_default.cfg\n");
@@ -532,10 +518,7 @@ void CGameBaseClient::RunClientEffect(int iEffect, int iState)
 
 		// Update the leaderboard update timer:
 		if (iEffect == PLAYER_EFFECT_ENTERED_GAME)
-		{
-			if (pLeaderboardHandler)
-				pLeaderboardHandler->Reset();
-		}
+			CLeaderboardHandler::Reset();
 	}
 }
 
@@ -766,10 +749,9 @@ void CGameBaseClient::ServerRefreshCompleted(void)
 	}
 }
 
-void CGameBaseClient::RefreshScoreboard(int iOffset)
+void CGameBaseClient::RefreshScoreboard(const char *name, int iOffset)
 {
-	if (pLeaderboardHandler)
-		pLeaderboardHandler->FetchLeaderboardResults(iOffset);
+	CLeaderboardHandler::FetchLeaderboardResults(name, iOffset);
 }
 
 void CGameBaseClient::AddScoreboardItem(const char *pszSteamID, const char *playerName, int32 plLevel, int32 plKills, int32 plDeaths, int index)
@@ -820,8 +802,7 @@ void CGameBaseClient::LoadGameLocalization(void)
 
 void CGameBaseClient::OnUpdate(void)
 {
-	if (pLeaderboardHandler)
-		pLeaderboardHandler->OnUpdate();
+	CLeaderboardHandler::Update();
 
 	C_HL2MP_Player *pLocal = C_HL2MP_Player::GetLocalHL2MPPlayer();
 	if (!pLocal)

@@ -6,91 +6,65 @@
 
 #include "cbase.h"
 #include "c_leaderboard_handler.h"
-#include "filesystem.h"
-#include "KeyValues.h"
 #include "GameBase_Client.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-CLeaderboardHandler::CLeaderboardHandler()
+static CUtlVector<CLeaderboardHandler*> g_pLeaderboards;
+
+CLeaderboardHandler::CLeaderboardHandler(const char *leaderboardName)
 {
-	m_hGlobalLeaderboardHandle = NULL;
+	g_pLeaderboards.AddToTail(this);
+	Q_strncpy(m_pchLeaderboardName, leaderboardName, sizeof(m_pchLeaderboardName));
+	m_hLeaderboardHandle = NULL;
 	m_bIsLoading = false;
-	Reset();
+	OnReset();
 }
 
 CLeaderboardHandler::~CLeaderboardHandler()
 {
+	g_pLeaderboards.FindAndRemove(this);
 }
 
-void CLeaderboardHandler::Reset(void)
+void CLeaderboardHandler::OnReset(void)
 {
 	m_flTimeToUpload = 0.0f;
 	FetchLeaderboardHandle();
 }
 
-void CLeaderboardHandler::UploadLeaderboardStats(bool bDelay)
-{
-	if (bDelay)
-	{
-		m_flTimeToUpload = engine->Time() + 0.15f;
-		return;
-	}
-
-	if (m_hGlobalLeaderboardHandle != NULL)
-	{
-		int32 iLevel = 0, iKills = 0, iDeaths = 0, iScore = 0;
-		steamapicontext->SteamUserStats()->GetStat("BBX_ST_LEVEL", &iLevel);
-		steamapicontext->SteamUserStats()->GetStat("BBX_ST_KILLS", &iKills);
-		steamapicontext->SteamUserStats()->GetStat("BBX_ST_DEATHS", &iDeaths);
-
-		iScore = (iLevel + iKills) - iDeaths;
-		if (iScore < 0)
-			iScore = 0;
-
-		int32 details[] =
-		{
-			iLevel,
-			iKills,
-			iDeaths,
-		};
-
-		steamapicontext->SteamUserStats()->UploadLeaderboardScore(m_hGlobalLeaderboardHandle, k_ELeaderboardUploadScoreMethodForceUpdate, iScore, details, _ARRAYSIZE(details));
-	}
-}
-
 void CLeaderboardHandler::OnUpdate(void)
 {
-	if ((m_flTimeToUpload > 0.0f) && (engine->Time() >= m_flTimeToUpload))
+	if ((m_flTimeToUpload > 0.0f) && (engine->Time() >= m_flTimeToUpload) && (m_hLeaderboardHandle != NULL))
 	{
-		UploadLeaderboardStats();
+		int32 iArg1 = 0, iArg2 = 0, iArg3 = 0;
+		GetLeaderboardStats(iArg1, iArg2, iArg3);
+		int32 details[] = { iArg1, iArg2, iArg3, };
+		int32 iScore = (iArg1 + iArg2) - iArg3;
+		steamapicontext->SteamUserStats()->UploadLeaderboardScore(m_hLeaderboardHandle, k_ELeaderboardUploadScoreMethodForceUpdate, MAX(iScore, 0), details, _ARRAYSIZE(details));
 		m_flTimeToUpload = 0.0f;
 	}
 }
 
 void CLeaderboardHandler::FetchLeaderboardHandle(void)
 {
-	m_hGlobalLeaderboardHandle = NULL;
+	m_hLeaderboardHandle = NULL;
 
 	if (!steamapicontext || !steamapicontext->SteamUserStats())
 		return;
 
-	SteamAPICall_t hSteamAPICall = NULL;
-	hSteamAPICall = steamapicontext->SteamUserStats()->FindLeaderboard("Global");
-
+	SteamAPICall_t hSteamAPICall = steamapicontext->SteamUserStats()->FindLeaderboard(m_pchLeaderboardName);
 	if (hSteamAPICall != NULL)
 		m_SteamCallResultFindLeaderboard.Set(hSteamAPICall, this, &CLeaderboardHandler::OnFindLeaderboard);
 }
 
 void CLeaderboardHandler::FetchLeaderboardResults(int iOffset)
 {
-	if (m_bIsLoading || (m_hGlobalLeaderboardHandle == NULL))
+	if (m_bIsLoading || (m_hLeaderboardHandle == NULL))
 		return;
 
 	m_bIsLoading = true;
-
-	SteamAPICall_t hSteamAPICall = steamapicontext->SteamUserStats()->DownloadLeaderboardEntries(m_hGlobalLeaderboardHandle, k_ELeaderboardDataRequestGlobal, 1 + iOffset, MAX_LEADERBOARD_ENTRIES + iOffset);
+	SteamAPICall_t hSteamAPICall = steamapicontext->SteamUserStats()->DownloadLeaderboardEntries(m_hLeaderboardHandle, k_ELeaderboardDataRequestGlobal, 1 + iOffset, MAX_LEADERBOARD_ENTRIES + iOffset);
 	m_callResultDownloadEntries.Set(hSteamAPICall, this, &CLeaderboardHandler::OnLeaderboardDownloadedEntries);
 }
 
@@ -100,12 +74,12 @@ void CLeaderboardHandler::OnFindLeaderboard(LeaderboardFindResult_t *pFindLeader
 	if (!pFindLeaderboardResult->m_bLeaderboardFound || bIOFailure)
 		return;
 
-	// Only allow the Global scores.
+	// Only allow the selected leaderboard scores.
 	const char *pchName = steamapicontext->SteamUserStats()->GetLeaderboardName(pFindLeaderboardResult->m_hSteamLeaderboard);
-	if (strcmp(pchName, "Global"))
+	if (strcmp(pchName, m_pchLeaderboardName))
 		return;
 
-	m_hGlobalLeaderboardHandle = pFindLeaderboardResult->m_hSteamLeaderboard;
+	m_hLeaderboardHandle = pFindLeaderboardResult->m_hSteamLeaderboard;
 }
 
 void CLeaderboardHandler::OnLeaderboardDownloadedEntries(LeaderboardScoresDownloaded_t *pLeaderboardScoresDownloaded, bool bIOFailure)
@@ -136,5 +110,39 @@ void CLeaderboardHandler::OnLeaderboardDownloadedEntries(LeaderboardScoresDownlo
 	}
 
 	m_bIsLoading = false;
-	GameBaseClient->ScoreboardRefreshComplete(steamapicontext->SteamUserStats()->GetLeaderboardEntryCount(m_hGlobalLeaderboardHandle));
+	GameBaseClient->ScoreboardRefreshComplete(steamapicontext->SteamUserStats()->GetLeaderboardEntryCount(m_hLeaderboardHandle));
+}
+
+/*static*/void CLeaderboardHandler::UploadLeaderboardStats(void)
+{
+	const float flTimeNow = engine->Time();
+	for (int i = 0; i < g_pLeaderboards.Count(); i++)
+		g_pLeaderboards[i]->m_flTimeToUpload = (flTimeNow + 0.15f);
+}
+
+/*static*/void CLeaderboardHandler::Update(void)
+{
+	for (int i = 0; i < g_pLeaderboards.Count(); i++)
+		g_pLeaderboards[i]->OnUpdate();
+}
+
+/*static*/void CLeaderboardHandler::Reset(void)
+{
+	for (int i = 0; i < g_pLeaderboards.Count(); i++)
+		g_pLeaderboards[i]->OnReset();
+}
+
+/*static*/void CLeaderboardHandler::FetchLeaderboardResults(const char *name, int iOffset)
+{
+	if (!name || !name[0])
+		return;
+
+	for (int i = 0; i < g_pLeaderboards.Count(); i++)
+	{
+		if (!strcmp(g_pLeaderboards[i]->m_pchLeaderboardName, name))
+		{
+			g_pLeaderboards[i]->FetchLeaderboardResults(iOffset);
+			break;
+		}
+	}
 }

@@ -18,19 +18,30 @@
 class CLeaderboardHandler
 {
 public:
-	CLeaderboardHandler();
-	~CLeaderboardHandler();
+	DECLARE_CLASS_NOBASE(CLeaderboardHandler);
 
-	void UploadLeaderboardStats(bool bDelay = false);
+	CLeaderboardHandler(const char *leaderboardName);
+	virtual ~CLeaderboardHandler();
+
+	static void UploadLeaderboardStats(void);
+	static void Update(void);
+	static void Reset(void);
+	static void FetchLeaderboardResults(const char *name, int iOffset);
+
+protected:
+	virtual void GetLeaderboardStats(int32 &arg1, int32 &arg2, int32 &arg3) { }
+
 	void FetchLeaderboardHandle(void);
 	void FetchLeaderboardResults(int iOffset = 0);
+
 	void OnUpdate(void);
-	void Reset(void);
+	void OnReset(void);
 
 private:
 	bool m_bIsLoading;
-
-	SteamLeaderboard_t m_hGlobalLeaderboardHandle;
+	float m_flTimeToUpload;
+	char m_pchLeaderboardName[32];
+	SteamLeaderboard_t m_hLeaderboardHandle;
 
 	void OnFindLeaderboard(LeaderboardFindResult_t *pFindLearderboardResult, bool bIOFailure);
 	CCallResult<CLeaderboardHandler, LeaderboardFindResult_t> m_SteamCallResultFindLeaderboard;
@@ -38,7 +49,7 @@ private:
 	void OnLeaderboardDownloadedEntries(LeaderboardScoresDownloaded_t *pLeaderboardScoresDownloaded, bool bIOFailure);
 	CCallResult<CLeaderboardHandler, LeaderboardScoresDownloaded_t> m_callResultDownloadEntries;
 
-	float m_flTimeToUpload;
+	CLeaderboardHandler(const CLeaderboardHandler &); // not defined	
 };
 
 #endif // LEADERBOARD_HANDLER_H

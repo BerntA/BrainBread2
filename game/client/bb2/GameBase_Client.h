@@ -45,7 +45,7 @@ enum AvailableGameMenuCommands
 	COMMAND_RESET,
 	COMMAND_PASSWORD_OK,
 	COMMAND_PASSWORD_CANCEL,
-	COMMAND_SHOW_SCOREBOARD ,
+	COMMAND_SHOW_SCOREBOARD,
 	COMMAND_PROFILE,
 	COMMAND_ACHIEVEMENT_PANEL,
 	COMMAND_CHARACTER_PANEL,
@@ -72,7 +72,7 @@ public:
 	virtual void ServerRefreshCompleted(void) = 0;
 
 	// Scoreboard Handling
-	virtual void RefreshScoreboard(int iOffset = 0) = 0;
+	virtual void RefreshScoreboard(const char *name, int iOffset = 0) = 0;
 	virtual void AddScoreboardItem(const char *pszSteamID, const char *playerName, int32 plLevel, int32 plKills, int32 plDeaths, int index) = 0;
 	virtual void ScoreboardRefreshComplete(int maxEntries) = 0;
 
