@@ -491,7 +491,7 @@ void CGameBaseServer::SendAchievement(const char *szAchievement, int iReceipentI
 		if ((iReceipentID > 0) && (i != iReceipentID))
 			continue;
 
-		GameBaseShared()->GetAchievementManager()->WriteToAchievement(pPlayer, szAchievement, ACHIEVEMENT_TYPE_MAP);
+		AchievementManager::WriteToAchievement(pPlayer, szAchievement, ACHIEVEMENT_TYPE_MAP);
 	}
 }
 

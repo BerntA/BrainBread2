@@ -336,30 +336,20 @@ void CHL2MP_Player::HandleFirstTimeConnection(bool bForceDefault)
 	if (m_bHasReadProfileData && !bForceDefault)
 		return;
 
-	bool bShouldLoadDefaultStats = true;
-
 	// Load / TRY to load stored profile.
 	if (!bForceDefault)
 	{
-		if (GameBaseShared()->GetAchievementManager()->LoadGlobalStats(this) || HandleLocalProfile())
-			bShouldLoadDefaultStats = false;
+		if (AchievementManager::CanLoadSteamStats(this) || HandleLocalProfile())
+			return;
 	}
 
 	// We only init this if we don't init the skills / global stats.
-	if (bShouldLoadDefaultStats)
-	{
-		int iLevel = clamp(GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iLevel, 1, MAX_PLAYER_LEVEL);
-
-		if (GameBaseServer()->IsTutorialModeEnabled())
-			iLevel = MAX_PLAYER_LEVEL;
-
-		m_iSkill_Level = iLevel;
-		m_BB2Local.m_iSkill_Talents = GameBaseShared()->GetSharedGameDetails()->CalculatePointsForLevel(iLevel);
-		m_BB2Local.m_iSkill_XPLeft = (GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iXPIncreasePerLevel * iLevel);
-
-		OnLateStatsLoadEnterGame();
-		m_bHasTriedToLoadStats = true;
-	}
+	int iLevel = (GameBaseServer()->IsTutorialModeEnabled() ? MAX_PLAYER_LEVEL : clamp(GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iLevel, 1, MAX_PLAYER_LEVEL));
+	m_iSkill_Level = iLevel;
+	m_BB2Local.m_iSkill_Talents = GameBaseShared()->GetSharedGameDetails()->CalculatePointsForLevel(iLevel);
+	m_BB2Local.m_iSkill_XPLeft = (GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iXPIncreasePerLevel * iLevel);
+	OnLateStatsLoadEnterGame();
+	m_bHasTriedToLoadStats = true;
 }
 
 void CHL2MP_Player::OnLateStatsLoadEnterGame(void)
@@ -453,26 +443,9 @@ void CHL2MP_Player::PickDefaultSpawnTeam(int iForceTeam)
 	}
 }
 
-bool CHL2MP_Player::LoadGlobalStats(void)
+bool CHL2MP_Player::SaveGlobalStats(void)
 {
-	if (m_bHasReadProfileData || IsBot())
-		return false;
-
-	CSteamID pSteamClient;
-	if (!GetSteamID(&pSteamClient))
-	{
-		Warning("Unable to get SteamID for user %s\n", GetPlayerName());
-		return false;
-	}
-
-	SteamAPICall_t apiCall = steamgameserverapicontext->SteamGameServerStats()->RequestUserStats(pSteamClient);
-	m_SteamCallResultRequestPlayerStats.Set(apiCall, this, &CHL2MP_Player::OnReceiveStatsForPlayer);
-	return true;
-}
-
-bool CHL2MP_Player::SaveGlobalStatsForPlayer(void)
-{
-	if (!m_bHasReadProfileData || IsBot())
+	if (!AchievementManager::IsGlobalStatsAllowed() || !m_bHasReadProfileData || IsBot())
 		return false;
 
 	CSteamID pSteamClient;
@@ -496,20 +469,22 @@ bool CHL2MP_Player::SaveGlobalStatsForPlayer(void)
 	return true;
 }
 
-void CHL2MP_Player::OnReceiveStatsForPlayer(GSStatsReceived_t *pCallback, bool bIOFailure)
+void CHL2MP_Player::OnReceivedSteamStats(GSStatsReceived_t *pCallback, bool bIOFailure)
 {
-	if (m_bHasReadProfileData)
-		return;
-
+	Warning("Received and loaded stats for user %s, result %i\n", GetPlayerName(), pCallback->m_eResult);
 	m_bHasTriedToLoadStats = true;
 
-	bool bFailed = (bIOFailure || (pCallback->m_eResult != k_EResultOK));
-	if (bFailed)
+	if (!AchievementManager::IsGlobalStatsAllowed() || bIOFailure || (pCallback->m_eResult != k_EResultOK))
 	{
+		if (HandleLocalProfile())
+			return;
+
 		HandleFirstTimeConnection(true);
-		Warning("Failed to load stats for user %s, result %i\n", GetPlayerName(), pCallback->m_eResult);
 		return;
 	}
+
+	if (m_bHasReadProfileData)
+		return;
 
 	int iXPCurrent = 0, iXPLeft = 65, iLevel = 1, iTalents = 0, iZombieCredits = 0;
 
@@ -534,7 +509,6 @@ void CHL2MP_Player::OnReceiveStatsForPlayer(GSStatsReceived_t *pCallback, bool b
 
 	m_bHasReadProfileData = true;
 	OnLateStatsLoadEnterGame();
-	Warning("Received and loaded stats for user %s, result %i\n", GetPlayerName(), pCallback->m_eResult);
 }
 
 // ID the player.
@@ -639,7 +613,7 @@ void CHL2MP_Player::Spawn(void)
 void CHL2MP_Player::PerformPlayerUpdate(void)
 {
 	// Save Stats
-	GameBaseShared()->GetAchievementManager()->SaveGlobalStats(this);
+	SaveGlobalStats();
 
 	if (HL2MPRules()->CanUseSkills() && IsAlive())
 	{
@@ -1537,7 +1511,7 @@ bool CHL2MP_Player::ActivatePerk(int skill)
 		RefreshSpeed();
 		AddPerkFlag(PERK_HUMAN_REALITYPHASE);
 		SetCollisionGroup(COLLISION_GROUP_PLAYER_REALITY_PHASE);
-		GameBaseShared()->GetAchievementManager()->WriteToAchievement(this, "ACH_SKILL_PERK_ROCKET");
+		AchievementManager::WriteToAchievement(this, "ACH_SKILL_PERK_ROCKET");
 		break;
 	}
 
@@ -1942,7 +1916,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 	else if (FStrEq(args[0], "giveall"))
 	{
 		if (ShouldRunRateLimitedCommand(args))
-			GameBaseShared()->GetAchievementManager()->WriteToAchievement(this, "ACH_SECRET_GIVEALL");
+			AchievementManager::WriteToAchievement(this, "ACH_SECRET_GIVEALL");
 		return true;
 	}
 
@@ -2439,7 +2413,7 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 	color32 darkred = { 53, 0, 0, 90 };
 	UTIL_ScreenFade(this, darkred, 1.0f, 5.0f, FFADE_OUT | FFADE_PURGE | FFADE_STAYOUT);
 
-	GameBaseShared()->GetAchievementManager()->WriteToStat(this, "BBX_ST_DEATHS");
+	AchievementManager::WriteToStat(this, "BBX_ST_DEATHS");
 
 	ExecuteClientEffect(PLAYER_EFFECT_DEATH, 1);
 

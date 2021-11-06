@@ -377,7 +377,7 @@ void CWeaponFrag::ItemPostFrame( void )
 				ThrowGrenade(pOwner, 0.0f);
 				DecrementAmmo(pOwner);
 				OnThrewGrenade(true);
-				GameBaseShared()->GetAchievementManager()->WriteToAchievement(pOwner, "ACH_WEAPON_GRENADE_FAIL");
+				AchievementManager::WriteToAchievement(pOwner, "ACH_WEAPON_GRENADE_FAIL");
 #endif
 			}
 			else

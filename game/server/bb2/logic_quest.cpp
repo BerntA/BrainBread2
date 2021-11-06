@@ -279,7 +279,7 @@ void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, 
 				if (!pClient || pClient->IsBot() || (pClient->GetTeamNumber() != TEAM_HUMANS))
 					continue;
 
-				GameBaseShared()->GetAchievementManager()->WriteToStat(pClient, "BBX_QUESTS");
+				AchievementManager::WriteToStat(pClient, "BBX_QUESTS");
 			}
 		}
 	}

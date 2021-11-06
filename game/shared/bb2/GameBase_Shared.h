@@ -285,7 +285,6 @@ public:
 	bool HasObjectiveGlowItems(CHL2MP_Player *pClient);
 
 	// Achievement Checks
-	CAchievementManager *GetAchievementManager() { return m_pAchievementManager; }
 	void EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pVictim, CBaseEntity *pInflictor, int forcedWeaponID = WEAPON_ID_NONE);
 	void OnGameOver(float timeLeft, int iWinner);
 
@@ -316,9 +315,6 @@ private:
 #else
 	// Stores ALL items on the server (all player items in one list) MAX items = 12(maxclients) * 12(maxitems pr user).
 	CUtlVector<InventoryItem_t> pszInventoryList;
-
-	// Stat and Achievement Handler
-	CAchievementManager *m_pAchievementManager;
 
 	// Server Workshop Handler:
 	CGameDefinitionsWorkshop *m_pServerWorkshopData;

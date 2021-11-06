@@ -9,7 +9,7 @@
 #include "achievement_manager.h"
 #include "GameBase_Server.h"
 
-#define ACHMGR GameBaseShared()->GetAchievementManager()
+using namespace AchievementManager;
 
 CPlayerAchievStats::CPlayerAchievStats(CHL2MP_Player *pOuter)
 {
@@ -23,7 +23,7 @@ CPlayerAchievStats::~CPlayerAchievStats()
 
 bool CPlayerAchievStats::IsValid(void)
 {
-	return (m_pOuter && !m_pOuter->IsBot() && GameBaseServer() && GameBaseShared() && GameBaseShared()->GetAchievementManager() && HL2MPRules() && HL2MPRules()->CanUseSkills() && (GameBaseServer()->CanStoreSkills() == PROFILE_GLOBAL));
+	return (m_pOuter && !m_pOuter->IsBot() && GameBaseServer() && GameBaseShared() && HL2MPRules() && HL2MPRules()->CanUseSkills() && (GameBaseServer()->CanStoreSkills() == PROFILE_GLOBAL));
 }
 
 void CPlayerAchievStats::OnSpawned(void)
@@ -70,7 +70,7 @@ void CPlayerAchievStats::OnKilled(CBaseEntity *pVictim, CBaseEntity *pInflictor,
 	}
 
 	if ((m_iZombieKicks >= 25) && (m_iZombiePunches >= 20) && (m_iZombieUppercuts >= 15))
-		ACHMGR->WriteToAchievement(m_pOuter, "ACH_RAZ_KUNG_FLU");
+		WriteToAchievement(m_pOuter, "ACH_RAZ_KUNG_FLU");
 
 	if (hitgroup == HITGROUP_HEAD)
 	{
@@ -79,14 +79,14 @@ void CPlayerAchievStats::OnKilled(CBaseEntity *pVictim, CBaseEntity *pInflictor,
 			m_iZombiePlayerHeadshots++;
 
 		if (pActiveWeapon && pActiveWeapon->IsMeleeWeapon() && (weaponID != WEAPON_ID_KICK))
-			ACHMGR->WriteToStat(m_pOuter, "BBX_RZ_HEADSHOT");
+			WriteToStat(m_pOuter, "BBX_RZ_HEADSHOT");
 	}
 
 	if (m_iTotalHeadshots >= 69)
-		ACHMGR->WriteToAchievement(m_pOuter, "ACH_RAZ_MAZELTOV");
+		WriteToAchievement(m_pOuter, "ACH_RAZ_MAZELTOV");
 
 	if (m_iZombiePlayerHeadshots >= 3)
-		ACHMGR->WriteToAchievement(m_pOuter, "ACH_RAZ_SWEEPER");
+		WriteToAchievement(m_pOuter, "ACH_RAZ_SWEEPER");
 
 	PrintDebugMsg();
 }
@@ -101,7 +101,7 @@ void CPlayerAchievStats::OnDidDamage(const CTakeDamageInfo &info)
 		return;
 
 	int currDamage = ((int)ceil(info.GetDamage()));
-	ACHMGR->WriteToStat(m_pOuter, "BBX_RZ_PAIN", currDamage, true);
+	WriteToStat(m_pOuter, "BBX_RZ_PAIN", currDamage, true);
 
 	PrintDebugMsg();
 }
@@ -119,7 +119,7 @@ void CPlayerAchievStats::OnPickupItem(const DataInventoryItem_Base_t *item)
 	}
 
 	if (m_iHealthKitsUsed >= 10)
-		ACHMGR->WriteToAchievement(m_pOuter, "ACH_RAZ_HEALTH_ADDICT");
+		WriteToAchievement(m_pOuter, "ACH_RAZ_HEALTH_ADDICT");
 
 	PrintDebugMsg();
 }

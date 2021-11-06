@@ -65,15 +65,7 @@ const char *pszGameSkills[40] =
 	"BBX_ST_ZM_MASS_INVASION",
 };
 
-CAchievementManager::CAchievementManager()
-{
-}
-
-CAchievementManager::~CAchievementManager()
-{
-}
-
-void CAchievementManager::AnnounceAchievement(int plIndex, const char *pcAchievement, int iAchievementType)
+void AchievementManager::AnnounceAchievement(int plIndex, const char *pcAchievement, int iAchievementType)
 {
 	IGameEvent *event = gameeventmanager->CreateEvent("game_achievement");
 	if (event)
@@ -86,7 +78,7 @@ void CAchievementManager::AnnounceAchievement(int plIndex, const char *pcAchieve
 }
 
 // Set an achievement here.
-bool CAchievementManager::WriteToAchievement(CHL2MP_Player *pPlayer, const char *szAchievement, int iAchievementType)
+bool AchievementManager::WriteToAchievement(CHL2MP_Player *pPlayer, const char *szAchievement, int iAchievementType)
 {
 	if (!CanWrite(pPlayer, szAchievement) || !CanWriteToType(szAchievement, iAchievementType))
 	{
@@ -127,7 +119,7 @@ bool CAchievementManager::WriteToAchievement(CHL2MP_Player *pPlayer, const char 
 }
 
 // Write to a stat
-bool CAchievementManager::WriteToStat(CHL2MP_Player *pPlayer, const char *szStat, int iForceValue, bool bAddTo)
+bool AchievementManager::WriteToStat(CHL2MP_Player *pPlayer, const char *szStat, int iForceValue, bool bAddTo)
 {
 	if (!CanWrite(pPlayer, szStat, true))
 	{
@@ -173,40 +165,58 @@ bool CAchievementManager::WriteToStat(CHL2MP_Player *pPlayer, const char *szStat
 	return true;
 }
 
-// Save Global Stats for the desired user.
-bool CAchievementManager::SaveGlobalStats(CHL2MP_Player *pPlayer)
+bool AchievementManager::WriteToStatPvP(CHL2MP_Player *pPlayer, const char *szStat)
 {
-	if (!pPlayer || !CanSetupProfile())
+	// Make sure we have loaded stats, have PvP mode on, and have a server context!
+	if (
+		!pPlayer || !pPlayer->HasLoadedStats() || pPlayer->IsBot() ||
+		!steamgameserverapicontext || !steamgameserverapicontext->SteamGameServerStats() ||
+		!HL2MPRules() || !HL2MPRules()->IsFastPacedGameplay()
+		)
 		return false;
 
-	return pPlayer->SaveGlobalStatsForPlayer();
+	CSteamID pSteamClient;
+	if (!pPlayer->GetSteamID(&pSteamClient))
+	{
+		Warning("Unable to get SteamID for user %i\n", pPlayer->GetUserID());
+		return false;
+	}
+
+	int iCurrentValue;
+	steamgameserverapicontext->SteamGameServerStats()->GetUserStat(pSteamClient, szStat, &iCurrentValue);
+	iCurrentValue = clamp((iCurrentValue + 1), 0, 9999999);
+
+	steamgameserverapicontext->SteamGameServerStats()->SetUserStat(pSteamClient, szStat, iCurrentValue);
+	steamgameserverapicontext->SteamGameServerStats()->StoreUserStats(pSteamClient);
+	return true;
 }
 
-// Load Global Stats for the desired user.
-bool CAchievementManager::LoadGlobalStats(CHL2MP_Player *pPlayer)
+bool AchievementManager::IsGlobalStatsAllowed(void)
 {
-	if (!pPlayer || !CanSetupProfile())
-		return false;
-
-	return pPlayer->LoadGlobalStats();
-}
-
-// Are we allowed to do stuff at this time?
-bool CAchievementManager::CanSetupProfile(void)
-{
-	// Are we using stats, and has cheats NOT been on?
-	if ((GameBaseServer()->CanStoreSkills() != PROFILE_GLOBAL))
-		return false;
-
 	// Make sure that our interfaces have been locked and loaded.
-	if (!steamgameserverapicontext || !steamgameserverapicontext->SteamGameServerStats())
+	// Are we using stats, and has cheats NOT been on?
+	return (steamgameserverapicontext && steamgameserverapicontext->SteamGameServerStats() && GameBaseServer() && (GameBaseServer()->CanStoreSkills() == PROFILE_GLOBAL));
+}
+
+bool AchievementManager::CanLoadSteamStats(CHL2MP_Player *pPlayer)
+{
+	if (!pPlayer || pPlayer->m_bHasReadProfileData || pPlayer->IsBot() || !steamgameserverapicontext || !steamgameserverapicontext->SteamGameServerStats())
 		return false;
 
+	CSteamID pSteamClient;
+	if (!pPlayer->GetSteamID(&pSteamClient))
+	{
+		Warning("Unable to get SteamID for user %s\n", pPlayer->GetPlayerName());
+		return false;
+	}
+
+	SteamAPICall_t apiCall = steamgameserverapicontext->SteamGameServerStats()->RequestUserStats(pSteamClient);
+	pPlayer->m_SteamCallResultRequestPlayerStats.Set(apiCall, pPlayer, &CHL2MP_Player::OnReceivedSteamStats);
 	return true;
 }
 
 // Are we allowed to do stuff at this time?
-bool CAchievementManager::CanWrite(CHL2MP_Player *pClient, const char *param, bool bIsStat)
+bool AchievementManager::CanWrite(CHL2MP_Player *pClient, const char *param, bool bIsStat)
 {
 	if (!pClient || !pClient->m_bHasReadProfileData)
 		return false;
@@ -235,7 +245,7 @@ bool CAchievementManager::CanWrite(CHL2MP_Player *pClient, const char *param, bo
 }
 
 // Check if we can achieve this achievement.
-bool CAchievementManager::CanWriteToType(const char *param, int iType)
+bool AchievementManager::CanWriteToType(const char *param, int iType)
 {
 	if (iType <= 0)
 		return true;
@@ -254,7 +264,7 @@ bool CAchievementManager::CanWriteToType(const char *param, int iType)
 }
 
 // Get the highest value for this stat. (if it is defined for multiple achievements it will have different max values)
-int CAchievementManager::GetMaxValueForStat(const char *szStat)
+int AchievementManager::GetMaxValueForStat(const char *szStat)
 {
 	int iValue = 0;
 	for (int i = 0; i < ACHIEVEMENTS::GetNumAchievements(); i++)

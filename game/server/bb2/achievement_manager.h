@@ -6,6 +6,7 @@
 
 #ifndef SHARED_ACHIEVEMENT_HANDLER_H
 #define SHARED_ACHIEVEMENT_HANDLER_H
+
 #ifdef _WIN32
 #pragma once
 #endif
@@ -15,25 +16,18 @@
 #include "hl2mp_player.h"
 #include "achievement_shareddefs.h"
 
-class CAchievementManager
+namespace AchievementManager
 {
-public:
-	CAchievementManager();
-	virtual ~CAchievementManager();
-
 	void AnnounceAchievement(int plIndex, const char *pcAchievement, int iAchievementType = 0);
 	bool WriteToAchievement(CHL2MP_Player *pPlayer, const char *szAchievement, int iAchievementType = 0);
 	bool WriteToStat(CHL2MP_Player *pPlayer, const char *szStat, int iForceValue = 0, bool bAddTo = false);
-	bool SaveGlobalStats(CHL2MP_Player *pPlayer);
-	bool LoadGlobalStats(CHL2MP_Player *pPlayer);
+	bool WriteToStatPvP(CHL2MP_Player *pPlayer, const char *szStat);
+	bool IsGlobalStatsAllowed(void);
+	bool CanLoadSteamStats(CHL2MP_Player *pPlayer);
 	int GetMaxValueForStat(const char *szStat);
-
-private:
-
-	bool CanSetupProfile(void);
 	bool CanWrite(CHL2MP_Player *pClient, const char *param = NULL, bool bIsStat = false);
 	bool CanWriteToType(const char *param, int iType);
-};
+}
 
 extern const char *pszGameSkills[40]; // Skill stat definition array.
 

@@ -578,7 +578,7 @@ int CHL2MPRules::GetRewardFromRoundWin(CHL2MP_Player *pPlayer, int winnerTeam, b
 		if ((winnerTeam == TEAM_HUMANS) && pPlayer->HasFullySpawned())
 		{
 			xpReward = xpRequired * ((gameOver ? GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPGameWinArena : GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPRoundWinArena) / 100.0f);
-			GameBaseShared()->GetAchievementManager()->WriteToAchievement(pPlayer, "ACH_GM_ARENA_WIN");
+			AchievementManager::WriteToAchievement(pPlayer, "ACH_GM_ARENA_WIN");
 
 			if (timeLeft <= 0)
 				xpReward = xpRequired * (GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPRoundWinArena / 100.0f);
@@ -1724,7 +1724,7 @@ void CHL2MPRules::GoToIntermission(int iWinner)
 		pPlayer->ShowViewPortPanel(PANEL_ENDSCORE, true, data);
 
 		// Tell our clients that they should do a 'last' save of their stats if we're allowed to save and if the client has loaded his stats. (so we don't overwrite his current stats)
-		GameBaseShared()->GetAchievementManager()->SaveGlobalStats(pPlayer);
+		pPlayer->SaveGlobalStats();
 
 		pPlayer->HandleLocalProfile(true);
 	}
@@ -1822,26 +1822,17 @@ bool CHL2MPRules::CanUseSkills(void)
 
 bool CHL2MPRules::IsFastPacedGameplay(void)
 {
-	if ((GetCurrentGamemode() == MODE_DEATHMATCH) || (GetCurrentGamemode() == MODE_ELIMINATION))
-		return true;
-
-	return false;
+	return ((GetCurrentGamemode() == MODE_DEATHMATCH) || (GetCurrentGamemode() == MODE_ELIMINATION));
 }
 
 bool CHL2MPRules::CanUseGameAnnouncer(void)
 {
-	if (GetCurrentGamemode() == MODE_DEATHMATCH)
-		return true;
-
-	return false;
+	return (GetCurrentGamemode() == MODE_DEATHMATCH);
 }
 
 bool CHL2MPRules::IsPowerupsAllowed(void)
 {
-	if (GetCurrentGamemode() == MODE_DEATHMATCH)
-		return true;
-
-	return false;
+	return (GetCurrentGamemode() == MODE_DEATHMATCH);
 }
 
 bool CHL2MPRules::CanPlayersRespawnIndividually(void)
@@ -1897,7 +1888,7 @@ void CHL2MPRules::ClientDisconnected(edict_t *pClient)
 		if (engine->IsDedicatedServer())
 			pPlayer->HandleLocalProfile(true);
 
-		GameBaseShared()->GetAchievementManager()->SaveGlobalStats(pPlayer);
+		pPlayer->SaveGlobalStats();
 		GameBaseShared()->RemoveInventoryItem(pPlayer->entindex(), pPlayer->GetAbsOrigin());
 
 		// Remove the player from his team

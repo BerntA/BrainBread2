@@ -204,8 +204,7 @@ public:
 	void  OnLateStatsLoadEnterGame(void);
 	void  PickDefaultSpawnTeam(int iForceTeam = 0);
 
-	bool LoadGlobalStats(void);
-	bool SaveGlobalStatsForPlayer(void);
+	bool SaveGlobalStats(void);
 
 	int AllowEntityToBeGibbed(void);
 
@@ -362,11 +361,13 @@ private:
 	float m_flLastTimeSharedAmmo;
 	int m_iAmmoRequestID;
 
+	friend bool AchievementManager::CanLoadSteamStats(CHL2MP_Player *pPlayer);
+
 protected:
 	virtual void HandlePainSound(int iMajor, int iDamageTypeBits);
 	virtual void DoPlayerKick(void);
 
-	void OnReceiveStatsForPlayer(GSStatsReceived_t *pCallback, bool bIOFailure);
+	void OnReceivedSteamStats(GSStatsReceived_t *pCallback, bool bIOFailure);
 	CCallResult<CHL2MP_Player, GSStatsReceived_t> m_SteamCallResultRequestPlayerStats;
 };
 
