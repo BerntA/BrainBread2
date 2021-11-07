@@ -1031,43 +1031,18 @@ void CGameBaseShared::OnGameOver(float timeLeft, int iWinner)
 	bool bTimeOut = (timeLeft <= 0.0f);
 	bool bCanGiveMapAchiev = (!bTimeOut && ((iPlayersInGame >= 4)));
 
-	const char *pAchievement = NULL;
+	char pchAchievement[64]; pchAchievement[0] = 0;
 	if (bCanGiveMapAchiev)
 	{
-		if (!strcmp(currMap, "bbc_laststand"))
-			pAchievement = "ACH_MAP_LASTSTAND";
-		else if (!strcmp(currMap, "bbc_termoil"))
-			pAchievement = "ACH_MAP_TERMOIL";
-		else if (!strcmp(currMap, "bbc_mecklenburg"))
-			pAchievement = "ACH_MAP_MECKLENBURG";
-		else if (!strcmp(currMap, "bbc_compound"))
-			pAchievement = "ACH_MAP_COMPOUND";
-		else if (!strcmp(currMap, "bbc_nightclub"))
-			pAchievement = "ACH_MAP_NIGHTCLUB";
-		else if (!strcmp(currMap, "bbc_coltec"))
-			pAchievement = "ACH_MAP_COLTEC_C";
-		else if (!strcmp(currMap, "bbc_ikrom"))
-			pAchievement = "ACH_MAP_IKROM";
-		else if (!strcmp(currMap, "bba_rooftop"))
-			pAchievement = "ACH_MAP_ROOFTOP";
-		else if (!strcmp(currMap, "bba_colosseum"))
-			pAchievement = "ACH_MAP_COLOSSEUM";
-		else if (!strcmp(currMap, "bba_cargo"))
-			pAchievement = "ACH_MAP_CARGO";
-		else if (!strcmp(currMap, "bba_barracks"))
-			pAchievement = "ACH_MAP_BARRACKS_ARENA";
-		else if (!strcmp(currMap, "bba_devilscrypt"))
-			pAchievement = "ACH_MAP_DEVILSCRYPT";
-		else if (!strcmp(currMap, "bba_swamptrouble"))
-			pAchievement = "ACH_MAP_SWAMPTROUBLE";
-		else if (!strcmp(currMap, "bba_salvage"))
-			pAchievement = "ACH_MAP_SALVAGE";
-		else if (!strcmp(currMap, "bba_carnage"))
-			pAchievement = "ACH_MAP_CARNAGE";
-		else if (!strcmp(currMap, "bba_coltec"))
-			pAchievement = "ACH_MAP_COLTEC_A";
-		else if (!strcmp(currMap, "bba_island"))
-			pAchievement = "ACH_MAP_ISLAND_A";
+		for (int i = 0; i < ACHIEVEMENTS::GetNumAchievements(); i++)
+		{
+			const achievementStatItem_t *pAchiev = ACHIEVEMENTS::GetAchievementItem(i);
+			if (pAchiev && pAchiev->szMapLink && pAchiev->szMapLink[0] && !strcmp(currMap, pAchiev->szMapLink))
+			{
+				Q_strncpy(pchAchievement, pAchiev->szAchievement, sizeof(pchAchievement));
+				break;
+			}
+		}
 	}
 
 	if (!bTimeOut)
@@ -1078,8 +1053,8 @@ void CGameBaseShared::OnGameOver(float timeLeft, int iWinner)
 			if (!pPlayer || pPlayer->IsBot() || !pPlayer->HasFullySpawned())
 				continue;
 
-			if (pAchievement != NULL)
-				AchievementManager::WriteToAchievement(pPlayer, pAchievement);
+			if (pchAchievement && pchAchievement[0])
+				AchievementManager::WriteToAchievement(pPlayer, pchAchievement);
 
 			const char *pSpecialAchievement = NULL;
 			if (!pPlayer->HasPlayerUsedFirearm() && (pPlayer->GetTotalScore() > 0))

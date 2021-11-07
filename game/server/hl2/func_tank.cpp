@@ -1125,23 +1125,6 @@ void CFuncTank::ControllerPostFrame( void )
 	m_fireLast = gpGlobals->curtime - (1/m_fireRate) - 0.01;  // to make sure the gun doesn't fire too many bullets
 	
 	int bulletCount = (gpGlobals->curtime - m_fireLast) * m_fireRate;
-	
-	if( HasSpawnFlags( SF_TANK_AIM_ASSISTANCE ) )
-	{
-		// Trace out a hull and if it hits something, adjust the shot to hit that thing.
-		trace_t tr;
-		Vector start = WorldBarrelPosition();
-		Vector dir = forward;
-		
-		UTIL_TraceHull( start, start + forward * 8192, -Vector(8,8,8), Vector(8,8,8), MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
-		
-		if( tr.m_pEnt && tr.m_pEnt->m_takedamage != DAMAGE_NO && (tr.m_pEnt->GetFlags() & FL_AIMTARGET) )
-		{
-			forward = tr.m_pEnt->WorldSpaceCenter() - start;
-			VectorNormalize( forward );
-		}
-	}
-	
 	Fire( bulletCount, WorldBarrelPosition(), forward, pPlayer, false );
  
 	// HACKHACK -- make some noise (that the AI can hear)

@@ -25,96 +25,6 @@ static CUtlVector<IServerNetworkable*> g_DeleteList;
 CGlobalEntityList gEntList;
 CBaseEntityList *g_pEntityList = &gEntList;
 
-class CAimTargetManager : public IEntityListener
-{
-public:
-	// Called by CEntityListSystem
-	void LevelInitPreEntity() 
-	{ 
-		gEntList.AddListenerEntity( this );
-		Clear(); 
-	}
-	void LevelShutdownPostEntity()
-	{
-		gEntList.RemoveListenerEntity( this );
-		Clear();
-	}
-
-	void Clear() 
-	{ 
-		m_targetList.Purge(); 
-	}
-
-	void ForceRepopulateList()
-	{
-		Clear();
-
-		CBaseEntity *pEnt = gEntList.FirstEnt();
-
-		while( pEnt )
-		{
-			if( ShouldAddEntity(pEnt) )
-				AddEntity(pEnt);
-
-			pEnt = gEntList.NextEnt( pEnt );
-		}
-	}
-	
-	bool ShouldAddEntity( CBaseEntity *pEntity )
-	{
-		return ((pEntity->GetFlags() & FL_AIMTARGET) != 0);
-	}
-
-	// IEntityListener
-	virtual void OnEntityCreated( CBaseEntity *pEntity ) {}
-	virtual void OnEntityDeleted( CBaseEntity *pEntity )
-	{
-		if ( !(pEntity->GetFlags() & FL_AIMTARGET) )
-			return;
-		RemoveEntity(pEntity);
-	}
-	void AddEntity( CBaseEntity *pEntity )
-	{
-		if ( pEntity->IsMarkedForDeletion() )
-			return;
-		m_targetList.AddToTail( pEntity );
-	}
-	void RemoveEntity( CBaseEntity *pEntity )
-	{
-		int index = m_targetList.Find( pEntity );
-		if ( m_targetList.IsValidIndex(index) )
-		{
-			m_targetList.FastRemove( index );
-		}
-	}
-	int ListCount() { return m_targetList.Count(); }
-	int ListCopy( CBaseEntity *pList[], int listMax )
-	{
-		int count = MIN(listMax, ListCount() );
-		memcpy( pList, m_targetList.Base(), sizeof(CBaseEntity *) * count );
-		return count;
-	}
-
-private:
-	CUtlVector<CBaseEntity *>	m_targetList;
-};
-
-static CAimTargetManager g_AimManager;
-
-int AimTarget_ListCount()
-{
-	return g_AimManager.ListCount();
-}
-int AimTarget_ListCopy( CBaseEntity *pList[], int listMax )
-{
-	return g_AimManager.ListCopy( pList, listMax );
-}
-void AimTarget_ForceRepopulateList()
-{
-	g_AimManager.ForceRepopulateList();
-}
-
-
 // Manages a list of all entities currently doing game simulation or thinking
 // NOTE: This is usually a small subset of the global entity list, so it's
 // an optimization to maintain this list incrementally rather than polling each
@@ -125,6 +35,7 @@ struct simthinkentry_t
 	unsigned short	unused0;
 	int				nextThinkTick;
 };
+
 class CSimThinkManager : public IEntityListener
 {
 public:
@@ -427,24 +338,9 @@ CBaseEntity *CGlobalEntityList::NextEnt( CBaseEntity *pCurrentEnt )
 
 void CGlobalEntityList::ReportEntityFlagsChanged( CBaseEntity *pEntity, unsigned int flagsOld, unsigned int flagsNow )
 {
-	if ( pEntity->IsMarkedForDeletion() )
-		return;
-	// UNDONE: Move this into IEntityListener instead?
-	unsigned int flagsChanged = flagsOld ^ flagsNow;
-	if ( flagsChanged & FL_AIMTARGET )
-	{
-		unsigned int flagsAdded = flagsNow & flagsChanged;
-		unsigned int flagsRemoved = flagsOld & flagsChanged;
-
-		if ( flagsAdded & FL_AIMTARGET )
-		{
-			g_AimManager.AddEntity( pEntity );
-		}
-		if ( flagsRemoved & FL_AIMTARGET )
-		{
-			g_AimManager.RemoveEntity( pEntity );
-		}
-	}
+	//if ( pEntity->IsMarkedForDeletion() )
+	//	return;
+	//unsigned int flagsChanged = flagsOld ^ flagsNow;
 }
 
 //-----------------------------------------------------------------------------
@@ -1398,7 +1294,6 @@ public:
 	{
 		g_NotifyList.LevelInitPreEntity();
 		g_TouchManager.LevelInitPreEntity();
-		g_AimManager.LevelInitPreEntity();
 		g_SimThinkManager.LevelInitPreEntity();
 	}
 	void LevelShutdownPreEntity()
@@ -1408,7 +1303,6 @@ public:
 	void LevelShutdownPostEntity()
 	{
 		g_TouchManager.LevelShutdownPostEntity();
-		g_AimManager.LevelShutdownPostEntity();
 		g_SimThinkManager.LevelShutdownPostEntity();
 		CBaseEntityClassList *pClassList = s_pClassLists;
 		while ( pClassList )

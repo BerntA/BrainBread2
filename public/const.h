@@ -133,7 +133,7 @@
 #define	FL_NPC					(1<<14)
 #define	FL_GODMODE				(1<<15)
 #define	FL_NOTARGET				(1<<16)
-#define	FL_AIMTARGET			(1<<17)	// set if the crosshair needs to aim onto the entity
+//#define	FL_					(1<<17)	// unused
 #define	FL_PARTIALGROUND		(1<<18)	// not all corners are valid
 #define FL_STATICPROP			(1<<19)	// Eetsa static prop!		
 //#define FL_					(1<<20) // unused

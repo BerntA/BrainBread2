@@ -3759,14 +3759,6 @@ CBaseEntity *CBasePlayer::EntSelectSpawnPoint()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Called the first time the player's created
-//-----------------------------------------------------------------------------
-void CBasePlayer::InitialSpawn( void )
-{
-	m_iConnected = PlayerConnected;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Called everytime the player respawns
 //-----------------------------------------------------------------------------
 void CBasePlayer::Spawn( void )
@@ -3897,10 +3889,7 @@ void CBasePlayer::Spawn( void )
 void CBasePlayer::Activate( void )
 {
 	BaseClass::Activate();
-
-	AimTarget_ForceRepopulateList();
-
-	RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
+	RumbleEffect(RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE);
 }
 
 void CBasePlayer::Precache( void )

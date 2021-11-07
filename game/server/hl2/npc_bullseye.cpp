@@ -85,7 +85,6 @@ ConVar	sk_bullseye_health( "sk_bullseye_health","0");
 
 BEGIN_DATADESC( CNPC_Bullseye )
 
-	DEFINE_KEYFIELD( m_fAutoaimRadius, FIELD_FLOAT, "autoaimradius" ),
 	DEFINE_KEYFIELD( m_flFieldOfView, FIELD_FLOAT, "minangle" ),
 	DEFINE_KEYFIELD( m_flMinDistValidEnemy, FIELD_FLOAT, "mindist" ),
 
@@ -192,12 +191,6 @@ void CNPC_Bullseye::Spawn( void )
 	CapabilitiesAdd( bits_CAP_SIMPLE_RADIUS_DAMAGE );
 
 	m_iMaxHealth = GetHealth();
-
-	if( m_fAutoaimRadius > 0.0f )
-	{
-		// Make this an aimtarget, since it has some autoaim influence.
-		AddFlag(FL_AIMTARGET);
-	}
 }
 
 

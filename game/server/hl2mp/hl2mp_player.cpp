@@ -396,6 +396,7 @@ void CHL2MP_Player::OnLateStatsLoadEnterGame(void)
 
 void CHL2MP_Player::PickDefaultSpawnTeam(int iForceTeam)
 {
+	SetConnected(PlayerConnected);
 	m_flTimeUntilEndCheckPing = gpGlobals->curtime + HIGH_PING_CHECK_TIME;
 	if (HL2MPRules()->m_bRoundStarted)
 		m_flLastTimeRanCommand = gpGlobals->curtime;

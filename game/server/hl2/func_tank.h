@@ -20,7 +20,6 @@
 #define SF_TANK_CANCONTROL					0x0020
 #define	SF_TANK_DAMAGE_KICK					0x0040	// Kick when take damage
 #define	SF_TANK_AIM_AT_POS					0x0080	// Aim at a particular position
-#define SF_TANK_AIM_ASSISTANCE				0x0100
 #define SF_TANK_NPC							0x0200		
 #define SF_TANK_NPC_CONTROLLABLE			0x0400		// 1024
 #define SF_TANK_NPC_SET_CONTROLLER			0x0800		// 2048

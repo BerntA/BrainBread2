@@ -38,7 +38,6 @@ extern bool			g_fGameOver;
 
 void FinishClientPutInServer( CHL2MP_Player *pPlayer )
 {
-	pPlayer->InitialSpawn();
 	pPlayer->PickDefaultSpawnTeam();
 
 	char sName[128];
@@ -70,7 +69,6 @@ void ClientPutInServer( edict_t *pEdict, const char *playername )
 	pPlayer->SetPlayerName( playername );
 }
 
-
 void ClientActive( edict_t *pEdict, bool bLoadGame )
 {
 	// Can't load games in CS!
@@ -79,7 +77,6 @@ void ClientActive( edict_t *pEdict, bool bLoadGame )
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer( CBaseEntity::Instance( pEdict ) );
 	FinishClientPutInServer( pPlayer );
 }
-
 
 /*
 ===============
@@ -151,7 +148,5 @@ void GameStartFrame( void )
 //=========================================================
 void InstallGameRules()
 {
-	// vanilla deathmatch
 	CreateGameRulesObject( "CHL2MPRules" );
 }
-

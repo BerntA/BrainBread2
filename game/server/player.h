@@ -262,7 +262,6 @@ public:
 	virtual void			ForceRespawn( void );
 	virtual void			SetNewSolidFlags( bool bNonSolid );
 
-	virtual void			InitialSpawn( void );
 	virtual void			InitHUD( void ) {}
 	virtual void			ShowViewPortPanel( const char * name, bool bShow = true, KeyValues *data = NULL );
 

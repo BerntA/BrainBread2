@@ -26,6 +26,7 @@ struct achievementStatItem_t
 	int type;
 	int rewardValue;
 	bool hidden;
+	const char *szMapLink;
 };
 
 struct globalStatItem_t

@@ -56,7 +56,6 @@ protected:
 	COutputEvent	m_OnTargeted;
 	COutputEvent	m_OnReleased;
 	bool			m_bPerfectAccuracy;	// Entities that shoot at me should be perfectly accurate
-	float			m_fAutoaimRadius;	// How much to influence player's autoaim.
 	float			m_flMinDistValidEnemy;
 
 	DECLARE_DATADESC();
