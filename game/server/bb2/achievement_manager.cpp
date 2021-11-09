@@ -169,7 +169,7 @@ bool AchievementManager::WriteToStatPvP(CHL2MP_Player *pPlayer, const char *szSt
 {
 	// Make sure we have loaded stats, have PvP mode on, and have a server context!
 	if (
-		!pPlayer || !pPlayer->HasLoadedStats() || pPlayer->IsBot() ||
+		!pPlayer || !pPlayer->HasLoadedStats() || pPlayer->IsBot() || !engine->IsDedicatedServer() ||
 		!steamgameserverapicontext || !steamgameserverapicontext->SteamGameServerStats() ||
 		!HL2MPRules() || !HL2MPRules()->IsFastPacedGameplay()
 		)
@@ -200,7 +200,7 @@ bool AchievementManager::IsGlobalStatsAllowed(void)
 
 bool AchievementManager::CanLoadSteamStats(CHL2MP_Player *pPlayer)
 {
-	if (!pPlayer || pPlayer->m_bHasReadProfileData || pPlayer->IsBot() || !steamgameserverapicontext || !steamgameserverapicontext->SteamGameServerStats())
+	if (!engine->IsDedicatedServer() || !pPlayer || pPlayer->m_bHasReadProfileData || pPlayer->IsBot() || !steamgameserverapicontext || !steamgameserverapicontext->SteamGameServerStats())
 		return false;
 
 	CSteamID pSteamClient;

@@ -85,7 +85,6 @@ public:
 	void SetRespawnTime(float flTime) { m_BB2Local.m_flPlayerRespawnTime = flTime; }
 	float GetRespawnTime(void) { return m_BB2Local.m_flPlayerRespawnTime; }
 	bool HasFullySpawned(void) { return m_bHasFullySpawned; }
-	bool HasJoinedGame(void) { return m_bHasJoinedGame; }
 	bool HasLoadedStats(void) { return m_bHasTriedToLoadStats; }
 
 	float GetTeamPerkValue(float flOriginalValue);
@@ -104,6 +103,7 @@ public:
 	// Profile System Helper:
 	bool m_bHasReadProfileData;
 	bool m_bHasTriedToLoadStats;
+	bool m_bTriedToJoinGame;
 	unsigned long long m_ullCachedSteamID;
 
 	// The total weight of items and weapons combined.
@@ -323,7 +323,6 @@ private:
 	float m_flZombieVisionLockTime;
 	float m_flUpdateTime;
 	bool m_bHasFullySpawned;
-	bool m_bHasJoinedGame;
 	bool m_bEnableFlashlighOnSwitch;
 
 	bool m_bIsServerAdmin;

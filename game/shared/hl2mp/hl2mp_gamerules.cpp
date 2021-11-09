@@ -906,7 +906,7 @@ void CHL2MPRules::GameModeSharedThink(void)
 		if (pPlayer->GetTeamNumber() == TEAM_DECEASED)
 			zombiesInGame++;
 
-		if ((pPlayer->GetTeamNumber() != TEAM_UNASSIGNED) && pPlayer->HasJoinedGame())
+		if ((pPlayer->GetTeamNumber() != TEAM_UNASSIGNED) && pPlayer->HasLoadedStats())
 			playersInGame++;
 
 		if (pPlayer->HasPlayerEscaped())

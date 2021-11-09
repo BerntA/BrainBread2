@@ -254,8 +254,8 @@ CHL2MP_Player::CHL2MP_Player()
 	m_bHasReadProfileData = false;
 	m_bWantsToDeployAsHuman = false;
 	m_bHasFullySpawned = false;
-	m_bHasJoinedGame = false;
 	m_bHasTriedToLoadStats = false;
+	m_bTriedToJoinGame = false;
 	m_bIsServerAdmin = false;
 	m_bPlayerUsedFirearm = false;
 	m_bEnableFlashlighOnSwitch = false;
@@ -373,12 +373,17 @@ void CHL2MP_Player::OnLateStatsLoadEnterGame(void)
 			}
 		}
 
-		if (HL2MPRules()->GetCurrentGamemode() == MODE_ARENA)
+		switch (HL2MPRules()->GetCurrentGamemode())
+		{
+
+		case MODE_ARENA:
 		{
 			if (!HL2MPRules()->m_bRoundStarted)
 				HandleCommand_JoinTeam(TEAM_HUMANS);
+			break;
 		}
-		else if (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE)
+
+		case MODE_OBJECTIVE:
 		{
 			bool bAllowedToJoinLate = (bb2_allow_latejoin.GetBool() && !HL2MPRules()->DidClientDisconnectRecently(m_ullCachedSteamID));
 			if (bAllowedToJoinLate || GameBaseServer()->IsStoryMode() || !HL2MPRules()->m_bRoundStarted)
@@ -388,6 +393,24 @@ void CHL2MP_Player::OnLateStatsLoadEnterGame(void)
 			}
 			else
 				HandleCommand_JoinTeam(TEAM_DECEASED);
+			break;
+		}
+
+		case MODE_DEATHMATCH:
+		{
+			if (HL2MPRules()->m_bRoundStarted)
+				m_BB2Local.m_flPlayerRespawnTime = HL2MPRules()->GetPlayerRespawnTime(this);
+			else
+				HandleCommand_JoinTeam(TEAM_HUMANS);
+			break;
+		}
+
+		case MODE_ELIMINATION:
+		{
+			HandleCommand_JoinTeam(GetSelectedTeam());
+			break;
+		}
+
 		}
 	}
 
@@ -406,7 +429,7 @@ void CHL2MP_Player::PickDefaultSpawnTeam(int iForceTeam)
 
 	if (iForceTeam > 0)
 	{
-		m_bHasFullySpawned = m_bHasJoinedGame = m_bHasTriedToLoadStats = true;
+		m_bHasFullySpawned = m_bHasTriedToLoadStats = true;
 		SetSelectedTeam(iForceTeam);
 		HandleCommand_JoinTeam(iForceTeam, true);
 		ForceRespawn();
@@ -417,7 +440,7 @@ void CHL2MP_Player::PickDefaultSpawnTeam(int iForceTeam)
 	{
 		if (GameBaseServer()->IsTutorialModeEnabled())
 		{
-			m_bHasFullySpawned = m_bHasJoinedGame = m_bHasTriedToLoadStats = true;
+			m_bHasFullySpawned = m_bHasTriedToLoadStats = true;
 			m_BB2Local.m_iZombieCredits = 100;
 			HandleCommand_JoinTeam(TEAM_HUMANS);
 			HandleFirstTimeConnection();
@@ -472,6 +495,9 @@ bool CHL2MP_Player::SaveGlobalStats(void)
 
 void CHL2MP_Player::OnReceivedSteamStats(GSStatsReceived_t *pCallback, bool bIOFailure)
 {
+	if (m_bHasTriedToLoadStats || m_bHasReadProfileData)
+		return;
+
 	Warning("Received and loaded stats for user %s, result %i\n", GetPlayerName(), pCallback->m_eResult);
 	m_bHasTriedToLoadStats = true;
 
@@ -483,9 +509,6 @@ void CHL2MP_Player::OnReceivedSteamStats(GSStatsReceived_t *pCallback, bool bIOF
 		HandleFirstTimeConnection(true);
 		return;
 	}
-
-	if (m_bHasReadProfileData)
-		return;
 
 	int iXPCurrent = 0, iXPLeft = 65, iLevel = 1, iTalents = 0, iZombieCredits = 0;
 
@@ -905,7 +928,7 @@ void CHL2MP_Player::PostThink(void)
 	if (HL2MPRules() && HL2MPRules()->IsGameoverOrScoresVisible())
 		m_flLastTimeRanCommand = gpGlobals->curtime;
 
-	if (!IsBot() && bb2_enable_afk_kicker.GetBool() && engine->IsDedicatedServer() && !((GetTeamNumber() == TEAM_SPECTATOR) && m_bHasJoinedGame) && (m_flLastTimeRanCommand > 0.0f))
+	if (!IsBot() && bb2_enable_afk_kicker.GetBool() && engine->IsDedicatedServer() && !((GetTeamNumber() == TEAM_SPECTATOR) && HasLoadedStats()) && (m_flLastTimeRanCommand > 0.0f))
 	{
 		float flTimeSinceLastCMD = (gpGlobals->curtime - m_flLastTimeRanCommand);
 		if (flTimeSinceLastCMD >= bb2_afk_kick_time.GetFloat())
@@ -1757,7 +1780,7 @@ void CHL2MP_Player::ChangeTeam(int iTeam, bool bInfection)
 		bKill = true;
 
 	// When we leave spec mode we need to refresh this value to make sure we don't get kicked if we didn't move while spectating.
-	if ((iOldTeam == TEAM_SPECTATOR) && m_bHasJoinedGame && (iTeam >= TEAM_HUMANS) && (m_flLastTimeRanCommand > 0.0f))
+	if ((iOldTeam == TEAM_SPECTATOR) && HasLoadedStats() && (iTeam >= TEAM_HUMANS) && (m_flLastTimeRanCommand > 0.0f))
 		m_flLastTimeRanCommand = gpGlobals->curtime;
 
 	DropAllWeapons();
@@ -1889,10 +1912,10 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 
 	else if (FStrEq(args[0], "joingame"))
 	{
-		if (m_bHasJoinedGame)
+		if (m_bTriedToJoinGame)
 			return true;
 
-		m_bHasJoinedGame = true;
+		m_bTriedToJoinGame = true; // Only run this cmd once!
 
 		// BB2 Warn : Hack - Give the zombie plrs snacks...		
 		m_BB2Local.m_iZombieCredits = GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->iDefaultZombieCredits;
@@ -1901,13 +1924,6 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 		{
 			ShowViewPortPanel("team", true);
 			return true;
-		}
-		else if (HL2MPRules()->GetCurrentGamemode() == MODE_DEATHMATCH)
-		{
-			if (HL2MPRules()->m_bRoundStarted)
-				m_BB2Local.m_flPlayerRespawnTime = HL2MPRules()->GetPlayerRespawnTime(this);
-			else
-				HandleCommand_JoinTeam(TEAM_HUMANS);
 		}
 
 		HandleFirstTimeConnection();
@@ -1957,12 +1973,11 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 
 		ShowViewPortPanel("team", false);
 		SetSelectedTeam(iTeam);
-		m_bWantsToDeployAsHuman = true;
-		HandleCommand_JoinTeam(iTeam);
+		m_bWantsToDeployAsHuman = true;		
 
 		if (m_bHasReadProfileData || m_bHasFullySpawned || m_bHasTriedToLoadStats)
 		{
-			//ForceRespawn();
+			HandleCommand_JoinTeam(iTeam);
 			return true;
 		}
 
@@ -2402,6 +2417,9 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 					pEnemyTeam->AddScore(bb2_elimination_score_humans.GetInt(), this);
 			}
 		}
+
+		if (pAttacker->IsPlayer() && (pAttacker != this))
+			AchievementManager::WriteToStatPvP(ToHL2MPPlayer(pAttacker), "PVP_KILLS");
 	}
 
 	ExecuteClientEffect(PLAYER_EFFECT_ZOMBIE_FLASHLIGHT, 0);
@@ -2415,6 +2433,7 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 	UTIL_ScreenFade(this, darkred, 1.0f, 5.0f, FFADE_OUT | FFADE_PURGE | FFADE_STAYOUT);
 
 	AchievementManager::WriteToStat(this, "BBX_ST_DEATHS");
+	AchievementManager::WriteToStatPvP(this, "PVP_DEATHS");
 
 	ExecuteClientEffect(PLAYER_EFFECT_DEATH, 1);
 
