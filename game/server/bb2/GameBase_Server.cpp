@@ -468,7 +468,7 @@ void CGameBaseServer::SendToolTip(const char *message, const char *keybind, floa
 void CGameBaseServer::SendAchievement(const char *szAchievement, int iReceipentID)
 {
 	// Give Tutorial Finished Achiev:
-	if (IsTutorialModeEnabled() && !strcmp(szAchievement, "ACH_TUTORIAL_COMPLETE") && !engine->IsDedicatedServer() && steamapicontext)
+	if (IsTutorialModeEnabled() && !engine->IsDedicatedServer() && steamapicontext && !strcmp(szAchievement, "ACH_TUTORIAL_COMPLETE"))
 	{
 		bool bAchieved = false;
 		steamapicontext->SteamUserStats()->GetAchievement(szAchievement, &bAchieved);

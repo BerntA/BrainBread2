@@ -15,8 +15,6 @@ public:
 	DECLARE_DATADESC();
 
 	CLogicAchievement();
-
-	void Spawn(void);
 	void GiveAchievement(inputdata_t &data);
 };
 
@@ -28,11 +26,6 @@ END_DATADESC()
 
 CLogicAchievement::CLogicAchievement()
 {
-}
-
-void CLogicAchievement::Spawn(void)
-{
-	BaseClass::Spawn();
 }
 
 void CLogicAchievement::GiveAchievement(inputdata_t &data)

@@ -117,13 +117,11 @@ void AchievementItem::OnUpdate(void)
 					int iValue = 0;
 					if (steamapicontext->SteamUserStats()->GetStat(pAchiev->szStat, &iValue))
 					{
-						if (iValue > pAchiev->maxValue)
-							iValue = pAchiev->maxValue;
-
-						flProgress = ((float)iValue / (float)pAchiev->maxValue);
+						iValue = clamp(iValue, 0, pAchiev->value);
+						flProgress = ((float)iValue / (float)pAchiev->value);
 					}
 
-					m_pLabelProgress->SetText(VarArgs("%i / %i", iValue, pAchiev->maxValue));
+					m_pLabelProgress->SetText(VarArgs("%i / %i", iValue, pAchiev->value));
 				}
 				else if (m_bAchieved)
 				{
@@ -140,7 +138,7 @@ void AchievementItem::OnUpdate(void)
 				m_pLabelDate->SetText(GetUnlockDate());
 
 				char pchXPLabel[16];
-				Q_snprintf(pchXPLabel, 16, "%i XP", pAchiev->rewardValue);
+				Q_snprintf(pchXPLabel, 16, "%i XP", pAchiev->reward);
 				m_pLabelEXP->SetText(pchXPLabel);
 			}
 		}

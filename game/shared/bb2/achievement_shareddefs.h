@@ -22,9 +22,9 @@ struct achievementStatItem_t
 {
 	const char *szAchievement;
 	const char *szStat;
-	int maxValue;
+	int value;
 	int type;
-	int rewardValue;
+	int reward;
 	bool hidden;
 	const char *szMapLink;
 };

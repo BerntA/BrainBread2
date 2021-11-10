@@ -24,9 +24,8 @@ namespace AchievementManager
 	bool WriteToStatPvP(CHL2MP_Player *pPlayer, const char *szStat);
 	bool IsGlobalStatsAllowed(void);
 	bool CanLoadSteamStats(CHL2MP_Player *pPlayer);
+	bool CanWrite(CHL2MP_Player *pClient, const char *szParam, int iAchievementType = 0);
 	int GetMaxValueForStat(const char *szStat);
-	bool CanWrite(CHL2MP_Player *pClient, const char *param = NULL, bool bIsStat = false);
-	bool CanWriteToType(const char *param, int iType);
 }
 
 extern const char *pszGameSkills[40]; // Skill stat definition array.

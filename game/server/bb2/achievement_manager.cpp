@@ -80,7 +80,7 @@ void AchievementManager::AnnounceAchievement(int plIndex, const char *pcAchievem
 // Set an achievement here.
 bool AchievementManager::WriteToAchievement(CHL2MP_Player *pPlayer, const char *szAchievement, int iAchievementType)
 {
-	if (!CanWrite(pPlayer, szAchievement) || !CanWriteToType(szAchievement, iAchievementType))
+	if (!CanWrite(pPlayer, szAchievement, iAchievementType))
 	{
 		DevMsg("Failed to write to the achievement %s!\n", szAchievement);
 		return false;
@@ -109,8 +109,8 @@ bool AchievementManager::WriteToAchievement(CHL2MP_Player *pPlayer, const char *
 
 		// Give Some Reward:
 		const achievementStatItem_t *pAchiev = ACHIEVEMENTS::GetAchievementItem(szAchievement);
-		if (pAchiev && pAchiev->rewardValue)
-			pPlayer->CanLevelUp(pAchiev->rewardValue, NULL);
+		if (pAchiev && pAchiev->reward)
+			pPlayer->CanLevelUp(pAchiev->reward, NULL);
 
 		return true;
 	}
@@ -121,7 +121,7 @@ bool AchievementManager::WriteToAchievement(CHL2MP_Player *pPlayer, const char *
 // Write to a stat
 bool AchievementManager::WriteToStat(CHL2MP_Player *pPlayer, const char *szStat, int iForceValue, bool bAddTo)
 {
-	if (!CanWrite(pPlayer, szStat, true))
+	if (!CanWrite(pPlayer, szStat))
 	{
 		DevMsg("Failed to write to the stat %s!\n", szStat);
 		return false;
@@ -134,11 +134,10 @@ bool AchievementManager::WriteToStat(CHL2MP_Player *pPlayer, const char *szStat,
 		return false;
 	}
 
-	int iCurrentValue, iMaxValue;
+	int iCurrentValue = 0, iMaxValue = GetMaxValueForStat(szStat);
 	steamgameserverapicontext->SteamGameServerStats()->GetUserStat(pSteamClient, szStat, &iCurrentValue);
 
-	iMaxValue = GetMaxValueForStat(szStat);
-	// Make sure we're not above the max value:
+	// Make sure we're not above the max value!
 	if (iMaxValue <= iCurrentValue)
 		return false;
 
@@ -156,7 +155,7 @@ bool AchievementManager::WriteToStat(CHL2MP_Player *pPlayer, const char *szStat,
 	for (int i = 0; i < ACHIEVEMENTS::GetNumAchievements(); i++)
 	{
 		const achievementStatItem_t *pAchiev = ACHIEVEMENTS::GetAchievementItem(i);
-		if (pAchiev && (pAchiev->maxValue <= iCurrentValue) && pAchiev->szAchievement && pAchiev->szAchievement[0] && !strcmp(szStat, pAchiev->szStat))
+		if (pAchiev && (pAchiev->value <= iCurrentValue) && pAchiev->szAchievement && pAchiev->szAchievement[0] && !strcmp(szStat, pAchiev->szStat))
 			WriteToAchievement(pPlayer, pAchiev->szAchievement);
 	}
 
@@ -215,26 +214,18 @@ bool AchievementManager::CanLoadSteamStats(CHL2MP_Player *pPlayer)
 	return true;
 }
 
-// Are we allowed to do stuff at this time?
-bool AchievementManager::CanWrite(CHL2MP_Player *pClient, const char *param, bool bIsStat)
+// Can we write to this achiev/stat?
+bool AchievementManager::CanWrite(CHL2MP_Player *pClient, const char *szParam, int iAchievementType)
 {
-	if (!pClient || !pClient->m_bHasReadProfileData)
+	if (!pClient || !pClient->m_bHasReadProfileData || pClient->IsBot() || !IsGlobalStatsAllowed() || !szParam || !szParam[0])
 		return false;
 
-	// Are we using stats, and has cheats NOT been on?
-	if (GameBaseServer()->CanStoreSkills() != PROFILE_GLOBAL)
-		return false;
-
-	// Make sure that our interfaces have been locked and loaded.
-	if (!steamgameserverapicontext || !steamgameserverapicontext->SteamGameServerStats())
-		return false;
-
-	if (param && param[0])
+	if (iAchievementType == ACHIEVEMENT_TYPE_MAP)
 	{
 		for (int i = 0; i < ACHIEVEMENTS::GetNumAchievements(); i++)
 		{
 			const achievementStatItem_t *pAchiev = ACHIEVEMENTS::GetAchievementItem(i);
-			if ((bIsStat && pAchiev && !strcmp(param, pAchiev->szStat)) || (!bIsStat && pAchiev && !strcmp(param, pAchiev->szAchievement)))
+			if (pAchiev && (iAchievementType == pAchiev->type) && !strcmp(pAchiev->szAchievement, szParam))
 				return true;
 		}
 
@@ -244,25 +235,6 @@ bool AchievementManager::CanWrite(CHL2MP_Player *pClient, const char *param, boo
 	return true;
 }
 
-// Check if we can achieve this achievement.
-bool AchievementManager::CanWriteToType(const char *param, int iType)
-{
-	if (iType <= 0)
-		return true;
-
-	if (param && param[0])
-	{
-		for (int i = 0; i < ACHIEVEMENTS::GetNumAchievements(); i++)
-		{
-			const achievementStatItem_t *pAchiev = ACHIEVEMENTS::GetAchievementItem(i);
-			if (pAchiev && (iType == pAchiev->type) && !strcmp(pAchiev->szAchievement, param))
-				return true;
-		}
-	}
-
-	return false;
-}
-
 // Get the highest value for this stat. (if it is defined for multiple achievements it will have different max values)
 int AchievementManager::GetMaxValueForStat(const char *szStat)
 {
@@ -270,8 +242,8 @@ int AchievementManager::GetMaxValueForStat(const char *szStat)
 	for (int i = 0; i < ACHIEVEMENTS::GetNumAchievements(); i++)
 	{
 		const achievementStatItem_t *pAchiev = ACHIEVEMENTS::GetAchievementItem(i);
-		if (pAchiev && (iValue < pAchiev->maxValue) && !strcmp(szStat, pAchiev->szStat))
-			iValue = pAchiev->maxValue;
+		if (pAchiev && (iValue < pAchiev->value) && !strcmp(szStat, pAchiev->szStat))
+			iValue = pAchiev->value;
 	}
 	return iValue;
 }
