@@ -193,12 +193,14 @@ void CGameBaseServer::NewPlayerConnection(CHL2MP_Player *pClient)
 
 	GameBaseShared()->NewPlayerConnection(false);
 
+	char steamID[80];
+	Q_snprintf(steamID, 80, "%llu", pClient->GetSteamIDAsUInt64());
+
+	const sharedDataItem_t *pAdminItem = FindItemInSharedList(steamID, DATA_SECTION_SERVER_ADMIN);
+	pClient->SetAdminLevel(pAdminItem ? pAdminItem->iParam : 0);
+
 	if (engine->IsDedicatedServer())
 	{
-		char steamID[80];
-		Q_snprintf(steamID, 80, "%llu", pClient->GetSteamIDAsUInt64());
-
-		const char *ipAddress = "";
 		if (FindItemInSharedList(steamID, DATA_SECTION_DEVELOPER))
 			pClient->AddGroupIDFlag(GROUPID_IS_DEVELOPER);
 
@@ -208,11 +210,9 @@ void CGameBaseServer::NewPlayerConnection(CHL2MP_Player *pClient)
 		if (FindItemInSharedList(steamID, DATA_SECTION_TESTER))
 			pClient->AddGroupIDFlag(GROUPID_IS_TESTER);
 
-		const sharedDataItem_t *pAdminItem = FindItemInSharedList(steamID, DATA_SECTION_SERVER_ADMIN);
-		pClient->SetAdminLevel(pAdminItem ? pAdminItem->iParam : 0);
-
 		if (bb2_enable_ban_list.GetBool())
 		{
+			const char *ipAddress = "";
 			INetChannelInfo *info = engine->GetPlayerNetInfo(pClient->entindex());
 			if (info)
 			{
