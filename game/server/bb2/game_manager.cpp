@@ -181,7 +181,7 @@ CON_COMMAND_F(bb2_end_game, "End the game.", FCVAR_CHEAT)
 		return;
 
 	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pClient || (engine->IsDedicatedServer() && !pClient->IsAdminOnServer()))
+	if (!pClient || (engine->IsDedicatedServer() && !pClient->HasAdminLevel(ADMIN_LEVEL_MISC)))
 		return;
 
 	g_pGameManager->EndGame(atoi(args[1]));
@@ -193,7 +193,7 @@ CON_COMMAND_F(bb2_end_round, "End the round.", FCVAR_CHEAT)
 		return;
 
 	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pClient || (engine->IsDedicatedServer() && !pClient->IsAdminOnServer()))
+	if (!pClient || (engine->IsDedicatedServer() && !pClient->HasAdminLevel(ADMIN_LEVEL_MISC)))
 		return;
 
 	g_pGameManager->EndRound(atoi(args[1]));

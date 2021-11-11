@@ -256,9 +256,9 @@ CHL2MP_Player::CHL2MP_Player()
 	m_bHasFullySpawned = false;
 	m_bHasTriedToLoadStats = false;
 	m_bTriedToJoinGame = false;
-	m_bIsServerAdmin = false;
 	m_bPlayerUsedFirearm = false;
 	m_bEnableFlashlighOnSwitch = false;
+	m_iAdminLevel = 0;
 
 	m_flUpdateTime = 0.0f;
 	m_flNextResupplyTime = 0.0f;

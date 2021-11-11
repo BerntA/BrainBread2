@@ -236,8 +236,6 @@ enum ClientAttachmentTypes_t
 class CGameBaseShared
 {
 public:
-	CGameBaseShared();
-	~CGameBaseShared();
 
 	void Init();
 	void LoadBase();

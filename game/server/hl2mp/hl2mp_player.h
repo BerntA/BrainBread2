@@ -273,8 +273,9 @@ public:
 	void IncrementTotalDeaths(void) { m_iTotalDeaths++; }
 	void IncrementRoundDeaths(void) { m_iRoundDeaths++; }
 
-	void SetAdminStatus(bool value) { m_bIsServerAdmin = value; }
-	bool IsAdminOnServer(void) { return m_bIsServerAdmin; }
+	void SetAdminLevel(int mask) { m_iAdminLevel = mask; }
+	bool HasAdminLevel(int mask) { return ((m_iAdminLevel & mask) != 0); }
+	int GetAdminLevel(void) { return m_iAdminLevel; }
 
 	bool HasPlayerUsedFirearm(void) { return m_bPlayerUsedFirearm; }
 
@@ -325,7 +326,7 @@ private:
 	bool m_bHasFullySpawned;
 	bool m_bEnableFlashlighOnSwitch;
 
-	bool m_bIsServerAdmin;
+	int m_iAdminLevel;
 
 	// Achievements:
 	bool m_bPlayerUsedFirearm;

@@ -109,7 +109,7 @@ void CPlayerResource::UpdatePlayerData(void)
 			m_bConnected.Set(i, 1);
 			m_iTeam.Set(i, pPlayer->GetTeamNumber());
 			m_bAlive.Set(i, pPlayer->IsAlive() ? 1 : 0);
-			m_bAdmin.Set(i, pPlayer->IsAdminOnServer() ? 1 : 0);
+			m_bAdmin.Set(i, pPlayer->GetAdminLevel() ? 1 : 0);
 			m_iHealth.Set(i, MAX(0, pPlayer->GetHealth()));
 
 			if ((m_nUpdateCounter % 4) == 0)

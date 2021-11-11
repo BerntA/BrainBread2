@@ -17,6 +17,7 @@ struct sharedDataItem_t
 {
 	char szInfo[128];
 	int iType;
+	int iParam;
 };
 
 enum sharedDataTypes
@@ -29,6 +30,14 @@ enum sharedDataTypes
 	DATA_SECTION_SERVER_ADMIN,
 };
 
+enum AdminLevelMask
+{
+	ADMIN_LEVEL_NONE = 0x00, // Empty
+	ADMIN_LEVEL_KICK = 0x01, // a
+	ADMIN_LEVEL_BAN = 0x02, // b
+	ADMIN_LEVEL_MISC = 0x04, // c
+};
+
 enum profileSystemType
 {
 	PROFILE_NONE = 0,
@@ -39,8 +48,6 @@ enum profileSystemType
 class CGameBaseServer
 {
 public:
-	CGameBaseServer();
-	~CGameBaseServer();
 
 	void Init();
 	void Release();
@@ -49,8 +56,8 @@ public:
 
 	// Global
 	void LoadSharedInfo(void);
-	void AddItemToSharedList(const char *str, int type);
-	bool FindItemInSharedList(const char *str, int type);
+	void AddItemToSharedList(const char *str, int type, int param = 0);
+	const sharedDataItem_t *FindItemInSharedList(const char *str, int type) const;
 	void LoadServerTags(void);
 	void CheckMapData(void);
 	void SetCurrentMapAddon(const char *map);

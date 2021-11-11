@@ -74,14 +74,6 @@ CGameBaseShared* GameBaseShared()
 	return &gGameBaseShared;
 }
 
-CGameBaseShared::CGameBaseShared()
-{
-}
-
-CGameBaseShared::~CGameBaseShared()
-{
-}
-
 void CGameBaseShared::Init()
 {
 #ifdef CLIENT_DLL

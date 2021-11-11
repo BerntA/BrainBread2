@@ -1274,7 +1274,7 @@ void CHL2MPRules::CreateBanKickVote(CBasePlayer *pVoter, CBasePlayer *pTarget, b
 	}
 
 	CHL2MP_Player *pTargetClient = ToHL2MPPlayer(pTarget);
-	if (pTargetClient && pTargetClient->IsAdminOnServer())
+	if (pTargetClient && pTargetClient->GetAdminLevel())
 	{
 		GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_KICKBAN_ADMIN", GAME_TIP_WARNING, pVoter->entindex());
 		return;

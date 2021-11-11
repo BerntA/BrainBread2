@@ -24,14 +24,6 @@ CGameBaseServer *GameBaseServer()
 	return &gServerMode;
 }
 
-CGameBaseServer::CGameBaseServer()
-{
-}
-
-CGameBaseServer::~CGameBaseServer()
-{
-}
-
 void CGameBaseServer::Init()
 {
 	m_flPostLoadTimer = 0.0f;
@@ -41,7 +33,6 @@ void CGameBaseServer::Init()
 	m_bShouldChangeMap = false;
 	bAllowStatsForMap = false;
 	szNextMap[0] = 0;
-
 	m_pSharedDataList.Purge();
 }
 
@@ -60,34 +51,46 @@ void CGameBaseServer::LoadSharedInfo(void)
 {
 	m_pSharedDataList.Purge();
 	KeyValues *pkvAdminData = new KeyValues("AdminList");
-	if (pkvAdminData->LoadFromFile(filesystem, "data/server/admins.txt", "MOD"))
+	if (pkvAdminData->LoadFromFile(filesystem, "data/settings/admins.txt", "MOD"))
 	{
+		char pchTemp[16]; pchTemp[0] = 0;
 		for (KeyValues *sub = pkvAdminData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-			AddItemToSharedList(sub->GetString(), DATA_SECTION_SERVER_ADMIN);
+		{
+			int mask = ADMIN_LEVEL_NONE;
+			Q_strncpy(pchTemp, sub->GetName(), sizeof(pchTemp));
+
+			if (Q_stristr(pchTemp, "a"))
+				mask |= ADMIN_LEVEL_KICK;
+
+			if (Q_stristr(pchTemp, "b"))
+				mask |= ADMIN_LEVEL_BAN;
+
+			if (Q_stristr(pchTemp, "c"))
+				mask |= ADMIN_LEVEL_MISC;
+
+			AddItemToSharedList(sub->GetString(), DATA_SECTION_SERVER_ADMIN, mask);
+		}
 	}
 	pkvAdminData->deleteThis();
 }
 
-void CGameBaseServer::AddItemToSharedList(const char *str, int type)
+void CGameBaseServer::AddItemToSharedList(const char *str, int type, int param)
 {
 	sharedDataItem_t item;
 	Q_strncpy(item.szInfo, str, 128);
 	item.iType = type;
+	item.iParam = param;
 	m_pSharedDataList.AddToTail(item);
 }
 
-bool CGameBaseServer::FindItemInSharedList(const char *str, int type)
+const sharedDataItem_t *CGameBaseServer::FindItemInSharedList(const char *str, int type) const
 {
-	if (!m_pSharedDataList.Count())
-		return false;
-
 	for (int i = 0; i < m_pSharedDataList.Count(); i++)
 	{
-		if ((type == m_pSharedDataList[i].iType) && (!strcmp(str, m_pSharedDataList[i].szInfo)))
-			return true;
+		if ((type == m_pSharedDataList[i].iType) && !strcmp(str, m_pSharedDataList[i].szInfo))
+			return &m_pSharedDataList[i];
 	}
-
-	return false;
+	return NULL;
 }
 
 void CGameBaseServer::LoadServerTags(void)
@@ -205,8 +208,8 @@ void CGameBaseServer::NewPlayerConnection(CHL2MP_Player *pClient)
 		if (FindItemInSharedList(steamID, DATA_SECTION_TESTER))
 			pClient->AddGroupIDFlag(GROUPID_IS_TESTER);
 
-		if (FindItemInSharedList(steamID, DATA_SECTION_SERVER_ADMIN))
-			pClient->SetAdminStatus(true);
+		const sharedDataItem_t *pAdminItem = FindItemInSharedList(steamID, DATA_SECTION_SERVER_ADMIN);
+		pClient->SetAdminLevel(pAdminItem ? pAdminItem->iParam : 0);
 
 		if (bb2_enable_ban_list.GetBool())
 		{
@@ -576,7 +579,7 @@ void CGameBaseServer::OnUpdate(int iClientsInGame)
 			GameBaseShared()->GetServerWorkshopData()->Initialize();
 
 		uint32 unIP = steamgameserverapicontext->SteamGameServer()->GetPublicIP();
-		bIsServerBlacklisted = FindItemInSharedList(GetPublicIP(unIP), DATA_SECTION_SERVER_BLACKLIST);
+		bIsServerBlacklisted = (FindItemInSharedList(GetPublicIP(unIP), DATA_SECTION_SERVER_BLACKLIST) != NULL);
 		if (bIsServerBlacklisted)
 			Warning("This IP has been blacklisted, your servers will not be visible for the public nor will you be able to enable global profile saving.\n");
 
@@ -653,17 +656,31 @@ CON_COMMAND_F(player_vote_kickban, "Vote to kick or ban someone.", FCVAR_HIDDEN)
 	HL2MPRules()->CreateBanKickVote(pClient, UTIL_PlayerByUserId(iTarget), (iType != 0));
 }
 
+static bool IsValidAdmin(CHL2MP_Player *pClient, int mask)
+{
+	if (!pClient || pClient->IsBot())
+		return false;
+
+	if (!pClient->GetAdminLevel())
+	{
+		ClientPrint(pClient, HUD_PRINTCONSOLE, "You are not an admin on this server!");
+		return false;
+	}
+
+	if (!pClient->HasAdminLevel(mask))
+	{
+		ClientPrint(pClient, HUD_PRINTCONSOLE, "You do not have the privilege to execute this command!");
+		return false;
+	}
+
+	return true;
+}
+
 CON_COMMAND(admin_kick_id, "Admin Kick Command")
 {
 	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pClient)
+	if (!IsValidAdmin(pClient, ADMIN_LEVEL_KICK))
 		return;
-
-	if (pClient->IsBot() || !pClient->IsAdminOnServer())
-	{
-		ClientPrint(pClient, HUD_PRINTCONSOLE, "You are not an admin on this server!");
-		return;
-	}
 
 	if (args.ArgC() < 3)
 	{
@@ -683,14 +700,8 @@ CON_COMMAND(admin_kick_id, "Admin Kick Command")
 CON_COMMAND(admin_kick_bots, "Kick all bots from the server.")
 {
 	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pClient)
+	if (!IsValidAdmin(pClient, ADMIN_LEVEL_KICK))
 		return;
-
-	if (pClient->IsBot() || !pClient->IsAdminOnServer())
-	{
-		ClientPrint(pClient, HUD_PRINTCONSOLE, "You are not an admin on this server!");
-		return;
-	}
 
 	char pchServerCMD[80];
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
@@ -707,14 +718,8 @@ CON_COMMAND(admin_kick_bots, "Kick all bots from the server.")
 CON_COMMAND(admin_ban_id, "Admin Ban Command")
 {
 	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pClient)
+	if (!IsValidAdmin(pClient, ADMIN_LEVEL_BAN))
 		return;
-
-	if (pClient->IsBot() || !pClient->IsAdminOnServer())
-	{
-		ClientPrint(pClient, HUD_PRINTCONSOLE, "You are not an admin on this server!");
-		return;
-	}
 
 	if (args.ArgC() < 4)
 	{
@@ -743,14 +748,8 @@ CON_COMMAND(admin_ban_id, "Admin Ban Command")
 CON_COMMAND(admin_changelevel, "Admin Changelevel Command")
 {
 	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pClient)
+	if (!IsValidAdmin(pClient, ADMIN_LEVEL_MISC))
 		return;
-
-	if (pClient->IsBot() || !pClient->IsAdminOnServer())
-	{
-		ClientPrint(pClient, HUD_PRINTCONSOLE, "You are not an admin on this server!");
-		return;
-	}
 
 	if (args.ArgC() != 2)
 	{
@@ -775,14 +774,8 @@ CON_COMMAND(admin_changelevel, "Admin Changelevel Command")
 CON_COMMAND(admin_spectate, "Admin Spectate Command")
 {
 	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pClient)
+	if (!IsValidAdmin(pClient, ADMIN_LEVEL_MISC))
 		return;
-
-	if (pClient->IsBot() || !pClient->IsAdminOnServer())
-	{
-		ClientPrint(pClient, HUD_PRINTCONSOLE, "You are not an admin on this server!");
-		return;
-	}
 
 	if (!HL2MPRules()->IsFastPacedGameplay())
 	{
@@ -799,14 +792,8 @@ CON_COMMAND(admin_spectate, "Admin Spectate Command")
 CON_COMMAND(admin_joinhuman, "Admin Join Human Command")
 {
 	CHL2MP_Player *pClient = ToHL2MPPlayer(UTIL_GetCommandClient());
-	if (!pClient)
+	if (!IsValidAdmin(pClient, ADMIN_LEVEL_MISC))
 		return;
-
-	if (pClient->IsBot() || !pClient->IsAdminOnServer())
-	{
-		ClientPrint(pClient, HUD_PRINTCONSOLE, "You are not an admin on this server!");
-		return;
-	}
 
 	if (!HL2MPRules()->IsFastPacedGameplay())
 	{
