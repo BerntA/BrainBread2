@@ -500,16 +500,15 @@ void CWorld::RegisterSharedEvents( void )
 	EventList_RegisterSharedEvents();
 }
 
-
-void CWorld::Spawn( void )
+void CWorld::Spawn(void)
 {
-	SetLocalOrigin( vec3_origin );
-	SetLocalAngles( vec3_angle );
+	SetLocalOrigin(vec3_origin);
+	SetLocalAngles(vec3_angle);
 	// NOTE:  SHOULD NEVER BE ANYTHING OTHER THAN 1!!!
-	SetModelIndex( 1 );
+	SetModelIndex(1);
 	// world model
-	SetModelName( AllocPooledString( modelinfo->GetModelName( GetModel() ) ) );
-	AddFlag( FL_WORLDBRUSH );
+	SetModelName(AllocPooledString(modelinfo->GetModelName(GetModel())));
+	AddFlag(FL_WORLDBRUSH);
 
 	g_EventQueue.Init();
 	Precache();
@@ -528,8 +527,6 @@ void CWorld::Spawn( void )
 		bb2_zombie_max.SetValue(m_iMaxZombies);
 	else
 		bb2_zombie_max.Revert();
-
-	bb2_spawn_frequency.Revert();
 }
 
 static const char *g_DefaultLightstyles[] =

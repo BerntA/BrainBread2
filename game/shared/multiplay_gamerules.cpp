@@ -116,7 +116,8 @@ ConVar bb2_vote_kick_ban_time("bb2_vote_kick_ban_time", "5", FCVAR_REPLICATED, "
 ConVar bb2_allow_mercy( "bb2_allow_mercy", "0", FCVAR_REPLICATED, "If greater than 0, zombies will respawn as humans when they have died this many times.", true, 0.0f, true, 10.0f );
 ConVar bb2_zombie_kills_required("bb2_zombie_kills_required", "3", FCVAR_REPLICATED, "If greater than 0, zombies can respawn as humans when they've killed at least this many hostiles. Click a certain button to respawn, whenever you're ready!", true, 0.0f, true, 10.0f);
 
-ConVar bb2_spawn_frequency( "bb2_spawn_frequency", "1.0", FCVAR_REPLICATED, "When a wave has been spawned this is the time between each zombie to spawn. Shouldn't be too low due to lag.", true, 0.1f, false, 0.0f );
+ConVar bb2_zombie_spawn_freq_min("bb2_zombie_spawn_freq_min", "0.1", FCVAR_REPLICATED, "Min time between spawning zombies.", true, 0.1f, false, 0.0f);
+ConVar bb2_zombie_spawn_freq_max("bb2_zombie_spawn_freq_max", "0.2", FCVAR_REPLICATED, "Max time between spawning zombies.", true, 0.1f, false, 0.0f);
 
 ConVar bb2_allow_npc_to_score("bb2_allow_npc_to_score", "1", FCVAR_REPLICATED, "Should friendly npcs be allowed to affect scoring? For example for quests.", true, 0.0f, true, 1.0f);
 

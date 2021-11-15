@@ -48,12 +48,15 @@ public:
 private:
 
 	// Hammer Variables...
+	int m_iZombiesMin;
+	int m_iZombiesMax;
 	int m_iZombiesToSpawn;
+
 	float m_flMaxDistance;
 	float m_flMaxZDifference;
-	float m_flSpawnFrequency;
 	float m_flSpawnInterval;
 	float m_flRandomSpawnPercent;
+
 	int m_iTypeToSpawn;
 
 	// Current Spawned Ents:
@@ -77,7 +80,7 @@ protected:
 
 	float GetSpawnFrequency(void);
 	void TraceZombieBBox(const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm, CBaseEntity *pEntity);
-	void SpawnWave();
+	void SpawnZombie();
 	const char *GetZombieClassnameToSpawn();
 
 	CUtlVector<int> m_vZombieList;

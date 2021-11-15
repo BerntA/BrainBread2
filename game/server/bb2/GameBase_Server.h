@@ -78,6 +78,7 @@ public:
 
 	// Shared
 	// Does this server allow you to store your skills on round end/joining? (global DB)
+	bool CanEditSteamStats();
 	int CanStoreSkills();
 	bool HasIllegalConVarValues();
 	// Think func, updated from hl2mp g-rules.

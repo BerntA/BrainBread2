@@ -655,7 +655,7 @@ void CBaseCombatWeapon::Drop( const Vector &vecVelocity )
 	}	
 #endif
 
-	m_GlowColor = ((Clip() <= 0) && (GetAmmoCount() <= 0)) ? WEAPON_GLOW_NOAMMO : WEAPON_GLOW;
+	m_GlowColor = ((Clip() <= 0) && (GetAmmoCount() <= 0) && !IsMeleeWeapon()) ? WEAPON_GLOW_NOAMMO : WEAPON_GLOW;
 }
 
 //-----------------------------------------------------------------------------

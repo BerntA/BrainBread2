@@ -168,7 +168,7 @@ bool AchievementManager::WriteToStatPvP(CHL2MP_Player *pPlayer, const char *szSt
 {
 	// Make sure we have loaded stats, have PvP mode on, and have a server context!
 	if (
-		!pPlayer || !pPlayer->HasLoadedStats() || pPlayer->IsBot() || !engine->IsDedicatedServer() ||
+		!pPlayer || !pPlayer->HasLoadedStats() || pPlayer->IsBot() || !GameBaseServer()->CanEditSteamStats() ||
 		!steamgameserverapicontext || !steamgameserverapicontext->SteamGameServerStats() ||
 		!HL2MPRules() || !HL2MPRules()->IsFastPacedGameplay()
 		)
@@ -183,7 +183,8 @@ bool AchievementManager::WriteToStatPvP(CHL2MP_Player *pPlayer, const char *szSt
 
 	int iCurrentValue;
 	steamgameserverapicontext->SteamGameServerStats()->GetUserStat(pSteamClient, szStat, &iCurrentValue);
-	iCurrentValue = clamp((iCurrentValue + 1), 0, 9999999);
+	iCurrentValue++;
+	iCurrentValue = clamp(iCurrentValue, 0, 9999999);
 
 	steamgameserverapicontext->SteamGameServerStats()->SetUserStat(pSteamClient, szStat, iCurrentValue);
 	steamgameserverapicontext->SteamGameServerStats()->StoreUserStats(pSteamClient);

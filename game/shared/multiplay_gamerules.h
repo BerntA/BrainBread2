@@ -66,7 +66,6 @@ extern ConVar bb2_hard_scaling;
 extern ConVar bb2_allow_latejoin;
 extern ConVar bb2_allow_mercy;
 extern ConVar bb2_zombie_kills_required;
-extern ConVar bb2_spawn_frequency;
 extern ConVar bb2_roundstart_freezetime;
 extern ConVar bb2_vote_disable_kick;
 extern ConVar bb2_vote_disable_ban;
@@ -81,6 +80,9 @@ extern ConVar bb2_ban_time;
 extern ConVar bb2_vote_roundstart_delay;
 extern ConVar bb2_vote_kick_ban_time;
 extern ConVar bb2_allow_npc_to_score;
+
+extern ConVar bb2_zombie_spawn_freq_min;
+extern ConVar bb2_zombie_spawn_freq_max;
 
 extern ConVar bb2_enable_afk_kicker;
 extern ConVar bb2_afk_kick_time;

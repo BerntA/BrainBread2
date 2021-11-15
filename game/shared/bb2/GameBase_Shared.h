@@ -300,6 +300,17 @@ public:
 	int GetNumActivePlayers(void) { return m_iNumActivePlayers; }
 	int GetAveragePlayerLevel(void) { return m_iAvgPlayerLvL; }
 
+	float GetPlayerScaledValue(float min, float max)
+	{
+		float flScaling = ((float)GetNumActivePlayers()) / (MAX_PLAYERS - 2.0f);
+		float flNewValue = 0.0f;
+
+		flScaling = clamp(flScaling, 0.0f, 1.0f);
+		flNewValue = min + (flScaling * (max - min));
+
+		return clamp(flNewValue, min, max);
+	}
+
 	// Misc
 	void ComputePlayerWeight(CHL2MP_Player *pPlayer);
 #endif

@@ -511,6 +511,12 @@ void CGameBaseServer::PostInit()
 	LoadServerTags();
 }
 
+// Are we allowed to manipulate steam stats?
+bool CGameBaseServer::CanEditSteamStats()
+{
+	return (!bFoundCheats && engine->IsDedicatedServer() && IsChecksumsValid() && !IsServerBlacklisted() && !bFoundIllegalPlugin && sv_cheats && !sv_cheats->GetBool() && (gpGlobals->maxClients > 1));
+}
+
 // Are you allowed to store your skills?
 int CGameBaseServer::CanStoreSkills()
 {
@@ -527,8 +533,7 @@ int CGameBaseServer::CanStoreSkills()
 	{
 		// Blacklisted? Using sourcemod or similar? Using cheats? Not hosting whitelisted maps? Exploiting through convars like gravity? etc...
 		// Did this server ever have cheats on? If so we'll not allow this server to load any stats until you restart the map with sv_cheats off.
-		if (IsServerBlacklisted() || bFoundIllegalPlugin || !bAllowStatsForMap || HasIllegalConVarValues() || !IsChecksumsValid() ||
-			bFoundCheats || (gpGlobals->maxClients <= 1) || (sv_cheats && sv_cheats->GetBool()) || !engine->IsDedicatedServer())
+		if (!CanEditSteamStats() || !bAllowStatsForMap || HasIllegalConVarValues())
 			return PROFILE_NONE;
 	}
 

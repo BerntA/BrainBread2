@@ -101,11 +101,11 @@ DEFINE_OUTPUT(m_OnForceStop, "OnStop"),
 
 // Hammer Keyfields
 DEFINE_KEYFIELD(m_iTypeToSpawn, FIELD_INTEGER, "ZombieType"),
-DEFINE_KEYFIELD(m_iZombiesToSpawn, FIELD_INTEGER, "ZombieNumber"),
+DEFINE_KEYFIELD(m_iZombiesMin, FIELD_INTEGER, "ZombieNumber"),
+DEFINE_KEYFIELD(m_iZombiesMax, FIELD_INTEGER, "ZombieNumberMax"),
 DEFINE_KEYFIELD(m_flMaxDistance, FIELD_FLOAT, "MaximumDistance"),
 DEFINE_KEYFIELD(m_flMaxZDifference, FIELD_FLOAT, "MaximumZDifference"),
 DEFINE_KEYFIELD(m_flSpawnInterval, FIELD_FLOAT, "SpawnInterval"),
-DEFINE_KEYFIELD(m_flSpawnFrequency, FIELD_FLOAT, "SpawnFrequency"),
 DEFINE_KEYFIELD(m_flRandomSpawnPercent, FIELD_FLOAT, "RandomSpawnChance"),
 DEFINE_KEYFIELD(m_bSpawnNoMatterWhat, FIELD_BOOLEAN, "AutoSpawn"),
 
@@ -122,7 +122,9 @@ CZombieVolume::CZombieVolume()
 {
 	m_flSpawnInterval = 10.0f;
 	m_flRandomSpawnPercent = 20.0f;
-	m_iZombiesToSpawn = 5;
+
+	m_iZombiesMin = m_iZombiesMax = m_iZombiesToSpawn = 0;
+
 	m_iSpawnNum = 0;
 	m_iTypeToSpawn = 0;
 	m_flNextSpawnWave = 0.0f;
@@ -136,7 +138,6 @@ CZombieVolume::CZombieVolume()
 
 	m_flMaxDistance = bb2_zombie_spawner_distance.GetFloat();
 	m_flMaxZDifference = 0.0f;
-	m_flSpawnFrequency = 0.0f;
 
 	m_vZombieList.Purge();
 	g_pZombieVolumes.AddToTail(this);
@@ -156,11 +157,7 @@ void CZombieVolume::Spawn()
 	SetModel(STRING(GetModelName()));
 	SetBlocksLOS(false);
 	m_nRenderMode = kRenderEnvironmental;
-
-	if (m_iZombiesToSpawn > 50)
-		m_iZombiesToSpawn = 50;
-	else if (m_iZombiesToSpawn <= 0)
-		m_iZombiesToSpawn = 5;
+	m_iZombiesMax = MAX(m_iZombiesMin, m_iZombiesMax);
 
 	if (HasSpawnFlags(SF_STARTACTIVE))
 	{
@@ -172,11 +169,15 @@ void CZombieVolume::Spawn()
 
 void CZombieVolume::VolumeThink()
 {
+	float flSpawnFreq = 0.1f;
+
 	if (m_flNextSpawnWave <= gpGlobals->curtime)
 	{
 		m_flNextSpawnWave = gpGlobals->curtime + m_flSpawnInterval;
 		m_OnWaveSpawned.FireOutput(this, this);
 		m_iSpawnNum = 0;
+		m_iZombiesToSpawn = ((int)GameBaseShared()->GetPlayerScaledValue(m_iZombiesMin, m_iZombiesMax));
+		m_iZombiesToSpawn = clamp(m_iZombiesToSpawn, 1, 50);
 	}
 
 	// If the round has started + we haven't reached any limits, try to spawn!
@@ -185,15 +186,17 @@ void CZombieVolume::VolumeThink()
 		if (HL2MPRules()->CanSpawnZombie())
 		{
 			if (m_bSpawnNoMatterWhat || IsAllowedToSpawn(this, m_flMaxDistance, m_flMaxZDifference, (HasSpawnFlags(SF_NOVISCHECK) == false)))
-				SpawnWave();
+			{
+				SpawnZombie();
+				flSpawnFreq = GetSpawnFrequency();
+				m_flNextSpawnWave += flSpawnFreq;
+			}
 		}
-		else // Not able to spawn, tell zomb class to mark some for quick death stuff!
-		{
+		else // Not able to spawn, tell zomb class to mark some for quick death stuff!		
 			CNPC_BaseZombie::MarkOldestNPCForDeath();
-		}
 	}
 
-	SetNextThink(gpGlobals->curtime + GetSpawnFrequency());
+	SetNextThink(gpGlobals->curtime + flSpawnFreq);
 }
 
 void CZombieVolume::InputStartSpawn(inputdata_t &inputData)
@@ -212,30 +215,19 @@ void CZombieVolume::InputStopSpawn(inputdata_t &inputData)
 
 float CZombieVolume::GetSpawnFrequency(void)
 {
-	if (m_flSpawnFrequency > 0.0f)
-		return m_flSpawnFrequency;
-
-	return bb2_spawn_frequency.GetFloat();
+	return RandomDoubleNumber(bb2_zombie_spawn_freq_min.GetFloat(), bb2_zombie_spawn_freq_max.GetFloat());
 }
 
 void CZombieVolume::TraceZombieBBox(const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm, CBaseEntity *pEntity)
 {
-	Vector ZombieMins = Vector(-25, -25, 0);
-	Vector ZombieMax = Vector(25, 25, 74);
-
-	// Here the zombies will spawn standing up, not lying down, use a smaller hull!
-	if (HasSpawnFlags(SF_FASTSPAWN))
-	{
-		ZombieMins = Vector(-18, -18, 0);
-		ZombieMax = Vector(18, 18, 74);
-	}
-
+	Vector ZombieMins = (HasSpawnFlags(SF_FASTSPAWN) ? Vector(-18, -18, 0) : Vector(-25, -25, 0));
+	Vector ZombieMax = (HasSpawnFlags(SF_FASTSPAWN) ? Vector(18, 18, 74) : Vector(25, 25, 74));
 	Ray_t ray;
 	ray.Init(start, end, ZombieMins, ZombieMax);
 	UTIL_TraceRay(ray, fMask, pEntity, collisionGroup, &pm);
 }
 
-void CZombieVolume::SpawnWave()
+void CZombieVolume::SpawnZombie()
 {
 	// Do we only want to spawn new zombos if the old ones died?
 	if (HasSpawnFlags(SF_RESPAWN_ONLY_IF_DEAD) && (m_vZombieList.Count() >= m_iZombiesToSpawn))
