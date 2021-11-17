@@ -502,8 +502,6 @@ void CAI_BaseNPC::CleanupOnDeath( CBaseEntity *pCulprit, bool bFireDeathOutput )
 			m_pSquad = NULL;
 		}
 	}
-	else
-		DevMsg( "Unexpected double-death-cleanup\n" );
 }
 
 //-----------------------------------------------------------------------------

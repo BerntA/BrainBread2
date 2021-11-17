@@ -5,221 +5,106 @@
 // $NoKeywords: $
 //=============================================================================//
 
-#include <string.h>
-
 #include "cbase.h"
 #include "triggers.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-//------------------------------------------------------------------------------
-// FIXME: This really should inherit from something	more lightweight
-//------------------------------------------------------------------------------
-
-
-//------------------------------------------------------------------------------
-// Purpose : Shadow control entity
-//------------------------------------------------------------------------------
-class CColorCorrectionVolume : public CBaseTrigger
+class CColorCorrectionVolume : public CBaseEntity
 {
-	DECLARE_CLASS( CColorCorrectionVolume, CBaseTrigger );
+	DECLARE_CLASS(CColorCorrectionVolume, CBaseEntity);
 public:
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
 
 	CColorCorrectionVolume();
 
-	void Spawn( void );
-	bool KeyValue( const char *szKeyName, const char *szValue );
+	void Spawn(void);
+	bool KeyValue(const char *szKeyName, const char *szValue);
 	int  UpdateTransmitState();
 
-	void ThinkFunc();
-
-	virtual bool PassesTriggerFilters(CBaseEntity *pOther);
-	virtual void StartTouch( CBaseEntity *pEntity );
-	virtual void EndTouch( CBaseEntity *pEntity );
-	
 	// Inputs
-	void	InputEnable( inputdata_t &inputdata );
-	void	InputDisable( inputdata_t &inputdata );
+	void InputEnable(inputdata_t &inputdata);
+	void InputDisable(inputdata_t &inputdata);
 
 private:
 
-	bool		m_bEnabled;
-	bool		m_bStartDisabled;
+	CNetworkVar(bool, m_bDisabled);
+	CNetworkVar(float, m_FadeDuration);
+	CNetworkString(m_lookupFilename, MAX_PATH);
 
-	CNetworkVar( float, m_Weight );
-	CNetworkVar( float, m_MaxWeight ); 
-	CNetworkString( m_lookupFilename, MAX_PATH );
-
-	float		m_LastEnterWeight;
-	float		m_LastEnterTime;
-
-	float		m_LastExitWeight;
-	float		m_LastExitTime;
-
-	float		m_FadeDuration;
+	CNetworkVector(m_vecBoundsMin);
+	CNetworkVector(m_vecBoundsMax);
 };
 
 LINK_ENTITY_TO_CLASS(color_correction_volume, CColorCorrectionVolume);
 
-BEGIN_DATADESC( CColorCorrectionVolume )
+BEGIN_DATADESC(CColorCorrectionVolume)
 
-	DEFINE_THINKFUNC( ThinkFunc ),
+DEFINE_KEYFIELD(m_bDisabled, FIELD_BOOLEAN, "StartDisabled"),
+DEFINE_KEYFIELD(m_FadeDuration, FIELD_FLOAT, "fadeDuration"),
+DEFINE_AUTO_ARRAY_KEYFIELD(m_lookupFilename, FIELD_CHARACTER, "filename"),
 
-	DEFINE_KEYFIELD( m_FadeDuration, FIELD_FLOAT, "fadeDuration" ),
-	DEFINE_KEYFIELD( m_MaxWeight,         FIELD_FLOAT,   "maxweight" ),
-	DEFINE_AUTO_ARRAY_KEYFIELD( m_lookupFilename,    FIELD_CHARACTER,  "filename" ),
-
-	DEFINE_KEYFIELD( m_bEnabled,		  FIELD_BOOLEAN, "enabled" ),
-	DEFINE_KEYFIELD( m_bStartDisabled,    FIELD_BOOLEAN, "StartDisabled" ),
-
-	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),
+DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
+DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
 
 END_DATADESC()
 
-
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CColorCorrectionVolume, DT_ColorCorrectionVolume)
-	SendPropFloat( SENDINFO(m_Weight) ),
-	SendPropString( SENDINFO(m_lookupFilename) ),
+SendPropBool(SENDINFO(m_bDisabled)),
+SendPropFloat(SENDINFO(m_FadeDuration)),
+SendPropString(SENDINFO(m_lookupFilename)),
+SendPropVector(SENDINFO(m_vecBoundsMin), -1, SPROP_COORD),
+SendPropVector(SENDINFO(m_vecBoundsMax), -1, SPROP_COORD),
 END_SEND_TABLE()
 
-
-CColorCorrectionVolume::CColorCorrectionVolume() : BaseClass()
+CColorCorrectionVolume::CColorCorrectionVolume()
 {
-	m_bEnabled = true;
-	m_MaxWeight = 1.0f;
+	m_bDisabled = false;
+	m_FadeDuration = 10.0f;
 	m_lookupFilename.GetForModify()[0] = 0;
 }
-
 
 //------------------------------------------------------------------------------
 // Purpose : Send even though we don't have a model
 //------------------------------------------------------------------------------
 int CColorCorrectionVolume::UpdateTransmitState()
 {
-	// ALWAYS transmit to all clients.
-	return SetTransmitState( FL_EDICT_ALWAYS );
+	return SetTransmitState(FL_EDICT_ALWAYS); // ALWAYS transmit to all clients.
 }
 
-
-bool CColorCorrectionVolume::KeyValue( const char *szKeyName, const char *szValue )
+bool CColorCorrectionVolume::KeyValue(const char *szKeyName, const char *szValue)
 {
-	if ( FStrEq( szKeyName, "filename" ) )
+	if (FStrEq(szKeyName, "filename"))
 	{
-		Q_strncpy( m_lookupFilename.GetForModify(), szValue, MAX_PATH );
-
-		return true;
-	}
-	else if ( FStrEq( szKeyName, "maxweight" ) )
-	{
-		float max_weight;
-		sscanf( szValue, "%f", &max_weight );
-		m_MaxWeight = max_weight;
-
+		Q_strncpy(m_lookupFilename.GetForModify(), szValue, MAX_PATH);
 		return true;
 	}
 
-	return BaseClass::KeyValue( szKeyName, szValue );
+	return BaseClass::KeyValue(szKeyName, szValue);
 }
 
-//------------------------------------------------------------------------------
-// Purpose :
-//------------------------------------------------------------------------------
-void CColorCorrectionVolume::Spawn( void )
+void CColorCorrectionVolume::Spawn(void)
 {
-	BaseClass::Spawn();
-
-	AddEFlags( EFL_FORCE_CHECK_TRANSMIT | EFL_DIRTY_ABSTRANSFORM );
+	AddEFlags(EFL_FORCE_CHECK_TRANSMIT | EFL_DIRTY_ABSTRANSFORM);
 	Precache();
+	SetSolid(SOLID_NONE);
+	SetMoveType(MOVETYPE_NONE);
+	SetModel(STRING(GetModelName()));
+	SetBlocksLOS(false);
+	m_nRenderMode = kRenderEnvironmental;
 
-	SetSolid( SOLID_BSP );
-	SetSolidFlags( FSOLID_TRIGGER | FSOLID_NOT_SOLID );
-	SetModel( STRING( GetModelName() ) );
-
-	SetThink( &CColorCorrectionVolume::ThinkFunc );
-	SetNextThink( gpGlobals->curtime + 0.01f );
-
-	if( m_bStartDisabled )
-	{
-		m_bEnabled = false;
-	}
-	else
-	{
-		m_bEnabled = true;
-	}
+	m_vecBoundsMin = WorldSpaceCenter() + WorldAlignMins();
+	m_vecBoundsMax = WorldSpaceCenter() + WorldAlignMaxs();
 }
 
-bool CColorCorrectionVolume::PassesTriggerFilters( CBaseEntity *pEntity )
+void CColorCorrectionVolume::InputEnable(inputdata_t &inputdata)
 {
-	return (pEntity && pEntity->IsPlayer());
+	m_bDisabled = false;
 }
 
-void CColorCorrectionVolume::StartTouch( CBaseEntity *pEntity )
+void CColorCorrectionVolume::InputDisable(inputdata_t &inputdata)
 {
-	m_LastEnterTime = gpGlobals->curtime;
-	m_LastEnterWeight = m_Weight;
-}
-
-void CColorCorrectionVolume::EndTouch( CBaseEntity *pEntity )
-{
-	m_LastExitTime = gpGlobals->curtime;
-	m_LastExitWeight = m_Weight;
-}
-
-void CColorCorrectionVolume::ThinkFunc( )
-{
-	if( !m_bEnabled )
-	{
-		m_Weight.Set( 0.0f );
-	}
-	else
-	{
-		if( m_LastEnterTime > m_LastExitTime )
-		{
-			// we most recently entered the volume
-		
-			if( m_Weight < 1.0f )
-			{
-				float dt = gpGlobals->curtime - m_LastEnterTime;
-				float weight = m_LastEnterWeight + dt / ((1.0f-m_LastEnterWeight)*m_FadeDuration);
-				if( weight>1.0f )
-					weight = 1.0f;
-
-				m_Weight = weight;
-			}
-		}
-		else
-		{
-			// we most recently exitted the volume
-		
-			if( m_Weight > 0.0f )
-			{
-				float dt = gpGlobals->curtime - m_LastExitTime;
-				float weight = (1.0f-m_LastExitWeight) + dt / (m_LastExitWeight*m_FadeDuration);
-				if( weight>1.0f )
-					weight = 1.0f;
-
-				m_Weight = 1.0f - weight;
-			}
-		}
-	}
-
-	SetNextThink( gpGlobals->curtime + 0.01f );
-}
-
-
-//------------------------------------------------------------------------------
-// Purpose : Input handlers
-//------------------------------------------------------------------------------
-void CColorCorrectionVolume::InputEnable( inputdata_t &inputdata )
-{
-	m_bEnabled = true;
-}
-
-void CColorCorrectionVolume::InputDisable( inputdata_t &inputdata )
-{
-	m_bEnabled = false;
+	m_bDisabled = true;
 }
