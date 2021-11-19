@@ -1,9 +1,8 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright Bernt Andreas Eide, All rights reserved. ============//
 //
-// Purpose : Singleton manager for color correction on the client
+// Purpose: Color Correction Manager
 //
-// $NoKeywords: $
-//===========================================================================//
+//=============================================================================//
 
 #ifndef COLORCORRECTIONMGR_H
 #define COLORCORRECTIONMGR_H
@@ -14,44 +13,76 @@
 
 #include "igamesystem.h"
 
-
 //------------------------------------------------------------------------------
 // Purpose : Singleton manager for color correction on the client
 //------------------------------------------------------------------------------
-DECLARE_POINTER_HANDLE( ClientCCHandle_t );
+
+DECLARE_POINTER_HANDLE(ClientCCHandle_t);
 #define INVALID_CLIENT_CCHANDLE ( (ClientCCHandle_t)0 )
+
+class IColorCorrectionEntity
+{
+public:
+	virtual bool ShouldDrawColorCorrection() = 0;
+	virtual float GetColorCorrectionScale() = 0;
+protected:
+	bool m_bLoadedColorCorrection;
+};
+
+class CColorCorrectionEntry
+{
+public:
+	CColorCorrectionEntry(const char *file);
+	virtual ~CColorCorrectionEntry();
+
+	void Update();
+	const char *GetFileName(void){ return m_lookupFilename; }
+
+	CUtlVector<IColorCorrectionEntity*> m_pEntities;
+
+private:
+	char m_lookupFilename[MAX_PATH];
+
+	float m_Weight;
+	bool m_bCanDraw;
+
+	float m_LastEnterWeight;
+	float m_LastEnterTime;
+
+	float m_LastExitWeight;
+	float m_LastExitTime;
+
+	ClientCCHandle_t m_CCHandle;
+	CColorCorrectionEntry(const CColorCorrectionEntry &); // undefined
+};
 
 class CColorCorrectionMgr : public CBaseGameSystem
 {
-	// Inherited from IGameSystemPerFrame
 public:
 	virtual char const *Name() { return "Color Correction Mgr"; }
 
-	// Other public methods
-public:
 	CColorCorrectionMgr();
 
-	// Create, destroy color correction
-	ClientCCHandle_t AddColorCorrection( const char *pName, const char *pFileName = NULL );
-	void RemoveColorCorrection( ClientCCHandle_t );
+	void AddColorCorrection(IColorCorrectionEntity *pEntity, const char *file);
+	void RemoveColorCorrection(IColorCorrectionEntity *pEntity, const char *file);
+	CColorCorrectionEntry *FindColorCorrection(const char *file, int *index = NULL);
 
 	// Modify color correction weights
-	void SetColorCorrectionWeight( ClientCCHandle_t h, float flWeight );
-	void ResetColorCorrectionWeights();
-	void SetResetable( ClientCCHandle_t h, bool bResetable );
+	void SetColorCorrectionWeight(ClientCCHandle_t h, float flWeight);
+	void SetResetable(ClientCCHandle_t h, bool bResetable);
+	void UpdateColorCorrection();
 
 	// Is color correction active?
 	bool HasNonZeroColorCorrectionWeights() const;
 
 private:
 	int m_nActiveWeightCount;
+	CUtlVector<CColorCorrectionEntry*> m_pEntries;
 };
-
 
 //------------------------------------------------------------------------------
 // Singleton access
 //------------------------------------------------------------------------------
 extern CColorCorrectionMgr *g_pColorCorrectionMgr;
-
 
 #endif // COLORCORRECTIONMGR_H

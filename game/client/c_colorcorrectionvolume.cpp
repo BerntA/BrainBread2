@@ -1,9 +1,8 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright Bernt Andreas Eide, All rights reserved. ============//
 //
-// Purpose: Color correction entity.
+// Purpose: Client Simulated Color Correction
 //
-// $NoKeywords: $
-//===========================================================================//
+//=============================================================================//
 
 #include "cbase.h"
 #include "filesystem.h"
@@ -15,7 +14,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-class C_ColorCorrectionVolume : public C_BaseEntity
+class C_ColorCorrectionVolume : public C_BaseEntity, public IColorCorrectionEntity
 {
 public:
 	DECLARE_CLASS(C_ColorCorrectionVolume, C_BaseEntity);
@@ -26,33 +25,18 @@ public:
 
 	void OnDataChanged(DataUpdateType_t updateType);
 	bool ShouldDraw();
-	void ClientThink();
-
-protected:
-	bool ShouldDrawCorrection();
+	bool ShouldDrawColorCorrection();
+	float GetColorCorrectionScale() { return 1.0f; }
 
 private:
 	bool	m_bDisabled;
-	float	m_FadeDuration;
 	char	m_lookupFilename[MAX_PATH];
-
-	float	m_Weight;
-	bool	m_bCanDraw;
-
-	float	m_LastEnterWeight;
-	float	m_LastEnterTime;
-
-	float	m_LastExitWeight;
-	float	m_LastExitTime;
-
-	ClientCCHandle_t m_CCHandle;
 	Vector m_vecBoundsMin;
 	Vector m_vecBoundsMax;
 };
 
 IMPLEMENT_CLIENTCLASS_DT(C_ColorCorrectionVolume, DT_ColorCorrectionVolume, CColorCorrectionVolume)
 RecvPropBool(RECVINFO(m_bDisabled)),
-RecvPropFloat(RECVINFO(m_FadeDuration)),
 RecvPropString(RECVINFO(m_lookupFilename)),
 RecvPropVector(RECVINFO(m_vecBoundsMin)),
 RecvPropVector(RECVINFO(m_vecBoundsMax)),
@@ -60,30 +44,21 @@ END_RECV_TABLE()
 
 C_ColorCorrectionVolume::C_ColorCorrectionVolume()
 {
-	m_CCHandle = INVALID_CLIENT_CCHANDLE;
-	m_bCanDraw = false;
-	m_Weight = m_LastEnterWeight = m_LastExitWeight = m_LastEnterTime = m_LastExitTime = 0.0f;
+	m_bLoadedColorCorrection = false;
 }
 
 C_ColorCorrectionVolume::~C_ColorCorrectionVolume()
 {
-	g_pColorCorrectionMgr->RemoveColorCorrection(m_CCHandle);
+	g_pColorCorrectionMgr->RemoveColorCorrection(this, m_lookupFilename);
 }
 
 void C_ColorCorrectionVolume::OnDataChanged(DataUpdateType_t updateType)
 {
 	BaseClass::OnDataChanged(updateType);
-
-	if (updateType == DATA_UPDATE_CREATED)
+	if ((updateType == DATA_UPDATE_CREATED) && !m_bLoadedColorCorrection && m_lookupFilename && m_lookupFilename[0])
 	{
-		if (m_CCHandle == INVALID_CLIENT_CCHANDLE)
-		{
-			char filename[MAX_PATH];
-			Q_strncpy(filename, m_lookupFilename, MAX_PATH);
-
-			m_CCHandle = g_pColorCorrectionMgr->AddColorCorrection(filename);
-			SetNextClientThink((m_CCHandle != INVALID_CLIENT_CCHANDLE) ? CLIENT_THINK_ALWAYS : CLIENT_THINK_NEVER);
-		}
+		g_pColorCorrectionMgr->AddColorCorrection(this, m_lookupFilename);
+		m_bLoadedColorCorrection = true;
 	}
 }
 
@@ -92,7 +67,7 @@ bool C_ColorCorrectionVolume::ShouldDraw()
 	return false; // Nothing to draw!
 }
 
-bool C_ColorCorrectionVolume::ShouldDrawCorrection()
+bool C_ColorCorrectionVolume::ShouldDrawColorCorrection()
 {
 	if (m_bDisabled)
 		return false;
@@ -107,51 +82,4 @@ bool C_ColorCorrectionVolume::ShouldDrawCorrection()
 		return false;
 
 	return true;
-}
-
-void C_ColorCorrectionVolume::ClientThink()
-{
-	const bool bShouldDraw = ShouldDrawCorrection();
-
-	if (m_bCanDraw != bShouldDraw)
-	{
-		m_bCanDraw = bShouldDraw;
-		if (m_bCanDraw)
-		{
-			m_LastEnterTime = gpGlobals->curtime;
-			m_LastEnterWeight = m_Weight;
-		}
-		else
-		{
-			m_LastExitTime = gpGlobals->curtime;
-			m_LastExitWeight = m_Weight;
-		}
-	}
-
-	if (m_LastEnterTime > m_LastExitTime)
-	{
-		// we most recently entered the volume
-		if (m_Weight < 1.0f)
-		{
-			float dt = gpGlobals->curtime - m_LastEnterTime;
-			float weight = m_LastEnterWeight + dt / ((1.0f - m_LastEnterWeight)*m_FadeDuration);
-			if (weight > 1.0f)
-				weight = 1.0f;
-			m_Weight = weight;
-		}
-	}
-	else
-	{
-		// we most recently exitted the volume
-		if (m_Weight > 0.0f)
-		{
-			float dt = gpGlobals->curtime - m_LastExitTime;
-			float weight = (1.0f - m_LastExitWeight) + dt / (m_LastExitWeight*m_FadeDuration);
-			if (weight > 1.0f)
-				weight = 1.0f;
-			m_Weight = 1.0f - weight;
-		}
-	}
-
-	g_pColorCorrectionMgr->SetColorCorrectionWeight(m_CCHandle, m_Weight);
 }

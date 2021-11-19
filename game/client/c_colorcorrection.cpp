@@ -1,11 +1,10 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright Bernt Andreas Eide, All rights reserved. ============//
 //
-// Purpose: Color correction entity with simple radial falloff
+// Purpose: Client Simulated Color Correction
 //
-// $NoKeywords: $
-//===========================================================================//
-#include "cbase.h"
+//=============================================================================//
 
+#include "cbase.h"
 #include "filesystem.h"
 #include "cdll_client_int.h"
 #include "colorcorrectionmgr.h"
@@ -14,18 +13,15 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-
-static ConVar mat_colcorrection_disableentities( "mat_colcorrection_disableentities", "0", FCVAR_NONE, "Disable map color-correction entities" );
-
+static ConVar mat_colcorrection_disableentities("mat_colcorrection_disableentities", "0", FCVAR_NONE, "Disable map color-correction entities");
 
 //------------------------------------------------------------------------------
 // Purpose : Color correction entity with radial falloff
 //------------------------------------------------------------------------------
-class C_ColorCorrection : public C_BaseEntity
+class C_ColorCorrection : public C_BaseEntity, public IColorCorrectionEntity
 {
 public:
-	DECLARE_CLASS( C_ColorCorrection, C_BaseEntity );
-
+	DECLARE_CLASS(C_ColorCorrection, C_BaseEntity);
 	DECLARE_CLIENTCLASS();
 
 	C_ColorCorrection();
@@ -33,66 +29,42 @@ public:
 
 	void OnDataChanged(DataUpdateType_t updateType);
 	bool ShouldDraw();
-
-	void ClientThink();
+	bool ShouldDrawColorCorrection();
+	float GetColorCorrectionScale();
 
 private:
 	Vector	m_vecOrigin;
-
 	float	m_minFalloff;
 	float	m_maxFalloff;
-	float	m_flCurWeight;
-	char	m_netLookupFilename[MAX_PATH];
-
-	bool	m_bEnabled;
-
-	ClientCCHandle_t m_CCHandle;
+	char	m_lookupFilename[MAX_PATH];
+	bool	m_bDisabled;
 };
 
 IMPLEMENT_CLIENTCLASS_DT(C_ColorCorrection, DT_ColorCorrection, CColorCorrection)
-	RecvPropVector( RECVINFO(m_vecOrigin) ),
-	RecvPropFloat(  RECVINFO(m_minFalloff) ),
-	RecvPropFloat(  RECVINFO(m_maxFalloff) ),
-	RecvPropFloat(  RECVINFO(m_flCurWeight) ),
-	RecvPropString( RECVINFO(m_netLookupFilename) ),
-	RecvPropBool(   RECVINFO(m_bEnabled) ),
-
+RecvPropVector(RECVINFO(m_vecOrigin)),
+RecvPropFloat(RECVINFO(m_minFalloff)),
+RecvPropFloat(RECVINFO(m_maxFalloff)),
+RecvPropString(RECVINFO(m_lookupFilename)),
+RecvPropBool(RECVINFO(m_bDisabled)),
 END_RECV_TABLE()
 
-
-//------------------------------------------------------------------------------
-// Constructor, destructor
-//------------------------------------------------------------------------------
 C_ColorCorrection::C_ColorCorrection()
 {
-	m_CCHandle = INVALID_CLIENT_CCHANDLE;
+	m_bLoadedColorCorrection = false;
 }
 
 C_ColorCorrection::~C_ColorCorrection()
 {
-	g_pColorCorrectionMgr->RemoveColorCorrection( m_CCHandle );
+	g_pColorCorrectionMgr->RemoveColorCorrection(this, m_lookupFilename);
 }
 
-
-//------------------------------------------------------------------------------
-// Purpose :
-// Input   :
-// Output  :
-//------------------------------------------------------------------------------
 void C_ColorCorrection::OnDataChanged(DataUpdateType_t updateType)
 {
-	BaseClass::OnDataChanged( updateType );
-
-	if ( updateType == DATA_UPDATE_CREATED )
+	BaseClass::OnDataChanged(updateType);
+	if ((updateType == DATA_UPDATE_CREATED) && !m_bLoadedColorCorrection && m_lookupFilename && m_lookupFilename[0])
 	{
-		if ( m_CCHandle == INVALID_CLIENT_CCHANDLE )
-		{
-			char filename[MAX_PATH];
-			Q_strncpy( filename, m_netLookupFilename, MAX_PATH );
-
-			m_CCHandle = g_pColorCorrectionMgr->AddColorCorrection( filename );
-			SetNextClientThink( ( m_CCHandle != INVALID_CLIENT_CCHANDLE ) ? CLIENT_THINK_ALWAYS : CLIENT_THINK_NEVER );
-		}
+		g_pColorCorrectionMgr->AddColorCorrection(this, m_lookupFilename);
+		m_bLoadedColorCorrection = true;
 	}
 }
 
@@ -104,53 +76,35 @@ bool C_ColorCorrection::ShouldDraw()
 	return false;
 }
 
-void C_ColorCorrection::ClientThink()
+bool C_ColorCorrection::ShouldDrawColorCorrection()
 {
-	if ( m_CCHandle == INVALID_CLIENT_CCHANDLE )
-		return;
+	if (m_bDisabled || mat_colcorrection_disableentities.GetInt())
+		return false;
 
-	if ( mat_colcorrection_disableentities.GetInt() )
-	{
-		// Allow the colorcorrectionui panel (or user) to turn off color-correction entities
-		g_pColorCorrectionMgr->SetColorCorrectionWeight( m_CCHandle, 0.0f );
-		return;
-	}
-
-	if( !m_bEnabled && m_flCurWeight == 0.0f )
-	{
-		g_pColorCorrectionMgr->SetColorCorrectionWeight( m_CCHandle, 0.0f );
-		return;
-	}
+	if (m_maxFalloff == -1) // Render everywhere!
+		return true;
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if( !pPlayer )
-		return;
+	if (!pPlayer)
+		return false;
 
-	const Vector &playerOrigin = pPlayer->GetAbsOrigin();
+	const Vector &playerOrigin = pPlayer->GetLocalOrigin();
+	const float flDist = (playerOrigin - m_vecOrigin).Length();
 
-	float weight = 0;
-	if ( ( m_minFalloff != -1 ) && ( m_maxFalloff != -1 ) && m_minFalloff != m_maxFalloff )
-	{
-		float dist = (playerOrigin - m_vecOrigin).Length();
-		weight = (dist-m_minFalloff) / (m_maxFalloff-m_minFalloff);
-		if ( weight<0.0f ) weight = 0.0f;	
-		if ( weight>1.0f ) weight = 1.0f;	
-	}
-	
-	g_pColorCorrectionMgr->SetColorCorrectionWeight( m_CCHandle, m_flCurWeight * ( 1.0 - weight ) );
-
-	BaseClass::ClientThink();
+	return (flDist <= m_maxFalloff);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
+float C_ColorCorrection::GetColorCorrectionScale()
+{
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	if (pPlayer && (m_minFalloff != -1) && (m_maxFalloff != -1) && (m_minFalloff != m_maxFalloff))
+	{
+		const Vector &playerOrigin = pPlayer->GetLocalOrigin();
+		const float dist = (playerOrigin - m_vecOrigin).Length();
+		float weight = (dist - m_minFalloff) / (m_maxFalloff - m_minFalloff);
+		if (weight < 0.0f) weight = 0.0f;
+		if (weight > 1.0f) weight = 1.0f;
+		return (1.0f - weight);
+	}
+	return 1.0f;
+}
