@@ -132,9 +132,7 @@ bool CColorCorrectionMgr::HasNonZeroColorCorrectionWeights() const
 
 CColorCorrectionEntry::CColorCorrectionEntry(const char *file)
 {
-	m_bCanDraw = false;
-	m_Weight = m_LastEnterWeight = m_LastExitWeight = m_LastEnterTime = m_LastExitTime = 0.0f;
-
+	m_Weight = 0.0f;
 	Q_strncpy(m_lookupFilename, file, sizeof(m_lookupFilename));
 	CMatRenderContextPtr pRenderContext(g_pMaterialSystem);
 	ColorCorrectionHandle_t ccHandle = pRenderContext->AddLookup(m_lookupFilename);
@@ -189,45 +187,8 @@ void CColorCorrectionEntry::Update()
 		}
 	}
 
-	if (m_bCanDraw != bShouldDraw)
-	{
-		m_bCanDraw = bShouldDraw;
-		if (m_bCanDraw)
-		{
-			m_LastEnterTime = gpGlobals->curtime;
-			m_LastEnterWeight = m_Weight;
-		}
-		else
-		{
-			m_LastExitTime = gpGlobals->curtime;
-			m_LastExitWeight = m_Weight;
-		}
-	}
+	m_Weight = Approach(((bShouldDraw ? flMaxWeight : 0.0f) * flScale), m_Weight, gpGlobals->frametime * (1.0f / flFadeTime));
+	m_Weight = clamp(m_Weight, 0.0f, 1.0f);
 
-	if (m_LastEnterTime > m_LastExitTime)
-	{
-		// we most recently entered the bounds
-		if (m_Weight < 1.0f)
-		{
-			float dt = gpGlobals->curtime - m_LastEnterTime;
-			float weight = m_LastEnterWeight + dt / ((1.0f - m_LastEnterWeight)*flFadeTime);
-			if (weight > 1.0f)
-				weight = 1.0f;
-			m_Weight = weight;
-		}
-	}
-	else
-	{
-		// we most recently exitted the bounds
-		if (m_Weight > 0.0f)
-		{
-			float dt = gpGlobals->curtime - m_LastExitTime;
-			float weight = (1.0f - m_LastExitWeight) + dt / (m_LastExitWeight*flFadeTime);
-			if (weight > 1.0f)
-				weight = 1.0f;
-			m_Weight = 1.0f - weight;
-		}
-	}
-
-	g_pColorCorrectionMgr->SetColorCorrectionWeight(m_CCHandle, MIN(m_Weight * flScale, flMaxWeight));
+	g_pColorCorrectionMgr->SetColorCorrectionWeight(m_CCHandle, m_Weight);
 }

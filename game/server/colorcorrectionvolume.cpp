@@ -21,7 +21,7 @@ public:
 
 	void Spawn(void);
 	bool KeyValue(const char *szKeyName, const char *szValue);
-	int  UpdateTransmitState();
+	int  UpdateTransmitState() { return SetTransmitState(FL_EDICT_ALWAYS); } // ALWAYS transmit to all clients.
 
 	// Inputs
 	void InputEnable(inputdata_t &inputdata);
@@ -64,14 +64,6 @@ CColorCorrectionVolume::CColorCorrectionVolume()
 	m_lookupFilename.GetForModify()[0] = 0;
 }
 
-//------------------------------------------------------------------------------
-// Purpose : Send even though we don't have a model
-//------------------------------------------------------------------------------
-int CColorCorrectionVolume::UpdateTransmitState()
-{
-	return SetTransmitState(FL_EDICT_ALWAYS); // ALWAYS transmit to all clients.
-}
-
 bool CColorCorrectionVolume::KeyValue(const char *szKeyName, const char *szValue)
 {
 	if (FStrEq(szKeyName, "filename"))
@@ -92,9 +84,8 @@ void CColorCorrectionVolume::Spawn(void)
 	SetModel(STRING(GetModelName()));
 	SetBlocksLOS(false);
 	m_nRenderMode = kRenderEnvironmental;
-
-	m_vecBoundsMin = WorldSpaceCenter() + WorldAlignMins();
-	m_vecBoundsMax = WorldSpaceCenter() + WorldAlignMaxs();
+	m_vecBoundsMin = (GetAbsOrigin() + CollisionProp()->OBBMins());
+	m_vecBoundsMax = (GetAbsOrigin() + CollisionProp()->OBBMaxs());
 }
 
 void CColorCorrectionVolume::InputEnable(inputdata_t &inputdata)

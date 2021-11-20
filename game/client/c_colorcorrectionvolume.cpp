@@ -74,9 +74,10 @@ bool C_ColorCorrectionVolume::ShouldDrawColorCorrection()
 	if (!pPlayer)
 		return false;
 
-	Vector playerOrigin = pPlayer->GetLocalOrigin();
-	playerOrigin.z += 4.0f;
-	if (!IsPointInBox(playerOrigin, m_vecBoundsMin, m_vecBoundsMax))
+	Vector vPos = pPlayer->GetLocalOrigin();
+	vPos.z += 5.0f;
+
+	if (!IsPointInBox(vPos, m_vecBoundsMin, m_vecBoundsMax))
 		return false;
 
 	return true;

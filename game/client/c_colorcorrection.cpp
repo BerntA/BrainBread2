@@ -83,9 +83,7 @@ bool C_ColorCorrection::ShouldDrawColorCorrection()
 	if (!pPlayer)
 		return false;
 
-	const Vector &playerOrigin = pPlayer->GetLocalOrigin();
-	const float flDist = (playerOrigin - m_vecOrigin).Length();
-
+	const float flDist = (pPlayer->GetLocalOrigin() - m_vecOrigin).Length();
 	return (flDist <= m_flMaxFalloff);
 }
 
@@ -94,8 +92,7 @@ float C_ColorCorrection::GetColorCorrectionScale()
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 	if (pPlayer && (m_flMinFalloff != -1) && (m_flMaxFalloff != -1) && (m_flMinFalloff != m_flMaxFalloff))
 	{
-		const Vector &playerOrigin = pPlayer->GetLocalOrigin();
-		const float dist = (playerOrigin - m_vecOrigin).Length();
+		const float dist = (pPlayer->GetLocalOrigin() - m_vecOrigin).Length();
 		float weight = (dist - m_flMinFalloff) / (m_flMaxFalloff - m_flMinFalloff);
 		if (weight < 0.0f) weight = 0.0f;
 		if (weight > 1.0f) weight = 1.0f;

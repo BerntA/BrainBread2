@@ -20,7 +20,7 @@ public:
 
 	void Spawn(void);
 	bool KeyValue(const char *szKeyName, const char *szValue);
-	int  UpdateTransmitState();
+	int  UpdateTransmitState() { return SetTransmitState(FL_EDICT_ALWAYS); } // ALWAYS transmit to all clients.
 
 	// Inputs
 	void InputEnable(inputdata_t &inputdata);
@@ -68,15 +68,6 @@ CColorCorrection::CColorCorrection()
 	m_flMinFalloff = 0.0f;
 	m_flMaxFalloff = 1000.0f;
 	m_flMaxWeight = 1.0f;
-}
-
-//------------------------------------------------------------------------------
-// Purpose : Send even though we don't have a model
-//------------------------------------------------------------------------------
-int CColorCorrection::UpdateTransmitState()
-{
-	// ALWAYS transmit to all clients.
-	return SetTransmitState(FL_EDICT_ALWAYS);
 }
 
 bool CColorCorrection::KeyValue(const char *szKeyName, const char *szValue)

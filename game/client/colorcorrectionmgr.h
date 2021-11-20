@@ -43,15 +43,7 @@ public:
 
 private:
 	char m_lookupFilename[MAX_PATH];
-
 	float m_Weight;
-	bool m_bCanDraw;
-
-	float m_LastEnterWeight;
-	float m_LastEnterTime;
-
-	float m_LastExitWeight;
-	float m_LastExitTime;
 
 	ClientCCHandle_t m_CCHandle;
 	CColorCorrectionEntry(const CColorCorrectionEntry &); // undefined
