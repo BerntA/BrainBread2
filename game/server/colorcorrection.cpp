@@ -29,8 +29,9 @@ public:
 private:
 
 	CNetworkVar(bool, m_bDisabled);
-	CNetworkVar(float, m_minFalloff);
-	CNetworkVar(float, m_maxFalloff);
+	CNetworkVar(float, m_flMinFalloff);
+	CNetworkVar(float, m_flMaxFalloff);
+	CNetworkVar(float, m_flMaxWeight);
 	CNetworkString(m_lookupFilename, MAX_PATH);
 };
 
@@ -39,8 +40,9 @@ LINK_ENTITY_TO_CLASS(color_correction, CColorCorrection);
 BEGIN_DATADESC(CColorCorrection)
 
 DEFINE_KEYFIELD(m_bDisabled, FIELD_BOOLEAN, "StartDisabled"),
-DEFINE_KEYFIELD(m_minFalloff, FIELD_FLOAT, "minfalloff"),
-DEFINE_KEYFIELD(m_maxFalloff, FIELD_FLOAT, "maxfalloff"),
+DEFINE_KEYFIELD(m_flMinFalloff, FIELD_FLOAT, "minfalloff"),
+DEFINE_KEYFIELD(m_flMaxFalloff, FIELD_FLOAT, "maxfalloff"),
+DEFINE_KEYFIELD(m_flMaxWeight, FIELD_FLOAT, "maxweight"),
 DEFINE_AUTO_ARRAY_KEYFIELD(m_lookupFilename, FIELD_CHARACTER, "filename"),
 
 DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
@@ -52,18 +54,20 @@ extern void SendProxy_Origin(const SendProp *pProp, const void *pStruct, const v
 
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CColorCorrection, DT_ColorCorrection)
 SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_NOSCALE, 0.0f, HIGH_DEFAULT, SendProxy_Origin),
-SendPropFloat(SENDINFO(m_minFalloff)),
-SendPropFloat(SENDINFO(m_maxFalloff)),
-SendPropString(SENDINFO(m_lookupFilename)),
+SendPropFloat(SENDINFO(m_flMinFalloff)),
+SendPropFloat(SENDINFO(m_flMaxFalloff)),
+SendPropFloat(SENDINFO(m_flMaxWeight)),
 SendPropBool(SENDINFO(m_bDisabled)),
+SendPropString(SENDINFO(m_lookupFilename)),
 END_SEND_TABLE()
 
 CColorCorrection::CColorCorrection()
 {
 	m_bDisabled = false;
 	m_lookupFilename.GetForModify()[0] = 0;
-	m_minFalloff = 0.0f;
-	m_maxFalloff = 1000.0f;
+	m_flMinFalloff = 0.0f;
+	m_flMaxFalloff = 1000.0f;
+	m_flMaxWeight = 1.0f;
 }
 
 //------------------------------------------------------------------------------

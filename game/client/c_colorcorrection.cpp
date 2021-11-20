@@ -28,24 +28,27 @@ public:
 	virtual ~C_ColorCorrection();
 
 	void OnDataChanged(DataUpdateType_t updateType);
-	bool ShouldDraw();
+	bool ShouldDraw() { return false; }
 	bool ShouldDrawColorCorrection();
 	float GetColorCorrectionScale();
+	float GetColorCorrectionMaxWeight() { return m_flMaxWeight; }
 
 private:
 	Vector	m_vecOrigin;
-	float	m_minFalloff;
-	float	m_maxFalloff;
-	char	m_lookupFilename[MAX_PATH];
 	bool	m_bDisabled;
+	float	m_flMinFalloff;
+	float	m_flMaxFalloff;
+	float	m_flMaxWeight;
+	char	m_lookupFilename[MAX_PATH];
 };
 
 IMPLEMENT_CLIENTCLASS_DT(C_ColorCorrection, DT_ColorCorrection, CColorCorrection)
 RecvPropVector(RECVINFO(m_vecOrigin)),
-RecvPropFloat(RECVINFO(m_minFalloff)),
-RecvPropFloat(RECVINFO(m_maxFalloff)),
-RecvPropString(RECVINFO(m_lookupFilename)),
+RecvPropFloat(RECVINFO(m_flMinFalloff)),
+RecvPropFloat(RECVINFO(m_flMaxFalloff)),
+RecvPropFloat(RECVINFO(m_flMaxWeight)),
 RecvPropBool(RECVINFO(m_bDisabled)),
+RecvPropString(RECVINFO(m_lookupFilename)),
 END_RECV_TABLE()
 
 C_ColorCorrection::C_ColorCorrection()
@@ -68,20 +71,12 @@ void C_ColorCorrection::OnDataChanged(DataUpdateType_t updateType)
 	}
 }
 
-//------------------------------------------------------------------------------
-// We don't draw...
-//------------------------------------------------------------------------------
-bool C_ColorCorrection::ShouldDraw()
-{
-	return false;
-}
-
 bool C_ColorCorrection::ShouldDrawColorCorrection()
 {
 	if (m_bDisabled || mat_colcorrection_disableentities.GetInt())
 		return false;
 
-	if (m_maxFalloff == -1) // Render everywhere!
+	if (m_flMaxFalloff == -1) // Render everywhere!
 		return true;
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
@@ -91,17 +86,17 @@ bool C_ColorCorrection::ShouldDrawColorCorrection()
 	const Vector &playerOrigin = pPlayer->GetLocalOrigin();
 	const float flDist = (playerOrigin - m_vecOrigin).Length();
 
-	return (flDist <= m_maxFalloff);
+	return (flDist <= m_flMaxFalloff);
 }
 
 float C_ColorCorrection::GetColorCorrectionScale()
 {
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if (pPlayer && (m_minFalloff != -1) && (m_maxFalloff != -1) && (m_minFalloff != m_maxFalloff))
+	if (pPlayer && (m_flMinFalloff != -1) && (m_flMaxFalloff != -1) && (m_flMinFalloff != m_flMaxFalloff))
 	{
 		const Vector &playerOrigin = pPlayer->GetLocalOrigin();
 		const float dist = (playerOrigin - m_vecOrigin).Length();
-		float weight = (dist - m_minFalloff) / (m_maxFalloff - m_minFalloff);
+		float weight = (dist - m_flMinFalloff) / (m_flMaxFalloff - m_flMinFalloff);
 		if (weight < 0.0f) weight = 0.0f;
 		if (weight > 1.0f) weight = 1.0f;
 		return (1.0f - weight);

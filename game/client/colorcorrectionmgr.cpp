@@ -170,6 +170,7 @@ void CColorCorrectionEntry::Update()
 
 	bool bShouldDraw = false;
 	float flScale = 1.0f;
+	float flMaxWeight = 1.0f;
 	const float flFadeTime = mat_colcorrection_fade.GetFloat();
 
 	for (int i = 0; i < m_pEntities.Count(); i++)
@@ -178,8 +179,13 @@ void CColorCorrectionEntry::Update()
 		{
 			bShouldDraw = true;
 			const float flNewScale = m_pEntities[i]->GetColorCorrectionScale();
+			const float flNewMaxWeight = m_pEntities[i]->GetColorCorrectionMaxWeight();
+
 			if (flNewScale < flScale)
 				flScale = flNewScale;
+
+			if (flNewMaxWeight < flMaxWeight)
+				flMaxWeight = flNewMaxWeight;
 		}
 	}
 
@@ -223,5 +229,5 @@ void CColorCorrectionEntry::Update()
 		}
 	}
 
-	g_pColorCorrectionMgr->SetColorCorrectionWeight(m_CCHandle, m_Weight * flScale);
+	g_pColorCorrectionMgr->SetColorCorrectionWeight(m_CCHandle, MIN(m_Weight * flScale, flMaxWeight));
 }

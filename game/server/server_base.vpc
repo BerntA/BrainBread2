@@ -422,7 +422,6 @@ $Project
 		$File	"$SRCDIR\public\collisionutils.h"
 		$File	"colorcorrection.cpp"
 		$File	"colorcorrectionvolume.cpp"
-		$File	"controlentities.cpp"
 		$File	"cplane.cpp"
 		$File	"CRagdollMagnet.cpp"
 		$File	"CRagdollMagnet.h"

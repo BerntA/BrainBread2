@@ -30,6 +30,7 @@ public:
 private:
 
 	CNetworkVar(bool, m_bDisabled);
+	CNetworkVar(float, m_flMaxWeight);
 	CNetworkString(m_lookupFilename, MAX_PATH);
 	CNetworkVector(m_vecBoundsMin);
 	CNetworkVector(m_vecBoundsMax);
@@ -40,6 +41,7 @@ LINK_ENTITY_TO_CLASS(color_correction_volume, CColorCorrectionVolume);
 BEGIN_DATADESC(CColorCorrectionVolume)
 
 DEFINE_KEYFIELD(m_bDisabled, FIELD_BOOLEAN, "StartDisabled"),
+DEFINE_KEYFIELD(m_flMaxWeight, FIELD_FLOAT, "maxweight"),
 DEFINE_AUTO_ARRAY_KEYFIELD(m_lookupFilename, FIELD_CHARACTER, "filename"),
 
 DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
@@ -49,14 +51,16 @@ END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CColorCorrectionVolume, DT_ColorCorrectionVolume)
 SendPropBool(SENDINFO(m_bDisabled)),
-SendPropString(SENDINFO(m_lookupFilename)),
+SendPropFloat(SENDINFO(m_flMaxWeight)),
 SendPropVector(SENDINFO(m_vecBoundsMin), -1, SPROP_COORD),
 SendPropVector(SENDINFO(m_vecBoundsMax), -1, SPROP_COORD),
+SendPropString(SENDINFO(m_lookupFilename)),
 END_SEND_TABLE()
 
 CColorCorrectionVolume::CColorCorrectionVolume()
 {
 	m_bDisabled = false;
+	m_flMaxWeight = 1.0f;
 	m_lookupFilename.GetForModify()[0] = 0;
 }
 

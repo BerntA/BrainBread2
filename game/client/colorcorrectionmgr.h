@@ -25,6 +25,7 @@ class IColorCorrectionEntity
 public:
 	virtual bool ShouldDrawColorCorrection() = 0;
 	virtual float GetColorCorrectionScale() = 0;
+	virtual float GetColorCorrectionMaxWeight() = 0;
 protected:
 	bool m_bLoadedColorCorrection;
 };
@@ -35,8 +36,8 @@ public:
 	CColorCorrectionEntry(const char *file);
 	virtual ~CColorCorrectionEntry();
 
-	void Update();
-	const char *GetFileName(void){ return m_lookupFilename; }
+	virtual void Update();
+	virtual const char *GetFileName(void){ return m_lookupFilename; }
 
 	CUtlVector<IColorCorrectionEntity*> m_pEntities;
 
