@@ -75,7 +75,7 @@ bool C_ColorCorrectionVolume::ShouldDrawColorCorrection()
 		return false;
 
 	Vector vPos = pPlayer->GetLocalOrigin();
-	vPos.z += 5.0f;
+	vPos.z += 33.0f;
 
 	if (!IsPointInBox(vPos, m_vecBoundsMin, m_vecBoundsMax))
 		return false;

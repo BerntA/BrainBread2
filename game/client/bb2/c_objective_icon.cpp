@@ -80,7 +80,7 @@ void RenderObjectiveIcons(void)
 		if ((iconTeamLink != iTeam && (iconTeamLink > 0)) || pIcon->IsHidden() || (renderTexture == NULL))
 			continue;
 
-		const Vector &vOrigin = pIcon->WorldSpaceCenter();
+		const Vector &vOrigin = pIcon->GetLocalOrigin();
 
 		pRenderContext->Bind(renderTexture);
 		IMesh *pMesh = pRenderContext->GetDynamicMesh();

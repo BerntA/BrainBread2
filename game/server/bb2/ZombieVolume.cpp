@@ -36,7 +36,6 @@ bool IsAllowedToSpawn(CBaseEntity *pEntity, float distance, float zDiff, bool bC
 	if (!pEntity)
 		return false;
 
-	const Vector &vEntityPos = pEntity->WorldSpaceCenter();
 	CTraceFilterWorldOnly traceFilter;
 	trace_t tr;
 
@@ -70,7 +69,7 @@ bool IsAllowedToSpawn(CBaseEntity *pEntity, float distance, float zDiff, bool bC
 
 		if (bCheckVisible)
 		{
-			UTIL_TraceLine(vEntityPos, pClient->EyePosition(), MASK_BLOCKLOS, &traceFilter, &tr);
+			UTIL_TraceLine(pEntity->GetLocalOrigin(), pClient->EyePosition(), MASK_BLOCKLOS, &traceFilter, &tr);
 			if (tr.fraction != 1.0 || tr.startsolid)
 				continue;
 		}
