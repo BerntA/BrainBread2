@@ -102,9 +102,8 @@ void CGameDefinitionsMapData::ParseDataForMap(const char *map)
 			GameBaseShared()->GetSharedGameDetails()->ParseInventoryData(pkvInventoryData, true);
 
 #ifdef CLIENT_DLL
-		KeyValues *pkvMusicData = pkvMapData->FindKey("MusicData");
 		if (GetMusicSystem)
-			GetMusicSystem->ParseMapMusicData(pkvMusicData);
+			GetMusicSystem->ParseMapMusicData(pkvMapData->FindKey("MusicData"));
 #endif
 
 		pkvMapData->deleteThis();
@@ -204,6 +203,11 @@ bool CGameDefinitionsMapData::FetchMapData(void)
 				Q_strncpy(mapItem.pszMapName, mapName, 32);
 				pszGameMaps.AddToTail(mapItem);
 			}
+
+#ifdef CLIENT_DLL
+			if (GetMusicSystem)
+				GetMusicSystem->ParseLoadingMusic(mapName, pkvMapData->FindKey("MusicData"));
+#endif
 
 			pkvMapData->deleteThis();
 		}

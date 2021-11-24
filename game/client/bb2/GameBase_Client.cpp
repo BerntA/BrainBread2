@@ -602,7 +602,7 @@ void CGameBaseClient::RunMap(const char *szMap)
 	CloseConsole();
 	bb2_loading_image.SetValue(szMap);
 	RefreshVGUI();
-	GetMusicSystem->RunLoadingSoundTrack();
+	GetMusicSystem->RunLoadingSoundTrack(szMap);
 	engine->ClientCmd_Unrestricted("progress_enable\n");
 	engine->ClientCmd_Unrestricted(VarArgs("map %s\n", szMap));
 }
@@ -613,7 +613,7 @@ void CGameBaseClient::RunMap(const char *szMap, const char *szConnectionString)
 	CloseConsole();
 	bb2_loading_image.SetValue(szMap);
 	RefreshVGUI();
-	GetMusicSystem->RunLoadingSoundTrack();
+	GetMusicSystem->RunLoadingSoundTrack(szMap);
 	engine->ClientCmd_Unrestricted("progress_enable\n");
 	engine->ClientCmd_Unrestricted(VarArgs("connect %s\n", szConnectionString));
 }
@@ -625,7 +625,7 @@ void CGameBaseClient::RunMap(const char *szMap, const char *szConnectionString, 
 	CloseConsole();
 	bb2_loading_image.SetValue(szMap);
 	RefreshVGUI();
-	GetMusicSystem->RunLoadingSoundTrack();
+	GetMusicSystem->RunLoadingSoundTrack(szMap);
 	engine->ClientCmd_Unrestricted("progress_enable\n");
 	engine->ClientCmd_Unrestricted(VarArgs("connect %s\n", szConnectionString));
 }
@@ -636,7 +636,7 @@ void CGameBaseClient::Changelevel(const char *szMap)
 	CloseConsole();
 	bb2_loading_image.SetValue(szMap);
 	RefreshVGUI();
-	GetMusicSystem->RunLoadingSoundTrack();
+	GetMusicSystem->RunLoadingSoundTrack(szMap);
 	engine->ClientCmd_Unrestricted("progress_enable\n");
 }
 

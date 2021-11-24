@@ -16,27 +16,22 @@
 #include "hl2mp_gamerules.h"
 #include "GameEventListener.h"
 
+#define MAX_MUSIC_PATH 64
 extern ConVar bb2_music_system_shuffle;
 
 struct musicDataItem_t
 {
-	char pchFilePath[80];
+	char pchMapLink[MAX_MUSIC_PATH];
+	char pchFilePath[MAX_MUSIC_PATH];
 	float flVolume;
 };
 
 struct musicEventDataItem_t
 {
-	char pchEventName[64];
-	char pchFilePath[80];
+	char pchEventName[MAX_MUSIC_PATH];
+	char pchFilePath[MAX_MUSIC_PATH];
 	float flVolume;
 	bool bShouldLoop;
-};
-
-enum musicTypes_t
-{
-	MUSIC_TYPE_LOADING_TRACK = 0,
-	MUSIC_TYPE_AMBIENT_TRACK,
-	MUSIC_TYPE_EVENT,
 };
 
 class CMusicData;
@@ -57,49 +52,28 @@ public:
 
 	void Cleanup(void)
 	{
-		m_pLoadingTracks.Purge();
 		m_pAmbientTracks.Purge();
 		m_pMusicEvents.Purge();
 	}
 
-	bool HasLoadingMusic(void)
+	const musicEventDataItem_t *GetMusicEvent(const char *eventName) const
 	{
-		return m_pLoadingTracks.Count();
-	}
-
-	bool HasAmbientMusic(void)
-	{
-		return m_pAmbientTracks.Count();
-	}
-
-	int GetIndexForEvent(const char *eventName)
-	{
-		for (int i = 0; i < m_pMusicEvents.Count(); i++)
+		if (eventName && eventName[0])
 		{
-			if (!strcmp(eventName, m_pMusicEvents[i].pchEventName))
-				return i;
+			for (int i = 0; i < m_pMusicEvents.Count(); i++)
+			{
+				if (!strcmp(eventName, m_pMusicEvents[i].pchEventName))
+					return &m_pMusicEvents[i];
+			}
 		}
-
-		return -1;
-	}
-
-	bool DoesSoundEventExist(const char *eventName)
-	{
-		return (GetIndexForEvent(eventName) != -1);
-	}
-
-	void AddLoadingTrack(const char *soundPath, float volume)
-	{
-		musicDataItem_t item;
-		Q_strncpy(item.pchFilePath, soundPath, 80);
-		item.flVolume = volume;
-		m_pLoadingTracks.AddToTail(item);
+		return NULL;
 	}
 
 	void AddAmbientTrack(const char *soundPath, float volume)
 	{
 		musicDataItem_t item;
-		Q_strncpy(item.pchFilePath, soundPath, 80);
+		item.pchMapLink[0] = 0;
+		Q_strncpy(item.pchFilePath, soundPath, MAX_MUSIC_PATH);
 		item.flVolume = volume;
 		m_pAmbientTracks.AddToTail(item);
 	}
@@ -107,72 +81,43 @@ public:
 	void AddMusicEvent(const char *eventName, const char *soundPath, float volume, bool shouldLoop)
 	{
 		musicEventDataItem_t item;
-		Q_strncpy(item.pchEventName, eventName, 64);
-		Q_strncpy(item.pchFilePath, soundPath, 80);
+		Q_strncpy(item.pchEventName, eventName, MAX_MUSIC_PATH);
+		Q_strncpy(item.pchFilePath, soundPath, MAX_MUSIC_PATH);
 		item.flVolume = volume;
 		item.bShouldLoop = shouldLoop;
 		m_pMusicEvents.AddToTail(item);
 	}
 
-	bool PlayRandomMusic(int type, bool reset = false)
+	bool PlayRandomMusic(bool reset = false)
 	{
-		if (bb2_music_system_shuffle.GetBool() && (m_pAmbientTracks.Count() > 1) && (type == MUSIC_TYPE_AMBIENT_TRACK))
+		if (bb2_music_system_shuffle.GetBool() && (m_pAmbientTracks.Count() > 1))
 			m_iActiveIndex = GetRandIdxExcluded(m_pAmbientTracks.Count(), m_iActiveIndex);
-		else
+		else if (reset || (m_iActiveIndex >= m_pAmbientTracks.Count()))
+			m_iActiveIndex = 0;
+
+		if (m_pAmbientTracks.Count())
 		{
-			if (reset || (m_iActiveIndex >= m_pAmbientTracks.Count()))
-				m_iActiveIndex = 0;
+			FMODManager()->SetSoundVolume(m_pAmbientTracks[m_iActiveIndex].flVolume);
+			FMODManager()->TransitionAmbientSound(m_pAmbientTracks[m_iActiveIndex].pchFilePath);
+			if (!bb2_music_system_shuffle.GetBool())
+				m_iActiveIndex++;
 		}
 
-		switch (type)
-		{
-
-		case MUSIC_TYPE_LOADING_TRACK:
-		{
-			if (HasLoadingMusic())
-			{
-				int index = random->RandomInt(0, (m_pLoadingTracks.Count() - 1));
-				FMODManager()->SetSoundVolume(m_pLoadingTracks[index].flVolume);
-				FMODManager()->PlayLoadingMusic(m_pLoadingTracks[index].pchFilePath);
-				return true;
-			}
-			break;
-		}
-
-		case MUSIC_TYPE_AMBIENT_TRACK:
-		{
-			if (HasAmbientMusic())
-			{
-				FMODManager()->SetSoundVolume(m_pAmbientTracks[m_iActiveIndex].flVolume);
-				FMODManager()->TransitionAmbientSound(m_pAmbientTracks[m_iActiveIndex].pchFilePath);
-				if (!bb2_music_system_shuffle.GetBool())
-					m_iActiveIndex++;
-				return true;
-			}
-			break;
-		}
-
-		}
-
-		return false;
+		return (m_pAmbientTracks.Count() > 0);
 	}
 
 	bool RunMusicEvent(const char *eventName)
 	{
-		int index = GetIndexForEvent(eventName);
-		if (index != -1)
+		const musicEventDataItem_t *pEvent = GetMusicEvent(eventName);
+		if (pEvent)
 		{
-			FMODManager()->SetSoundVolume(m_pMusicEvents[index].flVolume);
-			FMODManager()->TransitionAmbientSound(m_pMusicEvents[index].pchFilePath, m_pMusicEvents[index].bShouldLoop);
-			return true;
+			FMODManager()->SetSoundVolume(pEvent->flVolume);
+			FMODManager()->TransitionAmbientSound(pEvent->pchFilePath, pEvent->bShouldLoop);
 		}
-
-		return false;
+		return (pEvent != NULL);
 	}
 
 	int m_iActiveIndex;
-
-	CUtlVector<musicDataItem_t> m_pLoadingTracks;
 	CUtlVector<musicDataItem_t> m_pAmbientTracks;
 	CUtlVector<musicEventDataItem_t> m_pMusicEvents;
 };
@@ -182,15 +127,17 @@ class CMusicSystem : public CGameEventListener
 {
 public:
 	CMusicSystem();
-	~CMusicSystem();
+	virtual ~CMusicSystem();
 
 	void InitializeSystem(const char *activeEventName);
 	void Cleanup(void);
 	void CleanupMapMusic(void);
 	void ParseMusicData(void);
+	bool ParseMusicData(CMusicData *pMusicData, KeyValues *pkvData);
+	bool ParseLoadingMusic(const char *pMapName, KeyValues *pkvData);
 	void ParseMapMusicData(KeyValues *pkvData = NULL);
 	void RunAmbientSoundTrack(bool bReset = false);
-	void RunLoadingSoundTrack(void);
+	void RunLoadingSoundTrack(const char *pMapName);
 	void RunSoundEvent(const char *eventName);
 
 	CMusicData *GetMusicDataForMap(void) { return m_pMapMusicData; }
@@ -200,6 +147,7 @@ private:
 
 	CMusicData *m_pDefaultData;
 	CMusicData *m_pMapMusicData;
+	CUtlVector<musicDataItem_t> m_pLoadingTracks;
 
 protected:
 	void FireGameEvent(IGameEvent *event);

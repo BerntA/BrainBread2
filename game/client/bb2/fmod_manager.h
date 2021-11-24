@@ -20,10 +20,10 @@ public:
 	CFMODManager();
 	~CFMODManager();
 
-	void InitFMOD();
-	void ExitFMOD();
-	void RestartFMOD();
-	void FadeThink();
+	void Init();
+	void Exit();
+	void Restart();
+	void Think();
 
 	bool PlayAmbientSound(const char *szSoundPath, bool bLoop = false);
 	void PlayLoadingMusic(const char *szSoundPath);

@@ -108,15 +108,17 @@ void CGameBaseShared::LoadBase()
 	if (m_pSharedNPCData)
 		delete m_pSharedNPCData;
 
+#ifdef CLIENT_DLL
+	if (m_pMusicSystem)
+		m_pMusicSystem->ParseMusicData();
+#endif
+
 	// We load our base values and such:
 	m_pSharedGameDefinitions = new CGameDefinitionsShared();
 	m_pSharedGameMapData = new CGameDefinitionsMapData();
 	m_pSharedNPCData = new CGameDefinitionsNPC();
 
-#ifdef CLIENT_DLL
-	if (m_pMusicSystem)
-		m_pMusicSystem->ParseMusicData();
-#else
+#ifndef CLIENT_DLL
 	LoadChecksums();
 #endif
 

@@ -41,9 +41,9 @@ CMusicSystem::~CMusicSystem()
 void CMusicSystem::InitializeSystem(const char *activeEventName)
 {
 	if (activeEventName && activeEventName[0])
-		GetMusicSystem->RunSoundEvent(activeEventName);
+		RunSoundEvent(activeEventName);
 	else
-		GetMusicSystem->RunAmbientSoundTrack(true);
+		RunAmbientSoundTrack(true);
 }
 
 void CMusicSystem::Cleanup(void)
@@ -59,6 +59,8 @@ void CMusicSystem::Cleanup(void)
 		delete m_pDefaultData;
 		m_pDefaultData = NULL;
 	}
+
+	m_pLoadingTracks.Purge();
 }
 
 void CMusicSystem::CleanupMapMusic(void)
@@ -73,34 +75,59 @@ void CMusicSystem::CleanupMapMusic(void)
 void CMusicSystem::ParseMusicData(void)
 {
 	Cleanup();
-
 	KeyValues *pkvDefault = new KeyValues("DefaultData");
 	if (pkvDefault->LoadFromFile(filesystem, "data/game/game_music.txt", "MOD"))
 	{
 		m_pDefaultData = new CMusicData();
-
-		KeyValues *pkvSub = pkvDefault->FindKey("LoadingMusic");
-		if (pkvSub)
-		{
-			for (KeyValues *sub = pkvSub->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-				m_pDefaultData->AddLoadingTrack(sub->GetName(), sub->GetFloat());
-		}
-
-		pkvSub = pkvDefault->FindKey("AmbientMusic");
-		if (pkvSub)
-		{
-			for (KeyValues *sub = pkvSub->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-				m_pDefaultData->AddAmbientTrack(sub->GetName(), sub->GetFloat());
-		}
-
-		pkvSub = pkvDefault->FindKey("Events");
-		if (pkvSub)
-		{
-			for (KeyValues *sub = pkvSub->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-				m_pDefaultData->AddMusicEvent(sub->GetName(), sub->GetString("path"), sub->GetFloat("volume"), (sub->GetInt("loop") >= 1));
-		}
+		ParseMusicData(m_pDefaultData, pkvDefault);
+		ParseLoadingMusic("DEFAULT", pkvDefault);
 	}
 	pkvDefault->deleteThis();
+}
+
+bool CMusicSystem::ParseMusicData(CMusicData *pMusicData, KeyValues *pkvData)
+{
+	if ((pMusicData == NULL) || (pkvData == NULL))
+		return false;
+
+	KeyValues *pkvSub = NULL;
+
+	pkvSub = pkvData->FindKey("AmbientMusic");
+	if (pkvSub)
+	{
+		for (KeyValues *sub = pkvSub->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+			pMusicData->AddAmbientTrack(sub->GetName(), sub->GetFloat());
+	}
+
+	pkvSub = pkvData->FindKey("Events");
+	if (pkvSub)
+	{
+		for (KeyValues *sub = pkvSub->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+			pMusicData->AddMusicEvent(sub->GetName(), sub->GetString("path"), sub->GetFloat("volume"), (sub->GetInt("loop") >= 1));
+	}
+
+	return true;
+}
+
+bool CMusicSystem::ParseLoadingMusic(const char *pMapName, KeyValues *pkvData)
+{
+	if (pkvData == NULL)
+		return false;
+
+	KeyValues *pkvSub = pkvData->FindKey("LoadingMusic");
+	if (pkvSub)
+	{
+		for (KeyValues *sub = pkvSub->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+		{
+			musicDataItem_t item;
+			Q_strncpy(item.pchMapLink, pMapName, MAX_MUSIC_PATH);
+			Q_strncpy(item.pchFilePath, sub->GetName(), MAX_MUSIC_PATH);
+			item.flVolume = sub->GetFloat();
+			m_pLoadingTracks.AddToTail(item);
+		}
+	}
+
+	return (pkvSub != NULL);
 }
 
 void CMusicSystem::ParseMapMusicData(KeyValues *pkvData)
@@ -108,45 +135,51 @@ void CMusicSystem::ParseMapMusicData(KeyValues *pkvData)
 	if (pkvData)
 	{
 		m_pMapMusicData = new CMusicData();
-
-		KeyValues *pkvSub = pkvData->FindKey("AmbientMusic");
-		if (pkvSub)
-		{
-			for (KeyValues *sub = pkvSub->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-				m_pMapMusicData->AddAmbientTrack(sub->GetName(), sub->GetFloat());
-		}
-
-		pkvSub = pkvData->FindKey("Events");
-		if (pkvSub)
-		{
-			for (KeyValues *sub = pkvSub->GetFirstSubKey(); sub; sub = sub->GetNextKey())
-				m_pMapMusicData->AddMusicEvent(sub->GetName(), sub->GetString("path"), sub->GetFloat("volume"), (sub->GetInt("loop") >= 1));
-		}
+		ParseMusicData(m_pMapMusicData, pkvData);
 	}
 }
 
 void CMusicSystem::RunAmbientSoundTrack(bool bReset)
 {
 	CMusicData *data = GetMusicDataForMap();
-	if (data)
-	{
-		if (data->HasAmbientMusic())
-		{
-			data->PlayRandomMusic(MUSIC_TYPE_AMBIENT_TRACK, bReset);
-			return;
-		}
-	}
+	if (data && data->PlayRandomMusic(bReset))
+		return;
 
 	data = GetDefaultMusicData();
 	if (data)
-		data->PlayRandomMusic(MUSIC_TYPE_AMBIENT_TRACK, bReset);
+		data->PlayRandomMusic(bReset);
 }
 
-void CMusicSystem::RunLoadingSoundTrack(void)
+void CMusicSystem::RunLoadingSoundTrack(const char *pMapName)
 {
-	CMusicData *data = GetDefaultMusicData();
-	if (data)
-		data->PlayRandomMusic(MUSIC_TYPE_LOADING_TRACK);
+	const int size = m_pLoadingTracks.Count();
+	if (!pMapName || !pMapName[0] || !size)
+		return;
+
+	CUtlVector<int> indexes;
+
+	// Look for matching map load snd.
+	for (int i = 0; i < size; i++)
+	{
+		const musicDataItem_t *pItem = &m_pLoadingTracks[i];
+		if (!strcmp(pMapName, pItem->pchMapLink))
+			indexes.AddToTail(i);
+	}
+
+	// Revert to default
+	if (indexes.Count() == 0)
+	{
+		for (int i = 0; i < size; i++)
+		{
+			const musicDataItem_t *pItem = &m_pLoadingTracks[i];
+			if (!strcmp("DEFAULT", pItem->pchMapLink))
+				indexes.AddToTail(i);
+		}
+	}
+
+	int index = indexes[random->RandomInt(0, (indexes.Count() - 1))];
+	FMODManager()->SetSoundVolume(m_pLoadingTracks[index].flVolume);
+	FMODManager()->PlayLoadingMusic(m_pLoadingTracks[index].pchFilePath);
 }
 
 void CMusicSystem::RunSoundEvent(const char *eventName)
@@ -154,24 +187,12 @@ void CMusicSystem::RunSoundEvent(const char *eventName)
 	FMODManager()->SetSoundVolume(1.0f);
 
 	CMusicData *data = GetMusicDataForMap();
-	if (data)
-	{
-		if (data->DoesSoundEventExist(eventName))
-		{
-			data->RunMusicEvent(eventName);
-			return;
-		}
-	}
+	if (data && data->RunMusicEvent(eventName))
+		return;
 
 	data = GetDefaultMusicData();
-	if (data)
-	{
-		if (data->DoesSoundEventExist(eventName))
-		{
-			data->RunMusicEvent(eventName);
-			return;
-		}
-	}
+	if (data && data->RunMusicEvent(eventName))
+		return;
 
 	// The event we wanted to play didn't exist, we expect that the 'eventName' is a raw path to some sound file.
 	FMODManager()->TransitionAmbientSound(eventName, true);
@@ -182,14 +203,11 @@ void CMusicSystem::FireGameEvent(IGameEvent *event)
 	const char *type = event->GetName();
 
 	if (!strcmp(type, "round_start"))
-	{
 		RunAmbientSoundTrack(true);
-	}
 	else if (!strcmp(type, "game_music"))
 	{
 		const char *soundEvent = event->GetString("file");
 		bool bStop = event->GetBool("stop");
-
 		if (bStop)
 			RunAmbientSoundTrack();
 		else

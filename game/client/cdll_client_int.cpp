@@ -921,7 +921,7 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	}
 
 	view->Init();
-	FMODManager()->InitFMOD();
+	FMODManager()->Init();
 	GameBaseShared()->Init();
 	vieweffects->Init();
 
@@ -1011,7 +1011,7 @@ void CHLClient::Shutdown( void )
 
 	g_pClientMode->Disable();
 	g_pClientMode->Shutdown();
-	FMODManager()->ExitFMOD();
+	FMODManager()->Exit();
 	GameBaseShared()->Release();
 
 	input->Shutdown_All();

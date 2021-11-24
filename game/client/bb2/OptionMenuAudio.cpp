@@ -158,7 +158,7 @@ void OptionMenuAudio::ApplyChanges(void)
 				dsp_enhance_stereo->SetValue(0);
 		}
 
-		FMODManager()->RestartFMOD();
+		FMODManager()->Restart();
 	}
 
 	subtitles.SetValue(0);

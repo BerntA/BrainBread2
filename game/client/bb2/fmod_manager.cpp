@@ -44,7 +44,7 @@ CFMODManager::~CFMODManager()
 {
 }
 
-void CFMODManager::InitFMOD(void)
+void CFMODManager::Init(void)
 {
 	result = System_Create(&pSystem); // Create the main system object.
 
@@ -63,7 +63,7 @@ void CFMODManager::InitFMOD(void)
 	m_pVarMuteSoundFocus = cvar->FindVar("snd_mute_losefocus");
 }
 
-void CFMODManager::ExitFMOD(void)
+void CFMODManager::Exit(void)
 {
 	result = pSystem->release();
 	if (result != FMOD_OK)
@@ -76,7 +76,7 @@ void CFMODManager::ExitFMOD(void)
 	pChannel = NULL;
 }
 
-void CFMODManager::RestartFMOD()
+void CFMODManager::Restart()
 {
 	// Attempt to play any prev. sound...
 	float volume = 0.0f;
@@ -90,8 +90,8 @@ void CFMODManager::RestartFMOD()
 		pChannel->getCurrentSound(&currSound);
 	}
 
-	ExitFMOD();
-	InitFMOD();
+	Exit();
+	Init();
 
 	// Restart snd!
 	if (currSound && lastPlayedSound && lastPlayedSound[0])
@@ -117,7 +117,7 @@ const char *CFMODManager::GetFullPathToSound(const char *pathToFileFromModFolder
 		if (fullPath[i] == '\\')
 			fullPath[i] = '/';
 	}
-	
+
 	Q_strncpy(lastPlayedSound, fullPath, sizeof(lastPlayedSound));
 	return lastPlayedSound;
 }
@@ -128,9 +128,8 @@ const char *CFMODManager::GetCurrentSoundName(void)
 	return szActiveSound;
 }
 
-// Handles all fade-related sound stuffs.
-// Called every frame.
-void CFMODManager::FadeThink(void)
+// Handles FMOD sound system, called each frame.
+void CFMODManager::Think(void)
 {
 	// Do we wish to play the in game soundtracks? If not, play on demand. (forced from main menu (transit only))
 	bool bShouldPlayInSequence = GameBaseClient->IsInGame();

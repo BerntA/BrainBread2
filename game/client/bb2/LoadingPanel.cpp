@@ -321,7 +321,7 @@ void CLoadingPanel::OnTick()
 {
 	BaseClass::OnTick();
 
-	FMODManager()->FadeThink();
+	FMODManager()->Think();
 
 	if (!IsVisible())
 	{
