@@ -166,7 +166,7 @@ void CMusicSystem::RunLoadingSoundTrack(const char *pMapName)
 			indexes.AddToTail(i);
 	}
 
-	// Revert to default
+	// Revert to default.
 	if (indexes.Count() == 0)
 	{
 		for (int i = 0; i < size; i++)
@@ -176,6 +176,10 @@ void CMusicSystem::RunLoadingSoundTrack(const char *pMapName)
 				indexes.AddToTail(i);
 		}
 	}
+
+	// Still no loading music?
+	if (indexes.Count() == 0)
+		return;
 
 	int index = indexes[random->RandomInt(0, (indexes.Count() - 1))];
 	FMODManager()->SetSoundVolume(m_pLoadingTracks[index].flVolume);

@@ -97,6 +97,7 @@ CBaseEntity *CNPCAutoSpawner::SpawnNewEntity(void)
 
 	pEntity->SetAbsOrigin(GetAbsOrigin());
 	pEntity->SetAbsAngles(GetAbsAngles());
+	pEntity->AddSpawnFlags(GetSpawnFlags());
 	pEntity->Spawn();
 	UTIL_DropToFloor(pEntity, MASK_SHOT, this);
 
