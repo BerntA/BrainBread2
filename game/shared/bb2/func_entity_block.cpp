@@ -42,6 +42,7 @@ private:
 	CNetworkVar(int, m_iCollisionGroup);
 	CNetworkVar(int, m_iBlockState);
 	CNetworkVar(bool, m_bDisabled);
+	CNetworkVar(bool, m_bRevert);
 };
 
 IMPLEMENT_NETWORKCLASS_ALIASED(FuncEntityBlock, DT_FuncEntityBlock)
@@ -51,10 +52,12 @@ BEGIN_NETWORK_TABLE(CFuncEntityBlock, DT_FuncEntityBlock)
 SendPropInt(SENDINFO(m_iCollisionGroup), 6, SPROP_UNSIGNED),
 SendPropInt(SENDINFO(m_iBlockState), 2, SPROP_UNSIGNED),
 SendPropBool(SENDINFO(m_bDisabled)),
+SendPropBool(SENDINFO(m_bRevert)),
 #else
 RecvPropInt(RECVINFO(m_iCollisionGroup)),
 RecvPropInt(RECVINFO(m_iBlockState)),
 RecvPropBool(RECVINFO(m_bDisabled)),
+RecvPropBool(RECVINFO(m_bRevert)),
 #endif
 END_NETWORK_TABLE()
 
@@ -63,6 +66,7 @@ BEGIN_DATADESC(CFuncEntityBlock)
 DEFINE_KEYFIELD(m_iCollisionGroup, FIELD_INTEGER, "CollisionGroup"),
 DEFINE_KEYFIELD(m_iBlockState, FIELD_INTEGER, "BlockState"),
 DEFINE_KEYFIELD(m_bDisabled, FIELD_BOOLEAN, "StartDisabled"),
+DEFINE_KEYFIELD(m_bRevert, FIELD_BOOLEAN, "Revert"),
 
 DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
 DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
@@ -77,6 +81,7 @@ CFuncEntityBlock::CFuncEntityBlock()
 	m_iCollisionGroup = 0;
 	m_iBlockState = 0;
 	m_bDisabled = false;
+	m_bRevert = false;
 }
 
 #ifdef GAME_DLL
@@ -115,17 +120,19 @@ bool CFuncEntityBlock::ShouldCollide(int collisionGroup, int contentsMask) const
 	if (m_bDisabled.Get()) // We're disabled, by default block all ents, block nothing otherwise.
 		return (m_iBlockState.Get() == DYN_BLOCK_ALL);
 
+	const bool bDefaultValue = m_bRevert.Get();
+
 	if ((m_iCollisionGroup == 30) && (collisionGroup == COLLISION_GROUP_PLAYER || collisionGroup == COLLISION_GROUP_PLAYER_REALITY_PHASE || collisionGroup == COLLISION_GROUP_NPC || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_BOSS || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER || collisionGroup == COLLISION_GROUP_NPC_MILITARY || collisionGroup == COLLISION_GROUP_NPC_MERCENARY))
-		return false;
+		return bDefaultValue;
 
 	if ((m_iCollisionGroup == 31) && (collisionGroup == COLLISION_GROUP_PLAYER_ZOMBIE || collisionGroup == COLLISION_GROUP_NPC || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_BOSS || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER || collisionGroup == COLLISION_GROUP_NPC_MILITARY || collisionGroup == COLLISION_GROUP_NPC_MERCENARY))
-		return false;
+		return bDefaultValue;
 
 	if ((m_iCollisionGroup == 32) && (collisionGroup == COLLISION_GROUP_PLAYER || collisionGroup == COLLISION_GROUP_PLAYER_REALITY_PHASE || collisionGroup == COLLISION_GROUP_NPC_MILITARY))
-		return false;
+		return bDefaultValue;
 
 	if ((m_iCollisionGroup == 33) && (collisionGroup == COLLISION_GROUP_PLAYER_ZOMBIE || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_BOSS || collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER))
-		return false;
+		return bDefaultValue;
 
 	// We have more types of npcs so we do an in-depth check:
 	if (m_iCollisionGroup == COLLISION_GROUP_NPC)
@@ -133,15 +140,15 @@ bool CFuncEntityBlock::ShouldCollide(int collisionGroup, int contentsMask) const
 		if ((collisionGroup == COLLISION_GROUP_NPC_ZOMBIE) || (collisionGroup == COLLISION_GROUP_NPC_MILITARY) || (collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_BOSS) || (collisionGroup == COLLISION_GROUP_NPC_ZOMBIE_CRAWLER)
 			|| (collisionGroup == COLLISION_GROUP_NPC_ACTOR) || (collisionGroup == COLLISION_GROUP_NPC_SCRIPTED) || (collisionGroup == COLLISION_GROUP_NPC_MERCENARY) ||
 			(collisionGroup == COLLISION_GROUP_NPC))
-			return false;
+			return bDefaultValue;
 	}
 
 	if (collisionGroup == m_iCollisionGroup)
-		return false;
+		return bDefaultValue;
 
 	// If we want to allow human players only we need to check if the collision group is COLLISION_GROUP_PLAYER_REALITY_PHASE or COLLISION_GROUP_PLAYER. The above check will handle COLLISION_GROUP_PLAYER.
 	if ((m_iCollisionGroup == COLLISION_GROUP_PLAYER) && (collisionGroup == COLLISION_GROUP_PLAYER_REALITY_PHASE))
-		return false;
+		return bDefaultValue;
 
-	return true;
+	return !bDefaultValue;
 }
