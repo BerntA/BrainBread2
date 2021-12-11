@@ -585,8 +585,6 @@ $Project
 		$File	"hud_closecaption.cpp"
 		$File	"hud_crosshair.cpp"
 		$File	"hud_element_helper.cpp"
-		$File	"hl2\hud_filmdemo.cpp"
-		$File	"hl2\hud_hdrdemo.cpp"
 		$File	"hud_msg.cpp"
 		$File	"hud_numericdisplay.cpp"
 		$File	"hud_pdump.cpp"

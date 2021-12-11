@@ -70,7 +70,7 @@
 		"bbc_laststand" "21241116"
 		"bbc_mecklenburg" "28551192"
 		"bbc_nightclub" "36478556"
-		"bbc_swamptrouble" "52511748"
+		"bbc_swamptrouble" "52896544"
 		"bbc_termoil" "35724324"
 		"bbd_backyard" "0"
 		"bbd_cargo" "0"
