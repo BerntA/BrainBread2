@@ -43,6 +43,7 @@
 #include "c_ai_basenpc.h"
 #include "hud_npc_health_bar.h"
 #include "quest_panel.h"
+#include "c_leaderboard_handler.h"
 
 #if defined( _X360 )
 #include "xbox/xbox_console.h"
@@ -974,6 +975,8 @@ void ClientModeShared::LevelShutdown( void )
 	// Reset any player explosion/shock effects
 	CLocalPlayerFilter filter;
 	enginesound->SetPlayerDSP( filter, 0, true );
+
+	CLeaderboardHandler::UploadLeaderboardStats();
 }
 
 

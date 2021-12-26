@@ -10,6 +10,7 @@
 #include <vgui_controls/Button.h>
 #include <vgui_controls/ImagePanel.h>
 #include "GameBase_Client.h"
+#include "c_leaderboard_handler.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -173,7 +174,7 @@ void PlayMenuScoreboard::RefreshScores(void)
 		}
 	}
 
-	GameBaseClient->RefreshScoreboard((m_iCommand == COMMAND_SHOW_SCOREBOARD_PVP) ? "PvP" : "Global", (m_iCurrPage * _ARRAYSIZE(m_pScoreItem)));
+	CLeaderboardHandler::FetchLeaderboardResults((m_iCommand == COMMAND_SHOW_SCOREBOARD_PVP) ? "PvP" : "Global", (m_iCurrPage * _ARRAYSIZE(m_pScoreItem)));
 }
 
 void PlayMenuScoreboard::RefreshCallback(int iItems)

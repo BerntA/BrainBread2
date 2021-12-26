@@ -23,9 +23,9 @@ public:
 	CLeaderboardHandler(const char *leaderboardName);
 	virtual ~CLeaderboardHandler();
 
+	static void InitHandle(void);
 	static void UploadLeaderboardStats(void);
 	static void Update(void);
-	static void Reset(void);
 	static void FetchLeaderboardResults(const char *name, int iOffset);
 
 protected:
@@ -35,19 +35,22 @@ protected:
 	void FetchLeaderboardResults(int iOffset = 0);
 
 	void OnUpdate(void);
-	void OnReset(void);
 
 private:
 	bool m_bIsLoading;
-	float m_flTimeToUpload;
+	bool m_bIsUploading;
+	int m_iIndex;
 	char m_pchLeaderboardName[32];
 	SteamLeaderboard_t m_hLeaderboardHandle;
 
-	void OnFindLeaderboard(LeaderboardFindResult_t *pFindLearderboardResult, bool bIOFailure);
-	CCallResult<CLeaderboardHandler, LeaderboardFindResult_t> m_SteamCallResultFindLeaderboard;
+	void OnFindLeaderboard(LeaderboardFindResult_t *pData, bool bIOFailure);
+	CCallResult<CLeaderboardHandler, LeaderboardFindResult_t> m_callResultFind;
 
-	void OnLeaderboardDownloadedEntries(LeaderboardScoresDownloaded_t *pLeaderboardScoresDownloaded, bool bIOFailure);
-	CCallResult<CLeaderboardHandler, LeaderboardScoresDownloaded_t> m_callResultDownloadEntries;
+	void OnLeaderboardDownloadedEntries(LeaderboardScoresDownloaded_t *pData, bool bIOFailure);
+	CCallResult<CLeaderboardHandler, LeaderboardScoresDownloaded_t> m_callResultDownload;
+
+	void OnLeaderboardUploadedEntry(LeaderboardScoreUploaded_t *pData, bool bIOFailure);
+	CCallResult<CLeaderboardHandler, LeaderboardScoreUploaded_t> m_callResultUpload;
 
 	CLeaderboardHandler(const CLeaderboardHandler &); // not defined	
 };

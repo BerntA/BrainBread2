@@ -182,7 +182,6 @@ public:
 	void OnUpdate(void);
 
 	// Scoreboard Handling
-	void RefreshScoreboard(const char *name, int iOffset = 0);
 	void AddScoreboardItem(const char *pszSteamID, const char *playerName, int32 plLevel, int32 plKills, int32 plDeaths, int index);
 	void ScoreboardRefreshComplete(int maxEntries);
 
@@ -247,7 +246,6 @@ void CGameBaseClient::Initialize(void)
 	ClientWorkshopInstallerPanel = new CAddonInstallerPanel(GameUiDll);
 	ClientWorkshopInstallerPanel->SetVisible(false);
 
-	CLeaderboardHandler::Reset();
 	PostInit();
 }
 
@@ -425,8 +423,6 @@ void CGameBaseClient::RunCommand(int iCommand)
 		engine->ClientCmd_Unrestricted("disconnect\n");
 		FMODManager()->SetSoundVolume(1.0f);
 		FMODManager()->TransitionAmbientSound("ui/mainmenu_theme.mp3");
-
-		CLeaderboardHandler::UploadLeaderboardStats();
 		break;
 	case COMMAND_RESET:
 		engine->ClientCmd_Unrestricted("exec config_default.cfg\n");
@@ -516,10 +512,6 @@ void CGameBaseClient::RunClientEffect(int iEffect, int iState)
 			break;
 		}
 		}
-
-		// Update the leaderboard update timer:
-		if (iEffect == PLAYER_EFFECT_ENTERED_GAME)
-			CLeaderboardHandler::Reset();
 	}
 }
 
@@ -750,11 +742,6 @@ void CGameBaseClient::ServerRefreshCompleted(void)
 	}
 }
 
-void CGameBaseClient::RefreshScoreboard(const char *name, int iOffset)
-{
-	CLeaderboardHandler::FetchLeaderboardResults(name, iOffset);
-}
-
 void CGameBaseClient::AddScoreboardItem(const char *pszSteamID, const char *playerName, int32 plLevel, int32 plKills, int32 plDeaths, int index)
 {
 	if (MainMenu && MainMenu->GetContextHandler())
@@ -894,6 +881,7 @@ void CGameBaseClient::Steam_OnUserStatsReceived(UserStatsReceived_t *pUserStatsR
 		MainMenu->GetContextHandler()->m_pAchievementPanel->SetupLayout();
 	}
 
+	CLeaderboardHandler::InitHandle();
 	g_bHasLoadedSteamStats = true;
 }
 
