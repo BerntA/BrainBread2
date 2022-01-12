@@ -468,7 +468,7 @@ void CNPCBaseSoldierStatic::Event_Killed(const CTakeDamageInfo &info)
 		{
 			// Drop the grenade as an item.
 			Vector vecStart;
-			GetAttachment("lefthand", vecStart);
+			GetAttachment("anim_attachment_RH", vecStart);
 
 			CBaseEntity *pItem = DropItem("weapon_frag", vecStart, RandomAngle(0, 360));
 			if (pItem)
@@ -958,7 +958,7 @@ void CNPCBaseSoldierStatic::HandleAnimEvent(animevent_t *pEvent)
 			vecSpin.z = random->RandomFloat(-1000.0, 1000.0);
 
 			Vector vecStart;
-			GetAttachment("lefthand", vecStart);
+			GetAttachment("anim_attachment_RH", vecStart);
 
 			if (m_NPCState == NPC_STATE_SCRIPT)
 			{
@@ -968,12 +968,12 @@ void CNPCBaseSoldierStatic::HandleAnimEvent(animevent_t *pEvent)
 
 				GetVectors(&forward, NULL, &up);
 				vecThrow = forward * 750 + up * 175;
-				Fraggrenade_Create(vecStart, vec3_angle, vecThrow, vecSpin, this, SOLDIER_GRENADE_TIMER, (Classify() == CLASS_MILITARY));
+				Fraggrenade_Create(vecStart, vec3_angle, vecThrow, vecSpin, this, SOLDIER_GRENADE_TIMER, false);
 			}
 			else
 			{
 				// Use the Velocity that AI gave us.
-				Fraggrenade_Create(vecStart, vec3_angle, m_vecTossVelocity, vecSpin, this, SOLDIER_GRENADE_TIMER, (Classify() == CLASS_MILITARY));
+				Fraggrenade_Create(vecStart, vec3_angle, m_vecTossVelocity, vecSpin, this, SOLDIER_GRENADE_TIMER, false);
 				m_iNumGrenades--;
 			}
 
@@ -986,7 +986,7 @@ void CNPCBaseSoldierStatic::HandleAnimEvent(animevent_t *pEvent)
 		case SOLDIER_AE_GREN_LAUNCH:
 		{
 			EmitSound("NPC_Combine.GrenadeLaunch");
-			Fraggrenade_Create(Weapon_ShootPosition(), vec3_angle, m_vecTossVelocity, vec3_origin, this, SOLDIER_GRENADE_TIMER, (Classify() == CLASS_MILITARY));
+			Fraggrenade_Create(Weapon_ShootPosition(), vec3_angle, m_vecTossVelocity, vec3_origin, this, SOLDIER_GRENADE_TIMER, false);
 			m_iNumGrenades--;
 			m_flNextGrenadeCheck = gpGlobals->curtime + random->RandomFloat(2, 5); // wait a random amount of time before shooting again
 		}
@@ -996,9 +996,9 @@ void CNPCBaseSoldierStatic::HandleAnimEvent(animevent_t *pEvent)
 		case SOLDIER_AE_GREN_DROP:
 		{
 			Vector vecStart;
-			GetAttachment("lefthand", vecStart);
+			GetAttachment("anim_attachment_RH", vecStart);
 
-			Fraggrenade_Create(vecStart, vec3_angle, m_vecTossVelocity, vec3_origin, this, SOLDIER_GRENADE_TIMER, (Classify() == CLASS_MILITARY));
+			Fraggrenade_Create(vecStart, vec3_angle, m_vecTossVelocity, vec3_origin, this, SOLDIER_GRENADE_TIMER, false);
 			m_iNumGrenades--;
 		}
 		handledEvent = true;

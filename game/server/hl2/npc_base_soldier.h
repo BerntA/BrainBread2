@@ -30,10 +30,9 @@ class CNPC_BaseSoldier : public CAI_BaseActor, public CNPCBaseProperties
 public:
 	CNPC_BaseSoldier();
 
-	bool			CanThrowGrenade( const Vector &vecTarget );
-	bool			CheckCanThrowGrenade( const Vector &vecTarget );
+	virtual bool	CanThrowGrenade( const Vector &vecTarget );
+	virtual bool	CheckCanThrowGrenade( const Vector &vecTarget );
 	virtual	bool	CanGrenadeEnemy( bool bUseFreeKnowledge = true );
-	int				GetGrenadeConditions( float flDot, float flDist );
 	int				RangeAttack2Conditions( float flDot, float flDist ); // For innate grenade attack
 	int				MeleeAttack1Conditions( float flDot, float flDist ); // For kick/punch
 	bool			FVisible( CBaseEntity *pEntity, int traceMask = MASK_BLOCKLOS, CBaseEntity **ppBlocker = NULL );
@@ -141,6 +140,7 @@ public:
 protected:
 
 	int m_iNumGrenades;
+	float m_flNextGrenadeCheck;
 	virtual BB2_SoundTypes GetNPCType() { return TYPE_SOLDIER; }
 	void SetKickDamage( int nDamage ) { m_nKickDamage = nDamage; }
 
@@ -225,7 +225,6 @@ private:
 	// Time Variables
 	float			m_flNextPainSoundTime;
 	float			m_flNextAlertSoundTime;
-	float			m_flNextGrenadeCheck;	
 	float			m_flNextLostSoundTime;
 	float			m_flAlertPatrolTime;		// When to stop doing alert patrol
 

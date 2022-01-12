@@ -139,15 +139,12 @@ void CPropBrick::Spawn(void)
 
 void CPropBrick::BrickTouch(CBaseEntity *pOther)
 {
-	if (!pOther)
-		return;
-
-	if (!pOther->IsSolid() || pOther->IsSolidFlagSet(FSOLID_VOLUME_CONTENTS))
+	if (!pOther || !pOther->IsSolid() || pOther->IsSolidFlagSet(FSOLID_VOLUME_CONTENTS))
 		return;
 
 	// Never damage our owner!
 	CBaseEntity *pThrower = m_pThrower.Get();
-	if (pThrower == pOther || (pThrower == NULL))
+	if ((pThrower == pOther) || (pThrower == NULL))
 		return;
 
 	float damage = m_flDamage;

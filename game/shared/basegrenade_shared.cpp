@@ -293,21 +293,24 @@ void CBaseGrenade::Detonate( void )
 //
 // Contact grenade, explode when it touches something
 // 
-void CBaseGrenade::ExplodeTouch( CBaseEntity *pOther )
+void CBaseGrenade::ExplodeTouch(CBaseEntity *pOther)
 {
-	trace_t		tr;
-	Vector		vecSpot;// trace starts here!
-
-	Assert( pOther );
-	if ( !pOther->IsSolid() )
+	// Must be something valid, and solid.
+	if (!pOther || !pOther->IsSolid() || pOther->IsSolidFlagSet(FSOLID_VOLUME_CONTENTS))
 		return;
 
-	Vector velDir = GetAbsVelocity();
-	VectorNormalize( velDir );
-	vecSpot = GetAbsOrigin() - velDir * 32;
-	UTIL_TraceLine( vecSpot, vecSpot + velDir * 64, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
+	// Don't trigger by thrower!
+	CBaseEntity *pThrower = GetThrower();
+	if (pThrower && (pThrower == pOther))
+		return;
 
-	Explode( &tr, DMG_BLAST );
+	trace_t		tr;
+	Vector velDir = GetAbsVelocity();
+	VectorNormalize(velDir);
+	Vector vecSpot = GetAbsOrigin() - velDir * 32;
+	UTIL_TraceLine(vecSpot, vecSpot + velDir * 64, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr);
+
+	Explode(&tr, DMG_BLAST);
 }
 
 void CBaseGrenade::DangerSoundThink( void )

@@ -26,10 +26,9 @@ class CNPCBaseSoldierStatic : public CAI_BaseActor, public CNPCBaseProperties
 public:
 	CNPCBaseSoldierStatic();
 
-	bool			CanThrowGrenade(const Vector &vecTarget);
-	bool			CheckCanThrowGrenade(const Vector &vecTarget);
+	virtual bool	CanThrowGrenade(const Vector &vecTarget);
+	virtual bool	CheckCanThrowGrenade(const Vector &vecTarget);
 	virtual	bool	CanGrenadeEnemy(bool bUseFreeKnowledge = true);
-	int				GetGrenadeConditions(float flDot, float flDist);
 	int				RangeAttack2Conditions(float flDot, float flDist); // For innate grenade attack
 	int				MeleeAttack1Conditions(float flDot, float flDist); // For kick/punch
 

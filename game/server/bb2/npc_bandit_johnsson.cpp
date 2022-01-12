@@ -35,8 +35,6 @@ public:
 	void		PrescheduleThink(void);
 	void		BuildScheduleTestBits(void);
 	int			SelectSchedule(void);
-	void		HandleAnimEvent(animevent_t *pEvent);
-	void		OnChangeActivity(Activity eNewActivity);
 	void		OnListened();
 	int			OnTakeDamage(const CTakeDamageInfo &info);
 	void		ClearAttackConditions(void);
@@ -58,7 +56,6 @@ public:
 private:
 
 	float m_flHealthFractionToCheck;
-	bool m_fIsBlocking;
 
 	void InputEnteredHideout(inputdata_t &inputdata);
 	void InputLeftHideout(inputdata_t &inputdata);
@@ -74,7 +71,6 @@ DEFINE_INPUTFUNC(FIELD_VOID, "LeaveHideout", InputLeftHideout),
 DEFINE_OUTPUT(m_OnLostQuarterOfHealth, "OnLostQuarterHealth"),
 END_DATADESC()
 
-#define AE_SOLDIER_BLOCK_PHYSICS 20 // trying to block an incoming physics object...
 #define TELEPORT_PARTICLE "bb2_healing_effect"
 
 //-----------------------------------------------------------------------------
@@ -220,28 +216,6 @@ void CNPCBanditJohnsson::BuildScheduleTestBits(void)
 int CNPCBanditJohnsson::SelectSchedule(void)
 {
 	return BaseClass::SelectSchedule();
-}
-
-void CNPCBanditJohnsson::HandleAnimEvent(animevent_t *pEvent)
-{
-	switch (pEvent->event)
-	{
-	case AE_SOLDIER_BLOCK_PHYSICS:
-		m_fIsBlocking = true;
-		break;
-
-	default:
-		BaseClass::HandleAnimEvent(pEvent);
-		break;
-	}
-}
-
-void CNPCBanditJohnsson::OnChangeActivity(Activity eNewActivity)
-{
-	// Any new sequence stops us blocking.
-	m_fIsBlocking = false;
-
-	BaseClass::OnChangeActivity(eNewActivity);
 }
 
 void CNPCBanditJohnsson::OnListened()

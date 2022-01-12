@@ -23,8 +23,6 @@
 
 LINK_ENTITY_TO_CLASS( npc_military, CNPCMilitary );
 
-#define AE_SOLDIER_BLOCK_PHYSICS		20 // trying to block an incoming physics object...
-
 //-----------------------------------------------------------------------------
 // Purpose: BB2 No dmg from plr or teamkilling for the military bois.
 //-----------------------------------------------------------------------------
@@ -115,28 +113,6 @@ void CNPCMilitary::BuildScheduleTestBits( void )
 	}
 
 	BaseClass::BuildScheduleTestBits();
-}
-
-void CNPCMilitary::HandleAnimEvent( animevent_t *pEvent )
-{
-	switch( pEvent->event )
-	{
-	case AE_SOLDIER_BLOCK_PHYSICS:
-		m_fIsBlocking = true;
-		break;
-
-	default:
-		BaseClass::HandleAnimEvent( pEvent );
-		break;
-	}
-}
-
-void CNPCMilitary::OnChangeActivity( Activity eNewActivity )
-{
-	// Any new sequence stops us blocking.
-	m_fIsBlocking = false;
-
-	BaseClass::OnChangeActivity( eNewActivity );
 }
 
 void CNPCMilitary::OnListened()

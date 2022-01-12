@@ -495,7 +495,6 @@ Class_T	CNPC_BaseSoldier::Classify ( void )
 	return CLASS_COMBINE;
 }
 
-
 //-----------------------------------------------------------------------------
 // Continuous movement tasks
 //-----------------------------------------------------------------------------
@@ -507,7 +506,6 @@ bool CNPC_BaseSoldier::IsCurTaskContinuousMove()
 
 	return BaseClass::IsCurTaskContinuousMove();
 }
-
 
 //-----------------------------------------------------------------------------
 // Chase the enemy, updating the target position as the player moves
@@ -764,7 +762,7 @@ void CNPC_BaseSoldier::StartTask( const Task_t *pTask )
 
 					if( pSoldier )
 					{
-						pSoldier->m_flNextGrenadeCheck = gpGlobals->curtime + 5;
+						pSoldier->m_flNextGrenadeCheck = gpGlobals->curtime + (IsBoss() ? 3.0f : 5.0f);
 					}
 
 					pSquadmate = m_pSquad->GetNextMember( &iter );
@@ -997,7 +995,7 @@ void CNPC_BaseSoldier::Event_Killed( const CTakeDamageInfo &info )
 		{
 			// Drop the grenade as an item.
 			Vector vecStart;
-			GetAttachment( "lefthand", vecStart );
+			GetAttachment( "anim_attachment_RH", vecStart );
 
 			CBaseEntity *pItem = DropItem( "weapon_frag", vecStart, RandomAngle(0,360) );
 			if ( pItem )
@@ -1861,6 +1859,7 @@ void CNPC_BaseSoldier::HandleAnimEvent( animevent_t *pEvent )
 			break;
 
 		case SOLDIER_AE_GREN_TOSS:
+		case EVENT_WEAPON_THROW:
 			{
 				Vector vecSpin;
 				vecSpin.x = random->RandomFloat( -1000.0, 1000.0 );
@@ -1868,7 +1867,7 @@ void CNPC_BaseSoldier::HandleAnimEvent( animevent_t *pEvent )
 				vecSpin.z = random->RandomFloat( -1000.0, 1000.0 );
 
 				Vector vecStart;
-				GetAttachment( "lefthand", vecStart );
+				GetAttachment( "anim_attachment_RH", vecStart );
 
 				if( m_NPCState == NPC_STATE_SCRIPT )
 				{
@@ -1878,17 +1877,17 @@ void CNPC_BaseSoldier::HandleAnimEvent( animevent_t *pEvent )
 
 					GetVectors( &forward, NULL, &up );
 					vecThrow = forward * 750 + up * 175;
-					Fraggrenade_Create(vecStart, vec3_angle, vecThrow, vecSpin, this, SOLDIER_GRENADE_TIMER, (Classify() == CLASS_MILITARY));
+					Fraggrenade_Create(vecStart, vec3_angle, vecThrow, vecSpin, this, SOLDIER_GRENADE_TIMER, (GetNPCClassType() == NPC_CLASS_PRIEST));
 				}
 				else
 				{
 					// Use the Velocity that AI gave us.
-					Fraggrenade_Create(vecStart, vec3_angle, m_vecTossVelocity, vecSpin, this, SOLDIER_GRENADE_TIMER, (Classify() == CLASS_MILITARY));
+					Fraggrenade_Create(vecStart, vec3_angle, m_vecTossVelocity, vecSpin, this, SOLDIER_GRENADE_TIMER, (GetNPCClassType() == NPC_CLASS_PRIEST));
 					m_iNumGrenades--;
 				}
 
 				// wait six seconds before even looking again to see if a grenade can be thrown.
-				m_flNextGrenadeCheck = gpGlobals->curtime + 6;
+				m_flNextGrenadeCheck = gpGlobals->curtime + (IsBoss() ? 4.0f : 6.0f);
 			}
 			handledEvent = true;
 			break;
@@ -1896,9 +1895,9 @@ void CNPC_BaseSoldier::HandleAnimEvent( animevent_t *pEvent )
 		case SOLDIER_AE_GREN_DROP:
 			{
 				Vector vecStart;
-				GetAttachment( "lefthand", vecStart );
+				GetAttachment( "anim_attachment_RH", vecStart );
 
-				Fraggrenade_Create(vecStart, vec3_angle, m_vecTossVelocity, vec3_origin, this, SOLDIER_GRENADE_TIMER, (Classify() == CLASS_MILITARY));
+				Fraggrenade_Create(vecStart, vec3_angle, m_vecTossVelocity, vec3_origin, this, SOLDIER_GRENADE_TIMER, (GetNPCClassType() == NPC_CLASS_PRIEST));
 				m_iNumGrenades--;
 			}
 			handledEvent = true;

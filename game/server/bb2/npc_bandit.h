@@ -22,8 +22,6 @@ public:
 	void		Precache(void);
 	void		DeathSound(const CTakeDamageInfo &info);
 	void		BuildScheduleTestBits(void);
-	void		HandleAnimEvent(animevent_t *pEvent);
-	void		OnChangeActivity(Activity eNewActivity);
 	void		OnListened();
 	int			OnTakeDamage(const CTakeDamageInfo &info);
 	void		ClearAttackConditions(void);
@@ -36,8 +34,6 @@ public:
 	void SetIdleState(int state) { g_pBanditQuestion = state; }
 
 private:
-	bool		m_fIsBlocking;
-
 	static int g_pBanditQuestion;
 };
 

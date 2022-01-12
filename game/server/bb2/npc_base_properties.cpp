@@ -184,6 +184,7 @@ void CNPCBaseProperties::FireGameEvent(IGameEvent *event)
 	case NPC_CLASS_POLICE: return "Police";
 	case NPC_CLASS_RIOT: return "Riot Police";
 	case NPC_CLASS_SWAT: return "S.W.A.T Police";
+	case NPC_CLASS_PRIEST: return "Priest";
 	}
 	return "UNKNOWN";
 }

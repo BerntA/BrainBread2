@@ -23,8 +23,6 @@
 
 LINK_ENTITY_TO_CLASS(npc_bandit, CNPCBandit);
 
-#define AE_SOLDIER_BLOCK_PHYSICS 20 // trying to block an incoming physics object...
-
 int CNPCBandit::g_pBanditQuestion = 0;
 
 //-----------------------------------------------------------------------------
@@ -107,28 +105,6 @@ void CNPCBandit::BuildScheduleTestBits(void)
 	}
 
 	BaseClass::BuildScheduleTestBits();
-}
-
-void CNPCBandit::HandleAnimEvent(animevent_t *pEvent)
-{
-	switch (pEvent->event)
-	{
-	case AE_SOLDIER_BLOCK_PHYSICS:
-		m_fIsBlocking = true;
-		break;
-
-	default:
-		BaseClass::HandleAnimEvent(pEvent);
-		break;
-	}
-}
-
-void CNPCBandit::OnChangeActivity(Activity eNewActivity)
-{
-	// Any new sequence stops us blocking.
-	m_fIsBlocking = false;
-
-	BaseClass::OnChangeActivity(eNewActivity);
 }
 
 void CNPCBandit::OnListened()

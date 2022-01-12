@@ -188,8 +188,9 @@ void CHL2MPSniperRifle::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseComba
 {
 	switch (pEvent->event)
 	{
-	case EVENT_WEAPON_AR2:
 	case EVENT_WEAPON_SMG1:
+	case EVENT_WEAPON_SHOTGUN_FIRE:
+	case EVENT_WEAPON_AR2:
 	case EVENT_WEAPON_PISTOL_FIRE:
 	{
 		Vector vecShootOrigin, vecShootDir;

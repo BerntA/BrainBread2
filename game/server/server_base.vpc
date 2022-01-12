@@ -194,6 +194,7 @@ $Project
 			$File "bb2\npc_military.h"
 			$File "bb2\npc_m1a1.cpp"
 			$File "bb2\npc_walker.cpp"
+			$File "bb2\npc_priest.cpp"
 			$File "bb2\npc_military_static.cpp"
 			$File "bb2\npc_base_soldier_static.cpp"
 			$File "bb2\npc_base_soldier_static.h"

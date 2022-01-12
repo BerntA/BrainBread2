@@ -23,31 +23,29 @@ const float GRENADE_COEFFICIENT_OF_RESTITUTION = 0.2f;
 
 class CGrenadeFrag : public CBaseGrenade
 {
-	DECLARE_CLASS( CGrenadeFrag, CBaseGrenade );
+	DECLARE_CLASS(CGrenadeFrag, CBaseGrenade);
 
 #if !defined( CLIENT_DLL )
 	DECLARE_DATADESC();
 #endif
-					
-	~CGrenadeFrag( void );
+
+	~CGrenadeFrag(void);
 
 public:
-	void	Spawn( void );
-	void	Precache( void );
-	bool	CreateVPhysics( void );
-	void	SetTimer( float detonateDelay, float warnDelay );
-	void	SetVelocity( const Vector &velocity, const AngularImpulse &angVelocity );
-	int		OnTakeDamage( const CTakeDamageInfo &inputInfo );
+	void	Spawn(void);
+	void	Precache(void);
+	bool	CreateVPhysics(void);
+	void	SetTimer(float detonateDelay, float warnDelay);
+	void	SetVelocity(const Vector &velocity, const AngularImpulse &angVelocity);
+	int		OnTakeDamage(const CTakeDamageInfo &inputInfo);
 	void	DelayThink();
-	void	VPhysicsUpdate( IPhysicsObject *pPhysics );
-	void	OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
-	void	SetCombineSpawned( bool combineSpawned ) { m_combineSpawned = combineSpawned; }
-	bool	IsCombineSpawned( void ) const { return m_combineSpawned; }
-	void	InputSetTimer( inputdata_t &inputdata );
+	void	VPhysicsUpdate(IPhysicsObject *pPhysics);
+	void	OnPhysGunPickup(CBasePlayer *pPhysGunUser, PhysGunPickup_t reason);
+	void	InputSetTimer(inputdata_t &inputdata);
+	void	ExplodeOnTouch(void) { AddSolidFlags(FSOLID_TRIGGER); SetCollisionGroup(COLLISION_GROUP_PROJECTILE); SetTouch(&CBaseGrenade::ExplodeTouch); m_flDetonateTime = (gpGlobals->curtime + MAX_COORD_FLOAT); }
 
 protected:
 	bool	m_inSolid;
-	bool	m_combineSpawned;
 };
 
 LINK_ENTITY_TO_CLASS( npc_grenade_frag, CGrenadeFrag );
@@ -62,7 +60,6 @@ BEGIN_DATADESC( CGrenadeFrag )
 
 END_DATADESC()
 
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -70,10 +67,10 @@ CGrenadeFrag::~CGrenadeFrag( void )
 {
 }
 
-void CGrenadeFrag::Spawn( void )
+void CGrenadeFrag::Spawn(void)
 {
-	Precache( );
-	SetModel( GRENADE_MODEL );
+	Precache();
+	SetModel(GRENADE_MODEL);
 
 	const DataExplosiveItem_t *data = GameBaseShared()->GetSharedGameDetails()->GetExplosiveDataForType(EXPLOSIVE_TYPE_GRENADE);
 	if (data)
@@ -82,19 +79,15 @@ void CGrenadeFrag::Spawn( void )
 		m_DmgRadius = data->flRadius;
 	}
 
-	m_takedamage	= DAMAGE_YES;
-	m_iHealth		= 1;
+	m_takedamage = DAMAGE_YES;
+	m_iHealth = 1;
 
-	SetSize( -Vector(4,4,4), Vector(4,4,4) );
-	SetCollisionGroup( COLLISION_GROUP_WEAPON );
+	SetSize(-Vector(4, 4, 4), Vector(4, 4, 4));
+	SetCollisionGroup(COLLISION_GROUP_WEAPON);
 	CreateVPhysics();
-
-	AddSolidFlags( FSOLID_NOT_STANDABLE );
-
-	m_combineSpawned	= false;
+	AddSolidFlags(FSOLID_NOT_STANDABLE);
 
 	BaseClass::Spawn();
-
 	SetBlocksLOS(false);
 }
 
@@ -211,12 +204,12 @@ void CGrenadeFrag::Precache( void )
 	BaseClass::Precache();
 }
 
-void CGrenadeFrag::SetTimer( float detonateDelay, float warnDelay )
+void CGrenadeFrag::SetTimer(float detonateDelay, float warnDelay)
 {
 	m_flDetonateTime = gpGlobals->curtime + detonateDelay;
 	m_flWarnAITime = gpGlobals->curtime + warnDelay;
-	SetThink( &CGrenadeFrag::DelayThink );
-	SetNextThink( gpGlobals->curtime );
+	SetThink(&CGrenadeFrag::DelayThink);
+	SetNextThink(gpGlobals->curtime + 0.125f);
 }
 
 void CGrenadeFrag::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )
@@ -226,23 +219,29 @@ void CGrenadeFrag::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t r
 	BaseClass::OnPhysGunPickup( pPhysGunUser, reason );
 }
 
-void CGrenadeFrag::DelayThink() 
+void CGrenadeFrag::DelayThink()
 {
-	if( gpGlobals->curtime > m_flDetonateTime )
+	if ((GetCollisionGroup() == COLLISION_GROUP_PROJECTILE) && ((GetGroundEntity() != NULL) || (GetAbsVelocity().Length() == 0.0f)))
 	{
 		Detonate();
 		return;
 	}
 
-	if( !m_bHasWarnedAI && gpGlobals->curtime >= m_flWarnAITime )
+	if (gpGlobals->curtime > m_flDetonateTime)
+	{
+		Detonate();
+		return;
+	}
+
+	if (!m_bHasWarnedAI && gpGlobals->curtime >= m_flWarnAITime)
 	{
 #if !defined( CLIENT_DLL )
-		CSoundEnt::InsertSound ( SOUND_DANGER, GetAbsOrigin(), 400, 1.5, this );
+		CSoundEnt::InsertSound(SOUND_DANGER, GetAbsOrigin(), 400, 1.5, this);
 #endif
 		m_bHasWarnedAI = true;
 	}
 
-	SetNextThink( gpGlobals->curtime + 0.1 );
+	SetNextThink(gpGlobals->curtime + 0.1);
 }
 
 void CGrenadeFrag::SetVelocity( const Vector &velocity, const AngularImpulse &angVelocity )
@@ -271,7 +270,7 @@ void CGrenadeFrag::InputSetTimer( inputdata_t &inputdata )
 	SetTimer( inputdata.value.Float(), inputdata.value.Float() - FRAG_GRENADE_WARN_TIME );
 }
 
-CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer, bool combineSpawned )
+CBaseGrenade *Fraggrenade_Create(const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer, bool bExplodeOnImpact)
 {
 	// Don't set the owner here, or the player can't interact with grenades he's thrown
 	CGrenadeFrag *pGrenade = (CGrenadeFrag *)CBaseEntity::Create( "npc_grenade_frag", position, angles, pOwner );
@@ -281,18 +280,8 @@ CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, 
 	pGrenade->SetVelocity( velocity, angVelocity );
 	pGrenade->SetThrower( ToBaseCombatCharacter( pOwner ) );
 	pGrenade->m_takedamage = DAMAGE_EVENTS_ONLY;
-	pGrenade->SetCombineSpawned( combineSpawned );	
+	if (bExplodeOnImpact)
+		pGrenade->ExplodeOnTouch();
 
 	return pGrenade;
-}
-
-bool Fraggrenade_WasCreatedByCombine( const CBaseEntity *pEntity )
-{
-	const CGrenadeFrag *pFrag = dynamic_cast<const CGrenadeFrag *>( pEntity );
-	if ( pFrag )
-	{
-		return pFrag->IsCombineSpawned();
-	}
-
-	return false;
 }
