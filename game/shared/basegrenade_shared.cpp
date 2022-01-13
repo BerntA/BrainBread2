@@ -296,7 +296,7 @@ void CBaseGrenade::Detonate( void )
 void CBaseGrenade::ExplodeTouch(CBaseEntity *pOther)
 {
 	// Must be something valid, and solid.
-	if (!pOther || !pOther->IsSolid() || pOther->IsSolidFlagSet(FSOLID_VOLUME_CONTENTS))
+	if (!pOther || !pOther->IsSolid() || pOther->IsSolidFlagSet(FSOLID_VOLUME_CONTENTS) || (pOther == this))
 		return;
 
 	// Don't trigger by thrower!

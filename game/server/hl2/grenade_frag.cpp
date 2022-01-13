@@ -42,33 +42,35 @@ public:
 	void	VPhysicsUpdate(IPhysicsObject *pPhysics);
 	void	OnPhysGunPickup(CBasePlayer *pPhysGunUser, PhysGunPickup_t reason);
 	void	InputSetTimer(inputdata_t &inputdata);
-	void	ExplodeOnTouch(void) { AddSolidFlags(FSOLID_TRIGGER); SetCollisionGroup(COLLISION_GROUP_PROJECTILE); SetTouch(&CBaseGrenade::ExplodeTouch); m_flDetonateTime = (gpGlobals->curtime + MAX_COORD_FLOAT); }
+	void	ExplodeOnTouch(void) { AddSolidFlags(FSOLID_TRIGGER); SetTouch(&CBaseGrenade::ExplodeTouch); m_flDetonateTime = (gpGlobals->curtime + MAX_COORD_FLOAT); m_bExplodeOnImpact = true; m_bHasWarnedAI = true; }
 
 protected:
 	bool	m_inSolid;
+	bool	m_bExplodeOnImpact;
 };
 
-LINK_ENTITY_TO_CLASS( npc_grenade_frag, CGrenadeFrag );
+LINK_ENTITY_TO_CLASS(npc_grenade_frag, CGrenadeFrag);
 
-BEGIN_DATADESC( CGrenadeFrag )
+BEGIN_DATADESC(CGrenadeFrag)
 
-	// Function Pointers
-	DEFINE_THINKFUNC( DelayThink ),
+// Function Pointers
+DEFINE_THINKFUNC(DelayThink),
 
-	// Inputs
-	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetTimer", InputSetTimer ),
+// Inputs
+DEFINE_INPUTFUNC(FIELD_FLOAT, "SetTimer", InputSetTimer),
 
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-CGrenadeFrag::~CGrenadeFrag( void )
+CGrenadeFrag::~CGrenadeFrag(void)
 {
 }
 
 void CGrenadeFrag::Spawn(void)
 {
+	m_bExplodeOnImpact = false;
 	Precache();
 	SetModel(GRENADE_MODEL);
 
@@ -94,7 +96,7 @@ void CGrenadeFrag::Spawn(void)
 bool CGrenadeFrag::CreateVPhysics()
 {
 	// Create the object in the physics system
-	VPhysicsInitNormal( SOLID_BBOX, 0, false );
+	VPhysicsInitNormal(SOLID_BBOX, 0, false);
 	return true;
 }
 
@@ -103,24 +105,24 @@ class CTraceFilterCollisionGroupDelta : public CTraceFilterEntitiesOnly
 {
 public:
 	// It does have a base, but we'll never network anything below here..
-	DECLARE_CLASS_NOBASE( CTraceFilterCollisionGroupDelta );
-	
-	CTraceFilterCollisionGroupDelta( const IHandleEntity *passentity, int collisionGroupAlreadyChecked, int newCollisionGroup )
-		: m_pPassEnt(passentity), m_collisionGroupAlreadyChecked( collisionGroupAlreadyChecked ), m_newCollisionGroup( newCollisionGroup )
+	DECLARE_CLASS_NOBASE(CTraceFilterCollisionGroupDelta);
+
+	CTraceFilterCollisionGroupDelta(const IHandleEntity *passentity, int collisionGroupAlreadyChecked, int newCollisionGroup)
+		: m_pPassEnt(passentity), m_collisionGroupAlreadyChecked(collisionGroupAlreadyChecked), m_newCollisionGroup(newCollisionGroup)
 	{
 	}
-	
-	virtual bool ShouldHitEntity( IHandleEntity *pHandleEntity, int contentsMask )
-	{
-		if ( !PassServerEntityFilter( pHandleEntity, m_pPassEnt ) )
-			return false;
-		CBaseEntity *pEntity = EntityFromEntityHandle( pHandleEntity );
 
-		if ( pEntity )
+	virtual bool ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask)
+	{
+		if (!PassServerEntityFilter(pHandleEntity, m_pPassEnt))
+			return false;
+
+		CBaseEntity *pEntity = EntityFromEntityHandle(pHandleEntity);
+		if (pEntity)
 		{
-			if ( g_pGameRules->ShouldCollide( m_collisionGroupAlreadyChecked, pEntity->GetCollisionGroup() ) )
+			if (g_pGameRules->ShouldCollide(m_collisionGroupAlreadyChecked, pEntity->GetCollisionGroup()))
 				return false;
-			if ( g_pGameRules->ShouldCollide( m_newCollisionGroup, pEntity->GetCollisionGroup() ) )
+			if (g_pGameRules->ShouldCollide(m_newCollisionGroup, pEntity->GetCollisionGroup()))
 				return true;
 		}
 
@@ -196,11 +198,11 @@ void CGrenadeFrag::VPhysicsUpdate(IPhysicsObject *pPhysics)
 	pPhysics->SetVelocity(&vel, &angVel);
 }
 
-void CGrenadeFrag::Precache( void )
+void CGrenadeFrag::Precache(void)
 {
-	PrecacheModel( GRENADE_MODEL );
-	PrecacheModel( "sprites/redglow1.vmt" );
-	PrecacheModel( "sprites/bluelaser1.vmt" );
+	PrecacheModel(GRENADE_MODEL);
+	PrecacheModel("sprites/redglow1.vmt");
+	PrecacheModel("sprites/bluelaser1.vmt");
 	BaseClass::Precache();
 }
 
@@ -209,22 +211,28 @@ void CGrenadeFrag::SetTimer(float detonateDelay, float warnDelay)
 	m_flDetonateTime = gpGlobals->curtime + detonateDelay;
 	m_flWarnAITime = gpGlobals->curtime + warnDelay;
 	SetThink(&CGrenadeFrag::DelayThink);
-	SetNextThink(gpGlobals->curtime + 0.125f);
+	SetNextThink(gpGlobals->curtime);
 }
 
-void CGrenadeFrag::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )
+void CGrenadeFrag::OnPhysGunPickup(CBasePlayer *pPhysGunUser, PhysGunPickup_t reason)
 {
-	SetThrower( pPhysGunUser );
+	SetThrower(pPhysGunUser);
 	m_bHasWarnedAI = true;
-	BaseClass::OnPhysGunPickup( pPhysGunUser, reason );
+	BaseClass::OnPhysGunPickup(pPhysGunUser, reason);
 }
 
 void CGrenadeFrag::DelayThink()
 {
-	if ((GetCollisionGroup() == COLLISION_GROUP_PROJECTILE) && ((GetGroundEntity() != NULL) || (GetAbsVelocity().Length() == 0.0f)))
+	IPhysicsObject *pPhysObj = VPhysicsGetObject();
+	if (m_bExplodeOnImpact && pPhysObj)
 	{
-		Detonate();
-		return;
+		Vector vecBaseVel, vecAngVel;
+		pPhysObj->GetVelocity(&vecBaseVel, &vecAngVel);
+		if (vecBaseVel.Length() <= 32.0f)
+		{
+			Detonate();
+			return;
+		}
 	}
 
 	if (gpGlobals->curtime > m_flDetonateTime)
@@ -244,41 +252,41 @@ void CGrenadeFrag::DelayThink()
 	SetNextThink(gpGlobals->curtime + 0.1);
 }
 
-void CGrenadeFrag::SetVelocity( const Vector &velocity, const AngularImpulse &angVelocity )
+void CGrenadeFrag::SetVelocity(const Vector &velocity, const AngularImpulse &angVelocity)
 {
 	IPhysicsObject *pPhysicsObject = VPhysicsGetObject();
-	if ( pPhysicsObject )
+	if (pPhysicsObject)
 	{
-		pPhysicsObject->AddVelocity( &velocity, &angVelocity );
+		pPhysicsObject->AddVelocity(&velocity, &angVelocity);
 	}
 }
 
-int CGrenadeFrag::OnTakeDamage( const CTakeDamageInfo &inputInfo )
+int CGrenadeFrag::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 {
 	// Manually apply vphysics because BaseCombatCharacter takedamage doesn't call back to CBaseEntity OnTakeDamage
-	VPhysicsTakeDamage( inputInfo );
+	VPhysicsTakeDamage(inputInfo);
 
 	// Grenades only suffer blast damage and burn damage.
-	if( !(inputInfo.GetDamageType() & (DMG_BLAST|DMG_BURN) ) )
+	if (!(inputInfo.GetDamageType() & (DMG_BLAST | DMG_BURN)))
 		return 0;
 
-	return BaseClass::OnTakeDamage( inputInfo );
+	return BaseClass::OnTakeDamage(inputInfo);
 }
 
-void CGrenadeFrag::InputSetTimer( inputdata_t &inputdata )
+void CGrenadeFrag::InputSetTimer(inputdata_t &inputdata)
 {
-	SetTimer( inputdata.value.Float(), inputdata.value.Float() - FRAG_GRENADE_WARN_TIME );
+	SetTimer(inputdata.value.Float(), inputdata.value.Float() - FRAG_GRENADE_WARN_TIME);
 }
 
 CBaseGrenade *Fraggrenade_Create(const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer, bool bExplodeOnImpact)
 {
 	// Don't set the owner here, or the player can't interact with grenades he's thrown
-	CGrenadeFrag *pGrenade = (CGrenadeFrag *)CBaseEntity::Create( "npc_grenade_frag", position, angles, pOwner );
-	
+	CGrenadeFrag *pGrenade = (CGrenadeFrag *)CBaseEntity::Create("npc_grenade_frag", position, angles, pOwner);
+
 	pGrenade->m_classType = (pOwner ? pOwner->Classify() : CLASS_NONE);
-	pGrenade->SetTimer( timer, timer - FRAG_GRENADE_WARN_TIME );
-	pGrenade->SetVelocity( velocity, angVelocity );
-	pGrenade->SetThrower( ToBaseCombatCharacter( pOwner ) );
+	pGrenade->SetTimer(timer, timer - FRAG_GRENADE_WARN_TIME);
+	pGrenade->SetVelocity(velocity, angVelocity);
+	pGrenade->SetThrower(ToBaseCombatCharacter(pOwner));
 	pGrenade->m_takedamage = DAMAGE_EVENTS_ONLY;
 	if (bExplodeOnImpact)
 		pGrenade->ExplodeOnTouch();

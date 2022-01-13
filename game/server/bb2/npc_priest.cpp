@@ -77,8 +77,11 @@ void CNPCPriest::Spawn(void)
 	SetCollisionGroup(COLLISION_GROUP_NPC_MERCENARY);
 	CapabilitiesRemove(bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_MOVE_JUMP);
 
-	string_t cWeaponEnt = FindPooledString("weapon_winchester1894");
-	GiveWeapon((cWeaponEnt == NULL_STRING) ? AllocPooledString("weapon_winchester1894") : cWeaponEnt);
+	if (m_spawnEquipment == NULL_STRING)
+	{
+		string_t cWeaponEnt = FindPooledString("weapon_winchester1894");
+		GiveWeapon((cWeaponEnt == NULL_STRING) ? AllocPooledString("weapon_winchester1894") : cWeaponEnt);
+	}
 }
 
 void CNPCPriest::Precache()
