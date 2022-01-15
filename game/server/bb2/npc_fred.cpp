@@ -95,7 +95,6 @@ public:
 	void PainSound(const CTakeDamageInfo &info);
 	void DeathSound(const CTakeDamageInfo &info);
 	void AlertSound(void);
-	void IdleSound(void);
 	void AttackSound(void);
 	void AttackHitSound(void);
 	void AttackMissSound(void);
@@ -251,7 +250,7 @@ void CNPCFred::PrescheduleThink(void)
 {
 	if (gpGlobals->curtime > m_flNextMoanSound)
 	{
-		if (CanPlayMoanSound())
+		if (CanPlayMoanSound() && !IsCurSchedule(SCHED_FRED_SHOCKWAVE))
 		{
 			IdleSound();
 			m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat(2.0, 5.0);
@@ -529,21 +528,6 @@ void CNPCFred::AlertSound(void)
 
 	// Don't let a moan sound cut off the alert sound.
 	m_flNextMoanSound += random->RandomFloat(2.0, 4.0);
-}
-
-void CNPCFred::IdleSound(void)
-{
-	if (IsCurSchedule(SCHED_FRED_SHOCKWAVE))
-		return;
-
-	if (GetState() == NPC_STATE_IDLE && random->RandomFloat(0, 1) == 0)
-	{
-		// Moan infrequently in IDLE state.
-		return;
-	}
-
-	HL2MPRules()->EmitSoundToClient(this, "Idle", GetNPCType(), GetGender());
-	MakeAISpookySound(360.0f);
 }
 
 void CNPCFred::AttackSound(void)

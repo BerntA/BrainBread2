@@ -25,6 +25,7 @@ static const char *g_pFilesToCheck[] = {
 	"data/npc/bandit.txt",
 	"data/npc/bandit_leader.txt",
 	"data/npc/bandit_johnson.txt",
+	"data/npc/priest.txt",
 	"data/npc/fred.txt",
 	"data/npc/runner.txt",
 	"data/npc/walker.txt",

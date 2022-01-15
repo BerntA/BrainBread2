@@ -740,7 +740,7 @@ CON_COMMAND(admin_ban_id, "Admin Ban Command")
 
 	char pchCommand[80];
 
-	Q_snprintf(pchCommand, 80, "banid %i %i \"%s\"\n", banTime, userID, reason);
+	Q_snprintf(pchCommand, 80, "banid %i %i\n", banTime, userID);
 	engine->ServerCommand(pchCommand);
 	engine->ServerExecute(); // Add to ban list right away.
 

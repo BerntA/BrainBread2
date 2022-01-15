@@ -64,12 +64,19 @@ enum
 //=========================================================
 // conditions
 //=========================================================
-enum 
+enum
 {
 	COND_ZOMBIE_OBSTRUCTED_BY_BREAKABLE_ENT = LAST_SHARED_CONDITION,
 	COND_ZOMBIE_ENEMY_IN_SIGHT,
 
 	LAST_BASE_ZOMBIE_CONDITION,
+};
+
+// Moan Flags
+enum
+{
+	ZOMBIE_MOAN_ALLOWED = 0x01,
+	ZOMBIE_MOAN_MOANED = 0x02,
 };
 
 typedef CAI_BlendingHost< CAI_BehaviorHost<CAI_BaseNPC> > CAI_BaseZombieBase;
@@ -147,18 +154,17 @@ public:
 	// Sounds
 	virtual void PainSound(const CTakeDamageInfo &info) = 0;
 	virtual void AlertSound(void) = 0;
-	virtual void IdleSound(void) = 0;
 	virtual void AttackSound(void) = 0;
 	virtual void AttackHitSound(void) = 0;
 	virtual void AttackMissSound(void) = 0;
 	virtual void FootstepSound(bool fRightFoot) = 0;
 	virtual void FootscuffSound(bool fRightFoot) = 0;
 
-	void MakeAISpookySound(float volume, float duration = 0.5);
+	int m_nMoanFlags;
 
 	virtual bool ValidateNavGoal() { return true; }
 	virtual bool CanPlayMoanSound();
-	virtual void MoanSound(void);
+	virtual void IdleSound(void);
 	virtual bool ShouldPlayIdleSound(void) { return false; }
 
 	virtual Vector BodyTarget(const Vector &posSrc, bool bNoisy);
@@ -187,7 +193,7 @@ protected:
 	// Zombies catch on fire if they take too much burn damage in a given time period.
 	float m_flBurnDamage;				// Keeps track of how much burn damage we've incurred in the last few seconds.
 	float m_flBurnDamageResetTime;	// Time at which we reset the burn damage.
-	bool m_bUseNormalSpeed;	
+	bool m_bUseNormalSpeed;
 
 	virtual BB2_SoundTypes GetNPCType() { return TYPE_ZOMBIE; }
 	virtual Activity SelectDoorBash();

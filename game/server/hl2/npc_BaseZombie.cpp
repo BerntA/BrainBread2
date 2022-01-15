@@ -46,27 +46,55 @@
 
 #define HEALTH_REGEN_SUSPEND 10.0f // How many seconds to suspend hp regen when taking dmg?
 
-ConVar zombie_moanfreq( "zombie_moanfreq", "1" );
-
-static int s_iAngryZombies = 0;
+static ConVar sk_npc_zombie_speed_override("sk_npc_zombie_speed_override", "0", FCVAR_GAMEDLL, "Override Zombie Move Speed", true, 0.0f, true, 5.0f);
+static CUtlVector<CNPC_BaseZombie*> zombieList;
 int g_pZombiesInWorld = 0;
 
-static CUtlVector<CNPC_BaseZombie*> zombieList;
-
-class CAngryZombieCounter : public CAutoGameSystem
+class CZombieMoanManager : public CAutoGameSystemPerFrame
 {
 public:
-	CAngryZombieCounter( char const *name ) : CAutoGameSystem( name )
+	CZombieMoanManager(char const *name) : CAutoGameSystemPerFrame(name)
 	{
 	}
-	// Level init, shutdown
-	virtual void LevelInitPreEntity()
+
+	void LevelInitPreEntity()
 	{
-		s_iAngryZombies = 0;
+		m_flLastTime = 0.0f;
 	}
+
+	void FrameUpdatePreEntityThink()
+	{
+		if (m_flLastTime > gpGlobals->curtime)
+			return;
+
+		m_flLastTime = (gpGlobals->curtime + random->RandomFloat(1.5f, 3.0f));
+
+		for (int i = 0; i < zombieList.Count(); i++)
+		{
+			CNPC_BaseZombie *pZombie = zombieList[i];
+			if (!pZombie || pZombie->IsBoss() || !pZombie->CanPlayMoanSound() || pZombie->m_nMoanFlags)
+				continue;
+			pZombie->m_nMoanFlags = ZOMBIE_MOAN_ALLOWED;
+			return;
+		}
+
+		// No one could moan, reset everyone this time --- moan next time!
+		for (int i = 0; i < zombieList.Count(); i++)
+		{
+			CNPC_BaseZombie *pZombie = zombieList[i];
+			if (!pZombie)
+				continue;
+			pZombie->m_nMoanFlags = 0;
+		}
+
+		m_flLastTime = (gpGlobals->curtime + 1.0f);
+	}
+
+private:
+	float m_flLastTime;
 };
 
-CAngryZombieCounter	AngryZombieCounter( "CAngryZombieCounter" );
+static CZombieMoanManager ZombieMoanManager("CZombieMoanManager");
 
 static const char *pMoanSounds[] =
 {
@@ -106,7 +134,7 @@ CNPC_BaseZombie::CNPC_BaseZombie()
 	g_pZombiesInWorld++;
 	m_bUseNormalSpeed = m_bLifeTimeOver = m_bMarkedForDeath = false;
 	m_flHealthRegenSuspended = m_flHealthRegenValue = 0.0f;
-
+	m_nMoanFlags = 0;
 	zombieList.AddToTail(this);
 }
 
@@ -115,7 +143,6 @@ CNPC_BaseZombie::~CNPC_BaseZombie()
 	g_pZombiesInWorld--;
 	m_hBlockingEntity = NULL;
 	m_hLastIgnitionSource = NULL;
-
 	zombieList.FindAndRemove(this);
 	CZombieVolume::OnZombieRemoved(this->entindex());
 }
@@ -358,49 +385,27 @@ int CNPC_BaseZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Spooky spook
-// Input  : volume (radius) of the sound.
-// Output :
-//-----------------------------------------------------------------------------
-void CNPC_BaseZombie::MakeAISpookySound( float volume, float duration )
-{
-	CSoundEnt::InsertSound( SOUND_COMBAT, EyePosition(), volume, duration, this, SOUNDENT_CHANNEL_SPOOKY_NOISE );
-}
-
-//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 bool CNPC_BaseZombie::CanPlayMoanSound()
 {
-	if( HasSpawnFlags( SF_NPC_GAG ) )
-		return false;
-
+	// Don't play if gagged!
 	// Burning zombies play their moan loop at full volume for as long as they're
 	// burning. Don't let a moan envelope play cause it will turn the volume down when done.
-	if( IsOnFire() )
-		return false;
-
-	// Members of a small group of zombies can vocalize whenever they want
-	if( s_iAngryZombies <= 4 )
-		return true;
-
-	// This serves to limit the number of zombies that can moan at one time when there are a lot. 
-	if( random->RandomInt( 1, zombie_moanfreq.GetInt() * (s_iAngryZombies/2) ) == 1 )
-		return true;
-
-	return false;
+	return !(HasSpawnFlags(SF_NPC_GAG) || IsOnFire());
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Open a window and let a little bit of the looping moan sound
-//			come through.
+// Purpose: Play a moan or idle sound.
 //-----------------------------------------------------------------------------
-void CNPC_BaseZombie::MoanSound(void)
+void CNPC_BaseZombie::IdleSound(void)
 {
-	if (HasSpawnFlags(SF_NPC_GAG))
+	// Non-boss moan/idle infrequently in IDLE state.
+	if (!IsBoss() && (GetState() == NPC_STATE_IDLE) && (random->RandomFloat(0, 1) == 0))
 		return;
 
-	HL2MPRules()->EmitSoundToClient(this, pMoanSounds[random->RandomInt(0, (_ARRAYSIZE(pMoanSounds) - 1))], GetNPCType(), GetGender());
-	m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat(10.0f, 16.0f);
+	const char *pSound = (TryTheLuck(0.35f) ? pMoanSounds[random->RandomInt(0, (_ARRAYSIZE(pMoanSounds) - 1))] : "Idle");
+	HL2MPRules()->EmitSoundToClient(this, pSound, GetNPCType(), GetGender());
+	CSoundEnt::InsertSound(SOUND_COMBAT, EyePosition(), 300.0f, 0.5f, this);
 }
 
 //-----------------------------------------------------------------------------
@@ -656,13 +661,7 @@ void CNPC_BaseZombie::HandleAnimEvent( animevent_t *pEvent )
 
 	if ( pEvent->event == AE_ZOMBIE_GET_UP )
 	{
-		MakeAIFootstepSound( 180.0f, 3.0f );
-		if( !IsOnFire() )
-		{
-			// If you let this code run while a zombie is burning, it will stop wailing. 
-			m_flNextMoanSound = gpGlobals->curtime;
-			MoanSound();
-		}
+		MakeAIFootstepSound(180.0f, 3.0f);
 		return;
 	}
 
@@ -1146,18 +1145,7 @@ void CNPC_BaseZombie::OnStateChange( NPC_STATE OldState, NPC_STATE NewState )
 	switch( NewState )
 	{
 	case NPC_STATE_COMBAT:
-		{
-			RemoveSpawnFlags( SF_NPC_GAG );
-			s_iAngryZombies++;
-		}
-		break;
-
-	default:
-		if( OldState == NPC_STATE_COMBAT )
-		{
-			// Only decrement if coming OUT of combat state.
-			s_iAngryZombies--;
-		}
+		RemoveSpawnFlags(SF_NPC_GAG);
 		break;
 	}
 }
@@ -1243,18 +1231,20 @@ bool CNPC_BaseZombie::IsBreakingDownObstacle(void)
 
 float CNPC_BaseZombie::GetIdealSpeed() const
 {
-	if (m_bUseNormalSpeed)
-		return BaseClass::GetIdealSpeed();
+	const float baseValue = BaseClass::GetIdealSpeed();
+	if (sk_npc_zombie_speed_override.GetFloat() > 0.0f)
+		return (baseValue * sk_npc_zombie_speed_override.GetFloat());
 
-	return (BaseClass::GetIdealSpeed() * m_flSpeedFactorValue);
+	return (m_bUseNormalSpeed ? baseValue : (baseValue * m_flSpeedFactorValue));
 }
 
 float CNPC_BaseZombie::GetIdealAccel() const
 {
-	if (m_bUseNormalSpeed)
-		return BaseClass::GetIdealAccel();
+	const float baseValue = BaseClass::GetIdealAccel();
+	if (sk_npc_zombie_speed_override.GetFloat() > 0.0f)
+		return (baseValue * sk_npc_zombie_speed_override.GetFloat());
 
-	return (BaseClass::GetIdealAccel() * m_flSpeedFactorValue);
+	return (m_bUseNormalSpeed ? baseValue : (baseValue * m_flSpeedFactorValue));
 }
 
 void CNPC_BaseZombie::HandleMovementObstruction(CBaseEntity *pEntity, int type)

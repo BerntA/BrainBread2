@@ -231,8 +231,8 @@ public:
 #ifndef CLIENT_DLL
 	// User vote system:
 	int m_iAmountOfVoters;
-	unsigned long long m_ullSteamIDToKickOrBan;
 	float m_flNextVoteTime;
+	char pchSteamIDKickBanTarget[MAX_NETWORKID_LENGTH];
 	char pchMapToChangeTo[MAX_MAP_NAME];
 	bool m_bPlayersAllowedToVote[MAX_PLAYERS];
 	bool m_bPlayersVoted[MAX_PLAYERS];

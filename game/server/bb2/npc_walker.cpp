@@ -45,7 +45,6 @@ public:
 	Class_T Classify( void );
 	int GetNPCClassType() { return (m_bIsRunner ? NPC_CLASS_RUNNER : NPC_CLASS_WALKER); }
 	int AllowEntityToBeGibbed(void);
-	void MoanSound(void);
 	int TranslateSchedule( int scheduleType );
 	void CheckFlinches() {} // Zombie has custom flinch code
 
@@ -67,7 +66,6 @@ public:
 	void PainSound( const CTakeDamageInfo &info );
 	void DeathSound( const CTakeDamageInfo &info );
 	void AlertSound( void );
-	void IdleSound( void );
 	void AttackSound( void );
 	void AttackHitSound( void );
 	void AttackMissSound( void );
@@ -229,7 +227,7 @@ void CNPCWalker::SpawnDirectly(void)
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void CNPCWalker::PrescheduleThink( void )
+void CNPCWalker::PrescheduleThink(void)
 {
 	if (IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_READY) && (GetCollisionGroup() == COLLISION_GROUP_NPC_ZOMBIE_SPAWNING) && IsZombieSpawnFlagActive(ZOMBIE_SPAWN_FLAG_CHECKCOLLISION))
 	{
@@ -249,16 +247,10 @@ void CNPCWalker::PrescheduleThink( void )
 		}
 	}
 
-	if (gpGlobals->curtime > m_flNextMoanSound)
+	if ((gpGlobals->curtime > m_flNextMoanSound) && CanPlayMoanSound() && m_nMoanFlags && ((m_nMoanFlags & ZOMBIE_MOAN_MOANED) == 0))
 	{
-		if (CanPlayMoanSound())
-		{
-			// Classic guy idles instead of moans.
-			IdleSound();
-			m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat(2.0, 5.0);
-		}
-		else
-			m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat(1.0, 2.0);
+		IdleSound();
+		m_nMoanFlags |= ZOMBIE_MOAN_MOANED;
 	}
 
 	BaseClass::PrescheduleThink();
@@ -545,35 +537,11 @@ void CNPCWalker::OnGibbedGroup(int hitgroup, bool bExploded)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Play a random idle sound.
-//-----------------------------------------------------------------------------
-void CNPCWalker::IdleSound( void )
-{
-	if( GetState() == NPC_STATE_IDLE && random->RandomFloat( 0, 1 ) == 0 )
-	{
-		// Moan infrequently in IDLE state.
-		return;
-	}
-
-	HL2MPRules()->EmitSoundToClient(this, "Idle", GetNPCType(), GetGender());
-	MakeAISpookySound( 360.0f );
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Play a random attack sound.
 //-----------------------------------------------------------------------------
 void CNPCWalker::AttackSound( void )
 {
 	HL2MPRules()->EmitSoundToClient(this, "Attack", GetNPCType(), GetGender());
-}
-
-//---------------------------------------------------------
-// Classic zombie only uses moan sound if on fire.
-//---------------------------------------------------------
-void CNPCWalker::MoanSound( void )
-{
-	if( IsOnFire() )
-		BaseClass::MoanSound();
 }
 
 //---------------------------------------------------------
@@ -791,7 +759,7 @@ void CNPCWalker::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, boo
 		if ( !UTIL_IsLowViolence() )
 		{
 			RemoveSpawnFlags( SF_NPC_GAG );
-			MoanSound();
+			IdleSound();
 		}
 	}
 }

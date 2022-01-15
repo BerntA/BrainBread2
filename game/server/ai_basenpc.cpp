@@ -1942,17 +1942,7 @@ void CAI_BaseNPC::OnListened()
 
 				case SOUND_THUMPER:			condition = COND_HEAR_THUMPER;			break;
 				case SOUND_BUGBAIT:			condition = COND_HEAR_BUGBAIT;			break;
-				case SOUND_COMBAT:
-					if ( pCurrentSound->SoundChannel() == SOUNDENT_CHANNEL_SPOOKY_NOISE )
-					{
-						condition = COND_HEAR_SPOOKY;
-					}
-					else 
-					{
-						condition = COND_HEAR_COMBAT;
-					}
-					break;
-
+				case SOUND_COMBAT:			condition = COND_HEAR_COMBAT;			break;
 				case SOUND_WORLD:			condition = COND_HEAR_WORLD;			break;
 				case SOUND_PLAYER:			condition = COND_HEAR_PLAYER;			break;
 				case SOUND_BULLET_IMPACT:	condition = COND_HEAR_BULLET_IMPACT;	break;

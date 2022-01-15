@@ -313,7 +313,7 @@ CHL2MPRules::CHL2MPRules()
 	m_flNextVoteTime = 0.0f;
 	m_iAmountOfVoters = 0;
 	m_iCurrentVoteType = 0;
-	m_ullSteamIDToKickOrBan = 0;
+	pchSteamIDKickBanTarget[0] = 0;
 	pchMapToChangeTo[0] = 0;
 	m_flTimeRoundStarted = 0.0f;
 
@@ -1131,32 +1131,27 @@ void CHL2MPRules::VoteSystemThink(void)
 			if (yesVotes >= ((voteType == VOTE_TYPE_MAP) ? bb2_vote_required_percentage.GetFloat() : bb2_vote_required_percentage_kickban.GetFloat()))
 			{
 				bVoteStatus = true;
-
-				CBasePlayer *pTarget = NULL;
-				if (voteType != VOTE_TYPE_MAP)
-					pTarget = UTIL_PlayerBySteamID(m_ullSteamIDToKickOrBan);
-
 				char pchServerCMD[80];
+
 				switch (voteType)
 				{
 
 				case VOTE_TYPE_KICK:
 				{
-					if ((bb2_vote_kick_ban_time.GetInt() > 0) && (m_ullSteamIDToKickOrBan > 0))
-					{
-						Q_snprintf(pchServerCMD, 80, "banid %i %llu\n", bb2_vote_kick_ban_time.GetInt(), m_ullSteamIDToKickOrBan);
-						engine->ServerCommand(pchServerCMD);
-					}
+					if (bb2_vote_kick_ban_time.GetInt() > 0)
+						Q_snprintf(pchServerCMD, 80, "banid %i %s kick\n", bb2_vote_kick_ban_time.GetInt(), pchSteamIDKickBanTarget);
+					else
+						Q_snprintf(pchServerCMD, 80, "kickid \"%s\"\n", pchSteamIDKickBanTarget);
+					engine->ServerCommand(pchServerCMD);
+					engine->ServerExecute();
 					break;
 				}
 
 				case VOTE_TYPE_BAN:
 				{
-					if (m_ullSteamIDToKickOrBan > 0)
-					{
-						Q_snprintf(pchServerCMD, 80, "banid %i %llu;writeid;writeip\n", bb2_ban_time.GetInt(), m_ullSteamIDToKickOrBan);
-						engine->ServerCommand(pchServerCMD);
-					}
+					Q_snprintf(pchServerCMD, 80, "banid %i %s kick;writeid;writeip\n", bb2_ban_time.GetInt(), pchSteamIDKickBanTarget);
+					engine->ServerCommand(pchServerCMD);
+					engine->ServerExecute();
 					break;
 				}
 
@@ -1165,19 +1160,13 @@ void CHL2MPRules::VoteSystemThink(void)
 					break;
 
 				}
-
-				if (pTarget)
-				{
-					Q_snprintf(pchServerCMD, 80, "kickid %i\n", pTarget->GetUserID());
-					engine->ServerCommand(pchServerCMD);
-				}
 			}
 
 			if (bVoteStatus)
 				GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_SUCCESS", GAME_TIP_WARNING);
 			else
 				GameBaseServer()->SendToolTip("#TOOLTIP_VOTE_FAILURE", GAME_TIP_WARNING);
-		
+
 			DispatchVoteEvent(0, 0, true);
 			ResetVote();
 			m_flNextVoteTime = gpGlobals->curtime + bb2_vote_frequency_time.GetFloat();
@@ -1191,7 +1180,7 @@ void CHL2MPRules::ResetVote(bool bFullReset)
 	m_iCurrentNoVotes = 0;
 	m_iAmountOfVoters = 0;
 	m_iCurrentVoteType = 0;
-	m_ullSteamIDToKickOrBan = 0;
+	pchSteamIDKickBanTarget[0] = 0;
 	pchMapToChangeTo[0] = 0;
 
 	if (bFullReset)	
@@ -1280,8 +1269,8 @@ void CHL2MPRules::CreateBanKickVote(CBasePlayer *pVoter, CBasePlayer *pTarget, b
 	ResetVote();
 	SetupVote(pVoter->entindex());
 	m_iCurrentVoteType = bBan ? VOTE_TYPE_BAN : VOTE_TYPE_KICK;
-	m_ullSteamIDToKickOrBan = ((unsigned long long)pTarget->GetSteamIDAsUInt64());
-	
+	Q_strncpy(pchSteamIDKickBanTarget, pTarget->GetNetworkIDString(), MAX_NETWORKID_LENGTH);
+
 	GameBaseServer()->GameAnnouncement((bBan ? "#Vote_Ban_Player" : "#Vote_Kick_Player"), pVoter->GetPlayerName(), pTarget->GetPlayerName());
 	DispatchVoteEvent(pVoter->entindex(), pTarget->entindex());
 }
