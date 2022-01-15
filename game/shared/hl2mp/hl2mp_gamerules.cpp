@@ -193,7 +193,6 @@ static const char *s_PreserveEnts[] =
 	"env_sun",
 	"env_wind",
 	"env_fog_controller",
-	"func_illusionary",
 	"func_reflective_glass",
 	"infodecal",
 	"info_projecteddecal",

@@ -28,6 +28,7 @@ DEFINE_KEYFIELD(szQuestID, FIELD_STRING, "QuestName"),
 DEFINE_OUTPUT(m_OnStart, "OnStart"),
 DEFINE_OUTPUT(m_OnQuestFailed, "OnFail"),
 DEFINE_OUTPUT(m_OnQuestCompleted, "OnCompleted"),
+DEFINE_OUTPUT(m_OnQuestProgressed, "OnProgressed"), // Any progress at all.
 
 // Objective Completed / Progressed outputs
 DEFINE_OUTPUT(m_OnQuestProgressObjective[0], "OnProgressObjective1"),
@@ -214,6 +215,8 @@ void CLogicQuest::SendQuestParameters(int iObjectiveToProgress, bool bProgress, 
 			event->SetBool("entity_count", bEntityCountUpdate);
 			gameeventmanager->FireEvent(event);
 		}
+
+		m_OnQuestProgressed.FireOutput(this, this);
 
 		if (bEntityCountUpdate)
 			return;

@@ -52,6 +52,7 @@ private:
 
 	COutputEvent m_OnStart;
 	COutputEvent m_OnQuestFailed;
+	COutputEvent m_OnQuestProgressed;
 	COutputEvent m_OnQuestProgressObjective[MAX_QUEST_OBJECTIVES];
 	COutputEvent m_OnQuestCompleted;
 
