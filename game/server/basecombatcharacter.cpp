@@ -1440,17 +1440,17 @@ int CBaseCombatCharacter::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	Vector vecDir = vec3_origin;
 	if (info.GetInflictor())
 	{
-		vecDir = info.GetInflictor()->WorldSpaceCenter() - Vector ( 0, 0, 10 ) - WorldSpaceCenter();
+		vecDir = info.GetInflictor()->WorldSpaceCenter() - Vector(0, 0, 10) - WorldSpaceCenter();
 		VectorNormalize(vecDir);
 	}
 	g_vecAttackDir = vecDir;
 
 	//!!!LATER - make armor consideration here!
 	// do the damage
-	if ( m_takedamage != DAMAGE_EVENTS_ONLY )
+	if (m_takedamage != DAMAGE_EVENTS_ONLY)
 	{
 		// Separate the fractional amount of damage from the whole
-		float flFractionalDamage = info.GetDamage() - floor( info.GetDamage() );
+		float flFractionalDamage = info.GetDamage() - floor(info.GetDamage());
 		float flIntegerDamage = info.GetDamage() - flFractionalDamage;
 
 		// Add fractional damage to the accumulator
@@ -1458,33 +1458,23 @@ int CBaseCombatCharacter::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 		// If the accumulator is holding a full point of damage, move that point
 		// of damage into the damage we're about to inflict.
-		if( m_flDamageAccumulator >= 1.0 )
+		if (m_flDamageAccumulator >= 1.0)
 		{
 			flIntegerDamage += 1.0;
 			m_flDamageAccumulator -= 1.0;
 		}
 
-		if ( flIntegerDamage <= 0 )
+		if (flIntegerDamage <= 0)
 			return 0;
 
 		m_iHealth -= flIntegerDamage;
 	}
 
-	// Give 1 xp per dmg done on an enemy:
 	CHL2MP_Player *pClient = ToHL2MPPlayer(info.GetAttacker());
 	CBaseCombatWeapon *pWeapon = NULL;
+
 	if (pClient)
 	{
-		if (this->IsNPC())
-		{
-			Disposition_t disposition = this->MyNPCPointer()->IRelationType(pClient);
-			if (disposition != D_LI)
-			{
-				if (pClient->IsHuman())
-					pClient->CanLevelUp(1, this);
-			}
-		}
-
 		// Blood Splats on player.
 		pWeapon = pClient->GetActiveWeapon();
 		if (pWeapon && pClient->GetAbsOrigin().DistTo(this->GetAbsOrigin()) < 150.0f)

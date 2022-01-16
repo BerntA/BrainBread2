@@ -45,29 +45,6 @@
 #include "hl2mp_bot_temp.h"
 #include "game_announcer.h"
 
-// Bernt - This needs to be moved into CAIBaseNPC at some point...
-int GetExperienceReward(CBaseEntity *pEntity)
-{
-	if (!pEntity)
-		return 0;
-
-	int reward = 1;
-
-	CNPC_BaseZombie *pGetZombieInstance = dynamic_cast<CNPC_BaseZombie*> (pEntity);
-	if (pGetZombieInstance)
-		reward = pGetZombieInstance->GetXP();
-
-	CNPC_BaseSoldier *pSoldierHumanoid = dynamic_cast<CNPC_BaseSoldier*> (pEntity);
-	if (pSoldierHumanoid)
-		reward = pSoldierHumanoid->GetXP();
-
-	CNPCBaseSoldierStatic *pStaticHumanoid = dynamic_cast<CNPCBaseSoldierStatic*> (pEntity);
-	if (pStaticHumanoid)
-		reward = pStaticHumanoid->GetXP();
-
-	return (pEntity->IsPlayer() ? 3 : reward);
-}
-
 int GetZombieCredits(CBaseEntity *pEntity)
 {
 	if (!pEntity)
@@ -78,13 +55,7 @@ int GetZombieCredits(CBaseEntity *pEntity)
 
 CBaseCombatWeapon *GetActiveWeaponFromEntity(CBaseEntity *pEntity)
 {
-	if (!pEntity)
-		return NULL;
-
-	if (pEntity->MyCombatCharacterPointer())
-		return pEntity->MyCombatCharacterPointer()->GetActiveWeapon();
-
-	return NULL;
+	return ((pEntity && pEntity->MyCombatCharacterPointer()) ? pEntity->MyCombatCharacterPointer()->GetActiveWeapon() : NULL);
 }
 
 extern void respawn(CBaseEntity *pEdict, bool fCopyCorpse);
@@ -554,44 +525,38 @@ float CHL2MPRules::GetReinforcementRespawnTime()
 }
 
 #ifndef CLIENT_DLL
-int CHL2MPRules::GetRewardFromRoundWin(CHL2MP_Player *pPlayer, int winnerTeam, bool gameOver)
+void CHL2MPRules::GiveRewardFromRoundWin(CHL2MP_Player *pPlayer, int winnerTeam, bool gameOver)
 {
-	if (CanUseSkills() == false)
-		return 0;
+	if ((CanUseSkills() == false) || !pPlayer->HasFullySpawned())
+		return;
 
 	float xpReward = 0.0f;
-	float xpRequired = ((float)pPlayer->m_BB2Local.m_iSkill_XPLeft);
-	float timeLeft = GetTimeLeft();
+	const float xpRequired = ((float)pPlayer->m_BB2Local.m_iSkill_XPLeft);
+	const float timeLeft = GetTimeLeft();
+
 	if (GetCurrentGamemode() == MODE_OBJECTIVE)
 	{
-		if ((pPlayer->HasPlayerEscaped() || ((pPlayer->GetTeamNumber() == winnerTeam) && pPlayer->HasFullySpawned() && pPlayer->IsAlive())) && gameOver)		
+		if ((pPlayer->HasPlayerEscaped() || ((pPlayer->GetTeamNumber() == winnerTeam) && pPlayer->IsAlive())) && gameOver)
 			xpReward = xpRequired * (GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPGameWinObjective / 100.0f);
 	}
-	else if (GetCurrentGamemode() == MODE_ARENA)
+	else if ((GetCurrentGamemode() == MODE_ARENA) && (winnerTeam == TEAM_HUMANS))
 	{
-		if ((winnerTeam == TEAM_HUMANS) && pPlayer->HasFullySpawned())
-		{
-			xpReward = xpRequired * ((gameOver ? GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPGameWinArena : GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPRoundWinArena) / 100.0f);
-			AchievementManager::WriteToAchievement(pPlayer, "ACH_GM_ARENA_WIN");
-
-			if (timeLeft <= 0)
-				xpReward = xpRequired * (GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPRoundWinArena / 100.0f);
-		}
+		xpReward = xpRequired * ((gameOver ? GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPGameWinArena : GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPRoundWinArena) / 100.0f);
+		AchievementManager::WriteToAchievement(pPlayer, "ACH_GM_ARENA_WIN");
+		if (timeLeft <= 0)
+			xpReward = xpRequired * (GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flXPRoundWinArena / 100.0f);
 	}
 
-	int iXPToGive = abs((int)(ceil(xpReward)));
-	if (iXPToGive > 0)
-	{
-		bool bRet = pPlayer->CanLevelUp(iXPToGive, NULL);
-		if (bRet)
-		{
-			char pchArg1[16];
-			Q_snprintf(pchArg1, 16, "%i", iXPToGive);
-			GameBaseServer()->SendToolTip("#TOOLTIP_XP_REWARD", GAME_TIP_DEFAULT, pPlayer->entindex(), pchArg1);
-		}
-	}
+	if (xpReward > 0.0f)
+		xpReward = ceil(xpReward);
 
-	return iXPToGive;
+	bool bRet = pPlayer->CanLevelUp(xpReward);
+	if (bRet)
+	{
+		char pchArg1[16];
+		Q_snprintf(pchArg1, 16, "%i", ((int)xpReward));
+		GameBaseServer()->SendToolTip("#TOOLTIP_XP_REWARD", GAME_TIP_DEFAULT, pPlayer->entindex(), pchArg1);
+	}
 }
 
 void CHL2MPRules::DisplayScores(int iWinner)
@@ -624,7 +589,7 @@ void CHL2MPRules::DisplayScores(int iWinner)
 		if (pPlayer->IsBot())
 			continue;
 
-		GetRewardFromRoundWin(pPlayer, iWinner, false);
+		GiveRewardFromRoundWin(pPlayer, iWinner, false);
 		pPlayer->ShowViewPortPanel(PANEL_ENDSCORE, true, data);
 	}
 
@@ -1703,7 +1668,7 @@ void CHL2MPRules::GoToIntermission(int iWinner)
 		if (pPlayer->IsBot())
 			continue;
 
-		GetRewardFromRoundWin(pPlayer, iWinner, true);
+		GiveRewardFromRoundWin(pPlayer, iWinner, true);
 		pPlayer->ShowViewPortPanel(PANEL_ENDSCORE, true, data);
 
 		// Tell our clients that they should do a 'last' save of their stats if we're allowed to save and if the client has loaded his stats. (so we don't overwrite his current stats)
@@ -1974,10 +1939,9 @@ void CHL2MPRules::DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info)
 	// If the killer is a player then award the player:
 	if (pKillerPlayer && (pVictim != pKiller) && m_bRoundStarted)
 	{
-		int experience = GetExperienceReward(pVictim);
 		pKillerPlayer->IncrementTotalScore();
 		pKillerPlayer->IncrementRoundScore();
-		pKillerPlayer->IncrementFragCount(experience);
+		pKillerPlayer->IncrementFragCount(5);
 
 		// Add extra zombie credit for zombie skills:
 		// Add one more kill to our current kills as a zombie. We then check these kills when you die, if they're over 3 you'll be respawned as a human. :)
@@ -1987,8 +1951,8 @@ void CHL2MPRules::DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info)
 			pKillerPlayer->m_BB2Local.m_iZombieCredits += GetZombieCredits(pVictim);
 			pKillerPlayer->CheckCanRespawnAsHuman();
 		}
-		else // Humans gain EXP from killing.
-			pKillerPlayer->CanLevelUp(experience, pVictim);
+		else
+			pKillerPlayer->Taunt(pVictim);
 
 		CTeam *pPlayerTeam = pKillerPlayer->GetTeam();
 		if (pPlayerTeam)

@@ -171,22 +171,47 @@ bool CNPCPriest::IsHeavyDamage(const CTakeDamageInfo &info)
 bool CNPCPriest::CanThrowGrenade(const Vector &vecTarget)
 {
 	// Not allowed to throw another grenade right now.
-	if (gpGlobals->curtime < m_flNextGrenadeCheck)
+	// If moving, don't check.
+	// No enemy - dont check either.
+	CBaseEntity *pEnemy = GetEnemy();
+	if ((gpGlobals->curtime < m_flNextGrenadeCheck) || (m_flGroundSpeed != 0) || (pEnemy == NULL))
 		return false;
 
-	// Too far away!
-	float flDist = (vecTarget - GetAbsOrigin()).Length();
-	if (flDist > 1024.0f)
+	const Vector &vecMyPos = GetAbsOrigin();
+	CUtlVector<Vector> vecTargetList;
+	vecTargetList.AddToTail(pEnemy->GetLocalOrigin());
+
+	if (GetEnemies() && (GetEnemies()->NumEnemies() > 0))
 	{
-		m_flNextGrenadeCheck = gpGlobals->curtime + 0.5f;
-		return false;
+		AIEnemiesIter_t iter;
+		for (AI_EnemyInfo_t *pEMemory = GetEnemies()->GetFirst(&iter); pEMemory != NULL; pEMemory = GetEnemies()->GetNext(&iter))
+		{
+			CBaseEntity *pTarget = pEMemory->hEnemy.Get();
+			if (pEMemory->bDangerMemory || (pTarget == NULL) || !pTarget->IsAlive() || (pTarget->entindex() == pEnemy->entindex()))
+				continue;
+			vecTargetList.AddToTail(pTarget->GetLocalOrigin());
+		}
 	}
 
-	// If moving, don't check.
-	if (m_flGroundSpeed != 0)
-		return false;
+	if (vecTargetList.Count() > 1)
+		vecTargetList.Shuffle(random); // Ensure random order!
 
-	return CheckCanThrowGrenade(vecTarget);
+	for (int i = (vecTargetList.Count() - 1); i >= 0; i--)
+	{
+		const Vector &vPos = vecTargetList[i];
+		float flDist = (vPos - vecMyPos).Length2D();
+		if (flDist > 1024.0f)
+		{
+			vecTargetList.Remove(i);
+			continue;
+		}
+
+		if (CheckCanThrowGrenade(vPos))
+			return true;
+	}
+
+	m_flNextGrenadeCheck = (gpGlobals->curtime + 0.5f);
+	return false;
 }
 
 Activity CNPCPriest::NPC_TranslateActivity(Activity activity)

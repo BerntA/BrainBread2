@@ -179,8 +179,9 @@ public:
 	void PerformPlayerUpdate(void);
 	void DispatchDamageText(CBaseEntity *pVictim, int damage);
 
+	void Taunt(CBaseEntity *pVictim); // Activate player taunt.
 	bool GiveItem(const char *szItemName, bool bDoLevelCheck = false);
-	bool CanLevelUp(int iXP, CBaseEntity *pVictim);
+	bool CanLevelUp(float flXP, bool bAllowTeamBonus = false);
 	bool PerformLevelUp(int iXP);
 	bool ActivatePerk(int skill);
 	bool EnterRageMode(bool bForce = false);

@@ -191,7 +191,7 @@ void CGameBaseServer::NewPlayerConnection(CHL2MP_Player *pClient)
 	WRITE_STRING(szSoundFile);
 	MessageEnd();
 
-	GameBaseShared()->NewPlayerConnection(false);
+	GameBaseShared()->NewPlayerConnection(false, pClient->entindex());
 
 	char steamID[80];
 	Q_snprintf(steamID, 80, "%llu", pClient->GetSteamIDAsUInt64());

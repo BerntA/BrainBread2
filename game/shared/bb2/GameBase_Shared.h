@@ -296,7 +296,7 @@ public:
 	bool ClientCommand(const CCommand &args);
 
 	// Events
-	void NewPlayerConnection(bool bState = false);
+	void NewPlayerConnection(bool bState, int index);
 	int GetNumActivePlayers(void) { return m_iNumActivePlayers; }
 	int GetAveragePlayerLevel(void) { return m_iAvgPlayerLvL; }
 

@@ -47,6 +47,7 @@ public:
 
 	virtual Vector  GetCrouchEyeOffset( void );
 
+	virtual int OnTakeDamage_Alive(const CTakeDamageInfo &info);
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 
 	void SetActivity( Activity NewActivity );

@@ -56,6 +56,8 @@ public:
 	const char *GetNPCModelName() { return pszModelName; }
 	const char *GetOverridenSoundSet() { return pszSoundsetOverride; }
 
+	void OnTookDamage(const CTakeDamageInfo &info, const float flHealth); // Give XP to attackers.
+
 protected:
 
 	// Define what type of npcs this is: (a broad selection, classify is shared, = fred and other bosses go under the same classification as a walker, however this type is more specific for every 'kind'.

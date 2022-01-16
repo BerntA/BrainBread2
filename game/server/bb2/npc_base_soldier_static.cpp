@@ -456,6 +456,15 @@ void CNPCBaseSoldierStatic::RunTask(const Task_t *pTask)
 	}
 }
 
+int CNPCBaseSoldierStatic::OnTakeDamage_Alive(const CTakeDamageInfo &inputInfo)
+{
+	const float flCurrentHealth = ((float)m_iHealth.Get());
+	int ret = BaseClass::OnTakeDamage_Alive(inputInfo);
+	if (ret)
+		OnTookDamage(inputInfo, flCurrentHealth);
+	return ret;
+}
+
 void CNPCBaseSoldierStatic::Event_Killed(const CTakeDamageInfo &info)
 {
 	HL2MPRules()->DeathNotice(this, info);

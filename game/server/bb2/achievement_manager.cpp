@@ -110,7 +110,7 @@ bool AchievementManager::WriteToAchievement(CHL2MP_Player *pPlayer, const char *
 		// Give Some Reward:
 		const achievementStatItem_t *pAchiev = ACHIEVEMENTS::GetAchievementItem(szAchievement);
 		if (pAchiev && pAchiev->reward)
-			pPlayer->CanLevelUp(pAchiev->reward, NULL);
+			pPlayer->CanLevelUp(pAchiev->reward);
 
 		return true;
 	}

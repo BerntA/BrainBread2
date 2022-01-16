@@ -147,6 +147,24 @@ void CNPCBaseProperties::UpdateMeleeRange(const Vector &bounds) // Make sure tha
 	m_flRange = MAX(m_pNPCData->flRange, bboxMaxRange);
 }
 
+void CNPCBaseProperties::OnTookDamage(const CTakeDamageInfo &info, const float flHealth)
+{
+	CHL2MP_Player *pAttacker = ToHL2MPPlayer(info.GetAttacker());
+	if (!pAttacker || (pAttacker->Classify() != CLASS_PLAYER) || !HL2MPRules() || HL2MPRules()->IsGameoverOrScoresVisible() || !HL2MPRules()->m_bRoundStarted)
+		return;
+
+	const float totalHealth = ((float)m_iTotalHP);
+	const float totalXP = ((float)m_iXPToGive);
+
+	float xpToGivePlayer = MIN(flHealth, info.GetDamage());
+	xpToGivePlayer = clamp(xpToGivePlayer, 0.0f, totalHealth);
+	xpToGivePlayer /= totalHealth;
+	xpToGivePlayer *= totalXP;
+
+	pAttacker->IncrementFragCount(ceil(xpToGivePlayer));
+	pAttacker->CanLevelUp(xpToGivePlayer, true);
+}
+
 void CNPCBaseProperties::FireGameEvent(IGameEvent *event)
 {
 	const char *type = event->GetName();

@@ -461,7 +461,7 @@ bool CMultiplayRules::Init()
 
 				pPlayer->SetConnected( PlayerDisconnected );
 
-				GameBaseShared()->NewPlayerConnection(true);
+				GameBaseShared()->NewPlayerConnection(true, pPlayer->entindex());
 			}
 		}
 	}

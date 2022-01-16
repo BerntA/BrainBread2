@@ -32,6 +32,7 @@ public:
 	int				RangeAttack2Conditions(float flDot, float flDist); // For innate grenade attack
 	int				MeleeAttack1Conditions(float flDot, float flDist); // For kick/punch
 
+	int OnTakeDamage_Alive(const CTakeDamageInfo &info);
 	void Event_Killed(const CTakeDamageInfo &info);
 
 	void SetActivity(Activity NewActivity);
@@ -128,7 +129,7 @@ private:
 	//=========================================================
 	// Soldier Conditions
 	//=========================================================
-	enum 
+	enum
 	{
 		COND_SOLDIER_STATIC_NO_FIRE = BaseClass::NEXT_CONDITION,
 		COND_SOLDIER_STATIC_ATTACK_SLOT_AVAILABLE,

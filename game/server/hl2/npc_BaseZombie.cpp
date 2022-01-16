@@ -347,8 +347,10 @@ int CNPC_BaseZombie::MeleeAttack1Conditions(float flDot, float flFullDist)
 //-----------------------------------------------------------------------------
 #define ZOMBIE_SCORCH_RATE		8
 #define ZOMBIE_MIN_RENDERCOLOR	50
-int CNPC_BaseZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
+int CNPC_BaseZombie::OnTakeDamage_Alive(const CTakeDamageInfo &inputInfo)
 {
+	const float flCurrentHealth = ((float)m_iHealth.Get());
+
 	// BB2 no dmg for zombie if player zombie attack us
 	CBaseEntity *pAttacker = inputInfo.GetAttacker();
 	if (pAttacker)
@@ -366,19 +368,20 @@ int CNPC_BaseZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 		// If a zombie is on fire it only takes damage from the fire that's attached to it. (DMG_DIRECT)
 		// This is to stop zombies from burning to death 10x faster when they're standing around
 		// 10 fire entities.
-		if( IsOnFire() && !(inputInfo.GetDamageType() & DMG_DIRECT) )
+		if (IsOnFire() && !(inputInfo.GetDamageType() & DMG_DIRECT))
 			return 0;
 
-		Scorch( ZOMBIE_SCORCH_RATE, ZOMBIE_MIN_RENDERCOLOR );
+		Scorch(ZOMBIE_SCORCH_RATE, ZOMBIE_MIN_RENDERCOLOR);
 	}
 
 	if (ShouldIgnite(inputInfo))
-		Ignite( 100.0f );
+		Ignite(100.0f);
 
 	int ret = BaseClass::OnTakeDamage_Alive(inputInfo);
 	if (ret)
 	{
 		m_flHealthRegenSuspended = (gpGlobals->curtime + HEALTH_REGEN_SUSPEND);
+		OnTookDamage(inputInfo, flCurrentHealth);
 	}
 
 	return ret;
@@ -1125,7 +1128,7 @@ bool CNPC_BaseZombie::ShouldUseNormalSpeedForSchedule(int scheduleType)
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-void CNPC_BaseZombie::Event_Killed( const CTakeDamageInfo &info )
+void CNPC_BaseZombie::Event_Killed(const CTakeDamageInfo &info)
 {
 	CTakeDamageInfo pDamageCopy = info;
 
@@ -1134,6 +1137,7 @@ void CNPC_BaseZombie::Event_Killed( const CTakeDamageInfo &info )
 		pDamageCopy.SetAttacker(pIgniter);
 
 	HL2MPRules()->DeathNotice(this, pDamageCopy);
+
 	BaseClass::Event_Killed(pDamageCopy);
 	m_hLastIgnitionSource = NULL;
 }

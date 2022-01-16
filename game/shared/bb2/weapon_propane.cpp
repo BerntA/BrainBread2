@@ -22,7 +22,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define PROPANE_GRIEF_XP 50
+#define PROPANE_GRIEF_XP 50.0f
 #define PROPANE_THROW_OFFSET_FORWARD 5.0f
 #define PROPANE_THROW_OFFSET_RIGHT 5.0f
 #define RETHROW_DELAY	0.5
@@ -122,7 +122,7 @@ int CPropaneExplosive::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	// If someone else destroys the throwers propane tank they will receive some 'you suck' kind of griefing XP.
 	CHL2MP_Player *pThrower = ToHL2MPPlayer(m_pThrowOwner.Get());
 	if (pThrower && (pThrower != pAttacker))
-		pThrower->CanLevelUp(PROPANE_GRIEF_XP, NULL);
+		pThrower->CanLevelUp(PROPANE_GRIEF_XP);
 
 	SetThrower(ToBaseCombatCharacter(pAttacker));
 	CSoundEnt::InsertSound(SOUND_DANGER, GetAbsOrigin(), 400, 1.5, this);

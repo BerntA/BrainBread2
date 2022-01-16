@@ -1435,82 +1435,70 @@ bool CHL2MP_Player::PerformLevelUp(int iXP)
 
 #define PERCENT_TO_TAUNT 0.075f // X%
 
-bool CHL2MP_Player::CanLevelUp(int iXP, CBaseEntity *pVictim)
+// Killed an NPC or player, taunt + skill activation passive.
+void CHL2MP_Player::Taunt(CBaseEntity *pVictim)
 {
-	// Don't give XP to people who've not spawned!
-	if (!HasFullySpawned())
-		return false;
+	if (!HasFullySpawned() || !IsAlive())
+		return;
 
-	if (!HL2MPRules()->CanUseSkills())
+	if (TryTheLuck(PERCENT_TO_TAUNT))
+		HL2MPRules()->EmitSoundToClient(this, "Taunt", BB2_SoundTypes::TYPE_PLAYER, GetSoundsetGender());
+
+	if (!pVictim || !HL2MPRules()->CanUseSkills())
+		return;
+
+	double perc = 0.0;
+	const float totalHP = ((float)pVictim->GetMaxHealth());
+
+	if (GetSkillValue(PLAYER_SKILL_HUMAN_LIFE_LEECH) > 0)
 	{
-		if ((pVictim != NULL) && IsAlive() && (iXP > 1))
+		perc = (GetSkillValue(PLAYER_SKILL_HUMAN_LIFE_LEECH, TEAM_HUMANS) / PERCENT_BASE);
+		if (TryTheLuck(perc))
 		{
-			if (TryTheLuck(PERCENT_TO_TAUNT))
-				HL2MPRules()->EmitSoundToClient(this, "Taunt", BB2_SoundTypes::TYPE_PLAYER, GetSoundsetGender());
+			float m_flHealthToTake = ((totalHP / 100.0f) * GetSkillValue(PLAYER_SKILL_HUMAN_LIFE_LEECH, TEAM_HUMANS));
+			TakeHealth(m_flHealthToTake, DMG_GENERIC);
+			DispatchDamageText(pVictim, ((int)m_flHealthToTake));
+			PlaySkillSoundCue(SKILL_SOUND_CUE_LIFE_LEECH);
 		}
-
-		return false;
 	}
 
-	if ((pVictim != NULL) && m_bIsInfected && (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE))
-		return false;
-
-	if (m_iSkill_Level < MAX_PLAYER_LEVEL)
+	if (GetSkillValue(PLAYER_SKILL_HUMAN_MAGAZINE_REFILL) > 0)
 	{
-		int iExperienceToGive = iXP;
-		if ((HL2MPRules()->GetCurrentGamemode() == MODE_ARENA) && HL2MPRules()->IsGamemodeFlagActive(GM_FLAG_ARENA_HARDMODE))
-			iExperienceToGive = ceil(((float)iXP) * GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flArenaHardModeXPMultiplier);		
-
-		if (pVictim && (iXP > 1))
-			iExperienceToGive += (m_BB2Local.m_iPerkTeamBonus * GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iTeamBonusXPIncrease);
-
-		// While this one goes for leveling... Because we also want to reset it or else we will actually only need 5 kills per level. 
-		m_BB2Local.m_iSkill_XPCurrent += iExperienceToGive;
-	}
-
-	// Enable Perks: (% chance stuff)
-	if ((pVictim != NULL) && IsAlive() && (iXP > 1))
-	{
-		if (TryTheLuck(PERCENT_TO_TAUNT))
-			HL2MPRules()->EmitSoundToClient(this, "Taunt", BB2_SoundTypes::TYPE_PLAYER, GetSoundsetGender());
-
-		double perc = 0.0;
-
-		if (GetSkillValue(PLAYER_SKILL_HUMAN_LIFE_LEECH) > 0)
+		perc = (GetSkillValue(PLAYER_SKILL_HUMAN_MAGAZINE_REFILL, TEAM_HUMANS) / PERCENT_BASE);
+		if (TryTheLuck(perc))
 		{
-			perc = (GetSkillValue(PLAYER_SKILL_HUMAN_LIFE_LEECH, TEAM_HUMANS) / PERCENT_BASE);
-			if (TryTheLuck(perc))
+			CBaseCombatWeapon *pMyWeapon = GetActiveWeapon();
+			if (pMyWeapon)
 			{
-				float m_flEnemyHealth = pVictim->GetMaxHealth();
-				float m_flHealthToTake = ((m_flEnemyHealth / 100.0f) * (GetSkillValue(PLAYER_SKILL_HUMAN_LIFE_LEECH, TEAM_HUMANS)));
-				TakeHealth(m_flHealthToTake, DMG_GENERIC);
-				DispatchDamageText(pVictim, (int)m_flHealthToTake);
-				PlaySkillSoundCue(SKILL_SOUND_CUE_LIFE_LEECH);
-			}
-		}
-
-		if (GetSkillValue(PLAYER_SKILL_HUMAN_MAGAZINE_REFILL) > 0)
-		{
-			perc = (GetSkillValue(PLAYER_SKILL_HUMAN_MAGAZINE_REFILL, TEAM_HUMANS) / PERCENT_BASE);
-			if (TryTheLuck(perc))
-			{
-				CBaseCombatWeapon *pMyWeapon = GetActiveWeapon();
-				if (pMyWeapon)
+				if ((pMyWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL) && !pMyWeapon->IsMeleeWeapon() && pMyWeapon->UsesClipsForAmmo())
 				{
-					if ((pMyWeapon->GetWeaponType() != WEAPON_TYPE_SPECIAL) && !pMyWeapon->IsMeleeWeapon() && pMyWeapon->UsesClipsForAmmo())
-					{
-						pMyWeapon->m_iClip = pMyWeapon->GetMaxClip();
-						pMyWeapon->AffectedByPlayerSkill(PLAYER_SKILL_HUMAN_MAGAZINE_REFILL);
-						PlaySkillSoundCue(SKILL_SOUND_CUE_AMMO_REFILL);
-					}
+					pMyWeapon->m_iClip = pMyWeapon->GetMaxClip();
+					pMyWeapon->AffectedByPlayerSkill(PLAYER_SKILL_HUMAN_MAGAZINE_REFILL);
+					PlaySkillSoundCue(SKILL_SOUND_CUE_AMMO_REFILL);
 				}
 			}
 		}
 	}
+}
 
+bool CHL2MP_Player::CanLevelUp(float flXP, bool bAllowTeamBonus)
+{
 	// Disable leveling if we're at max level.
-	if (m_iSkill_Level >= MAX_PLAYER_LEVEL)
+	// Don't give XP to people who've not spawned! (must allow skills)
+	if ((m_iSkill_Level >= MAX_PLAYER_LEVEL) || (flXP <= 0.0f) || !HasFullySpawned() || !HL2MPRules()->CanUseSkills())
 		return false;
+
+	if ((HL2MPRules()->GetCurrentGamemode() == MODE_ARENA) && HL2MPRules()->IsGamemodeFlagActive(GM_FLAG_ARENA_HARDMODE))
+		flXP *= GameBaseShared()->GetSharedGameDetails()->GetGamemodeData()->flArenaHardModeXPMultiplier;
+
+	// Teaming up = mooor xp.
+	if (bAllowTeamBonus)
+		flXP += (m_BB2Local.m_iPerkTeamBonus.Get() * GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iTeamBonusXPIncrease);
+
+	flXP = ceil(flXP);
+
+	// While this one goes for leveling... Because we also want to reset it or else we will actually only need 5 kills per level. 
+	m_BB2Local.m_iSkill_XPCurrent += ((int)flXP);
 
 	// We try to level up:
 	IGNORE_PREDICTION_SUPPRESSION;

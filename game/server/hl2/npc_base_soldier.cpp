@@ -982,6 +982,19 @@ bool CNPC_BaseSoldier::FVisible( CBaseEntity *pEntity, int traceMask, CBaseEntit
 }
 
 //-----------------------------------------------------------------------------
+// Handle took damage
+//-----------------------------------------------------------------------------
+int CNPC_BaseSoldier::OnTakeDamage_Alive(const CTakeDamageInfo &inputInfo)
+{
+	const float flCurrentHealth = ((float)m_iHealth.Get());
+	int ret = BaseClass::OnTakeDamage_Alive(inputInfo);
+	if (ret)
+		OnTookDamage(inputInfo, flCurrentHealth);
+	return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Handle death
 //-----------------------------------------------------------------------------
 void CNPC_BaseSoldier::Event_Killed( const CTakeDamageInfo &info )
 {

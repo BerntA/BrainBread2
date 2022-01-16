@@ -1080,7 +1080,7 @@ bool CGameBaseShared::ClientCommand(const CCommand &args)
 // Purpose:
 // Notify everyone that we have a new player in our game!
 ///////////////////////////////////////////////
-void CGameBaseShared::NewPlayerConnection(bool bState)
+void CGameBaseShared::NewPlayerConnection(bool bState, int index)
 {
 	int iNumPlayers = 0;
 	int iAvgLevel = 0;
@@ -1109,6 +1109,7 @@ void CGameBaseShared::NewPlayerConnection(bool bState)
 	if (event)
 	{
 		event->SetBool("state", bState); // False - Connected, True - Disconnected.
+		event->SetInt("index", index);
 		gameeventmanager->FireEvent(event);
 	}
 }

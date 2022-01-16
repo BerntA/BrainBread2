@@ -281,7 +281,7 @@ public:
 	float GetPlayerRespawnTime(CHL2MP_Player *pPlayer);
 
 	// Shared
-	int GetRewardFromRoundWin(CHL2MP_Player *pPlayer, int winnerTeam, bool gameOver);
+	void GiveRewardFromRoundWin(CHL2MP_Player *pPlayer, int winnerTeam, bool gameOver);
 
 	// Zombie Limiting
 	bool CanSpawnZombie(void);
