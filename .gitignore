@@ -56,11 +56,6 @@ ipch
 /Release/*
 /obj_*_linux32/*
 obj_*_linux32
-/stdshaders/game/*
-/stdshaders/game/bin/*
-/stdshaders/game/bb2/*
-/stdshaders/game/bb2/shaders/*
-/stdshaders/game/bb2/shaders/fxc/*
 Debug_dx9_*
 Debug_dx9_*
 Release_dx9_*
@@ -119,6 +114,7 @@ Release
 .builds
 *.pidb
 *.svclog
+materialsystem/buildshaders.log
 
 # Visual C++ cache files
 ipch/

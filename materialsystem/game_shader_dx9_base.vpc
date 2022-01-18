@@ -1,0 +1,77 @@
+//-----------------------------------------------------------------------------
+//	game_shader_dx9.vpc
+//
+//	Project Script for mods to use an an example of how to override shaders
+//-----------------------------------------------------------------------------
+
+$Macro OUTBINDIR	"$SRCDIR\build"
+
+$Include "$SRCDIR\vpc_scripts\source_dll_base.vpc"
+
+$Configuration	"Debug"
+{
+	$General
+	{
+		$OutputDirectory		"Debug"			[$WIN32]
+		$IntermediateDirectory	"Debug"			[$WIN32]
+	}
+}
+
+$Configuration	"Release"
+{
+	$General
+	{
+		$OutputDirectory		"Release"		[$WIN32]
+		$IntermediateDirectory	"Release"		[$WIN32]
+	}
+}
+
+// Common Configuration
+$Configuration
+{
+	$Compiler
+	{
+		$AdditionalIncludeDirectories	"$BASE;include;"	[$WIN32||$POSIX]
+		$PreprocessorDefinitions		"$BASE;STDSHADER_DX9_DLL_EXPORT;FAST_MATERIALVAR_ACCESS;GAME_SHADER_DLL"
+		$PreprocessorDefinitions		"$BASE;USE_ACTUAL_DX" [($WIN32||$X360) && !$GL]
+	}
+
+	$Linker
+	{
+		$AdditionalDependencies			"$BASE version.lib winmm.lib"	[$WIN32]
+		$SystemLibraries                                                        "iconv" [$OSXALL]
+	}
+}
+
+$Project
+{
+	$Folder	"Source Files"
+	{
+		$File	"basevsshader.cpp"
+		$File	"example_model_dx9.cpp"
+		$File	"example_model_dx9_helper.cpp"
+		$File	"bloom.cpp"
+		$File	"screenspace_general.cpp"
+	}
+
+	$Folder	"Header Files"
+	{
+		$File	"basevsshader.h"
+		$File	"common_fxc.h"
+		$File	"common_hlsl_cpp_consts.h"
+		$File	"common_ps_fxc.h"
+		$File	"common_vertexlitgeneric_dx9.h"
+		$File	"common_vs_fxc.h"
+		$File	"shader_constant_register_map.h"
+		$File	"example_model_dx9_helper.h"
+	}
+
+	$Folder "Link Libraries"
+	{
+        $Lib	mathlib
+        $Lib	shaderlib
+    }
+
+	$Shaders	"stdshader_dx9_20b.txt"
+	$Shaders	"stdshader_dx9_30.txt"
+}
