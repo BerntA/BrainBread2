@@ -134,7 +134,7 @@ void CNPC_CustomActor::Spawn()
 bool CNPC_CustomActor::ParseNPC(CBaseEntity *pEntity)
 {
 	m_flSpeedFactorValue = 1.0f;
-	m_flXPToGive = 5.0f;
+	m_flXPToGive = (m_bBossState ? 100.0f : 50.0f);
 	m_iDamageKick = 20;
 	m_flRange = 60.0f;
 	m_iModelSkin = m_nSkin.Get();
