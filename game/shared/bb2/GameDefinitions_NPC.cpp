@@ -76,7 +76,7 @@ bool CGameDefinitionsNPC::LoadNPCData(void)
 			npcItem->iKickDamageMin = npcData->GetInt("KickDamageMin");
 			npcItem->iKickDamageMax = npcData->GetInt("KickDamageMax");
 
-			npcItem->iXP = npcData->GetInt("XP");
+			npcItem->flXP = npcData->GetFloat("XP");
 			npcItem->flHealthScale = npcData->GetFloat("HealthScale", 10.0f);
 			npcItem->flDamageScale = npcData->GetFloat("DamageScale", 10.0f);
 			npcItem->flRange = npcData->GetFloat("Range", 50.0f);

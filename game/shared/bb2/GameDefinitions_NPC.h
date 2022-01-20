@@ -101,7 +101,7 @@ public:
 	float flSpeedFactorMin;
 	float flSpeedFactorMax;
 
-	int iXP;
+	float flXP;
 
 	float flHealthScale;
 	float flDamageScale;

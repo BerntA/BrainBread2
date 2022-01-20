@@ -18,7 +18,7 @@
 
 CNPCBaseProperties::CNPCBaseProperties()
 {
-	m_iXPToGive = 0;
+	m_flXPToGive = 0.0f;
 	m_iDamageOneHand = 0;
 	m_iDamageBothHands = 0;
 	m_iDamageKick = 0;
@@ -62,7 +62,7 @@ bool CNPCBaseProperties::ParseNPC(CBaseEntity *pEntity)
 		m_iDefaultDamage2H = random->RandomInt(npcData->iDoubleSlashDamageMin, npcData->iDoubleSlashDamageMax);
 		m_iDefaultKickDamage = random->RandomInt(npcData->iKickDamageMin, npcData->iKickDamageMax);
 
-		m_iXPToGive = npcData->iXP;
+		m_flXPToGive = npcData->flXP;
 		m_iTotalHP = m_iDefaultHealth;
 		m_iDamageOneHand = m_iDefaultDamage1H;
 		m_iDamageBothHands = m_iDefaultDamage2H;
@@ -117,10 +117,7 @@ void CNPCBaseProperties::UpdateNPCScaling()
 	m_iDamageOneHand = (flDamageScaleAmount * (damageSingle / 100.0f)) + damageSingle;
 	m_iDamageBothHands = (flDamageScaleAmount * (damageBoth / 100.0f)) + damageBoth;
 	m_iDamageKick = (flDamageScaleAmount * (damageKick / 100.0f)) + damageKick;
-
-	float defaultXP = ((float)m_pNPCData->iXP);
-	float newXPValue = ((flHealthScaleAmount + flDamageScaleAmount) * (defaultXP / 100.0f)) + defaultXP;
-	m_iXPToGive = (int)newXPValue;
+	m_flXPToGive = (((flHealthScaleAmount + flDamageScaleAmount) * (m_pNPCData->flXP / 100.0f)) + m_pNPCData->flXP);
 
 	if (m_pOuter)
 	{
@@ -154,12 +151,10 @@ void CNPCBaseProperties::OnTookDamage(const CTakeDamageInfo &info, const float f
 		return;
 
 	const float totalHealth = ((float)m_iTotalHP);
-	const float totalXP = ((float)m_iXPToGive);
-
 	float xpToGivePlayer = MIN(flHealth, info.GetDamage());
 	xpToGivePlayer = clamp(xpToGivePlayer, 0.0f, totalHealth);
 	xpToGivePlayer /= totalHealth;
-	xpToGivePlayer *= totalXP;
+	xpToGivePlayer *= m_flXPToGive;
 
 	pAttacker->IncrementFragCount(ceil(xpToGivePlayer));
 	pAttacker->CanLevelUp(xpToGivePlayer, true);

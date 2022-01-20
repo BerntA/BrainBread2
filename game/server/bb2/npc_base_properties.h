@@ -46,7 +46,7 @@ public:
 
 	// Shared Accessors.
 	virtual bool GetGender() { return m_bGender; }
-	virtual int GetXP() { return m_iXPToGive; }
+	virtual float GetXP() { return m_flXPToGive; }
 
 	static const char *GetNPCScript(int type);
 
@@ -69,7 +69,7 @@ protected:
 
 	int m_iModelSkin;
 	int m_iTotalHP;
-	int m_iXPToGive;
+	float m_flXPToGive;
 	int m_iDamageOneHand;
 	int m_iDamageBothHands;
 	int m_iDamageKick;

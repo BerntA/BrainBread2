@@ -151,7 +151,7 @@ void CTriggerCapturePoint::CapturePointThink(void)
 			if ((gpGlobals->curtime > m_flCaptureTimeEnd) && bCanProceed)
 			{
 				m_bIsCaptured = true;
-				m_OnCaptured.FireOutput(this, this);
+				m_OnCaptured.FireOutput((m_hTouchingEntities.Count() > 0) ? m_hTouchingEntities[0].Get() : this, this);
 			}
 
 			for (int i = 0; i < m_hTouchingEntities.Count(); i++)
