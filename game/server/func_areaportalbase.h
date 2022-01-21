@@ -11,21 +11,25 @@
 #pragma once
 #endif
 
-
 #include "baseentity.h"
 #include "utllinkedlist.h"
 
+enum areaportal_state
+{
+	AREAPORTAL_CLOSED = 0,
+	AREAPORTAL_OPEN = 1,
+};
 
 // Shared stuff between door portals and window portals.
 class CFuncAreaPortalBase : public CBaseEntity
 {
-	DECLARE_CLASS( CFuncAreaPortalBase, CBaseEntity );
+	DECLARE_CLASS(CFuncAreaPortalBase, CBaseEntity);
 public:
 	DECLARE_DATADESC();
 
-					CFuncAreaPortalBase();
+	CFuncAreaPortalBase();
 	virtual			~CFuncAreaPortalBase();
-	
+
 	// This is called each frame for each client to all portals to close 
 	// when the viewer is far enough away, or on the backside.
 	//
@@ -90,24 +94,30 @@ public:
 	// Note: when you're standing in the space between the **'s, then the server would stop transmitting
 	// the contents of area 2 because there would be no portal you were on the correct side of to
 	// see into area 2.
-	virtual bool	UpdateVisibility( const Vector &vOrigin, float fovDistanceAdjustFactor, bool &bIsOpenOnClient );
+	virtual bool	UpdateVisibility(const Vector &vOrigin, float fovDistanceAdjustFactor, bool &bIsOpenOnClient);
 
+	virtual void	Precache(void);
+	virtual bool	KeyValue(const char *szKeyName, const char *szValue);
+
+	// Input handlers
+	void InputOpen(inputdata_t &inputdata);
+	void InputClose(inputdata_t &inputdata);
+	void InputToggle(inputdata_t &inputdata);
 
 public:
-
 	// This matches two dareaportal_t::m_PortalKeys.	
 	int				m_portalNumber;
-	
 	int				m_iPortalVersion;
 
 private:
-	
 	unsigned short	m_AreaPortalsElement;	// link into g_AreaPortals.
+
+protected:
+	void	SetState(int state) { m_state = state; UpdateState(); }
+	void	UpdateState(void);
+	int		m_state;
 };
 
-
 extern CUtlLinkedList<CFuncAreaPortalBase*, unsigned short> g_AreaPortals;
-
-
 
 #endif // FUNC_AREAPORTALBASE_H
