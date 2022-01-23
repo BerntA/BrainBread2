@@ -37,6 +37,7 @@ CTriggerAchievement::CTriggerAchievement(void)
 
 void CTriggerAchievement::Spawn()
 {
+	AddSpawnFlags(SF_TRIGGER_ALLOW_CLIENTS);
 	BaseClass::Spawn();
 
 	if (szAchievementLink == NULL_STRING)

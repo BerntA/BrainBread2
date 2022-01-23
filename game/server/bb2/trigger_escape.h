@@ -21,6 +21,7 @@ public:
 	CTriggerEscape();
 	virtual ~CTriggerEscape();
 
+	void Spawn();
 	void Touch(CBaseEntity *pOther);
 
 protected:

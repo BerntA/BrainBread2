@@ -140,10 +140,12 @@ void CBaseTrigger::InputTouchTest( inputdata_t &inputdata )
 //------------------------------------------------------------------------------
 void CBaseTrigger::Spawn()
 {
-	if ( HasSpawnFlags( SF_TRIGGER_ONLY_PLAYER_ALLY_NPCS ) )
+	m_flPercentRequired = MAX(m_flPercentRequired, 1.0f);
+
+	if (HasSpawnFlags(SF_TRIGGER_ONLY_PLAYER_ALLY_NPCS))
 	{
 		// Automatically set this trigger to work with NPC's.
-		AddSpawnFlags( SF_TRIGGER_ALLOW_NPCS );
+		AddSpawnFlags(SF_TRIGGER_ALLOW_NPCS);
 	}
 
 	BaseClass::Spawn();

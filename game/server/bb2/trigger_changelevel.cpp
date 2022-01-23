@@ -50,6 +50,7 @@ CTriggerChangelevel::CTriggerChangelevel()
 
 void CTriggerChangelevel::Spawn()
 {
+	AddSpawnFlags(SF_TRIGGER_ALLOW_CLIENTS);
 	BaseClass::Spawn();
 
 	if (pchNextLevel == NULL_STRING)
@@ -78,31 +79,28 @@ void CTriggerChangelevel::Spawn()
 
 void CTriggerChangelevel::OnThink(void)
 {
-	if (!m_bDisabled && !m_bChangeLevel)
+	if (!m_bDisabled && !m_bChangeLevel && IsEnoughPlayersInVolume(TEAM_HUMANS))
 	{
-		if (IsEnoughPlayersInVolume(TEAM_HUMANS))
+		if (GameBaseShared()->GetPlayerLoadoutHandler())
 		{
-			if (GameBaseShared()->GetPlayerLoadoutHandler())
-			{
-				GameBaseShared()->GetPlayerLoadoutHandler()->SetMapTransit(true);
-				GameBaseShared()->GetPlayerLoadoutHandler()->SaveLoadoutData();
-			}
-
-			for (int i = 1; i <= gpGlobals->maxClients; i++)
-			{
-				CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
-				if (!pPlayer || pPlayer->IsBot())
-					continue;
-
-				color32 black = { 0, 0, 0, 0 };
-				UTIL_ScreenFade(this, black, 0.5f, 5.0f, FFADE_OUT | FFADE_PURGE | FFADE_STAYOUT);
-			}
-
-			m_bChangeLevel = true;
-			GameBaseServer()->DoMapChange(STRING(pchNextLevel));
-			SetThink(NULL);
-			return;
+			GameBaseShared()->GetPlayerLoadoutHandler()->SetMapTransit(true);
+			GameBaseShared()->GetPlayerLoadoutHandler()->SaveLoadoutData();
 		}
+
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
+			if (!pPlayer || pPlayer->IsBot())
+				continue;
+
+			color32 black = { 0, 0, 0, 0 };
+			UTIL_ScreenFade(this, black, 0.5f, 5.0f, FFADE_OUT | FFADE_PURGE | FFADE_STAYOUT);
+		}
+
+		m_bChangeLevel = true;
+		GameBaseServer()->DoMapChange(STRING(pchNextLevel));
+		SetThink(NULL);
+		return;
 	}
 
 	SetNextThink(gpGlobals->curtime + CHANGELEVEL_THINK_FREQ);

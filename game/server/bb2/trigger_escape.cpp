@@ -33,6 +33,12 @@ CTriggerEscape::~CTriggerEscape(void)
 {
 }
 
+void CTriggerEscape::Spawn()
+{
+	AddSpawnFlags(SF_TRIGGER_ALLOW_CLIENTS);
+	BaseClass::Spawn();
+}
+
 void CTriggerEscape::Touch(CBaseEntity *pOther)
 {
 	if (m_bDisabled || !pOther || !pOther->IsHuman() || HL2MPRules()->IsGameoverOrScoresVisible())

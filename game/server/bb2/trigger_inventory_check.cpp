@@ -49,6 +49,8 @@ CTriggerInventoryCheck::CTriggerInventoryCheck()
 
 void CTriggerInventoryCheck::Spawn()
 {
+	AddSpawnFlags(SF_TRIGGER_ALLOW_CLIENTS);
+
 	if (!m_iItemID)
 	{
 		Warning("trigger_inventory_check '%s' with invalid ItemID '%u'!\nRemoving!\n", STRING(GetEntityName()), m_iItemID);
