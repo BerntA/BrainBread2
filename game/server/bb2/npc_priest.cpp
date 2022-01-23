@@ -241,8 +241,8 @@ Activity CNPCPriest::NPC_TranslateActivity(Activity activity)
 void CNPCPriest::FireBullets(const FireBulletsInfo_t &info)
 {
 	FireBulletsInfo_t adjustedInfo = info;
-	adjustedInfo.m_iShots = 5;
-	adjustedInfo.m_vecSpread = VECTOR_CONE_6DEGREES;
+	adjustedInfo.m_iShots = 3;
+	adjustedInfo.m_vecSpread = VECTOR_CONE_5DEGREES;
 	BaseClass::FireBullets(adjustedInfo);
 }
 
