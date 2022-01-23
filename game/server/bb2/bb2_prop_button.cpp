@@ -31,6 +31,7 @@ DEFINE_KEYFIELD(m_bShowModel, FIELD_BOOLEAN, "ShowModel"),
 DEFINE_KEYFIELD(szKeyPadCode, FIELD_STRING, "KeyPadCode"),
 DEFINE_KEYFIELD(m_bIsKeyPad, FIELD_BOOLEAN, "KeyPadMode"),
 DEFINE_KEYFIELD(m_clrGlow, FIELD_COLOR32, "GlowOverlayColor"),
+DEFINE_KEYFIELD(m_szUseSound, FIELD_SOUNDNAME, "UseSound"),
 
 // Inputs
 DEFINE_INPUTFUNC(FIELD_VOID, "ShowModel", ShowModel),
@@ -48,9 +49,9 @@ CPropButton::CPropButton(void) : CBaseKeyPadEntity()
 	ClassifyFor = 0;
 	m_iGlowType = m_iOldGlowMode = GLOW_MODE_GLOBAL;
 	m_clrGlow = { 255, 100, 100, 255 };
-	m_bStartGlowing = false;
 	m_bShowModel = true;
-	m_bIsKeyPad = false;
+	m_bStartGlowing = m_bIsKeyPad = false;
+	m_szUseSound = NULL_STRING;
 }
 
 void CPropButton::Spawn(void)
@@ -113,6 +114,8 @@ void CPropButton::Precache(void)
 	else
 	{
 		PrecacheModel(STRING(GetModelName()));
+		if (m_szUseSound != NULL_STRING)
+			PrecacheScriptSound(STRING(m_szUseSound));
 		BaseClass::Precache();
 	}
 }
@@ -139,6 +142,8 @@ void CPropButton::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 		return;
 
 	m_OnUse.FireOutput(pActivator, this);
+	if (m_szUseSound != NULL_STRING)
+		EmitSound(STRING(m_szUseSound));
 
 	if (m_bIsKeyPad)
 	{

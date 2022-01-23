@@ -25,7 +25,7 @@ public:
 
 	void OnDataChanged(DataUpdateType_t updateType);
 	bool ShouldDraw() { return false; }
-	bool ShouldDrawColorCorrection();
+	bool ShouldDrawColorCorrection(bool &bNoFade);
 	float GetColorCorrectionScale() { return 1.0f; }
 	float GetColorCorrectionMaxWeight() { return m_flMaxWeight; }
 
@@ -65,7 +65,7 @@ void C_ColorCorrectionVolume::OnDataChanged(DataUpdateType_t updateType)
 	}
 }
 
-bool C_ColorCorrectionVolume::ShouldDrawColorCorrection()
+bool C_ColorCorrectionVolume::ShouldDrawColorCorrection(bool &bNoFade)
 {
 	if (m_bDisabled)
 		return false;

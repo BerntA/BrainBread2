@@ -29,7 +29,7 @@ public:
 
 	void OnDataChanged(DataUpdateType_t updateType);
 	bool ShouldDraw() { return false; }
-	bool ShouldDrawColorCorrection();
+	bool ShouldDrawColorCorrection(bool &bNoFade);
 	float GetColorCorrectionScale();
 	float GetColorCorrectionMaxWeight() { return m_flMaxWeight; }
 
@@ -71,13 +71,16 @@ void C_ColorCorrection::OnDataChanged(DataUpdateType_t updateType)
 	}
 }
 
-bool C_ColorCorrection::ShouldDrawColorCorrection()
+bool C_ColorCorrection::ShouldDrawColorCorrection(bool &bNoFade)
 {
 	if (m_bDisabled || mat_colcorrection_disableentities.GetInt())
 		return false;
 
 	if (m_flMaxFalloff == -1) // Render everywhere!
+	{
+		bNoFade = true;
 		return true;
+	}
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 	if (!pPlayer)

@@ -45,6 +45,7 @@ CBaseEntity *CInventoryItemRandomizer::SpawnNewEntity(void)
 {
 	int itemIndex = -1;
 	int itemCount = GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList().Count();
+
 	if (itemCount <= 0)
 		return NULL;
 
@@ -68,7 +69,7 @@ CBaseEntity *CInventoryItemRandomizer::SpawnNewEntity(void)
 		for (int i = 0; i < itemCount; i++)
 		{
 			const DataInventoryItem_Base_t *data = &GameBaseShared()->GetSharedGameDetails()->GetInventoryItemList()[i];
-			if (data->bAutoConsume && (data->iItemID == m_iOverrideID) && !data->bIsMapItem)
+			if ((data->iItemID == m_iOverrideID) && !data->bIsMapItem)
 			{
 				itemIndex = i;
 				break;

@@ -23,7 +23,7 @@ DECLARE_POINTER_HANDLE(ClientCCHandle_t);
 class IColorCorrectionEntity
 {
 public:
-	virtual bool ShouldDrawColorCorrection() = 0;
+	virtual bool ShouldDrawColorCorrection(bool &bNoFade) = 0;
 	virtual float GetColorCorrectionScale() = 0;
 	virtual float GetColorCorrectionMaxWeight() = 0;
 protected:

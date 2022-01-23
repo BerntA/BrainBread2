@@ -49,6 +49,7 @@ private:
 	bool m_bShowModel;
 	bool m_bIsKeyPad;
 
+	string_t m_szUseSound;
 	color32 m_clrGlow;
 
 	COutputEvent m_OnUse;
