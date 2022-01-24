@@ -8729,22 +8729,21 @@ CanPlaySequence_t CAI_BaseNPC::CanPlaySequence( bool fDisregardNPCState, int int
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-Vector CAI_BaseNPC::GetShootEnemyDir( const Vector &shootOrigin, bool bNoisy )
+Vector CAI_BaseNPC::GetShootEnemyDir(const Vector &shootOrigin, bool bNoisy)
 {
 	CBaseEntity *pEnemy = GetEnemy();
-
-	if ( pEnemy )
+	if (pEnemy)
 	{
 		Vector vecEnemyLKP = GetEnemyLKP();
-		Vector vecEnemyOffset = pEnemy->BodyTarget( shootOrigin, bNoisy ) - pEnemy->GetAbsOrigin();
+		Vector vecEnemyOffset = pEnemy->BodyTarget(shootOrigin, bNoisy) - pEnemy->GetAbsOrigin();
 		Vector retval = vecEnemyOffset + vecEnemyLKP - shootOrigin;
-		VectorNormalize( retval );
+		VectorNormalize(retval);
 		return retval;
 	}
 	else
 	{
 		Vector forward;
-		AngleVectors( GetLocalAngles(), &forward );
+		AngleVectors(GetLocalAngles(), &forward);
 		return forward;
 	}
 }

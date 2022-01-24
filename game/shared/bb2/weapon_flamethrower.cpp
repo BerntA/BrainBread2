@@ -59,7 +59,7 @@ public:
 	float GetRange(void) { return ((float)GetWpnData().m_iRangeMax); }
 
 	bool Reload(void);
-	void PrimaryAttack(CBasePlayer *pOwner, CBaseViewModel *pVM, float fraction);
+	void PrimaryAttack(CBaseCombatCharacter *pOwner, float fraction);
 	void PrimaryAttack(void) { }
 	void SecondaryAttack(void) { }
 	void ItemPostFrame(void);
@@ -77,10 +77,14 @@ public:
 #ifdef CLIENT_DLL
 	void ClientThink(void);
 	void OnDataChanged(DataUpdateType_t updateType);
+#else
+	bool WeaponLOSCondition(const Vector &ownerPos, const Vector &targetPos, bool bSetConditions);
+	int WeaponRangeAttack1Condition(float flDot, float flDist);
+	int CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
 #endif
 
 protected:
-	float GetChargeFraction(void) 
+	float GetChargeFraction(void)
 	{
 		return (clamp(((gpGlobals->curtime - m_flAttackedTime) / m_flGrowTime), 0.0f, (m_flGrowTime / GetWpnData().m_flWeaponChargeTime)));
 	}
@@ -253,7 +257,7 @@ void CWeaponFlamethrower::ItemPostFrame(void)
 			WeaponSound(SPECIAL2);
 		}
 
-		PrimaryAttack(pOwner, pVM, (m_flLastChargeFraction + GetChargeFraction()));
+		PrimaryAttack(pOwner, (m_flLastChargeFraction + GetChargeFraction()));
 		return;
 	}
 
@@ -301,10 +305,63 @@ void CWeaponFlamethrower::UpdateOnRemove(void)
 	BaseClass::UpdateOnRemove();
 }
 
-void CWeaponFlamethrower::PrimaryAttack(CBasePlayer *pOwner, CBaseViewModel *pVM, float fraction) 
+#ifndef CLIENT_DLL
+class CTraceFilterFlameThrower : public CTraceFilterEntitiesOnly
 {
-	if (pOwner == NULL || pVM == NULL)
+public:
+	DECLARE_CLASS_NOBASE(CTraceFilterFlameThrower);
+
+	CTraceFilterFlameThrower(CAI_BaseNPC *pOwner, CBaseCombatWeapon *pWeapon, const Vector &vDir, float flDamage)
+	{
+		CTakeDamageInfo info(pWeapon, pOwner, flDamage, DMG_BURN);
+		info.SetSkillFlags(SKILL_FLAG_BLAZINGAMMO);
+		info.SetForcedWeaponID(WEAPON_ID_FLAMETHROWER);
+		info.SetDamageForce(vDir);
+		m_dmgInfo = info;
+		m_pNPC = pOwner;
+	}
+
+	bool ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask)
+	{
+		if (!StandardFilterRules(pHandleEntity, contentsMask))
+			return false;
+
+		CBaseEntity *pEntity = EntityFromEntityHandle(pHandleEntity);
+		if (!pEntity ||
+			(pEntity == m_dmgInfo.GetInflictor()) ||
+			(pEntity == m_dmgInfo.GetAttacker()) ||
+			(pEntity->m_takedamage != DAMAGE_YES) ||
+			pEntity->IsBaseCombatWeapon() ||
+			(pEntity->GetCollisionGroup() == COLLISION_GROUP_WEAPON) ||
+			!pEntity->IsSolid() ||
+			pEntity->IsSolidFlagSet(FSOLID_VOLUME_CONTENTS)
+			)
+			return false;
+
+		if (m_pNPC && (m_pNPC->IRelationType(pEntity) == D_LI))
+			return false;
+
+		const Vector &vEnemyPos = pEntity->WorldSpaceCenter();
+		m_dmgInfo.SetDamagePosition(vEnemyPos);
+		pEntity->TakeDamage(m_dmgInfo);
+		CSoundEnt::InsertSound(SOUND_COMBAT, vEnemyPos, 200, 0.2f, m_dmgInfo.GetAttacker());
+		return false;
+	}
+
+private:
+	CTakeDamageInfo m_dmgInfo;
+	CAI_BaseNPC *m_pNPC;
+	CTraceFilterFlameThrower(const CTraceFilterFlameThrower &);
+};
+#endif
+
+void CWeaponFlamethrower::PrimaryAttack(CBaseCombatCharacter *pOwner, float fraction)
+{
+	if (pOwner == NULL)
 		return;
+
+	CBasePlayer *pPlayer = ToBasePlayer(pOwner);
+	CBaseViewModel *pVM = (pPlayer ? pPlayer->GetViewModel() : NULL);
 
 	if (m_flSoundTimer <= gpGlobals->curtime)
 	{
@@ -312,10 +369,10 @@ void CWeaponFlamethrower::PrimaryAttack(CBasePlayer *pOwner, CBaseViewModel *pVM
 		WeaponSound(SINGLE);
 	}
 
-	if (m_iPoseParamFire >= 0)
+	if (pVM && (m_iPoseParamFire >= 0))
 		pVM->SetPoseParameter(m_iPoseParamFire, fraction * POSEPARAM_FIRE_SEQUENCE_MAX);
 
-	if (m_iPoseParamGauge >= 0)
+	if (pVM && (m_iPoseParamGauge >= 0))
 		pVM->SetPoseParameter(m_iPoseParamGauge, fraction * POSEPARAM_GAUGE_SEQUENCE_MAX);
 
 	if ((gpGlobals->curtime >= m_flNextSecondaryAttack) && (fraction > 0.0f)) // Attack frequently!
@@ -323,13 +380,37 @@ void CWeaponFlamethrower::PrimaryAttack(CBasePlayer *pOwner, CBaseViewModel *pVM
 		m_flNextSecondaryAttack = gpGlobals->curtime + MAX(GetFireRate(), 0.1f);
 
 #ifndef CLIENT_DLL
-		Vector vecStart = pOwner->Weapon_ShootPosition();
-		Vector vecForward = pOwner->GetAutoaimVector(), vecHull = Vector(5, 5, 5);
-		VectorNormalize(vecForward);
+		Vector vecStart, vecForward, vecHull = Vector(5, 5, 5);
 
+		if (pPlayer)
+		{
+			vecStart = pPlayer->Weapon_ShootPosition();
+			vecForward = pPlayer->GetAutoaimVector();
+		}
+		else
+		{
+			vecStart = pOwner->WorldSpaceCenter();
+			AngleVectors(pOwner->GetLocalAngles(), &vecForward);
+		}
+
+		VectorNormalize(vecForward);
 		trace_t traceHit;
+
+		if (pPlayer == NULL)
+		{
+			CTraceFilterWorldAndPropsOnly worldFilter;
+			CTraceFilterFlameThrower filterFlame(pOwner->MyNPCPointer(), this, vecForward, GetActualDamage());
+
+			UTIL_TraceHull(vecStart, vecStart + vecForward * GetRange(), -vecHull, vecHull, MASK_BLOCKLOS, &worldFilter, &traceHit);
+			UTIL_TraceHull(vecStart, traceHit.endpos, -vecHull, vecHull, MASK_SOLID, &filterFlame, &traceHit);
+
+			UTIL_TraceHull(vecStart, vecStart + Vector(0.0f, 0.0f, 1.0f) * 60.0f, -vecHull, vecHull, MASK_BLOCKLOS, &worldFilter, &traceHit);
+			UTIL_TraceHull(vecStart, traceHit.endpos, -vecHull, vecHull, MASK_SOLID, &filterFlame, &traceHit);
+			return;
+		}
+
 		lagcompensation->TraceRealtime(
-			pOwner,
+			pPlayer,
 			vecStart,
 			(vecStart + vecForward * (GetRange() * fraction)),
 			-vecHull,
@@ -337,16 +418,17 @@ void CWeaponFlamethrower::PrimaryAttack(CBasePlayer *pOwner, CBaseViewModel *pVM
 			&traceHit,
 			LAGCOMP_TRACE_BOX_ONLY,
 			(GetRange() * fraction)
-		);
+			);
+
 		CBaseEntity *pHitEnt = traceHit.m_pEnt;
 		if (pHitEnt)
 		{
-			float flProperDamage = GameBaseShared()->GetDropOffDamage(vecStart, traceHit.endpos, GetActualDamage(), GetWpnData().m_flDropOffDistance);
-
+			const float flProperDamage = GameBaseShared()->GetDropOffDamage(vecStart, traceHit.endpos, GetActualDamage(), GetWpnData().m_flDropOffDistance);
 			CTakeDamageInfo info(this, pOwner, flProperDamage, DMG_BURN);
 			info.SetSkillFlags(SKILL_FLAG_BLAZINGAMMO);
 			info.SetForcedWeaponID(WEAPON_ID_FLAMETHROWER);
-			CalculateMeleeDamageForce(&info, vecForward, traceHit.endpos);
+			info.SetDamagePosition(traceHit.endpos);
+			info.SetDamageForce(vecForward);
 			pHitEnt->DispatchTraceAttack(info, vecForward, &traceHit);
 			ApplyMultiDamage();
 			TraceAttackToTriggers(info, traceHit.startpos, traceHit.endpos, vecForward);
@@ -468,5 +550,45 @@ float CWeaponFlamethrower::GetActualDamage(void)
 	}
 
 	return baseDmg;
+}
+
+bool CWeaponFlamethrower::WeaponLOSCondition(const Vector &ownerPos, const Vector &targetPos, bool bSetConditions)
+{
+	return true; // We always try to fire this weapon, as long as the enemy is nearby! AoE damage! Carnage!
+}
+
+int CWeaponFlamethrower::WeaponRangeAttack1Condition(float flDot, float flDist)
+{
+	int cond = COND_CAN_RANGE_ATTACK1;
+
+	if ((GetAmmoTypeID() != -1) && !HasAnyAmmo())
+		cond = COND_NO_PRIMARY_AMMO;
+	else if (flDist > m_fMaxRange1)
+		cond = COND_TOO_FAR_TO_ATTACK;
+	else if (flDot < 0.5)
+		cond = COND_NOT_FACING_ATTACK;
+
+	// Initiate attack
+	if (cond == COND_CAN_RANGE_ATTACK1)
+	{
+		if (!(m_nEffectState & FLAMETHROWER_RENDER_LARGE_FLAME))
+		{
+			m_flAttackedTime = m_flNextSecondaryAttack = gpGlobals->curtime;
+			m_nEffectState = FLAMETHROWER_RENDER_LARGE_FLAME;
+			m_flSoundTimer = (gpGlobals->curtime + 0.8f);
+			StopWeaponSound(SINGLE);
+			WeaponSound(SPECIAL2);
+		}
+		PrimaryAttack(GetOwner(), 1.0f);
+	}
+	else if (m_nEffectState & FLAMETHROWER_RENDER_LARGE_FLAME) // Fallback!
+	{
+		m_nEffectState = 0;
+		m_flAttackedTime = m_flNextSecondaryAttack = gpGlobals->curtime;
+		StopWeaponSound(SINGLE);
+		WeaponSound(SPECIAL3);
+	}
+
+	return cond;
 }
 #endif
