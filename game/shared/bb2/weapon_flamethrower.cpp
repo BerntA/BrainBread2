@@ -401,9 +401,12 @@ void CWeaponFlamethrower::PrimaryAttack(CBaseCombatCharacter *pOwner, float frac
 			CTraceFilterWorldAndPropsOnly worldFilter;
 			CTraceFilterFlameThrower filterFlame(pOwner->MyNPCPointer(), this, vecForward, GetActualDamage());
 
+			// Attack in front of us
 			UTIL_TraceHull(vecStart, vecStart + vecForward * GetRange(), -vecHull, vecHull, MASK_BLOCKLOS, &worldFilter, &traceHit);
 			UTIL_TraceHull(vecStart, traceHit.endpos, -vecHull, vecHull, MASK_SOLID, &filterFlame, &traceHit);
 
+			// Attack above us
+			vecStart = (pOwner->GetLocalOrigin() + Vector(0.0f, 0.0f, WorldAlignSize().z));
 			UTIL_TraceHull(vecStart, vecStart + Vector(0.0f, 0.0f, 1.0f) * 60.0f, -vecHull, vecHull, MASK_BLOCKLOS, &worldFilter, &traceHit);
 			UTIL_TraceHull(vecStart, traceHit.endpos, -vecHull, vecHull, MASK_SOLID, &filterFlame, &traceHit);
 			return;
@@ -569,7 +572,7 @@ int CWeaponFlamethrower::WeaponRangeAttack1Condition(float flDot, float flDist)
 		cond = COND_NOT_FACING_ATTACK;
 
 	// Initiate attack
-	if (cond == COND_CAN_RANGE_ATTACK1)
+	if ((cond == COND_CAN_RANGE_ATTACK1) || (cond == COND_NOT_FACING_ATTACK))
 	{
 		if (!(m_nEffectState & FLAMETHROWER_RENDER_LARGE_FLAME))
 		{
