@@ -402,7 +402,7 @@ void CLogicObjective::FireGameEvent(IGameEvent *event)
 		if (!pAttacker->IsZombie(true) && (GetTeamLink() == TEAM_DECEASED))
 			return;
 
-		if (FClassnameIs(pVictim, goalEnt) || ((pVictim->Classify() == CLASS_ZOMBIE) && !strcmp(goalEnt, "zombies")))
+		if (FClassnameIs(pVictim, goalEnt) || ((pVictim->Classify() == CLASS_ZOMBIE) && !strcmp(goalEnt, "zombies")) || (pVictim->IsMercenary() && !strcmp(goalEnt, "bandits")))
 			ProgressEntityCounting();
 	}
 }

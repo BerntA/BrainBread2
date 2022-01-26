@@ -44,6 +44,7 @@ public:
 	virtual bool IsCrouchedActivity(Activity activity) { return false; }
 	virtual bool ValidateNavGoal() { return true; }
 	virtual float MinFleeDistance(void) { return 20.0f; }
+	virtual bool IsHumanBoss(void) { return IsBoss(); }
 
 	virtual Vector  GetCrouchEyeOffset( void );
 

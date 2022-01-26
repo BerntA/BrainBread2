@@ -29,6 +29,7 @@ public:
 	virtual bool	CanThrowGrenade(const Vector &vecTarget);
 	virtual bool	CheckCanThrowGrenade(const Vector &vecTarget);
 	virtual	bool	CanGrenadeEnemy(bool bUseFreeKnowledge = true);
+	virtual bool	IsHumanBoss(void) { return IsBoss(); }
 	int				RangeAttack2Conditions(float flDot, float flDist); // For innate grenade attack
 	int				MeleeAttack1Conditions(float flDot, float flDist); // For kick/punch
 

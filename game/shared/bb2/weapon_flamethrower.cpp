@@ -571,8 +571,10 @@ int CWeaponFlamethrower::WeaponRangeAttack1Condition(float flDot, float flDist)
 	else if (flDot < 0.5)
 		cond = COND_NOT_FACING_ATTACK;
 
+	CBaseCombatCharacter *pOwner = GetOwner();
+
 	// Initiate attack
-	if ((cond == COND_CAN_RANGE_ATTACK1) || (cond == COND_NOT_FACING_ATTACK))
+	if (pOwner && pOwner->MyNPCPointer() && pOwner->MyNPCPointer()->GetEnemy() && ((cond == COND_CAN_RANGE_ATTACK1) || (cond == COND_NOT_FACING_ATTACK)))
 	{
 		if (!(m_nEffectState & FLAMETHROWER_RENDER_LARGE_FLAME))
 		{

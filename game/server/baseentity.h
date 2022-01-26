@@ -780,27 +780,21 @@ public:
 	virtual void			DecalTrace( trace_t *pTrace, char const *decalName );
 	virtual void			ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCustomImpactName = NULL );
 
-	void			AddPoints( int score, bool bAllowNegativeScore );
-	void			AddPointsToTeam( int score, bool bAllowNegativeScore );
-	void			RemoveAllDecals( void );
+	void			AddPoints(int score, bool bAllowNegativeScore);
+	void			AddPointsToTeam(int score, bool bAllowNegativeScore);
+	void			RemoveAllDecals(void);
 
 	virtual bool IsHuman(bool includeNPCs = false)
 	{
-		if ((Classify() == CLASS_PLAYER) || (Classify() == CLASS_PLAYER_INFECTED))
-			return true;
-
 		if (includeNPCs && ((Classify() == CLASS_COMBINE) || (Classify() == CLASS_MILITARY)))
 			return true;
 
-		return false;
+		return ((Classify() == CLASS_PLAYER) || (Classify() == CLASS_PLAYER_INFECTED));
 	}
 
 	virtual bool IsMercenary(void)
 	{
-		if ((Classify() == CLASS_MILITARY))
-			return true;
-
-		return false;
+		return (Classify() == CLASS_MILITARY);
 	}
 
 	virtual bool IsHumanBoss(void)
@@ -810,21 +804,15 @@ public:
 
 	virtual bool IsZombie(bool includeNPCs = false)
 	{
-		if ((Classify() == CLASS_PLAYER_ZOMB))
-			return true;
-
 		if (includeNPCs && ((Classify() == CLASS_ZOMBIE) || (Classify() == CLASS_ZOMBIE_BOSS)))
 			return true;
 
-		return false;
+		return (Classify() == CLASS_PLAYER_ZOMB);
 	}
 
 	virtual bool IsZombieBoss(void)
 	{
-		if (Classify() == CLASS_ZOMBIE_BOSS)
-			return true;
-
-		return false;
+		return (Classify() == CLASS_ZOMBIE_BOSS);
 	}
 
 	virtual bool	OnControls( CBaseEntity *pControls ) { return false; }
