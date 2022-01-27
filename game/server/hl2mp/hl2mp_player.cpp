@@ -1497,6 +1497,15 @@ bool CHL2MP_Player::CanLevelUp(float flXP, bool bAllowTeamBonus)
 
 	flXP = ceil(flXP);
 
+	if (IsHuman())
+	{
+		CSingleUserRecipientFilter filter(this);
+		filter.MakeReliable();
+		UserMessageBegin(filter, "ExperienceTextInfo");
+		WRITE_SHORT(((int)flXP));
+		MessageEnd();
+	}
+
 	// While this one goes for leveling... Because we also want to reset it or else we will actually only need 5 kills per level. 
 	m_BB2Local.m_iSkill_XPCurrent += ((int)flXP);
 

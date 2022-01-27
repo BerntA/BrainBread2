@@ -227,6 +227,7 @@ $Project
 			$File "bb2/hud_objective.cpp"
 			$File "bb2/hud_objective.h"
 			$File "bb2/hud_damage_text.cpp"
+			$File "bb2/hud_exp_text.cpp"
 			$File "bb2/hud_votesystem.cpp"
 			$File "bb2/hud_inventory_view.cpp"
 			$File "bb2/hud_scope_view.cpp"
