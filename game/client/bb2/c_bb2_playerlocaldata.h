@@ -31,6 +31,8 @@ public:
 
 	// Zombie Skills
 	int m_iZombieCredits;
+	int m_iZombKills;
+	int m_iZombDeaths;
 	float m_flZombieRageThresholdDamage;
 
 	// Shared Skills

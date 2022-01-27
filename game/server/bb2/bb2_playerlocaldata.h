@@ -29,6 +29,8 @@ public:
 
 	// Zombie Skills
 	CNetworkVar(int, m_iZombieCredits);
+	CNetworkVar(int, m_iZombKills); // Zombie Stored Kills Purpose: Since every zombie needs to be an individual we store a kill amount to respawn the zombie as a human after the death with the X score!
+	CNetworkVar(int, m_iZombDeaths); // To make use of bb2_allow_mercy we store the death count, if it exceeds the mercy value we allow you to spawn as a human because the humans are too OP.
 	CNetworkVar(float, m_flZombieRageThresholdDamage);
 
 	// Shared Skills

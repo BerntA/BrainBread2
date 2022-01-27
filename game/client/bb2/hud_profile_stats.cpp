@@ -85,7 +85,8 @@ private:
 	// 1 - Str
 	// 2 - Pro
 	// 3 - Zombie Rage
-	int m_nTexture_Perk[4];
+	// 4 - Zombie Skull
+	int m_nTexture_Perk[5];
 	int m_nTexture_PerkHint;
 
 	int m_nTexture_Background;
@@ -143,6 +144,11 @@ private:
 	CPanelAnimationVarAliasType(float, perk_icon_w, "perk_icon_w", "0", "proportional_float");
 	CPanelAnimationVarAliasType(float, perk_icon_h, "perk_icon_h", "0", "proportional_float");
 
+	/* ZOMBIE */
+	CPanelAnimationVarAliasType(float, zomb_info_size, "zomb_info_size", "0", "proportional_float");
+	CPanelAnimationVarAliasType(float, zomb_info_x, "zomb_info_x", "0", "proportional_float");
+	CPanelAnimationVarAliasType(float, zomb_info_y, "zomb_info_y", "0", "proportional_float");
+
 	// No-Skill Mode:
 	CPanelAnimationVarAliasType(float, dm_x, "dm_x", "0", "proportional_float");
 	CPanelAnimationVarAliasType(float, dm_y, "dm_y", "0", "proportional_float");
@@ -190,6 +196,7 @@ CHudProfileStats::CHudProfileStats(const char * pElementName) : CHudElement(pEle
 		"vgui/skills/humans/ico_blood_rage",
 		"vgui/skills/humans/ico_gunslinger",
 		"vgui/skills/zombies/ico_damage",
+		"vgui/hud/skull",
 	};
 
 	const char *szBars[] =
@@ -483,6 +490,42 @@ void CHudProfileStats::Paint()
 				yposZombie -= surface()->GetFontTall(m_hSmallFont);
 				surface()->DrawSetTextPos(xposZombie, yposZombie);
 				surface()->DrawPrintText(longTip, wcslen(longTip));
+			}
+			else if (!pPlayer->m_BB2Local.m_bCanRespawnAsHuman && !pPlayer->m_BB2Local.m_bHasPlayerEscaped)
+			{
+				float zombPosY = zomb_info_y;
+
+				int neededValue = bb2_zombie_kills_required.GetInt();
+				if (neededValue)
+				{
+					neededValue -= pPlayer->m_BB2Local.m_iZombKills;
+
+					surface()->DrawSetColor(GetFgColor());
+					surface()->DrawSetTexture(m_nTexture_Perk[3]);
+					surface()->DrawTexturedRect(zomb_info_x, zombPosY, zomb_info_x + zomb_info_size, zombPosY + zomb_info_size);
+
+					V_swprintf_safe(wszArg1, L"%i", MAX(neededValue, 0));
+					surface()->DrawSetTextFont(m_hSmallFont);
+					surface()->DrawSetTextPos(zomb_info_x + zomb_info_size, zombPosY + (zomb_info_size / 2) - (surface()->GetFontTall(m_hSmallFont) / 2));
+					surface()->DrawPrintText(wszArg1, wcslen(wszArg1));
+
+					zombPosY += (zomb_info_size - scheme()->GetProportionalScaledValue(2));
+				}
+
+				neededValue = bb2_allow_mercy.GetInt();
+				if (neededValue)
+				{
+					neededValue -= pPlayer->m_BB2Local.m_iZombDeaths;
+
+					surface()->DrawSetColor(GetFgColor());
+					surface()->DrawSetTexture(m_nTexture_Perk[4]);
+					surface()->DrawTexturedRect(zomb_info_x, zombPosY, zomb_info_x + zomb_info_size, zombPosY + zomb_info_size);
+
+					V_swprintf_safe(wszArg1, L"%i", MAX(neededValue, 0));
+					surface()->DrawSetTextFont(m_hSmallFont);
+					surface()->DrawSetTextPos(zomb_info_x + zomb_info_size, zombPosY + (zomb_info_size / 2) - (surface()->GetFontTall(m_hSmallFont) / 2));
+					surface()->DrawPrintText(wszArg1, wcslen(wszArg1));
+				}
 			}
 		}
 		else

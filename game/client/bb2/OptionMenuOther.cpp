@@ -39,6 +39,7 @@ OptionMenuOther::OptionMenuOther(vgui::Panel *parent, char const *panelName) : B
 		"#GameUI_ScopeRefract",
 		"#GameUI_SOUND_SKILL_CUES",
 		"#GameUI_MUSIC_SHUFFLE",
+		"#GameUI_ExperienceText",
 	};
 
 	for (int i = 0; i < _ARRAYSIZE(m_pCheckBoxVar); i++)
@@ -61,24 +62,6 @@ OptionMenuOther::OptionMenuOther(vgui::Panel *parent, char const *panelName) : B
 	{
 		m_pComboSoundSet[i] = vgui::SETUP_PANEL(new vgui::ComboList(this, "SoundComboList", szInfo[i], 6));
 		m_pComboSoundSet[i]->SetZPos(50);
-	}
-
-	const char *szTitles[] =
-	{
-		"#GameUI_Misc",
-		"#GameUI_Misc_Sound",
-	};
-
-	for (int i = 0; i < _ARRAYSIZE(m_pTextTitle); i++)
-	{
-		m_pTextTitle[i] = vgui::SETUP_PANEL(new vgui::Label(this, "TitleLabel", szTitles[i]));
-		m_pTextTitle[i]->SetZPos(70);
-		m_pTextTitle[i]->SetContentAlignment(Label::a_center);
-
-		m_pDivider[i] = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Divider"));
-		m_pDivider[i]->SetZPos(75);
-		m_pDivider[i]->SetShouldScaleImage(true);
-		m_pDivider[i]->SetImage("mainmenu/sub_divider");
 	}
 
 	const char *szComboImg[] =
@@ -150,6 +133,7 @@ void OptionMenuOther::ApplyChanges(void)
 
 	static ConVarRef bb2_sound_skill_cues("bb2_sound_skill_cues");
 	static ConVarRef bb2_music_system_shuffle("bb2_music_system_shuffle");
+	static ConVarRef bb2_render_xp_text("bb2_render_xp_text");
 
 	bb2_sound_zombie.SetValue(m_pComboSoundSet[0]->GetComboBox()->GetActiveItem());
 	bb2_sound_fred.SetValue(m_pComboSoundSet[1]->GetComboBox()->GetActiveItem());
@@ -168,6 +152,7 @@ void OptionMenuOther::ApplyChanges(void)
 
 	bb2_sound_skill_cues.SetValue(m_pCheckBoxVar[6]->IsChecked());
 	bb2_music_system_shuffle.SetValue(m_pCheckBoxVar[7]->IsChecked());
+	bb2_render_xp_text.SetValue(m_pCheckBoxVar[8]->IsChecked());
 
 	engine->ClientCmd_Unrestricted("host_writeconfig\n");
 }
@@ -224,6 +209,7 @@ void OptionMenuOther::SetupLayout(void)
 
 		static ConVarRef bb2_sound_skill_cues("bb2_sound_skill_cues");
 		static ConVarRef bb2_music_system_shuffle("bb2_music_system_shuffle");
+		static ConVarRef bb2_render_xp_text("bb2_render_xp_text");
 
 		m_pCheckBoxVar[0]->SetCheckedStatus(bb2_enable_healthbar_for_all.GetBool());
 		m_pCheckBoxVar[1]->SetCheckedStatus(bb2_show_details.GetBool());
@@ -234,18 +220,13 @@ void OptionMenuOther::SetupLayout(void)
 
 		m_pCheckBoxVar[6]->SetCheckedStatus(bb2_sound_skill_cues.GetBool());
 		m_pCheckBoxVar[7]->SetCheckedStatus(bb2_music_system_shuffle.GetBool());
+		m_pCheckBoxVar[8]->SetCheckedStatus(bb2_render_xp_text.GetBool());
 
 		m_pComboSoundSet[0]->GetComboBox()->ActivateItem(clamp(bb2_sound_zombie.GetInt(), 0, (m_pComboSoundSet[0]->GetComboBox()->GetItemCount() - 1)));
 		m_pComboSoundSet[1]->GetComboBox()->ActivateItem(clamp(bb2_sound_fred.GetInt(), 0, (m_pComboSoundSet[1]->GetComboBox()->GetItemCount() - 1)));
 		m_pComboSoundSet[2]->GetComboBox()->ActivateItem(clamp(bb2_sound_military.GetInt(), 0, (m_pComboSoundSet[2]->GetComboBox()->GetItemCount() - 1)));
 		m_pComboSoundSet[3]->GetComboBox()->ActivateItem(clamp(bb2_sound_bandit.GetInt(), 0, (m_pComboSoundSet[3]->GetComboBox()->GetItemCount() - 1)));
 		m_pComboSoundSet[4]->GetComboBox()->ActivateItem(clamp(bb2_sound_announcer.GetInt(), 0, (m_pComboSoundSet[4]->GetComboBox()->GetItemCount() - 1)));
-	}
-
-	for (int i = 0; i < _ARRAYSIZE(m_pTextTitle); i++)
-	{
-		m_pTextTitle[i]->SetSize(scheme()->GetProportionalScaledValue(300), scheme()->GetProportionalScaledValue(24));
-		m_pDivider[i]->SetSize(scheme()->GetProportionalScaledValue(300), scheme()->GetProportionalScaledValue(2));
 	}
 
 	for (int i = 0; i < _ARRAYSIZE(m_pCheckBoxVar); i++)
@@ -284,12 +265,6 @@ void OptionMenuOther::SetupLayout(void)
 		m_pCheckBoxVar[i]->SetPos((w - scheme()->GetProportionalScaledValue(300 + DIVIDER_START_XPOS)), scheme()->GetProportionalScaledValue(185) + ((i - 6) * (hz + scheme()->GetProportionalScaledValue(8))));
 	}
 
-	m_pTextTitle[0]->SetPos(scheme()->GetProportionalScaledValue(DIVIDER_START_XPOS), scheme()->GetProportionalScaledValue(12));
-	m_pTextTitle[1]->SetPos((w - scheme()->GetProportionalScaledValue(300 + DIVIDER_START_XPOS)), scheme()->GetProportionalScaledValue(12));
-
-	m_pDivider[0]->SetPos(scheme()->GetProportionalScaledValue(DIVIDER_START_XPOS), scheme()->GetProportionalScaledValue(37));
-	m_pDivider[1]->SetPos((w - scheme()->GetProportionalScaledValue(300 + DIVIDER_START_XPOS)), scheme()->GetProportionalScaledValue(37));
-
 	m_pComboImgList[0]->InitCrosshairList();
 	m_pComboImgList[0]->SetActiveItem((crosshair.GetInt() - 1));
 
@@ -301,10 +276,4 @@ void OptionMenuOther::SetupLayout(void)
 void OptionMenuOther::ApplySchemeSettings(vgui::IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
-
-	for (int i = 0; i < _ARRAYSIZE(m_pTextTitle); i++)
-	{
-		m_pTextTitle[i]->SetFgColor(pScheme->GetColor("OptionTitleTextColor", Color(255, 255, 255, 255)));
-		m_pTextTitle[i]->SetFont(pScheme->GetFont("OptionTextLarge"));
-	}
 }

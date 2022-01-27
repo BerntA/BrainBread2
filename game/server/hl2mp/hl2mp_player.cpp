@@ -237,9 +237,7 @@ CHL2MP_Player::CHL2MP_Player()
 	m_iTotalDeaths = 0;
 	m_iRoundScore = 0;
 	m_iRoundDeaths = 0;
-	m_iZombKills = 0;
 	m_nGroupID = 0;
-	m_iZombDeaths = 0;
 	m_iNumPerkKills = 0;
 	m_iSelectedTeam = 0;
 	m_iSkill_Level = 0;
@@ -2389,7 +2387,7 @@ void CHL2MP_Player::Event_Killed(const CTakeDamageInfo &info)
 
 				if (pAttacker != this)
 				{
-					m_iZombDeaths++;
+					m_BB2Local.m_iZombDeaths++;
 					CheckCanRespawnAsHuman();
 				}
 			}
@@ -2588,8 +2586,8 @@ void CHL2MP_Player::Reset()
 	//ResetDeathCount();
 	//ResetFragCount();
 
-	m_iZombKills = 0;
-	m_iZombDeaths = 0;
+	m_BB2Local.m_iZombKills = 0;
+	m_BB2Local.m_iZombDeaths = 0;
 
 	m_iRoundScore = 0;
 	m_iRoundDeaths = 0;
@@ -2616,7 +2614,7 @@ void CHL2MP_Player::CheckCanRespawnAsHuman()
 	int killsRequired = bb2_zombie_kills_required.GetInt();
 	int deathMercy = bb2_allow_mercy.GetInt();
 
-	if ((killsRequired && (m_iZombKills >= killsRequired)) || (deathMercy && (m_iZombDeaths >= deathMercy)))
+	if ((killsRequired && (m_BB2Local.m_iZombKills >= killsRequired)) || (deathMercy && (m_BB2Local.m_iZombDeaths >= deathMercy)))
 		m_BB2Local.m_bCanRespawnAsHuman = true;
 }
 
@@ -2867,8 +2865,8 @@ float CHL2MP_Player::GetSkillWeaponDamage(float flDefaultDamage, float dmgFactor
 // Reset All zombie related skills.
 void CHL2MP_Player::ResetZombieSkills(void)
 {
-	m_iZombKills = 0;
-	m_iZombDeaths = 0;
+	m_BB2Local.m_iZombKills = 0;
+	m_BB2Local.m_iZombDeaths = 0;
 }
 
 void CHL2MP_Player::RefreshSpeed(void)
@@ -3388,8 +3386,8 @@ CON_COMMAND(classic_respawn_ashuman, "Respawn as a human if possible!")
 		return;
 
 	pClient->m_BB2Local.m_bCanRespawnAsHuman = false;
-	pClient->m_iZombKills = 0;
-	pClient->m_iZombDeaths = 0;
+	pClient->m_BB2Local.m_iZombKills = 0;
+	pClient->m_BB2Local.m_iZombDeaths = 0;
 
 	pClient->m_bWantsToDeployAsHuman = true;
 	pClient->HandleCommand_JoinTeam(TEAM_HUMANS, true);

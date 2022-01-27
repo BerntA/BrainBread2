@@ -1508,14 +1508,14 @@ void CBasePlayer::PlayerDeathThink(void)
 		// We only allow zombies to become humans again in the classic gamemode.
 		if (IsZombie() && (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE))
 		{
-			if ((bb2_zombie_kills_required.GetInt() >= 1) && (pClient->m_iZombKills >= bb2_zombie_kills_required.GetInt()))
+			if ((bb2_zombie_kills_required.GetInt() >= 1) && (pClient->m_BB2Local.m_iZombKills >= bb2_zombie_kills_required.GetInt()))
 			{
-				pClient->m_iZombKills = 0;
+				pClient->m_BB2Local.m_iZombKills = 0;
 				pClient->HandleCommand_JoinTeam(TEAM_HUMANS, true);
 			}
-			else if ((bb2_allow_mercy.GetInt() >= 1) && (pClient->m_iZombDeaths >= bb2_allow_mercy.GetInt()))
+			else if ((bb2_allow_mercy.GetInt() >= 1) && (pClient->m_BB2Local.m_iZombDeaths >= bb2_allow_mercy.GetInt()))
 			{
-				pClient->m_iZombDeaths = 0;
+				pClient->m_BB2Local.m_iZombDeaths = 0;
 				pClient->HandleCommand_JoinTeam(TEAM_HUMANS, true);
 			}
 		}

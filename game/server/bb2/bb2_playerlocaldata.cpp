@@ -20,6 +20,8 @@ SendPropInt(SENDINFO(m_iSkill_XPLeft), 16, SPROP_UNSIGNED),
 SendPropInt(SENDINFO(m_iSkill_Talents), 8, SPROP_UNSIGNED),
 
 SendPropInt(SENDINFO(m_iZombieCredits), 12, SPROP_UNSIGNED),
+SendPropInt(SENDINFO(m_iZombKills), 3, SPROP_UNSIGNED),
+SendPropInt(SENDINFO(m_iZombDeaths), 3, SPROP_UNSIGNED),
 SendPropFloat(SENDINFO(m_flZombieRageThresholdDamage)),
 
 SendPropArray3(SENDINFO_ARRAY3(m_iPlayerSkills), SendPropInt(SENDINFO_ARRAY(m_iPlayerSkills), 4, SPROP_UNSIGNED)),
@@ -56,6 +58,8 @@ CBB2PlayerLocalData::CBB2PlayerLocalData()
 	m_iSkill_Talents = 0;
 
 	m_iZombieCredits = 0;
+	m_iZombKills = 0;
+	m_iZombDeaths = 0;
 	m_flZombieRageThresholdDamage = 0.0f;
 
 	for (int i = 0; i < MAX_SKILL_ARRAY; i++)

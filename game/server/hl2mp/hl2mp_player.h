@@ -77,11 +77,6 @@ public:
 	void RefreshSpeed(void);
 	bool HandleLocalProfile(bool bSave = false);
 
-	// Zombie Stored Kills Purpose: Since every zombie needs to be an individual we store a kill amount to respawn the zombie as a human after the death with the X score!
-	int m_iZombKills;
-	// To make use of bb2_allow_mercy we store the death count, if it exceeds the mercy value we allow you to spawn as a human because the humans are too OP.
-	int m_iZombDeaths;
-
 	void SetRespawnTime(float flTime) { m_BB2Local.m_flPlayerRespawnTime = flTime; }
 	float GetRespawnTime(void) { return m_BB2Local.m_flPlayerRespawnTime; }
 	bool HasFullySpawned(void) { return m_bHasFullySpawned; }

@@ -38,16 +38,12 @@ namespace vgui
 		void SetupLayout(void);
 
 	private:
-		vgui::ImagePanel *m_pDivider[2];
-		vgui::Label *m_pTextTitle[2];
-
-		vgui::GraphicalCheckBox *m_pCheckBoxVar[8];
+		vgui::GraphicalCheckBox *m_pCheckBoxVar[9];
 		vgui::ComboList *m_pComboSoundSet[5];
 
 		vgui::ComboImageList *m_pComboImgList[1];
 
 		vgui::GraphicalOverlay *m_pViewmodelFOVSlider;
-
 		vgui::GraphicalOverlay *m_pCrosshairColorSlider[4];
 
 		vgui::InlineMenuButton *m_pApplyButton;

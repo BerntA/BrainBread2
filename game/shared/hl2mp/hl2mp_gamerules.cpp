@@ -1947,7 +1947,7 @@ void CHL2MPRules::DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info)
 		// Add one more kill to our current kills as a zombie. We then check these kills when you die, if they're over 3 you'll be respawned as a human. :)
 		if (pKillerPlayer->IsZombie())
 		{
-			pKillerPlayer->m_iZombKills++;
+			pKillerPlayer->m_BB2Local.m_iZombKills++;
 			pKillerPlayer->m_BB2Local.m_iZombieCredits += GetZombieCredits(pVictim);
 			pKillerPlayer->CheckCanRespawnAsHuman();
 		}
