@@ -110,6 +110,12 @@ public:
 
 	int GetPerkFlags(void) { return m_nPerkFlags; }
 	bool IsPerkFlagActive(int nFlag) { return (m_nPerkFlags & nFlag) != 0; }
+
+	float GetPerkFraction(float maxTime) // Return duration as float between 0 - 1 based on max time it should last.
+	{
+		const float perc = (m_BB2Local.m_flPerkTimer - gpGlobals->curtime) / maxTime;
+		return clamp(perc, 0.0f, 1.0f);
+	}
 	
 	void SetPlayerSlideState(bool value) { m_bIsInSlide = value; }
 

@@ -264,7 +264,7 @@ CHL2MP_Player::CHL2MP_Player()
 	m_flNextResupplyTime = 0.0f;
 	m_flLastInfectionTwitchTime = 0.0f;
 	m_flLastTimeRanCommand = 0.0f;
-	m_flZombieRageTime = m_flZombieAttackTime = m_flZombieDamageThresholdDepletion = 0.0f;
+	m_flZombieAttackTime = m_flZombieDamageThresholdDepletion = 0.0f;
 
 	m_flAmmoRequestTime = m_flLastTimeSharedAmmo = 0.0f;
 	m_iAmmoRequestID = 0;
@@ -572,7 +572,7 @@ void CHL2MP_Player::Spawn(void)
 	m_nPerkFlags = 0;
 	m_BB2Local.m_bCanActivatePerk = false;
 	m_BB2Local.m_flZombieRageThresholdDamage = 0.0f;
-	m_flZombieRageTime = m_flZombieAttackTime = m_flZombieDamageThresholdDepletion = 0.0f;
+	m_flZombieAttackTime = m_flZombieDamageThresholdDepletion = 0.0f;
 
 	// Misc
 	m_flNextResupplyTime = 0.0f;
@@ -1004,7 +1004,7 @@ void CHL2MP_Player::PostThink(void)
 		{
 			if (IsPerkFlagActive(PERK_ZOMBIE_RAGE))
 			{
-				if (m_flZombieRageTime < gpGlobals->curtime)
+				if (m_BB2Local.m_flPerkTimer < gpGlobals->curtime)
 					LeaveRageMode();
 			}
 			else
@@ -1560,7 +1560,7 @@ bool CHL2MP_Player::EnterRageMode(bool bForce) // Zombie 'Perk' thing.
 
 	m_BB2Local.m_bCanActivatePerk = false;
 	m_BB2Local.m_flZombieRageThresholdDamage = 0.0f;
-	m_flZombieRageTime = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flDuration;
+	m_BB2Local.m_flPerkTimer = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flDuration;
 
 	float flHealth = ceil(GetSkillValue("Health", PLAYER_SKILL_ZOMBIE_HEALTH, TEAM_DECEASED) + GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flHealth);
 	SetHealth((int)flHealth);
@@ -1585,7 +1585,8 @@ void CHL2MP_Player::LeaveRageMode(void)
 
 	m_BB2Local.m_bCanActivatePerk = false;
 	m_BB2Local.m_flZombieRageThresholdDamage = 0.0f;
-	m_flZombieRageTime = m_flZombieAttackTime = m_flZombieDamageThresholdDepletion = 0.0f;
+	m_BB2Local.m_flPerkTimer = 0.0f;
+	m_flZombieAttackTime = m_flZombieDamageThresholdDepletion = 0.0f;
 	m_nPerkFlags &= ~PERK_ZOMBIE_RAGE;
 
 	float flHealth = ceil(GetSkillValue("Health", PLAYER_SKILL_ZOMBIE_HEALTH, TEAM_DECEASED));

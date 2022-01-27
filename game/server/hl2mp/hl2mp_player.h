@@ -309,7 +309,6 @@ private:
 	bool m_bIsInfected;
 	float m_flLastInfectionTwitchTime;
 
-	float m_flZombieRageTime;
 	float m_flZombieAttackTime;
 	float m_flZombieDamageThresholdDepletion;
 

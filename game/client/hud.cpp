@@ -705,7 +705,7 @@ typedef struct
 
 // This defines the properties of the 8 circle segments
 // in the circular progress bar.
-circular_progress_segment_t Segments[8] =
+static circular_progress_segment_t Segments[8] =
 {
 	{ 0.0, 0.5, 0.0, 1.0, 0.0, 1, 0 },
 	{ M_PI * 0.25, 1.0, 0.0, 1.0, 0.5, 0, 1 },
@@ -721,16 +721,24 @@ circular_progress_segment_t Segments[8] =
 
 void CHudTexture::DrawCircularProgression(Color color, int tx, int ty, int tw, int th, float per)
 {
-	float flWide = tw;
-	float flTall = th;
+	DrawCircularProgression(color, textureId, tx, ty, tw, th, per);
+}
 
-	float flHalfWide = (float)flWide / 2;
-	float flHalfTall = (float)flTall / 2;
+// Draw circular progression.
+/*static*/ void CHudTexture::DrawCircularProgression(const Color &color, int textureId, int tx, int ty, int tw, int th, float per)
+{
+	per = clamp(per, 0.0f, 1.0f);
+
+	float flWide = ((float)tw);
+	float flTall = ((float)th);
+
+	float flHalfWide = flWide / 2.0f;
+	float flHalfTall = flTall / 2.0f;
 
 	vgui::surface()->DrawSetTexture(textureId);
 	vgui::surface()->DrawSetColor(color);
 
-	float flEndProgressRadians = per * M_PI * 2;
+	float flEndProgressRadians = (per * M_PI * 2.0f);
 
 	for (int i = 0; i < 8; i++)
 	{
@@ -776,6 +784,15 @@ void CHudTexture::DrawCircularProgression(Color color, int tx, int ty, int tw, i
 			vgui::surface()->DrawTexturedPolygon(3, v);
 		}
 	}
+}
+
+// Draw a simple circular progression based texture, with bg col texture and fg col texture.
+/*static*/ void CHudTexture::DrawCircularProgression(const Color &bgColor, const Color &fgColor, int bgTexture, int fgTexture, int x, int y, int wide, int tall, float percent)
+{
+	vgui::surface()->DrawSetColor(bgColor);
+	vgui::surface()->DrawSetTexture(bgTexture);
+	vgui::surface()->DrawTexturedRect(x, y, x + wide, y + tall);
+	DrawCircularProgression(fgColor, fgTexture, x, y, wide, tall, percent);
 }
 
 //-----------------------------------------------------------------------------

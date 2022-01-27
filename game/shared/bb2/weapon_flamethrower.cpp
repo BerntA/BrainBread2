@@ -380,7 +380,7 @@ void CWeaponFlamethrower::PrimaryAttack(CBaseCombatCharacter *pOwner, float frac
 		m_flNextSecondaryAttack = gpGlobals->curtime + MAX(GetFireRate(), 0.1f);
 
 #ifndef CLIENT_DLL
-		Vector vecStart, vecForward, vecHull = Vector(5, 5, 5);
+		Vector vecStart, vecForward, vecHull = Vector(8, 8, 8);
 
 		if (pPlayer)
 		{
@@ -403,6 +403,11 @@ void CWeaponFlamethrower::PrimaryAttack(CBaseCombatCharacter *pOwner, float frac
 
 			// Attack in front of us
 			UTIL_TraceHull(vecStart, vecStart + vecForward * GetRange(), -vecHull, vecHull, MASK_BLOCKLOS, &worldFilter, &traceHit);
+			if (traceHit.startsolid || traceHit.fraction < 1.0f)
+			{
+				vecStart = pOwner->EyePosition();
+				UTIL_TraceHull(vecStart, vecStart + vecForward * GetRange(), -vecHull, vecHull, MASK_BLOCKLOS, &worldFilter, &traceHit);
+			}
 			UTIL_TraceHull(vecStart, traceHit.endpos, -vecHull, vecHull, MASK_SOLID, &filterFlame, &traceHit);
 
 			// Attack above us
@@ -584,7 +589,7 @@ int CWeaponFlamethrower::WeaponRangeAttack1Condition(float flDot, float flDist)
 			StopWeaponSound(SINGLE);
 			WeaponSound(SPECIAL2);
 		}
-		PrimaryAttack(GetOwner(), 1.0f);
+		PrimaryAttack(pOwner, 1.0f);
 	}
 	else if (m_nEffectState & FLAMETHROWER_RENDER_LARGE_FLAME) // Fallback!
 	{

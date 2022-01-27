@@ -571,68 +571,51 @@ void CHudProfileStats::Paint()
 
 	if (pPlayer->GetPerkFlags())
 	{
+		const float percent = pPlayer->GetPerkFraction(
+			m_bIsZombie ? GameBaseShared()->GetSharedGameDetails()->GetPlayerZombieRageData()->flDuration : GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->flPerkTime
+			);
+
 		if (m_bIsZombie)
 		{
 			if (pPlayer->IsPerkFlagActive(PERK_ZOMBIE_RAGE))
 			{
 				yposZombie -= (perk_icon_h + 1);
-				surface()->DrawSetColor(GetFgColor());
-				surface()->DrawSetTexture(m_nTexture_Perk[3]);
-				surface()->DrawTexturedRect(xposZombie, yposZombie, xposZombie + perk_icon_w, yposZombie + perk_icon_h);
-
+				CHudTexture::DrawCircularProgression(GetFgColor(), Color(25, 255, 25, 255), m_nTexture_Perk[3], m_nTexture_Perk[3], xposZombie, yposZombie, perk_icon_w, perk_icon_h, percent);
 				V_swprintf_safe(unicode, L"RAGE Mode Active!");
 				surface()->DrawSetTextPos(xposZombie + perk_icon_w + flPerkXTextOffset, yposZombie + (perk_icon_h / 2) - (surface()->GetFontTall(m_hSmallFont) / 2));
 				surface()->DrawPrintText(unicode, wcslen(unicode));
 			}
 		}
-		else
+		else if (bSkillsEnabled)
 		{
-			if (bSkillsEnabled)
+			int iActivePerk = 0;
+
+			if (pPlayer->IsPerkFlagActive(PERK_HUMAN_REALITYPHASE))
 			{
-				if (pPlayer->IsPerkFlagActive(PERK_HUMAN_REALITYPHASE))
-				{
-					surface()->DrawSetColor(GetFgColor());
-					surface()->DrawSetTexture(m_nTexture_Perk[0]);
-					surface()->DrawTexturedRect(perk_icon_x, flPerkYOffset, perk_icon_x + perk_icon_w, flPerkYOffset + perk_icon_h);
+				iActivePerk = PLAYER_SKILL_HUMAN_REALITY_PHASE;
+				CHudTexture::DrawCircularProgression(GetFgColor(), Color(25, 255, 25, 255), m_nTexture_Perk[0], m_nTexture_Perk[0], perk_icon_x, flPerkYOffset, perk_icon_w, perk_icon_h, percent);
+			}
 
-					flPerkYTextOffset -= (surface()->GetFontTall(m_hSmallFont) / 2);
-					V_swprintf_safe(unicode, L"Perk x%i", pPlayer->GetSkillValue(PLAYER_SKILL_HUMAN_REALITY_PHASE));
-					surface()->DrawSetTextPos(perk_icon_x + perk_icon_w + flPerkXTextOffset, flPerkYTextOffset);
-					surface()->DrawPrintText(unicode, wcslen(unicode));
+			if (pPlayer->IsPerkFlagActive(PERK_HUMAN_BLOODRAGE))
+			{
+				iActivePerk = PLAYER_SKILL_HUMAN_BLOOD_RAGE;
+				CHudTexture::DrawCircularProgression(GetFgColor(), Color(25, 255, 25, 255), m_nTexture_Perk[1], m_nTexture_Perk[1], perk_icon_x, flPerkYOffset, perk_icon_w, perk_icon_h, percent);
+			}
 
-					flPerkYOffset -= (perk_icon_h + 1.0f);
-					flPerkYTextOffset = flPerkYOffset + (perk_icon_h / 2);
-				}
+			if (pPlayer->IsPerkFlagActive(PERK_HUMAN_GUNSLINGER))
+			{
+				iActivePerk = PLAYER_SKILL_HUMAN_GUNSLINGER;
+				CHudTexture::DrawCircularProgression(GetFgColor(), Color(25, 255, 25, 255), m_nTexture_Perk[2], m_nTexture_Perk[2], perk_icon_x, flPerkYOffset, perk_icon_w, perk_icon_h, percent);
+			}
 
-				if (pPlayer->IsPerkFlagActive(PERK_HUMAN_BLOODRAGE))
-				{
-					surface()->DrawSetColor(GetFgColor());
-					surface()->DrawSetTexture(m_nTexture_Perk[1]);
-					surface()->DrawTexturedRect(perk_icon_x, flPerkYOffset, perk_icon_x + perk_icon_w, flPerkYOffset + perk_icon_h);
-
-					flPerkYTextOffset -= (surface()->GetFontTall(m_hSmallFont) / 2);
-					V_swprintf_safe(unicode, L"Perk x%i", pPlayer->GetSkillValue(PLAYER_SKILL_HUMAN_BLOOD_RAGE));
-					surface()->DrawSetTextPos(perk_icon_x + perk_icon_w + flPerkXTextOffset, flPerkYTextOffset);
-					surface()->DrawPrintText(unicode, wcslen(unicode));
-
-					flPerkYOffset -= (perk_icon_h + 1.0f);
-					flPerkYTextOffset = flPerkYOffset + (perk_icon_h / 2);
-				}
-
-				if (pPlayer->IsPerkFlagActive(PERK_HUMAN_GUNSLINGER))
-				{
-					surface()->DrawSetColor(GetFgColor());
-					surface()->DrawSetTexture(m_nTexture_Perk[2]);
-					surface()->DrawTexturedRect(perk_icon_x, flPerkYOffset, perk_icon_x + perk_icon_w, flPerkYOffset + perk_icon_h);
-
-					flPerkYTextOffset -= (surface()->GetFontTall(m_hSmallFont) / 2);
-					V_swprintf_safe(unicode, L"Perk x%i", pPlayer->GetSkillValue(PLAYER_SKILL_HUMAN_GUNSLINGER));
-					surface()->DrawSetTextPos(perk_icon_x + perk_icon_w + flPerkXTextOffset, flPerkYTextOffset);
-					surface()->DrawPrintText(unicode, wcslen(unicode));
-
-					flPerkYOffset -= (perk_icon_h + 1.0f);
-					flPerkYTextOffset = flPerkYOffset + (perk_icon_h / 2);
-				}
+			if (iActivePerk)
+			{
+				flPerkYTextOffset -= (surface()->GetFontTall(m_hSmallFont) / 2.0f);
+				V_swprintf_safe(unicode, L"Perk x%i", pPlayer->GetSkillValue(iActivePerk));
+				surface()->DrawSetTextPos(perk_icon_x + perk_icon_w + flPerkXTextOffset, flPerkYTextOffset);
+				surface()->DrawPrintText(unicode, wcslen(unicode));
+				flPerkYOffset -= (perk_icon_h + 1.0f);
+				flPerkYTextOffset = flPerkYOffset + (perk_icon_h / 2);
 			}
 		}
 	}
@@ -684,13 +667,8 @@ void CHudProfileStats::Paint()
 			const DataPlayerItem_Player_PowerupItem_t *data = GameBaseShared()->GetSharedGameDetails()->GetPlayerPowerupData(perkFlag);
 			if (data)
 			{
+				const float percent = pPlayer->GetPerkFraction(data->flPerkDuration);
 				CHudTexture *pPowerupIcon = NULL;
-				float duration = pPlayer->m_BB2Local.m_flPerkTimer - gpGlobals->curtime;
-				if (duration < 0.0f)
-					duration = 0.0f;
-
-				float percent = (duration / data->flPerkDuration);
-				percent = clamp(percent, 0.0f, 1.0f);
 
 				pPowerupIcon = data->pIconPowerupInactive;
 				if (pPowerupIcon)

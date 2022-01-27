@@ -858,7 +858,7 @@ void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pV
 
 	if (pClient->GetTeamNumber() == TEAM_HUMANS)
 	{
-		if (FClassnameIs(pVictim, "npc_walker") || FClassnameIs(pVictim, "npc_runner"))
+		if (pVictim->Classify() == CLASS_ZOMBIE)
 		{
 			AchievementManager::WriteToAchievement(pClient, "ACH_ZOMBIE_FIRST_BLOOD");
 			AchievementManager::WriteToStat(pClient, "BBX_KI_ZOMBIES");

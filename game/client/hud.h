@@ -68,6 +68,8 @@ public:
 
 	// Circular Progression:
 	void DrawCircularProgression(Color color, int x, int y, int w, int h, float per);
+	static void DrawCircularProgression(const Color &color, int textureId, int x, int y, int w, int h, float per);
+	static void DrawCircularProgression(const Color &bgColor, const Color &fgColor, int bgTexture, int fgTexture, int x, int y, int wide, int tall, float percent);
 
 	char		szShortName[ 64 ];
 	char		szTextureFile[ 64 ];
