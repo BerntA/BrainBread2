@@ -197,6 +197,9 @@ void CHL2MP_Player::DoPlayerKick(void)
 		knockbackForce += (knockbackForce / 100.0f) * skillPercent;
 	}
 
+	if (IsPerkFlagActive(PERK_HUMAN_BLOODRAGE))
+		damage += ((damage / 100.0f) * GetSkillValue(PLAYER_SKILL_HUMAN_BLOOD_RAGE, TEAM_HUMANS));
+
 	trace_t traceHit;
 	CBaseEntity *pHitEnt = NULL;
 
