@@ -380,7 +380,7 @@ void CWeaponFlamethrower::PrimaryAttack(CBaseCombatCharacter *pOwner, float frac
 		m_flNextSecondaryAttack = gpGlobals->curtime + MAX(GetFireRate(), 0.1f);
 
 #ifndef CLIENT_DLL
-		Vector vecStart, vecForward, vecHull = Vector(8, 8, 8);
+		Vector vecStart, vecForward, vecHull = Vector(6, 6, 6);
 
 		if (pPlayer)
 		{
@@ -398,6 +398,11 @@ void CWeaponFlamethrower::PrimaryAttack(CBaseCombatCharacter *pOwner, float frac
 
 		if (pPlayer == NULL)
 		{
+			const float flNPCHeight = pOwner->WorldAlignSize().z;
+			Vector vecAttackHullMin = Vector(-10.0f, -10.0f, 0.0f),
+				vecAttackHullMax = Vector(10.0f, 10.0f, flNPCHeight * 0.97f);
+			vecHull = Vector(4.0f, 4.0f, 4.0f); // Smaller box check for vis.
+
 			CTraceFilterWorldAndPropsOnly worldFilter;
 			CTraceFilterFlameThrower filterFlame(pOwner->MyNPCPointer(), this, vecForward, GetActualDamage());
 
@@ -408,10 +413,10 @@ void CWeaponFlamethrower::PrimaryAttack(CBaseCombatCharacter *pOwner, float frac
 				vecStart = pOwner->EyePosition();
 				UTIL_TraceHull(vecStart, vecStart + vecForward * GetRange(), -vecHull, vecHull, MASK_BLOCKLOS, &worldFilter, &traceHit);
 			}
-			UTIL_TraceHull(vecStart, traceHit.endpos, -vecHull, vecHull, MASK_SOLID, &filterFlame, &traceHit);
+			UTIL_TraceHull(pOwner->GetLocalOrigin(), pOwner->GetLocalOrigin() + vecForward * (traceHit.endpos - traceHit.startpos).Length(), vecAttackHullMin, vecAttackHullMax, MASK_SOLID, &filterFlame, &traceHit);
 
 			// Attack above us
-			vecStart = (pOwner->GetLocalOrigin() + Vector(0.0f, 0.0f, WorldAlignSize().z));
+			vecStart = (pOwner->GetLocalOrigin() + Vector(0.0f, 0.0f, flNPCHeight + 1.0f));
 			UTIL_TraceHull(vecStart, vecStart + Vector(0.0f, 0.0f, 1.0f) * 60.0f, -vecHull, vecHull, MASK_BLOCKLOS, &worldFilter, &traceHit);
 			UTIL_TraceHull(vecStart, traceHit.endpos, -vecHull, vecHull, MASK_SOLID, &filterFlame, &traceHit);
 			return;

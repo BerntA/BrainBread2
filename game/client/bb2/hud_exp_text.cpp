@@ -108,8 +108,8 @@ void CHudExperienceText::Paint()
 	{
 		const ExpItem_t &item = m_pItems[i];
 
-		const float delta = (gpGlobals->curtime - m_pItems[i].timeAdded) / m_flLifeCycle;
-		float currPos = (1.0f - clamp(delta, 0.0f, 1.0f)) * ypos - fontTall;
+		const float delta = (gpGlobals->curtime - item.timeAdded) / m_flLifeCycle;
+		const float currPos = (1.0f - clamp(delta, 0.0f, 1.0f)) * ypos - fontTall;
 
 		V_swprintf_safe(unicode, L"+%i XP", item.value);
 		surface()->DrawSetColor(m_hXPColor);
