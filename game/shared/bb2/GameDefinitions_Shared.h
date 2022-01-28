@@ -158,6 +158,8 @@ struct DataPlayerItem_MiscSkillInfo_t
 	float flSlideLength;
 	float flSlideSpeed;
 	float flSlideCooldown;
+
+	float flBloodRageRegenRate;
 };
 
 struct DataPlayerItem_Humans_Skills_t

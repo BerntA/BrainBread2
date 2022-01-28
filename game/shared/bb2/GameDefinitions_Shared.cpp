@@ -261,6 +261,8 @@ bool CGameDefinitionsShared::LoadData(void)
 			pszPlayerMiscSkillData.flSlideLength = pkvOther->GetFloat("SlideLength");
 			pszPlayerMiscSkillData.flSlideSpeed = pkvOther->GetFloat("SlideSpeed");
 			pszPlayerMiscSkillData.flSlideCooldown = pkvOther->GetFloat("SlideCooldown");
+
+			pszPlayerMiscSkillData.flBloodRageRegenRate = pkvOther->GetFloat("BloodRageHPRegen");
 		}
 
 		pkvOther = pkvParseData->FindKey("ItemArmor");

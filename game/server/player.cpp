@@ -778,16 +778,12 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		if (GetTeamNumber() == TEAM_HUMANS)
 		{
 			flNewDamage -= (flNewDamage / 100.0f) * pClient->GetSkillValue(PLAYER_SKILL_HUMAN_IMPENETRABLE, TEAM_HUMANS);
-
-			// If Reality Phase is active we decrease some more damage:
-			if (pClient->IsPerkFlagActive(PERK_HUMAN_REALITYPHASE))
-			{
+			if (pClient->IsPerkFlagActive(PERK_HUMAN_REALITYPHASE)) // If Reality Phase is active we decrease some more damage
 				flNewDamage -= (flNewDamage / 100.0f) * pClient->GetSkillValue(PLAYER_SKILL_HUMAN_REALITY_PHASE, TEAM_HUMANS);
-			}
 		}
 		else
 			flNewDamage -= (flNewDamage / 100.0f) * pClient->GetSkillValue(PLAYER_SKILL_ZOMBIE_DAMAGE_REDUCTION, TEAM_DECEASED);
-		
+
 		// Armor. 
 		if (m_ArmorValue && pClient->m_BB2Local.m_iActiveArmorType && !(info.GetDamageType() & (DMG_FALL | DMG_DROWN | DMG_POISON | DMG_RADIATION | DMG_BURN)))// armor doesn't protect against fall or drown damage!
 		{

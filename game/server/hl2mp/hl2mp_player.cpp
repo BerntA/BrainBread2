@@ -1519,14 +1519,15 @@ bool CHL2MP_Player::ActivatePerk(int skill)
 
 	m_iNumPerkKills = 0;
 	m_BB2Local.m_bCanActivatePerk = false;
+	m_BB2Local.m_flPerkTimer = (gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->flPerkTime);
 	SetHealth(GetMaxHealth()); // Give full HP on activation!
 
 	switch (skill)
 	{
+
 	case PLAYER_SKILL_HUMAN_REALITY_PHASE:
 	{
 		SetPlayerSpeed(GetSkillCombination(GetSkillValue("Speed", PLAYER_SKILL_HUMAN_SPEED, TEAM_HUMANS), GetSkillValue(PLAYER_SKILL_HUMAN_REALITY_PHASE, TEAM_HUMANS)));
-		m_BB2Local.m_flPerkTimer = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->flPerkTime;
 		RefreshSpeed();
 		AddPerkFlag(PERK_HUMAN_REALITYPHASE);
 		SetCollisionGroup(COLLISION_GROUP_PLAYER_REALITY_PHASE);
@@ -1536,17 +1537,18 @@ bool CHL2MP_Player::ActivatePerk(int skill)
 
 	case PLAYER_SKILL_HUMAN_GUNSLINGER:
 	{
-		m_BB2Local.m_flPerkTimer = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->flPerkTime;
 		AddPerkFlag(PERK_HUMAN_GUNSLINGER);
 		break;
 	}
 
 	case PLAYER_SKILL_HUMAN_BLOOD_RAGE:
 	{
-		m_BB2Local.m_flPerkTimer = gpGlobals->curtime + GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->flPerkTime;
 		AddPerkFlag(PERK_HUMAN_BLOODRAGE);
+		m_flHealthRegenWaitTime = 0.2f;
+		SetHealthRegenAmount(GetSkillValue("HealthRegen", PLAYER_SKILL_HUMAN_HEALTHREGEN, TEAM_HUMANS) + (GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flBloodRageRegenRate * ((float)GetSkillValue(PLAYER_SKILL_HUMAN_BLOOD_RAGE))));
 		break;
 	}
+
 	}
 
 	IGNORE_PREDICTION_SUPPRESSION;
@@ -1683,6 +1685,7 @@ void CHL2MP_Player::ResetPerksAndPowerups(void)
 	if (HL2MPRules()->CanUseSkills())
 	{
 		SetPlayerSpeed(GetSkillValue("Speed", PLAYER_SKILL_HUMAN_SPEED, TEAM_HUMANS));
+		SetHealthRegenAmount(GetSkillValue("HealthRegen", PLAYER_SKILL_HUMAN_HEALTHREGEN, TEAM_HUMANS));
 	}
 	else
 	{
