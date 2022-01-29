@@ -859,6 +859,7 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 				GameBaseServer()->SendToolTip("#TOOLTIP_INFECTION_START", "", 2.5f, GAME_TIP_WARNING, entindex());
 				CheckIsPlayerStuck();
 				GameBaseShared()->RemoveInventoryItem(entindex(), GetAbsOrigin());
+				AchievementManager::WriteToAchievement(pClient, "ACH_SURVIVOR_INFECTED");
 				return 0;
 			}
 		}

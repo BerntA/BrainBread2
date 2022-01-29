@@ -1538,6 +1538,7 @@ bool CHL2MP_Player::ActivatePerk(int skill)
 	case PLAYER_SKILL_HUMAN_GUNSLINGER:
 	{
 		AddPerkFlag(PERK_HUMAN_GUNSLINGER);
+		AchievementManager::WriteToAchievement(this, "ACH_SKILL_PERK_GUNSLINGER");
 		break;
 	}
 
@@ -1546,6 +1547,7 @@ bool CHL2MP_Player::ActivatePerk(int skill)
 		AddPerkFlag(PERK_HUMAN_BLOODRAGE);
 		m_flHealthRegenWaitTime = 0.2f;
 		SetHealthRegenAmount(GetSkillValue("HealthRegen", PLAYER_SKILL_HUMAN_HEALTHREGEN, TEAM_HUMANS) + (GameBaseShared()->GetSharedGameDetails()->GetPlayerMiscSkillData()->flBloodRageRegenRate * ((float)GetSkillValue(PLAYER_SKILL_HUMAN_BLOOD_RAGE))));
+		AchievementManager::WriteToAchievement(this, "ACH_SKILL_PERK_BLOODRAGE");
 		break;
 	}
 
@@ -1581,6 +1583,7 @@ bool CHL2MP_Player::EnterRageMode(bool bForce) // Zombie 'Perk' thing.
 
 	RefreshSpeed();
 
+	AchievementManager::WriteToAchievement(this, "ACH_SKILL_PERK_ZOMBIERAGE");
 	AddPerkFlag(PERK_ZOMBIE_RAGE);
 	IGNORE_PREDICTION_SUPPRESSION;
 	DispatchParticleEffect("bb2_perk_activate", PATTACH_ROOTBONE_FOLLOW, this, -1, true);

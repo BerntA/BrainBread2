@@ -895,10 +895,13 @@ void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pV
 			}
 		}
 	}
-	else
+	else if (pClient->GetTeamNumber() == TEAM_DECEASED)
 	{
 		if (pVictim->IsHuman())
+		{
 			AchievementManager::WriteToAchievement(pClient, "ACH_ZOMBIE_KILL_HUMAN");
+			AchievementManager::WriteToStat(pClient, "BBX_KI_HUMANS");
+		}
 	}
 
 	if (uniqueWepID > WEAPON_ID_NONE)

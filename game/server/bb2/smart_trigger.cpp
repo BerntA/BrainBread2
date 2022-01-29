@@ -71,7 +71,7 @@ void CSmartTrigger::Touch(CBaseEntity *pOther)
 		return pOther->IsHuman();
 
 	case SMART_TRIGGER_FILTER_MILITARY_NPCS:
-		return (pOther->Classify() == CLASS_COMBINE);
+		return ((pOther->Classify() == CLASS_COMBINE) || (pOther->Classify() == CLASS_MILITARY));
 
 	case SMART_TRIGGER_FILTER_HUMANS:
 		return pOther->IsHuman(true);

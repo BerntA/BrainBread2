@@ -407,18 +407,18 @@ void CWeaponFlamethrower::PrimaryAttack(CBaseCombatCharacter *pOwner, float frac
 			CTraceFilterFlameThrower filterFlame(pOwner->MyNPCPointer(), this, vecForward, GetActualDamage());
 
 			// Attack in front of us
-			UTIL_TraceHull(vecStart, vecStart + vecForward * GetRange(), -vecHull, vecHull, MASK_BLOCKLOS, &worldFilter, &traceHit);
+			UTIL_TraceHull(vecStart, vecStart + vecForward * GetRange(), -vecHull, vecHull, MASK_SHOT_HULL, &worldFilter, &traceHit);
 			if (traceHit.startsolid || traceHit.fraction < 1.0f)
 			{
 				vecStart = pOwner->EyePosition();
-				UTIL_TraceHull(vecStart, vecStart + vecForward * GetRange(), -vecHull, vecHull, MASK_BLOCKLOS, &worldFilter, &traceHit);
+				UTIL_TraceHull(vecStart, vecStart + vecForward * GetRange(), -vecHull, vecHull, MASK_SHOT_HULL, &worldFilter, &traceHit);
 			}
-			UTIL_TraceHull(pOwner->GetLocalOrigin(), pOwner->GetLocalOrigin() + vecForward * (traceHit.endpos - traceHit.startpos).Length(), vecAttackHullMin, vecAttackHullMax, MASK_SOLID, &filterFlame, &traceHit);
+			UTIL_TraceHull(pOwner->GetLocalOrigin(), pOwner->GetLocalOrigin() + vecForward * (traceHit.endpos - traceHit.startpos).Length(), vecAttackHullMin, vecAttackHullMax, MASK_SHOT_HULL, &filterFlame, &traceHit);
 
 			// Attack above us
 			vecStart = (pOwner->GetLocalOrigin() + Vector(0.0f, 0.0f, flNPCHeight + 1.0f));
-			UTIL_TraceHull(vecStart, vecStart + Vector(0.0f, 0.0f, 1.0f) * 60.0f, -vecHull, vecHull, MASK_BLOCKLOS, &worldFilter, &traceHit);
-			UTIL_TraceHull(vecStart, traceHit.endpos, -vecHull, vecHull, MASK_SOLID, &filterFlame, &traceHit);
+			UTIL_TraceHull(vecStart, vecStart + Vector(0.0f, 0.0f, 1.0f) * 60.0f, -vecHull, vecHull, MASK_SHOT_HULL, &worldFilter, &traceHit);
+			UTIL_TraceHull(vecStart, traceHit.endpos, -vecHull, vecHull, MASK_SHOT_HULL, &filterFlame, &traceHit);
 			return;
 		}
 
