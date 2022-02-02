@@ -29,6 +29,7 @@ enum ZombieClassTypes
 };
 
 static ConVar bb2_zombie_spawner_distance("bb2_zombie_spawner_distance", "5200", FCVAR_GAMEDLL, "If there is no players within this distance from the spawner it will not spawn any zombies.", true, 200.0f, false, 0.0f);
+static ConVar bb2_zombie_spawner_continuous("bb2_zombie_spawner_continuous", "1", FCVAR_GAMEDLL, "Waves can be spawned even if the zombies in a previous wave did not fully spawn yet, do not wait.", true, 0.0f, true, 1.0f);
 static CUtlVector<CZombieVolume*> g_pZombieVolumes;
 
 bool IsAllowedToSpawn(CBaseEntity *pEntity, float distance, float zDiff, bool bCheckVisible)
@@ -188,7 +189,8 @@ void CZombieVolume::VolumeThink()
 			{
 				SpawnZombie();
 				flSpawnFreq = GetSpawnFrequency();
-				m_flNextSpawnWave += flSpawnFreq;
+				if (!bb2_zombie_spawner_continuous.GetBool())
+					m_flNextSpawnWave += flSpawnFreq;
 			}
 		}
 		else // Not able to spawn, tell zomb class to mark some for quick death stuff!		

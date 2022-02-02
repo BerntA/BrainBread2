@@ -15,6 +15,7 @@
 #include "input.h"
 #else
 #include "ilagcompensationmanager.h"
+#include "npc_base_properties.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -398,13 +399,15 @@ void CWeaponFlamethrower::PrimaryAttack(CBaseCombatCharacter *pOwner, float frac
 
 		if (pPlayer == NULL)
 		{
+			CNPCBaseProperties *pBaseNPC = dynamic_cast<CNPCBaseProperties*>(pOwner);
+			const float flNPCDamage = ((pBaseNPC && GameBaseShared()->GetNPCData()) ? GameBaseShared()->GetNPCData()->GetFirearmDamage(pBaseNPC->GetNPCName(), GetClassname()) : 5.0f);
 			const float flNPCHeight = pOwner->WorldAlignSize().z;
 			Vector vecAttackHullMin = Vector(-10.0f, -10.0f, 0.0f),
 				vecAttackHullMax = Vector(10.0f, 10.0f, flNPCHeight * 0.97f);
 			vecHull = Vector(4.0f, 4.0f, 4.0f); // Smaller box check for vis.
 
 			CTraceFilterWorldAndPropsOnly worldFilter;
-			CTraceFilterFlameThrower filterFlame(pOwner->MyNPCPointer(), this, vecForward, GetActualDamage());
+			CTraceFilterFlameThrower filterFlame(pOwner->MyNPCPointer(), this, vecForward, MAX(flNPCDamage, 5.0f));
 
 			// Attack in front of us
 			UTIL_TraceHull(vecStart, vecStart + vecForward * GetRange(), -vecHull, vecHull, MASK_SHOT_HULL, &worldFilter, &traceHit);

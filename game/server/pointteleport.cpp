@@ -140,6 +140,10 @@ void CPointTeleport::TeleportTeam(int team)
 	QAngle viewAngles;
 	viewAngles.Init();
 
+	trace_t trace;
+	CTraceFilterWorldOnly filter;
+	const Vector &vPos = GetLocalOrigin();
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CHL2MP_Player *pPlayer = ToHL2MPPlayer(UTIL_PlayerByIndex(i));
@@ -148,6 +152,9 @@ void CPointTeleport::TeleportTeam(int team)
 
 		if ((team == TEAM_HUMANS) && pPlayer->IsPlayerInfected())
 			continue;
+
+		UTIL_TraceLine(vPos, pPlayer->WorldSpaceCenter(), MASK_BLOCKLOS, &filter, &trace);
+		if ((trace.fraction == 1.0f) && ((trace.endpos - trace.startpos).Length() < 600.0f)) continue;
 
 		viewAngles[YAW] = random->RandomFloat(-180.0f, 180.0f);
 		pPlayer->Teleport(&m_vSaveOrigin, &viewAngles, NULL);
