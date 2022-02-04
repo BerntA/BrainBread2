@@ -48,7 +48,6 @@ public:
 	bool		CanThrowGrenade(const Vector &vecTarget);
 	int			AllowEntityToBeGibbed(void) { return GIB_NO_GIBS; }
 	Activity	NPC_TranslateActivity(Activity eNewActivity);
-	void		FireBullets(const FireBulletsInfo_t &info);
 	Class_T		Classify(void);
 	BB2_SoundTypes GetNPCType() { return TYPE_CUSTOM; }
 	int			GetNPCClassType() { return NPC_CLASS_PRIEST; }
@@ -236,14 +235,6 @@ Activity CNPCPriest::NPC_TranslateActivity(Activity activity)
 	default:
 		return BaseClass::NPC_TranslateActivity(activity);
 	}
-}
-
-void CNPCPriest::FireBullets(const FireBulletsInfo_t &info)
-{
-	FireBulletsInfo_t adjustedInfo = info;
-	adjustedInfo.m_iShots = 3;
-	adjustedInfo.m_vecSpread = VECTOR_CONE_5DEGREES;
-	BaseClass::FireBullets(adjustedInfo);
 }
 
 Class_T	CNPCPriest::Classify(void)

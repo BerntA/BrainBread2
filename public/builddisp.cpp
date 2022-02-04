@@ -2775,8 +2775,8 @@ void CCoreDispInfo::CreateBoundingBoxes( CoreDispBBox_t *pBBox, int count )
 	int iBox;
 	for( iBox = 0; iBox < count; ++iBox )
 	{
-		pBBox[iBox].vMin.Init( FLT_MAX, FLT_MAX, FLT_MAX );
-		pBBox[iBox].vMax.Init( FLT_MIN, FLT_MIN, FLT_MIN );
+		pBBox[iBox].vMin.Init(FLT_MAX, FLT_MAX, FLT_MAX);
+		pBBox[iBox].vMax.Init(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 	}
 
 	// Get the width and height of the displacement surface.
