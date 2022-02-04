@@ -14,7 +14,7 @@
 #ifndef CLIENT_DLL
 #include "items.h"
 #include "GameBase_Server.h"
-#include "html_data_handler.h"
+#include "external_data_handler.h"
 #include "GameChecksumManager.h"
 #else
 #include "fmod_manager.h"
@@ -1167,10 +1167,7 @@ void CGameBaseShared::ComputePlayerWeight(CHL2MP_Player *pPlayer)
 #ifndef CLIENT_DLL
 CON_COMMAND(reload_gamebase_server, "Reload the game base content.(full reparse)")
 {
-	if (!sv_cheats)
-		return;
-
-	if (!sv_cheats->GetBool())
+	if (!sv_cheats || !sv_cheats->GetBool())
 		return;
 
 	GameBaseShared()->LoadBase();

@@ -1493,6 +1493,7 @@ bool CHL2MP_Player::CanLevelUp(float flXP, bool bAllowTeamBonus)
 	if (bAllowTeamBonus)
 		flXP += (m_BB2Local.m_iPerkTeamBonus.Get() * GameBaseShared()->GetSharedGameDetails()->GetPlayerSharedData()->iTeamBonusXPIncrease);
 
+	flXP *= HL2MPRules()->GetXPRate();
 	flXP = ceil(flXP);
 
 	if (IsHuman())

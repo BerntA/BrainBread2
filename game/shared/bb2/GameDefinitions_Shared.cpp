@@ -2069,3 +2069,84 @@ const char* COM_GetModDirectory()
 
 	return modDir;
 }
+
+//
+// Allows us to load a dynamic set of soundscripts -
+// useful for custom sound mods! Prevents the case where mods override the sound manifest = breaks other game stuff or mods!
+//
+
+#ifdef GAME_DLL
+void EnumerateSoundScriptFolder(FileHandle_t fileInfo, const char *path)
+{
+	if (fileInfo == FILESYSTEM_INVALID_HANDLE)
+		return;
+
+	char pszNextPath[MAX_PATH];
+	Q_snprintf(pszNextPath, MAX_PATH, "data/soundscripts/%s/*.*", path);
+
+	FileFindHandle_t findHandle;
+	const char *pFileName = filesystem->FindFirst(pszNextPath, &findHandle);
+	while (pFileName != NULL)
+	{
+		if (strlen(pFileName) > 2)
+		{
+			if (filesystem->FindIsDirectory(findHandle))
+			{
+				Q_snprintf(pszNextPath, MAX_PATH, "%s/%s", path, pFileName);
+				EnumerateSoundScriptFolder(fileInfo, pszNextPath);
+			}
+			else
+			{
+				Q_snprintf(pszNextPath, MAX_PATH, "    \"precache_file\" \"data/soundscripts/%s/%s\"\n", path, pFileName);
+				g_pFullFileSystem->Write(&pszNextPath, strlen(pszNextPath), fileInfo);
+			}
+		}
+
+		pFileName = filesystem->FindNext(findHandle);
+	}
+	filesystem->FindClose(findHandle);
+}
+
+void RecreateSoundScriptsManifest(void)
+{
+	// Initialize sound script manifest:
+	FileHandle_t soundManifest = g_pFullFileSystem->Open("scripts/game_sounds_manifest.txt", "w");
+	if (soundManifest == FILESYSTEM_INVALID_HANDLE)
+		return;
+
+	char pszTempString[MAX_PATH];
+
+	Q_snprintf(pszTempString, MAX_PATH,
+		"game_sounds_manifest\n"
+		"{\n"
+		);
+	g_pFullFileSystem->Write(&pszTempString, strlen(pszTempString), soundManifest);
+
+	FileFindHandle_t findHandle;
+	const char *pFileName = filesystem->FindFirst("data/soundscripts/*.*", &findHandle);
+	while (pFileName != NULL)
+	{
+		if (strlen(pFileName) > 2)
+		{
+			if (filesystem->FindIsDirectory(findHandle))
+			{
+				Q_strncpy(pszTempString, pFileName, MAX_PATH);
+				EnumerateSoundScriptFolder(soundManifest, pszTempString);
+			}
+			else
+			{
+				Q_snprintf(pszTempString, MAX_PATH, "    \"precache_file\" \"data/soundscripts/%s\"\n", pFileName);
+				g_pFullFileSystem->Write(&pszTempString, strlen(pszTempString), soundManifest);
+			}
+		}
+
+		pFileName = filesystem->FindNext(findHandle);
+	}
+	filesystem->FindClose(findHandle);
+
+	Q_snprintf(pszTempString, MAX_PATH, "}");
+	g_pFullFileSystem->Write(&pszTempString, strlen(pszTempString), soundManifest);
+
+	g_pFullFileSystem->Close(soundManifest);
+}
+#endif

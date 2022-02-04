@@ -534,5 +534,6 @@ extern const DataPenetrationItem_t *GetPenetrationDataForMaterial(unsigned short
 extern Vector TryPenetrateSurface(trace_t *tr, ITraceFilter *filter);
 
 const char* COM_GetModDirectory();
+void RecreateSoundScriptsManifest(void);
 
 #endif // GAME_DEFINITIONS_SHARED_H

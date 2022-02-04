@@ -223,7 +223,7 @@ public:
 	CNetworkVar(int, m_iCurrentYesVotes);
 	CNetworkVar(int, m_iCurrentNoVotes);
 	CNetworkVar(float, m_flTimeUntilVoteEnds);
-	CNetworkVar(float, m_flTimeVoteStarted);
+	CNetworkVar(float, m_flTimeVoteStarted);	
 
 	// Game End Map Vote System:
 	CNetworkArray(int, m_iEndMapVotesForType, ENDMAP_VOTE_TYPES_MAX);
@@ -299,6 +299,9 @@ public:
 	virtual void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );	
 	virtual bool IsTeamplay(void);
 	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );	
+
+	float GetXPRate(void) { return MAX(m_flExperienceRate.Get(), 1.0f); }
+	void SetXPRate(float rate) { m_flExperienceRate.Set(rate); }
 	
 private:
 
@@ -308,6 +311,7 @@ private:
 	CNetworkVar(int, m_iRoundCountdown);
 	CNetworkVar(int, m_iCurrentGamemode);
 	CNetworkVar(int, m_iGamemodeFlags);
+	CNetworkVar(float, m_flExperienceRate);
 
 	// Arena
 	CNetworkVar(float, m_flRespawnTime);

@@ -335,11 +335,6 @@ bool CGameBaseServer::IsClassicMode(void)
 	return (HL2MPRules() && (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE) && bb2_classic_mode_enabled.GetBool());
 }
 
-bool CGameBaseServer::IsUsingDBSystem(void)
-{
-	return engine->IsDedicatedServer();
-}
-
 void CGameBaseServer::IterateAddonsPath(const char *path)
 {
 	char pszAbsPath[256], pszNextPath[256];

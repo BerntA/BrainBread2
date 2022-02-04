@@ -11,7 +11,7 @@
 #endif
 
 #include "hl2mp_player.h"
-#include "html_data_handler.h"
+#include "external_data_handler.h"
 
 struct sharedDataItem_t
 {
@@ -71,7 +71,6 @@ public:
 	bool IsTutorialModeEnabled(void);
 	bool IsStoryMode(void);
 	bool IsClassicMode(void);
-	bool IsUsingDBSystem(void);
 
 	// Plugin Iterator
 	void IterateAddonsPath(const char *path);

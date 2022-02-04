@@ -79,53 +79,54 @@ extern ConVar mp_chattime;
 
 #endif
 
-REGISTER_GAMERULES_CLASS( CHL2MPRules );
+REGISTER_GAMERULES_CLASS(CHL2MPRules);
 
-BEGIN_NETWORK_TABLE_NOBASE( CHL2MPRules, DT_HL2MPRules )
+BEGIN_NETWORK_TABLE_NOBASE(CHL2MPRules, DT_HL2MPRules)
 
 #ifdef CLIENT_DLL
-	RecvPropInt( RECVINFO( m_iCurrentGamemode ) ),
-	RecvPropInt( RECVINFO( m_iGamemodeFlags ) ),
-	RecvPropBool( RECVINFO( m_bRoundStarted ) ),
-	RecvPropBool( RECVINFO(m_bShouldShowScores)),
-	RecvPropInt( RECVINFO( m_iRoundCountdown ) ),
-	RecvPropFloat( RECVINFO( m_flServerStartTime ) ),
-	RecvPropFloat( RECVINFO( m_flRespawnTime ) ),
-	RecvPropInt(RECVINFO(m_iNumReinforcements)),
+RecvPropInt(RECVINFO(m_iCurrentGamemode)),
+RecvPropInt(RECVINFO(m_iGamemodeFlags)),
+RecvPropBool(RECVINFO(m_bRoundStarted)),
+RecvPropBool(RECVINFO(m_bShouldShowScores)),
+RecvPropInt(RECVINFO(m_iRoundCountdown)),
+RecvPropFloat(RECVINFO(m_flServerStartTime)),
+RecvPropFloat(RECVINFO(m_flRespawnTime)),
+RecvPropFloat(RECVINFO(m_flExperienceRate)),
+RecvPropInt(RECVINFO(m_iNumReinforcements)),
 
-	// Vote Sys.
-	RecvPropInt(RECVINFO(m_iCurrentVoteType)),
-	RecvPropInt(RECVINFO(m_iCurrentYesVotes)),
-	RecvPropInt(RECVINFO(m_iCurrentNoVotes)),
-	RecvPropFloat( RECVINFO( m_flTimeUntilVoteEnds ) ),
-	RecvPropFloat(RECVINFO(m_flTimeVoteStarted)),
+// Vote Sys.
+RecvPropInt(RECVINFO(m_iCurrentVoteType)),
+RecvPropInt(RECVINFO(m_iCurrentYesVotes)),
+RecvPropInt(RECVINFO(m_iCurrentNoVotes)),
+RecvPropFloat(RECVINFO(m_flTimeUntilVoteEnds)),
+RecvPropFloat(RECVINFO(m_flTimeVoteStarted)),
 
-	RecvPropArray3(RECVINFO_ARRAY(m_iEndMapVotesForType), RecvPropInt(RECVINFO(m_iEndMapVotesForType[0]))),
+RecvPropArray3(RECVINFO_ARRAY(m_iEndMapVotesForType), RecvPropInt(RECVINFO(m_iEndMapVotesForType[0]))),
 #else
-	SendPropInt(SENDINFO(m_iCurrentGamemode), 3, SPROP_UNSIGNED),
-	SendPropInt(SENDINFO(m_iGamemodeFlags), 2, SPROP_UNSIGNED),
-	SendPropBool(SENDINFO(m_bRoundStarted)),
-	SendPropBool(SENDINFO(m_bShouldShowScores)),
-	SendPropInt(SENDINFO(m_iRoundCountdown), 6, SPROP_UNSIGNED),
-	SendPropFloat(SENDINFO(m_flServerStartTime), -1, SPROP_CHANGES_OFTEN, 0.0f, 2048.0f),
-	SendPropFloat(SENDINFO(m_flRespawnTime), -1, SPROP_CHANGES_OFTEN, 0.0f, 2048.0f),
-	SendPropInt(SENDINFO(m_iNumReinforcements), 8, SPROP_UNSIGNED),
+SendPropInt(SENDINFO(m_iCurrentGamemode), 3, SPROP_UNSIGNED),
+SendPropInt(SENDINFO(m_iGamemodeFlags), 2, SPROP_UNSIGNED),
+SendPropBool(SENDINFO(m_bRoundStarted)),
+SendPropBool(SENDINFO(m_bShouldShowScores)),
+SendPropInt(SENDINFO(m_iRoundCountdown), 6, SPROP_UNSIGNED),
+SendPropFloat(SENDINFO(m_flServerStartTime), -1, SPROP_CHANGES_OFTEN, 0.0f, 2048.0f),
+SendPropFloat(SENDINFO(m_flRespawnTime), -1, SPROP_CHANGES_OFTEN, 0.0f, 2048.0f),
+SendPropFloat(SENDINFO(m_flExperienceRate)),
+SendPropInt(SENDINFO(m_iNumReinforcements), 8, SPROP_UNSIGNED),
 
-	// Vote Sys.
-	SendPropInt(SENDINFO(m_iCurrentVoteType), 3, SPROP_UNSIGNED),
-	SendPropInt(SENDINFO(m_iCurrentYesVotes), 5, SPROP_UNSIGNED),
-	SendPropInt(SENDINFO(m_iCurrentNoVotes), 5, SPROP_UNSIGNED),
-	SendPropFloat(SENDINFO(m_flTimeUntilVoteEnds)),
-	SendPropFloat(SENDINFO(m_flTimeVoteStarted)),
+// Vote Sys.
+SendPropInt(SENDINFO(m_iCurrentVoteType), 3, SPROP_UNSIGNED),
+SendPropInt(SENDINFO(m_iCurrentYesVotes), 5, SPROP_UNSIGNED),
+SendPropInt(SENDINFO(m_iCurrentNoVotes), 5, SPROP_UNSIGNED),
+SendPropFloat(SENDINFO(m_flTimeUntilVoteEnds)),
+SendPropFloat(SENDINFO(m_flTimeVoteStarted)),
 
-	SendPropArray3(SENDINFO_ARRAY3(m_iEndMapVotesForType), SendPropInt(SENDINFO_ARRAY(m_iEndMapVotesForType), 4, SPROP_UNSIGNED)),
+SendPropArray3(SENDINFO_ARRAY3(m_iEndMapVotesForType), SendPropInt(SENDINFO_ARRAY(m_iEndMapVotesForType), 4, SPROP_UNSIGNED)),
 #endif
 
-	END_NETWORK_TABLE()
+END_NETWORK_TABLE()
 
-
-	LINK_ENTITY_TO_CLASS( hl2mp_gamerules, CHL2MPGameRulesProxy );
-IMPLEMENT_NETWORKCLASS_ALIASED( HL2MPGameRulesProxy, DT_HL2MPGameRulesProxy )
+LINK_ENTITY_TO_CLASS(hl2mp_gamerules, CHL2MPGameRulesProxy);
+IMPLEMENT_NETWORKCLASS_ALIASED(HL2MPGameRulesProxy, DT_HL2MPGameRulesProxy)
 
 	static HL2MPViewVectors g_HL2MPViewVectors(
 	Vector( 0, 0, 64 ),       //VEC_VIEW (m_vView) 
@@ -275,6 +276,7 @@ CHL2MPRules::CHL2MPRules()
 	m_ulMapSize = 0;
 	g_pZombiesInWorld = 0;
 	m_flRoundStartTime = 0;
+	m_flExperienceRate = 1.0f;
 
 	// Vote System:
 	m_iCurrentYesVotes = 0;

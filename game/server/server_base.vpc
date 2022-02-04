@@ -45,7 +45,7 @@ $Configuration
 	
 	$Compiler
 	{
-		$AdditionalIncludeDirectories	"$BASE;.\;$SRCDIR\game\shared;$SRCDIR\utils\common;$SRCDIR\fmod;$SRCDIR\game\server\bb2;$SRCDIR\game\shared\bb2"
+		$AdditionalIncludeDirectories	"$BASE;.\;$SRCDIR\game\shared;$SRCDIR\utils\common;$SRCDIR\game\server\bb2;$SRCDIR\game\shared\bb2;$SRCDIR\thirdparty"
 		$PreprocessorDefinitions		"$BASE;GAME_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead"
 		$PreprocessorDefinitions		"$BASE;SWDS" [$POSIX]
 		$PreprocessorDefinitions		"$BASE;fopen=dont_use_fopen" [$WINDOWS||$X360]
@@ -106,8 +106,8 @@ $Project
 		$Folder "Database"
 		{
 		    $File "$SRCDIR\game\shared\bb2\achievement_shareddefs.h"
-			$File "bb2/html_data_handler.cpp"
-			$File "bb2/html_data_handler.h"
+			$File "bb2/external_data_handler.cpp"
+			$File "bb2/external_data_handler.h"
 			$File "bb2/achievement_manager.cpp"
 			$File "bb2/achievement_manager.h"				
 			$File "bb2/player_achiev_stats.cpp"

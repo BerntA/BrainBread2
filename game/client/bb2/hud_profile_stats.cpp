@@ -168,6 +168,9 @@ private:
 	CPanelAnimationVarAliasType(float, misc_x, "misc_x", "0", "proportional_float");
 	CPanelAnimationVarAliasType(float, misc_y, "misc_y", "0", "proportional_float");
 
+	CPanelAnimationVar(Color, xp_rate_color, "xp_rate_color", "15 255 15 255");
+	CPanelAnimationVarAliasType(float, xp_rate_x, "xp_rate_x", "0", "proportional_float");
+
 	CPanelAnimationVar(vgui::HFont, m_hTextFont, "TextFont", "BB2_PANEL");
 	CPanelAnimationVar(vgui::HFont, m_hXPFont, "XPFont", "Default");
 	CPanelAnimationVar(vgui::HFont, m_hSmallFont, "DefFontSmall", "DefaultVerySmall");
@@ -396,11 +399,7 @@ void CHudProfileStats::Paint()
 				float flFraction = 1.0f - (flTimeElapsed / flInfectionTime); // Reverse the fraction.
 				pHudIcon = m_pSharedHUDIcons[SHARED_HUD_ICON_INFECTION_FULL];
 				if (pHudIcon)
-				{
-					flXPTextX = pHudIcon->GetOrigPosX() + (pHudIcon->GetOrigWide() / 2);
-					flXPTextY = pHudIcon->GetOrigPosY() + pHudIcon->GetOrigTall() + xp_ypos;
 					pHudIcon->DrawCircularProgression(GetFgColor(), pHudIcon->GetOrigPosX(), pHudIcon->GetOrigPosY(), pHudIcon->GetOrigWide(), pHudIcon->GetOrigTall(), flFraction);
-				}
 			}
 		}
 	}
@@ -558,14 +557,24 @@ void CHudProfileStats::Paint()
 
 	if (bb2_show_details.GetBool())
 	{
-		if (!m_bIsZombie && bSkillsEnabled)
+		if (!m_bIsZombie && bSkillsEnabled && (m_iLevel < MAX_PLAYER_LEVEL))
 		{
-			if (m_iLevel < MAX_PLAYER_LEVEL)
+			V_swprintf_safe(unicode, L"%i / %i", m_iKillCount, m_iPointsUntilLevel);
+			iStringLen = UTIL_ComputeStringWidth(m_hSmallFont, unicode);
+			surface()->DrawSetTextPos(flXPTextX - (iStringLen / 2), flXPTextY);
+			surface()->DrawPrintText(unicode, wcslen(unicode));
+
+			if (HL2MPRules()->GetXPRate() > 1.0f)
 			{
-				V_swprintf_safe(unicode, L"%i / %i", m_iKillCount, m_iPointsUntilLevel);
-				iStringLen = UTIL_ComputeStringWidth(m_hSmallFont, unicode);
-				surface()->DrawSetTextPos(flXPTextX - (iStringLen / 2), flXPTextY);
+				surface()->DrawSetColor(xp_rate_color);
+				surface()->DrawSetTextColor(xp_rate_color);
+
+				V_swprintf_safe(unicode, L"%.02fx XP", HL2MPRules()->GetXPRate());
+				surface()->DrawSetTextPos(xp_rate_x, flXPTextY);
 				surface()->DrawPrintText(unicode, wcslen(unicode));
+
+				surface()->DrawSetColor(GetFgColor());
+				surface()->DrawSetTextColor(GetFgColor());
 			}
 		}
 
