@@ -12,7 +12,7 @@
 #pragma once
 #endif
 
-#include "fmod.hpp"
+#include "fmod/fmod.hpp"
 
 class CFMODManager
 {
