@@ -51,6 +51,9 @@ public:
 	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo = NULL);
 	virtual void Drop(const Vector &vecVelocity);
 
+	virtual float GetMinRestTime() { return GetWpnData().m_flFireRate; }
+	virtual float GetMaxRestTime() { return (GetWpnData().m_flFireRate + 0.2f); }
+
 #ifndef CLIENT_DLL
 	virtual int CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
 	virtual void Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator);

@@ -51,8 +51,8 @@ public:
 
 	void AffectedByPlayerSkill(int skill);
 
-	float GetMinRestTime() { return 0; }
-	float GetMaxRestTime() { return 0; }
+	float GetMinRestTime() { return 0.85f; }
+	float GetMaxRestTime() { return 1.25f; }
 
 private:
 	CWeaponWinchester1894(const CWeaponWinchester1894 &);

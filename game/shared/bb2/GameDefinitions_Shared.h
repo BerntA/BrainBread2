@@ -318,6 +318,7 @@ struct DataInventoryItem_Base_t
 	Color clGlowColor;
 	bool bGlobalGlow;
 	bool bAutoConsume;
+	bool bUnique;
 
 	bool bEnableObjectiveIcon;
 	char szObjectiveIconTexture[MAX_WEAPON_STRING];

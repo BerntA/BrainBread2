@@ -28,6 +28,9 @@ public:
 	int GetMaxZoomLevel(void) { return 2; }
 	int GetUniqueWeaponID() { return WEAPON_ID_REMINGTON700; }
 
+	float GetMinRestTime() { return 1.0f; }
+	float GetMaxRestTime() { return 1.5f; }
+
 private:
 	CWeaponRemington700(const CWeaponRemington700 &);
 };

@@ -74,15 +74,13 @@ void CInventoryItem::Spawn()
 		CObjectiveIcon *pObjIcon = (CObjectiveIcon*)CreateEntityByName("objective_icon");
 		if (pObjIcon)
 		{
-			const char *szTexture = m_pData->szObjectiveIconTexture;
-
 			Vector vecOrigin = this->GetAbsOrigin();
 			vecOrigin.z += OBJECTIVE_ICON_EXTRA_HEIGHT;
-
 			pObjIcon->SetAbsOrigin(vecOrigin);
 			pObjIcon->SetAbsAngles(this->GetAbsAngles());
-			pObjIcon->SetObjectiveIconTexture(szTexture, true);
+			pObjIcon->SetObjectiveIconTexture(m_pData->szObjectiveIconTexture, true);
 			pObjIcon->Spawn();
+			pObjIcon->HideIcon(m_bIsDisabled);
 			m_pObjIcon = pObjIcon;
 		}
 	}
@@ -110,18 +108,24 @@ void CInventoryItem::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 
 	CSingleUserRecipientFilter filter(pPlayer);
 
-	bool bAutoConsume = m_pData->bAutoConsume;
-	if (!bAutoConsume && !m_bExcludeFromInventory && (GameBaseShared()->GetInventoryItemCountForPlayer(pActivator->entindex()) >= MAX_INVENTORY_ITEM_COUNT))
-	{
-		GameBaseServer()->SendToolTip("#TOOLTIP_INVENTORY_FULL", GAME_TIP_DEFAULT, pActivator->entindex());
-		EmitSound(filter, pPlayer->entindex(), m_pData->szSoundScriptFailure);
-		return;
-	}
-
-	if (!bAutoConsume)
+	if (!m_pData->bAutoConsume)
 	{
 		if (!m_bExcludeFromInventory)
 		{
+			if (GameBaseShared()->GetInventoryItemCountForPlayer(pActivator->entindex()) >= MAX_INVENTORY_ITEM_COUNT)
+			{
+				GameBaseServer()->SendToolTip("#TOOLTIP_INVENTORY_FULL", GAME_TIP_DEFAULT, pActivator->entindex());
+				EmitSound(filter, pPlayer->entindex(), m_pData->szSoundScriptFailure);
+				return;
+			}
+
+			if (m_pData->bUnique && (GameBaseShared()->GetInventoryItemForPlayer(pActivator->entindex(), m_iItemID, m_bIsMapItem) != -1))
+			{
+				GameBaseServer()->SendToolTip("#TOOLTIP_INVENTORY_UNIQUE", GAME_TIP_DEFAULT, pActivator->entindex());
+				EmitSound(filter, pPlayer->entindex(), m_pData->szSoundScriptFailure);
+				return;
+			}
+
 			// We have enough space!! Get it before it is 2 late!
 			GameBaseShared()->AddInventoryItem(pActivator->entindex(), m_pData, m_bIsMapItem);
 		}
@@ -200,7 +204,6 @@ bool CInventoryItem::SetItem(const DataInventoryItem_Base_t &data, bool bMapItem
 	m_pData = &data;
 	m_iItemID = data.iItemID;
 	m_bIsMapItem = bMapItem;
-
 	SetModel(data.szModelPath);
 	return true;
 }
@@ -246,7 +249,6 @@ void CInventoryItem::OnRotationEffect(void)
 void CInventoryItem::Teleport(const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity)
 {
 	BaseClass::Teleport(newPosition, newAngles, newVelocity);
-
 	UpdateObjectiveIconPosition(GetAbsOrigin());
 }
 
@@ -297,7 +299,6 @@ void CInventoryItem::FireGameEvent(IGameEvent *event)
 		{
 			Warning("Item (%u) '%s' doesn't exist!\nRemoving!\n", m_iItemID, STRING(GetEntityName()));
 			UTIL_Remove(this);
-			return;
 		}
 	}
 }
