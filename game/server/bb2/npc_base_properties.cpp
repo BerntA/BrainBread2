@@ -155,6 +155,7 @@ void CNPCBaseProperties::OnTookDamage(const CTakeDamageInfo &info, const float f
 	xpToGivePlayer = clamp(xpToGivePlayer, 0.0f, totalHealth);
 	xpToGivePlayer /= totalHealth;
 	xpToGivePlayer *= m_flXPToGive;
+	xpToGivePlayer = MAX(xpToGivePlayer, 1.0f);
 
 	pAttacker->IncrementFragCount(ceil(xpToGivePlayer));
 	pAttacker->CanLevelUp(xpToGivePlayer, true);
