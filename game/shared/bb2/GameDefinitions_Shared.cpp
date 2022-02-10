@@ -1322,6 +1322,7 @@ void CGameDefinitionsShared::ParseInventoryData(KeyValues *pkvData, bool bIsMapI
 			item.bEnableObjectiveIcon = (pszObjIconTexture && pszObjIconTexture[0]);
 			item.bAutoConsume = sub->GetBool("AutoConsume");
 			item.bUnique = sub->GetBool("Unique");
+			item.flDespawnTime = sub->GetFloat("DespawnTime", 0.0f);
 			Q_strncpy(item.szObjectiveIconTexture, pszObjIconTexture, MAX_WEAPON_STRING);
 
 			KeyValues *pkvColor = sub->FindKey("GlobalGlow");

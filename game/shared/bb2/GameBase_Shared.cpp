@@ -725,7 +725,9 @@ void CGameBaseShared::RemoveInventoryItem(int iPlayerIndex, const Vector &vecAbs
 						modelinfo->GetModelBounds(pModel, mins, maxs);
 						endPoint.z += maxs.z + 4;
 					}
+
 					pEntity->SetLocalOrigin(endPoint);
+					pEntity->OnItemWasDropped();
 				}
 			}
 

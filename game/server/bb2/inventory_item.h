@@ -40,6 +40,7 @@ public:
 	bool SetItem(const DataInventoryItem_Base_t &data, bool bMapItem);
 	bool SetItem(uint itemID, bool bMapItem);
 	void OnItemStateUpdated(bool bDisabled);
+	void OnItemWasDropped(void);
 
 	const DataInventoryItem_Base_t* GetItemData(void) { return m_pData; }
 

@@ -319,6 +319,7 @@ struct DataInventoryItem_Base_t
 	bool bGlobalGlow;
 	bool bAutoConsume;
 	bool bUnique;
+	float flDespawnTime;
 
 	bool bEnableObjectiveIcon;
 	char szObjectiveIconTexture[MAX_WEAPON_STRING];

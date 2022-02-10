@@ -235,6 +235,15 @@ void CInventoryItem::OnItemStateUpdated(bool bDisabled)
 		pEnt->HideIcon(bDisabled);
 }
 
+void CInventoryItem::OnItemWasDropped(void)
+{
+	if (m_pData->flDespawnTime <= 0.1f)
+		return;
+
+	SetThink(&CBaseEntity::SUB_Remove);
+	SetNextThink(gpGlobals->curtime + m_pData->flDespawnTime);
+}
+
 void CInventoryItem::OnRotationEffect(void)
 {
 	BaseClass::OnRotationEffect();

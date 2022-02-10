@@ -44,6 +44,7 @@ public:
 
 	// Become touchable when we are at rest
 	virtual void OnEntityEvent(EntityEvent_t event, void *pEventData);
+	virtual void OnItemWasDropped(void) { }
 
 	// Activate when at rest, but don't allow pickup until then
 	void ActivateWhenAtRest(float flTime = 0.5f);
