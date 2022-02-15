@@ -28,6 +28,9 @@
 *.hgignore
 *.ipch
 
+*.VC.*
+*.FileListAbsolute.txt
+
 # Version Controlling
 *.hg
 /.hg
