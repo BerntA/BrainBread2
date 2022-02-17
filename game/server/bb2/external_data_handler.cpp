@@ -15,6 +15,12 @@
 #include "GameChecksumManager.h"
 
 #ifndef OSX
+
+#if defined(_WIN32) && defined(USE_VS2022)
+FILE _iob[] = { *stdin, *stdout, *stderr };
+extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
+#endif
+
 #include "curl/curl.h"
 #include "rapidjson/fwd.h"
 #include "rapidjson/document_safe.h"

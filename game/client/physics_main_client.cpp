@@ -7,7 +7,11 @@
 #include "cbase.h"
 #include "c_baseentity.h"
 #ifdef WIN32
+#ifdef USE_VS2022
+#include <typeinfo>
+#else
 #include <typeinfo.h>
+#endif
 #endif
 #include "tier0/vprof.h"
 

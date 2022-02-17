@@ -120,7 +120,11 @@ entities. Each one is useful under different conditions.
 #include "utllinkedlist.h"
 #include "utldict.h"
 #ifdef WIN32
+#ifdef USE_VS2022
+#include <typeinfo>
+#else
 #include <typeinfo.h>
+#endif
 #else
 #include <typeinfo>
 #endif

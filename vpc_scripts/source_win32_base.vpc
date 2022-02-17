@@ -58,6 +58,8 @@ $Configuration
 		// Defines to differentiate 32 from 64 bit builds
 		$PreprocessorDefinitions			"$BASE;PLATFORM_64BITS;WIN64;_WIN64;COMPILER_MSVC64" [$WIN64]
 		$PreprocessorDefinitions			"$BASE;COMPILER_MSVC32" [$WIN32]
+		
+		$PreprocessorDefinitions			"$BASE;USE_VS2022" [$VS2022]
 
 		// /Gw is a VS 2013 option that puts global and static variables in individual sections so that the
 		// linker can discard unreferenced data. When building @client /dota with linker optimizations this

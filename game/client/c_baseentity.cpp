@@ -4797,9 +4797,15 @@ C_BaseEntity *C_BaseEntity::Instance(int iEnt)
 }
 
 #ifdef WIN32
+
+#ifdef USE_VS2022
+#include <typeinfo>
+#else
 #pragma warning( push )
 #include <typeinfo.h>
 #pragma warning( pop )
+#endif
+
 #endif
 
 //-----------------------------------------------------------------------------
