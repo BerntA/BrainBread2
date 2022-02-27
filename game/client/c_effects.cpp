@@ -34,8 +34,8 @@ Vector g_vSplashColor( 0.5, 0.5, 0.5 );
 float g_flSplashScale = 0.15;
 float g_flSplashLifetime = 0.5f;
 float g_flSplashAlpha = 0.3f;
-ConVar r_RainSplashPercentage( "r_RainSplashPercentage", "70", FCVAR_CLIENTDLL|FCVAR_ARCHIVE ); // N% chance of a rain particle making a splash.
 
+ConVar r_RainSplashPercentage("r_RainSplashPercentage", "30", FCVAR_CLIENTDLL | FCVAR_ARCHIVE); // N% chance of a rain particle making a splash.
 
 float GUST_INTERVAL_MIN = 1;
 float GUST_INTERVAL_MAX = 2;
@@ -53,7 +53,6 @@ ConVar r_RainSideVel( "r_RainSideVel", "130", FCVAR_CHEAT, "How much sideways ve
 ConVar r_RainSimulate( "r_RainSimulate", "1", FCVAR_CHEAT, "Enable/disable rain simulation." );
 ConVar r_DrawRain( "r_DrawRain", "1", FCVAR_CHEAT, "Enable/disable rain rendering." );
 ConVar r_RainProfile( "r_RainProfile", "0", FCVAR_CHEAT, "Enable/disable rain profiling." );
-
 
 //Precahce the effects
 CLIENTEFFECT_REGISTER_BEGIN( PrecachePrecipitation )
@@ -197,11 +196,11 @@ private:
 	Vector							m_vAshSpawnOrigin;
 
 	int								m_iAshCount;
+	int								m_iRainSplashIndex;
 
 private:
 	CClient_Precipitation( const CClient_Precipitation & ); // not defined, not accessible
 };
-
 
 // Just receive the normal data table stuff
 IMPLEMENT_CLIENTCLASS_DT(CClient_Precipitation, DT_Precipitation, CPrecipitation)
@@ -325,43 +324,13 @@ inline bool CClient_Precipitation::SimulateRain( CPrecipitationParticle* pPartic
 		}
 	}
 
-	/*
-	// No longer in the air? punt.
-	if ( !IsInAir( pParticle->m_Pos ) )
-	{
-	// Possibly make a splash if we hit a water surface and it's in front of the view.
-	if ( m_Splashes.Count() < 20 )
-	{
-	if ( RandomInt( 0, 100 ) < r_RainSplashPercentage.GetInt() )
-	{
-	trace_t trace;
-	UTIL_TraceLine(vOldPos, pParticle->m_Pos, MASK_WATER, NULL, C COLLISION_GROUP_NONE, &trace);
-	if( trace.fraction < 1 )
-	{
-	m_Splashes.AddToTail( trace.endpos );
-	}
-	}
-	}
-
-	// Tell the framework it's time to remove the particle from the list
-	return false;
-	}*/
-	/*Tony; the traceline replaces the IsInAir check.
-	you also don't want the random's to be around the traceline either, or it will only check SOMETIMES. it  needs to check _all_ the time.
-	you also probably want to do some radius checking of the particles position (ignoring z) for if it's in range of the local player to run this code or not
-	otherwise you will have traces for every particle all over the place even if there's no way that the player can see it
-	so when the player is out of that radius, you would only use if ( !IsInAir( pParticle->m_Pos ) { return  false; }
-	probably also need to check to make sure that it doesn't splash on sky, too.
-	*/
-
 	trace_t trace;
 	UTIL_TraceLine(vOldPos, pParticle->m_Pos, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &trace);
 
 	if (trace.fraction < 1 || trace.DidHit() || trace.DidHitWorld())
 	{
-		double perc = (r_RainSplashPercentage.GetFloat() / PERCENT_BASE);
-		if (TryTheLuck(perc))
-			DispatchParticleEffect("rain_impact_tfo", trace.endpos, trace.m_pEnt->GetAbsAngles(), NULL);
+		if ((m_iRainSplashIndex > 0) && TryTheLuck(r_RainSplashPercentage.GetFloat() / PERCENT_BASE))
+			DispatchParticleEffect(m_iRainSplashIndex, trace.endpos, trace.endpos, vec3_angle, NULL);
 
 		// Tell the framework it's time to remove the particle from the list
 		return false;
@@ -644,7 +613,6 @@ void CClient_Precipitation::Render()
 	}
 }
 
-
 //-----------------------------------------------------------------------------
 // Constructor, destructor
 //-----------------------------------------------------------------------------
@@ -654,7 +622,7 @@ CClient_Precipitation::CClient_Precipitation() : m_Remainder(0.0f)
 	m_nPrecipType = PRECIPITATION_TYPE_RAIN;
 	m_MatHandle = INVALID_MATERIAL_HANDLE;
 	m_flHalfScreenWidth = 1;
-	
+	m_iRainSplashIndex = -1;
 	g_Precipitations.AddToTail( this );
 }
 
@@ -707,8 +675,10 @@ void CClient_Precipitation::Precache( )
 		m_Color[1] = 1.0f;
 		m_Color[2] = 1.0f;
 	}
-}
 
+	if (m_iRainSplashIndex == -1)
+		m_iRainSplashIndex = GetParticleSystemIndex("rain_impact_tfo");
+}
 
 //-----------------------------------------------------------------------------
 // Gets the tracer width and speed
