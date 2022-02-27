@@ -112,6 +112,7 @@ private:
 	int m_nClientEffectFlags;
 #else
 	float GetActualDamage(void);
+	bool m_bCanNPCReachTarget;
 #endif
 };
 
@@ -195,6 +196,8 @@ CWeaponFlamethrower::CWeaponFlamethrower()
 #ifdef CLIENT_DLL
 	m_nClientEffectFlags = 0;
 	m_pParticleFireSmall = m_pParticleFireLarge = NULL;
+#else
+	m_bCanNPCReachTarget = false;
 #endif
 }
 
@@ -399,14 +402,14 @@ void CWeaponFlamethrower::PrimaryAttack(CBaseCombatCharacter *pOwner, float frac
 
 		if (pPlayer == NULL)
 		{
-			CNPCBaseProperties *pBaseNPC = dynamic_cast<CNPCBaseProperties*>(pOwner);
+			CNPCBaseProperties* pBaseNPC = dynamic_cast<CNPCBaseProperties*>(pOwner);
 			const float flNPCDamage = ((pBaseNPC && GameBaseShared()->GetNPCData()) ? GameBaseShared()->GetNPCData()->GetFirearmDamage(pBaseNPC->GetNPCName(), GetClassname()) : 5.0f);
 			const float flNPCHeight = pOwner->WorldAlignSize().z;
 			Vector vecAttackHullMin = Vector(-10.0f, -10.0f, 0.0f),
 				vecAttackHullMax = Vector(10.0f, 10.0f, flNPCHeight * 0.97f);
 			vecHull = Vector(4.0f, 4.0f, 4.0f); // Smaller box check for vis.
 
-			CTraceFilterWorldAndPropsOnly worldFilter;
+			CTraceFilterNoNPCsOrPlayer worldFilter(pOwner, pOwner->GetCollisionGroup());
 			CTraceFilterFlameThrower filterFlame(pOwner->MyNPCPointer(), this, vecForward, MAX(flNPCDamage, 5.0f));
 
 			// Attack in front of us
@@ -416,7 +419,11 @@ void CWeaponFlamethrower::PrimaryAttack(CBaseCombatCharacter *pOwner, float frac
 				vecStart = pOwner->EyePosition();
 				UTIL_TraceHull(vecStart, vecStart + vecForward * GetRange(), -vecHull, vecHull, MASK_SHOT_HULL, &worldFilter, &traceHit);
 			}
-			UTIL_TraceHull(pOwner->GetLocalOrigin(), pOwner->GetLocalOrigin() + vecForward * (traceHit.endpos - traceHit.startpos).Length(), vecAttackHullMin, vecAttackHullMax, MASK_SHOT_HULL, &filterFlame, &traceHit);
+
+			m_bCanNPCReachTarget = !(traceHit.startsolid || traceHit.fraction < 1.0f);
+			float flRange = (traceHit.endpos - traceHit.startpos).Length() - 10.0f;
+			flRange = MAX(flRange, 0.0f);
+			UTIL_TraceHull(pOwner->GetLocalOrigin(), pOwner->GetLocalOrigin() + vecForward * flRange, vecAttackHullMin, vecAttackHullMax, MASK_SHOT_HULL, &filterFlame, &traceHit);
 
 			// Attack above us
 			vecStart = (pOwner->GetLocalOrigin() + Vector(0.0f, 0.0f, flNPCHeight + 1.0f));
@@ -577,14 +584,12 @@ int CWeaponFlamethrower::WeaponRangeAttack1Condition(float flDot, float flDist)
 {
 	int cond = COND_CAN_RANGE_ATTACK1;
 
-	if ((GetAmmoTypeID() != -1) && !HasAnyAmmo())
-		cond = COND_NO_PRIMARY_AMMO;
-	else if (flDist > m_fMaxRange1)
+	if (flDist > m_fMaxRange1)
 		cond = COND_TOO_FAR_TO_ATTACK;
 	else if (flDot < 0.5)
 		cond = COND_NOT_FACING_ATTACK;
 
-	CBaseCombatCharacter *pOwner = GetOwner();
+	CBaseCombatCharacter* pOwner = GetOwner();
 
 	// Initiate attack
 	if (pOwner && pOwner->MyNPCPointer() && pOwner->MyNPCPointer()->GetEnemy() && ((cond == COND_CAN_RANGE_ATTACK1) || (cond == COND_NOT_FACING_ATTACK)))
@@ -607,6 +612,6 @@ int CWeaponFlamethrower::WeaponRangeAttack1Condition(float flDot, float flDist)
 		WeaponSound(SPECIAL3);
 	}
 
-	return cond;
+	return (m_bCanNPCReachTarget ? cond : COND_TOO_FAR_TO_ATTACK);
 }
 #endif

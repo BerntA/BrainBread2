@@ -1319,13 +1319,13 @@ WaterMove
 
 void CBasePlayer::WaterMove()
 {
-	if ( ( GetMoveType() == MOVETYPE_NOCLIP ) && !GetMoveParent() )
+	if ((GetMoveType() == MOVETYPE_NOCLIP) && !GetMoveParent())
 	{
 		m_AirFinished = gpGlobals->curtime + AIRTIME;
 		return;
 	}
 
-	if ( m_iHealth < 0 || !IsAlive() )
+	if (m_iHealth < 0 || !IsAlive())
 	{
 		UpdateUnderwaterState();
 		return;
@@ -1336,13 +1336,16 @@ void CBasePlayer::WaterMove()
 	// waterlevel 2 - waist in water (WL_Waist)
 	// waterlevel 3 - head in water (WL_Eyes)
 
-	if (GetWaterLevel() != WL_Eyes || CanBreatheUnderwater()) 
+	if ((GetWaterLevel() != WL_Eyes) || CanBreatheUnderwater())
 	{
-		// Did we take damage and have we been underwater long enough? If so we play the rough air version when you transcend out of the water.
-		if ((m_AirFinished < gpGlobals->curtime) && m_idrowndmg > m_idrownrestored)
-			HL2MPRules()->EmitSoundToClient(this, "DrownAirRough", GetSoundType(), GetSoundsetGender());
-		else if ((m_AirFinished - gpGlobals->curtime) < (AIRTIME - 1)) // We went out of the water without taking damage but we were underwater for 1 sec or more.
-			HL2MPRules()->EmitSoundToClient(this, "DrownAir", GetSoundType(), GetSoundsetGender());
+		if (!IsZombie())
+		{
+			// Did we take damage and have we been underwater long enough? If so we play the rough air version when you transcend out of the water.
+			if ((m_AirFinished < gpGlobals->curtime) && m_idrowndmg > m_idrownrestored)
+				HL2MPRules()->EmitSoundToClient(this, "DrownAirRough", GetSoundType(), GetSoundsetGender());
+			else if ((m_AirFinished - gpGlobals->curtime) < (AIRTIME - 1)) // We went out of the water without taking damage but we were underwater for 1 sec or more.
+				HL2MPRules()->EmitSoundToClient(this, "DrownAir", GetSoundType(), GetSoundsetGender());
+		}
 
 		m_AirFinished = gpGlobals->curtime + AIRTIME;
 		m_nDrownDmgRate = DROWNING_DAMAGE_INITIAL;
@@ -1353,7 +1356,7 @@ void CBasePlayer::WaterMove()
 			// set drowning damage bit.  hack - dmg_drownrecover actually
 			// makes the time based damage code 'give back' health over time.
 			// make sure counter is cleared so we start count correctly.
-			
+
 			// NOTE: this actually causes the count to continue restarting
 			// until all drowning damage is healed.
 
@@ -1361,7 +1364,6 @@ void CBasePlayer::WaterMove()
 			m_bitsDamageType &= ~DMG_DROWN;
 			m_rgbTimeBasedDamage[itbd_DrownRecover] = 0;
 		}
-
 	}
 	else
 	{	// fully under water
@@ -1397,13 +1399,11 @@ void CBasePlayer::WaterMove()
 	UpdateUnderwaterState();
 }
 
-
 // true if the player is attached to a ladder
 bool CBasePlayer::IsOnLadder( void )
 { 
 	return (GetMoveType() == MOVETYPE_LADDER);
 }
-
 
 float CBasePlayer::GetWaterJumpTime() const
 {

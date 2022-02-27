@@ -466,20 +466,12 @@ void CHL2_Player::FlashlightTurnOn( void )
 	EmitSound( "HL2Player.FlashLightOn" );
 }
 
-
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CHL2_Player::FlashlightTurnOff( void )
 {
 	RemoveEffects( EF_DIMLIGHT );
 	EmitSound( "HL2Player.FlashLightOff" );
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void CHL2_Player::SetPlayerUnderwater( bool state )
-{
-	BaseClass::SetPlayerUnderwater( state );
 }
 
 //-----------------------------------------------------------------------------

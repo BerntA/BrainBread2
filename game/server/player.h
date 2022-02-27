@@ -459,7 +459,7 @@ public:
 	void					UpdateUnderwaterState( void );
 	bool					IsPlayerUnderwater( void ) { return m_bPlayerUnderwater; }
 
-	virtual bool			CanBreatheUnderwater() const { return false; }
+	virtual bool			CanBreatheUnderwater() { return (Classify() == CLASS_PLAYER_ZOMB); }
 	virtual void			PlayerUse( void );
 	virtual void			PlayUseDenySound() {}
 

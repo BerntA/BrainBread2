@@ -82,10 +82,6 @@ CLoadingPanel::CLoadingPanel(vgui::VPANEL parent) : BaseClass(NULL, "LoadingPane
 	colMapString = Color(0, 0, 0, 0);
 	colStatsStatus = Color(0, 0, 0, 0);
 
-	m_pMapRating = vgui::SETUP_PANEL(new ImageProgressBar(this, "MapRating", "vgui/loading/rating_full", "vgui/loading/rating_empty"));
-	m_pMapRating->SetProgressDirection(ProgressBar::PROGRESS_EAST);
-	m_pMapRating->SetZPos(135);
-
 	PerformLayout();
 }
 
@@ -194,19 +190,13 @@ void CLoadingPanel::SetupLayout(void)
 	m_pTextMapDetail[3]->SetPos((ScreenWidth() - scheme()->GetProportionalScaledValue(68)), scheme()->GetProportionalScaledValue(30));
 	m_pTextMapDetail[3]->SetSize(scheme()->GetProportionalScaledValue(60), scheme()->GetProportionalScaledValue(18));
 
-	m_pMapRating->SetSize(scheme()->GetProportionalScaledValue(32), scheme()->GetProportionalScaledValue(8));
-	m_pMapRating->SetPos((ScreenWidth() - scheme()->GetProportionalScaledValue(44)), scheme()->GetProportionalScaledValue(45));
-
 	// IF the server kicked, banned or shut down or timed out we will notice that, fixup the GUI:
 	if (m_bDisconnected)
 	{
 		int x, y, w, h;
 		m_pTipBackground->GetBounds(x, y, w, h);
-
 		m_pTextProgress->SetPos(x, y);
 		m_pTextProgress->SetSize(w, h);
-
-		m_pMapRating->SetVisible(false);
 	}
 }
 
@@ -367,7 +357,6 @@ void CLoadingPanel::OnTick()
 				m_pTextMapDetail[i]->SetText("");
 
 			m_pTextMapDetail[3]->SetVisible(false);
-			m_pMapRating->SetVisible(false);
 			colMapString = Color(0, 255, 0, 255);
 			colStatsStatus = Color(0, 0, 0, 0);
 
@@ -416,11 +405,7 @@ void CLoadingPanel::OnTick()
 
 				colMapString = Color(0, 255, 0, 255);
 				if (mapItem->iMapVerification == MAP_VERIFIED_WHITELISTED)
-				{
-					m_pMapRating->SetVisible(true);
-					m_pMapRating->SetProgress(mapItem->flScore);
 					m_pTextMapDetail[2]->SetText("#LoadingUI_CustomMap");
-				}
 				else if (mapItem->iMapVerification == MAP_VERIFIED_UNKNOWN)
 				{
 					colMapString = Color(255, 0, 0, 255);

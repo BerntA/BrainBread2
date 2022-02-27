@@ -287,7 +287,6 @@ void CAddonInstallerPanel::OnReceiveUGCQueryResults(SteamUGCQueryCompleted_t *pC
 						itemMapDataItem.iMapVerification = iVerification;
 						itemMapDataItem.workshopID = WorkshopItem.m_nPublishedFileId;
 						itemMapDataItem.bExclude = false;
-						itemMapDataItem.flScore = WorkshopItem.m_flScore;
 						Q_strncpy(itemMapDataItem.pszMapName, mapNameValue, 32);
 						m_pTempMapItems.AddToTail(itemMapDataItem);
 					}

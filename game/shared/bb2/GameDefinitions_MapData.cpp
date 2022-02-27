@@ -157,7 +157,6 @@ bool CGameDefinitionsMapData::FetchMapData(void)
 
 #ifdef CLIENT_DLL
 				GetMapInfo(sub->GetName(), mapItem);
-				mapItem.flScore = 0.0f;
 #else
 				mapItem.ulFileSize = (unsigned long long)atoll(sub->GetString());
 #endif
@@ -197,7 +196,6 @@ bool CGameDefinitionsMapData::FetchMapData(void)
 			{
 				gameMapItem_t mapItem;
 				GetMapInfo(mapName, mapItem, pkvMapData);
-				mapItem.flScore = 0.0f;
 				mapItem.iMapVerification = MAP_VERIFIED_UNKNOWN;
 				mapItem.workshopID = 0;
 				Q_strncpy(mapItem.pszMapName, mapName, 32);
@@ -360,7 +358,6 @@ void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted
 				int iExistingMapIndex = GetMapIndex(mapNameValue);
 				if (iExistingMapIndex != -1)
 				{
-					pszGameMaps[iExistingMapIndex].flScore = WorkshopItem.m_flScore;
 					pszGameMaps[iExistingMapIndex].iMapVerification = iVerification;
 					pszGameMaps[iExistingMapIndex].workshopID = WorkshopItem.m_nPublishedFileId;
 				}
@@ -373,7 +370,6 @@ void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted
 					mapItem.iMapVerification = iVerification;
 					mapItem.workshopID = WorkshopItem.m_nPublishedFileId;
 					mapItem.bExclude = false;
-					mapItem.flScore = WorkshopItem.m_flScore;
 					Q_strncpy(mapItem.pszMapName, mapNameValue, 32);
 					GetMapImageData(mapItem.pszMapName, mapItem);
 					pszGameMaps.AddToTail(mapItem);

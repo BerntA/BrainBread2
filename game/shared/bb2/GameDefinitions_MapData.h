@@ -38,7 +38,6 @@ struct gameMapItem_t
 	char pszMapExtraInfo[256];
 	bool bExclude;
 
-	float flScore;
 	int iMapVerification;
 	PublishedFileId_t workshopID;
 

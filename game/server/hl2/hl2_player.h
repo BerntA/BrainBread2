@@ -94,10 +94,6 @@ public:
 	void				FlashlightTurnOn( void );
 	void				FlashlightTurnOff( void );
 
-	// Underwater breather device
-	virtual void		SetPlayerUnderwater( bool state );
-	virtual bool		CanBreatheUnderwater() const { return false; }
-
 	// physics interactions
 	virtual void		PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize );
 	virtual	bool		IsHoldingEntity( CBaseEntity *pEnt );

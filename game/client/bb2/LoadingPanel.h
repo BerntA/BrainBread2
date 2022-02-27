@@ -80,7 +80,6 @@ private:
 	Color colMapString;
 	Color colStatsStatus;
 	vgui::Label *m_pTextMapDetail[4];
-	ImageProgressBar *m_pMapRating;
 
 	void SetLoadingAttributes(void);
 

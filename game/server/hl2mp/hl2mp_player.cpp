@@ -2481,10 +2481,7 @@ int CHL2MP_Player::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 
 void CHL2MP_Player::DeathSound(const CTakeDamageInfo &info)
 {
-	const char *soundname = "Death";
-	if (IsPlayerUnderwater())
-		soundname = "DrownDying";
-
+	const char* soundname = ((IsPlayerUnderwater() && !IsZombie()) ? "DrownDying" : "Death");
 	HL2MPRules()->EmitSoundToClient(this, soundname, GetSoundType(), GetSoundsetGender());
 }
 
