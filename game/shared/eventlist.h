@@ -32,6 +32,7 @@ typedef enum
 	AE_NPC_BODYDROP_HEAVY, //#define NPC_EVENT_BODYDROP_HEAVY	2002
 	AE_NPC_SWISHSOUND, //#define NPC_EVENT_SWISHSOUND		2010
 	AE_NPC_180TURN, //#define NPC_EVENT_180TURN			2020
+	AE_NPC_ITEM_PICKUP, //#define NPC_EVENT_ITEM_PICKUP					2040
 	AE_NPC_WEAPON_DROP, //#define NPC_EVENT_WEAPON_DROP					2041
 	AE_NPC_WEAPON_SET_SEQUENCE_NAME, //#define NPC_EVENT_WEAPON_SET_SEQUENCE_NAME		2042
 	AE_NPC_WEAPON_SET_SEQUENCE_NUMBER, //#define NPC_EVENT_WEAPON_SET_SEQUENCE_NUMBER	2043
@@ -48,10 +49,10 @@ typedef enum
 	AE_STOP_SCRIPTED_EFFECT,
 
 	AE_CLIENT_EFFECT_ATTACH,
-	
+
 	AE_MUZZLEFLASH,			// Muzzle flash from weapons held by the player
 	AE_NPC_MUZZLEFLASH,		// Muzzle flash from weapons held by NPCs
-	
+
 	AE_THUMPER_THUMP,		//Thumper Thump!
 	AE_AMMOCRATE_PICKUP_AMMO,	//Ammo crate pick up ammo!
 
@@ -61,6 +62,8 @@ typedef enum
 	AE_NPC_RESTARTGESTURE,
 
 	AE_NPC_ATTACK_BROADCAST,
+	AE_NPC_HURT_INTERACTION_PARTNER,
+	AE_NPC_SET_INTERACTION_CANTDIE,
 
 	AE_SV_DUSTTRAIL,
 
@@ -87,18 +90,18 @@ typedef enum
 	LAST_SHARED_ANIMEVENT,
 } Animevent;
 
-
 typedef struct evententry_s evententry_t;
 
 //=========================================================
 //=========================================================
-extern void EventList_Init( void );
-extern void EventList_Free( void );
-extern bool EventList_RegisterSharedEvent( const char *pszEventName, int iEventIndex, int iType = 0 );
-extern Animevent EventList_RegisterPrivateEvent( const char *pszEventName );
-extern int EventList_IndexForName( const char *pszEventName );
-extern const char *EventList_NameForIndex( int iEventIndex );
-Animevent EventList_RegisterPrivateEvent( const char *pszEventName );
+
+extern void EventList_Init(void);
+extern void EventList_Free(void);
+extern bool EventList_RegisterSharedEvent(const char* pszEventName, int iEventIndex, int iType = 0);
+extern Animevent EventList_RegisterPrivateEvent(const char* pszEventName);
+extern int EventList_IndexForName(const char* pszEventName);
+extern const char* EventList_NameForIndex(int iEventIndex);
+Animevent EventList_RegisterPrivateEvent(const char* pszEventName);
 
 // This macro guarantees that the names of each event and the constant used to
 // reference it in the code are identical.
@@ -106,9 +109,7 @@ Animevent EventList_RegisterPrivateEvent( const char *pszEventName );
 #define REGISTER_PRIVATE_ANIMEVENT( _n ) _n = EventList_RegisterPrivateEvent( #_n );
 
 // Implemented in shared code
-extern void EventList_RegisterSharedEvents( void );
-extern int EventList_GetEventType( int eventIndex );
-
-
+extern void EventList_RegisterSharedEvents(void);
+extern int EventList_GetEventType(int eventIndex);
 
 #endif // EVENTLIST_H
