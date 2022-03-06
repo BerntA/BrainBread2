@@ -226,7 +226,7 @@ void CGameBaseClient::Initialize(void)
 	CreateInterfaceFn gameUIFactory = g_GameUIDLL.GetFactory();
 	if (gameUIFactory)
 	{
-		GameUI = (IGameUI *)gameUIFactory(GAMEUI_INTERFACE_VERSION, NULL);
+		GameUI = (IGameUI*)gameUIFactory(GAMEUI_INTERFACE_VERSION, NULL);
 		if (!GameUI)
 			Error("Couldn't load GameUI!\n");
 	}
@@ -245,6 +245,9 @@ void CGameBaseClient::Initialize(void)
 	VPANEL GameUiDll = enginevgui->GetPanel(PANEL_GAMEUIDLL);
 	ClientWorkshopInstallerPanel = new CAddonInstallerPanel(GameUiDll);
 	ClientWorkshopInstallerPanel->SetVisible(false);
+
+	if (steamapicontext && steamapicontext->SteamRemoteStorage())
+		steamapicontext->SteamRemoteStorage()->SetCloudEnabledForApp(false);
 
 	PostInit();
 }
