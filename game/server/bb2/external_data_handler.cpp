@@ -27,6 +27,7 @@ extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
 
 typedef rapidjson::Document JSONDocument;
 #define DAY_OF_WEEK_SATURDAY 6
+#define DAY_OF_WEEK_SUNDAY 0
 #endif
 
 ConVar bb2_enable_ban_list("bb2_enable_ban_list", "1", FCVAR_GAMEDLL, "Enable or Disable the official ban list?", true, 0.0f, true, 1.0f);
@@ -34,13 +35,13 @@ static ConVar bb2_debug_libcurl("bb2_debug_libcurl", "0", FCVAR_GAMEDLL | FCVAR_
 static ConVar bb2_libcurl_timeout("bb2_libcurl_timeout", "0", FCVAR_GAMEDLL | FCVAR_HIDDEN, "Set LIBCURL timeout time.");
 
 #ifndef OSX
-static JSONDocument *ParseJSON(const char *data)
+static JSONDocument* ParseJSON(const char* data)
 {
 	if (!(data && data[0])) // Empty?
 		return NULL;
 
 	// Parse JSON data.
-	JSONDocument *document = new JSONDocument;
+	JSONDocument* document = new JSONDocument;
 	document->Parse(data);
 	if (document->HasParseError() || (document->Size() <= 0)) // Couldn't parse? Return NULL.
 	{
@@ -60,7 +61,7 @@ static size_t DataWriteCallback(char* buf, size_t size, size_t nmemb, void* up)
 	return size * nmemb;
 }
 
-static bool CurlGetRequest(const char *url)
+static bool CurlGetRequest(const char* url)
 {
 	if (!(url && url[0]))
 		return false;
@@ -100,18 +101,18 @@ void LoadSharedData(void)
 		return;
 
 	// Load reperio studios data.
-	KeyValues *pkvMiscData = GetChecksumKeyValue("Tags");
+	KeyValues* pkvMiscData = GetChecksumKeyValue("Tags");
 	if (pkvMiscData)
 	{
 		int iActiveItemType = 0;
-		for (KeyValues *sub = pkvMiscData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+		for (KeyValues* sub = pkvMiscData->GetFirstSubKey(); sub; sub = sub->GetNextKey())
 		{
 			if (CurlGetRequest(sub->GetString()))
 			{
-				KeyValues *pkvData = new KeyValues("ExternalData");
+				KeyValues* pkvData = new KeyValues("ExternalData");
 				if (pkvData->LoadFromBuffer("ReperioData", g_pDataBuffer, filesystem, "MOD"))
 				{
-					for (KeyValues *pkvDataSub = pkvData->GetFirstSubKey(); pkvDataSub; pkvDataSub = pkvDataSub->GetNextKey())
+					for (KeyValues* pkvDataSub = pkvData->GetFirstSubKey(); pkvDataSub; pkvDataSub = pkvDataSub->GetNextKey())
 						GameBaseServer()->AddItemToSharedList(pkvDataSub->GetString(), iActiveItemType);
 				}
 				pkvData->deleteThis();
@@ -124,17 +125,17 @@ void LoadSharedData(void)
 	}
 
 	// Parse time data for events.
-	KeyValues *pkvEventData = GetChecksumKeyValue("Events");
+	KeyValues* pkvEventData = GetChecksumKeyValue("Events");
 	if (pkvEventData)
 	{
-		KeyValues *pkvXP = pkvEventData->FindKey("XP");
+		KeyValues* pkvXP = pkvEventData->FindKey("XP");
 		if (pkvXP && CurlGetRequest(pkvXP->GetString("url")))
 		{
-			JSONDocument *pDocument = ParseJSON(g_pDataBuffer);
+			JSONDocument* pDocument = ParseJSON(g_pDataBuffer);
 			if (pDocument && pDocument->HasMember("day_of_week"))
 			{
 				int weekDay = (*pDocument)["day_of_week"].GetInt();
-				if ((weekDay == DAY_OF_WEEK_SATURDAY) && HL2MPRules())
+				if (((weekDay == DAY_OF_WEEK_SATURDAY) || (weekDay == DAY_OF_WEEK_SUNDAY)) && HL2MPRules())
 					HL2MPRules()->SetXPRate(MAX(pkvXP->GetFloat("value", 1.0f), 1.0f));
 			}
 			delete pDocument;
