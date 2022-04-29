@@ -1336,7 +1336,8 @@ $Project
 		$Lib		dmxloader
 		$Lib		mathlib
 		$Lib		matsys_controls
-		$Lib		particles
+		$Lib		particles [$VS2022]
+		$Lib		"$SRCDIR\lib\public\2013\particles" [!$VS2022]
 		$Lib		tier1
 		$Lib		tier2
 		$Lib		tier3
