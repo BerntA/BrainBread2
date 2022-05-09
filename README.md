@@ -11,9 +11,9 @@ Now anyone can feel free to contribute to this development, now that BrainBread 
 ### Compiling
 Use the VPC scripts to generate the necessary project file(s).
 [Source SDK 2013 Compiling Help](https://developer.valvesoftware.com/wiki/Source_SDK_2013)
-* Windows: You can use VS2010, VS2013, VS2015, VS2017 or VS2019 to compile this project, however newer versions of Visual Studio might work as well. (Use the 2013 toolset, WinXP)
-* Linux: Use gcc compiler, make sure that you have the latest version of libcurl. Make use of Steam Runtime to get the right headers for compatibility.
-* OSX: Use XCode, run osx_compile.
+* Windows: You can use VS2010, VS2013, VS2015, VS2017, VS2019, or VS2022 to compile this project.
+* Linux: Use GCC 4.8 or GCC 5 compiler.
+* OSX: Use XCode 10, run osx_compile.
 
 ### Contributing
 Feel free to post issues, pull requests and such.
