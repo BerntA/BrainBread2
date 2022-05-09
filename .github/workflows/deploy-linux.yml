@@ -9,25 +9,23 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: C/C++ dev tools
       run: |
         sudo apt update
-        sudo apt-get install build-essential gcc-multilib g++-multilib
-      
-    - name: Setup Steam Runtime
-      run: |
-        sudo mkdir /valve
-        sudo wget https://media.steampowered.com/client/runtime/steam-runtime-sdk_latest.tar.xz
-        sudo tar xvf steam-runtime-sdk_latest.tar.xz
-        sudo mv steam-runtime-sdk_2013-09-05 /valve/steam-runtime
-        sudo /valve/steam-runtime/setup.sh --auto-update --target=i386 --release
-    
+        sudo apt-get install build-essential gcc-4.8-multilib g++-4.8-multilib
+
     - name: Create makefile
-      run: ./creategameprojects
+      run: |
+        sudo chmod +x ./creategameprojects
+        sudo chmod +x ./devtools/gendbg.sh
+        sudo chmod +x ./devtools/bin/vpc
+        sudo chmod +x ./devtools/bin/vpc_linux
+        sudo chmod +x ./devtools/bin/linux/ccache
+        ./creategameprojects
 
     - name: Build
-      run: cat build-linux.txt | sudo /valve/steam-runtime/shell-i386.sh
+      run: make -f brainbread.mak
 
     - name: Upload Binaries
       uses: actions/upload-artifact@v2
