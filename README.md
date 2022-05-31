@@ -1,4 +1,4 @@
-[![BrainBread 2](./asset-1.png)](http://store.steampowered.com/app/346330/)
+[![BrainBread 2](./asset-1.png)](https://store.steampowered.com/app/346330/BrainBread_2/)
 
 ### Introduction
 BrainBread 2, also known as BrainBread: Source has been in development for almost a decade, the goal was to rebuild the ancient master-piece mod for Half-Life 1, [BrainBread](https://www.moddb.com/mods/brainbread).
