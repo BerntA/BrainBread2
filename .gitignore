@@ -37,6 +37,9 @@ enc_temp_folder/
 /.hg
 hg
 
+# Output file dir
+build/
+
 # OSX/Linux build products
 *.mak
 *.mak.vpc_crc
