@@ -64,223 +64,7 @@ $Configuration
 }
 
 $Project
-{
-	$Folder "BB2"
-	{
-		$Folder "Base"
-		{
-			$File "bb2\GameBase_Server.cpp"
-			$File "bb2\GameBase_Server.h"
-			$File "bb2\GameChecksumManager.cpp"
-			$File "bb2\GameChecksumManager.h"
-			$File "$SRCDIR\game\shared\bb2\GameBase_Shared.cpp"
-			$File "$SRCDIR\game\shared\bb2\GameBase_Shared.h"
-			$File "$SRCDIR\game\shared\bb2\GameDefinitions_NPC.cpp"
-			$File "$SRCDIR\game\shared\bb2\GameDefinitions_NPC.h"
-			$File "$SRCDIR\game\shared\bb2\GameDefinitions_Shared.cpp"
-			$File "$SRCDIR\game\shared\bb2\GameDefinitions_Shared.h"
-			$File "$SRCDIR\game\shared\bb2\GameDefinitions_QuestData.cpp"
-			$File "$SRCDIR\game\shared\bb2\GameDefinitions_QuestData.h"			
-			$File "$SRCDIR\game\shared\bb2\GameDefinitions_MapData.cpp"
-			$File "$SRCDIR\game\shared\bb2\GameDefinitions_MapData.h"			
-			$File "bb2\GameDefinitions_Workshop.cpp"
-			$File "bb2\GameDefinitions_Workshop.h"			
-			$File "$SRCDIR\game\shared\bb2\skills_shareddefs.h"
-			$File "$SRCDIR\game\shared\bb2\gibs_shared.cpp"
-			$File "$SRCDIR\game\shared\bb2\gibs_shared.h"
-			
-			$File "$SRCDIR\game\shared\bb2\random_extended.h"
-			$File "$SRCDIR\game\shared\bb2\random_extended.cpp" [$OSXALL]
-			$File "$SRCDIR\game\shared\bb2\random_extended.cpp" [$WIN32||$LINUXALL]
-			{
-				$Configuration
-				{
-					$Compiler
-					{
-						$Create/UsePrecompiledHeader	"Not Using Precompiled Headers"
-					}
-				}
-			}
-		}
-		
-		$Folder "Database"
-		{
-		    $File "$SRCDIR\game\shared\bb2\achievement_shareddefs.h"
-			$File "bb2/external_data_handler.cpp"
-			$File "bb2/external_data_handler.h"
-			$File "bb2/achievement_manager.cpp"
-			$File "bb2/achievement_manager.h"				
-			$File "bb2/player_achiev_stats.cpp"
-			$File "bb2/player_achiev_stats.h"
-		}		
-		
-		$Folder "Entities"
-		{
-			$Folder "Screens"
-			{
-				$File "bb2\VGUIKeyPadScreen.cpp"
-				$File "bb2\VGUIKeyPadScreen.h"
-				$File "bb2\VGUIPDAScreen.cpp"
-				$File "bb2\VGUIPDAScreen.h"
-			}
-			
-			$File "bb2\BaseKeyPadEntity.cpp"
-			$File "bb2\BaseKeyPadEntity.h"
-			$File "bb2\bb2_ammo.cpp"
-			$File "bb2\logic_inventory_checker.cpp"
-			$File "bb2\bb2_entity_counter.cpp"
-			$File "bb2\bb2_entity_counter.h"			
-			$File "bb2\game_tip.cpp"
-			$File "bb2\game_tip.h"			
-			$File "bb2\bb2_prop_button.cpp"
-			$File "bb2\bb2_prop_button.h"
-			$File "bb2\bbc_ammo_box.cpp"
-			$File "bb2\logic_boss_spawner.cpp"
-			$File "bb2\item_note.cpp"
-			$File "bb2\item_powerup.cpp"
-			$File "bb2\item_powerup_randomizer.cpp"
-			$File "bb2\game_announcer.cpp"
-			$File "bb2\game_announcer.h"
-			$File "bb2\objective_icon.cpp"
-			$File "bb2\objective_icon.h"			
-			$File "bb2\game_music.cpp"
-			$File "bb2\game_music.h"
-			$File "bb2\logic_quest.cpp"
-			$File "bb2\logic_quest.h"
-			$File "bb2\logic_objective.cpp"
-			$File "bb2\logic_objective.h"
-			$File "bb2\inventory_item.cpp"
-			$File "bb2\inventory_item.h"
-			$File "bb2\spawn_point_base.cpp"
-			$File "bb2\spawn_point_base.h"
-			$File "bb2\inventory_item_randomizer.cpp"
-			$File "bb2\item_weapon_randomizer.cpp"
-			$File "bb2\item_ammo_randomizer.cpp"
-			$File "bb2\item_turtle.cpp"
-			$File "bb2\logic_achievement.cpp"
-			$File "bb2\npc_auto_spawner.cpp"
-			$File "bb2\game_manager.cpp"			
-			$File "bb2\spawnable_entity_base.cpp"
-			$File "bb2\spawnable_entity_base.h"			
-			$File "bb2\env_flare.cpp"
-			$File "bb2\env_flare.h"		
-			$File "bb2\logic_entity_monitor.cpp"
-			$File "bb2\func_npc_ladder.cpp"
-		}
-		
-		$Folder "TempEnts"
-		{
-		    $File "bb2\te_clientsidegib.cpp"
-			$File "bb2\te_bullet_shot.cpp"
-			$File "bb2\te_bullet_shot.h"			
-			$File "bb2\te_player_gib.cpp"
-			$File "bb2\te_player_gib.h"
-		}
-		
-		$Folder "NPCS"
-		{
-			$File "bb2\npc_base_properties.cpp"
-			$File "bb2\npc_base_properties.h"
-			$File "bb2\npc_fred.cpp"
-			$File "bb2\npc_bandit.cpp"
-			$File "bb2\npc_bandit.h"
-			$File "bb2\npc_bandit_johnsson.cpp"
-			$File "bb2\npc_military.cpp"
-			$File "bb2\npc_military.h"
-			$File "bb2\npc_m1a1.cpp"
-			$File "bb2\npc_walker.cpp"
-			$File "bb2\npc_priest.cpp"
-			$File "bb2\npc_military_static.cpp"
-			$File "bb2\npc_base_soldier_static.cpp"
-			$File "bb2\npc_base_soldier_static.h"
-			$File "bb2\npc_custom_actor.cpp"
-			$File "bb2\npc_custom_actor.h"
-			$File "hl2\npc_base_soldier.cpp"
-			$File "hl2\npc_base_soldier.h"
-			$File "hl2\npc_BaseZombie.cpp"
-			$File "hl2\npc_BaseZombie.h"
-		}
-		
-		$Folder "Triggers"
-		{
-			$File "bb2\smart_trigger.cpp"
-			$File "bb2\smart_trigger.h"
-			$File "bb2\trigger_achievement.cpp"
-			$File "bb2\trigger_achievement.h"
-			$File "bb2\trigger_escape.cpp"
-			$File "bb2\trigger_escape.h"
-			$File "bb2\ZombieVolume.cpp"
-			$File "bb2\ZombieVolume.h"
-			$File "bb2\trigger_inventory_check.cpp"
-			$File "$SRCDIR\game\shared\bb2\func_entity_block.cpp"
-			$File "bb2\trigger_capturepoint.cpp"
-			$File "bb2\trigger_changelevel.cpp"			
-		}
-
-		$Folder "Player"
-		{
-			$File "bb2/bb2_playerlocaldata.cpp"
-			$File "bb2/bb2_playerlocaldata.h"
-			$File "bb2/player_loadout_handler.cpp"
-			$File "bb2/player_loadout_handler.h"
-		}
-		
-		$Folder "Weapons"
-		{
-			$File "$SRCDIR\game\shared\bb2\weapon_ak47.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_g36c.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_mac11.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_mp7.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_microuzi.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_beretta.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_deagle.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_rex.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_hands.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_m9_bayonet.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_sledgehammer.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_remington.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_winchester1894.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_sawedoff.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_zombiehands.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_fireaxe.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_baseballbat.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_brick.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_famas.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_minigun.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_flamethrower.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_hatchet.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_machete.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_propane.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_frag.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_glock17.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_remington700.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_base_sniper.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_base_sniper.h"
-			$File "$SRCDIR\game\shared\bb2\weapon_base_pistol.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_base_pistol.h"
-			$File "$SRCDIR\game\shared\bb2\weapon_base_akimbo.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_base_akimbo.h"
-			$File "$SRCDIR\game\shared\bb2\weapon_melee_chargeable.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_melee_chargeable.h"	
-			$File "$SRCDIR\game\shared\bb2\weapon_base_shotgun.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_base_shotgun.h"
-			$File "$SRCDIR\game\shared\bb2\weapon_benelli_m4.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_glock17_akimbo.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_beretta_akimbo.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_rex_akimbo.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_sawedoff_akimbo.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_mp5.cpp"
-			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase.cpp"
-			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase.h"
-			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.cpp"
-			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.h"
-			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.cpp"
-			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.h"
-			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.cpp"
-			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.h"
-		}
-	}
-	
+{	
 	$Folder	"Source Files"
 	{
 		$File	"$SRCDIR\game\shared\activitylist.cpp"
@@ -769,6 +553,222 @@ $Project
 						$Create/UsePrecompiledHeader	"Create Precompiled Header (/Yc)"
 					}
 				}
+			}
+		}
+		
+		$Folder "BB2"
+		{
+			$Folder "Base"
+			{
+				$File "bb2\GameBase_Server.cpp"
+				$File "bb2\GameBase_Server.h"
+				$File "bb2\GameChecksumManager.cpp"
+				$File "bb2\GameChecksumManager.h"
+				$File "$SRCDIR\game\shared\bb2\GameBase_Shared.cpp"
+				$File "$SRCDIR\game\shared\bb2\GameBase_Shared.h"
+				$File "$SRCDIR\game\shared\bb2\GameDefinitions_NPC.cpp"
+				$File "$SRCDIR\game\shared\bb2\GameDefinitions_NPC.h"
+				$File "$SRCDIR\game\shared\bb2\GameDefinitions_Shared.cpp"
+				$File "$SRCDIR\game\shared\bb2\GameDefinitions_Shared.h"
+				$File "$SRCDIR\game\shared\bb2\GameDefinitions_QuestData.cpp"
+				$File "$SRCDIR\game\shared\bb2\GameDefinitions_QuestData.h"			
+				$File "$SRCDIR\game\shared\bb2\GameDefinitions_MapData.cpp"
+				$File "$SRCDIR\game\shared\bb2\GameDefinitions_MapData.h"			
+				$File "bb2\GameDefinitions_Workshop.cpp"
+				$File "bb2\GameDefinitions_Workshop.h"			
+				$File "$SRCDIR\game\shared\bb2\skills_shareddefs.h"
+				$File "$SRCDIR\game\shared\bb2\gibs_shared.cpp"
+				$File "$SRCDIR\game\shared\bb2\gibs_shared.h"
+				
+				$File "$SRCDIR\game\shared\bb2\random_extended.h"
+				$File "$SRCDIR\game\shared\bb2\random_extended.cpp" [$OSXALL]
+				$File "$SRCDIR\game\shared\bb2\random_extended.cpp" [$WIN32||$LINUXALL]
+				{
+					$Configuration
+					{
+						$Compiler
+						{
+							$Create/UsePrecompiledHeader	"Not Using Precompiled Headers"
+						}
+					}
+				}
+			}
+			
+			$Folder "Database"
+			{
+				$File "$SRCDIR\game\shared\bb2\achievement_shareddefs.h"
+				$File "bb2/external_data_handler.cpp"
+				$File "bb2/external_data_handler.h"
+				$File "bb2/achievement_manager.cpp"
+				$File "bb2/achievement_manager.h"				
+				$File "bb2/player_achiev_stats.cpp"
+				$File "bb2/player_achiev_stats.h"
+			}		
+			
+			$Folder "Entities"
+			{
+				$Folder "Screens"
+				{
+					$File "bb2\VGUIKeyPadScreen.cpp"
+					$File "bb2\VGUIKeyPadScreen.h"
+					$File "bb2\VGUIPDAScreen.cpp"
+					$File "bb2\VGUIPDAScreen.h"
+				}
+				
+				$File "bb2\BaseKeyPadEntity.cpp"
+				$File "bb2\BaseKeyPadEntity.h"
+				$File "bb2\bb2_ammo.cpp"
+				$File "bb2\logic_inventory_checker.cpp"
+				$File "bb2\bb2_entity_counter.cpp"
+				$File "bb2\bb2_entity_counter.h"			
+				$File "bb2\game_tip.cpp"
+				$File "bb2\game_tip.h"			
+				$File "bb2\bb2_prop_button.cpp"
+				$File "bb2\bb2_prop_button.h"
+				$File "bb2\bbc_ammo_box.cpp"
+				$File "bb2\logic_boss_spawner.cpp"
+				$File "bb2\item_note.cpp"
+				$File "bb2\item_powerup.cpp"
+				$File "bb2\item_powerup_randomizer.cpp"
+				$File "bb2\game_announcer.cpp"
+				$File "bb2\game_announcer.h"
+				$File "bb2\objective_icon.cpp"
+				$File "bb2\objective_icon.h"			
+				$File "bb2\game_music.cpp"
+				$File "bb2\game_music.h"
+				$File "bb2\logic_quest.cpp"
+				$File "bb2\logic_quest.h"
+				$File "bb2\logic_objective.cpp"
+				$File "bb2\logic_objective.h"
+				$File "bb2\inventory_item.cpp"
+				$File "bb2\inventory_item.h"
+				$File "bb2\spawn_point_base.cpp"
+				$File "bb2\spawn_point_base.h"
+				$File "bb2\inventory_item_randomizer.cpp"
+				$File "bb2\item_weapon_randomizer.cpp"
+				$File "bb2\item_ammo_randomizer.cpp"
+				$File "bb2\item_turtle.cpp"
+				$File "bb2\logic_achievement.cpp"
+				$File "bb2\npc_auto_spawner.cpp"
+				$File "bb2\game_manager.cpp"			
+				$File "bb2\spawnable_entity_base.cpp"
+				$File "bb2\spawnable_entity_base.h"			
+				$File "bb2\env_flare.cpp"
+				$File "bb2\env_flare.h"		
+				$File "bb2\logic_entity_monitor.cpp"
+				$File "bb2\func_npc_ladder.cpp"
+			}
+			
+			$Folder "TempEnts"
+			{
+				$File "bb2\te_clientsidegib.cpp"
+				$File "bb2\te_bullet_shot.cpp"
+				$File "bb2\te_bullet_shot.h"			
+				$File "bb2\te_player_gib.cpp"
+				$File "bb2\te_player_gib.h"
+			}
+			
+			$Folder "NPCS"
+			{
+				$File "bb2\npc_base_properties.cpp"
+				$File "bb2\npc_base_properties.h"
+				$File "bb2\npc_fred.cpp"
+				$File "bb2\npc_bandit.cpp"
+				$File "bb2\npc_bandit.h"
+				$File "bb2\npc_bandit_johnsson.cpp"
+				$File "bb2\npc_military.cpp"
+				$File "bb2\npc_military.h"
+				$File "bb2\npc_m1a1.cpp"
+				$File "bb2\npc_walker.cpp"
+				$File "bb2\npc_priest.cpp"
+				$File "bb2\npc_military_static.cpp"
+				$File "bb2\npc_base_soldier_static.cpp"
+				$File "bb2\npc_base_soldier_static.h"
+				$File "bb2\npc_custom_actor.cpp"
+				$File "bb2\npc_custom_actor.h"
+				$File "hl2\npc_base_soldier.cpp"
+				$File "hl2\npc_base_soldier.h"
+				$File "hl2\npc_BaseZombie.cpp"
+				$File "hl2\npc_BaseZombie.h"
+			}
+			
+			$Folder "Triggers"
+			{
+				$File "bb2\smart_trigger.cpp"
+				$File "bb2\smart_trigger.h"
+				$File "bb2\trigger_achievement.cpp"
+				$File "bb2\trigger_achievement.h"
+				$File "bb2\trigger_escape.cpp"
+				$File "bb2\trigger_escape.h"
+				$File "bb2\ZombieVolume.cpp"
+				$File "bb2\ZombieVolume.h"
+				$File "bb2\trigger_inventory_check.cpp"
+				$File "$SRCDIR\game\shared\bb2\func_entity_block.cpp"
+				$File "bb2\trigger_capturepoint.cpp"
+				$File "bb2\trigger_changelevel.cpp"			
+			}
+
+			$Folder "Player"
+			{
+				$File "bb2/bb2_playerlocaldata.cpp"
+				$File "bb2/bb2_playerlocaldata.h"
+				$File "bb2/player_loadout_handler.cpp"
+				$File "bb2/player_loadout_handler.h"
+			}
+			
+			$Folder "Weapons"
+			{
+				$File "$SRCDIR\game\shared\bb2\weapon_ak47.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_g36c.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_mac11.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_mp7.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_microuzi.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_beretta.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_deagle.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_rex.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_hands.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_m9_bayonet.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_sledgehammer.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_remington.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_winchester1894.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_sawedoff.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_zombiehands.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_fireaxe.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_baseballbat.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_brick.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_famas.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_minigun.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_flamethrower.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_hatchet.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_machete.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_propane.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_frag.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_glock17.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_remington700.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_base_sniper.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_base_sniper.h"
+				$File "$SRCDIR\game\shared\bb2\weapon_base_pistol.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_base_pistol.h"
+				$File "$SRCDIR\game\shared\bb2\weapon_base_akimbo.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_base_akimbo.h"
+				$File "$SRCDIR\game\shared\bb2\weapon_melee_chargeable.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_melee_chargeable.h"	
+				$File "$SRCDIR\game\shared\bb2\weapon_base_shotgun.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_base_shotgun.h"
+				$File "$SRCDIR\game\shared\bb2\weapon_benelli_m4.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_glock17_akimbo.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_beretta_akimbo.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_rex_akimbo.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_sawedoff_akimbo.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_mp5.cpp"
+				$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase.cpp"
+				$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase.h"
+				$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.cpp"
+				$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.h"
+				$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.cpp"
+				$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.h"
+				$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.cpp"
+				$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.h"
 			}
 		}
 

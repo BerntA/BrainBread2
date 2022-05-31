@@ -65,367 +65,7 @@ $Configuration
 }
 
 $Project
-{
-	$Folder "BB2"
-	{
-		$Folder "Base"
-		{
-			$File "bb2/GameBase_Client.cpp"
-			$File "bb2/GameBase_Client.h"
-			$File "$SRCDIR\game\shared\bb2\GameBase_Shared.cpp"
-			$File "$SRCDIR\game\shared\bb2\GameBase_Shared.h"
-			$File "$SRCDIR\game\shared\bb2\GameDefinitions_NPC.cpp"
-			$File "$SRCDIR\game\shared\bb2\GameDefinitions_NPC.h"
-			$File "$SRCDIR\game\shared\bb2\GameDefinitions_Shared.cpp"
-			$File "$SRCDIR\game\shared\bb2\GameDefinitions_Shared.h"
-			$File "$SRCDIR\game\shared\bb2\GameDefinitions_QuestData.cpp"
-			$File "$SRCDIR\game\shared\bb2\GameDefinitions_QuestData.h"
-			$File "$SRCDIR\game\shared\bb2\GameDefinitions_MapData.cpp"
-			$File "$SRCDIR\game\shared\bb2\GameDefinitions_MapData.h"			
-			$File "$SRCDIR\game\shared\bb2\skills_shareddefs.h"
-			$File "$SRCDIR\game\shared\bb2\gibs_shared.cpp"
-			$File "$SRCDIR\game\shared\bb2\gibs_shared.h"
-			
-			$File "$SRCDIR\game\shared\bb2\random_extended.h"			
-			$File "$SRCDIR\game\shared\bb2\random_extended.cpp" [$OSXALL]
-			$File "$SRCDIR\game\shared\bb2\random_extended.cpp" [$WIN32||$LINUXALL]
-			{
-				$Configuration
-				{
-					$Compiler
-					{
-						$Create/UsePrecompiledHeader	"Not Using Precompiled Headers"
-					}
-				}
-			}
-		}
-		
-		$Folder "Database"
-		{
-		    $File "$SRCDIR\game\shared\bb2\achievement_shareddefs.h"
-			$File "bb2/c_steam_server_lister.cpp"
-			$File "bb2/c_steam_server_lister.h"
-			$File "bb2/c_leaderboard_handler.cpp"
-			$File "bb2/c_leaderboard_handler.h"
-			$File "bb2/c_leaderboards.cpp"
-		}		
-		
-		$Folder "Entities"
-		{
-			$Folder "Screens"
-			{
-				$File "bb2/c_vguipdascreen.cpp"
-				$File "bb2/c_vguipdascreen.h"
-			}
-			
-			$File "bb2/c_objective_icon.cpp"
-			$File "bb2/c_objective_icon.h"			
-			$File "bb2/c_client_gib.cpp"
-			$File "bb2/c_client_gib.h"			
-			$File "bb2/c_viewmodel_attachment.cpp"
-			$File "bb2/c_viewmodel_attachment.h"
-			$File "bb2/c_firstperson_body.cpp"
-			$File "bb2/c_firstperson_body.h"
-			$File "bb2/c_client_attachment.cpp"
-			$File "bb2/c_client_attachment.h"
-			$File "bb2/c_playermodel.cpp"
-			$File "bb2/c_playermodel.h"
-			$File "$SRCDIR\game\shared\bb2\func_entity_block.cpp"
-		}
-		
-		$Folder "TempEnts"
-		{
-		    $File "bb2/c_te_clientsidegib.cpp"
-			$File "bb2/c_te_bullet_shot.cpp"
-			$File "bb2/c_te_player_gib.cpp"
-		}
-		
-		$Folder "GAME_UI"
-		{
-			$Folder "Base"
-			{
-				$File "bb2/console_dialog.cpp"
-				$File "bb2/console_dialog.h"
-				$File "bb2/LoadingPanel.cpp"
-				$File "bb2/LoadingPanel.h"
-				$File "bb2/AddonInstallerPanel.cpp"
-				$File "bb2/AddonInstallerPanel.h"
-				$File "bb2/MainMenu.cpp"
-				$File "bb2/MainMenu.h"
-				$File "bb2/MenuContextHandler.cpp"
-				$File "bb2/MenuContextCredits.cpp"
-				$File "bb2/MenuContextCredits.h"
-				$File "bb2/MenuContextMain.cpp"
-				$File "bb2/MenuContextMain.h"
-				$File "bb2/MenuContextProfile.cpp"
-				$File "bb2/MenuContextProfile.h"
-				$File "bb2/MenuContextOptions.cpp"
-				$File "bb2/MenuContextOptions.h"
-				$File "bb2/MenuContextPlay.cpp"
-				$File "bb2/MenuContextPlay.h"
-				$File "bb2/MenuContextQuit.cpp"
-				$File "bb2/MenuContextQuit.h"
-				$File "bb2/MenuOverlay.cpp"
-				$File "bb2/MenuOverlay.h"				
-			}
-			
-			$Folder "Options"
-			{
-				$File "bb2/OptionMenuAudio.cpp"
-				$File "bb2/OptionMenuAudio.h"
-				$File "bb2/OptionMenuGraphics.cpp"
-				$File "bb2/OptionMenuGraphics.h"
-				$File "bb2/OptionMenuKeyboard.cpp"
-				$File "bb2/OptionMenuKeyboard.h"
-				$File "bb2/OptionMenuMouse.cpp"
-				$File "bb2/OptionMenuMouse.h"
-				$File "bb2/OptionMenuPerformance.cpp"
-				$File "bb2/OptionMenuPerformance.h"
-				$File "bb2/OptionMenuOther.cpp"
-				$File "bb2/OptionMenuOther.h"
-				$File "bb2/OptionMenuVideo.cpp"
-				$File "bb2/OptionMenuVideo.h"
-			}
-			
-			$Folder "Play"
-			{
-				$File "bb2/MapSelectionPanel.cpp"
-				$File "bb2/MapSelectionPanel.h"
-				$File "bb2/ServerSettingsPanel.cpp"
-				$File "bb2/ServerSettingsPanel.h"
-				$File "bb2/PlayMenuCreateGame.cpp"
-				$File "bb2/PlayMenuCreateGame.h"
-				$File "bb2/PlayMenuScoreboard.cpp"
-				$File "bb2/PlayMenuScoreboard.h"
-				$File "bb2/PlayMenuServerBrowser.cpp"
-				$File "bb2/PlayMenuServerBrowser.h"				
-			}
-			
-			$Folder "Profile"
-			{
-			    $File "bb2/ProfileMenuAchievementPanel.cpp"
-				$File "bb2/ProfileMenuAchievementPanel.h"
-				$File "bb2/ProfileMenuCharacterPanel.cpp"
-				$File "bb2/ProfileMenuCharacterPanel.h"
-			}
-		}
-		
-		$Folder "HUD"
-		{
-			$File "bb2/hud_tool_tips.cpp"
-			$File "bb2/hud_game_tip.cpp"
-			$File "bb2/hud_mag_ammo.cpp"
-			$File "bb2/hud_profile_stats.cpp"
-			$File "bb2/hud_roundtimer.cpp"
-			$File "bb2/hud_target_identifier.cpp"
-			$File "bb2/hud_weapon_view.cpp"
-			$File "bb2/hud_round_status.cpp"
-			$File "bb2/hud_human_infection.cpp"
-			$File "bb2/hud_npc_health_bar.cpp"
-			$File "bb2/hud_npc_health_bar.h"
-			$File "bb2/hud_damageindicator.cpp"
-			$File "bb2/hud_objective.cpp"
-			$File "bb2/hud_objective.h"
-			$File "bb2/hud_damage_text.cpp"
-			$File "bb2/hud_exp_text.cpp"
-			$File "bb2/hud_votesystem.cpp"
-			$File "bb2/hud_inventory_view.cpp"
-			$File "bb2/hud_scope_view.cpp"
-			$File "bb2/hud_timeview.cpp"
-			$File "bb2/hud_weapon_charger.cpp"
-			$File "bb2/hud_zombie_rage.cpp"			
-			$File "bb2/hud_deathnotice.cpp"
-			$File "bb2/hud_weaponselection.cpp"
-		}
-		
-		$Folder "Shaders"
-		{
-			$File "bb2/BloodyTextureProxy.cpp"
-			$File "bb2/TeamTextureProxy.cpp"
-			$File "bb2/GlobalRenderEffects.cpp"
-			$File "bb2/GlobalRenderEffects.h"
-		}
-		
-		$Folder "Sound"
-		{
-			$File "bb2/fmod_manager.cpp"
-			$File "bb2/fmod_manager.h"
-			$File "bb2/music_system.cpp"
-			$File "bb2/music_system.h"
-		}
-		
-		$Folder "VGUI_Base"
-		{
-			$File "bb2/vgui_base_frame.cpp"
-			$File "bb2/vgui_base_frame.h"
-			$File "bb2/vgui_base_panel.cpp"
-			$File "bb2/vgui_base_panel.h"
-		}
-		
-		$Folder "VGUI_Controls"
-		{
-			$File "bb2/AdvertisementPanel.cpp"
-			$File "bb2/AdvertisementPanel.h"
-			$File "bb2/MapSelectionItem.cpp"
-			$File "bb2/MapSelectionItem.h"			
-			$File "bb2/LeaderboardItem.cpp"
-			$File "bb2/LeaderboardItem.h"		
-			$File "bb2/CheckBoxList.cpp"
-			$File "bb2/CheckBoxList.h"	
-			$File "bb2/TopPlayersPanel.cpp"
-			$File "bb2/TopPlayersPanel.h"	
-			$File "bb2/QuestItem.cpp"
-			$File "bb2/QuestItem.h"			
-			$File "bb2/CharacterPreviewPanel.cpp"
-			$File "bb2/CharacterPreviewPanel.h"
-			$File "bb2/CharacterStatPreview.cpp"
-			$File "bb2/CharacterStatPreview.h"		
-			$File "bb2/QuestDetailPanel.cpp"
-			$File "bb2/QuestDetailPanel.h"	
-			$File "bb2/QuestList.cpp"
-			$File "bb2/QuestList.h"			
-			$File "bb2/AnimatedMenuButton.cpp"
-			$File "bb2/AnimatedMenuButton.h"
-			$File "bb2/CircularButton.cpp"
-			$File "bb2/CircularButton.h"
-			$File "bb2/ExoticImageButton.cpp"
-			$File "bb2/ExoticImageButton.h"
-			$File "bb2/GraphicalCheckBox.cpp"
-			$File "bb2/GraphicalCheckBox.h"
-			$File "bb2/GraphicalOverlayInset.cpp"
-			$File "bb2/GraphicalOverlayInset.h"
-			$File "bb2/GraphicalSlider.cpp"
-			$File "bb2/GraphicalSlider.h"
-			$File "bb2/InlineMenuButton.cpp"
-			$File "bb2/InlineMenuButton.h"
-			$File "bb2/MouseInputPanel.cpp"
-			$File "bb2/MouseInputPanel.h"
-			$File "bb2/MultiLabel.cpp"
-			$File "bb2/MultiLabel.h"
-			$File "bb2/OverlayButton.cpp"
-			$File "bb2/OverlayButton.h"		
-			$File "bb2/SkillTreeIcon.cpp"
-			$File "bb2/SkillTreeIcon.h"			
-			$File "bb2/ToolTipItem.cpp"
-			$File "bb2/ToolTipItem.h"			
-			$File "bb2/ScoreboardItem.cpp"
-			$File "bb2/ScoreboardItem.h"	
-			$File "bb2/PasswordDialog.cpp"
-			$File "bb2/PasswordDialog.h"	
-			$File "bb2/ImageProgressBar.cpp"
-			$File "bb2/ImageProgressBar.h"	
-			$File "bb2/ImageListPanel.cpp"
-			$File "bb2/ImageListPanel.h"			
-			$File "bb2/ComboImageList.cpp"
-			$File "bb2/ComboImageList.h"
-			$File "bb2/ComboList.cpp"
-			$File "bb2/ComboList.h"
-			$File "bb2/MapVoteItem.cpp"
-			$File "bb2/MapVoteItem.h"
-			$File "bb2/ScoreBoardSectionPanel.cpp"
-			$File "bb2/ScoreBoardSectionPanel.h"			
-		}
-		
-		$Folder "VGUI_Menus"
-		{
-			$File "bb2/quest_panel.cpp"
-			$File "bb2/quest_panel.h"
-			$File "bb2/skill_tree.cpp"
-			$File "bb2/skill_tree.h"
-			$File "bb2/keypad_menu.cpp"
-			$File "bb2/keypad_menu.h"
-			$File "bb2/NotePanel.cpp"
-			$File "bb2/NotePanel.h"
-			$File "bb2/zombie_menu.cpp"
-			$File "bb2/zombie_menu.h"
-			$File "bb2/team_menu.cpp"
-			$File "bb2/team_menu.h"
-			$File "bb2/voice_menu.cpp"
-			$File "bb2/voice_menu.h"
-			$File "bb2/EndScoreMenu.cpp"
-			$File "bb2/EndScoreMenu.h"
-			$File "bb2/ScoreBoardPanel.cpp"
-			$File "bb2/ScoreBoardPanel.h"
-			$File "bb2/EndMapVoteMenu.cpp"
-			$File "bb2/EndMapVoteMenu.h"
-			$File "bb2/vote_menu.cpp"
-			$File "bb2/vote_menu.h"			
-			$File "bb2/SpectatorGUI.cpp"
-			$File "bb2/spectatorgui.h"
-		}
-		
-		$Folder "VGUI_Screens"
-		{
-			$File "bb2/KeyPadScreen.cpp"
-			$File "bb2/KeyPadScreen.h"
-			$File "bb2/PDAScreen.cpp"
-			$File "bb2/PDAScreen.h"
-		}
-
-		$Folder "Player"
-		{
-			$File "bb2/c_bb2_playerlocaldata.cpp"
-			$File "bb2/c_bb2_playerlocaldata.h"
-			$File "bb2/c_bb2_player_shared.cpp"
-			$File "bb2/c_bb2_player_shared.h"
-		}
-		
-		$Folder "Weapons"
-		{
-			$File "$SRCDIR\game\shared\bb2\weapon_ak47.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_g36c.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_mac11.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_mp7.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_microuzi.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_beretta.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_deagle.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_rex.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_hands.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_m9_bayonet.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_sledgehammer.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_remington.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_winchester1894.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_sawedoff.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_zombiehands.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_fireaxe.cpp"			
-			$File "$SRCDIR\game\shared\bb2\weapon_baseballbat.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_brick.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_famas.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_minigun.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_flamethrower.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_hatchet.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_machete.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_propane.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_frag.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_glock17.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_remington700.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_base_sniper.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_base_sniper.h"
-			$File "$SRCDIR\game\shared\bb2\weapon_base_pistol.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_base_pistol.h"
-			$File "$SRCDIR\game\shared\bb2\weapon_base_akimbo.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_base_akimbo.h"
-			$File "$SRCDIR\game\shared\bb2\weapon_melee_chargeable.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_melee_chargeable.h"	
-			$File "$SRCDIR\game\shared\bb2\weapon_base_shotgun.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_base_shotgun.h"
-			$File "$SRCDIR\game\shared\bb2\weapon_benelli_m4.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_glock17_akimbo.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_beretta_akimbo.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_rex_akimbo.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_sawedoff_akimbo.cpp"
-			$File "$SRCDIR\game\shared\bb2\weapon_mp5.cpp"
-			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase.cpp"
-			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase.h"
-			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.cpp"
-			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.h"
-			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.cpp"
-			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.h"
-			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.cpp"
-			$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.h"
-		}
-	}
-	
+{	
 	$Folder	"Source Files"
 	{
 		$File	"hl2\C_Func_Monitor.cpp"
@@ -750,6 +390,366 @@ $Project
 						$Create/UsePrecompiledHeader	"Create Precompiled Header (/Yc)"
 					}
 				}
+			}
+		}
+
+		$Folder "BB2"
+		{
+			$Folder "Base"
+			{
+				$File "bb2/GameBase_Client.cpp"
+				$File "bb2/GameBase_Client.h"
+				$File "$SRCDIR\game\shared\bb2\GameBase_Shared.cpp"
+				$File "$SRCDIR\game\shared\bb2\GameBase_Shared.h"
+				$File "$SRCDIR\game\shared\bb2\GameDefinitions_NPC.cpp"
+				$File "$SRCDIR\game\shared\bb2\GameDefinitions_NPC.h"
+				$File "$SRCDIR\game\shared\bb2\GameDefinitions_Shared.cpp"
+				$File "$SRCDIR\game\shared\bb2\GameDefinitions_Shared.h"
+				$File "$SRCDIR\game\shared\bb2\GameDefinitions_QuestData.cpp"
+				$File "$SRCDIR\game\shared\bb2\GameDefinitions_QuestData.h"
+				$File "$SRCDIR\game\shared\bb2\GameDefinitions_MapData.cpp"
+				$File "$SRCDIR\game\shared\bb2\GameDefinitions_MapData.h"			
+				$File "$SRCDIR\game\shared\bb2\skills_shareddefs.h"
+				$File "$SRCDIR\game\shared\bb2\gibs_shared.cpp"
+				$File "$SRCDIR\game\shared\bb2\gibs_shared.h"
+				
+				$File "$SRCDIR\game\shared\bb2\random_extended.h"			
+				$File "$SRCDIR\game\shared\bb2\random_extended.cpp" [$OSXALL]
+				$File "$SRCDIR\game\shared\bb2\random_extended.cpp" [$WIN32||$LINUXALL]
+				{
+					$Configuration
+					{
+						$Compiler
+						{
+							$Create/UsePrecompiledHeader	"Not Using Precompiled Headers"
+						}
+					}
+				}
+			}
+			
+			$Folder "Database"
+			{
+				$File "$SRCDIR\game\shared\bb2\achievement_shareddefs.h"
+				$File "bb2/c_steam_server_lister.cpp"
+				$File "bb2/c_steam_server_lister.h"
+				$File "bb2/c_leaderboard_handler.cpp"
+				$File "bb2/c_leaderboard_handler.h"
+				$File "bb2/c_leaderboards.cpp"
+			}		
+			
+			$Folder "Entities"
+			{
+				$Folder "Screens"
+				{
+					$File "bb2/c_vguipdascreen.cpp"
+					$File "bb2/c_vguipdascreen.h"
+				}
+				
+				$File "bb2/c_objective_icon.cpp"
+				$File "bb2/c_objective_icon.h"			
+				$File "bb2/c_client_gib.cpp"
+				$File "bb2/c_client_gib.h"			
+				$File "bb2/c_viewmodel_attachment.cpp"
+				$File "bb2/c_viewmodel_attachment.h"
+				$File "bb2/c_firstperson_body.cpp"
+				$File "bb2/c_firstperson_body.h"
+				$File "bb2/c_client_attachment.cpp"
+				$File "bb2/c_client_attachment.h"
+				$File "bb2/c_playermodel.cpp"
+				$File "bb2/c_playermodel.h"
+				$File "$SRCDIR\game\shared\bb2\func_entity_block.cpp"
+			}
+			
+			$Folder "TempEnts"
+			{
+				$File "bb2/c_te_clientsidegib.cpp"
+				$File "bb2/c_te_bullet_shot.cpp"
+				$File "bb2/c_te_player_gib.cpp"
+			}
+			
+			$Folder "GAME_UI"
+			{
+				$Folder "Base"
+				{
+					$File "bb2/console_dialog.cpp"
+					$File "bb2/console_dialog.h"
+					$File "bb2/LoadingPanel.cpp"
+					$File "bb2/LoadingPanel.h"
+					$File "bb2/AddonInstallerPanel.cpp"
+					$File "bb2/AddonInstallerPanel.h"
+					$File "bb2/MainMenu.cpp"
+					$File "bb2/MainMenu.h"
+					$File "bb2/MenuContextHandler.cpp"
+					$File "bb2/MenuContextCredits.cpp"
+					$File "bb2/MenuContextCredits.h"
+					$File "bb2/MenuContextMain.cpp"
+					$File "bb2/MenuContextMain.h"
+					$File "bb2/MenuContextProfile.cpp"
+					$File "bb2/MenuContextProfile.h"
+					$File "bb2/MenuContextOptions.cpp"
+					$File "bb2/MenuContextOptions.h"
+					$File "bb2/MenuContextPlay.cpp"
+					$File "bb2/MenuContextPlay.h"
+					$File "bb2/MenuContextQuit.cpp"
+					$File "bb2/MenuContextQuit.h"
+					$File "bb2/MenuOverlay.cpp"
+					$File "bb2/MenuOverlay.h"				
+				}
+				
+				$Folder "Options"
+				{
+					$File "bb2/OptionMenuAudio.cpp"
+					$File "bb2/OptionMenuAudio.h"
+					$File "bb2/OptionMenuGraphics.cpp"
+					$File "bb2/OptionMenuGraphics.h"
+					$File "bb2/OptionMenuKeyboard.cpp"
+					$File "bb2/OptionMenuKeyboard.h"
+					$File "bb2/OptionMenuMouse.cpp"
+					$File "bb2/OptionMenuMouse.h"
+					$File "bb2/OptionMenuPerformance.cpp"
+					$File "bb2/OptionMenuPerformance.h"
+					$File "bb2/OptionMenuOther.cpp"
+					$File "bb2/OptionMenuOther.h"
+					$File "bb2/OptionMenuVideo.cpp"
+					$File "bb2/OptionMenuVideo.h"
+				}
+				
+				$Folder "Play"
+				{
+					$File "bb2/MapSelectionPanel.cpp"
+					$File "bb2/MapSelectionPanel.h"
+					$File "bb2/ServerSettingsPanel.cpp"
+					$File "bb2/ServerSettingsPanel.h"
+					$File "bb2/PlayMenuCreateGame.cpp"
+					$File "bb2/PlayMenuCreateGame.h"
+					$File "bb2/PlayMenuScoreboard.cpp"
+					$File "bb2/PlayMenuScoreboard.h"
+					$File "bb2/PlayMenuServerBrowser.cpp"
+					$File "bb2/PlayMenuServerBrowser.h"				
+				}
+				
+				$Folder "Profile"
+				{
+					$File "bb2/ProfileMenuAchievementPanel.cpp"
+					$File "bb2/ProfileMenuAchievementPanel.h"
+					$File "bb2/ProfileMenuCharacterPanel.cpp"
+					$File "bb2/ProfileMenuCharacterPanel.h"
+				}
+			}
+			
+			$Folder "HUD"
+			{
+				$File "bb2/hud_tool_tips.cpp"
+				$File "bb2/hud_game_tip.cpp"
+				$File "bb2/hud_mag_ammo.cpp"
+				$File "bb2/hud_profile_stats.cpp"
+				$File "bb2/hud_roundtimer.cpp"
+				$File "bb2/hud_target_identifier.cpp"
+				$File "bb2/hud_weapon_view.cpp"
+				$File "bb2/hud_round_status.cpp"
+				$File "bb2/hud_human_infection.cpp"
+				$File "bb2/hud_npc_health_bar.cpp"
+				$File "bb2/hud_npc_health_bar.h"
+				$File "bb2/hud_damageindicator.cpp"
+				$File "bb2/hud_objective.cpp"
+				$File "bb2/hud_objective.h"
+				$File "bb2/hud_damage_text.cpp"
+				$File "bb2/hud_exp_text.cpp"
+				$File "bb2/hud_votesystem.cpp"
+				$File "bb2/hud_inventory_view.cpp"
+				$File "bb2/hud_scope_view.cpp"
+				$File "bb2/hud_timeview.cpp"
+				$File "bb2/hud_weapon_charger.cpp"
+				$File "bb2/hud_zombie_rage.cpp"			
+				$File "bb2/hud_deathnotice.cpp"
+				$File "bb2/hud_weaponselection.cpp"
+			}
+			
+			$Folder "Shaders"
+			{
+				$File "bb2/BloodyTextureProxy.cpp"
+				$File "bb2/TeamTextureProxy.cpp"
+				$File "bb2/GlobalRenderEffects.cpp"
+				$File "bb2/GlobalRenderEffects.h"
+			}
+			
+			$Folder "Sound"
+			{
+				$File "bb2/fmod_manager.cpp"
+				$File "bb2/fmod_manager.h"
+				$File "bb2/music_system.cpp"
+				$File "bb2/music_system.h"
+			}
+			
+			$Folder "VGUI_Base"
+			{
+				$File "bb2/vgui_base_frame.cpp"
+				$File "bb2/vgui_base_frame.h"
+				$File "bb2/vgui_base_panel.cpp"
+				$File "bb2/vgui_base_panel.h"
+			}
+			
+			$Folder "VGUI_Controls"
+			{
+				$File "bb2/AdvertisementPanel.cpp"
+				$File "bb2/AdvertisementPanel.h"
+				$File "bb2/MapSelectionItem.cpp"
+				$File "bb2/MapSelectionItem.h"			
+				$File "bb2/LeaderboardItem.cpp"
+				$File "bb2/LeaderboardItem.h"		
+				$File "bb2/CheckBoxList.cpp"
+				$File "bb2/CheckBoxList.h"	
+				$File "bb2/TopPlayersPanel.cpp"
+				$File "bb2/TopPlayersPanel.h"	
+				$File "bb2/QuestItem.cpp"
+				$File "bb2/QuestItem.h"			
+				$File "bb2/CharacterPreviewPanel.cpp"
+				$File "bb2/CharacterPreviewPanel.h"
+				$File "bb2/CharacterStatPreview.cpp"
+				$File "bb2/CharacterStatPreview.h"		
+				$File "bb2/QuestDetailPanel.cpp"
+				$File "bb2/QuestDetailPanel.h"	
+				$File "bb2/QuestList.cpp"
+				$File "bb2/QuestList.h"			
+				$File "bb2/AnimatedMenuButton.cpp"
+				$File "bb2/AnimatedMenuButton.h"
+				$File "bb2/CircularButton.cpp"
+				$File "bb2/CircularButton.h"
+				$File "bb2/ExoticImageButton.cpp"
+				$File "bb2/ExoticImageButton.h"
+				$File "bb2/GraphicalCheckBox.cpp"
+				$File "bb2/GraphicalCheckBox.h"
+				$File "bb2/GraphicalOverlayInset.cpp"
+				$File "bb2/GraphicalOverlayInset.h"
+				$File "bb2/GraphicalSlider.cpp"
+				$File "bb2/GraphicalSlider.h"
+				$File "bb2/InlineMenuButton.cpp"
+				$File "bb2/InlineMenuButton.h"
+				$File "bb2/MouseInputPanel.cpp"
+				$File "bb2/MouseInputPanel.h"
+				$File "bb2/MultiLabel.cpp"
+				$File "bb2/MultiLabel.h"
+				$File "bb2/OverlayButton.cpp"
+				$File "bb2/OverlayButton.h"		
+				$File "bb2/SkillTreeIcon.cpp"
+				$File "bb2/SkillTreeIcon.h"			
+				$File "bb2/ToolTipItem.cpp"
+				$File "bb2/ToolTipItem.h"			
+				$File "bb2/ScoreboardItem.cpp"
+				$File "bb2/ScoreboardItem.h"	
+				$File "bb2/PasswordDialog.cpp"
+				$File "bb2/PasswordDialog.h"	
+				$File "bb2/ImageProgressBar.cpp"
+				$File "bb2/ImageProgressBar.h"	
+				$File "bb2/ImageListPanel.cpp"
+				$File "bb2/ImageListPanel.h"			
+				$File "bb2/ComboImageList.cpp"
+				$File "bb2/ComboImageList.h"
+				$File "bb2/ComboList.cpp"
+				$File "bb2/ComboList.h"
+				$File "bb2/MapVoteItem.cpp"
+				$File "bb2/MapVoteItem.h"
+				$File "bb2/ScoreBoardSectionPanel.cpp"
+				$File "bb2/ScoreBoardSectionPanel.h"			
+			}
+			
+			$Folder "VGUI_Menus"
+			{
+				$File "bb2/quest_panel.cpp"
+				$File "bb2/quest_panel.h"
+				$File "bb2/skill_tree.cpp"
+				$File "bb2/skill_tree.h"
+				$File "bb2/keypad_menu.cpp"
+				$File "bb2/keypad_menu.h"
+				$File "bb2/NotePanel.cpp"
+				$File "bb2/NotePanel.h"
+				$File "bb2/zombie_menu.cpp"
+				$File "bb2/zombie_menu.h"
+				$File "bb2/team_menu.cpp"
+				$File "bb2/team_menu.h"
+				$File "bb2/voice_menu.cpp"
+				$File "bb2/voice_menu.h"
+				$File "bb2/EndScoreMenu.cpp"
+				$File "bb2/EndScoreMenu.h"
+				$File "bb2/ScoreBoardPanel.cpp"
+				$File "bb2/ScoreBoardPanel.h"
+				$File "bb2/EndMapVoteMenu.cpp"
+				$File "bb2/EndMapVoteMenu.h"
+				$File "bb2/vote_menu.cpp"
+				$File "bb2/vote_menu.h"			
+				$File "bb2/SpectatorGUI.cpp"
+				$File "bb2/spectatorgui.h"
+			}
+			
+			$Folder "VGUI_Screens"
+			{
+				$File "bb2/KeyPadScreen.cpp"
+				$File "bb2/KeyPadScreen.h"
+				$File "bb2/PDAScreen.cpp"
+				$File "bb2/PDAScreen.h"
+			}
+
+			$Folder "Player"
+			{
+				$File "bb2/c_bb2_playerlocaldata.cpp"
+				$File "bb2/c_bb2_playerlocaldata.h"
+				$File "bb2/c_bb2_player_shared.cpp"
+				$File "bb2/c_bb2_player_shared.h"
+			}
+			
+			$Folder "Weapons"
+			{
+				$File "$SRCDIR\game\shared\bb2\weapon_ak47.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_g36c.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_mac11.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_mp7.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_microuzi.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_beretta.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_deagle.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_rex.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_hands.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_m9_bayonet.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_sledgehammer.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_remington.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_winchester1894.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_sawedoff.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_zombiehands.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_fireaxe.cpp"			
+				$File "$SRCDIR\game\shared\bb2\weapon_baseballbat.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_brick.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_famas.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_minigun.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_flamethrower.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_hatchet.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_machete.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_propane.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_frag.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_glock17.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_remington700.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_base_sniper.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_base_sniper.h"
+				$File "$SRCDIR\game\shared\bb2\weapon_base_pistol.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_base_pistol.h"
+				$File "$SRCDIR\game\shared\bb2\weapon_base_akimbo.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_base_akimbo.h"
+				$File "$SRCDIR\game\shared\bb2\weapon_melee_chargeable.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_melee_chargeable.h"	
+				$File "$SRCDIR\game\shared\bb2\weapon_base_shotgun.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_base_shotgun.h"
+				$File "$SRCDIR\game\shared\bb2\weapon_benelli_m4.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_glock17_akimbo.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_beretta_akimbo.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_rex_akimbo.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_sawedoff_akimbo.cpp"
+				$File "$SRCDIR\game\shared\bb2\weapon_mp5.cpp"
+				$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase.cpp"
+				$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase.h"
+				$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.cpp"
+				$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbase_machinegun.h"
+				$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.cpp"
+				$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.h"
+				$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.cpp"
+				$File "$SRCDIR\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.h"
 			}
 		}
 
