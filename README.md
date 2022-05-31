@@ -1,16 +1,15 @@
-# BrainBread 2 Source Code
+[![BrainBread 2](./asset-1.png)](http://store.steampowered.com/app/346330/)
 
 ### Introduction
-BrainBread 2, also known as BrainBread: Source, has been in development for almost a decade. 
-The goal was to rebuild the ancient master-piece mod for Half-Life 1, BrainBread.
+BrainBread 2, also known as BrainBread: Source has been in development for almost a decade, the goal was to rebuild the ancient master-piece mod for Half-Life 1, [BrainBread](https://www.moddb.com/mods/brainbread).
 
 In 2016 BrainBread 2 was released on Steam as a standalone sourcemod. 
-It contained a vast spectrum of gamemodes, maps, weapons and customization.
-Now anyone can feel free to contribute to this development, now that BrainBread 2 is open source.
+The game contained a vast spectrum of gamemodes, maps, weapons and customization.
+Now anyone can feel free to contribute to this development, now that BrainBread 2 is open source!
 
 ### Compiling
-Use the VPC scripts to generate the necessary project file(s).
-[Source SDK 2013 Compiling Help](https://developer.valvesoftware.com/wiki/Source_SDK_2013)
+Use the VPC scripts to generate the necessary project file(s), see
+[Source SDK 2013 Compiling Help](https://developer.valvesoftware.com/wiki/Source_SDK_2013) for additional help.
 * Windows: You can use VS2010, VS2013, VS2015, VS2017, VS2019, or VS2022 to compile this project.
 * Linux: Use GCC 4.8 or GCC 5 compiler.
 * OSX: Use XCode 10, run osx_compile.
@@ -35,3 +34,5 @@ However, if you create a pull request, be sure to test your changes properly bef
 
 ### CI
 [![Deploy on Linux](https://github.com/BerntA/BrainBread2/actions/workflows/deploy-linux.yml/badge.svg)](https://github.com/BerntA/BrainBread2/actions/workflows/deploy-linux.yml)
+
+![Zombie Walker BB2](./asset-2.png)
