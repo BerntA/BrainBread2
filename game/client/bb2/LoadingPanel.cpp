@@ -90,7 +90,7 @@ CLoadingPanel::~CLoadingPanel()
 	ClearVitalParentControls();
 }
 
-void CLoadingPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
+void CLoadingPanel::ApplySchemeSettings(vgui::IScheme* pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
 
@@ -206,11 +206,11 @@ void CLoadingPanel::OnThink()
 	BaseClass::OnThink();
 }
 
-const char *CLoadingPanel::GetLoadingTip(const char *text)
+const char* CLoadingPanel::GetLoadingTip(const char* text)
 {
 	char pszString[256];
 	Q_strncpy(pszString, text, 256);
-	char *p = pszString;
+	char* p = pszString;
 
 	int iSize = strlen(pszString);
 	bool bHasFunction = false;
@@ -229,9 +229,9 @@ const char *CLoadingPanel::GetLoadingTip(const char *text)
 	return p;
 }
 
-char *CLoadingPanel::ReplaceBracketsWithInfo(char *text)
+char* CLoadingPanel::ReplaceBracketsWithInfo(char* text)
 {
-	char *p = text;
+	char* p = text;
 	char pszBeginning[128], pszEnding[128], pszMiddle[128];
 	int length = Q_strlen(text);
 
@@ -263,7 +263,7 @@ char *CLoadingPanel::ReplaceBracketsWithInfo(char *text)
 	Q_strncpy(pszMiddle, &p[iOccuranceStart + 1], (iOccuranceEnd - iOccuranceStart));
 
 	char pszFunc[32];
-	const char *keybind = engine->Key_LookupBinding(pszMiddle);
+	const char* keybind = engine->Key_LookupBinding(pszMiddle);
 	if (keybind == NULL)
 		keybind = "UNBOUND";
 	Q_strncpy(pszFunc, keybind, 32);
@@ -295,7 +295,7 @@ void CLoadingPanel::SetRandomLoadingTip(void)
 
 	if (GameBaseShared() && GameBaseShared()->GetSharedGameDetails())
 	{
-		const DataLoadingTipsItem_t *tipData = GameBaseShared()->GetSharedGameDetails()->GetRandomLoadingTip();
+		const DataLoadingTipsItem_t* tipData = GameBaseShared()->GetSharedGameDetails()->GetRandomLoadingTip();
 		if (tipData)
 		{
 			char pchLoadingTip[256];
@@ -326,7 +326,7 @@ void CLoadingPanel::OnTick()
 			GameBaseClient->ResetMapConVar();
 
 			// IF our class exist and we actually loaded a while ago we're in-game if not we canceled the load...
-			C_BasePlayer *pPLR = C_BasePlayer::GetLocalPlayer();
+			C_BasePlayer* pPLR = C_BasePlayer::GetLocalPlayer();
 			if (!pPLR)
 				GameBaseClient->RunCommand(COMMAND_DISCONNECT);
 			else
@@ -347,11 +347,7 @@ void CLoadingPanel::OnTick()
 		if (!m_bCanUpdateImage)
 		{
 			m_bCanUpdateImage = true;
-			FindVitalParentControls();
-
-			int iMapIndex = -1;
-			if (GameBaseShared()->GetSharedMapData())
-				iMapIndex = GameBaseShared()->GetSharedMapData()->GetMapIndex(GameBaseClient->GetLoadingImage());
+			const int iMapIndex = (GameBaseShared()->GetSharedMapData() ? GameBaseShared()->GetSharedMapData()->GetMapIndex(GameBaseClient->GetLoadingImage()) : -1);
 
 			for (int i = 0; i < _ARRAYSIZE(m_pTextMapDetail); i++)
 				m_pTextMapDetail[i]->SetText("");
@@ -367,7 +363,7 @@ void CLoadingPanel::OnTick()
 				for (int i = 0; i < NbChilds; ++i)
 				{
 					VPANEL gameUIPanel = vgui::ipanel()->GetChild(panel, i);
-					Panel *basePanel = vgui::ipanel()->GetPanel(gameUIPanel, "GameUI");
+					Panel* basePanel = vgui::ipanel()->GetPanel(gameUIPanel, "GameUI");
 					if (basePanel)
 					{
 						// We load a different scheme file for the actual engine loading dialog so we don't screw anything up, the scheme has all colors set to BLANK so the dialog will be invisible.
@@ -385,7 +381,7 @@ void CLoadingPanel::OnTick()
 			// Load the map details!
 			if (iMapIndex >= 0 && iMapIndex < GameBaseShared()->GetSharedMapData()->pszGameMaps.Count())
 			{
-				const gameMapItem_t *mapItem = &GameBaseShared()->GetSharedMapData()->pszGameMaps[iMapIndex];
+				const gameMapItem_t* mapItem = &GameBaseShared()->GetSharedMapData()->pszGameMaps[iMapIndex];
 
 				if (mapItem->numLoadingScreens)
 				{
@@ -414,6 +410,8 @@ void CLoadingPanel::OnTick()
 				else
 					m_pTextMapDetail[2]->SetText("#LoadingUI_OfficialMap");
 			}
+
+			FindVitalParentControls();
 		}
 
 		SetLoadingAttributes();
@@ -435,27 +433,27 @@ void CLoadingPanel::FindVitalParentControls()
 			for (int z = 0; z < newChilds; ++z)
 			{
 				VPANEL prPan = vgui::ipanel()->GetChild(gameUIPanel, z);
-				Panel *myPanel = vgui::ipanel()->GetPanel(prPan, "GameUI");
+				Panel* myPanel = vgui::ipanel()->GetPanel(prPan, "GameUI");
 				if (myPanel)
 				{
 					// Get Progress Value:
 					if (!strcmp(myPanel->GetName(), "Progress"))
 					{
-						ProgressBar *pBar = dynamic_cast<ProgressBar*>(myPanel);
+						ProgressBar* pBar = dynamic_cast<ProgressBar*>(myPanel);
 						if (pBar)
 							m_pParentProgressBar = pBar;
 					}
 					// Get Progress String:
 					else if (!strcmp(myPanel->GetName(), "InfoLabel"))
 					{
-						Label *pLabel = dynamic_cast<Label*>(myPanel);
+						Label* pLabel = dynamic_cast<Label*>(myPanel);
 						if (pLabel)
 							m_pParentProgressText = pLabel;
 					}
 					// Get Cancel Button:
 					else if (!strcmp(myPanel->GetName(), "CancelButton"))
 					{
-						Button *pCancelButton = dynamic_cast<Button*>(myPanel);
+						Button* pCancelButton = dynamic_cast<Button*>(myPanel);
 						if (pCancelButton)
 							m_pParentCancelButton = pCancelButton;
 					}

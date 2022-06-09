@@ -7276,8 +7276,8 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 			continue;
 		}
 
-		// Take down players with important stuff first!
-		if (!bUnreachable && pEnemy->IsPlayer() && GameBaseShared()->HasObjectiveGlowItems(ToHL2MPPlayer(pEnemy)))
+		// Take down players with important stuff first! (bosses do not care anymore though)
+		if (!(IsBoss() || IsZombieBoss() || IsHumanBoss()) && !bUnreachable && pEnemy->IsPlayer() && GameBaseShared()->HasObjectiveGlowItems(ToHL2MPPlayer(pEnemy)))
 		{
 			// Pick this fella if can be seen, within range and such.
 			if (GetSenses()->DidSeeEntity(pEnemy) && (EnemyDistance(pEnemy) < GetSenses()->GetDistLook()) && FVisible(pEnemy))
