@@ -2973,7 +2973,7 @@ void CAI_BaseNPC::UpdateEfficiency(CBasePlayer *pPVSTarget)
 				}
 			}
 			
-			iSound = pCurrentSound->NextSound();
+			iSound = (pCurrentSound ? pCurrentSound->NextSound() : SOUNDLIST_EMPTY);
 		}
 	}
 
@@ -3040,7 +3040,7 @@ void CAI_BaseNPC::UpdateSleepState(CBasePlayer *pPVSTarget)
 							break;
 						}
 
-						iSound = pCurrentSound->NextSound();
+						iSound = (pCurrentSound ? pCurrentSound->NextSound() : SOUNDLIST_EMPTY);
 					}
 				}
 			}

@@ -105,7 +105,7 @@ void CAI_Senses::Listen( void )
 				m_iAudibleList = iSound;
 			}
 
-			iSound = pCurrentSound->NextSound();
+			iSound = (pCurrentSound ? pCurrentSound->NextSound() : SOUNDLIST_EMPTY);
 		}
 	}
 	
