@@ -9,12 +9,15 @@
 #include "ai_moveprobe.h"
 #include "ai_pathfinder.h"
 #include "ai_navigator.h"
+#include "ai_waypoint.h"
 
 #ifdef BB2_USE_NAVMESH
 #include "nav.h"
 #include "nav_pathfind.h"
 #include "nav_area.h"
 #endif // BB2_USE_NAVMESH
+
+
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -298,6 +301,7 @@ const Vector CAI_TacticalServices::FindLosNavArea(const Vector& vThreatPos, cons
 			if (GetOuter()->TestShootPosition(navOrigin, vThreatEyePos))
 				return navOrigin;
 		}
+		
 	}
 
 	return vec3_invalid;
