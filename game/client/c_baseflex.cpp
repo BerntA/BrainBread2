@@ -63,9 +63,6 @@ C_BaseFlex::C_BaseFlex() :
 	m_flFlexDelayedWeight = NULL;
 	m_cFlexDelayedWeight = 0;
 
-	/// Make sure size is correct
-	Assert( PHONEME_CLASS_STRONG + 1 == NUM_PHONEME_CLASSES );
-
 #ifdef HL2_CLIENT_DLL
 	// Get general lean vector
 	AddVar( &m_vecLean, &m_iv_vecLean, LATCH_ANIMATION_VAR );

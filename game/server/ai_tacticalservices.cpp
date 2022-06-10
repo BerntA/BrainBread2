@@ -22,34 +22,6 @@
 ConVar ai_find_lateral_cover("ai_find_lateral_cover", "1");
 ConVar ai_find_lateral_los("ai_find_lateral_los", "1");
 
-#ifdef _DEBUG
-ConVar ai_debug_cover("ai_debug_cover", "0");
-int g_AIDebugFindCoverNode = -1;
-#define DebugFindCover( node, from, to, r, g, b ) \
-	if ( !ai_debug_cover.GetBool() || \
-		 (g_AIDebugFindCoverNode != -1 && g_AIDebugFindCoverNode != node) || \
-		 !GetOuter()->m_bSelected ) \
-		; \
-				else \
-		NDebugOverlay::Line( from, to, r, g, b, false, 1 )
-
-#define DebugFindCover2( node, from, to, r, g, b ) \
-	if ( ai_debug_cover.GetInt() < 2 || \
-		 (g_AIDebugFindCoverNode != -1 && g_AIDebugFindCoverNode != node) || \
-		 !GetOuter()->m_bSelected ) \
-		; \
-				else \
-		NDebugOverlay::Line( from, to, r, g, b, false, 1 )
-
-ConVar ai_debug_tactical_los("ai_debug_tactical_los", "0");
-int g_AIDebugFindLosNode = -1;
-#define ShouldDebugLos( node ) ( ai_debug_tactical_los.GetBool() && ( g_AIDebugFindLosNode == -1 || g_AIDebugFindLosNode == ( node ) ) && GetOuter()->m_bSelected )
-#else
-#define DebugFindCover( node, from, to, r, g, b ) ((void)0)
-#define DebugFindCover2( node, from, to, r, g, b ) ((void)0)
-#define ShouldDebugLos( node ) false
-#endif
-
 //-------------------------------------
 
 void CAI_TacticalServices::Init()
@@ -153,7 +125,7 @@ bool CAI_TacticalServices::FindCoverPos(const Vector &vNearPos, const Vector &vT
 //-------------------------------------
 // Checks lateral cover
 //-------------------------------------
-bool CAI_TacticalServices::TestLateralCover(const Vector &vecCheckStart, const Vector &vecCheckEnd, float flMinDist)
+bool CAI_TacticalServices::TestLateralCover(const Vector& vecCheckStart, const Vector& vecCheckEnd, float flMinDist)
 {
 	trace_t	tr;
 
@@ -166,15 +138,10 @@ bool CAI_TacticalServices::TestLateralCover(const Vector &vecCheckStart, const V
 				AIMoveTrace_t moveTrace;
 				GetOuter()->GetMoveProbe()->MoveLimit(NAV_GROUND, GetLocalOrigin(), vecCheckEnd, MASK_NPCSOLID, NULL, &moveTrace);
 				if (moveTrace.fStatus == AIMR_OK)
-				{
-					DebugFindCover(NO_NODE, vecCheckEnd + GetOuter()->GetViewOffset(), vecCheckStart, 0, 255, 0);
 					return true;
-				}
 			}
 		}
 	}
-
-	DebugFindCover(NO_NODE, vecCheckEnd + GetOuter()->GetViewOffset(), vecCheckStart, 255, 0, 0);
 
 	return false;
 }
@@ -261,7 +228,7 @@ bool CAI_TacticalServices::FindLateralCover(const Vector &vNearPos, const Vector
 }
 
 #ifdef BB2_USE_NAVMESH
-const Vector CAI_TacticalServices::FindLosNavArea(const Vector &vThreatPos, const Vector &vThreatEyePos, float flMinThreatDist, float flMaxThreatDist, FlankType_t eFlankType, const Vector &vecFlankRefPos, float flFlankParam)
+const Vector CAI_TacticalServices::FindLosNavArea(const Vector& vThreatPos, const Vector& vThreatEyePos, float flMinThreatDist, float flMaxThreatDist, FlankType_t eFlankType, const Vector& vecFlankRefPos, float flFlankParam)
 {
 	if (!TheNavMesh->IsLoaded())
 		return vec3_invalid;
@@ -270,19 +237,18 @@ const Vector CAI_TacticalServices::FindLosNavArea(const Vector &vThreatPos, cons
 
 	MARK_TASK_EXPENSIVE();
 
-	CNavArea *pArea = TheNavMesh->GetNearestNavArea(GetOuter());
+	CNavArea* pArea = TheNavMesh->GetNearestNavArea(GetOuter());
 	if (pArea == NULL)
 		return vec3_invalid;
 
-	CUtlVector<CNavArea *> pNearbyAreas;
+	CUtlVector<CNavArea*> pNearbyAreas;
 	CollectSurroundingAreas(&pNearbyAreas, pArea, (flMaxThreatDist * 1.5f));
 	for (int i = 0; i < pNearbyAreas.Count(); i++)
 	{
-		CNavArea *pCurrArea = pNearbyAreas[i];
+		CNavArea* pCurrArea = pNearbyAreas[i];
 		if (!pCurrArea)
 			continue;
 
-		int navID = pCurrArea->GetID();
 		bool skip = false;
 		Vector navOrigin = pCurrArea->GetCenter();
 
@@ -330,25 +296,7 @@ const Vector CAI_TacticalServices::FindLosNavArea(const Vector &vThreatPos, cons
 			flThreatDist > flMinThreatDist)
 		{
 			if (GetOuter()->TestShootPosition(navOrigin, vThreatEyePos))
-			{
-				if (ShouldDebugLos(nodeIndex))
-					NDebugOverlay::Text(navOrigin, CFmtStr("%d:los!", navID), false, 1);
-
 				return navOrigin;
-			}
-			else
-			{
-				if (ShouldDebugLos(nodeIndex))
-					NDebugOverlay::Text(navOrigin, CFmtStr("%d:!shoot", navID), false, 1);
-			}
-		}
-		else
-		{
-			if (ShouldDebugLos(nodeIndex))
-			{
-				CFmtStr msg("%d:%s", navID, (flThreatDist < flMaxThreatDist) ? "too close" : "too far");
-				NDebugOverlay::Text(navOrigin, msg, false, 1);
-			}
 		}
 	}
 
