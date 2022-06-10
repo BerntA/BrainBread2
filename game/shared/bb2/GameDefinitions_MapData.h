@@ -20,6 +20,14 @@ enum MapVerifications
 	MAP_VERIFIED_OFFICIAL,
 };
 
+#define WORKSHOP_KV_PAIR_SIZE 32
+
+struct WorkshopMapKVPair
+{
+	char map[WORKSHOP_KV_PAIR_SIZE];
+	unsigned long long size;
+};
+
 #ifdef CLIENT_DLL
 #define MAX_MAP_PREVIEW_IMAGES 5
 struct gameMapItem_t

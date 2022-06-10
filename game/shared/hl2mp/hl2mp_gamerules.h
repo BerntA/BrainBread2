@@ -300,7 +300,7 @@ public:
 	virtual bool IsTeamplay(void);
 	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );	
 
-	float GetXPRate(void) { return MAX(m_flExperienceRate.Get(), 1.0f); }
+	float GetXPRate(void) { return clamp(m_flExperienceRate.Get(), 1.0f, 2.0f); }
 	void SetXPRate(float rate) { m_flExperienceRate.Set(rate); }
 	
 private:

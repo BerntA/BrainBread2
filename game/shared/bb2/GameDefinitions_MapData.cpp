@@ -158,7 +158,7 @@ bool CGameDefinitionsMapData::FetchMapData(void)
 #ifdef CLIENT_DLL
 				GetMapInfo(sub->GetName(), mapItem);
 #else
-				mapItem.ulFileSize = (unsigned long long)atoll(sub->GetString());
+				mapItem.ulFileSize = ((unsigned long long)atoll(sub->GetString()));
 #endif
 
 				mapItem.iMapVerification = MAP_VERIFIED_OFFICIAL;
@@ -258,23 +258,19 @@ bool CGameDefinitionsMapData::QueryUGC(int page)
 	return true;
 }
 
-gameMapItem_t *CGameDefinitionsMapData::GetMapData(const char *pszMap)
+gameMapItem_t* CGameDefinitionsMapData::GetMapData(const char* pszMap)
 {
 	int index = GetMapIndex(pszMap);
-	if (index != -1)
-		return &pszGameMaps[index];
-
-	return NULL;
+	return ((index != -1) ? &pszGameMaps[index] : NULL);
 }
 
-int CGameDefinitionsMapData::GetMapIndex(const char *pszMap)
+int CGameDefinitionsMapData::GetMapIndex(const char* pszMap)
 {
 	for (int i = 0; i < pszGameMaps.Count(); i++)
 	{
 		if (!strcmp(pszGameMaps[i].pszMapName, pszMap))
 			return i;
 	}
-
 	return -1;
 }
 
@@ -294,7 +290,7 @@ bool CGameDefinitionsMapData::IsMapWhiteListed(const char *pszMap)
 //-----------------------------------------------------------------------------
 // Purpose: Fetch workshop items and their details
 //-----------------------------------------------------------------------------
-void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted_t *pCallback, bool bIOFailure)
+void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted_t* pCallback, bool bIOFailure)
 {
 	if (!m_bSatRequestInfo)
 	{
@@ -303,79 +299,90 @@ void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted
 		Msg("Loaded %i workshop addons.\n", pCallback->m_unTotalMatchingResults);
 	}
 
+	CUtlVector<WorkshopMapKVPair> mapKVPair;
+	char mapTagKey[WORKSHOP_KV_PAIR_SIZE], mapTagValue[WORKSHOP_KV_PAIR_SIZE];
+	int pairIndex = 0;
+
 	for (uint32 i = 0; i < pCallback->m_unNumResultsReturned; ++i)
 	{
+		mapKVPair.Purge();
 		SteamUGCDetails_t WorkshopItem;
-		if (STEAM_API_INTERFACE->SteamUGC()->GetQueryUGCResult(pCallback->m_handle, i, &WorkshopItem))
+		if (!STEAM_API_INTERFACE->SteamUGC()->GetQueryUGCResult(pCallback->m_handle, i, &WorkshopItem))
+			continue;
+
+		uint32 uAmountOfKeys = STEAM_API_INTERFACE->SteamUGC()->GetQueryUGCNumKeyValueTags(pCallback->m_handle, i);
+		if (uAmountOfKeys == 0) continue;
+
+		// Scan for map_name keys, populate vector list:
+		for (uint32 items = 0; items < uAmountOfKeys; items++)
 		{
-			// This is not a map item therefore we skip it...
-			if (!Q_strstr(WorkshopItem.m_rgchTags, "Elimination") &&
-				!Q_strstr(WorkshopItem.m_rgchTags, "Arena") &&
-				!Q_strstr(WorkshopItem.m_rgchTags, "Classic") &&
-				!Q_strstr(WorkshopItem.m_rgchTags, "Objective") &&
-				!Q_strstr(WorkshopItem.m_rgchTags, "Story Mode") &&
-				!Q_strstr(WorkshopItem.m_rgchTags, "Deathmatch") &&
-				!Q_strstr(WorkshopItem.m_rgchTags, "Custom"))
-				continue;
+			STEAM_API_INTERFACE->SteamUGC()->GetQueryUGCKeyValueTag(pCallback->m_handle, i, items, mapTagKey, WORKSHOP_KV_PAIR_SIZE, mapTagValue, WORKSHOP_KV_PAIR_SIZE);
+			if (strcmp(mapTagKey, "map_name") != 0) continue;
 
-			uint32 uAmountOfKeys = STEAM_API_INTERFACE->SteamUGC()->GetQueryUGCNumKeyValueTags(pCallback->m_handle, i);
-			for (uint32 items = 0; items < uAmountOfKeys; items += 2)
-			{
-				int iVerification = MAP_VERIFIED_WHITELISTED; // Every custom map is now whitelisted.
-				//if (Q_strstr(WorkshopItem.m_rgchTags, "Whitelisted"))
-				//	iVerification = MAP_VERIFIED_WHITELISTED;
+			WorkshopMapKVPair pair;
+			Q_strncpy(pair.map, mapTagValue, sizeof(pair.map));
+			pair.size = 0ULL;
+			mapKVPair.AddToTail(pair);
+		}
 
-				char mapNameKey[32], mapNameValue[32], mapSizeKey[32], mapSizeValue[128];
-				STEAM_API_INTERFACE->SteamUGC()->GetQueryUGCKeyValueTag(pCallback->m_handle, i, items, mapNameKey, 32, mapNameValue, 32);
-				STEAM_API_INTERFACE->SteamUGC()->GetQueryUGCKeyValueTag(pCallback->m_handle, i, (items + 1), mapSizeKey, 32, mapSizeValue, 128);
+		// Scan for map_size keys:
+		pairIndex = 0;
+		for (uint32 items = 0; items < uAmountOfKeys; items++)
+		{
+			STEAM_API_INTERFACE->SteamUGC()->GetQueryUGCKeyValueTag(pCallback->m_handle, i, items, mapTagKey, WORKSHOP_KV_PAIR_SIZE, mapTagValue, WORKSHOP_KV_PAIR_SIZE);
+			if (strcmp(mapTagKey, "map_size") != 0) continue;
 
-				if (!(mapNameValue && mapNameValue[0]))
-					continue;
+			mapKVPair[pairIndex].size = ((unsigned long long)atoll(mapTagValue));
+			pairIndex++;
+		}
+
+		if (mapKVPair.Count() == 0) continue;
+
+		int iVerification = MAP_VERIFIED_WHITELISTED; // Every custom map is now whitelisted.
+		//if (Q_strstr(WorkshopItem.m_rgchTags, "Whitelisted"))
+		//	iVerification = MAP_VERIFIED_WHITELISTED;
+
+		for (int items = 0; items < mapKVPair.Count(); items++)
+		{
+			const WorkshopMapKVPair& pair = mapKVPair[items];
+			int iExistingMapIndex = GetMapIndex(pair.map);
 
 #ifndef CLIENT_DLL
-				if (!(mapSizeValue && mapSizeValue[0]))
-					continue;
-
-				unsigned long long mapFileSize = (unsigned long long)atoll(mapSizeValue);
-
-				int iExistingMapIndex = GetMapIndex(mapNameValue);
-				if (iExistingMapIndex != -1)
-				{
-					pszGameMaps[iExistingMapIndex].ulFileSize = mapFileSize;
-					pszGameMaps[iExistingMapIndex].iMapVerification = iVerification;
-					pszGameMaps[iExistingMapIndex].workshopID = WorkshopItem.m_nPublishedFileId;
-				}
-				else
-				{
-					gameMapItem_t mapItem;
-					mapItem.ulFileSize = mapFileSize;
-					mapItem.iMapVerification = iVerification;
-					mapItem.workshopID = WorkshopItem.m_nPublishedFileId;
-					Q_strncpy(mapItem.pszMapName, mapNameValue, 32);
-					pszGameMaps.AddToTail(mapItem);
-				}
-#else
-				int iExistingMapIndex = GetMapIndex(mapNameValue);
-				if (iExistingMapIndex != -1)
-				{
-					pszGameMaps[iExistingMapIndex].iMapVerification = iVerification;
-					pszGameMaps[iExistingMapIndex].workshopID = WorkshopItem.m_nPublishedFileId;
-				}
-				else
-				{
-					gameMapItem_t mapItem;
-					Q_strncpy(mapItem.pszMapTitle, ((!(WorkshopItem.m_rgchTitle && WorkshopItem.m_rgchTitle[0])) ? mapNameValue : WorkshopItem.m_rgchTitle), 32);
-					Q_strncpy(mapItem.pszMapDescription, WorkshopItem.m_rgchDescription, 256);
-					Q_strncpy(mapItem.pszMapExtraInfo, "", 256);
-					mapItem.iMapVerification = iVerification;
-					mapItem.workshopID = WorkshopItem.m_nPublishedFileId;
-					mapItem.bExclude = false;
-					Q_strncpy(mapItem.pszMapName, mapNameValue, 32);
-					GetMapImageData(mapItem.pszMapName, mapItem);
-					pszGameMaps.AddToTail(mapItem);
-				}
-#endif
+			if (iExistingMapIndex != -1)
+			{
+				pszGameMaps[iExistingMapIndex].ulFileSize = pair.size;
+				pszGameMaps[iExistingMapIndex].iMapVerification = iVerification;
+				pszGameMaps[iExistingMapIndex].workshopID = WorkshopItem.m_nPublishedFileId;
 			}
+			else
+			{
+				gameMapItem_t mapItem;
+				mapItem.ulFileSize = pair.size;
+				mapItem.iMapVerification = iVerification;
+				mapItem.workshopID = WorkshopItem.m_nPublishedFileId;
+				Q_strncpy(mapItem.pszMapName, pair.map, 32);
+				pszGameMaps.AddToTail(mapItem);
+			}
+#else
+			if (iExistingMapIndex != -1)
+			{
+				pszGameMaps[iExistingMapIndex].iMapVerification = iVerification;
+				pszGameMaps[iExistingMapIndex].workshopID = WorkshopItem.m_nPublishedFileId;
+			}
+			else
+			{
+				gameMapItem_t mapItem;
+				Q_strncpy(mapItem.pszMapTitle, ((!(WorkshopItem.m_rgchTitle && WorkshopItem.m_rgchTitle[0])) ? pair.map : WorkshopItem.m_rgchTitle), 32);
+				Q_strncpy(mapItem.pszMapDescription, WorkshopItem.m_rgchDescription, 256);
+				Q_strncpy(mapItem.pszMapExtraInfo, "", 256);
+				mapItem.iMapVerification = iVerification;
+				mapItem.workshopID = WorkshopItem.m_nPublishedFileId;
+				mapItem.bExclude = false;
+				Q_strncpy(mapItem.pszMapName, pair.map, 32);
+				GetMapImageData(mapItem.pszMapName, mapItem);
+				pszGameMaps.AddToTail(mapItem);
+			}
+#endif
 		}
 	}
 
@@ -402,15 +409,11 @@ void CGameDefinitionsMapData::OnReceiveUGCQueryResultsAll(SteamUGCQueryCompleted
 
 #ifndef CLIENT_DLL
 // Check if this map is registered in our map list, if so check if its filesize is the same as in our list.
-bool CGameDefinitionsMapData::VerifyMapFile(const char *map, unsigned long long mapSize)
+bool CGameDefinitionsMapData::VerifyMapFile(const char* map, unsigned long long mapSize)
 {
 	int index = GetMapIndex(map);
-	if (index == -1)
+	if ((index == -1) || (mapSize <= 0))
 		return false;
-
-	if (mapSize <= 0)
-		return false;
-
 	return (mapSize == pszGameMaps[index].ulFileSize);
 }
 #else
