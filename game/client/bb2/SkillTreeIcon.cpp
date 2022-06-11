@@ -84,10 +84,13 @@ void SkillTreeIcon::Paint()
 	const bool bM2Down = g_pInputSystem->IsButtonDown(MOUSE_RIGHT);
 	const float flTime = engine->Time();
 
-	if ((flTime >= flCommandTime) && (bM1Down || bM2Down))
+	int x, y;
+	vgui::input()->GetCursorPos(x, y);
+
+	if ((flTime >= flCommandTime) && (bM1Down || bM2Down) && IsWithin(x, y))
 	{
 		surface()->PlaySound(bM1Down ? "common/wpn_hudoff.wav" : "common/wpn_moveselect.wav");
 		engine->ClientCmd_Unrestricted(VarArgs("%s %i\n", szCommand, (bM1Down ? 1 : 0)));
-		flCommandTime = (flTime + 0.2f);
+		flCommandTime = (flTime + 0.15f);
 	}
 }
