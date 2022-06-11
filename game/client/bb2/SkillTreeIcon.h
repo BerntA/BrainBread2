@@ -24,7 +24,7 @@ namespace vgui
 		DECLARE_CLASS_SIMPLE(SkillTreeIcon, vgui::Panel);
 
 	public:
-		SkillTreeIcon(vgui::Panel *parent, char const *panelName, const char *name, const char *description, const char *command, const char *iconTexture);
+		SkillTreeIcon(vgui::Panel* parent, char const* panelName, const char* name, const char* description, const char* command, const char* iconTexture);
 		~SkillTreeIcon();
 
 		void SetProgressValue(float value)
@@ -32,8 +32,8 @@ namespace vgui
 			flProgress = (value / 10.0f);
 		}
 
-		char *GetSkillName() { return szName; }
-		char *GetSkillDescription() { return szDesc; }
+		char* GetSkillName() { return szName; }
+		char* GetSkillDescription() { return szDesc; }
 		virtual void PerformLayout();
 
 	private:
@@ -42,14 +42,14 @@ namespace vgui
 		char szCommand[128];
 
 		float flProgress;
+		float flCommandTime;
 
-		vgui::ImagePanel *m_pIcon;
-		vgui::MouseInputPanel *m_pMousePanel;
+		vgui::ImagePanel* m_pIcon;
+		CHudTexture* m_pLevelIconBG;
+		CHudTexture* m_pLevelIconFG;
 
 	protected:
 		virtual void Paint();
-		virtual void OnMousePressed(vgui::MouseCode code);
-		virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 	};
 }
 

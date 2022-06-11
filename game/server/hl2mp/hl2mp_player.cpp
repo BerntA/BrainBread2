@@ -2049,7 +2049,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 
 	else if (FStrEq(args[0], "bb2_skill_progress_human"))
 	{
-		if ((args.ArgC() != 3) || !HL2MPRules()->CanUseSkills() || !ShouldRunRateLimitedCommand(args))
+		if ((args.ArgC() != 3) || !HL2MPRules()->CanUseSkills())
 			return true;
 
 		bool m_bCanApplyChanges = ((GetTeamNumber() == TEAM_HUMANS) && IsAlive());
@@ -2122,7 +2122,7 @@ bool CHL2MP_Player::ClientCommand(const CCommand &args)
 
 	else if (FStrEq(args[0], "bb2_skill_progress_zombie"))
 	{
-		if ((args.ArgC() != 3) || !HL2MPRules()->CanUseSkills() || !ShouldRunRateLimitedCommand(args))
+		if ((args.ArgC() != 3) || !HL2MPRules()->CanUseSkills())
 			return true;
 
 		bool m_bCanApplyChanges = ((GetTeamNumber() == TEAM_DECEASED) && IsAlive());

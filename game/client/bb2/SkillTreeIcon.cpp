@@ -9,16 +9,15 @@
 #include <vgui/ISurface.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/ImagePanel.h>
+#include <vgui/IInput.h>
+#include <inputsystem/iinputsystem.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
 
-static CHudTexture *m_pLevelIconBG = NULL;
-static CHudTexture *m_pLevelIconFG = NULL;
-
-SkillTreeIcon::SkillTreeIcon(vgui::Panel *parent, char const *panelName, const char *name, const char *description, const char *command, const char *iconTexture) : vgui::Panel(parent, panelName)
+SkillTreeIcon::SkillTreeIcon(vgui::Panel* parent, char const* panelName, const char* name, const char* description, const char* command, const char* iconTexture) : vgui::Panel(parent, panelName)
 {
 	SetParent(parent);
 	SetName(panelName);
@@ -28,29 +27,21 @@ SkillTreeIcon::SkillTreeIcon(vgui::Panel *parent, char const *panelName, const c
 	SetProportional(true);
 	SetScheme("BaseScheme");
 
-	// Icon
 	m_pIcon = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "IconImage"));
 	m_pIcon->SetZPos(12);
 	m_pIcon->SetImage("transparency");
 	m_pIcon->SetShouldScaleImage(true);
-
-	m_pMousePanel = vgui::SETUP_PANEL(new vgui::MouseInputPanel(this, "MouseInputs"));
-	m_pMousePanel->SetZPos(90);
-	m_pMousePanel->SetVisible(true);
-	m_pMousePanel->SetEnabled(true);
+	m_pIcon->SetImage(iconTexture);
 
 	Q_strncpy(szName, name, 128);
 	Q_strncpy(szDesc, description, 128);
 	Q_strncpy(szCommand, command, 128);
-	m_pIcon->SetImage(iconTexture);
+	flCommandTime = 0.0f;
 
 	SetProgressValue(0.0f);
-
 	SetPaintEnabled(true);
 	SetPaintBackgroundEnabled(true);
-
 	InvalidateLayout();
-
 	PerformLayout();
 }
 
@@ -69,16 +60,8 @@ void SkillTreeIcon::PerformLayout()
 	m_pIcon->SetSize(w - scheme()->GetProportionalScaledValue(8), h - scheme()->GetProportionalScaledValue(8));
 	m_pIcon->SetPos(scheme()->GetProportionalScaledValue(4), scheme()->GetProportionalScaledValue(4));
 
-	m_pMousePanel->SetSize(w, h);
-	m_pMousePanel->SetPos(0, 0);
-
 	m_pLevelIconBG = gHUD.GetIcon("level_min");
 	m_pLevelIconFG = gHUD.GetIcon("level_max");
-}
-
-void SkillTreeIcon::ApplySchemeSettings(vgui::IScheme *pScheme)
-{
-	BaseClass::ApplySchemeSettings(pScheme);
 }
 
 void SkillTreeIcon::Paint()
@@ -96,21 +79,15 @@ void SkillTreeIcon::Paint()
 
 	if (m_pLevelIconFG)
 		m_pLevelIconFG->DrawCircularProgression(col, 0, 0, GetWide(), GetTall(), flProgress);
-}
 
-void SkillTreeIcon::OnMousePressed(vgui::MouseCode code)
-{
-	if (!IsVisible())
-	{
-		BaseClass::OnMousePressed(code);
-		return;
-	}
+	const bool bM1Down = g_pInputSystem->IsButtonDown(MOUSE_LEFT);
+	const bool bM2Down = g_pInputSystem->IsButtonDown(MOUSE_RIGHT);
+	const float flTime = engine->Time();
 
-	if ((code == MOUSE_LEFT) || (code == MOUSE_RIGHT))
+	if ((flTime >= flCommandTime) && (bM1Down || bM2Down))
 	{
-		surface()->PlaySound((code == MOUSE_LEFT) ? "common/wpn_hudoff.wav" : "common/wpn_moveselect.wav");
-		engine->ClientCmd_Unrestricted(VarArgs("%s %i\n", szCommand, ((code == MOUSE_LEFT) ? 1 : 0)));
+		surface()->PlaySound(bM1Down ? "common/wpn_hudoff.wav" : "common/wpn_moveselect.wav");
+		engine->ClientCmd_Unrestricted(VarArgs("%s %i\n", szCommand, (bM1Down ? 1 : 0)));
+		flCommandTime = (flTime + 0.2f);
 	}
-	else
-		BaseClass::OnMousePressed(code);
 }
