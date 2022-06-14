@@ -94,15 +94,6 @@ private:
 
 	C_BaseFlex(const C_BaseFlex &); // not defined, not accessible
 
-	enum
-	{
-		PHONEME_CLASS_WEAK = 0,
-		PHONEME_CLASS_NORMAL,
-		PHONEME_CLASS_STRONG,
-
-		NUM_PHONEME_CLASSES
-	};
-
 #ifdef HL2_CLIENT_DLL
 public:
 
