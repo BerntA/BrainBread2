@@ -200,6 +200,8 @@ public:
 
 	void SkipNextMapInCycle();
 
+	virtual void ClientCommandKeyValues(edict_t* pEntity, KeyValues* pKeyValues);
+
 public:
 
 	virtual void GetNextLevelName( char *szNextMap, int bufsize, bool bRandom = false );

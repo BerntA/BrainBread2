@@ -206,3 +206,4 @@ lib/public/mathlib.lib
 lib/public/raytrace.lib
 lib/public/tier1.lib
 lib/public/vgui_controls.lib
+*.lib
