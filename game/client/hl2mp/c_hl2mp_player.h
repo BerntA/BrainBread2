@@ -169,7 +169,7 @@ private:
 	int m_iModelIncrementor;
 	int m_iOldModelIncrementor;
 
-	int m_iSkillSets[MAX_SKILL_SETS - 1][MAX_SKILL_ARRAY];
+	int m_iSkillSets[MAX_SKILL_SETS - 1][PLAYER_SKILL_ZOMBIE_HEALTH - 1];
 
 	friend class C_Playermodel;
 };

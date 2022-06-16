@@ -730,7 +730,7 @@ void C_HL2MP_Player::LoadSkillSets()
 
 				sub = sub->GetNextValue();
 
-				if (!sub)
+				if (!sub && k < PLAYER_SKILL_ZOMBIE_HEALTH - 1)
 				{
 					Warning("ERROR!: Skill Set #%s not fully filled!\n", szBuf);
 					break;
@@ -920,7 +920,7 @@ CON_COMMAND_F(setmodel, "Set the playermodel to use, client-only. Can be a numbe
 	pPlayer->GetNewPlayerModel()->SetModelPointer((pPlayer->GetTeamNumber() == TEAM_DECEASED) ? data->m_pClientModelPtrZombie : data->m_pClientModelPtrHuman);
 }
 
-CON_COMMAND_F(activateskillset, "", FCVAR_CHEAT)
+CON_COMMAND_F(bb2_activateskillset, "", FCVAR_CHEAT)
 {
 	C_HL2MP_Player* pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
 
@@ -930,7 +930,7 @@ CON_COMMAND_F(activateskillset, "", FCVAR_CHEAT)
 	pPlayer->ActivateSkillSet(atof(args[1]));
 }
 
-CON_COMMAND_F(saveskillsets, "", FCVAR_CHEAT)
+CON_COMMAND_F(bb2_saveskillsets, "", FCVAR_CHEAT)
 {
 	C_HL2MP_Player* pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
 
@@ -940,7 +940,7 @@ CON_COMMAND_F(saveskillsets, "", FCVAR_CHEAT)
 	pPlayer->SaveSkillSets();
 }
 
-CON_COMMAND_F(saveskills, "Save the current allocated skill points as a skill set. Argument must be a number within the boundaries of 0 and 2.", FCVAR_CHEAT)
+CON_COMMAND_F(bb2_saveskills, "Save the current allocated skill points as a skill set. Argument must be a number within the boundaries of 0 and 2.", FCVAR_CHEAT)
 {
 	C_HL2MP_Player* pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
 
@@ -950,7 +950,7 @@ CON_COMMAND_F(saveskills, "Save the current allocated skill points as a skill se
 	pPlayer->SaveSkillsAsSet(atof(args[1]));
 }
 
-CON_COMMAND_F(loadskills, "", FCVAR_CHEAT)
+CON_COMMAND_F(bb2_loadskills, "", FCVAR_CHEAT)
 {
 	C_HL2MP_Player* pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
 
