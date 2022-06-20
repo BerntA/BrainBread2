@@ -75,7 +75,8 @@ ConVar fire_dmginterval( "fire_dmginterval", "1.0" );
 
 #define VPROF_FIRE(s) VPROF( s )
 
-class CFire : public CBaseEntity
+DECLARE_AUTO_LIST(IFireAutoList);
+class CFire : public CBaseEntity, public IFireAutoList
 {
 public:
 	DECLARE_CLASS( CFire, CBaseEntity );
@@ -479,12 +480,16 @@ void FireSystem_ExtinguishInRadius( const Vector &origin, float radius, float ra
 {
 	// UNDONE: pass this instead of percent
 	float heat = (1-rate) * fire_extscale.GetFloat();
+	float fSqr = Sqr(radius);
 
-	CFire *pFires[32];
-	int fireCount = FireSystem_GetFiresInSphere( pFires, ARRAYSIZE(pFires), false, origin, radius );
-	for ( int i = 0; i < fireCount; i++ )
+	for (int i = 0; i < IFireAutoList::AutoList().Count(); i++)
 	{
-		pFires[i]->Extinguish( heat );
+		CFire* pFire = static_cast<CFire*>(IFireAutoList::AutoList()[i]);
+
+		if (pFire->GetAbsOrigin().DistToSqr(origin) <= fSqr)
+		{
+			pFire->Extinguish(heat);
+		}
 	}
 }
 
@@ -498,12 +503,16 @@ void FireSystem_AddHeatInRadius( const Vector &origin, float radius, float heat 
 {
 	VPROF_FIRE( "FireSystem_AddHeatInRadius" );
 
-	CFire *pFires[32];
+	float fSqr = Sqr(radius);
 
-	int fireCount = FireSystem_GetFiresInSphere( pFires, ARRAYSIZE(pFires), false, origin, radius );
-	for ( int i = 0; i < fireCount; i++ )
+	for (int i = 0; i < IFireAutoList::AutoList().Count(); i++)
 	{
-		pFires[i]->AddHeat( heat );
+		CFire* pFire = static_cast<CFire*>(IFireAutoList::AutoList()[i]);
+
+		if (pFire->GetAbsOrigin().DistToSqr(origin) <= fSqr)
+		{
+			pFire->AddHeat(heat);
+		}
 	}
 }
 
@@ -537,8 +546,8 @@ BEGIN_DATADESC( CFire )
 	DEFINE_KEYFIELD( m_flAttackTime, FIELD_FLOAT, "fireattack" ),
 	DEFINE_KEYFIELD( m_bStartDisabled, FIELD_BOOLEAN, "StartDisabled" ),
 
-	DEFINE_FUNCTION( BurnThink ),
-	DEFINE_FUNCTION( GoOutThink ),
+	DEFINE_THINKFUNC( BurnThink ),
+	DEFINE_THINKFUNC( GoOutThink ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "StartFire", InputStartFire ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "Extinguish", InputExtinguish ),
@@ -554,11 +563,13 @@ END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( env_fire, CFire );
 
+IMPLEMENT_AUTO_LIST(IFireAutoList);
+
 //==================================================
 // CFire
 //==================================================
 
-CFire::CFire( void )
+CFire::CFire( void ) : IFireAutoList()
 {
 	m_flFuel = 0.0f;
 	m_flAttackTime = 0.0f;
