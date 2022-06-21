@@ -569,7 +569,7 @@ IMPLEMENT_AUTO_LIST(IFireAutoList);
 // CFire
 //==================================================
 
-CFire::CFire( void ) : IFireAutoList()
+CFire::CFire( void )
 {
 	m_flFuel = 0.0f;
 	m_flAttackTime = 0.0f;
