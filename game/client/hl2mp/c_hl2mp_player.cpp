@@ -907,6 +907,7 @@ void C_HL2MP_Player::CalculateIKLocks(float currentTime)
 	partition->SuppressLists(curSuppressed, true);
 }
 
+
 CON_COMMAND_F(setmodel, "Set the playermodel to use, client-only. Can be a number, chooses between playermodels via script.", FCVAR_CHEAT)
 {
 	C_HL2MP_Player *pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
@@ -920,6 +921,7 @@ CON_COMMAND_F(setmodel, "Set the playermodel to use, client-only. Can be a numbe
 	pPlayer->GetNewPlayerModel()->SetModelPointer((pPlayer->GetTeamNumber() == TEAM_DECEASED) ? data->m_pClientModelPtrZombie : data->m_pClientModelPtrHuman);
 }
 
+#ifdef DEBUG
 CON_COMMAND_F(bb2_activateskillset, "", FCVAR_CHEAT)
 {
 	C_HL2MP_Player* pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
@@ -959,3 +961,4 @@ CON_COMMAND_F(bb2_loadskills, "", FCVAR_CHEAT)
 
 	pPlayer->LoadSkillSets();
 }
+#endif
