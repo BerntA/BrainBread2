@@ -195,6 +195,9 @@ ehthumbs.db
 # Folder config file
 Desktop.ini
 
+# Ignore changes to .lib files
+*.lib
+
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
 
