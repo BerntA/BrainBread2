@@ -12,7 +12,7 @@ Use the VPC scripts to generate the necessary project file(s), see
 [Source SDK 2013 Compiling Help](https://developer.valvesoftware.com/wiki/Source_SDK_2013) for additional help.
 * Windows: You can use VS2010, VS2013, VS2015, VS2017, VS2019, or VS2022 to compile this project.
 * Linux: Use GCC 4.8 or GCC 5 compiler.
-* OSX: Use XCode 10, run osx_compile.
+* OSX: Use XCode 10, run osx-compile.
 
 ### Contributing
 Feel free to post issues, pull requests and such.
