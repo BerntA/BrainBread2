@@ -197,11 +197,14 @@ CHudMessage::~CHudMessage()
 	textmessage = NULL;
 }
 
-void CHudMessage::ApplySchemeSettings( IScheme *scheme )
+void CHudMessage::ApplySchemeSettings(IScheme* scheme)
 {
-	BaseClass::ApplySchemeSettings( scheme );
+	BaseClass::ApplySchemeSettings(scheme);
+	SetPaintBackgroundEnabled(false);
 
-	SetPaintBackgroundEnabled( false );
+	int screenWide, screenTall;
+	GetHudSize(screenWide, screenTall);
+	SetBounds(0, 0, screenWide, screenTall);
 }
 
 //-----------------------------------------------------------------------------
