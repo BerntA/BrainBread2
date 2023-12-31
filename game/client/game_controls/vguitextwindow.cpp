@@ -87,7 +87,6 @@ CTextWindow::CTextWindow(IViewPort *pViewPort) : Frame(NULL, PANEL_INFO	)
 	m_szTitle[0] = '\0';
 	m_szMessage[0] = '\0';
 	m_szMessageFallback[0] = '\0';
-	m_nExitCommand = TEXTWINDOW_CMD_NONE;
 	m_bShownURL = false;
 	m_bUnloadOnDismissal = false;
 	
@@ -161,10 +160,10 @@ void CTextWindow::Reset( void )
 	// HPE_END
 	//=============================================================================
 
-	m_nExitCommand = TEXTWINDOW_CMD_NONE;
 	m_nContentType = TYPE_TEXT;
 	m_bShownURL = false;
 	m_bUnloadOnDismissal = false;
+
 	Update();
 }
 
@@ -359,58 +358,7 @@ void CTextWindow::Update( void )
 void CTextWindow::OnCommand( const char *command )
 {
 	if (!Q_strcmp(command, "okay"))
-	{
-		//=============================================================================
-		// HPE_BEGIN:
-		// [Forrest] Replaced text window command string with TEXTWINDOW_CMD enumeration
-		// of options.  Passing a command string is dangerous and allowed a server network
-		// message to run arbitrary commands on the client.
-		//=============================================================================
-		const char *pszCommand = NULL;
-		switch ( m_nExitCommand )
-		{
-			case TEXTWINDOW_CMD_NONE:
-				break;
-
-			case TEXTWINDOW_CMD_JOINGAME:
-				pszCommand = "joingame";
-				break;
-
-			case TEXTWINDOW_CMD_CHANGETEAM:
-				pszCommand = "changeteam";
-				break;
-
-			case TEXTWINDOW_CMD_IMPULSE101:
-				pszCommand = "impulse 101";
-				break;
-
-			case TEXTWINDOW_CMD_MAPINFO:
-				pszCommand = "mapinfo";
-				break;
-
-			case TEXTWINDOW_CMD_CLOSED_HTMLPAGE:
-				pszCommand = "closed_htmlpage";
-				break;
-
-			case TEXTWINDOW_CMD_CHOOSETEAM:
-				pszCommand = "chooseteam";
-				break;
-
-			default:
-				DevMsg("CTextWindow::OnCommand: unknown exit command value %i\n", m_nExitCommand );
-				break;
-		}
-
-		if ( pszCommand != NULL )
-		{
-			engine->ClientCmd_Unrestricted( pszCommand );
-		}
-		//=============================================================================
-		// HPE_END
-		//=============================================================================
-		
-		m_pViewPort->ShowPanel( this, false );
-	}
+		m_pViewPort->ShowPanel(this, false);
 
 	BaseClass::OnCommand(command);
 }
@@ -428,16 +376,14 @@ void CTextWindow::OnKeyCodePressed( vgui::KeyCode code )
 
 void CTextWindow::SetData(KeyValues *data)
 {
-	SetData( data->GetInt( "type" ), data->GetString( "title" ), data->GetString( "msg" ), data->GetString( "msg_fallback" ), data->GetInt( "cmd" ), data->GetBool( "unload" ) );
+	SetData( data->GetInt( "type" ), data->GetString( "title" ), data->GetString( "msg" ), data->GetString( "msg_fallback" ), data->GetBool( "unload" ) );
 }
 
-void CTextWindow::SetData( int type, const char *title, const char *message, const char *message_fallback, int command, bool bUnload )
+void CTextWindow::SetData(int type, const char* title, const char* message, const char* message_fallback, bool bUnload)
 {
 	Q_strncpy(  m_szTitle, title, sizeof( m_szTitle ) );
 	Q_strncpy(  m_szMessage, message, sizeof( m_szMessage ) );
 	Q_strncpy(  m_szMessageFallback, message_fallback, sizeof( m_szMessageFallback ) );
-
-	m_nExitCommand = command;
 
 	m_nContentType = type;
 	m_bUnloadOnDismissal = bUnload;
@@ -466,6 +412,8 @@ void CTextWindow::ShowPanel(bool bShow)
 			m_pHTMLMessage->OpenURL("about:blank", NULL);
 			m_bShownURL = false;
 		}
+
+		engine->ClientCmd_Unrestricted("joingame\n");
 	}
 }
 

@@ -454,7 +454,6 @@ void CHL2MP_Player::PickDefaultSpawnTeam(int iForceTeam)
 			KeyValues *data = new KeyValues("data");
 			data->SetString("title", title);		 // info panel title
 			data->SetString("type", "1");			// show userdata from stringtable entry
-			data->SetInt("cmd", 1);			       // Joingame cmd on closing.
 			data->SetString("msg", "motd");		  // use this stringtable entry
 			data->SetBool("unload", true);
 

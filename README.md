@@ -25,10 +25,8 @@ However, if you create a pull request, be sure to test your changes properly bef
 
 ### Current Bugs
 * Writing 'connect ip:port' in the console while in-game will bug if the server is password protected, you have to open the main menu in order to write in the desired password. (assuming you're using the console when the main menu isn't up)
-* Very rare and random crash which occurs when you click OK on the motd in-game, when you're about to enter the game. (spawn)
 * Sometimes viewmodels will randomly go invisible until you respawn/get a new weapon of the same type.
 * When recording via HLTV, the objective HUD will be hidden.
-* Changing resolution while the motd is up will create unforeseen consequences.
 * Spectating starts inside the player, you have to refresh the spectate mode to fix this issue at this time.
 * Sometimes sliding might get you stuck.
 

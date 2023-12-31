@@ -221,25 +221,29 @@ void CBaseViewport::OnScreenSizeChanged(int iOldWide, int iOldTall)
 	BaseClass::OnScreenSizeChanged(iOldWide, iOldTall);
 
 	IViewPortPanel* pSpecGuiPanel = FindPanelByName(PANEL_SPECGUI);
+	IViewPortPanel* pMOTDPanel = FindPanelByName(PANEL_INFO);
+
 	bool bSpecGuiWasVisible = pSpecGuiPanel && pSpecGuiPanel->IsVisible();
-	
+	bool bMOTDWasVisible = pMOTDPanel && pMOTDPanel->IsVisible();
+
 	// reload the script file, so the screen positions in it are correct for the new resolution
-	ReloadScheme( NULL );
+	ReloadScheme(NULL);
 
 	// recreate all the default panels
 	RemoveAllPanels();
 	CreateDefaultPanels();
 
 	// hide all panels when reconnecting 
-	ShowPanel( PANEL_ALL, false );
+	ShowPanel(PANEL_ALL, false);
 
 	// re-enable the spectator gui if it was previously visible
-	if ( bSpecGuiWasVisible )
-	{
-		ShowPanel( PANEL_SPECGUI, true );
-	}
+	if (bSpecGuiWasVisible)
+		ShowPanel(PANEL_SPECGUI, true);
 
 	engine->ClientCmd_Unrestricted("hud_reloadscheme\n");
+
+	if (bMOTDWasVisible) // ensure we join the game!
+		engine->ClientCmd_Unrestricted("joingame\n");
 }
 
 void CBaseViewport::CreateDefaultPanels( void )

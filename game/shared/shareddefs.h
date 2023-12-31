@@ -372,26 +372,6 @@ enum
 	TYPE_FILE,		// show this local file
 } ;
 
-//=============================================================================
-// HPE_BEGIN:
-// [Forrest] Replaced text window command string with TEXTWINDOW_CMD enumeration
-// of options.  Passing a command string is dangerous and allowed a server network
-// message to run arbitrary commands on the client.
-//=============================================================================
-enum
-{
-	TEXTWINDOW_CMD_NONE = 0,
-	TEXTWINDOW_CMD_JOINGAME,
-	TEXTWINDOW_CMD_CHANGETEAM,
-	TEXTWINDOW_CMD_IMPULSE101,
-	TEXTWINDOW_CMD_MAPINFO,
-	TEXTWINDOW_CMD_CLOSED_HTMLPAGE,
-	TEXTWINDOW_CMD_CHOOSETEAM,
-};
-//=============================================================================
-// HPE_END
-//=============================================================================
-
 // VGui Screen Flags
 enum
 {
