@@ -65,11 +65,6 @@ IScreenSpaceEffectManager *g_pScreenSpaceEffects = &g_ScreenSpaceEffectManager;
 //---------------------------------------------------------------------------------------
 void CScreenSpaceEffectManager::InitScreenSpaceEffects( )
 {
-	if ( CommandLine()->FindParm( "-filmgrain" ) )
-	{
-		GetScreenSpaceEffect( "filmgrain" )->Enable( true );
-	}
-
 	for( CScreenSpaceEffectRegistration *pReg=CScreenSpaceEffectRegistration::s_pHead; pReg!=NULL; pReg=pReg->m_pNext )
 	{
 		IScreenSpaceEffect *pEffect = pReg->m_pEffect;
@@ -81,7 +76,6 @@ void CScreenSpaceEffectManager::InitScreenSpaceEffects( )
 		}
 	}
 }
-
 
 //----------------------------------------------------------------------------------------
 // CScreenSpaceEffectManager::ShutdownScreenSpaceEffects - Shutdown all registered effects
@@ -97,7 +91,6 @@ void CScreenSpaceEffectManager::ShutdownScreenSpaceEffects( )
 		}
 	}
 }
-
 
 //---------------------------------------------------------------------------------------
 // CScreenSpaceEffectManager::GetScreenSpaceEffect - Returns a point to the named effect
@@ -117,7 +110,6 @@ IScreenSpaceEffect *CScreenSpaceEffectManager::GetScreenSpaceEffect( const char 
 
 	return NULL;
 }
-
 
 //---------------------------------------------------------------------------------------
 // CScreenSpaceEffectManager::SetScreenSpaceEffectParams 
