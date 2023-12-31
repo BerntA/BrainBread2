@@ -1723,15 +1723,22 @@ void Frame::ApplySchemeSettings(IScheme *pScheme)
 }
 
 // Disables the fade-in/out-effect even if configured in the scheme settings
-void Frame::DisableFadeEffect( void )
+void Frame::DisableFadeEffect(void)
 {
 	m_flFocusTransitionEffectTime = 0.f;
 	m_flTransitionEffectTime = 0.f;
 }
 
-void Frame::SetFadeEffectDisableOverride( bool disabled )
+void Frame::SetFadeEffectDisableOverride(bool disabled)
 {
 	m_bDisableFadeEffect = disabled;
+}
+
+void Frame::DisableAllFadeEffects()
+{
+	SetMinimizeToSysTrayButtonVisible(false);
+	SetFadeEffectDisableOverride(true);
+	DisableFadeEffect();
 }
 
 //-----------------------------------------------------------------------------

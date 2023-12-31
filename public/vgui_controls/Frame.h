@@ -133,6 +133,8 @@ public:
 	// Temporarily enables or disables the fade effect rather than zeroing the fade times as done in DisableFadeEffect
 	void SetFadeEffectDisableOverride( bool disabled );
 
+	void DisableAllFadeEffects();
+
 protected:
 	// Respond to mouse presses
 	virtual void OnMousePressed(MouseCode code);
