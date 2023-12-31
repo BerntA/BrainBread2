@@ -103,6 +103,8 @@ CTextWindow::CTextWindow(IViewPort *pViewPort) : Frame(NULL, PANEL_INFO	)
 	SetMinimizeButtonVisible(false);
 	SetMaximizeButtonVisible(false);
 
+	DisableAllFadeEffects();
+
 	m_pTextMessage = new TextEntry( this, "TextMessage" );
 	m_pTextMessage->SetZPos(10);
 
@@ -443,22 +445,21 @@ void CTextWindow::SetData( int type, const char *title, const char *message, con
 	Update();
 }
 
-void CTextWindow::ShowPanel( bool bShow )
+void CTextWindow::ShowPanel(bool bShow)
 {
-	if ( BaseClass::IsVisible() == bShow )
+	if (BaseClass::IsVisible() == bShow)
 		return;
 
-	m_pViewPort->ShowBackGround( bShow );
-
-	if ( bShow )
+	if (bShow)
 	{
 		Activate();
-		SetMouseInputEnabled( true );
+		SetMouseInputEnabled(true);
+		SetVisible(true);
 	}
 	else
 	{
-		SetVisible( false );
-		SetMouseInputEnabled( false );
+		SetVisible(false);
+		SetMouseInputEnabled(false);
 
 		if (m_bUnloadOnDismissal && m_bShownURL && m_pHTMLMessage)
 		{

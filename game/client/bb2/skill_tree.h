@@ -31,10 +31,11 @@ public:
 	CSkillTree(IViewPort *pViewPort);
 	virtual ~CSkillTree();
 
-	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
-	virtual void PaintBackground();
+	void ApplySchemeSettings(vgui::IScheme *pScheme);
+	void PaintBackground();
 
-	virtual void OnThink();
+	void OnThink();
+	void OnClose() {} // unused
 	const char *GetName(void) { return PANEL_SKILL; }
 	void SetData(KeyValues *data) {};
 	void Update() {};
@@ -61,8 +62,8 @@ private:
 
 protected:
 
-	virtual vgui::Panel *CreateControlByName(const char *controlName);
-	virtual void OnKeyCodeTyped(vgui::KeyCode code);
+	vgui::Panel *CreateControlByName(const char *controlName);
+	void OnKeyCodeTyped(vgui::KeyCode code);
 
 	void OnCommand(const char *command);
 	void PerformLayout();

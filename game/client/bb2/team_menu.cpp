@@ -224,8 +224,6 @@ void CTeamMenu::OnShowPanel(bool bShow)
 
 	if (bShow)
 	{
-		m_pViewPort->ShowBackGround(bShow);
-		gViewPortInterface->ShowBackGround(bShow);
 		SetVisible(bShow);
 		OnSetCharacterPreview();
 	}
@@ -238,8 +236,6 @@ void CTeamMenu::ForceClose(void)
 	for (int i = 0; i < _ARRAYSIZE(m_pModelPreviews); i++)
 		m_pModelPreviews[i]->DeleteModelData();
 
-	m_pViewPort->ShowBackGround(false);
-	gViewPortInterface->ShowBackGround(false);
 	SetVisible(false);
 }
 

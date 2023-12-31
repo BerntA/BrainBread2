@@ -338,17 +338,13 @@ void CGameBaseClient::SelectQuestPreview(int index)
 // Is this viewport panel visible?
 bool CGameBaseClient::IsViewPortPanelVisible(const char *panel)
 {
-	if (!gViewPortInterface)
-		return false;
-
-	IViewPortPanel *viewportPanel = gViewPortInterface->FindPanelByName(panel);
+	IViewPortPanel *viewportPanel = (gViewPortInterface ? gViewPortInterface->FindPanelByName(panel) : NULL);
 	if (viewportPanel)
 	{
 		Panel *panel = dynamic_cast<Panel*> (viewportPanel);
 		if (panel)
 			return panel->IsVisible();
 	}
-
 	return false;
 }
 
@@ -544,7 +540,7 @@ bool CGameBaseClient::CanOpenPanel(void)
 {
 	// Prevents a big issue which will make the scoreboard "stuck"/"toggled" (not looking for key input) 
 	// Wait for it to be fully removed:
-	vgui::Frame* pBasePanel = dynamic_cast<vgui::Frame*> (gViewPortInterface->GetActivePanel());
+	vgui::Frame* pBasePanel = dynamic_cast<vgui::Frame*> (gViewPortInterface ? gViewPortInterface->GetActivePanel() : NULL);
 	if ((pBasePanel && pBasePanel->IsVisible()) || (QuestPanel && QuestPanel->IsVisible()) || (NotePanel && NotePanel->IsVisible()) || (VotePanel && VotePanel->IsVisible()))
 		return false;
 
@@ -567,7 +563,7 @@ void CGameBaseClient::CloseGamePanels(bool bInGamePanelsOnly)
 	if (pCaptureProgressHUD)
 		pCaptureProgressHUD->Reset();
 
-	IViewPortPanel *pBasePanel = gViewPortInterface->GetActivePanel();
+	IViewPortPanel *pBasePanel = (gViewPortInterface ? gViewPortInterface->GetActivePanel() : NULL);
 	if (pBasePanel)
 	{
 		vgui::CVGUIBaseFrame *pBaseClassFrame = dynamic_cast<vgui::CVGUIBaseFrame*> (pBasePanel);

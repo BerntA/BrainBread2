@@ -36,6 +36,7 @@ public:
 
 protected:
 	virtual void OnThink();
+	virtual void OnClose() {} // unused
 	virtual void PaintBackground();
 	virtual void PerformLayout();
 	virtual void OnTick();

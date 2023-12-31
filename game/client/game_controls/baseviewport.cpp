@@ -186,9 +186,6 @@ CBaseViewport::CBaseViewport() : vgui::EditablePanel( NULL, "CBaseViewport")
 	SetKeyBoardInputEnabled( false );
 	SetMouseInputEnabled( false );
 
-#ifndef _XBOX
-	m_pBackGround = NULL;
-#endif
 	m_bHasParent = false;
 	m_pActivePanel = NULL;
 	m_pLastActivePanel = NULL;
@@ -231,15 +228,7 @@ void CBaseViewport::OnScreenSizeChanged(int iOldWide, int iOldTall)
 
 	// recreate all the default panels
 	RemoveAllPanels();
-#ifndef _XBOX
-	m_pBackGround = new CBackGroundPanel( NULL );
-	m_pBackGround->SetZPos( -20 ); // send it to the back 
-	m_pBackGround->SetVisible( false );
-#endif
 	CreateDefaultPanels();
-#ifndef _XBOX
-	vgui::ipanel()->MoveToBack( m_pBackGround->GetVPanel() ); // really send it to the back 
-#endif
 
 	// hide all panels when reconnecting 
 	ShowPanel( PANEL_ALL, false );
@@ -506,13 +495,6 @@ void CBaseViewport::RemoveAllPanels( void)
 		vgui::VPANEL vPanel = m_Panels[i]->GetVPanel();
 		vgui::ipanel()->DeletePanel( vPanel );
 	}
-#ifndef _XBOX
-	if ( m_pBackGround )
-	{
-		m_pBackGround->MarkForDeletion();
-		m_pBackGround = NULL;
-	}
-#endif
 	m_Panels.Purge();
 	m_pActivePanel = NULL;
 	m_pLastActivePanel = NULL;
@@ -521,19 +503,9 @@ void CBaseViewport::RemoveAllPanels( void)
 CBaseViewport::~CBaseViewport()
 {
 	m_bInitialized = false;
-
-#ifndef _XBOX
-	if ( !m_bHasParent && m_pBackGround )
-	{
-		m_pBackGround->MarkForDeletion();
-	}
-	m_pBackGround = NULL;
-#endif
 	RemoveAllPanels();
-
 	gameeventmanager->RemoveListener( this );
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: called when the VGUI subsystem starts up
@@ -543,15 +515,8 @@ void CBaseViewport::Start( IGameUIFuncs *pGameUIFuncs, IGameEventManager2 * pGam
 {
 	m_GameuiFuncs = pGameUIFuncs;
 	m_GameEventManager = pGameEventManager;
-#ifndef _XBOX
-	m_pBackGround = new CBackGroundPanel( NULL );
-	m_pBackGround->SetZPos( -20 ); // send it to the back 
-	m_pBackGround->SetVisible( false );
-#endif
 	CreateDefaultPanels();
-
-	m_GameEventManager->AddListener( this, "game_newmap", false );
-	
+	m_GameEventManager->AddListener( this, "game_newmap", false );	
 	m_bInitialized = true;
 }
 
@@ -653,14 +618,11 @@ void CBaseViewport::OnThink()
 void CBaseViewport::SetParent(vgui::VPANEL parent)
 {
 	EditablePanel::SetParent( parent );
+
 	// force ourselves to be proportional - when we set our parent above, if our new
 	// parent happened to be non-proportional (such as the vgui root panel), we got
 	// slammed to be nonproportional
 	EditablePanel::SetProportional( true );
-	
-#ifndef _XBOX
-	m_pBackGround->SetParent( (vgui::VPANEL)parent );
-#endif
 
 	// set proportionality on animation controller
 	m_pAnimController->SetProportional( true );

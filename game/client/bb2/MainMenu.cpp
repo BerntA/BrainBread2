@@ -327,6 +327,7 @@ CMainMenu::CMainMenu(vgui::VPANEL parent) : BaseClass(NULL, "MainMenu")
 	SetProportional(true);
 	SetVisible(true);
 
+	DisableAllFadeEffects();
 	SetSize(ScreenWidth(), ScreenHeight());
 	SetZPos(100);
 

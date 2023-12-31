@@ -46,6 +46,8 @@ CKeyPadMenu::CKeyPadMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_KEYPAD)
 	SetMinimizeButtonVisible(false);
 	SetMaximizeButtonVisible(false);
 
+	DisableAllFadeEffects();
+
 	m_pImgBackground = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Background"));
 	m_pImgBackground->SetImage("keypad/keypadbg");
 	m_pImgBackground->SetZPos(20);
@@ -130,8 +132,6 @@ void CKeyPadMenu::ShowPanel(bool bShow)
 		engine->ClientCmd_Unrestricted("gameui_allowescapetoshow\n");
 
 	SetVisible(bShow);
-	m_pViewPort->ShowBackGround(bShow);
-	gViewPortInterface->ShowBackGround(bShow);
 }
 
 void CKeyPadMenu::SetData(KeyValues *data)
@@ -146,7 +146,6 @@ void CKeyPadMenu::OnKeyCodeTyped(vgui::KeyCode code)
 	{
 		PerformLayout();
 		ShowPanel(false);
-		gViewPortInterface->ShowBackGround(false);
 	}
 	else
 		BaseClass::OnKeyCodeTyped(code);

@@ -89,9 +89,6 @@ void CVGUIBaseFrame::OnThink()
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Constructor
-//-----------------------------------------------------------------------------
 CVGUIBaseFrame::CVGUIBaseFrame(vgui::VPANEL parent, const char *panelName, bool bOpenBuildMode, float flFadeTime, bool bDisableInput) : BaseClass(NULL, panelName)
 {
 	m_bDisableInput = bDisableInput;
@@ -110,6 +107,8 @@ CVGUIBaseFrame::CVGUIBaseFrame(vgui::VPANEL parent, const char *panelName, bool 
 	SetMoveable(false);
 	SetZPos(0);
 
+	DisableAllFadeEffects();
+
 	m_pBackground = vgui::SETUP_PANEL(new vgui::ImagePanel(this, ""));
 	m_pBackground->SetImage("scoreboard/mainbg");
 	m_pBackground->SetZPos(-1);
@@ -127,9 +126,6 @@ CVGUIBaseFrame::CVGUIBaseFrame(vgui::VPANEL parent, const char *panelName, bool 
 	SetAlpha(0);
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Destructor
-//-----------------------------------------------------------------------------
 CVGUIBaseFrame::~CVGUIBaseFrame()
 {
 }

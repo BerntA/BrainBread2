@@ -43,6 +43,8 @@ CEndMapVoteMenu::CEndMapVoteMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_ENDVO
 	SetMinimizeButtonVisible(false);
 	SetMaximizeButtonVisible(false);
 
+	DisableAllFadeEffects();
+
 	m_pLabelVoteAnnounce = new Label(this, "LabelVote", "");
 	m_pLabelVoteAnnounce->SetZPos(20);
 	m_pLabelVoteAnnounce->SetContentAlignment(Label::a_center);
@@ -145,16 +147,14 @@ void CEndMapVoteMenu::ShowPanel(bool bShow)
 	GameBaseClient->CloseGamePanels(true);
 	GameBaseClient->CloseConsole();
 	g_pClientMode->StopMessageMode();
+
 	if (gViewPortInterface)
 		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, false);
 
 	PerformLayout();
 	SetMouseInputEnabled(bShow);
 	SetKeyBoardInputEnabled(bShow);
-
 	SetVisible(bShow);
-	m_pViewPort->ShowBackGround(bShow);
-	gViewPortInterface->ShowBackGround(bShow);
 }
 
 void CEndMapVoteMenu::ApplySchemeSettings(vgui::IScheme *pScheme)

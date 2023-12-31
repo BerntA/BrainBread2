@@ -54,6 +54,8 @@ CSkillTree::CSkillTree(IViewPort *pViewPort) : Frame(NULL, PANEL_SKILL)
 	SetMinimizeButtonVisible(false);
 	SetMaximizeButtonVisible(false);
 
+	DisableAllFadeEffects();
+
 	m_pBackground = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Background"));
 	m_pBackground->SetImage("skills/humans/background");
 	m_pBackground->SetZPos(20);
@@ -207,8 +209,6 @@ void CSkillTree::ShowPanel(bool bShow)
 		engine->ClientCmd_Unrestricted("gameui_allowescapetoshow\n");
 
 	SetVisible(bShow);
-	m_pViewPort->ShowBackGround(bShow);
-	gViewPortInterface->ShowBackGround(bShow);
 }
 
 void CSkillTree::ApplySchemeSettings(vgui::IScheme *pScheme)
@@ -241,10 +241,7 @@ void CSkillTree::Reset()
 void CSkillTree::OnKeyCodeTyped(vgui::KeyCode code)
 {
 	if ((code == KEY_ESCAPE) || (gameuifuncs->GetButtonCodeForBind("skill_tree") == code))
-	{
 		ShowPanel(false);
-		gViewPortInterface->ShowBackGround(false);
-	}
 	else
 		BaseClass::OnKeyCodeTyped(code);
 }

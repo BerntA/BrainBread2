@@ -35,8 +35,8 @@ CLoadingPanel::CLoadingPanel(vgui::VPANEL parent) : BaseClass(NULL, "LoadingPane
 	SetKeyBoardInputEnabled(false);
 	SetMouseInputEnabled(false);
 	SetScheme("ClientScheme");
-
 	SetZPos(100);
+	DisableAllFadeEffects();
 
 	vgui::ivgui()->AddTickSignal(GetVPanel(), 1);
 

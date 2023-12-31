@@ -33,6 +33,7 @@ CAddonInstallerPanel::CAddonInstallerPanel(vgui::VPANEL parent)
 	SetMouseInputEnabled(true);
 	SetScheme("ClientScheme");
 	SetZPos(100);
+	DisableAllFadeEffects();
 
 	m_pImgBackground = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "BGImage"));
 	m_pImgBackground->SetImage("mainmenu/backgroundart");

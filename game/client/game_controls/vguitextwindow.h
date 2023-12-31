@@ -68,6 +68,7 @@ public:
 	virtual void ShowIndex( const char *entry );
 
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
+	virtual void OnClose() {} // unused
 
 protected:	
 	// vgui overrides

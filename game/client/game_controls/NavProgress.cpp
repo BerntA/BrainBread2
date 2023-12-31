@@ -110,8 +110,6 @@ void CNavProgress::ShowPanel( bool bShow )
 	if ( BaseClass::IsVisible() == bShow )
 		return;
 
-	m_pViewPort->ShowBackGround( bShow );
-
 	if ( bShow )
 	{
 		Activate();

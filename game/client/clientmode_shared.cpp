@@ -212,7 +212,7 @@ static void __MsgFunc_VGUIMenu( bf_read &msg )
 
 	bool  bShow = msg.ReadByte()!=0;
 	
-	IViewPortPanel *viewport = gViewPortInterface->FindPanelByName( panelname );
+	IViewPortPanel *viewport = (gViewPortInterface ? gViewPortInterface->FindPanelByName(panelname) : NULL);
 
 	if ( !viewport )
 	{

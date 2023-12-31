@@ -64,6 +64,8 @@ CVoiceMenu::CVoiceMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_VOICEWHEEL)
 	SetMinimizeButtonVisible(false);
 	SetMaximizeButtonVisible(false);
 
+	DisableAllFadeEffects();
+
 	// Init Default 
 	m_pImgBackground = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Background"));
 	m_pImgBackground->SetImage("voicewheel/base");
@@ -153,14 +155,12 @@ void CVoiceMenu::OnCommand(const char *command)
 
 				PerformLayout();
 				ShowPanel(false);
-				gViewPortInterface->ShowBackGround(false);
 				break;
 			}
 			else
 			{
 				PerformLayout();
 				ShowPanel(false);
-				gViewPortInterface->ShowBackGround(false);
 			}
 		}
 	}
@@ -186,8 +186,6 @@ void CVoiceMenu::ShowPanel(bool bShow)
 		engine->ClientCmd_Unrestricted("gameui_allowescapetoshow\n");
 
 	SetVisible(bShow);
-	m_pViewPort->ShowBackGround(bShow);
-	gViewPortInterface->ShowBackGround(bShow);
 }
 
 void CVoiceMenu::ApplySchemeSettings(vgui::IScheme *pScheme)
@@ -217,7 +215,6 @@ void CVoiceMenu::OnKeyCodeTyped(vgui::KeyCode code)
 	{
 		PerformLayout();
 		ShowPanel(false);
-		gViewPortInterface->ShowBackGround(false);
 	}
 	else
 		BaseClass::OnKeyCodeTyped(code);

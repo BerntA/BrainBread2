@@ -38,6 +38,7 @@ public:
 	void PaintBackground();
 	void PerformLayout();
 	void OnThink();
+	void OnClose() {} // unused
 	const char *GetName(void) { return PANEL_ENDVOTE; }
 	void SetData(KeyValues *data);
 	void Update();
@@ -58,7 +59,7 @@ protected:
 
 	MESSAGE_FUNC_PARAMS(OnPlayerVote, "OnPlayerVote", data);
 
-	virtual vgui::Panel *CreateControlByName(const char *controlName);
+	vgui::Panel *CreateControlByName(const char *controlName);
 
 	vgui::ImagePanel *m_pBackgroundImg;
 	vgui::Label *m_pLabelVoteAnnounce;

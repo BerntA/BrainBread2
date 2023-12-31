@@ -39,6 +39,7 @@ public:
 	const char *GetName(void) { return PANEL_KEYPAD; }
 	void SetData(KeyValues *data);
 	void Reset();
+	void OnClose() {} // unused
 	void Update() {};
 	bool NeedsUpdate(void) { return false; }
 	bool HasInputElements(void) { return true; }

@@ -148,6 +148,7 @@ protected:
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 	virtual void PaintBackground();
 	virtual void OnThink();
+	virtual void OnClose() {} // unused
 	virtual void OnKeyCodeTyped(vgui::KeyCode code);
 
 private:

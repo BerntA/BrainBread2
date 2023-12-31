@@ -49,6 +49,8 @@ CZombieMenu::CZombieMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_ZOMBIE)
 	SetMinimizeButtonVisible(false);
 	SetMaximizeButtonVisible(false);
 
+	DisableAllFadeEffects();
+
 	// Init Default 
 	m_pImgBackground = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "Background"));
 	m_pImgBackground->SetImage("skills/zombies/background");
@@ -180,8 +182,6 @@ void CZombieMenu::ShowPanel(bool bShow)
 		engine->ClientCmd_Unrestricted("gameui_allowescapetoshow\n");
 
 	SetVisible(bShow);
-	m_pViewPort->ShowBackGround(bShow);
-	gViewPortInterface->ShowBackGround(bShow);
 }
 
 void CZombieMenu::ApplySchemeSettings(vgui::IScheme *pScheme)
@@ -217,7 +217,6 @@ void CZombieMenu::OnKeyCodeTyped(vgui::KeyCode code)
 	{
 		PerformLayout();
 		ShowPanel(false);
-		gViewPortInterface->ShowBackGround(false);
 	}
 	else
 		BaseClass::OnKeyCodeTyped(code);

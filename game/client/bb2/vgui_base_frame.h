@@ -22,13 +22,12 @@
 
 namespace vgui
 {
-
 	class CVGUIBaseFrame : public vgui::Frame
 	{
 		DECLARE_CLASS_SIMPLE(CVGUIBaseFrame, vgui::Frame);
 
 	public:
-		CVGUIBaseFrame(vgui::VPANEL parent, const char *panelName, bool bOpenBuildMode = false, float flFadeTime = 0.5f, bool bDisableInput = false);
+		CVGUIBaseFrame(vgui::VPANEL parent, const char* panelName, bool bOpenBuildMode = false, float flFadeTime = 0.5f, bool bDisableInput = false);
 		virtual ~CVGUIBaseFrame();
 		virtual void OnShowPanel(bool bShow);
 		virtual void ForceClose(void);
@@ -37,18 +36,19 @@ namespace vgui
 
 		virtual void UpdateLayout(void) {} // Late update: (every sec)
 		virtual void OnThink();
+		virtual void OnClose() {} // unused
 		virtual void OnKeyCodeTyped(vgui::KeyCode code);
 		virtual void PaintBackground();
 		virtual bool RecordKeyPresses() { return true; }
 
 		// Get our faded background.
-		vgui::ImagePanel *GetBackground() {
+		vgui::ImagePanel* GetBackground() {
 			return m_pBackground;
 		}
 
 	private:
 
-		vgui::ImagePanel *m_pBackground; // Fade out everything behind us?
+		vgui::ImagePanel* m_pBackground; // Fade out everything behind us?
 
 		float m_flUpdateTime;
 		float m_flFadeFrequency;
