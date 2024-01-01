@@ -8,11 +8,10 @@
 
 #ifndef FMOD_MANAGER_H
 #define FMOD_MANAGER_H
+
 #ifdef _WIN32
 #pragma once
 #endif
-
-#include "fmod/fmod.hpp"
 
 class CFMODManager
 {
@@ -25,18 +24,18 @@ public:
 	void Restart();
 	void Think();
 
-	bool PlayAmbientSound(const char *szSoundPath, bool bLoop = false);
-	void PlayLoadingMusic(const char *szSoundPath);
+	bool PlayAmbientSound(const char* szSoundPath, bool bLoop = false);
+	void PlayLoadingMusic(const char* szSoundPath);
 	void StopAmbientSound(bool force = false);
-	bool TransitionAmbientSound(const char *szSoundPath, bool bLoop = false);
+	bool TransitionAmbientSound(const char* szSoundPath, bool bLoop = false);
 	void SetSoundVolume(float vol) { m_flSoundVolume = vol; }
 
 private:
-	ConVar *m_pVarMusicVolume;
-	ConVar *m_pVarMuteSoundFocus;
+	ConVar* m_pVarMusicVolume;
+	ConVar* m_pVarMuteSoundFocus;
 
-	const char *GetFullPathToSound(const char *pathToFileFromModFolder);
-	const char *GetCurrentSoundName(void);
+	const char* GetFullPathToSound(const char* pathToFileFromModFolder);
+	const char* GetCurrentSoundName(void);
 
 	char szActiveSound[MAX_WEAPON_STRING];
 	char szTransitSound[MAX_WEAPON_STRING];
@@ -52,6 +51,6 @@ private:
 	float m_flFadeOutTime; // When will we start to fade out?
 };
 
-extern CFMODManager *FMODManager();
+extern CFMODManager* FMODManager();
 
 #endif //FMOD_MANAGER_H

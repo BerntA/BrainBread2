@@ -7,6 +7,7 @@
 //========================================================================================//
 
 #include "cbase.h"
+#include "fmod/fmod.hpp"
 #include "fmod_manager.h"
 #include "filesystem.h"
 #include "GameBase_Client.h"
