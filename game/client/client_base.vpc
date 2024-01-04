@@ -571,6 +571,8 @@ $Project
 				$File "bb2/TeamTextureProxy.cpp"
 				$File "bb2/GlobalRenderEffects.cpp"
 				$File "bb2/GlobalRenderEffects.h"
+				$File "bb2/FilmGrainEffect.cpp"
+				$File "bb2/ZombieVisionEffect.cpp"
 			}
 			
 			$Folder "Sound"

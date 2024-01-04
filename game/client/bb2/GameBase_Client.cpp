@@ -74,15 +74,6 @@ void OnUpdateMulticoreState(IConVar *pConVar, char const *pOldString, float flOl
 
 ConVar bb2_enable_multicore("bb2_enable_multicore", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Enable or Disable multicore rendering, this feature is unstable but could increase performance!", true, 0, true, 1, OnUpdateMulticoreState);
 
-void EnableFilmGrain(IConVar *pConVar, char const *pOldString, float flOldValue)
-{
-	ConVar *var = (ConVar*)pConVar;
-	if (view && var)
-		view->SetScreenOverlayMaterial((var->GetBool() ? GlobalRenderEffects->GetFilmGrainOverlay() : NULL));
-}
-
-ConVar bb2_fx_filmgrain("bb2_fx_filmgrain", "0", FCVAR_ARCHIVE, "Enable or Disable film grain.", true, 0, true, 1, EnableFilmGrain);
-
 static void VoiceThresholdChange(IConVar *pConVar, char const *pOldString, float flOldValue)
 {
 	ConVar *var = (ConVar*)pConVar;
@@ -455,62 +446,49 @@ void CGameBaseClient::RunCommand(int iCommand)
 // Execute client specific commands.
 void CGameBaseClient::RunClientEffect(int iEffect, int iState)
 {
-	C_HL2MP_Player *pClient = C_HL2MP_Player::GetLocalHL2MPPlayer();
-	if (pClient && view)
+	C_HL2MP_Player* pClient = C_HL2MP_Player::GetLocalHL2MPPlayer();
+	if (pClient == NULL)
+		return;
+
+	CHudCaptureProgressBar* pCaptureProgressHUD = GET_HUDELEMENT(CHudCaptureProgressBar);
+
+	switch (iEffect)
 	{
-		CHudCaptureProgressBar *pCaptureProgressHUD = GET_HUDELEMENT(CHudCaptureProgressBar);
 
-		switch (iEffect)
-		{
-		case PLAYER_EFFECT_ZOMBIE_FLASHLIGHT:
-		{
-			view->SetScreenOverlayMaterial(NULL);
-			if (pClient->GetTeamNumber() == TEAM_DECEASED)
-			{
-				if (iState >= 1)
-					view->SetScreenOverlayMaterial(GlobalRenderEffects->GetZombieVision());
+	case PLAYER_EFFECT_ZOMBIE_FLASHLIGHT:
+	{
+		if (pClient->GetTeamNumber() == TEAM_DECEASED)
+			pClient->SetZombieVision(iState >= 1);
+		break;
+	}
 
-				pClient->SetZombieVision((iState >= 1));
-			}
+	case PLAYER_EFFECT_ENTERED_GAME:
+	case PLAYER_EFFECT_FULLCHECK:
+	{
+		if (pCaptureProgressHUD)
+			pCaptureProgressHUD->Reset();
 
-			if (iState <= 0)
-			{
-				if (bb2_fx_filmgrain.GetBool())
-					view->SetScreenOverlayMaterial(GlobalRenderEffects->GetFilmGrainOverlay());
-			}
+		m_pPlayerRagdoll = NULL;
 
-			break;
-		}
-		case PLAYER_EFFECT_ENTERED_GAME:
-		case PLAYER_EFFECT_FULLCHECK:
-		{
-			view->SetScreenOverlayMaterial(NULL);
-			if (bb2_fx_filmgrain.GetBool())
-				view->SetScreenOverlayMaterial(GlobalRenderEffects->GetFilmGrainOverlay());
+		pClient->SetZombieVision(false);
+		m_flLastBloodParticleDispatchTime = 0.0f;
+		break;
+	}
 
-			if (pCaptureProgressHUD)
-				pCaptureProgressHUD->Reset();
+	case PLAYER_EFFECT_BECOME_ZOMBIE:
+	{
+		if (pCaptureProgressHUD)
+			pCaptureProgressHUD->Reset();
+		break;
+	}
 
-			m_pPlayerRagdoll = NULL;
+	case PLAYER_EFFECT_DEATH:
+	{
+		CloseGamePanels(true);
+		pClient->SetZombieVision(false);
+		break;
+	}
 
-			pClient->SetZombieVision(false);
-			m_flLastBloodParticleDispatchTime = 0.0f;
-			break;
-		}
-		case PLAYER_EFFECT_BECOME_ZOMBIE:
-		{
-			if (pCaptureProgressHUD)
-				pCaptureProgressHUD->Reset();
-
-			break;
-		}
-		case PLAYER_EFFECT_DEATH:
-		{
-			CloseGamePanels(true);
-			pClient->SetZombieVision(false);
-			break;
-		}
-		}
 	}
 }
 

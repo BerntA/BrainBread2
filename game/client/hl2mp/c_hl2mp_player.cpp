@@ -370,8 +370,9 @@ bool C_HL2MP_Player::CanDrawGlowEffects(void)
 }
 
 void C_HL2MP_Player::SetZombieVision(bool state)
-{ 
-	m_bIsZombieVisionEnabled = state; 
+{
+	m_bIsZombieVisionEnabled = state;
+
 	if (m_bIsZombieVisionEnabled)
 	{
 		if (m_pZombieLighting == 0)
@@ -386,7 +387,7 @@ void C_HL2MP_Player::SetZombieVision(bool state)
 
 		return;
 	}
-	
+
 	if (m_pZombieLighting != 0)
 	{
 		m_pZombieLighting->die = gpGlobals->curtime;

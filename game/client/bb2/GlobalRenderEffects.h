@@ -19,7 +19,6 @@
 
 class IMaterialSystem;
 class IMaterialSystemHardwareConfig;
-class CGlobalRenderEffects;
 
 class CGlobalRenderEffects
 {
@@ -38,9 +37,6 @@ public:
 	IMaterial *GetFrozenOverlay(void) { return m_MatIceOverlay; }
 	IMaterial *GetDizzyIcon(void) { return m_MatDizzyIcon; }
 
-	IMaterial *GetZombieVision(void) { return m_MatZombieVisionOverlay; }
-	IMaterial *GetFilmGrainOverlay(void) { return m_MatFilmGrainOverlay; }
-
 	bool CanDrawOverlay(C_BaseEntity *pTarget);
 
 private:
@@ -54,9 +50,6 @@ private:
 	IMaterial *m_MatBurnOverlay;
 	IMaterial *m_MatIceOverlay;
 	IMaterial *m_MatDizzyIcon;
-
-	IMaterial *m_MatZombieVisionOverlay;
-	IMaterial *m_MatFilmGrainOverlay;
 
 	bool m_bInitialized;
 };

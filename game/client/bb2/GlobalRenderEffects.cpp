@@ -48,12 +48,6 @@ void CGlobalRenderEffects::Initialize()
 
 	m_MatDizzyIcon = materials->FindMaterial("effects/dizzy", TEXTURE_GROUP_CLIENT_EFFECTS);
 	m_MatDizzyIcon->IncrementReferenceCount();
-
-	m_MatZombieVisionOverlay = materials->FindMaterial("effects/zombie_vision", TEXTURE_GROUP_CLIENT_EFFECTS);
-	m_MatZombieVisionOverlay->IncrementReferenceCount();
-
-	m_MatFilmGrainOverlay = materials->FindMaterial("effects/filmgrain", TEXTURE_GROUP_CLIENT_EFFECTS);
-	m_MatFilmGrainOverlay->IncrementReferenceCount();
 }
 
 void CGlobalRenderEffects::Shutdown()
@@ -89,12 +83,6 @@ void CGlobalRenderEffects::Shutdown()
 
 	m_MatDizzyIcon->DecrementReferenceCount();
 	m_MatDizzyIcon = NULL;
-
-	m_MatZombieVisionOverlay->DecrementReferenceCount();
-	m_MatZombieVisionOverlay = NULL;
-
-	m_MatFilmGrainOverlay->DecrementReferenceCount();
-	m_MatFilmGrainOverlay = NULL;
 }
 
 bool CGlobalRenderEffects::CanDrawOverlay(C_BaseEntity *pTarget)
