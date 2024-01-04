@@ -7,7 +7,6 @@
 
 #include "cbase.h"
 #include "hl2mptextwindow.h"
-#include "backgroundpanel.h"
 #include <cdll_client_int.h>
 #include <vgui/IScheme.h>
 #include <vgui/ILocalize.h>
@@ -109,7 +108,6 @@ void CHL2MPTextWindow::PerformLayout()
 void CHL2MPTextWindow::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
-	ApplyBackgroundSchemeSettings( this, pScheme );
 }
 
 CHL2MPSpectatorGUI::CHL2MPSpectatorGUI(IViewPort *pViewPort) : CSpectatorGUI(pViewPort)

@@ -59,6 +59,10 @@ $Project "Client"
 			$File	"hl2mp\c_hl2mp_player.h"
 			$File	"hl2mp\clientmode_hl2mpnormal.cpp"
 			$File	"hl2mp\clientmode_hl2mpnormal.h"
+			$File	"hl2mp\hl2mp_hud_chat.cpp"
+			$File	"hl2mp\hl2mp_hud_chat.h"
+			$File	"hl2mp\hl2mptextwindow.cpp"
+			$File	"hl2mp\hl2mptextwindow.h"
 			$File	"$SRCDIR\game\shared\hl2mp\hl2mp_gamerules.cpp"
 			$File	"$SRCDIR\game\shared\hl2mp\hl2mp_gamerules.h"
 			$File	"$SRCDIR\game\shared\hl2mp\hl2mp_player_shared.cpp"
@@ -67,16 +71,6 @@ $Project "Client"
 			$File	"$SRCDIR\game\shared\hl2mp\hl2mp_weapon_parse.h"			
 			$File	"$SRCDIR\game\shared\hl2mp\hl2mp_playeranimstate.cpp"
 			$File	"$SRCDIR\game\shared\hl2mp\hl2mp_playeranimstate.h"
-
-			$Folder	"UI"
-			{
-				$File	"hl2mp\ui\backgroundpanel.cpp"
-				$File	"hl2mp\ui\backgroundpanel.h"
-				$File	"hl2mp\hl2mp_hud_chat.cpp"
-				$File	"hl2mp\hl2mp_hud_chat.h"
-				$File	"hl2mp\ui\hl2mptextwindow.cpp"
-				$File	"hl2mp\ui\hl2mptextwindow.h"
-			}
 		}
 	}
 }
