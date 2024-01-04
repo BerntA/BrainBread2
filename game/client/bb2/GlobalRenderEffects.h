@@ -64,5 +64,6 @@ private:
 extern CGlobalRenderEffects *GlobalRenderEffects;
 extern void DrawHumanIndicators(void);
 extern void DrawDizzyIcon(const Vector &vecOrigin);
+extern void RenderMaterialOverlay(IMaterial* texture, int x, int y, int w, int h);
 
 #endif // C_GLOBAL_RENDER_FX_H

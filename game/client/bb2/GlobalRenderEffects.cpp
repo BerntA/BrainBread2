@@ -8,6 +8,7 @@
 #include "GlobalRenderEffects.h"
 #include "c_hl2mp_player.h"
 #include "view.h"
+#include "view_scene.h"
 #include "viewrender.h"
 #include "c_playerresource.h"
 
@@ -234,4 +235,34 @@ void DrawDizzyIcon(const Vector &vecOrigin)
 	meshBuilder.AdvanceVertex();
 	meshBuilder.End();
 	pMesh->Draw();
+}
+
+void RenderMaterialOverlay(IMaterial* texture, int x, int y, int w, int h)
+{
+	if (texture == NULL)
+		return;
+
+	if (texture->NeedsFullFrameBufferTexture())
+		DrawScreenEffectMaterial(texture, x, y, w, h);
+	else if (texture->NeedsPowerOfTwoFrameBufferTexture())
+	{
+		UpdateRefractTexture(x, y, w, h, true);
+
+		// Now draw the entire screen using the material...
+		CMatRenderContextPtr pRenderContext(materials);
+		ITexture* pTexture = GetPowerOfTwoFrameBufferTexture();
+		int sw = pTexture->GetActualWidth();
+		int sh = pTexture->GetActualHeight();
+		// Note - don't offset by x,y - already done by the viewport.
+		pRenderContext->DrawScreenSpaceRectangle(
+			texture,
+			0, 0, w, h,
+			0, 0, sw - 1, sh - 1, sw, sh
+		);
+	}
+	else
+	{
+		byte color[4] = { 255, 255, 255, 255 };
+		render->ViewDrawFade(color, texture);
+	}
 }
