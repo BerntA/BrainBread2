@@ -405,7 +405,6 @@ void CGameBaseClient::RunCommand(int iCommand)
 		break;
 	case COMMAND_DISCONNECT:
 		CloseConsole();
-		ClearConsole();
 
 		if (MainMenu)
 			MainMenu->DoReturn();
