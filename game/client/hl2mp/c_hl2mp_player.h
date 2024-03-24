@@ -99,6 +99,13 @@ public:
 	float GetSkillValue(const char* pszType, int skillType, int team = 2, int dataSubType = -1);
 	float GetSkillCombination(float def, float extra);
 
+	
+	KeyValues* SkillSetKV(int iSlot);
+	void SaveSkillSets();
+	void SaveSkillsAsSet(int iSlot);
+	void LoadSkillSets();
+	void ActivateSkillSet(int iSlot);
+
 	virtual void UpdateClientSideAnimation();
 	void DoAnimationEvent(PlayerAnimEvent_t event, int nData = 0, bool bSkipPrediction = false, float flData = 1.0f);
 	float GetPlaybackRateForAnimEvent(PlayerAnimEvent_t event, int nData);
@@ -161,6 +168,8 @@ private:
 	char m_szModelChoice[MAX_MAP_NAME];	// Survivor choice
 	int m_iModelIncrementor;
 	int m_iOldModelIncrementor;
+
+	int m_iSkillSets[MAX_SKILL_SETS - 1][PLAYER_SKILL_ZOMBIE_HEALTH - 1];
 
 	friend class C_Playermodel;
 };
