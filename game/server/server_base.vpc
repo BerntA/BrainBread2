@@ -657,6 +657,8 @@ $Project
 				$File "bb2\env_flare.h"		
 				$File "bb2\logic_entity_monitor.cpp"
 				$File "bb2\func_npc_ladder.cpp"
+				$File "bb2\func_transition.cpp"
+				$File "bb2\func_transition.h"
 			}
 			
 			$Folder "TempEnts"

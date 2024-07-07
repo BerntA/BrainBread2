@@ -310,9 +310,11 @@ public:
 
 	CNetworkVar( bool, m_bUseHitboxesForRenderBox );
 
+public:
+	void PropSetAnim(const char* szAnim);
+
 protected:
-	void FinishSetSequence( int nSequence );
-	void PropSetAnim( const char *szAnim );
+	void FinishSetSequence(int nSequence);
 	void BoneFollowerHierarchyChanged();
 
 	// Contained Bone Follower manager

@@ -983,6 +983,7 @@ protected:
 	virtual void HandlePainSound(int iMajor, int iDamageTypeBits) {};
 
 	Vector m_vecLagCompHitEndPosition;
+	int m_iDoorTransitionIndex;
 
 public:
 
@@ -992,7 +993,9 @@ public:
 	inline bool IsAutoKickDisabled( void ) const;
 	inline void DisableAutoKick( bool disabled );
 
-	void	DumpPerfToRecipient( CBasePlayer *pRecipient, int nMaxRecords );
+	void	DumpPerfToRecipient(CBasePlayer* pRecipient, int nMaxRecords);
+	void	SetDoorTransition(int index) { m_iDoorTransitionIndex = index; }
+	int		GetDoorTransition(void) { return m_iDoorTransitionIndex; }
 
 private:
 	bool m_autoKickDisabled;

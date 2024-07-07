@@ -6449,6 +6449,25 @@ void CBaseEntity::SetCollisionBoundsFromModel()
 	}
 }
 
+void SetGenericTextMessage(hudtextparms_t& params)
+{
+	params.channel = 1;
+	params.x = -1;
+	params.y = 0.7;
+	params.effect = 0;
+	params.fadeinTime = 1.5f;
+	params.fadeoutTime = 0.5f;
+	params.holdTime = 2.0f;
+	params.fxTime = 0.25f;
+
+	params.r1 = 100;
+	params.g1 = 100;
+	params.b1 = 100;
+
+	params.r2 = 240;
+	params.g2 = 110;
+	params.b2 = 0;
+}
 
 //------------------------------------------------------------------------------
 // Purpose: Create an NPC of the given type
