@@ -975,6 +975,64 @@ bool CMultiplayRules::Init()
 		}
 	}
 
+	void ResetSkills(CHL2MP_Player* pPlayer)
+	{
+		pPlayer->m_BB2Local.m_iSkill_Talents = GameBaseShared()->GetSharedGameDetails()->CalculatePointsForLevel(pPlayer->GetPlayerLevel());
+		for (int i = 0; i < PLAYER_SKILL_ZOMBIE_HEALTH; i++)
+			pPlayer->m_BB2Local.m_iPlayerSkills.Set(i, 0);
+	}
+
+	void CMultiplayRules::ClientCommandKeyValues(edict_t* pEntity, KeyValues* pKeyValues)
+	{
+		CHL2MP_Player* pPlayer = ToHL2MPPlayer(CBaseEntity::Instance(pEntity));
+
+		if (!pPlayer)
+			return;
+
+		char const* pszCommand = pKeyValues->GetName();
+		
+		if (pszCommand && pszCommand[0])
+		{
+			if (FStrEq(pszCommand, "SkillSet"))
+			{
+				int iAlloc = 0;
+				KeyValues* sub = pKeyValues->GetFirstValue();
+
+				if (!sub)
+					return;
+
+				ResetSkills(pPlayer);
+
+				for (int iSkillType = 0; iSkillType < PLAYER_SKILL_ZOMBIE_HEALTH; iSkillType++)
+				{
+					iAlloc = sub->GetInt();
+
+					if (iAlloc >= 10 || pPlayer->m_BB2Local.m_iSkill_Talents - iAlloc < 0)
+					{
+						Warning("ERROR!: Skill overflow for player %i:   %s!\n", pPlayer->GetClientIndex(), pPlayer->GetPlayerName());
+						
+						if (iSkillType > 0)
+							ResetSkills(pPlayer);
+
+						return;
+					}
+
+					pPlayer->m_BB2Local.m_iSkill_Talents -= iAlloc;
+					pPlayer->SetSkillValue(iSkillType, iAlloc);
+
+					sub = sub->GetNextValue();
+
+					if (!sub && iSkillType < PLAYER_SKILL_ZOMBIE_HEALTH - 1)
+					{
+						Warning("ERROR!: Skill Set not fully filled for player %i:   %s!\n", pPlayer->GetClientIndex(), pPlayer->GetPlayerName());
+						break;
+					}
+
+				}
+			}
+		}
+	}
+
 	void CMultiplayRules::IncrementMapCycleIndex()
 	{
 		// Reset index if we've passed the end of the map list
