@@ -126,7 +126,7 @@ void CFuncTransition::Activate(void)
 	m_vSaveAngles = pTarget->GetAbsAngles();
 
 	SetThink(&CFuncTransition::TransitionThink);
-	SetNextThink(gpGlobals->curtime + 0.1f);
+	SetNextThink(gpGlobals->curtime + 1.0f);
 }
 
 bool CFuncTransition::CreateVPhysics()

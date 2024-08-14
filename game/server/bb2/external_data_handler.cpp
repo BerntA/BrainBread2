@@ -18,7 +18,7 @@
 
 #if defined(_WIN32) && defined(USE_VS2022)
 FILE _iob[] = { *stdin, *stdout, *stderr };
-extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
+extern "C" FILE* __cdecl __iob_func(void) { return _iob; }
 #endif
 
 #include "curl/curl.h"
@@ -93,6 +93,7 @@ static bool CurlGetRequest(const char* url)
 void LoadSharedData(void)
 {
 	GameBaseServer()->LoadSharedInfo();
+
 	if (HL2MPRules())
 		HL2MPRules()->SetXPRate(1.0f);
 
@@ -128,18 +129,19 @@ void LoadSharedData(void)
 	KeyValues* pkvEventData = GetChecksumKeyValue("Events");
 	if (pkvEventData)
 	{
-		KeyValues* pkvXP = pkvEventData->FindKey("XP");
-		if (pkvXP && CurlGetRequest(pkvXP->GetString("url")))
-		{
-			JSONDocument* pDocument = ParseJSON(g_pDataBuffer);
-			if (pDocument && pDocument->HasMember("day_of_week"))
-			{
-				int weekDay = (*pDocument)["day_of_week"].GetInt();
-				if (((weekDay == DAY_OF_WEEK_SATURDAY) || (weekDay == DAY_OF_WEEK_SUNDAY)) && HL2MPRules())
-					HL2MPRules()->SetXPRate(MAX(pkvXP->GetFloat("value", 1.0f), 1.0f));
-			}
-			delete pDocument;
-		}
+		// DISABLED XP EVENT ...
+		//KeyValues* pkvXP = pkvEventData->FindKey("XP");
+		//if (pkvXP && CurlGetRequest(pkvXP->GetString("url")))
+		//{
+		//	JSONDocument* pDocument = ParseJSON(g_pDataBuffer);
+		//	if (pDocument && pDocument->HasMember("day_of_week"))
+		//	{
+		//		int weekDay = (*pDocument)["day_of_week"].GetInt();
+		//		if (((weekDay == DAY_OF_WEEK_SATURDAY) || (weekDay == DAY_OF_WEEK_SUNDAY)) && HL2MPRules())
+		//			HL2MPRules()->SetXPRate(MAX(pkvXP->GetFloat("value", 1.0f), 1.0f));
+		//	}
+		//	delete pDocument;
+		//}
 	}
 #endif
 }
