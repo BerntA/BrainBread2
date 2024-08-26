@@ -1018,7 +1018,7 @@ void CMissile::SetGracePeriod(float flGracePeriod)
 //-----------------------------------------------------------------------------
 void CMissile::DoExplosion(void)
 {
-	int iDamageType = (TryTheLuck(0.08) ? DMG_BURN : -1); // 8 % chance to spawn fire on gibs etc...
+	int iDamageType = -1; // SET DMG_BURN if you want the gibs to be scorched.
 	ExplosionCreate(GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), GetRadius(), 
 		SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE,
 		0.0f, this, iDamageType, NULL, m_bShouldBeFriendly ? CLASS_PLAYER : CLASS_NONE);
