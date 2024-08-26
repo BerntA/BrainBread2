@@ -237,12 +237,12 @@ void AchievementItem::SetSize(int wide, int tall)
 	m_pAchievementProgress->SetSize((wide - tall) - (iOffset * 3), (flSize * 0.25f));
 	m_pAchievementProgress->SetPos(tall + iOffset, (flSize * 0.65f));
 
-	m_pLabelDate->SetSize(((float)wide) * 40.0f, (flSize * 0.20f));
-	m_pLabelDate->SetPos((wide - (((float)wide) * 40.0f)) - iOffset, iOffset);
+	m_pLabelDate->SetSize(scheme()->GetProportionalScaledValue(50), (flSize * 0.20f));
+	m_pLabelDate->SetPos(wide - scheme()->GetProportionalScaledValue(50) - iOffset, iOffset);
 	m_pLabelDate->SetContentAlignment(Label::Alignment::a_east);
 
-	m_pLabelEXP->SetSize(((float)wide) * 40.0f, (flSize * 0.20f));
-	m_pLabelEXP->SetPos((wide - (((float)wide) * 40.0f)) - iOffset, iOffset + scheme()->GetProportionalScaledValue(10));
+	m_pLabelEXP->SetSize(scheme()->GetProportionalScaledValue(50), (flSize * 0.20f));
+	m_pLabelEXP->SetPos(wide - scheme()->GetProportionalScaledValue(50) - iOffset, iOffset + scheme()->GetProportionalScaledValue(10));
 	m_pLabelEXP->SetContentAlignment(Label::Alignment::a_east);
 }
 
