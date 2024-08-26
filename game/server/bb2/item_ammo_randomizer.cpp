@@ -59,7 +59,7 @@ CBaseEntity *CItemAmmoRandomizer::SpawnNewEntity(void)
 		vecOrigin.z += OBJECTIVE_ICON_EXTRA_HEIGHT;
 
 		pAmmoEntity->SetAbsOrigin(vecOrigin);
-		pAmmoEntity->SetAbsAngles(QAngle(0, 0, 0));
+		pAmmoEntity->SetAbsAngles(vec3_angle);
 		pAmmoEntity->Spawn();
 		pAmmoEntity->EnableRotationEffect();
 		pAmmoEntity->AddSpawnFlags(SF_NORESPAWN);

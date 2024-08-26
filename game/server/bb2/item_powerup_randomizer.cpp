@@ -55,7 +55,7 @@ CBaseEntity *CItemPowerupRandomizer::SpawnNewEntity(void)
 		vecOrigin.z += OBJECTIVE_ICON_EXTRA_HEIGHT;
 		pPowerupEnt->SetParam(powerup);
 		pPowerupEnt->SetAbsOrigin(vecOrigin);
-		pPowerupEnt->SetAbsAngles(QAngle(0, 0, 0));
+		pPowerupEnt->SetAbsAngles(vec3_angle);
 		pPowerupEnt->Spawn();
 		pPowerupEnt->EnableRotationEffect();
 		UTIL_DropToFloor(pPowerupEnt, MASK_SOLID_BRUSHONLY, this);

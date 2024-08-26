@@ -112,8 +112,8 @@ CharacterPreviewPanel::CharacterPreviewPanel(vgui::Panel *pParent, const char *p
 	m_iLeftLeg = 0;
 	m_iRightLeg = 0;
 
-	vecCameraPosition = Vector(0, 0, 0);
-	angCameraAngle = QAngle(0, 0, 0);
+	vecCameraPosition = vec3_origin;
+	angCameraAngle = vec3_angle;
 
 	m_flAngleY = 0.0f;
 	m_flOriginX = 0.0f;

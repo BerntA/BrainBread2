@@ -200,7 +200,7 @@ CBaseEntity *CItemWeaponRandomizer::SpawnNewEntity(void)
 		vecOrigin.z += OBJECTIVE_ICON_EXTRA_HEIGHT;
 
 		pWeapon->SetAbsOrigin(vecOrigin);
-		pWeapon->SetAbsAngles(QAngle(0, 0, 0));
+		pWeapon->SetAbsAngles(vec3_angle);
 		pWeapon->Spawn();
 		pWeapon->m_bSuppressRespawn = true;
 		pWeapon->EnableRotationEffect();
@@ -271,7 +271,7 @@ CBaseEntity *CItemExplosiveRandomizer::SpawnNewEntity(void)
 		vecOrigin.z += OBJECTIVE_ICON_EXTRA_HEIGHT;
 
 		pWeapon->SetAbsOrigin(vecOrigin);
-		pWeapon->SetAbsAngles(QAngle(0, 0, 0));
+		pWeapon->SetAbsAngles(vec3_angle);
 		pWeapon->Spawn();
 		pWeapon->m_bSuppressRespawn = true;
 		pWeapon->EnableRotationEffect();

@@ -1406,13 +1406,10 @@ DECLARE_CLIENT_EFFECT( "HelicopterMegaBomb", HelicopterMegaBombCallback );
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void GenericExplosionEffectCallback(const CEffectData & data)
+void GenericExplosionEffectCallback(const CEffectData& data)
 {
 	int type = data.m_nAttachmentIndex;
-
-	QAngle	vecAngles(0, 0, 0);
-	DispatchParticleEffect(GameBaseShared()->GetSharedGameDetails()->GetExplosionParticle(type), data.m_vOrigin, vecAngles);
-
+	DispatchParticleEffect(GameBaseShared()->GetSharedGameDetails()->GetExplosionParticle(type), data.m_vOrigin, vec3_angle);
 	CLocalPlayerFilter filter;
 	C_BaseEntity::EmitSound(filter, SOUND_FROM_WORLD, "BaseExplosionEffect.Sound", &data.m_vOrigin);
 }

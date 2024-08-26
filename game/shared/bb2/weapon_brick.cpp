@@ -61,7 +61,7 @@ CPropBrick::CPropBrick()
 {
 	m_flDamage = 0.0f;
 	m_pThrower = NULL;
-	vecThrownFrom = Vector(0, 0, 0);
+	vecThrownFrom = vec3_origin;
 }
 
 CPropBrick::~CPropBrick()

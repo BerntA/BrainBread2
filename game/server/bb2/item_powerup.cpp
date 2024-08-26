@@ -141,7 +141,7 @@ CON_COMMAND_F(bb2_create_powerup_item, "Create some powerup item.", FCVAR_CHEAT)
 		vecOrigin.z += 30.0f;
 		pPowerupEnt->SetParam(powerupName);
 		pPowerupEnt->SetAbsOrigin(vecOrigin);
-		pPowerupEnt->SetAbsAngles(QAngle(0, 0, 0));
+		pPowerupEnt->SetAbsAngles(vec3_angle);
 		pPowerupEnt->Spawn();
 		UTIL_DropToFloor(pPowerupEnt, MASK_SOLID_BRUSHONLY, pPlayer);
 	}
