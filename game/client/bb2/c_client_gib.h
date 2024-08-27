@@ -72,6 +72,7 @@ protected:
 	bool m_bFadingOut;
 	bool m_bReleaseGib;
 	bool m_bForceFade;
+	bool m_bDispatchedBleedout;
 	int m_iGibType;
 
 	int m_iPlayerIndex;

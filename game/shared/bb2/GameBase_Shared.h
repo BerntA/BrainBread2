@@ -262,7 +262,7 @@ public:
 	float GetPlaybackSpeedThirdperson(CHL2MP_Player *pClient, int viewmodelActivity, int thirdpersonActivity);
 
 	// Bleeding Dispatches
-	void DispatchBleedout(CBaseEntity *pEntity);
+	void DispatchBleedout(const Vector& vPos);
 
 #ifdef CLIENT_DLL
 	// Inventory Accessors

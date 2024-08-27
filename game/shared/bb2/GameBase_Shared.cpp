@@ -456,30 +456,17 @@ float CGameBaseShared::GetPlaybackSpeedThirdperson(CHL2MP_Player *pClient, int v
 // Purpose:
 // Spawn the bleedout effect.
 ///////////////////////////////////////////////
-void CGameBaseShared::DispatchBleedout(CBaseEntity *pEntity)
+void CGameBaseShared::DispatchBleedout(const Vector& vPos)
 {
-	if (!pEntity)
-		return;
-
-	Vector vecDown;
-	AngleVectors(pEntity->GetLocalAngles(), NULL, NULL, &vecDown);
-	VectorNormalize(vecDown);
-	vecDown *= -1;
-
-	Vector vecStart = pEntity->GetLocalOrigin();
-	Vector vecEnd = vecStart + vecDown * MAX_TRACE_LENGTH;
-	Vector mins = Vector(-60, -60, 0);
-	Vector maxs = Vector(60, 60, 12);
+	Vector vecStart = vPos + Vector(0.0f, 0.0f, 5.0f);
+	Vector vecEnd = vecStart + Vector(0.0f, 0.0f, -1.0f) * MAX_TRACE_LENGTH;
 
 	trace_t tr;
-	CTraceFilterNoNPCsOrPlayer filter(pEntity, COLLISION_GROUP_DEBRIS);
+	CTraceFilterNoNPCsOrPlayer filter(NULL, COLLISION_GROUP_DEBRIS);
+	UTIL_TraceLine(vecStart, vecEnd, MASK_SOLID_BRUSHONLY, &filter, &tr);
 
-	UTIL_TraceHull(vecStart, vecEnd, mins, maxs, MASK_SOLID_BRUSHONLY, &filter, &tr);
 	if (tr.DidHitWorld() && !tr.allsolid && !tr.IsDispSurface() && (tr.fraction != 1.0f) && (tr.plane.normal.z == 1.0f))
-	{
-		QAngle qAngle(0, 0, 0);
-		DispatchParticleEffect(GameBaseShared()->GetSharedGameDetails()->GetBleedoutParticle(), tr.endpos, qAngle, pEntity);
-	}
+		DispatchParticleEffect(GameBaseShared()->GetSharedGameDetails()->GetBleedoutParticle(), tr.endpos, vec3_angle);
 }
 
 #ifdef CLIENT_DLL

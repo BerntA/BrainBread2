@@ -87,7 +87,7 @@ C_ClientSideGibBase::C_ClientSideGibBase(void)
 	m_iPlayerTeam = m_iPlayerIndex = m_iGibType = 0;
 	m_szSurvivor[0] = 0;
 	m_flTouchDelta = 0.0f;
-	m_bReleaseGib = m_bFadingOut = m_bNoModelParticles = m_bForceFade = false;
+	m_bReleaseGib = m_bFadingOut = m_bNoModelParticles = m_bForceFade = m_bDispatchedBleedout = false;
 	m_flFadeOutDelay = gpGlobals->curtime + PROP_FADE_TIME;
 	m_takedamage = DAMAGE_EVENTS_ONLY;
 	s_ClientGibList.AddToTail(this);
@@ -112,7 +112,7 @@ bool C_ClientSideGibBase::Initialize(int type)
 	return true;
 }
 
-bool C_ClientSideGibBase::Initialize(int type, const model_t *model)
+bool C_ClientSideGibBase::Initialize(int type, const model_t* model)
 {
 	if (InitializeAsClientEntity(NULL, RENDER_GROUP_OPAQUE_ENTITY) == false)
 		return false;
@@ -149,7 +149,7 @@ void C_ClientSideGibBase::LoadPhysics()
 	solid_t tmpSolid;
 	PhysModelParseSolid(tmpSolid, this, GetModelIndex());
 	VPhysicsInitNormal(SOLID_VPHYSICS, 0, false, &tmpSolid);
-	IPhysicsObject *pPhysicsObj = VPhysicsGetObject();
+	IPhysicsObject* pPhysicsObj = VPhysicsGetObject();
 	if (!pPhysicsObj)
 	{
 		SetSolid(SOLID_NONE);
@@ -173,8 +173,6 @@ void C_ClientSideGibBase::SetForceFade(bool value)
 
 void C_ClientSideGibBase::OnBecomeRagdoll(void)
 {
-	if ((m_iGibType == CLIENT_RAGDOLL) && IsClientRagdoll() && bb2_gibs_spawn_blood_puddle.GetBool())
-		GameBaseShared()->DispatchBleedout(this);
 }
 
 IRagdoll* C_ClientSideGibBase::GetIRagdoll() const
@@ -198,6 +196,26 @@ void C_ClientSideGibBase::ClientThink(void)
 	}
 
 	FadeOut();
+
+	if (!m_bDispatchedBleedout && (m_iGibType == CLIENT_RAGDOLL) && IsClientRagdoll() && bb2_gibs_spawn_blood_puddle.GetBool())
+	{
+		IPhysicsObject* pPhysics = VPhysicsGetObject();
+		if (pPhysics == NULL)
+			return;
+
+		Vector vecVelocity, origin;
+		AngularImpulse angVelocity;
+		QAngle angles;
+
+		pPhysics->GetVelocity(&vecVelocity, &angVelocity);
+		pPhysics->GetPosition(&origin, &angles);
+
+		if (vecVelocity.Length() < 10.0f)
+		{
+			m_bDispatchedBleedout = true;
+			GameBaseShared()->DispatchBleedout(origin);
+		}
+	}
 }
 
 void C_ClientSideGibBase::SUB_Remove(void)
