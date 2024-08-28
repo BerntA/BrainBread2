@@ -124,6 +124,7 @@ void CFuncTransition::Activate(void)
 
 	m_vSaveOrigin = pTarget->GetAbsOrigin() + Vector(0.0f, 0.0f, 1.0f);
 	m_vSaveAngles = pTarget->GetAbsAngles();
+	m_vSaveAngles[ROLL] = 0.0f; m_vSaveAngles[PITCH] = 0.0f; // NO roll or pitch -- will break view angles.
 
 	SetThink(&CFuncTransition::TransitionThink);
 	SetNextThink(gpGlobals->curtime + 1.0f);
@@ -173,7 +174,7 @@ void CFuncTransition::TransitionUse(CBaseEntity* pActivator, CBaseEntity* pCalle
 	PlaySound(pPlayer, STRING(m_OpenSound));
 
 	color32 black = { 0,0,0,255 };
-	UTIL_ScreenFade(pPlayer, black, func_transition_fade_time.GetFloat(), 1.0f, FFADE_OUT | FFADE_STAYOUT | FFADE_PURGE);
+	UTIL_ScreenFade(pPlayer, black, func_transition_fade_time.GetFloat(), 0, FFADE_OUT | FFADE_STAYOUT | FFADE_PURGE);
 
 	pPlayer->SetDoorTransition(entindex());
 
@@ -212,7 +213,7 @@ void CFuncTransition::TeleportTo(CBasePlayer* pPlayer)
 	PlaySound(pPlayer, STRING(m_CloseSound));
 
 	color32 black = { 0,0,0,255 };
-	UTIL_ScreenFade(pPlayer, black, func_transition_fade_time.GetFloat(), 0.0f, FFADE_IN | FFADE_PURGE);
+	UTIL_ScreenFade(pPlayer, black, func_transition_fade_time.GetFloat(), 0, FFADE_IN | FFADE_PURGE);
 
 	pPlayer->SetDoorTransition(0);
 	pPlayer->SetLaggedMovementValue(1.0f);

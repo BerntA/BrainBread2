@@ -30,7 +30,7 @@ AnimatedMenuButton::AnimatedMenuButton(vgui::Panel *parent, char const *panelNam
 
 	m_pLabelTitle = vgui::SETUP_PANEL(new vgui::Label(this, "BaseText", ""));
 	m_pLabelTitle->SetZPos(30);
-	m_pLabelTitle->SetContentAlignment(Label::a_west);
+	m_pLabelTitle->SetContentAlignment(Label::a_center);
 	m_pLabelTitle->SetText(text);
 
 	m_pRolloverImage = vgui::SETUP_PANEL(new ImageProgressBar(this, "OverlayImg", "vgui/mainmenu/menubutton_over", "vgui/mainmenu/menubutton"));
@@ -102,7 +102,7 @@ void AnimatedMenuButton::PerformLayout()
 	m_pRolloverImage->SetPos(0, 0);
 
 	m_pLabelTitle->SetSize(w, h);
-	m_pLabelTitle->SetPos(scheme()->GetProportionalScaledValue(25), scheme()->GetProportionalScaledValue(3));
+	m_pLabelTitle->SetPos(0, 0);
 }
 
 void AnimatedMenuButton::ApplySchemeSettings(vgui::IScheme *pScheme)
