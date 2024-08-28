@@ -28,24 +28,27 @@ class CHudScopeView : public CHudElement, public vgui::Panel
 	DECLARE_CLASS_SIMPLE(CHudScopeView, vgui::Panel);
 
 public:
-	CHudScopeView(const char * pElementName);
+	CHudScopeView(const char* pElementName);
 	void Init(void);
 	bool ShouldDraw(void);
 
 protected:
 	void Paint();
-	void ApplySchemeSettings(vgui::IScheme *scheme);
+	void ApplySchemeSettings(vgui::IScheme* scheme);
 
 private:
 	int m_nTexture_Scope;
 	int m_nTexture_ScopeRefract;
+
+	CPanelAnimationVarAliasType(float, scope_wide, "scope_wide", "512", "proportional_float");
+	CPanelAnimationVarAliasType(float, scope_tall, "scope_tall", "256", "proportional_float");
 };
 
 DECLARE_HUDELEMENT_DEPTH(CHudScopeView, 100);
 
-CHudScopeView::CHudScopeView(const char * pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudScopeView")
+CHudScopeView::CHudScopeView(const char* pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudScopeView")
 {
-	vgui::Panel *pParent = g_pClientMode->GetViewport();
+	vgui::Panel* pParent = g_pClientMode->GetViewport();
 	SetParent(pParent);
 
 	m_nTexture_Scope = surface()->CreateNewTextureID();
@@ -70,14 +73,14 @@ bool CHudScopeView::ShouldDraw(void)
 	if (!CHudElement::ShouldDraw())
 		return false;
 
-	C_BaseCombatWeapon *pActiveWeapon = GetActiveWeapon();
+	C_BaseCombatWeapon* pActiveWeapon = GetActiveWeapon();
 	if (!pActiveWeapon || !g_PR)
 		return false;
 
 	if (pActiveWeapon->GetWeaponType() != WEAPON_TYPE_SNIPER)
 		return false;
 
-	C_HL2MPSniperRifle *pSniperRifle = dynamic_cast<C_HL2MPSniperRifle*> (pActiveWeapon);
+	C_HL2MPSniperRifle* pSniperRifle = dynamic_cast<C_HL2MPSniperRifle*> (pActiveWeapon);
 	if (!pSniperRifle)
 		return false;
 
@@ -93,16 +96,47 @@ bool CHudScopeView::ShouldDraw(void)
 //------------------------------------------------------------------------
 void CHudScopeView::Paint()
 {
-	int textureID = m_nTexture_Scope;
-	if (bb2_scope_refraction.GetBool())
-		textureID = m_nTexture_ScopeRefract;
+	const int textureID = bb2_scope_refraction.GetBool() ? m_nTexture_ScopeRefract : m_nTexture_Scope;
+
+	int wide, tall;
+	GetSize(wide, tall);
+
+	// DRAW SCOPE
+	int xpos = (wide / 2) - (scope_wide / 2);
+	int ypos = (tall / 2) - (scope_tall / 2);
 
 	surface()->DrawSetColor(GetFgColor());
 	surface()->DrawSetTexture(textureID);
-	surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
+	surface()->DrawTexturedRect(xpos, ypos, xpos + scope_wide, ypos + scope_tall);
+
+	// Fill in the sides
+	int sWide = scope_wide - scheme()->GetProportionalScaledValue(2);
+	int sTall = scope_tall - scheme()->GetProportionalScaledValue(2);
+
+	int left = (wide / 2) - (sWide / 2);
+	int right = left + sWide;
+
+	// LEFT fill
+	surface()->DrawSetColor(COLOR_BLACK);
+	surface()->DrawFilledRect(0, 0, left, tall);
+
+	// RIGHT fill
+	surface()->DrawSetColor(COLOR_BLACK);
+	surface()->DrawFilledRect(right, 0, right + (wide - right), tall);
+
+	left = (tall / 2) - (sTall / 2);
+	right = left + sTall;
+
+	// MIDDLE FILL up
+	surface()->DrawSetColor(COLOR_BLACK);
+	surface()->DrawFilledRect(0, 0, wide, left);
+
+	// MIDDLE FILL down
+	surface()->DrawSetColor(COLOR_BLACK);
+	surface()->DrawFilledRect(0, right, wide, right + (tall - right));
 }
 
-void CHudScopeView::ApplySchemeSettings(vgui::IScheme *scheme)
+void CHudScopeView::ApplySchemeSettings(vgui::IScheme* scheme)
 {
 	BaseClass::ApplySchemeSettings(scheme);
 
