@@ -197,7 +197,7 @@ void CFuncTransition::TransitionThink(void)
 
 		CBasePlayer* pPlayer = ToBasePlayer(item->hPlayer.Get());
 
-		if (pPlayer)
+		if (pPlayer && (pPlayer->GetDoorTransition() == entindex()))
 			TeleportTo(pPlayer);
 
 		m_pTransitionItems.Remove(i);
