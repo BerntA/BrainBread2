@@ -106,21 +106,22 @@ void CTriggerChangelevel::OnThink(void)
 	SetNextThink(gpGlobals->curtime + CHANGELEVEL_THINK_FREQ);
 }
 
-void CTriggerChangelevel::StartTouch(CBaseEntity *pOther)
+void CTriggerChangelevel::StartTouch(CBaseEntity* pOther)
 {
 	if (!pOther || m_bDisabled)
 		return;
 
 	BaseClass::StartTouch(pOther);
 
-	CBasePlayer *pPlayer = ToBasePlayer(pOther);
+	CBasePlayer* pPlayer = ToBasePlayer(pOther);
 	if (pPlayer && pPlayer->IsAlive() && !IsEnoughPlayersInVolume(TEAM_HUMANS))
 	{
-		CTeam *pTeam = GetGlobalTeam(TEAM_HUMANS);
-		float flRequiredPlayers = (pTeam ? floor(((float)pTeam->GetNumPlayers()) * (m_flPercentRequired / 100.0f)) : 0.0f);
+		CTeam* pTeam = GetGlobalTeam(TEAM_HUMANS);
+		float flNumPlayers = (float)pTeam->GetNumPlayers();
+		float flRequiredPlayers = (pTeam ? ceil(flNumPlayers * (m_flPercentRequired / 100.0f)) : 0.0f);
 		if (flRequiredPlayers > 0)
 		{
-			const char *subMsg = ((flRequiredPlayers > 1) ? "players" : "player");
+			const char* subMsg = ((flRequiredPlayers > 1) ? "players" : "player");
 			char pchArg1[16];
 			Q_snprintf(pchArg1, 16, "%i", (int)flRequiredPlayers);
 			GameBaseServer()->SendToolTip("#TOOLTIP_CHANGELEVEL_FAIL", "", 3.0f, GAME_TIP_WARNING, pPlayer->entindex(), pchArg1, subMsg);
