@@ -13,6 +13,16 @@
 #include "team.h"
 
 #define CAPTURE_THINK_FREQ 0.1f
+#define CAPTURE_RESET_TIME 2.5f
+
+enum
+{
+	CAPTURE_STATE_NONE = 0, // not being captured
+	CAPTURE_STATE_ACTIVE, // being captured
+	CAPTURE_STATE_INSUFFICIENT, // too few actors in the volume
+	CAPTURE_STATE_HALTED, // progress has been halted due to enemy presence
+	CAPTURE_STATE_CAPTURED, // captured, finished
+};
 
 class CTriggerCapturePoint : public CBaseTrigger
 {
@@ -24,21 +34,20 @@ public:
 
 	void Spawn();
 	void Reset();
-	void StartTouch(CBaseEntity *pOther);
-	void EndTouch(CBaseEntity *pOther);
-	void OnTouch(CBaseEntity *pOther);
+	void StartTouch(CBaseEntity* pOther);
+	void EndTouch(CBaseEntity* pOther);
+	void OnTouch(CBaseEntity* pOther);
+	void OnThink(void);
 	void CapturePointThink(void);
-	void HaltProgress(void);
-	void TransmitCaptureStatus(CBasePlayer *pPlayer, bool value);
+	void TransmitCaptureStatus(CBasePlayer* pPlayer, bool value);
 	void NotifyCaptureFailed(bool bEnemyEntered = false);
-	bool HasToHaltProgress(CBaseEntity *pOther);
-	bool CanContinueProgress(void);
+	void NotifyCaptureInsufficient(void);
+	int GetProgressStatus(void);
 
 private:
 
 	// Captured Info
-	bool m_bIsCaptured;
-	bool m_bIsBeingCaptured;
+	int m_iProgressStatus;
 	bool m_bShouldHaltWhenEnemiesTouchUs;
 
 	// Team 
@@ -46,13 +55,8 @@ private:
 
 	// Capture Time
 	float m_flTimeToCapture;
-	float m_flCaptureTimeStart;
-	float m_flCaptureTimeEnd;
-	float m_flElapsedTime;
-	float m_flTimeLeft;
-
-	// Halting
-	bool m_bShouldHaltProgress;
+	float m_flCaptureProgress;
+	float m_flTimeToReset;
 
 	// Misc
 	float m_flTouchTimer;
@@ -77,17 +81,18 @@ DEFINE_KEYFIELD(cszMessageProgressHalted, FIELD_STRING, "CaptureHaltedMessage"),
 
 DEFINE_OUTPUT(m_OnCaptured, "OnCaptured"),
 
-DEFINE_THINKFUNC(CapturePointThink),
+DEFINE_THINKFUNC(OnThink),
 END_DATADESC()
 
 CTriggerCapturePoint::CTriggerCapturePoint()
 {
+	m_iProgressStatus = CAPTURE_STATE_NONE;
 	m_iTeamLink = TEAM_HUMANS;
-	m_bIsCaptured = m_bIsBeingCaptured = m_bShouldHaltProgress = m_bShouldHaltWhenEnemiesTouchUs = false;
+	m_bShouldHaltWhenEnemiesTouchUs = false;
 
 	m_flPercentRequired = 30.0f;
 	m_flTimeToCapture = 10.0f;
-	m_flCaptureTimeStart = m_flCaptureTimeEnd = m_flElapsedTime = m_flTimeLeft = m_flTouchTimer = 0.0f;
+	m_flCaptureProgress = m_flTimeToReset = m_flTouchTimer = 0.0f;
 	m_flWait = 0.2f;
 
 	cszMessageTooFewPlayers = cszMessageFailed = cszMessageProgressHalted = NULL_STRING;
@@ -101,168 +106,163 @@ void CTriggerCapturePoint::Spawn()
 	BaseClass::Spawn();
 	InitTrigger();
 	SetTouch(&CTriggerCapturePoint::OnTouch);
-	SetThink(&CTriggerCapturePoint::CapturePointThink);
-	SetNextThink(gpGlobals->curtime + CAPTURE_THINK_FREQ);
+	SetThink(&CTriggerCapturePoint::OnThink);
+	SetNextThink(gpGlobals->curtime + 1.0f);
 }
 
 void CTriggerCapturePoint::Reset()
 {
-	m_bIsCaptured = m_bIsBeingCaptured = m_bShouldHaltProgress = false;
-	m_flCaptureTimeStart = m_flCaptureTimeEnd = m_flElapsedTime = m_flTimeLeft = 0.0f;
+	m_iProgressStatus = CAPTURE_STATE_NONE;
+	m_flCaptureProgress = m_flTimeToReset = 0.0f;
+}
+
+void CTriggerCapturePoint::OnThink(void)
+{
+	CapturePointThink();
+	SetNextThink(gpGlobals->curtime + CAPTURE_THINK_FREQ);
 }
 
 void CTriggerCapturePoint::CapturePointThink(void)
 {
-	// Iterate the touching entities:
-	if (!m_bDisabled && !m_bIsCaptured)
+	if (m_bDisabled || (m_iProgressStatus == CAPTURE_STATE_CAPTURED))
+		return;
+
+	const int iCurrentProgressStatus = GetProgressStatus();
+
+	if (m_iProgressStatus == CAPTURE_STATE_ACTIVE)
+		m_flCaptureProgress += CAPTURE_THINK_FREQ;
+
+	if (m_iProgressStatus != iCurrentProgressStatus)
 	{
-		bool bCanProceed = CanContinueProgress();
-		bool bShouldStartCapturing = IsEnoughPlayersInVolume(m_iTeamLink);
-		if (bShouldStartCapturing && !m_bIsBeingCaptured && bCanProceed)
-		{
-			m_bIsBeingCaptured = true;
-			m_flCaptureTimeStart = gpGlobals->curtime;
-			m_flCaptureTimeEnd = gpGlobals->curtime + m_flTimeToCapture;
-			m_flTimeLeft = m_flTimeToCapture;
+		m_iProgressStatus = iCurrentProgressStatus;
 
-			if (m_bShouldHaltProgress)
-				HaltProgress();
+		switch (m_iProgressStatus)
+		{
+
+		case CAPTURE_STATE_NONE:
+		{
+			m_flTimeToReset = (gpGlobals->curtime + CAPTURE_RESET_TIME); // clear our state in X sec..
+			break;
 		}
 
-		if (!bShouldStartCapturing && m_bIsBeingCaptured)
+		case CAPTURE_STATE_ACTIVE:
 		{
-			Reset();
-			NotifyCaptureFailed();
-
-			for (int i = 0; i < m_hTouchingEntities.Count(); i++)
-				TransmitCaptureStatus(ToBasePlayer(m_hTouchingEntities[i].Get()), false);
+			break;
 		}
 
-		if (bCanProceed && m_bShouldHaltProgress && m_bIsBeingCaptured)
+		case CAPTURE_STATE_INSUFFICIENT:
 		{
-			m_bShouldHaltProgress = false;
-			m_flTimeLeft = m_flTimeToCapture - m_flElapsedTime;
-			m_flCaptureTimeStart = gpGlobals->curtime;
-			m_flCaptureTimeEnd = gpGlobals->curtime + m_flTimeLeft;
+			NotifyCaptureInsufficient();
+			break;
 		}
 
-		if (m_bIsBeingCaptured)
+		case CAPTURE_STATE_HALTED:
 		{
-			if ((gpGlobals->curtime > m_flCaptureTimeEnd) && bCanProceed)
-			{
-				m_bIsCaptured = true;
-				m_OnCaptured.FireOutput((m_hTouchingEntities.Count() > 0) ? m_hTouchingEntities[0].Get() : this, this);
-			}
+			NotifyCaptureFailed(true);
+			break;
+		}
 
-			for (int i = 0; i < m_hTouchingEntities.Count(); i++)
-				TransmitCaptureStatus(ToBasePlayer(m_hTouchingEntities[i].Get()), !m_bIsCaptured);
 		}
 	}
 
-	SetNextThink(gpGlobals->curtime + CAPTURE_THINK_FREQ);
+	if ((m_iProgressStatus == CAPTURE_STATE_NONE) && (m_flTimeToReset > 0.0f) && (gpGlobals->curtime > m_flTimeToReset))
+	{
+		Reset();
+		NotifyCaptureFailed();
+
+		for (int i = 0; i < m_hTouchingEntities.Count(); i++)
+			TransmitCaptureStatus(ToBasePlayer(m_hTouchingEntities[i].Get()), false);
+
+		return;
+	}
+
+	if (m_iProgressStatus == CAPTURE_STATE_NONE)
+		return;
+
+	if (m_flCaptureProgress >= m_flTimeToCapture)
+	{
+		m_iProgressStatus = CAPTURE_STATE_CAPTURED;
+		m_OnCaptured.FireOutput((m_hTouchingEntities.Count() > 0) ? m_hTouchingEntities[0].Get() : this, this);
+	}
+
+	for (int i = 0; i < m_hTouchingEntities.Count(); i++)
+		TransmitCaptureStatus(ToBasePlayer(m_hTouchingEntities[i].Get()), (m_iProgressStatus < CAPTURE_STATE_CAPTURED));
 }
 
-bool CTriggerCapturePoint::HasToHaltProgress(CBaseEntity *pOther)
+int CTriggerCapturePoint::GetProgressStatus(void)
 {
-	if (!m_bShouldHaltWhenEnemiesTouchUs || !pOther || !pOther->IsAlive())
-		return false;
+	if (m_hTouchingEntities.Count() == 0)
+		return CAPTURE_STATE_NONE;
 
-	if ((m_iTeamLink == TEAM_HUMANS) && (pOther->IsZombie(true) || pOther->IsMercenary()))
-		return true;
+	int iActorsInVolume = 0;
+	for (int i = 0; i < m_hTouchingEntities.Count(); i++)
+	{
+		CBaseEntity* pToucher = m_hTouchingEntities[i].Get();
+		if (!pToucher || !pToucher->IsAlive() || !pToucher->IsPlayer() || (m_iTeamLink != pToucher->GetTeamNumber()))
+			continue;
+		iActorsInVolume++;
+	}
 
-	if ((m_iTeamLink == TEAM_DECEASED) && pOther->IsHuman(true))
-		return true;
+	if (iActorsInVolume == 0)
+		return CAPTURE_STATE_NONE;
 
-	return false;
-}
-
-bool CTriggerCapturePoint::CanContinueProgress(void)
-{
 	if (m_bShouldHaltWhenEnemiesTouchUs)
 	{
 		for (int i = 0; i < m_hTouchingEntities.Count(); i++)
 		{
-			CBaseEntity *pToucher = m_hTouchingEntities[i].Get();
-			if (!pToucher)
+			CBaseEntity* pToucher = m_hTouchingEntities[i].Get();
+			if (!pToucher || !pToucher->IsAlive())
 				continue;
 
-			if (HasToHaltProgress(pToucher))
-				return false;
+			if ((m_iTeamLink == TEAM_HUMANS) && (pToucher->IsZombie(true) || pToucher->IsMercenary()))
+				return CAPTURE_STATE_HALTED;
+
+			if ((m_iTeamLink == TEAM_DECEASED) && pToucher->IsHuman(true))
+				return CAPTURE_STATE_HALTED;
 		}
 	}
 
-	return IsEnoughPlayersInVolume(m_iTeamLink);
+	return (IsEnoughPlayersInVolume(m_iTeamLink) ? CAPTURE_STATE_ACTIVE : CAPTURE_STATE_INSUFFICIENT);
 }
 
-void CTriggerCapturePoint::StartTouch(CBaseEntity *pOther)
+void CTriggerCapturePoint::StartTouch(CBaseEntity* pOther)
 {
-	if (!pOther || m_bDisabled || m_bIsCaptured)
+	if (!pOther || m_bDisabled || (m_iProgressStatus == CAPTURE_STATE_CAPTURED))
 		return;
 
 	BaseClass::StartTouch(pOther);
 
-	// If another team or enemy enters this volume it will lock the progress.
-	if (HasToHaltProgress(pOther) && !m_bShouldHaltProgress && m_bIsBeingCaptured)
-		HaltProgress();
-
-	CBasePlayer *pPlayer = ToBasePlayer(pOther);
-	if (pPlayer && (pPlayer->GetTeamNumber() == m_iTeamLink) && pPlayer->IsAlive() && !IsEnoughPlayersInVolume(m_iTeamLink))
-	{
-		CTeam *pTeam = GetGlobalTeam(m_iTeamLink);
-		float flRequiredPlayers = (pTeam ? floor(((float)pTeam->GetNumPlayers()) * (m_flPercentRequired / 100.0f)) : 0.0f);
-		if (flRequiredPlayers > 0)
-		{
-			char pchArg1[16];
-			Q_snprintf(pchArg1, 16, "%i", (int)flRequiredPlayers);
-			GameBaseServer()->SendToolTip(STRING(cszMessageTooFewPlayers), "", 2.0f, GAME_TIP_WARNING, pPlayer->entindex(), pchArg1, ((flRequiredPlayers > 1) ? "players" : "player"));
-		}
-	}
+	if (pOther->IsPlayer() && (pOther->GetTeamNumber() == m_iTeamLink) && pOther->IsAlive() && !IsEnoughPlayersInVolume(m_iTeamLink))
+		NotifyCaptureInsufficient();
 }
 
-void CTriggerCapturePoint::EndTouch(CBaseEntity *pOther)
+void CTriggerCapturePoint::EndTouch(CBaseEntity* pOther)
 {
-	if (!pOther || m_bDisabled || m_bIsCaptured)
+	if (!pOther || m_bDisabled || (m_iProgressStatus == CAPTURE_STATE_CAPTURED))
 		return;
 
 	BaseClass::EndTouch(pOther);
 	TransmitCaptureStatus(ToBasePlayer(pOther), false);
 }
 
-void CTriggerCapturePoint::HaltProgress(void)
-{
-	m_bShouldHaltProgress = true;
-	m_flElapsedTime += (gpGlobals->curtime - m_flCaptureTimeStart);
-	NotifyCaptureFailed(true);
-}
-
-void CTriggerCapturePoint::TransmitCaptureStatus(CBasePlayer *pPlayer, bool value)
+void CTriggerCapturePoint::TransmitCaptureStatus(CBasePlayer* pPlayer, bool value)
 {
 	if (!pPlayer || (pPlayer->GetTeamNumber() != m_iTeamLink))
 		return;
 
+	float flFraction = clamp((m_flCaptureProgress / m_flTimeToCapture), 0.0f, 1.0f);
+
 	CSingleUserRecipientFilter filter(pPlayer);
 	filter.MakeReliable();
-
-	float maxTime = m_flTimeToCapture;
-	float timeElapsed = (gpGlobals->curtime - m_flCaptureTimeStart) + m_flElapsedTime;
-
-	if (m_bShouldHaltProgress)
-		timeElapsed = m_flElapsedTime;
-
-	if (timeElapsed > maxTime)
-		timeElapsed = maxTime;
-
-	float flFraction = clamp((timeElapsed / maxTime), 0.0f, 1.0f);
-
 	UserMessageBegin(filter, "CapturePointProgress");
 	WRITE_BYTE(value);
 	WRITE_FLOAT(flFraction);
 	MessageEnd();
 }
 
-void CTriggerCapturePoint::OnTouch(CBaseEntity *pOther)
+void CTriggerCapturePoint::OnTouch(CBaseEntity* pOther)
 {
-	if ((m_flTouchTimer > gpGlobals->curtime) || !pOther || m_bIsCaptured || m_bDisabled || !PassesTriggerFilters(pOther) || !IsFilterPassing(pOther))
+	if ((m_flTouchTimer > gpGlobals->curtime) || !pOther || (m_iProgressStatus == CAPTURE_STATE_CAPTURED) || m_bDisabled || !PassesTriggerFilters(pOther) || !IsFilterPassing(pOther))
 		return;
 
 	m_flTouchTimer = (gpGlobals->curtime + m_flWait);
@@ -271,16 +271,42 @@ void CTriggerCapturePoint::OnTouch(CBaseEntity *pOther)
 
 void CTriggerCapturePoint::NotifyCaptureFailed(bool bEnemyEntered)
 {
-	const char *message = STRING(cszMessageFailed);
+	const char* message = STRING(cszMessageFailed);
 	if (bEnemyEntered && m_bShouldHaltWhenEnemiesTouchUs)
 		message = STRING(cszMessageProgressHalted);
 
 	for (int i = 0; i < m_hTouchingEntities.Count(); i++)
 	{
-		CBasePlayer *pToucher = ToBasePlayer(m_hTouchingEntities[i].Get());
+		CBasePlayer* pToucher = ToBasePlayer(m_hTouchingEntities[i].Get());
 		if (!pToucher || (pToucher->GetTeamNumber() != m_iTeamLink))
 			continue;
 
 		GameBaseServer()->SendToolTip(message, "", 2.0f, GAME_TIP_WARNING, pToucher->entindex());
+	}
+}
+
+void CTriggerCapturePoint::NotifyCaptureInsufficient(void)
+{
+	CTeam* pTeam = GetGlobalTeam(m_iTeamLink);
+
+	if (pTeam == NULL)
+		return;
+
+	float flNumPlayers = (float)pTeam->GetNumPlayers();
+	float flRequiredPlayers = (pTeam ? ceil(flNumPlayers * (m_flPercentRequired / 100.0f)) : 0.0f);
+
+	if (flRequiredPlayers == 0.0f)
+		return;
+
+	char pchArg1[16];
+	Q_snprintf(pchArg1, sizeof(pchArg1), "%i", (int)flRequiredPlayers);
+
+	for (int i = 0; i < m_hTouchingEntities.Count(); i++)
+	{
+		CBasePlayer* pToucher = ToBasePlayer(m_hTouchingEntities[i].Get());
+		if (!pToucher || (pToucher->GetTeamNumber() != m_iTeamLink))
+			continue;
+
+		GameBaseServer()->SendToolTip(STRING(cszMessageTooFewPlayers), "", 2.0f, GAME_TIP_WARNING, pToucher->entindex(), pchArg1, ((flRequiredPlayers > 1) ? "players" : "player"));
 	}
 }
