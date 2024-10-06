@@ -575,7 +575,7 @@ Activity CNPCWalker::NPC_TranslateActivity( Activity newActivity )
 	if ((newActivity == ACT_IDLE) || (newActivity == (Activity)ACT_ZOMBIE_TANTRUM))
 		bIsIdle = true;
 
-	if ((newActivity == ACT_WALK || newActivity == ACT_RUN) && !GameBaseServer()->IsClassicMode() && !IsCrawlingWithNoLegs() && !m_bIsInCrawlMode && m_bIsRunner && !IsAffectedBySkillFlag(SKILL_FLAG_COLDSNAP))
+	if ((newActivity == ACT_WALK || newActivity == ACT_RUN) && !IsCrawlingWithNoLegs() && !m_bIsInCrawlMode && m_bIsRunner && !IsAffectedBySkillFlag(SKILL_FLAG_COLDSNAP))
 			return (Activity)ACT_MELEE_CHARGE;
 
 	if (IsCrawlingWithNoLegs())

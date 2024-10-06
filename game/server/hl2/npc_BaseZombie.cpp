@@ -776,13 +776,6 @@ void CNPC_BaseZombie::Spawn( void )
 		return;
 	}
 
-	// If Pure Classic is enabled we will not spawn non Fred or Walker npcs...
-	if (GameBaseServer()->IsClassicMode() && !FClassnameIs(this, "npc_fred") && !FClassnameIs(this, "npc_walker"))
-	{
-		UTIL_Remove(this);
-		return;
-	}
-
 	SetSolid( SOLID_BBOX );
 	SetMoveType( MOVETYPE_STEP );
 

@@ -35,7 +35,6 @@ private:
 	COutputEvent m_OnEndGame;
 	COutputEvent m_OnEndRound;
 	COutputEvent m_OnStartGame;
-	COutputEvent m_OnStartGameClassic;
 	COutputEvent m_OnFailedRound;
 	COutputEvent m_OnGameOver;
 
@@ -59,7 +58,6 @@ DEFINE_KEYFIELD(m_iTriesPerRound, FIELD_INTEGER, "Tries"),
 DEFINE_OUTPUT(m_OnEndGame, "OnEndGame"),
 DEFINE_OUTPUT(m_OnEndRound, "OnEndRound"),
 DEFINE_OUTPUT(m_OnStartGame, "OnStartGame"),
-DEFINE_OUTPUT(m_OnStartGameClassic, "OnStartGameClassic"),
 DEFINE_OUTPUT(m_OnFailedRound, "OnRoundFail"),
 DEFINE_OUTPUT(m_OnGameOver, "OnGameOver"),
 DEFINE_OUTPUT(m_OnNewRound[0], "OnRound1"),
@@ -141,10 +139,6 @@ void CGameManager::FireGameEvent(IGameEvent *event)
 
 	if (!strcmp(type, "round_started"))
 	{
-		// If Pure Classic Mode is on we'll allow the mapper to use this output to make some changes if necessary.
-		if (GameBaseServer()->IsClassicMode())
-			m_OnStartGameClassic.FireOutput(this, this);
-
 		m_OnStartGame.FireOutput(this, this);
 
 		if (m_iRoundsToPlay > 0)

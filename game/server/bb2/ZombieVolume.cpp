@@ -291,9 +291,9 @@ void CZombieVolume::SpawnZombie()
 	m_iSpawnNum++;
 }
 
-const char *CZombieVolume::GetZombieClassnameToSpawn()
+const char* CZombieVolume::GetZombieClassnameToSpawn()
 {
-	const char *pszTypes[] =
+	const char* pszTypes[] =
 	{
 		"npc_runner",
 	};
@@ -307,9 +307,8 @@ const char *CZombieVolume::GetZombieClassnameToSpawn()
 	case ZOMBIE_TYPE_RANDOM:
 	{
 		double percent = (m_flRandomSpawnPercent / PERCENT_BASE);
-		if (TryTheLuck(percent) && !GameBaseServer()->IsClassicMode())
+		if (TryTheLuck(percent))
 			return (pszTypes[random->RandomInt(0, (_ARRAYSIZE(pszTypes) - 1))]);
-
 		return "npc_walker";
 	}
 	default:

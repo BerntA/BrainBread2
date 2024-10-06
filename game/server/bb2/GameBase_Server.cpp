@@ -327,14 +327,6 @@ bool CGameBaseServer::IsStoryMode(void)
 	return (GetWorldEntity() && GetWorldEntity()->IsStoryMap() && (HL2MPRules() && (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE)));
 }
 
-bool CGameBaseServer::IsClassicMode(void)
-{
-	if (IsStoryMode())
-		return false;
-
-	return (HL2MPRules() && (HL2MPRules()->GetCurrentGamemode() == MODE_OBJECTIVE) && bb2_classic_mode_enabled.GetBool());
-}
-
 void CGameBaseServer::IterateAddonsPath(const char *path)
 {
 	char pszAbsPath[256], pszNextPath[256];

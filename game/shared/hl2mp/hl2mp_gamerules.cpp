@@ -973,7 +973,7 @@ void CHL2MPRules::GameModeSharedThink(void)
 				}
 			}
 		}
-		else if (!GameBaseServer()->IsClassicMode() && (GetCurrentGamemode() != MODE_ELIMINATION) && (GetCurrentGamemode() != MODE_DEATHMATCH) && humansInGame <= 0 && clientsInGame > 0) // If everyone is dead / is zombies we restart.
+		else if ((GetCurrentGamemode() == MODE_ARENA) && humansInGame <= 0 && clientsInGame > 0) // If everyone is dead / is zombies we restart.
 			EndRound(true);
 		else if ((GetCurrentGamemode() == MODE_OBJECTIVE) && (GetTimeLeft() <= 0) && !GameBaseServer()->IsStoryMode() && (clientsInGame > 0))
 			GoToIntermission(TEAM_DECEASED);

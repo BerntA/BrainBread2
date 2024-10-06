@@ -262,13 +262,6 @@ void CNPC_BaseSoldier::Spawn( void )
 		return;
 	}
 
-	// If Pure Classic is enabled we will not spawn non Military npcs...
-	if (GameBaseServer()->IsClassicMode() && !FClassnameIs(this, "npc_military"))
-	{
-		UTIL_Remove(this);
-		return;
-	}
-
 	SetHullType(HULL_HUMAN);
 	SetHullSizeNormal();
 

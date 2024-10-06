@@ -70,7 +70,6 @@ public:
 
 	bool IsTutorialModeEnabled(void);
 	bool IsStoryMode(void);
-	bool IsClassicMode(void);
 
 	// Plugin Iterator
 	void IterateAddonsPath(const char *path);
