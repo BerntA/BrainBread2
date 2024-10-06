@@ -31,6 +31,7 @@ private:
 
 	void InputEndGame(inputdata_t &inputData);
 	void InputEndRound(inputdata_t &inputData);
+	void InputAddReinforcements(inputdata_t& inputData);
 
 	COutputEvent m_OnEndGame;
 	COutputEvent m_OnEndRound;
@@ -51,6 +52,7 @@ static CGameManager *g_pGameManager = NULL;
 BEGIN_DATADESC(CGameManager)
 DEFINE_INPUTFUNC(FIELD_INTEGER, "EndGame", InputEndGame),
 DEFINE_INPUTFUNC(FIELD_INTEGER, "EndRound", InputEndRound),
+DEFINE_INPUTFUNC(FIELD_INTEGER, "AddReinforcements", InputAddReinforcements),
 
 DEFINE_KEYFIELD(m_iRoundsToPlay, FIELD_INTEGER, "Rounds"),
 DEFINE_KEYFIELD(m_iTriesPerRound, FIELD_INTEGER, "Tries"),
@@ -100,14 +102,19 @@ void CGameManager::Spawn()
 		m_iTriesPerRound = 0;
 }
 
-void CGameManager::InputEndGame(inputdata_t &inputData)
+void CGameManager::InputEndGame(inputdata_t& inputData)
 {
 	EndGame(inputData.value.Int());
 }
 
-void CGameManager::InputEndRound(inputdata_t &inputData)
+void CGameManager::InputEndRound(inputdata_t& inputData)
 {
 	EndRound(inputData.value.Int());
+}
+
+void CGameManager::InputAddReinforcements(inputdata_t& inputData)
+{
+	HL2MPRules()->AddReinforcements(inputData.value.Int());
 }
 
 void CGameManager::EndGame(int iWinner)

@@ -170,6 +170,10 @@ public:
 	// Arena Specific:
 	float GetReinforcementRespawnTime();
 	int GetReinforcementsLeft() { return m_iNumReinforcements; }
+	void AddReinforcements(int value) 
+	{
+		m_iNumReinforcements += value;
+	}
 
 	// Shared Stuff:
 	float GetTimeLeft();
