@@ -21,6 +21,8 @@
 #include "hud_macros.h"
 #endif
 
+#include <ctime>
+
 void ClearCharVectorList(CUtlVector<char*> &list)
 {
 	for (int i = 0; i < list.Count(); i++)
@@ -450,6 +452,26 @@ float CGameBaseShared::GetPlaybackSpeedThirdperson(CHL2MP_Player *pClient, int v
 		return (1.0f / (durationViewmodel / durationThirdperson));
 
 	return 1.0f;
+}
+
+////////////////////////////////////////////////
+// Purpose: Determine if we should activate a festive event!
+///////////////////////////////////////////////
+int CGameBaseShared::GetFestiveEvent()
+{
+	std::time_t unixTime = std::time(NULL); // Seconds since 1970.
+	std::tm* now = std::localtime(&unixTime); // Fetch local time.
+
+	if (now == NULL)
+		return FESTIVE_EVENT_NONE;
+
+	if ((now->tm_mon == 9) && (now->tm_mday >= 24) && (now->tm_mday <= 31))
+		return FESTIVE_EVENT_HALLOWEEN;
+
+	if ((now->tm_mon == 11) && (now->tm_mday >= 20) && (now->tm_mday <= 31))
+		return FESTIVE_EVENT_CHRISTMAS;
+
+	return FESTIVE_EVENT_NONE;
 }
 
 ////////////////////////////////////////////////

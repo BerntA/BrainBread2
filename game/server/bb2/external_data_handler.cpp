@@ -95,7 +95,7 @@ void LoadSharedData(void)
 	GameBaseServer()->LoadSharedInfo();
 
 	if (HL2MPRules())
-		HL2MPRules()->SetXPRate(1.0f);
+		HL2MPRules()->SetXPRate((GameBaseShared()->GetFestiveEvent() > FESTIVE_EVENT_NONE) ? 2.0f : 1.0f);
 
 #ifndef OSX
 	if (!engine->IsDedicatedServer())

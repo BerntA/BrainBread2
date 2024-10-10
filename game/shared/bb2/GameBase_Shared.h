@@ -233,6 +233,13 @@ enum ClientAttachmentTypes_t
 	CLIENT_ATTACHMENT_WEAPON = 0,
 };
 
+enum FestiveEvents_t
+{
+	FESTIVE_EVENT_NONE = 0,
+	FESTIVE_EVENT_HALLOWEEN,
+	FESTIVE_EVENT_CHRISTMAS,
+};
+
 class CGameBaseShared
 {
 public:
@@ -260,6 +267,8 @@ public:
 	float GetDropOffDamage(const Vector &vecStart, const Vector &vecEnd, float damage, float minDist);
 	float GetSequenceDuration(CStudioHdr *ptr, int sequence);
 	float GetPlaybackSpeedThirdperson(CHL2MP_Player *pClient, int viewmodelActivity, int thirdpersonActivity);
+
+	int GetFestiveEvent();
 
 	// Bleeding Dispatches
 	void DispatchBleedout(const Vector& vPos);
