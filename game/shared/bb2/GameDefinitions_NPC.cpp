@@ -11,6 +11,12 @@
 #include "GameBase_Shared.h"
 #include "gibs_shared.h"
 
+static void PrecacheModelSafe(const char* name)
+{
+	if (name && name[0])
+		CBaseAnimating::PrecacheModel(name);
+}
+
 CGameDefinitionsNPC::CGameDefinitionsNPC()
 {
 	LoadNPCData();
@@ -167,23 +173,14 @@ bool CGameDefinitionsNPC::Precache(void)
 	{
 		for (int modelItems = 0; modelItems < pszNPCItems[i]->pszModelList.Count(); modelItems++)
 		{
-			CBaseAnimating::PrecacheModel(pszNPCItems[i]->pszModelList[modelItems].szModelPath);
+			PrecacheModelSafe(pszNPCItems[i]->pszModelList[modelItems].szModelPath);
 
 			// Check if there's any gibs:
-			if (pszNPCItems[i]->pszModelList[modelItems].szGibHead && pszNPCItems[i]->pszModelList[modelItems].szGibHead[0])
-				CBaseAnimating::PrecacheModel(pszNPCItems[i]->pszModelList[modelItems].szGibHead);
-
-			if (pszNPCItems[i]->pszModelList[modelItems].szGibArmLeft && pszNPCItems[i]->pszModelList[modelItems].szGibArmLeft[0])
-				CBaseAnimating::PrecacheModel(pszNPCItems[i]->pszModelList[modelItems].szGibArmLeft);
-
-			if (pszNPCItems[i]->pszModelList[modelItems].szGibArmRight && pszNPCItems[i]->pszModelList[modelItems].szGibArmRight[0])
-				CBaseAnimating::PrecacheModel(pszNPCItems[i]->pszModelList[modelItems].szGibArmRight);
-
-			if (pszNPCItems[i]->pszModelList[modelItems].szGibLegLeft && pszNPCItems[i]->pszModelList[modelItems].szGibLegLeft[0])
-				CBaseAnimating::PrecacheModel(pszNPCItems[i]->pszModelList[modelItems].szGibLegLeft);
-
-			if (pszNPCItems[i]->pszModelList[modelItems].szGibLegRight && pszNPCItems[i]->pszModelList[modelItems].szGibLegRight[0])
-				CBaseAnimating::PrecacheModel(pszNPCItems[i]->pszModelList[modelItems].szGibLegRight);
+			PrecacheModelSafe(pszNPCItems[i]->pszModelList[modelItems].szGibHead);
+			PrecacheModelSafe(pszNPCItems[i]->pszModelList[modelItems].szGibArmLeft);
+			PrecacheModelSafe(pszNPCItems[i]->pszModelList[modelItems].szGibArmRight);
+			PrecacheModelSafe(pszNPCItems[i]->pszModelList[modelItems].szGibLegLeft);
+			PrecacheModelSafe(pszNPCItems[i]->pszModelList[modelItems].szGibLegRight);
 		}
 	}
 
@@ -191,23 +188,14 @@ bool CGameDefinitionsNPC::Precache(void)
 	{
 		for (int modelItems = 0; modelItems < m_pModelOverrideItems[i]->pszModelList.Count(); modelItems++)
 		{
-			CBaseAnimating::PrecacheModel(m_pModelOverrideItems[i]->pszModelList[modelItems].szModelPath);
+			PrecacheModelSafe(m_pModelOverrideItems[i]->pszModelList[modelItems].szModelPath);
 
 			// Check if there's any gibs:
-			if (m_pModelOverrideItems[i]->pszModelList[modelItems].szGibHead && m_pModelOverrideItems[i]->pszModelList[modelItems].szGibHead[0])
-				CBaseAnimating::PrecacheModel(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibHead);
-
-			if (m_pModelOverrideItems[i]->pszModelList[modelItems].szGibArmLeft && m_pModelOverrideItems[i]->pszModelList[modelItems].szGibArmLeft[0])
-				CBaseAnimating::PrecacheModel(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibArmLeft);
-
-			if (m_pModelOverrideItems[i]->pszModelList[modelItems].szGibArmRight && m_pModelOverrideItems[i]->pszModelList[modelItems].szGibArmRight[0])
-				CBaseAnimating::PrecacheModel(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibArmRight);
-
-			if (m_pModelOverrideItems[i]->pszModelList[modelItems].szGibLegLeft && m_pModelOverrideItems[i]->pszModelList[modelItems].szGibLegLeft[0])
-				CBaseAnimating::PrecacheModel(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibLegLeft);
-
-			if (m_pModelOverrideItems[i]->pszModelList[modelItems].szGibLegRight && m_pModelOverrideItems[i]->pszModelList[modelItems].szGibLegRight[0])
-				CBaseAnimating::PrecacheModel(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibLegRight);
+			PrecacheModelSafe(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibHead);
+			PrecacheModelSafe(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibArmLeft);
+			PrecacheModelSafe(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibArmRight);
+			PrecacheModelSafe(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibLegLeft);
+			PrecacheModelSafe(m_pModelOverrideItems[i]->pszModelList[modelItems].szGibLegRight);
 		}
 	}
 
