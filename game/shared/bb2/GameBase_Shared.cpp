@@ -454,11 +454,25 @@ float CGameBaseShared::GetPlaybackSpeedThirdperson(CHL2MP_Player *pClient, int v
 	return 1.0f;
 }
 
+//#define DEBUG_FESTIVE_EVENT_LOGIC
+
+#ifdef GAME_DLL
+#ifdef DEBUG_FESTIVE_EVENT_LOGIC
+ConVar bb2_festive_event_override("bb2_festive_event_override", "0", FCVAR_GAMEDLL | FCVAR_CHEAT, "Test festive events.");
+#endif
+#endif
+
 ////////////////////////////////////////////////
 // Purpose: Determine if we should activate a festive event!
 ///////////////////////////////////////////////
 int CGameBaseShared::GetFestiveEvent()
 {
+#ifdef GAME_DLL
+#ifdef DEBUG_FESTIVE_EVENT_LOGIC
+	return bb2_festive_event_override.GetInt();
+#endif
+#endif
+
 	std::time_t unixTime = std::time(NULL); // Seconds since 1970.
 	std::tm* now = std::localtime(&unixTime); // Fetch local time.
 

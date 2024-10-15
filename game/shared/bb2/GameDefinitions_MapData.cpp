@@ -108,6 +108,33 @@ void CGameDefinitionsMapData::ParseDataForMap(const char *map)
 
 		pkvMapData->deleteThis();
 	}
+
+	// Load festive overrides
+#ifndef CLIENT_DLL
+	{
+		const int iFestiveEvent = GameBaseShared()->GetFestiveEvent();
+		KeyValues* pkvFestiveData = NULL;
+
+		switch (iFestiveEvent)
+		{
+		case FESTIVE_EVENT_HALLOWEEN:
+			pkvFestiveData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/game/festive_halloween_overrides");
+			break;
+
+		case FESTIVE_EVENT_CHRISTMAS:
+			pkvFestiveData = GameBaseShared()->ReadEncryptedKeyValueFile(filesystem, "data/game/festive_christmas_overrides");
+			break;
+		}
+
+		if (pkvFestiveData)
+		{
+			if (GameBaseShared()->GetNPCData())
+				GameBaseShared()->GetNPCData()->LoadNPCOverrideData(pkvFestiveData);
+
+			pkvFestiveData->deleteThis();
+		}
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
