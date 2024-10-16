@@ -28,6 +28,7 @@ enum NPC_CLASS_TYPES
 	NPC_CLASS_RIOT,
 	NPC_CLASS_SWAT,
 	NPC_CLASS_PRIEST,
+	NPC_CLASS_TURTLE,
 };
 
 abstract_class CNPCBaseProperties : public CGameEventListener

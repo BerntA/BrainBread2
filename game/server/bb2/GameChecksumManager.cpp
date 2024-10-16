@@ -33,6 +33,7 @@ static const char *g_pFilesToCheck[] = {
 	"data/npc/swat.txt",
 	"data/npc/riot.txt",
 	"data/npc/military.txt",
+	"data/npc/turtle.txt",
 
 	// Weapons
 	"scripts/weapon_beretta.txt",
