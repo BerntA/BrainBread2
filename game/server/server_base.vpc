@@ -693,6 +693,8 @@ $Project
 				$File "hl2\npc_base_soldier.h"
 				$File "hl2\npc_BaseZombie.cpp"
 				$File "hl2\npc_BaseZombie.h"
+				$File "bb2\npc_parasite.cpp"
+				$File "bb2\npc_parasite.h"
 			}
 			
 			$Folder "Triggers"
