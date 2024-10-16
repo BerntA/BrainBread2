@@ -11,7 +11,7 @@
 
 using namespace AchievementManager;
 
-CPlayerAchievStats::CPlayerAchievStats(CHL2MP_Player *pOuter)
+CPlayerAchievStats::CPlayerAchievStats(CHL2MP_Player* pOuter)
 {
 	m_pOuter = pOuter;
 }
@@ -31,16 +31,25 @@ void CPlayerAchievStats::OnSpawned(void)
 	m_iHealthKitsUsed = m_iZombieKicks = m_iZombiePunches = m_iZombieUppercuts = m_iTotalHeadshots = m_iZombiePlayerHeadshots = 0;
 }
 
-void CPlayerAchievStats::OnDeath(const CTakeDamageInfo &info)
+void CPlayerAchievStats::OnDeath(const CTakeDamageInfo& info)
 {
+	if (!IsValid())
+		return;
+
+	CBaseEntity* pAttacker = info.GetAttacker();
+	if (pAttacker == NULL)
+		return;
+
+	if (FClassnameIs(pAttacker, "npc_turtle"))
+		WriteToAchievement(m_pOuter, "ACH_TURTLE_RAVAGE");
 }
 
-void CPlayerAchievStats::OnKilled(CBaseEntity *pVictim, CBaseEntity *pInflictor, const CTakeDamageInfo &info, int hitgroup)
+void CPlayerAchievStats::OnKilled(CBaseEntity* pVictim, CBaseEntity* pInflictor, const CTakeDamageInfo& info, int hitgroup)
 {
 	if (!IsValid() || !pVictim || !pInflictor || (pVictim == m_pOuter))
 		return;
 
-	CBaseCombatWeapon *pActiveWeapon = m_pOuter->GetActiveWeapon();
+	CBaseCombatWeapon* pActiveWeapon = m_pOuter->GetActiveWeapon();
 	int weaponID = info.GetForcedWeaponID();
 	if (pActiveWeapon && (weaponID == WEAPON_ID_NONE))
 		weaponID = pActiveWeapon->GetUniqueWeaponID();
@@ -91,11 +100,11 @@ void CPlayerAchievStats::OnKilled(CBaseEntity *pVictim, CBaseEntity *pInflictor,
 	PrintDebugMsg();
 }
 
-void CPlayerAchievStats::OnTookDamage(const CTakeDamageInfo &info)
+void CPlayerAchievStats::OnTookDamage(const CTakeDamageInfo& info)
 {
 }
 
-void CPlayerAchievStats::OnDidDamage(const CTakeDamageInfo &info)
+void CPlayerAchievStats::OnDidDamage(const CTakeDamageInfo& info)
 {
 	if (!IsValid())
 		return;
@@ -106,7 +115,7 @@ void CPlayerAchievStats::OnDidDamage(const CTakeDamageInfo &info)
 	PrintDebugMsg();
 }
 
-void CPlayerAchievStats::OnPickupItem(const DataInventoryItem_Base_t *item)
+void CPlayerAchievStats::OnPickupItem(const DataInventoryItem_Base_t* item)
 {
 	if (!IsValid() || !item)
 		return;

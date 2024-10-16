@@ -1849,6 +1849,7 @@ namespace ACHIEVEMENTS
 		// Objectives / Sweetness
 		{ "ACH_SURVIVOR_CAPTURE_BRIEFCASE", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 50, false, NULL },
 		{ "ACH_SURVIVOR_KILL_FRED", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 100, false, NULL },
+		{ "ACH_SURVIVOR_KILL_FRED_HALLOWEEN", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 1000, false, NULL },
 		{ "ACH_SURVIVOR_INFECTED", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 50, false, NULL },
 		{ "ACH_ZOMBIE_KILL_HUMAN", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 50, false, NULL },
 		{ "ACH_ZOMBIE_KILL_HUMANOIDS", "BBX_KI_HUMANS", 25, ACHIEVEMENT_TYPE_DEFAULT, 300, false, NULL },
@@ -1952,6 +1953,9 @@ namespace ACHIEVEMENTS
 		{ "ACH_MAP_SWAMPTROUBLE_OBJ", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 750, false, "bbc_swamptrouble" },
 		{ "ACH_MAP_COLTEC_C", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 750, false, "bbc_coltec" },
 		{ "ACH_MAP_FEVER", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 1000, false, "bbc_fever" },
+		{ "ACH_MAP_DAYCITY", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false, "bbc_daycity" },
+		{ "ACH_MAP_FORGOTTEN_MANSION", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 1500, false, "bbs_forgotten_mansion" },
+
 		{ "ACH_MAP_ROOFTOP", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false, "bba_rooftop" },
 		{ "ACH_MAP_COLOSSEUM", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false, "bba_colosseum" },
 		{ "ACH_MAP_BARRACKS_ARENA", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false, "bba_barracks" },
@@ -1963,6 +1967,10 @@ namespace ACHIEVEMENTS
 		{ "ACH_MAP_COLTEC_A", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false, "bba_coltec" },
 		{ "ACH_MAP_ISLAND_A", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 250, false, "bba_island" },
 		{ "ACH_MAP_SURGERY_A", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 250, false, "bba_surgery" },
+		{ "ACH_MAP_AMBIT", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 750, false, "bba_ambit" },
+		{ "ACH_MAP_BACKYARD_A", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false, "bba_backyard" },
+		{ "ACH_MAP_MECKLENBURG_A", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false, "bba_mecklenburg" },
+		{ "ACH_MAP_RISHIKA_A", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 3500, false, "bba_rishika" },
 
 		// Hidden:
 		{ "ACH_SECRET_WATCHYOURSTEP", "", 0, ACHIEVEMENT_TYPE_MAP, 0, true, NULL },
@@ -1972,6 +1980,7 @@ namespace ACHIEVEMENTS
 		{ "ACH_SECRET_TURTLE", "", 0, ACHIEVEMENT_TYPE_MAP, 0, true, NULL },
 		{ "ACH_SECRET_GIVEALL", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 0, true, NULL },
 		{ "ACH_WEP_BRICK", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 150, true, NULL },
+		{ "ACH_TURTLE_RAVAGE", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 350, true, NULL },
 
 		// Stats Only + hidden (no achievs) - used for leaderboards...
 		{ "", "BBX_ST_KILLS", 9999999, ACHIEVEMENT_TYPE_DEFAULT, 0, true, NULL },

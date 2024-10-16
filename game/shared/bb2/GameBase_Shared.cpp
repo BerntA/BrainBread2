@@ -880,6 +880,7 @@ void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pV
 		return;
 
 	int uniqueWepID = forcedWeaponID;
+	const int iFestiveEvent = GetFestiveEvent();
 
 	if (pClient->GetTeamNumber() == TEAM_HUMANS)
 	{
@@ -890,7 +891,7 @@ void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pV
 		}
 		else if (FClassnameIs(pVictim, "npc_fred"))
 		{
-			AchievementManager::WriteToAchievement(pClient, "ACH_SURVIVOR_KILL_FRED");
+			AchievementManager::WriteToAchievement(pClient, (iFestiveEvent == FESTIVE_EVENT_HALLOWEEN) ? "ACH_SURVIVOR_KILL_FRED_HALLOWEEN" : "ACH_SURVIVOR_KILL_FRED");
 		}
 		else if (pVictim->IsZombie())
 		{
