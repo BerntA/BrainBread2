@@ -108,7 +108,7 @@ void CBaseParasite::Spawn(void)
 	SetSolid(SOLID_BBOX);
 	AddSolidFlags(FSOLID_NOT_STANDABLE | FSOLID_TRIGGER);
 	SetMoveType(MOVETYPE_STEP);
-	SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE_CRAWLER);
+	SetCollisionGroup(COLLISION_GROUP_NPC_ZOMBIE);
 
 	SetViewOffset(Vector(6, 0, 11));		// Position of the eyes relative to NPC's origin.
 
