@@ -488,7 +488,7 @@ void CWeaponPropane::ThrowGrenade(CBasePlayer *pPlayer)
 		pPropane->SetHealth(1);
 		pPropane->SetMaxHealth(1);
 		pPropane->m_iExplosiveType = EXPLOSIVE_TYPE_PROPANE;
-		pPropane->RemoveProp();
+		//pPropane->RemoveProp(); -- do not remove propane tanks anymore!
 		pPropane->SetProperties(pPlayer);
 	}
 #endif
