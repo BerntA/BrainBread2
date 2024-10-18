@@ -26,6 +26,7 @@ struct damageTextItem_t
 {
 	Vector vecStartPos;
 	int damageDone;
+	int index;
 	float timeAdded;
 };
 
@@ -35,18 +36,20 @@ class CHudDamageText : public CHudElement, public vgui::Panel
 
 public:
 
-	CHudDamageText(const char * pElementName);
+	CHudDamageText(const char* pElementName);
 
 	void Init(void);
 	void VidInit(void);
 	bool ShouldDraw(void);
 	void Reset(void);
-	void MsgFunc_DamageTextInfo(bf_read &msg);
+	void MsgFunc_DamageTextInfo(bf_read& msg);
 
 protected:
 
-	void ApplySchemeSettings(vgui::IScheme *scheme);
+	void ApplySchemeSettings(vgui::IScheme* scheme);
 	void Paint();
+
+	damageTextItem_t* GetDamageEntry(int index, bool bHealing);
 
 	CUtlVector<damageTextItem_t> m_pItems;
 
@@ -57,6 +60,7 @@ private:
 	CPanelAnimationVar(Color, m_hHealColor, "HealingColor", "10 200 10 255");
 	CPanelAnimationVar(float, m_flTimeToUse, "ScrollTime", "0.65f");
 	CPanelAnimationVar(float, m_flHeightToScroll, "ScrollHeight", "40.0f");
+	CPanelAnimationVar(float, m_flMergeTime, "MergeTime", "0.18f");
 };
 
 DECLARE_HUDELEMENT_DEPTH(CHudDamageText, 80);
@@ -65,14 +69,14 @@ DECLARE_HUD_MESSAGE(CHudDamageText, DamageTextInfo);
 //------------------------------------------------------------------------
 // Purpose: Constructor
 //------------------------------------------------------------------------
-CHudDamageText::CHudDamageText(const char * pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudDamageText")
+CHudDamageText::CHudDamageText(const char* pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudDamageText")
 {
-	vgui::Panel * pParent = g_pClientMode->GetViewport();
+	vgui::Panel* pParent = g_pClientMode->GetViewport();
 	SetParent(pParent);
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_ROUNDSTARTING);
 }
 
-void CHudDamageText::ApplySchemeSettings(vgui::IScheme *scheme)
+void CHudDamageText::ApplySchemeSettings(vgui::IScheme* scheme)
 {
 	BaseClass::ApplySchemeSettings(scheme);
 	SetPaintBackgroundEnabled(false);
@@ -150,21 +154,42 @@ void CHudDamageText::Paint()
 	}
 }
 
-void CHudDamageText::MsgFunc_DamageTextInfo(bf_read &msg)
+damageTextItem_t* CHudDamageText::GetDamageEntry(int index, bool bHealing)
+{
+	for (int i = 0; i < m_pItems.Count(); i++)
+	{
+		damageTextItem_t* pItem = &m_pItems[i];
+		if ((pItem->index == index) && ((pItem->damageDone > 0) == bHealing))
+			return pItem;
+	}
+	return NULL;
+}
+
+void CHudDamageText::MsgFunc_DamageTextInfo(bf_read& msg)
 {
 	float xpos, ypos, zpos;
 	xpos = msg.ReadFloat();
 	ypos = msg.ReadFloat();
 	zpos = msg.ReadFloat();
 
-	int damage = msg.ReadShort();
+	const int damage = msg.ReadShort();
+	const int index = msg.ReadShort();
+
 	float labelHeight = (float)surface()->GetFontTall(m_hDefaultFont);
-	if (damage > 0)
-		labelHeight *= 2;
+	if (damage > 0) labelHeight *= 2;
+
+	damageTextItem_t* pExistingItem = GetDamageEntry(index, (damage > 0));
+	if ((pExistingItem != NULL) && ((gpGlobals->curtime - pExistingItem->timeAdded) <= m_flMergeTime))
+	{
+		pExistingItem->damageDone += damage;
+		return;
+	}
 
 	damageTextItem_t item;
 	item.vecStartPos = Vector(xpos, ypos, zpos + labelHeight);
 	item.damageDone = damage;
+	item.index = index;
 	item.timeAdded = gpGlobals->curtime;
+
 	m_pItems.AddToHead(item);
 }

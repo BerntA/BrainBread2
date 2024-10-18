@@ -695,6 +695,7 @@ void CHL2MP_Player::DispatchDamageText(CBaseEntity *pVictim, int damage)
 	WRITE_FLOAT(absPos.y);
 	WRITE_FLOAT(absPos.z);
 	WRITE_SHORT(damage);
+	WRITE_SHORT(pVictim->entindex());
 	MessageEnd();
 
 	if (!IsPerkFlagActive(PERK_ZOMBIE_RAGE) && pVictim->IsPlayer() && !pVictim->IsZombie(true) && IsZombie(true) && (damage < 0))
