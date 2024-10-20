@@ -99,7 +99,7 @@ void MenuContextQuit::SetupLayout(void)
 
 	if (!IsVisible())
 	{
-		const char *randomMessage[] =
+		const char* randomMessage[] =
 		{
 			"#GameUI_QuitOrLeave_Message1",
 			"#GameUI_QuitOrLeave_Message2",
@@ -111,10 +111,10 @@ void MenuContextQuit::SetupLayout(void)
 			"#GameUI_QuitOrLeave_Message8",
 		};
 
-		const char *message = randomMessage[random->RandomInt(0, (_ARRAYSIZE(randomMessage) - 1))];
+		const char* message = randomMessage[random->RandomInt(0, (_ARRAYSIZE(randomMessage) - 1))];
 		if (!strcmp(message, "#GameUI_QuitOrLeave_Message5"))
 		{
-			const char *playerName = "unnamed";
+			const char* playerName = "unnamed";
 			if (steamapicontext && steamapicontext->SteamFriends())
 				playerName = steamapicontext->SteamFriends()->GetPersonaName();
 
@@ -126,6 +126,9 @@ void MenuContextQuit::SetupLayout(void)
 		}
 		else
 			m_pLabelMessage->SetText(message);
+
+		engine->ClientCmd_Unrestricted("mat_savechanges\n");
+		engine->ClientCmd_Unrestricted("host_writeconfig\n");
 	}
 
 	int w, h, wz, hz;
