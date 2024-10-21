@@ -667,7 +667,7 @@ void CHL2MPRules::NewRoundInit(int iPlayersInGame)
 					pPlayer->RemoveFlag(FL_FROZEN | FL_GODMODE);
 
 				if (!pPlayer->IsBot() && !GameBaseServer()->IsTutorialModeEnabled() && (GetCurrentGamemode() != MODE_ELIMINATION)
-					&& (GetCurrentGamemode() != MODE_DEATHMATCH))
+					&& (GetCurrentGamemode() != MODE_DEATHMATCH) && !GameBaseServer()->IsStoryMode())
 				{
 					CSingleUserRecipientFilter filter(pPlayer);
 					pPlayer->EmitSound(filter, pPlayer->entindex(), "Music.Round.Start");
