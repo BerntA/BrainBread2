@@ -13,6 +13,11 @@
 #pragma once
 #endif
 
+namespace FMOD
+{
+	class System;
+}
+
 class CFMODManager
 {
 public:
@@ -30,11 +35,14 @@ public:
 	bool TransitionAmbientSound(const char* szSoundPath, bool bLoop = false);
 	void SetSoundVolume(float vol) { m_flSoundVolume = vol; }
 
+	FMOD::System* GetFMODSystem();
+	const char* GetFullPathToSound(const char* pathToFileFromModFolder);
+	const float GetMasterVolume() { return (m_pVarMusicVolume ? m_pVarMusicVolume->GetFloat() : 1.0f); }
+
 private:
 	ConVar* m_pVarMusicVolume;
 	ConVar* m_pVarMuteSoundFocus;
 
-	const char* GetFullPathToSound(const char* pathToFileFromModFolder);
 	const char* GetCurrentSoundName(void);
 
 	char szActiveSound[MAX_WEAPON_STRING];

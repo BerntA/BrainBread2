@@ -12,6 +12,7 @@
 #include "filesystem.h"
 #include "GameBase_Client.h"
 #include "music_system.h"
+#include "c_soundscape.h"
 
 using namespace FMOD;
 
@@ -54,7 +55,7 @@ void CFMODManager::Init(void)
 	else
 		DevMsg("FMOD system successfully created.\n");
 
-	result = pSystem->init(100, FMOD_INIT_NORMAL, 0);   // Initialize FMOD system.
+	result = pSystem->init(32, FMOD_INIT_NORMAL, 0);   // Initialize FMOD system.
 	if (result != FMOD_OK)
 		Warning("FMOD ERROR: Failed to initialize properly!\n");
 	else
@@ -91,6 +92,8 @@ void CFMODManager::Restart()
 		pChannel->getCurrentSound(&currSound);
 	}
 
+	Soundscape_StopFMODSounds();
+
 	Exit();
 	Init();
 
@@ -102,25 +105,28 @@ void CFMODManager::Restart()
 		pChannel->setVolume(volume);
 		pChannel->setMute(muted);
 	}
+
+	Soundscape_RestartFMODSounds();
 }
 
 // Returns the full path of a specified sound file in the /sounds folder
-const char *CFMODManager::GetFullPathToSound(const char *pathToFileFromModFolder)
+const char* CFMODManager::GetFullPathToSound(const char* pathToFileFromModFolder)
 {
-	char fullPath[512], relativePath[256];
-	Q_snprintf(relativePath, 256, "sound/%s", pathToFileFromModFolder);
+	static char fullPath[512];
+	static char relativePath[256];
+
+	Q_snprintf(relativePath, sizeof(relativePath), "sound/%s", pathToFileFromModFolder);
 	filesystem->RelativePathToFullPath(relativePath, "MOD", fullPath, sizeof(fullPath));
-	int iLength = strlen(fullPath);
 
 	// convert backwards slashes to forward slashes
+	const int iLength = strlen(fullPath);
 	for (int i = 0; i < iLength; i++)
 	{
 		if (fullPath[i] == '\\')
 			fullPath[i] = '/';
 	}
 
-	Q_strncpy(lastPlayedSound, fullPath, sizeof(lastPlayedSound));
-	return lastPlayedSound;
+	return fullPath;
 }
 
 // Returns the current sound playing.
@@ -192,6 +198,11 @@ void CFMODManager::Think(void)
 		pSystem->update();
 }
 
+System* CFMODManager::GetFMODSystem()
+{
+	return pSystem;
+}
+
 void CFMODManager::PlayLoadingMusic(const char *szSoundPath)
 {
 	m_bFadeIn = false;
@@ -200,8 +211,9 @@ void CFMODManager::PlayLoadingMusic(const char *szSoundPath)
 
 	Q_strncpy(szActiveSound, "", MAX_WEAPON_STRING); // clear active sound.
 	Q_strncpy(szTransitSound, "", MAX_WEAPON_STRING); // clear transit sound.
+	Q_strncpy(lastPlayedSound, GetFullPathToSound(szSoundPath), sizeof(lastPlayedSound));
 
-	result = pSystem->createStream(GetFullPathToSound(szSoundPath), FMOD_DEFAULT, 0, &pSound);
+	result = pSystem->createStream(lastPlayedSound, FMOD_DEFAULT, 0, &pSound);
 	if (result != FMOD_OK)
 	{
 		Warning("FMOD: Failed to create stream of sound '%s' ! (ERROR NUMBER: %i)\n", szSoundPath, result);
@@ -225,7 +237,8 @@ bool CFMODManager::PlayAmbientSound(const char *szSoundPath, bool bLoop)
 	if (m_bFadeOut || m_bFadeIn || m_bIsPlayingSound || !strcmp(szSoundPath, szActiveSound))
 		return false;
 
-	result = pSystem->createStream(GetFullPathToSound(szSoundPath), FMOD_DEFAULT, 0, &pSound);
+	Q_strncpy(lastPlayedSound, GetFullPathToSound(szSoundPath), sizeof(lastPlayedSound));
+	result = pSystem->createStream(lastPlayedSound, FMOD_DEFAULT, 0, &pSound);
 	if (result != FMOD_OK)
 	{
 		Warning("FMOD: Failed to create stream of sound '%s' ! (ERROR NUMBER: %i)\n", szSoundPath, result);

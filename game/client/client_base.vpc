@@ -579,6 +579,8 @@ $Project
 			{
 				$File "bb2/fmod_manager.cpp"
 				$File "bb2/fmod_manager.h"
+				$File "bb2/fmod_ambience.cpp"
+				$File "bb2/fmod_ambience.h"
 				$File "bb2/music_system.cpp"
 				$File "bb2/music_system.h"
 			}
