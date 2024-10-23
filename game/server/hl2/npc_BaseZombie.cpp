@@ -47,6 +47,7 @@
 #define HEALTH_REGEN_SUSPEND 10.0f // How many seconds to suspend hp regen when taking dmg?
 
 static ConVar sk_npc_zombie_speed_override("sk_npc_zombie_speed_override", "0", FCVAR_GAMEDLL, "Override Zombie Move Speed", true, 0.0f, true, 5.0f);
+static ConVar bb2_zombie_lifespan_disable("bb2_zombie_lifespan_disable", "0", FCVAR_GAMEDLL, "Disable zombie lifetime logic", true, 0.0f, true, 1.0f);
 static CUtlVector<CNPC_BaseZombie*> zombieList;
 int g_pZombiesInWorld = 0;
 
@@ -986,15 +987,19 @@ void CNPC_BaseZombie::PrescheduleThink(void)
 	if ((m_flBurnDamageResetTime) && (gpGlobals->curtime >= m_flBurnDamageResetTime))
 		m_flBurnDamage = 0;
 
-	// Non boss zombies/monsters have a limited lifetime/lifeline:
-	CBaseEntity *pEnemy = GetEnemy();
-	bool bHasNearbyEnemy = (pEnemy && pEnemy->IsPlayer() && pEnemy->IsHuman() && (this->GetLocalOrigin().DistTo(pEnemy->GetLocalOrigin()) <= 700.0f) && ((gpGlobals->curtime - GetEnemies()->LastTimeSeen(pEnemy, false)) <= 10.0f));
-	if (!IsBoss() && !GameBaseServer()->IsTutorialModeEnabled() && (GetLifeSpan() < gpGlobals->curtime) && !m_bLifeTimeOver && !bHasNearbyEnemy)
+	if (bb2_zombie_lifespan_disable.GetBool())
+		m_flSpawnTime = (gpGlobals->curtime + 60.0f); // set valid lifetime..	
+	else // Otherwise non-boss zombies/monsters have a limited lifetime/lifeline/lifespan:
 	{
-		m_bLifeTimeOver = true;
-		SetLastHitGroup(HITGROUP_GENERIC);
-		KillMe();
-		return;
+		CBaseEntity* pEnemy = GetEnemy();
+		bool bHasNearbyEnemy = (pEnemy && pEnemy->IsPlayer() && pEnemy->IsHuman() && (this->GetLocalOrigin().DistTo(pEnemy->GetLocalOrigin()) <= 700.0f) && ((gpGlobals->curtime - GetEnemies()->LastTimeSeen(pEnemy, false)) <= 10.0f));
+		if (!IsBoss() && !GameBaseServer()->IsTutorialModeEnabled() && (GetLifeSpan() < gpGlobals->curtime) && !m_bLifeTimeOver && !bHasNearbyEnemy)
+		{
+			m_bLifeTimeOver = true;
+			SetLastHitGroup(HITGROUP_GENERIC);
+			KillMe();
+			return;
+		}
 	}
 
 	// Health Regen:
