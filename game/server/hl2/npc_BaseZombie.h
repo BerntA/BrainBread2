@@ -106,6 +106,7 @@ public:
 	void KillMe(void)
 	{
 		m_iHealth = 5;
+		AddGibFlag(GIB_RAGDOLL_SUICIDE);
 		OnTakeDamage(CTakeDamageInfo(this, this, m_iHealth * 2, DMG_GENERIC));
 	}
 

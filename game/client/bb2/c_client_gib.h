@@ -40,6 +40,7 @@ public:
 	virtual void Release(void);
 
 	virtual bool IsClientRagdoll(void) { return false; }
+	virtual bool IsGibFlagActive(int nFlag) { return false; }
 
 	virtual int GetGibType(void) { return m_iGibType; }
 	virtual void SetGibType(int type) { m_iGibType = type; }

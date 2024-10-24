@@ -805,9 +805,6 @@ bool CBaseCombatCharacter::BecomeRagdollBoogie( CBaseEntity *pKiller, const Vect
 //-----------------------------------------------------------------------------
 bool CBaseCombatCharacter::BecomeRagdoll( const CTakeDamageInfo &info, const Vector &forceVector )
 {
-	//Fix up the force applied to server side ragdolls. This fixes magnets not affecting them.
-	CTakeDamageInfo newinfo = info;
-	newinfo.SetDamageForce( forceVector );
 	return BecomeRagdollOnClient( forceVector );
 }
 

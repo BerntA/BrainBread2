@@ -197,7 +197,7 @@ void C_ClientSideGibBase::ClientThink(void)
 
 	FadeOut();
 
-	if (!m_bDispatchedBleedout && (m_iGibType == CLIENT_RAGDOLL) && IsClientRagdoll() && bb2_gibs_spawn_blood_puddle.GetBool())
+	if (!m_bDispatchedBleedout && (m_iGibType == CLIENT_RAGDOLL) && IsClientRagdoll() && !IsGibFlagActive(GIB_RAGDOLL_SUICIDE) && bb2_gibs_spawn_blood_puddle.GetBool())
 	{
 		IPhysicsObject* pPhysics = VPhysicsGetObject();
 		if (pPhysics == NULL)

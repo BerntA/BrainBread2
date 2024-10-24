@@ -49,7 +49,9 @@ enum
 
 	GIB_FULL_EXPLODE = 0x020,
 
-	MAX_GIB_BITS = 6
+	GIB_RAGDOLL_SUICIDE = 0x040, // tell client ragdoll to not spawn any excessive blood stuff - used for vanishing npcs.
+
+	MAX_GIB_BITS = 7
 };
 
 enum
