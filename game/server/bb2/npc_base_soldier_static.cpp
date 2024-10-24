@@ -31,6 +31,8 @@
 
 static int g_fSoldierQuestion = 0;
 
+#define SF_SOLDIER_NO_MELEE	(1 << 17)
+
 #define SOLDIER_GRENADE_THROW_SPEED 650
 #define SOLDIER_GRENADE_TIMER		3.5
 #define SOLDIER_GRENADE_FLUSH_TIME	3.0		// Don't try to flush an enemy who has been out of sight for longer than this.
@@ -158,11 +160,13 @@ void CNPCBaseSoldierStatic::Spawn(void)
 
 	CapabilitiesAdd(bits_CAP_TURN_HEAD);
 	CapabilitiesAdd(bits_CAP_AIM_GUN);
-	CapabilitiesAdd(bits_CAP_INNATE_MELEE_ATTACK1);
 	CapabilitiesAdd(bits_CAP_SQUAD);
 	CapabilitiesAdd(bits_CAP_USE_WEAPONS);
 	CapabilitiesAdd(bits_CAP_NO_HIT_SQUADMATES);
 	CapabilitiesAdd(bits_CAP_ANIMATEDFACE);
+
+	if (!HasSpawnFlags(SF_SOLDIER_NO_MELEE))
+		CapabilitiesAdd(bits_CAP_INNATE_MELEE_ATTACK1);
 
 	m_HackedGunPos = Vector(0, 0, 55);
 

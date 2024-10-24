@@ -37,6 +37,9 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#define SF_SOLDIER_NO_MELEE	(1 << 17)
+#define SF_SOLDIER_NO_JUMP	(1 << 18)
+
 #define SOLDIER_CHARGE_MIN_ATTACK_DIST_SQR (192.0f * 192.0f)
 
 #define SOLDIER_GRENADE_THROW_SPEED 650
@@ -286,7 +289,8 @@ void CNPC_BaseSoldier::Spawn( void )
 	// CapabilitiesAdd(bits_CAP_INNATE_RANGE_ATTACK2 );
 
 	// Innate range attack for kicking
-	CapabilitiesAdd(bits_CAP_INNATE_MELEE_ATTACK1 );
+	if (!HasSpawnFlags(SF_SOLDIER_NO_MELEE))
+		CapabilitiesAdd(bits_CAP_INNATE_MELEE_ATTACK1);
 
 	// Can be in a squad
 	CapabilitiesAdd( bits_CAP_SQUAD);
@@ -294,7 +298,9 @@ void CNPC_BaseSoldier::Spawn( void )
 
 	// CapabilitiesAdd( bits_CAP_DUCK );				// In reloading and cover <- BB2 npcs have no crouch anims!!
 	CapabilitiesAdd( bits_CAP_USE );
-	CapabilitiesAdd(bits_CAP_MOVE_JUMP);
+
+	if (!HasSpawnFlags(SF_SOLDIER_NO_JUMP))
+		CapabilitiesAdd(bits_CAP_MOVE_JUMP);
 
 	CapabilitiesAdd( bits_CAP_NO_HIT_SQUADMATES );
 
