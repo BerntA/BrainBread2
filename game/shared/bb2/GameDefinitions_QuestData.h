@@ -47,7 +47,7 @@ class CQuestItem
 {
 public:
 	char szQuestName[MAX_MAP_NAME_SAVE];
-	char szTitle[MAX_MAP_NAME_SAVE];
+	char szTitle[MAX_WEAPON_STRING];
 	char szDescription[256];
 
 	int iQuestIndex;

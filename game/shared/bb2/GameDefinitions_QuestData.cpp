@@ -51,7 +51,7 @@ void CGameDefinitionsQuestData::ParseQuestData(KeyValues *pkvData)
 			questItem->bShowInOrder = (questData->GetInt("DoInOrder") >= 1);
 
 			Q_strncpy(questItem->szQuestName, questData->GetName(), MAX_MAP_NAME_SAVE);
-			Q_strncpy(questItem->szTitle, questData->GetString("Title"), MAX_MAP_NAME_SAVE);
+			Q_strncpy(questItem->szTitle, questData->GetString("Title"), MAX_WEAPON_STRING);
 			Q_strncpy(questItem->szDescription, questData->GetString("Description"), 256);			
 
 			// Init default vars for all the objs.
@@ -168,7 +168,7 @@ void CGameDefinitionsQuestData::FireGameEvent(IGameEvent *event)
 
 #ifdef CLIENT_DLL
 	char pchChatString[512]; pchChatString[0] = 0;
-	wchar_t unicode[512], argument[64];
+	wchar_t unicode[512], argument[80];
 
 	if (!strcmp(type, "quest_start"))
 	{
