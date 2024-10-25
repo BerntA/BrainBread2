@@ -103,9 +103,7 @@ void CLogicObjective::Spawn()
 		return;
 	}
 
-	m_bShouldEntityCount = false;
-	if (Q_strstr(STRING(szObjective), "%s1"))
-		m_bShouldEntityCount = true;
+	m_bShouldEntityCount = ((m_iKillsNeeded > 0) || Q_strstr(STRING(szObjective), "%s1"));
 
 	if (m_bShouldEntityCount)
 	{
