@@ -309,7 +309,7 @@ float ChangeDistance( float flInterval, float flGoalDistance, float flGoalVeloci
 //
 //=============================================================================
 
-#define MAX_AIS	150
+#define MAX_AIS	256
 
 class CAI_Manager
 {
