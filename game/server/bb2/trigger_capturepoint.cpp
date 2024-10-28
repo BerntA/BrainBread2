@@ -194,16 +194,18 @@ int CTriggerCapturePoint::GetProgressStatus(void)
 	if (m_hTouchingEntities.Count() == 0)
 		return CAPTURE_STATE_NONE;
 
-	int iActorsInVolume = 0;
+	bool bHasAtLeastOneValidActor = false;
 	for (int i = 0; i < m_hTouchingEntities.Count(); i++)
 	{
 		CBaseEntity* pToucher = m_hTouchingEntities[i].Get();
-		if (!pToucher || !pToucher->IsAlive() || !pToucher->IsPlayer() || (m_iTeamLink != pToucher->GetTeamNumber()))
+		if (!pToucher || !pToucher->IsAlive() || !pToucher->IsPlayer() || (m_iTeamLink != pToucher->GetTeamNumber()) || !IsFilterPassing(pToucher))
 			continue;
-		iActorsInVolume++;
+
+		bHasAtLeastOneValidActor = true;
+		break;
 	}
 
-	if (iActorsInVolume == 0)
+	if (bHasAtLeastOneValidActor == false)
 		return CAPTURE_STATE_NONE;
 
 	if (m_bShouldHaltWhenEnemiesTouchUs)
@@ -232,7 +234,7 @@ void CTriggerCapturePoint::StartTouch(CBaseEntity* pOther)
 
 	BaseClass::StartTouch(pOther);
 
-	if (pOther->IsPlayer() && (pOther->GetTeamNumber() == m_iTeamLink) && pOther->IsAlive() && !IsEnoughPlayersInVolume(m_iTeamLink))
+	if (pOther->IsPlayer() && (pOther->GetTeamNumber() == m_iTeamLink) && pOther->IsAlive() && IsFilterPassing(pOther) && !IsEnoughPlayersInVolume(m_iTeamLink))
 		NotifyCaptureInsufficient();
 }
 
