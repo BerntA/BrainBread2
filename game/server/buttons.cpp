@@ -86,6 +86,9 @@ void CBaseButton::Precache( void )
 	{
 		PrecacheScriptSound( STRING( m_sNoise ) );
 	}
+
+	if (HasSpawnFlags(SF_BUTTON_SPARK_IF_OFF))
+		PrecacheScriptSound("DoSpark");
 }
 
 
