@@ -33,6 +33,8 @@ IPhysicsSurfaceProps *physprops = NULL;
 // UNDONE: Split into separate hashes?
 IPhysicsObjectPairHash *g_EntityCollisionHash = NULL;
 
+const char* SURFACEPROP_MANIFEST_FILE = "scripts/surfaceproperties_manifest.txt";
+
 const objectparams_t g_PhysDefaultObjectParams =
 {
 	NULL,
@@ -543,32 +545,29 @@ void AddSurfacepropFile( const char *pFileName, IPhysicsSurfaceProps *pProps, IF
 	}
 }
 
-void PhysParseSurfaceData(IPhysicsSurfaceProps *pProps, IFileSystem *pFileSystem)
+void PhysParseSurfaceData(IPhysicsSurfaceProps* pProps, IFileSystem* pFileSystem)
 {
-	KeyValues *pkvNewManifest = new KeyValues("surfaceproperties_manifest");
-	pkvNewManifest->SetString("file", "data/surfaceproperties/surfaceproperties.txt");
-	AddSurfacepropFile("data/surfaceproperties/surfaceproperties.txt", pProps, pFileSystem); // Load base first.
-
-	char filePath[MAX_WEAPON_STRING];
-	FileFindHandle_t findHandle;
-	const char *pFilename = filesystem->FindFirstEx("data/surfaceproperties/*.txt", "MOD", &findHandle);
-	while (pFilename)
+	KeyValues* manifest = new KeyValues(SURFACEPROP_MANIFEST_FILE);
+	if (manifest->LoadFromFile(pFileSystem, SURFACEPROP_MANIFEST_FILE, "GAME"))
 	{
-		if (!filesystem->IsDirectory(pFilename, "MOD") && Q_strcmp(pFilename, "surfaceproperties.txt"))
+		for (KeyValues* sub = manifest->GetFirstSubKey(); sub != NULL; sub = sub->GetNextKey())
 		{
-			Q_snprintf(filePath, MAX_WEAPON_STRING, "data/surfaceproperties/%s", pFilename);
-			AddSurfacepropFile(filePath, pProps, pFileSystem);
+			if (!Q_stricmp(sub->GetName(), "file"))
+			{
+				// Add
+				AddSurfacepropFile(sub->GetString(), pProps, pFileSystem);
+				continue;
+			}
 
-			KeyValues *pkvSub = new KeyValues("file");
-			pkvSub->SetStringValue(filePath);
-			pkvNewManifest->AddSubKey(pkvSub);
+			Warning("surfaceprops::Init:  Manifest '%s' with bogus file type '%s', expecting 'file'\n",
+				SURFACEPROP_MANIFEST_FILE, sub->GetName());
 		}
-		pFilename = filesystem->FindNext(findHandle);
 	}
-	filesystem->FindClose(findHandle);
-
-	pkvNewManifest->SaveToFile(pFileSystem, "scripts/surfaceproperties_manifest.txt", "MOD");
-	pkvNewManifest->deleteThis();
+	else
+	{
+		Error("Unable to load manifest file '%s'\n", SURFACEPROP_MANIFEST_FILE);
+	}
+	manifest->deleteThis();
 }
 
 void PhysCreateVirtualTerrain( CBaseEntity *pWorld, const objectparams_t &defaultParams )
@@ -1014,7 +1013,7 @@ void PhysFrictionSound( CBaseEntity *pEntity, IPhysicsObject *pObject, float ene
 	if ( psurf->sounds.scrapeSmooth && phit->audio.roughnessFactor < psurf->audio.roughThreshold )
 	{
 		soundName = psurf->sounds.scrapeSmooth;
-		soundHandle = &psurf->soundhandles.scrapeRough;
+		soundHandle = &psurf->soundhandles.scrapeSmooth;
 	}
 
 	const char *pSoundName = physprops->GetString( soundName );
@@ -1062,5 +1061,3 @@ void PrecachePhysicsSounds()
 		pprop->soundhandles.strainSound = PrecachePhysicsSoundByStringIndex( pprop->sounds.strainSound );
 	}
 }
-
-

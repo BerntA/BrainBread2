@@ -24,6 +24,8 @@
 // This test will flag any circular references and bail.
 #define MAX_SOUNDSCAPE_RECURSION	8
 
+#define SOUNDSCAPE_MANIFEST_FILE	"scripts/soundscapes_manifest.txt"
+
 const float DEFAULT_SOUND_RADIUS = 36.0f;
 // Keep an array of all looping sounds so they can be faded in/out
 // OPTIMIZE: Get a handle/pointer to the engine's sound channel instead 
@@ -321,21 +323,49 @@ bool C_SoundscapeSystem::Init()
 {
 	m_loopingSoundId = 0;
 
-	DevMsg("Client Loading Soundscapes:\n");
-	char filePath[MAX_WEAPON_STRING];
-	FileFindHandle_t findHandle;
-	const char *pFilename = filesystem->FindFirstEx("data/soundscapes/*.txt", "MOD", &findHandle);
-	while (pFilename)
+	const char* mapname = MapName();
+	const char* mapSoundscapeFilename = NULL;
+
+	if (mapname && *mapname)
 	{
-		if (!filesystem->IsDirectory(pFilename, "MOD"))
-		{
-			Q_snprintf(filePath, MAX_WEAPON_STRING, "data/soundscapes/%s", pFilename);
-			AddSoundScapeFile(filePath);
-			DevMsg("Loaded: %s\n", filePath);
-		}
-		pFilename = filesystem->FindNext(findHandle);
+		mapSoundscapeFilename = VarArgs("scripts/soundscapes_%s.txt", mapname);
 	}
-	filesystem->FindClose(findHandle);
+
+	KeyValues* manifest = new KeyValues(SOUNDSCAPE_MANIFEST_FILE);
+#ifdef POSIX
+	if (manifest->LoadFromFile(filesystem, SOUNDSCAPE_MANIFEST_FILE, "MOD"))
+#else
+	if (filesystem->LoadKeyValues(*manifest, IFileSystem::TYPE_SOUNDSCAPE, SOUNDSCAPE_MANIFEST_FILE, "MOD"))
+#endif
+	{
+		for (KeyValues* sub = manifest->GetFirstSubKey(); sub != NULL; sub = sub->GetNextKey())
+		{
+			if (!Q_stricmp(sub->GetName(), "file"))
+			{
+				// Add
+				AddSoundScapeFile(sub->GetString());
+				if (mapSoundscapeFilename && FStrEq(sub->GetString(), mapSoundscapeFilename))
+				{
+					mapSoundscapeFilename = NULL; // we've already loaded the map's soundscape
+				}
+				continue;
+			}
+
+			Warning("C_SoundscapeSystem::Init:  Manifest '%s' with bogus file type '%s', expecting 'file'\n",
+				SOUNDSCAPE_MANIFEST_FILE, sub->GetName());
+		}
+
+		if (mapSoundscapeFilename && filesystem->FileExists(mapSoundscapeFilename))
+		{
+			AddSoundScapeFile(mapSoundscapeFilename);
+		}
+	}
+	else
+	{
+		Error("Unable to load manifest file '%s'\n", SOUNDSCAPE_MANIFEST_FILE);
+	}
+
+	manifest->deleteThis();
 
 	return true;
 }

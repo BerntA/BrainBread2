@@ -15,6 +15,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#define SOUNDSCAPE_MANIFEST_FILE	"scripts/soundscapes_manifest.txt"
+
 CON_COMMAND(soundscape_flush, "Flushes the server & client side soundscapes")
 {
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() );
@@ -131,23 +133,51 @@ bool CSoundscapeSystem::Init()
 {
 	m_soundscapeCount = 0;
 
-	DevMsg("Server Loading Soundscapes:\n");
-	char filePath[MAX_WEAPON_STRING];
-	FileFindHandle_t findHandle;
-	const char *pFilename = filesystem->FindFirstEx("data/soundscapes/*.txt", "MOD", &findHandle);
-	while (pFilename)
-	{
-		if (!filesystem->IsDirectory(pFilename, "MOD"))
-		{
-			Q_snprintf(filePath, MAX_WEAPON_STRING, "data/soundscapes/%s", pFilename);
-			AddSoundscapeFile(filePath);
-			DevMsg("Loaded: %s\n", filePath);
-		}
-		pFilename = filesystem->FindNext(findHandle);
-	}
-	filesystem->FindClose(findHandle);
+	const char* mapname = STRING(gpGlobals->mapname);
+	const char* mapSoundscapeFilename = NULL;
 
+	if (mapname && *mapname)
+	{
+		mapSoundscapeFilename = UTIL_VarArgs("scripts/soundscapes_%s.txt", mapname);
+	}
+
+	KeyValues* manifest = new KeyValues(SOUNDSCAPE_MANIFEST_FILE);
+#ifdef POSIX
+	if (manifest->LoadFromFile(filesystem, SOUNDSCAPE_MANIFEST_FILE, "MOD"))
+#else
+	if (filesystem->LoadKeyValues(*manifest, IFileSystem::TYPE_SOUNDSCAPE, SOUNDSCAPE_MANIFEST_FILE, "MOD"))
+#endif
+	{
+		for (KeyValues* sub = manifest->GetFirstSubKey(); sub != NULL; sub = sub->GetNextKey())
+		{
+			if (!Q_stricmp(sub->GetName(), "file"))
+			{
+				// Add
+				AddSoundscapeFile(sub->GetString());
+				if (mapSoundscapeFilename && FStrEq(sub->GetString(), mapSoundscapeFilename))
+				{
+					mapSoundscapeFilename = NULL; // we've already loaded the map's soundscape
+				}
+				continue;
+			}
+
+			Warning("CSoundscapeSystem::Init:  Manifest '%s' with bogus file type '%s', expecting 'file'\n",
+				SOUNDSCAPE_MANIFEST_FILE, sub->GetName());
+		}
+
+		if (mapSoundscapeFilename && filesystem->FileExists(mapSoundscapeFilename))
+		{
+			AddSoundscapeFile(mapSoundscapeFilename);
+		}
+	}
+	else
+	{
+		Error("Unable to load manifest file '%s'\n", SOUNDSCAPE_MANIFEST_FILE);
+	}
+
+	manifest->deleteThis();
 	m_activeIndex = 0;
+
 	return true;
 }
 
