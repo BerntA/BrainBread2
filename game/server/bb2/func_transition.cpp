@@ -12,6 +12,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#define USE_SUSPEND_TIME 1.0f
 #define SF_TRANSITION_LOCKED 2048 // Start locked
 
 void SetGenericTextMessage(hudtextparms_t& params);
@@ -139,9 +140,10 @@ bool CFuncTransition::CreateVPhysics()
 void CFuncTransition::TransitionUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value)
 {
 	CBasePlayer* pPlayer = ToBasePlayer(pActivator);
-	if (!pPlayer || !pPlayer->IsAlive() || (pPlayer->GetDoorTransition() > 0))
+	if (!pPlayer || !pPlayer->IsAlive() || (pPlayer->GetDoorTransition() > 0) || ((gpGlobals->curtime - pPlayer->GetLastUsedTransitionTime()) <= USE_SUSPEND_TIME))
 		return;
 
+	pPlayer->UpdateLastUsedTransitionTime();
 	const char* pDoor = STRING(m_Door);
 
 	if (pDoor && pDoor[0]) // ensure that default anim for door is idle.

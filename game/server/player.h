@@ -984,18 +984,23 @@ protected:
 
 	Vector m_vecLagCompHitEndPosition;
 	int m_iDoorTransitionIndex;
+	float m_flLastTransitionUseTime;
 
 public:
 
 	float  GetLaggedMovementValue( void ){ return m_flLaggedMovementValue;	}
 	void   SetLaggedMovementValue( float flValue ) { m_flLaggedMovementValue = flValue;	}
 
-	inline bool IsAutoKickDisabled( void ) const;
-	inline void DisableAutoKick( bool disabled );
+	inline bool IsAutoKickDisabled(void) const;
+	inline void DisableAutoKick(bool disabled);
 
 	void	DumpPerfToRecipient(CBasePlayer* pRecipient, int nMaxRecords);
+
 	void	SetDoorTransition(int index) { m_iDoorTransitionIndex = index; }
 	int		GetDoorTransition(void) { return m_iDoorTransitionIndex; }
+
+	void	UpdateLastUsedTransitionTime(void) { m_flLastTransitionUseTime = gpGlobals->curtime; }
+	float	GetLastUsedTransitionTime(void) const { return m_flLastTransitionUseTime; }
 
 private:
 	bool m_autoKickDisabled;

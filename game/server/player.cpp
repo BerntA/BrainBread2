@@ -271,6 +271,7 @@ CBasePlayer::CBasePlayer( )
 	Weapon_SetNext(NULL);
 	m_bitsDamageType = 0;
 	m_iDoorTransitionIndex = 0;
+	m_flLastTransitionUseTime = 0.0f;
 
 	m_bForceOrigin = false;
 	m_pCurrentCommand = NULL;
@@ -1270,6 +1271,7 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	m_flDeathTime = gpGlobals->curtime;
 	m_iDoorTransitionIndex = 0;
+	m_flLastTransitionUseTime = 0.0f;
 
 	ClearLastKnownArea();
 
@@ -3803,6 +3805,7 @@ void CBasePlayer::Spawn( void )
 	m_bitsDamageType	= 0;
 	m_afPhysicsFlags	= 0;
 	m_iDoorTransitionIndex = 0;
+	m_flLastTransitionUseTime = 0.0f;
 
 	m_idrownrestored = m_idrowndmg;
 
