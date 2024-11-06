@@ -646,6 +646,110 @@ IRagdoll* C_HL2MP_Player::GetRepresentativeRagdoll() const
 	return (m_pPlayerRagdoll ? m_pPlayerRagdoll->GetIRagdoll() : NULL);
 }
 
+KeyValues* C_HL2MP_Player::SkillSetKV(int iSlot)
+{
+	KeyValues* kvSkills = new KeyValues("SkillSet");
+	int val;
+	char szBuf[8];
+
+	for (int i = 0; i < PLAYER_SKILL_ZOMBIE_HEALTH; i++)
+	{
+		Q_snprintf(szBuf, sizeof(PLAYER_SKILL_ZOMBIE_HEALTH), "%i", i);
+
+		kvSkills->SetInt(szBuf, m_iSkillSets[iSlot][i]);
+	}
+
+	return kvSkills;
+}
+
+void C_HL2MP_Player::SaveSkillSets()
+{
+	KeyValues* kvSkillFile = new KeyValues("SkillSets");
+	int val;
+	char szBuf[8];
+
+	for (int set = 0; set < MAX_SKILL_SETS; set++)
+	{
+		Q_snprintf(szBuf, 12, "%i", set);
+		KeyValues* pSkillSet = new KeyValues(szBuf);
+
+		for (int sk = 0; sk < PLAYER_SKILL_ZOMBIE_HEALTH; sk++)
+		{
+			Q_snprintf(szBuf, sizeof(PLAYER_SKILL_ZOMBIE_HEALTH), "%i", sk);
+
+			// pSkillSet->SetInt(szBuf, GetSkillValue(sk));
+			pSkillSet->SetInt(szBuf, m_iSkillSets[set][sk]);
+		}
+
+		kvSkillFile->AddSubKey(pSkillSet);
+	}
+
+	kvSkillFile->SaveToFile(g_pFullFileSystem, "scripts/skillsets.txt", "MOD");
+	kvSkillFile->deleteThis();
+}
+
+void C_HL2MP_Player::SaveSkillsAsSet(int iSlot)
+{
+	if (iSlot > MAX_SKILL_SETS - 1)
+		return;
+
+	for (int sk = 0; sk < PLAYER_SKILL_ZOMBIE_HEALTH; sk++)
+	{
+		m_iSkillSets[iSlot][sk] = GetSkillValue(sk);
+	}
+}
+
+void C_HL2MP_Player::LoadSkillSets()
+{
+	KeyValues* kvLoadFile = new KeyValues("SkillSets");
+
+	if (!kvLoadFile->LoadFromFile(g_pFullFileSystem, "scripts/skillsets.txt", "MOD"))
+	{
+		kvLoadFile->deleteThis();
+
+		return;
+	}
+
+	char szBuf[4];
+	KeyValues* pSkillSet;
+	for (int i = 0; i < MAX_SKILL_SETS; i++)
+	{
+		Q_snprintf(szBuf, 16, "%i", i);
+
+		pSkillSet = kvLoadFile->FindKey(szBuf);
+
+		if (pSkillSet)
+		{
+			KeyValues* sub = pSkillSet->GetFirstValue();
+			
+			if (!sub)
+				continue;
+
+			for (int k = 0; k < PLAYER_SKILL_ZOMBIE_HEALTH; k++)
+			{
+				m_iSkillSets[i][k] = sub->GetInt();
+
+				sub = sub->GetNextValue();
+
+				if (!sub && k < PLAYER_SKILL_ZOMBIE_HEALTH - 1)
+				{
+					Warning("ERROR!: Skill Set #%s not fully filled!\n", szBuf);
+					break;
+				}
+			}
+		}
+	}
+
+	kvLoadFile->deleteThis();
+}
+
+void C_HL2MP_Player::ActivateSkillSet(int iSlot)
+{
+	KeyValues* kvSkills = SkillSetKV(iSlot);
+
+	engine->ServerCmdKeyValues(kvSkills);
+}
+
 void C_HL2MP_Player::UpdateClientSideAnimation()
 {
 	m_PlayerAnimState->Update(EyeAngles()[YAW], EyeAngles()[PITCH]);
@@ -804,6 +908,7 @@ void C_HL2MP_Player::CalculateIKLocks(float currentTime)
 	partition->SuppressLists(curSuppressed, true);
 }
 
+
 CON_COMMAND_F(setmodel, "Set the playermodel to use, client-only. Can be a number, chooses between playermodels via script.", FCVAR_CHEAT)
 {
 	C_HL2MP_Player *pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
@@ -816,3 +921,45 @@ CON_COMMAND_F(setmodel, "Set the playermodel to use, client-only. Can be a numbe
 
 	pPlayer->GetNewPlayerModel()->SetModelPointer((pPlayer->GetTeamNumber() == TEAM_DECEASED) ? data->m_pClientModelPtrZombie : data->m_pClientModelPtrHuman);
 }
+
+#ifdef DEBUG
+CON_COMMAND_F(bb2_activateskillset, "", FCVAR_CHEAT)
+{
+	C_HL2MP_Player* pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
+
+	if ((pPlayer == NULL) || (args.ArgC() != 2))
+		return;
+
+	pPlayer->ActivateSkillSet(atof(args[1]));
+}
+
+CON_COMMAND_F(bb2_saveskillsets, "", FCVAR_CHEAT)
+{
+	C_HL2MP_Player* pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
+
+	if (pPlayer == NULL)
+		return;
+
+	pPlayer->SaveSkillSets();
+}
+
+CON_COMMAND_F(bb2_saveskills, "Save the current allocated skill points as a skill set. Argument must be a number within the boundaries of 0 and 2.", FCVAR_CHEAT)
+{
+	C_HL2MP_Player* pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
+
+	if ((pPlayer == NULL) || (args.ArgC() != 2))
+		return;
+
+	pPlayer->SaveSkillsAsSet(atof(args[1]));
+}
+
+CON_COMMAND_F(bb2_loadskills, "", FCVAR_CHEAT)
+{
+	C_HL2MP_Player* pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
+
+	if (pPlayer == NULL)
+		return;
+
+	pPlayer->LoadSkillSets();
+}
+#endif
