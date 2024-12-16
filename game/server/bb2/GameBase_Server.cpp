@@ -172,7 +172,7 @@ void CGameBaseServer::NewPlayerConnection(CHL2MP_Player *pClient)
 	char szSoundFile[MAX_WEAPON_STRING];
 	Q_strncpy(szSoundFile, "", MAX_WEAPON_STRING);
 
-	CGameMusic *pGameMusic = ToGameMusic(gEntList.FindEntityByClassname(NULL, "game_music"));
+	CGameMusic* pGameMusic = ToGameMusic(gEntList.FindEntityByClassname(NULL, "game_music"));
 	while (pGameMusic)
 	{
 		// Find the first entity playing music:

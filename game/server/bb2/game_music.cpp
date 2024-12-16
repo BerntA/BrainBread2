@@ -66,13 +66,13 @@ void CGameMusic::Play(void)
 		return;
 
 	// If we play a sound then make sure we stop all the other music ent's or else their state will never be reset (it will never reset m_bIsPlayingSound).
-	CGameMusic *pOther = dynamic_cast<CGameMusic*> (gEntList.FindEntityByClassname(NULL, this->GetClassname()));
+	CGameMusic* pOther = ToGameMusic(gEntList.FindEntityByClassname(NULL, this->GetClassname()));
 	while (pOther)
 	{
 		if (pOther != this)
 			pOther->Stop();
 
-		pOther = dynamic_cast<CGameMusic*> (gEntList.FindEntityByClassname(pOther, this->GetClassname()));
+		pOther = ToGameMusic(gEntList.FindEntityByClassname(pOther, this->GetClassname()));
 	}
 
 	m_bIsPlayingSound = true;
