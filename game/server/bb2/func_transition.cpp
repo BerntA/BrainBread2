@@ -234,9 +234,9 @@ void CFuncTransition::KillBlockers(void)
 	CTakeDamageInfo damageInfo(this, this, 1000, DMG_GENERIC | DMG_PREVENT_PHYSICS_FORCE);
 	const int mask = MASK_SHOT & (~CONTENTS_HITBOX);
 
-	for (CEntitySphereQuery sphere(m_vSaveOrigin, 60.0f); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity())
+	for (CEntitySphereQuery sphere(m_vSaveOrigin, 50.0f); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity())
 	{
-		if (!pEntity || !pEntity->IsNPC() || (pEntity->m_takedamage == DAMAGE_NO))
+		if (!pEntity || !pEntity->IsNPC() || (pEntity->m_takedamage == DAMAGE_NO) || pEntity->IsHumanBoss() || pEntity->IsZombieBoss())
 			continue;
 
 		vecTarget = pEntity->WorldSpaceCenter();
