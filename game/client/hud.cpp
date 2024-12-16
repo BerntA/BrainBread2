@@ -21,11 +21,8 @@
 #include <KeyValues.h>
 #include "itextmessage.h"
 #include "mempool.h"
-#include <KeyValues.h>
 #include "filesystem.h"
 #include <vgui_controls/AnimationController.h>
-#include <vgui/ISurface.h>
-#include "hud_lcd.h"
 #include "hl2mp_gamerules.h"
 #include <math.h>
 #include "ScoreBoardPanel.h"
@@ -399,8 +396,6 @@ void CHud::Init( void )
 	// Create all the Hud elements
 	CHudElementHelper::CreateAllElements();
 
-	gLCD.Init();
-
 	// Initialize all created elements
 	for ( int i = 0; i < m_HudList.Size(); i++ )
 	{
@@ -492,8 +487,6 @@ void CHud::InitFonts()
 //-----------------------------------------------------------------------------
 void CHud::Shutdown( void )
 {
-	gLCD.Shutdown();
-
 	// Deleting hudlist items can result in them being removed from the same hudlist (m_bNeedsRemove).
 	//	So go through and kill the last item until the array is empty.
 	while ( m_HudList.Size() > 0 )
@@ -1297,10 +1290,7 @@ void CHud::UpdateHud( bool bActive )
 {
 	// clear the weapon bits.
 	gHUD.m_iKeyBits &= (~(IN_WEAPON1|IN_WEAPON2));
-
 	g_pClientMode->Update();
-
-	gLCD.Update();
 }
 
 //-----------------------------------------------------------------------------

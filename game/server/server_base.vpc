@@ -236,8 +236,6 @@ $Project
 		$File	"EntityParticleTrail.h"
 		$File	"$SRCDIR\game\shared\EntityParticleTrail_Shared.cpp"
 		$File	"$SRCDIR\game\shared\entityparticletrail_shared.h"
-		$File	"env_debughistory.cpp"
-		$File	"env_debughistory.h"
 		$File	"$SRCDIR\game\shared\env_detail_controller.cpp"
 		$File	"env_entity_maker.cpp"
 		$File	"env_particlescript.cpp"

@@ -692,7 +692,7 @@ void CNPC_Crow::Takeoff( const Vector &vGoal )
 	}
 }
 
-void CNPC_Crow::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
+void CNPC_Crow::TraceAttack(const CTakeDamageInfo& info, const Vector& vecDir, trace_t* ptr)
 {
 	CTakeDamageInfo	newInfo = info;
 
@@ -706,7 +706,7 @@ void CNPC_Crow::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 		newInfo.SetDamageForce( puntDir );
 	}
 
-	BaseClass::TraceAttack( newInfo, vecDir, ptr, pAccumulator );
+	BaseClass::TraceAttack(newInfo, vecDir, ptr);
 }
 
 

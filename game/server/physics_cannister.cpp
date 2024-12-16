@@ -170,7 +170,7 @@ int CPhysicsCannister::OnTakeDamage( const CTakeDamageInfo &info )
 }
 
 
-void CPhysicsCannister::TraceAttack( const CTakeDamageInfo &info, const Vector &dir, trace_t *ptr, CDmgAccumulator *pAccumulator )
+void CPhysicsCannister::TraceAttack(const CTakeDamageInfo& info, const Vector& dir, trace_t* ptr)
 {
 	if ( !m_active && ptr->hitgroup != 0 )
 	{
@@ -179,7 +179,7 @@ void CPhysicsCannister::TraceAttack( const CTakeDamageInfo &info, const Vector &
 		VectorNormalize( direction );
 		CannisterActivate( info.GetAttacker(), direction );
 	}
-	BaseClass::TraceAttack( info, dir, ptr, pAccumulator );
+	BaseClass::TraceAttack(info, dir, ptr);
 }
 
 

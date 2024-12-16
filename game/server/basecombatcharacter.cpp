@@ -37,7 +37,6 @@
 #include "hl2mp_player.h"
 #include "GameBase_Shared.h"
 #include "GameBase_Server.h"
-#include "physics_prop_ragdoll.h"
 #include "random_extended.h"
 
 #include "hl2mp_gamerules.h"
@@ -354,20 +353,9 @@ CBaseCombatCharacter::CBaseCombatCharacter( void )
 	m_hActiveWeapon			= NULL;
 	
 	// not alive yet
-	m_aliveTimer.Invalidate();
-	m_hasBeenInjured = 0;
 	m_nGibFlags = 0;
 	m_nMaterialOverlayFlags = 0;
 	m_pActiveSkillEffects.Purge();
-
-	for( int t=0; t<MAX_DAMAGE_TEAMS; ++t )
-	{
-		m_damageHistory[t].team = TEAM_INVALID;
-	}
-
-	// not standing on a nav area yet
-	m_lastNavArea = NULL;
-	m_registeredNavTeam = TEAM_INVALID;
 
 	for (int i = 0; i < MAX_WEAPONS; i++)
 	{
@@ -400,16 +388,9 @@ void CBaseCombatCharacter::Spawn( void )
 	BaseClass::Spawn();
 
 	SetBlocksLOS( false );
-	m_aliveTimer.Start();
-	m_hasBeenInjured = 0;
 	m_nGibFlags = 0;
 	m_nMaterialOverlayFlags = 0;
 	m_pActiveSkillEffects.Purge();
-
-	for( int t=0; t<MAX_DAMAGE_TEAMS; ++t )
-	{
-		m_damageHistory[t].team = TEAM_INVALID;
-	}
 
 	// not standing on a nav area yet
 	ClearLastKnownArea();
@@ -1360,32 +1341,6 @@ int CBaseCombatCharacter::OnTakeDamage(const CTakeDamageInfo &info)
 		UTIL_Smoke(info.GetDamagePosition(), random->RandomInt(10, 15), 10);
 	}
 
-	// track damage history
-	if (info.GetAttacker())
-	{
-		int attackerTeam = info.GetAttacker()->GetTeamNumber();
-
-		m_hasBeenInjured |= (1 << attackerTeam);
-
-		for (int i = 0; i < MAX_DAMAGE_TEAMS; ++i)
-		{
-			if (m_damageHistory[i].team == attackerTeam)
-			{
-				// restart the injury timer
-				m_damageHistory[i].interval.Start();
-				break;
-			}
-
-			if (m_damageHistory[i].team == TEAM_INVALID)
-			{
-				// team not registered yet
-				m_damageHistory[i].team = attackerTeam;
-				m_damageHistory[i].interval.Start();
-				break;
-			}
-		}
-	}
-
 	// Bernt: Scale the damage depending on which entity we hit.
 	// We handle players in hl2mp_player, if we check it here the armor code will expect the non scaled damage...
 	CTakeDamageInfo damageCopy = info;
@@ -2176,49 +2131,6 @@ void CBaseCombatCharacter::DoMuzzleFlash()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Invoke this to update our last known nav area 
-// (since there is no think method chained to CBaseCombatCharacter)
-//-----------------------------------------------------------------------------
-void CBaseCombatCharacter::UpdateLastKnownArea( void )
-{
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Return true if we can use (walk through) the given area 
-//-----------------------------------------------------------------------------
-bool CBaseCombatCharacter::IsAreaTraversable( const CNavArea *area ) const
-{
-	return area ? !area->IsBlocked( GetTeamNumber() ) : false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Leaving the nav mesh
-//-----------------------------------------------------------------------------
-void CBaseCombatCharacter::ClearLastKnownArea( void )
-{
-	OnNavAreaChanged( NULL, m_lastNavArea );
-	
-	if ( m_lastNavArea )
-	{
-		m_lastNavArea->DecrementPlayerCount( m_registeredNavTeam, entindex() );
-		m_lastNavArea->OnExit( this, NULL );
-		m_lastNavArea = NULL;
-		m_registeredNavTeam = TEAM_INVALID;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Handling editor removing the area we're standing upon
-//-----------------------------------------------------------------------------
-void CBaseCombatCharacter::OnNavAreaRemoved( CNavArea *removedArea )
-{
-	if ( m_lastNavArea == removedArea )
-	{
-		ClearLastKnownArea();
-	}
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Changing team, maintain associated data
 //-----------------------------------------------------------------------------
 void CBaseCombatCharacter::ChangeTeam( int iTeamNum )
@@ -2227,63 +2139,4 @@ void CBaseCombatCharacter::ChangeTeam( int iTeamNum )
 	ClearLastKnownArea();
 
 	BaseClass::ChangeTeam( iTeamNum );
-}
-
-//-----------------------------------------------------------------------------
-// Return true if we have ever been injured by a member of the given team
-//-----------------------------------------------------------------------------
-bool CBaseCombatCharacter::HasEverBeenInjured( int team /*= TEAM_ANY */ ) const
-{
-	if ( team == TEAM_ANY )
-	{
-		return ( m_hasBeenInjured == 0 ) ? false : true;
-	}
-
-	int teamMask = 1 << team;
-
-	if ( m_hasBeenInjured & teamMask )
-	{
-		return true;
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Return time since we were hurt by a member of the given team
-//-----------------------------------------------------------------------------
-float CBaseCombatCharacter::GetTimeSinceLastInjury( int team /*= TEAM_ANY */ ) const
-{
-	const float never = 999999999999.9f;
-
-	if ( team == TEAM_ANY )
-	{
-		float time = never;
-
-		// find most recent injury time
-		for( int i=0; i<MAX_DAMAGE_TEAMS; ++i )
-		{
-			if ( m_damageHistory[i].team != TEAM_INVALID )
-			{
-				if ( m_damageHistory[i].interval.GetElapsedTime() < time )
-				{
-					time = m_damageHistory[i].interval.GetElapsedTime();
-				}
-			}
-		}
-
-		return time;
-	}
-	else
-	{
-		for( int i=0; i<MAX_DAMAGE_TEAMS; ++i )
-		{
-			if ( m_damageHistory[i].team == team )
-			{
-				return m_damageHistory[i].interval.GetElapsedTime();
-			}
-		}
-	}
-
-	return never;
 }

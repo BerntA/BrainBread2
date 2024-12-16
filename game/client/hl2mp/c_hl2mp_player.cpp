@@ -144,7 +144,7 @@ C_HL2MP_Player::~C_HL2MP_Player( void )
 	m_PlayerAnimState->Release();
 }
 
-void C_HL2MP_Player::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
+void C_HL2MP_Player::TraceAttack(const CTakeDamageInfo& info, const Vector& vecDir, trace_t* ptr)
 {
 	Vector vecOrigin = ptr->endpos - vecDir * 4;
 

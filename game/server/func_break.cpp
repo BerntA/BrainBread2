@@ -608,7 +608,7 @@ void CBreakable::Break( CBaseEntity *pBreaker )
 }
 
 
-void CBreakable::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
+void CBreakable::TraceAttack(const CTakeDamageInfo& info, const Vector& vecDir, trace_t* ptr)
 {
 	// random spark if this is a 'computer' object
 	if (random->RandomInt(0,1) )
@@ -629,7 +629,7 @@ void CBreakable::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir,
 		}
 	}
 
-	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
+	BaseClass::TraceAttack(info, vecDir, ptr);
 }
 
 

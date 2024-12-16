@@ -17,6 +17,7 @@ ConVar phys_pushscale( "phys_pushscale", "1", FCVAR_REPLICATED );
 void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBaseEntity *pWeapon, const Vector &damageForce, const Vector &damagePosition, const Vector &reportedPosition, float flDamage, int bitsDamageType, int iCustomDamage )
 {
 	m_hInflictor = pInflictor;
+
 	if ( pAttacker )
 	{
 		m_hAttacker = pAttacker;
@@ -27,15 +28,11 @@ void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBa
 	}
 
 	m_hWeapon = pWeapon;
-
 	m_flDamage = flDamage;
-
-	m_flBaseDamage = BASEDAMAGE_NOT_SPECIFIED;
 
 	m_bitsDamageType = bitsDamageType;
 	m_iDamageCustom = iCustomDamage;
 
-	m_flMaxDamage = flDamage;
 	m_vecDamageForce = damageForce;
 	m_vecDamagePosition = damagePosition;
 	m_vecReportedPosition = reportedPosition;
@@ -93,28 +90,6 @@ void CTakeDamageInfo::Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBas
 		vecReported = *reportedPosition;
 	}
 	Init( pInflictor, pAttacker, pWeapon, damageForce, damagePosition, vecReported, flDamage, bitsDamageType, iKillType );
-}
-
-//-----------------------------------------------------------------------------
-// Squirrel the damage value away as BaseDamage, which will later be used to 
-// calculate damage force. 
-//-----------------------------------------------------------------------------
-void CTakeDamageInfo::AdjustPlayerDamageInflictedForSkillLevel()
-{
-#ifndef CLIENT_DLL
-	CopyDamageToBaseDamage();
-	SetDamage( g_pGameRules->AdjustPlayerDamageInflicted(GetDamage()) );
-#endif
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void CTakeDamageInfo::AdjustPlayerDamageTakenForSkillLevel()
-{
-#ifndef CLIENT_DLL
-	CopyDamageToBaseDamage();
-	g_pGameRules->AdjustPlayerDamageTaken(this);
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -220,7 +195,6 @@ void AddMultiDamage( const CTakeDamageInfo &info, CBaseEntity *pEntity )
 	g_MultiDamage.SetDamageForce( g_MultiDamage.GetDamageForce() + info.GetDamageForce() );
 	g_MultiDamage.SetDamagePosition( info.GetDamagePosition() );
 	g_MultiDamage.SetReportedPosition( info.GetReportedPosition() );
-	g_MultiDamage.SetMaxDamage( MAX( g_MultiDamage.GetMaxDamage(), info.GetDamage() ) );
 	g_MultiDamage.SetAmmoType( info.GetAmmoType() );
 	g_MultiDamage.SetSkillFlags(info.GetSkillFlags());
 	g_MultiDamage.SetForcedWeaponID(info.GetForcedWeaponID());
@@ -279,7 +253,7 @@ void CalculateExplosiveDamageForce( CTakeDamageInfo *info, const Vector &vecDir,
 	float flClampForce = ImpulseScale( 75, 400 );
 
 	// Calculate an impulse large enough to push a 75kg man 4 in/sec per point of damage
-	float flForceScale = info->GetBaseDamage() * ImpulseScale( 75, 4 );
+	float flForceScale = info->GetDamage() * ImpulseScale( 75, 4 );
 
 	if( flForceScale > flClampForce )
 		flForceScale = flClampForce;
@@ -323,7 +297,7 @@ void CalculateMeleeDamageForce( CTakeDamageInfo *info, const Vector &vecMeleeDir
 	info->SetDamagePosition( vecForceOrigin );
 
 	// Calculate an impulse large enough to push a 75kg man 4 in/sec per point of damage
-	float flForceScale = info->GetBaseDamage() * ImpulseScale( 75, 4 );
+	float flForceScale = info->GetDamage() * ImpulseScale( 75, 4 );
 	Vector vecForce = vecMeleeDir;
 	VectorNormalize( vecForce );
 	vecForce *= flForceScale;
@@ -352,121 +326,3 @@ void GuessDamageForce( CTakeDamageInfo *info, const Vector &vecForceDir, const V
 		CalculateMeleeDamageForce( info, vecForceDir, vecForceOrigin, flScale );
 	}
 }
-
-
-// Debug functions for printing out damage types
-
-// This table maps the DMG_* defines to their strings such that 
-// for DMG_XXX = i << x  then table[i] = string for DMG_XXX
-
-static const char * const s_DamageTypeToStrTable[] =
-{
-	"GENERIC",
-	"CRUSH",
-	"BULLET",
-	"SLASH",
-	"BURN",
-	"VEHICLE",
-	"FALL",
-	"BLAST",
-	"CLUB",
-	"SHOCK",
-	"SONIC",
-	"ENERGYBEAM",
-	"PREVENT_PHYSICS_FORCE",
-	"NEVERGIB",
-	"ALWAYSGIB",
-	"DROWN",
-	"PARALYZE",
-	"NERVEGAS",
-	"POISON",
-	"RADIATION",
-	"DROWNRECOVER",
-	"ACID",
-	"SLOWBURN",
-	"REMOVENORAGDOLL",
-	"PHYSGUN",
-	"PLASMA",
-	"AIRBOAT",
-	"DISSOLVE",
-	"BLAST_SURFACE",
-	"DIRECT",
-	"BUCKSHOT"
-};
-#define DAMAGE_TYPE_STR_TABLE_ENTRIES 31 // number of entries in table above
-
-void CTakeDamageInfo::DebugGetDamageTypeString(unsigned int damageType, char *outbuf, int outbuflength )
-{
-	Assert(outbuflength > 0);
-
-	// we need to use snprintf to actually copy out the strings here because that's the only function that returns
-	// how much text was output
-	if ( damageType == 0 )
-	{
-		int charsWrit = Q_snprintf(outbuf, outbuflength, "%s", s_DamageTypeToStrTable[0]);
-		
-		outbuflength -= charsWrit;
-		outbuf += charsWrit; // advance the output pointer (now it sits on the null terminator)
-	}
-
-	// loop through the other entries in the table
-	for (int i = 0;
-		 outbuflength > 0 && i < (DAMAGE_TYPE_STR_TABLE_ENTRIES - 1);
-		 ++i )
-	{
-		if ( damageType & (1 << i) )
-		{
-			// this bit was set. Print the corresponding entry from the table
-			// (the index is +1 because entry 1 in the table corresponds to 1 << 0)
-			int charsWrit = Q_snprintf(outbuf, outbuflength, "%s ", s_DamageTypeToStrTable[i + 1]); 
-
-			outbuflength -= charsWrit; // reduce the chars left
-			outbuf += charsWrit; // advance the output pointer (now it sits on the null terminator)
-		}
-	}
-}
-
-
-/*
-// instant damage
-
-#define DMG_GENERIC			0			// generic damage was done
-#define DMG_CRUSH			(1 << 0)	// crushed by falling or moving object. 
-// NOTE: It's assumed crush damage is occurring as a result of physics collision, so no extra physics force is generated by crush damage.
-// DON'T use DMG_CRUSH when damaging entities unless it's the result of a physics collision. You probably want DMG_CLUB instead.
-#define DMG_BULLET			(1 << 1)	// shot
-#define DMG_SLASH			(1 << 2)	// cut, clawed, stabbed
-#define DMG_BURN			(1 << 3)	// heat burned
-#define DMG_VEHICLE			(1 << 4)	// hit by a vehicle
-#define DMG_FALL			(1 << 5)	// fell too far
-#define DMG_BLAST			(1 << 6)	// explosive blast damage
-#define DMG_CLUB			(1 << 7)	// crowbar, punch, headbutt
-#define DMG_SHOCK			(1 << 8)	// electric shock
-#define DMG_SONIC			(1 << 9)	// sound pulse shockwave
-#define DMG_ENERGYBEAM		(1 << 10)	// laser or other high energy beam 
-#define DMG_PREVENT_PHYSICS_FORCE		(1 << 11)	// Prevent a physics force 
-#define DMG_NEVERGIB		(1 << 12)	// with this bit OR'd in, no damage type will be able to gib victims upon death
-#define DMG_ALWAYSGIB		(1 << 13)	// with this bit OR'd in, any damage type can be made to gib victims upon death.
-#define DMG_DROWN			(1 << 14)	// Drowning
-
-
-#define DMG_PARALYZE		(1 << 15)	// slows affected creature down
-#define DMG_NERVEGAS		(1 << 16)	// nerve toxins, very bad
-#define DMG_POISON			(1 << 17)	// blood poisoning - heals over time like drowning damage
-#define DMG_RADIATION		(1 << 18)	// radiation exposure
-#define DMG_DROWNRECOVER	(1 << 19)	// drowning recovery
-#define DMG_ACID			(1 << 20)	// toxic chemicals or acid burns
-#define DMG_SLOWBURN		(1 << 21)	// in an oven
-
-#define DMG_REMOVENORAGDOLL	(1<<22)		// with this bit OR'd in, no ragdoll will be created, and the target will be quietly removed.
-// use this to kill an entity that you've already got a server-side ragdoll for
-
-#define DMG_PHYSGUN			(1<<23)		// Hit by manipulator. Usually doesn't do any damage.
-#define DMG_PLASMA			(1<<24)		// Shot by Cremator
-#define DMG_AIRBOAT			(1<<25)		// Hit by the airboat's gun
-
-#define DMG_DISSOLVE		(1<<26)		// Dissolving!
-#define DMG_BLAST_SURFACE	(1<<27)		// A blast on the surface of water that cannot harm things underwater
-#define DMG_DIRECT			(1<<28)
-#define DMG_BUCKSHOT		(1<<29)		// not quite a bullet. Little, rounder, different.
-*/

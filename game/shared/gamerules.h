@@ -207,7 +207,6 @@ public:
 
 	virtual bool AllowDamage( CBaseEntity *pVictim, const CTakeDamageInfo &info ) = 0;
 
-
 // Client spawn/respawn control
 	virtual void PlayerSpawn( CBasePlayer *pPlayer ) = 0;// called by CBasePlayer::Spawn just before releasing player into the game
 	virtual void PlayerThink( CBasePlayer *pPlayer ) = 0; // called by CBasePlayer::PreThink every frame, before physics are run and after keys are accepted
@@ -221,11 +220,6 @@ public:
 	virtual int IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled ) = 0;// how many points do I award whoever kills this player?
 	virtual void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info ) = 0;// Called each time a player dies
 	virtual void DeathNotice(CBaseEntity *pVictim, const CTakeDamageInfo &info) { } // Call this from within a GameRules class to report an obituary.
-
-// Weapon Damage
-	// Determines how much damage Player's attacks inflict
-	virtual float AdjustPlayerDamageInflicted( float damage ) { return damage; }
-	virtual void  AdjustPlayerDamageTaken( CTakeDamageInfo *pInfo ) {}; // Base class does nothing.
 
 // Weapon spawn/respawn control
 	virtual int WeaponShouldRespawn(CBaseCombatWeapon *pWeapon) { return TRUE; } // should this weapon respawn?

@@ -72,7 +72,6 @@
 #include "hl2mp_gamerules.h"
 #include "ai_blended_movement.h"
 
-#include "env_debughistory.h"
 #include "collisionutils.h"
 
 // dvs: for opening doors -- these should probably not be here
@@ -989,7 +988,7 @@ float CAI_BaseNPC::GetHitgroupDamageMultiplier( int iHitGroup, const CTakeDamage
 //=========================================================
 // TraceAttack
 //=========================================================
-void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
+void CAI_BaseNPC::TraceAttack(const CTakeDamageInfo& info, const Vector& vecDir, trace_t* ptr)
 {
 	m_fNoDamageDecal = false;
 	if ( m_takedamage == DAMAGE_NO )
@@ -7071,10 +7070,6 @@ void CAI_BaseNPC::TaskFail( AI_TaskFailureCode_t code )
 		{
 			DevMsg(this, AIMF_IGNORE_SELECTED, "      TaskFail -> %s\n", m_failText );
 		}
-
-		ADD_DEBUG_HISTORY( HISTORY_AI_DECISIONS, UTIL_VarArgs("%s(%d):       TaskFail -> %s\n", GetDebugName(), entindex(), m_failText ) );
-
-		//AddTimedOverlay( fail_text, 5);
 	}
 
 	m_ScheduleState.taskFailureCode = code;

@@ -1473,7 +1473,7 @@ public:
 	//---------------------------------
 
 	virtual float		GetHitgroupDamageMultiplier( int iHitGroup, const CTakeDamageInfo &info );
-	void				TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
+	void				TraceAttack(const CTakeDamageInfo& info, const Vector& vecDir, trace_t* ptr);
 	void				DecalTrace( trace_t *pTrace, char const *decalName );
 	void				ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCustomImpactName );
 	virtual	bool		PlayerInSpread( const Vector &sourcePos, const Vector &targetPos, float flSpread, float maxDistOffCenter, bool ignoreHatedPlayers = true );

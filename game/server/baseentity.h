@@ -22,7 +22,6 @@
 #include "engine/ivmodelinfo.h"
 
 class CDamageModifier;
-class CDmgAccumulator;
 
 struct CSoundParameters;
 
@@ -735,12 +734,12 @@ public:
 	virtual ITraceFilter*	GetBeamTraceFilter( void );
 
 	// Call this to do a TraceAttack on an entity, performs filtering. Don't call TraceAttack() directly except when chaining up to base class
-	void			DispatchTraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator = NULL );
+	void			DispatchTraceAttack(const CTakeDamageInfo& info, const Vector& vecDir, trace_t* ptr);
 	virtual bool	PassesDamageFilter( const CTakeDamageInfo &info );
 
 
 protected:
-	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator = NULL );
+	virtual void	TraceAttack(const CTakeDamageInfo& info, const Vector& vecDir, trace_t* ptr);
 
 public:
 

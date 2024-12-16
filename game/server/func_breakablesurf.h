@@ -90,7 +90,7 @@ public:
 	void			Die( CBaseEntity *pBreaker, const Vector &vAttackDir );
 	void			BreakThink(void);
 	void			Event_Killed( CBaseEntity *pInflictor, CBaseEntity *pAttacker, float flDamage, int bitsDamageType );
-	void			TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
+	void			TraceAttack(const CTakeDamageInfo& info, const Vector& vecDir, trace_t* ptr);
 	int				OnTakeDamage( const CTakeDamageInfo &info );
 	void			InputShatter( inputdata_t &inputdata );
 	void			VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );

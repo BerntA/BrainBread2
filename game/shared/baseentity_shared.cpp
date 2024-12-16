@@ -1985,7 +1985,7 @@ ITraceFilter* CBaseEntity::GetBeamTraceFilter( void )
 	return NULL;
 }
 
-void CBaseEntity::DispatchTraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
+void CBaseEntity::DispatchTraceAttack(const CTakeDamageInfo& info, const Vector& vecDir, trace_t* ptr)
 {
 #ifdef GAME_DLL
 	// Make sure our damage filter allows the damage.
@@ -1995,25 +1995,16 @@ void CBaseEntity::DispatchTraceAttack( const CTakeDamageInfo &info, const Vector
 	}
 #endif
 
-	TraceAttack( info, vecDir, ptr, pAccumulator );
+	TraceAttack(info, vecDir, ptr);
 }
 
-void CBaseEntity::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
+void CBaseEntity::TraceAttack(const CTakeDamageInfo& info, const Vector& vecDir, trace_t* ptr)
 {
 	Vector vecOrigin = ptr->endpos - vecDir * 4;
 
 	if ( m_takedamage )
 	{
-#ifdef GAME_DLL
-		if ( pAccumulator )
-		{
-			pAccumulator->AccumulateMultiDamage( info, this );
-		}
-		else
-#endif // GAME_DLL
-		{
-			AddMultiDamage( info, this );
-		}
+		AddMultiDamage(info, this);
 
 		int blood = BloodColor();
 		
@@ -2024,7 +2015,6 @@ void CBaseEntity::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 		}
 	}
 }
-
 
 //-----------------------------------------------------------------------------
 // Allows the shooter to change the impact effect of his bullets

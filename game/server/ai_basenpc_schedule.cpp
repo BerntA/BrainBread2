@@ -29,7 +29,6 @@
 #include "vstdlib/random.h"
 #include "ndebugoverlay.h"
 #include "tier0/vcrmode.h"
-#include "env_debughistory.h"
 #include "nav.h"
 #include "nav_mesh.h"
 
@@ -93,11 +92,6 @@ void CAI_BaseNPC::ClearSchedule( const char *szReason )
 	if (szReason && m_debugOverlays & OVERLAY_TASK_TEXT_BIT)
 	{
 		DevMsg( this, AIMF_IGNORE_SELECTED, "  Schedule cleared: %s\n", szReason );
-	}
-
-	if ( szReason )
-	{
-		ADD_DEBUG_HISTORY( HISTORY_AI_DECISIONS, UTIL_VarArgs( "%s(%d):  Schedule cleared: %s\n", GetDebugName(), entindex(), szReason ) );
 	}
 
 	m_ScheduleState.timeCurTaskStarted = m_ScheduleState.timeStarted = 0;
@@ -191,8 +185,6 @@ void CAI_BaseNPC::SetSchedule( CAI_Schedule *pNewSchedule )
 	{
 		DevMsg(this, AIMF_IGNORE_SELECTED, "Schedule: %s (time: %.2f)\n", pNewSchedule->GetName(), gpGlobals->curtime );
 	}
-
-	ADD_DEBUG_HISTORY( HISTORY_AI_DECISIONS, UTIL_VarArgs("%s(%d): Schedule: %s (time: %.2f)\n", GetDebugName(), entindex(), pNewSchedule->GetName(), gpGlobals->curtime ) );
 
 #ifdef AI_MONITOR_FOR_OSCILLATION
 	if( m_bSelected )
@@ -337,8 +329,6 @@ bool CAI_BaseNPC::IsScheduleValid()
 						DevMsg( this, AIMF_IGNORE_SELECTED, "      Break condition -> %s\n", m_interruptText );
 					}
 
-					ADD_DEBUG_HISTORY( HISTORY_AI_DECISIONS, UTIL_VarArgs("%s(%d):      Break condition -> %s\n", GetDebugName(), entindex(), m_interruptText ) );
-
 					break;
 				}
 			}
@@ -349,8 +339,6 @@ bool CAI_BaseNPC::IsScheduleValid()
 				{
 					DevMsg( this, AIMF_IGNORE_SELECTED, "      New enemy: %s\n", GetEnemy() ? GetEnemy()->GetDebugName() : "<NULL>" );
 				}
-				
-				ADD_DEBUG_HISTORY( HISTORY_AI_DECISIONS, UTIL_VarArgs("%s(%d):      New enemy: %s\n", GetDebugName(), entindex(), GetEnemy() ? GetEnemy()->GetDebugName() : "<NULL>" ) );
 			}
 		}
 
@@ -652,8 +640,6 @@ void CAI_BaseNPC::MaintainSchedule ( void )
 					DevMsg( this, AIMF_IGNORE_SELECTED, "      (failed)\n" );
 				}
 
-				ADD_DEBUG_HISTORY( HISTORY_AI_DECISIONS, UTIL_VarArgs("%s(%d):      (failed)\n", GetDebugName(), entindex() ) );
-
 				pNewSchedule = GetFailSchedule();
 				m_IdealSchedule = pNewSchedule->GetId();
 				DevWarning( 2, "(%s) Schedule (%s) Failed at %d!\n", STRING( GetEntityName() ), GetCurSchedule() ? GetCurSchedule()->GetName() : "GetCurSchedule() == NULL", GetScheduleCurTaskIndex() );
@@ -717,8 +703,6 @@ void CAI_BaseNPC::MaintainSchedule ( void )
 			{
 				DevMsg(this, AIMF_IGNORE_SELECTED, "  Task: %s\n", pszTaskName );
 			}
-
-			ADD_DEBUG_HISTORY( HISTORY_AI_DECISIONS, UTIL_VarArgs("%s(%d):  Task: %s\n", GetDebugName(), entindex(), pszTaskName ) );
 
 			OnStartTask();
 			

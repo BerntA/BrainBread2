@@ -385,13 +385,6 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 			adjustedInfo.SetDamage((damageToTake - (damageToTake * flBlockedDamagePercent)));
 		}
 
-		// Now make a consideration for skill level!
-		if( info.GetAttacker() && info.GetAttacker()->IsPlayer() && pEntity->IsNPC() )
-		{
-			// An explosion set off by the player is harming an NPC. Adjust damage accordingly.
-			adjustedInfo.AdjustPlayerDamageInflictedForSkillLevel();
-		}
-
 		Vector dir = vecSpot - vecSrc;
 		VectorNormalize( dir );
 

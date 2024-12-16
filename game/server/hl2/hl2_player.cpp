@@ -610,23 +610,7 @@ int	CHL2_Player::OnTakeDamage( const CTakeDamageInfo &info )
 			NotifyFriendsOfDamage( info.GetAttacker() );
 	}
 
-	// Modify the amount of damage the player takes, based on skill.
-	CTakeDamageInfo playerDamage = info;
-
-	// Should we run this damage through the skill level adjustment?
-	bool bAdjustForSkillLevel = true;
-
-	if( info.GetDamageType() == DMG_GENERIC && info.GetAttacker() == this && info.GetInflictor() == this )
-	{
-		// Only do a skill level adjustment if the player isn't his own attacker AND inflictor.
-		// This prevents damage from SetHealth() inputs from being adjusted for skill level.
-		bAdjustForSkillLevel = false;
-	}
-
-	if (bAdjustForSkillLevel)
-		playerDamage.AdjustPlayerDamageTakenForSkillLevel();
-
-	return BaseClass::OnTakeDamage( playerDamage );
+	return BaseClass::OnTakeDamage(info);
 }
 
 //-----------------------------------------------------------------------------

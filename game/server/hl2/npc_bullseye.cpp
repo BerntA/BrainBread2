@@ -367,7 +367,7 @@ bool CNPC_Bullseye::IsLightDamage( const CTakeDamageInfo &info )
 //			*ptr - 
 //			bitsDamageType - 
 //-----------------------------------------------------------------------------
-void CNPC_Bullseye::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
+void CNPC_Bullseye::TraceAttack(const CTakeDamageInfo& info, const Vector& vecDir, trace_t* ptr)
 {
 	//If specified, we must be the enemy of the target
 	if ( m_spawnflags & SF_BULLSEYE_ENEMYDAMAGEONLY )
@@ -387,7 +387,7 @@ void CNPC_Bullseye::TraceAttack( const CTakeDamageInfo &info, const Vector &vecD
 		TraceBleed( info.GetDamage(), vecDir, ptr, info.GetDamageType() );
 	}
 
-	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
+	BaseClass::TraceAttack(info, vecDir, ptr);
 }
 
 

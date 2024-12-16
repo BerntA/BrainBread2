@@ -14,16 +14,12 @@
 #include "c_playerresource.h"
 #include "c_hl2mp_player.h"
 #include "hl2mp_gamerules.h"
-#include "ihudlcd.h"
-
-
 
 DECLARE_HUDELEMENT( CHudChat );
 
 DECLARE_HUD_MESSAGE( CHudChat, SayText );
 DECLARE_HUD_MESSAGE( CHudChat, SayText2 );
 DECLARE_HUD_MESSAGE( CHudChat, TextMsg );
-
 
 //=====================
 //CHudChatLine

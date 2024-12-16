@@ -81,7 +81,7 @@ public:
 	
 	void Touch( CBaseEntity *pOther );
 
-	void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
+	void TraceAttack(const CTakeDamageInfo& info, const Vector& vecDir, trace_t* ptr);
 
 	// locals
 	bool Init( CBaseEntity *pOwner, const char *pModelName, solid_t &solid, const Vector &position, const QAngle &orientation );

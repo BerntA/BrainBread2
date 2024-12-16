@@ -52,7 +52,7 @@ public:
 	virtual C_Playermodel *GetNewPlayerModel(void) { return m_pNewPlayerModel; }
 	virtual float GetFOV( void );
 	virtual CStudioHdr *OnNewModel( void );
-	virtual void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
+	virtual void TraceAttack(const CTakeDamageInfo& info, const Vector& vecDir, trace_t* ptr);
 	virtual void ItemPreFrame( void );
 	virtual void ItemPostFrame( void );
 	virtual float GetMinFOV()	const { return 5.0f; }

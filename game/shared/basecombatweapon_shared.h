@@ -107,30 +107,6 @@ namespace vgui2
 #define BASECOMBATWEAPON_DERIVED_FROM		CBaseAnimating
 
 //-----------------------------------------------------------------------------
-// Collect trace attacks for weapons that fire multiple projectiles per attack that also penetrate
-//-----------------------------------------------------------------------------
-class CDmgAccumulator
-{
-public:
-	CDmgAccumulator( void );
-	~CDmgAccumulator();
-
-#ifdef GAME_DLL
-	virtual void Start( void ) { m_bActive = true; }
-	virtual void AccumulateMultiDamage( const CTakeDamageInfo &info, CBaseEntity *pEntity );
-	virtual void Process( void );
-
-private:
-	CTakeDamageInfo					m_updatedInfo;
-	CUtlMap< int, CTakeDamageInfo >	m_TargetsDmgInfo;
-#endif	// GAME_DLL
-
-private:
-	bool							m_bActive;
-
-};
-
-//-----------------------------------------------------------------------------
 // Purpose: Client side rep of CBaseTFCombatWeapon 
 //-----------------------------------------------------------------------------
 // Hacky
@@ -420,8 +396,6 @@ public:
 
 	void					InputHideWeapon( inputdata_t &inputdata );
 	void                    Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-
-	virtual CDmgAccumulator	*GetDmgAccumulator( void ) { return NULL; }
 
 // Client only methods
 #else

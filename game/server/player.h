@@ -30,44 +30,6 @@ public:
 	bool			paused;
 };
 
-// Info about last 20 or so updates to the
-class CPlayerCmdInfo
-{
-public:
-	CPlayerCmdInfo() : 
-	  m_flTime( 0.0f ), m_nNumCmds( 0 ), m_nDroppedPackets( 0 )
-	{
-	}
-
-	// realtime of sample
-	float		m_flTime;
-	// # of CUserCmds in this update
-	int			m_nNumCmds;
-	// # of dropped packets on the link
-	int			m_nDroppedPackets;
-};
-
-class CPlayerSimInfo
-{
-public:
-	CPlayerSimInfo() : 
-	  m_flTime( 0.0f ), m_nNumCmds( 0 ), m_nTicksCorrected( 0 ), m_flFinalSimulationTime( 0.0f ), m_flGameSimulationTime( 0.0f ), m_flServerFrameTime( 0.0f ), m_vecAbsOrigin( 0, 0, 0 )
-	{
-	}
-
-	// realtime of sample
-	float		m_flTime;
-	// # of CUserCmds in this update
-	int			m_nNumCmds;
-	// If clock needed correction, # of ticks added/removed
-	int			m_nTicksCorrected; // +ve or -ve
-	// player's m_flSimulationTime at end of frame
-	float		m_flFinalSimulationTime;
-	float		m_flGameSimulationTime;
-	// estimate of server perf
-	float		m_flServerFrameTime;  
-	Vector		m_vecAbsOrigin;
-};
 //-----------------------------------------------------------------------------
 // Forward declarations: 
 //-----------------------------------------------------------------------------
@@ -77,7 +39,6 @@ class CTeam;
 class IPhysicsPlayerController;
 class CUserCmd;
 class CNavArea;
-class CHintSystem;
 
 // for step sounds
 struct surfacedata_t;
@@ -292,7 +253,7 @@ public:
 	virtual void			PreThink( void );
 	virtual void			PostThink( void );
 	virtual int				TakeHealth( float flHealth, int bitsDamageType );
-	virtual void			TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
+	virtual void			TraceAttack(const CTakeDamageInfo& info, const Vector& vecDir, trace_t* ptr);
 	virtual int				OnTakeDamage( const CTakeDamageInfo &info );
 	virtual void			DamageEffect(float flDamage, int fDamageType);
 	virtual void            CheckIsPlayerStuck(void);
@@ -994,8 +955,6 @@ public:
 	inline bool IsAutoKickDisabled(void) const;
 	inline void DisableAutoKick(bool disabled);
 
-	void	DumpPerfToRecipient(CBasePlayer* pRecipient, int nMaxRecords);
-
 	void	SetDoorTransition(int index) { m_iDoorTransitionIndex = index; }
 	int		GetDoorTransition(void) { return m_iDoorTransitionIndex; }
 
@@ -1013,9 +972,6 @@ private:
 	};
 	// One for left and one for right side of step
 	StepSoundCache_t		m_StepSoundCache[ 2 ];
-
-	CUtlLinkedList< CPlayerSimInfo >  m_vecPlayerSimInfo;
-	CUtlLinkedList< CPlayerCmdInfo >  m_vecPlayerCmdInfo;
 
 	// Store the last time we successfully processed a usercommand
 	float			m_flLastUserCommandTime;

@@ -409,16 +409,16 @@ void CBoneFollower::Touch( CBaseEntity *pOther )
 //-----------------------------------------------------------------------------
 // Purpose: Pass on trace attack calls to the entity we're following
 //-----------------------------------------------------------------------------
-void CBoneFollower::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
+void CBoneFollower::TraceAttack(const CTakeDamageInfo& info, const Vector& vecDir, trace_t* ptr)
 {
-	CBaseEntity *pOwner = GetOwnerEntity();
-	if ( pOwner )
+	CBaseEntity* pOwner = GetOwnerEntity();
+	if (pOwner)
 	{
-		pOwner->DispatchTraceAttack( info, vecDir, ptr, pAccumulator );
+		pOwner->DispatchTraceAttack(info, vecDir, ptr);
 		return;
 	}
 
-	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
+	BaseClass::TraceAttack(info, vecDir, ptr);
 }
 
 LINK_ENTITY_TO_CLASS( phys_bone_follower, CBoneFollower );

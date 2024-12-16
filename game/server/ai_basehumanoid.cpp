@@ -108,9 +108,9 @@ bool CAI_BaseHumanoid::OnMoveBlocked( AIMoveResult_t *pResult )
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-void CAI_BaseHumanoid::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
+void CAI_BaseHumanoid::TraceAttack(const CTakeDamageInfo& info, const Vector& vecDir, trace_t* ptr)
 {
-	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
+	BaseClass::TraceAttack(info, vecDir, ptr);
 }
 
 //-----------------------------------------------------------------------------

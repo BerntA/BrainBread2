@@ -13,10 +13,6 @@
 
 #include "networkvar.h" // todo: change this when DECLARE_CLASS is moved into a better location.
 
-// Used to initialize m_flBaseDamage to something that we know pretty much for sure
-// hasn't been modified by a user. 
-#define BASEDAMAGE_NOT_SPECIFIED	FLT_MAX
-
 enum TakeDamageInfoMiscFlags
 {
 	TAKEDMGINFO_FORCE_RELATIONSHIP_CHECK = 0x01, // Force relationship based checking.
@@ -54,14 +50,9 @@ public:
 
 	float			GetDamage() const;
 	void			SetDamage( float flDamage );
-	float			GetMaxDamage() const;
-	void			SetMaxDamage( float flMaxDamage );
 	void			ScaleDamage( float flScaleAmount );
 	void			AddDamage( float flAddAmount );
 	void			SubtractDamage( float flSubtractAmount );
-
-	float			GetBaseDamage() const;
-	bool			BaseDamageIsValid() const;
 
 	Vector			GetDamageForce() const;
 	void			SetDamageForce( const Vector &damageForce );
@@ -102,17 +93,6 @@ public:
 	void			Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, float flDamage, int bitsDamageType, int iKillType = 0, Vector *reportedPosition = NULL );
 	void			Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBaseEntity *pWeapon, const Vector &damageForce, const Vector &damagePosition, float flDamage, int bitsDamageType, int iKillType = 0, Vector *reportedPosition = NULL );
 
-	void			AdjustPlayerDamageInflictedForSkillLevel();
-	void			AdjustPlayerDamageTakenForSkillLevel();
-
-	// Given a damage type (composed of the #defines above), fill out a string with the appropriate text.
-	// For designer debug output.
-	static void		DebugGetDamageTypeString(unsigned int DamageType, char *outbuf, int outbuflength );
-
-
-//private:
-	void			CopyDamageToBaseDamage();
-
 protected:
 	void			Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, CBaseEntity *pWeapon, const Vector &damageForce, const Vector &damagePosition, const Vector &reportedPosition, float flDamage, int bitsDamageType, int iKillType );
 
@@ -123,8 +103,6 @@ protected:
 	EHANDLE			m_hAttacker;
 	EHANDLE			m_hWeapon;
 	float			m_flDamage;
-	float			m_flMaxDamage;
-	float			m_flBaseDamage;			// The damage amount before skill leve adjustments are made. Used to get uniform damage forces.
 	int				m_bitsDamageType;
 	int				m_iDamageCustom;
 	int				m_iAmmoType;			// AmmoType of the weapon used to cause this damage, if any
@@ -214,16 +192,6 @@ inline void CTakeDamageInfo::SetDamage( float flDamage )
 	m_flDamage = flDamage;
 }
 
-inline float CTakeDamageInfo::GetMaxDamage() const
-{
-	return m_flMaxDamage;
-}
-
-inline void CTakeDamageInfo::SetMaxDamage( float flMaxDamage )
-{
-	m_flMaxDamage = flMaxDamage;
-}
-
 inline void CTakeDamageInfo::ScaleDamage( float flScaleAmount )
 {
 	m_flDamage *= flScaleAmount;
@@ -237,20 +205,6 @@ inline void CTakeDamageInfo::AddDamage( float flAddAmount )
 inline void CTakeDamageInfo::SubtractDamage( float flSubtractAmount )
 {
 	m_flDamage -= flSubtractAmount;
-}
-
-inline float CTakeDamageInfo::GetBaseDamage() const
-{
-	if( BaseDamageIsValid() )
-		return m_flBaseDamage;
-
-	// No one ever specified a base damage, so just return damage.
-	return m_flDamage;
-}
-
-inline bool CTakeDamageInfo::BaseDamageIsValid() const
-{
-	return (m_flBaseDamage != BASEDAMAGE_NOT_SPECIFIED);
 }
 
 inline Vector CTakeDamageInfo::GetDamageForce() const
@@ -333,11 +287,6 @@ inline int CTakeDamageInfo::GetSkillFlags() const
 inline void CTakeDamageInfo::SetSkillFlags(int flags)
 {
 	m_nSkillFlags = flags;
-}
-
-inline void CTakeDamageInfo::CopyDamageToBaseDamage()
-{ 
-	m_flBaseDamage = m_flDamage;
 }
 
 inline int CTakeDamageInfo::GetForcedWeaponID() const
