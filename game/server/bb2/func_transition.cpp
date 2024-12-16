@@ -8,6 +8,7 @@
 #include "func_transition.h"
 #include "player.h"
 #include "props.h"
+#include "basecombatcharacter.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -184,6 +185,8 @@ void CFuncTransition::TransitionUse(CBaseEntity* pActivator, CBaseEntity* pCalle
 	item.hPlayer = pPlayer;
 	item.flTime = (gpGlobals->curtime + func_transition_time.GetFloat());
 	m_pTransitionItems.AddToTail(item);
+
+	KillBlockers();
 }
 
 void CFuncTransition::TransitionThink(void)
@@ -220,6 +223,33 @@ void CFuncTransition::TeleportTo(CBasePlayer* pPlayer)
 	pPlayer->SetDoorTransition(0);
 	pPlayer->SetLaggedMovementValue(1.0f);
 	pPlayer->Teleport(&m_vSaveOrigin, &m_vSaveAngles, &vec3_origin);
+}
+
+void CFuncTransition::KillBlockers(void)
+{
+	CBaseEntity* pEntity = NULL;
+	Vector vecSrc = m_vSaveOrigin, vecTarget = vec3_origin;
+	trace_t tr;
+	CTraceFilterNoNPCsOrPlayer filter(this, COLLISION_GROUP_NONE);
+	CTakeDamageInfo damageInfo(this, this, 1000, DMG_GENERIC | DMG_PREVENT_PHYSICS_FORCE);
+	const int mask = MASK_SHOT & (~CONTENTS_HITBOX);
+
+	for (CEntitySphereQuery sphere(m_vSaveOrigin, 60.0f); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity())
+	{
+		if (!pEntity || !pEntity->IsNPC() || (pEntity->m_takedamage == DAMAGE_NO))
+			continue;
+
+		vecTarget = pEntity->WorldSpaceCenter();
+		UTIL_TraceLine(vecSrc, vecTarget, mask, &filter, &tr);
+
+		if (tr.fraction != 1.0)
+			continue; // npc is probably hiding behind the door?
+
+		if (pEntity->MyCombatCharacterPointer())
+			pEntity->MyCombatCharacterPointer()->SetLastHitGroup(HITGROUP_GENERIC);
+
+		pEntity->TakeDamage(damageInfo); // end his missery!
+	}
 }
 
 void CFuncTransition::Lock()

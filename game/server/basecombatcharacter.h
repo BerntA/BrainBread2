@@ -255,11 +255,11 @@ public:
 	virtual float GetIdealAccel() const;
 
 protected:
-	Relationship_t *FindEntityRelationship(CBaseEntity *pTarget = NULL, int relation = CLASS_NONE);
+	Relationship_t* FindEntityRelationship(CBaseEntity* pTarget = NULL, int relation = CLASS_NONE);
 
 	// Skill Affection Logic:
-	virtual void OnAffectedBySkill(const CTakeDamageInfo &info);
-	virtual void OnSkillFlagState(int flag, bool state) { }
+	virtual void OnAffectedBySkill(const CTakeDamageInfo& info);
+	virtual void OnSkillFlagState(int flag, bool state) {}
 	virtual bool IsAffectedBySkillFlag(int flag) const;
 	virtual void CheckSkillAffections(void);
 	virtual int GetSkillAffectionDamageType(int skillFlag) { return DMG_CLUB; }
@@ -273,8 +273,8 @@ protected:
 	float m_flGibHealth[4];
 
 	virtual int AllowEntityToBeGibbed(void) { return GIB_NO_GIBS; } // Override this to enable gibs.
-	virtual bool CanGibEntity(const CTakeDamageInfo &info);
-	virtual void OnGibbedGroup(int hitgroup, bool bExploded) { }
+	virtual bool CanGibEntity(const CTakeDamageInfo& info);
+	virtual void OnGibbedGroup(int hitgroup, bool bExploded) {}
 	virtual void OnSetGibHealth(void);
 
 	int GetGibFlags(void) { return m_nGibFlags; }
@@ -347,7 +347,6 @@ public:
 public:
 	// returns the last body region that took damage
 	int	LastHitGroup() const				{ return m_LastHitGroup; }
-protected:
 	void SetLastHitGroup( int nHitGroup )	{ m_LastHitGroup = nHitGroup; }
 
 public:
