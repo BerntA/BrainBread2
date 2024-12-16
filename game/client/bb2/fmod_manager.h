@@ -28,6 +28,7 @@ public:
 	void Exit();
 	void Restart();
 	void Think();
+	bool IsModuleLoaded() { return m_bHasLoaded; }
 
 	bool PlayAmbientSound(const char* szSoundPath, bool bLoop = false);
 	void PlayLoadingMusic(const char* szSoundPath);
@@ -52,6 +53,7 @@ private:
 	bool m_bFadeOut;
 	bool m_bIsPlayingSound;
 	bool m_bShouldLoop;
+	bool m_bHasLoaded;
 
 	float m_flVolume; // Main Volume (100% vol)
 	float m_flSoundVolume; // Percent of master vol above.

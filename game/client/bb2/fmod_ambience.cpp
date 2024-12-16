@@ -43,6 +43,12 @@ void CFMODAmbience::PlaySound(const char* pSoundPath)
 
 void CFMODAmbience::PlaySoundInternal(void)
 {
+	if (!FMODManager()->IsModuleLoaded())
+	{
+		Warning("FMOD: Failed to play sound, FMOD is not initialized!\n");
+		return;
+	}
+
 	FMOD_RESULT result = FMODManager()->GetFMODSystem()->createStream(m_pchSoundFile, FMOD_LOOP_NORMAL | FMOD_2D | FMOD_HARDWARE, 0, &m_pSound);
 
 	if (result != FMOD_OK)
@@ -71,13 +77,13 @@ void CFMODAmbience::StopSound(void)
 void CFMODAmbience::SetVolume(float volume)
 {
 	m_flVolume = clamp(volume, 0.0f, 1.0f);
-	if (m_pChannel && (m_flVolume <= 0.0f))
+	if (m_pChannel && (m_flVolume <= 0.0f) && FMODManager()->IsModuleLoaded())
 		m_pChannel->setVolume(0.0f);
 }
 
 void CFMODAmbience::Think(void)
 {
-	if (m_pChannel == NULL)
+	if ((m_pChannel == NULL) || !FMODManager()->IsModuleLoaded())
 		return;
 
 	bool bShouldMute = (engine->IsPaused() || !engine->IsActiveApp());
@@ -95,11 +101,14 @@ void CFMODAmbience::Destroy(void)
 {
 	SetVolume(0.0f);
 
-	if (m_pSound != NULL)
-		m_pSound->release();
+	if (FMODManager()->IsModuleLoaded())
+	{
+		if (m_pSound != NULL)
+			m_pSound->release();
 
-	if (m_pChannel != NULL)
-		m_pChannel->stop();
+		if (m_pChannel != NULL)
+			m_pChannel->stop();
+	}
 
 	m_pSound = NULL;
 	m_pChannel = NULL;

@@ -18,9 +18,9 @@ using namespace FMOD;
 
 #define FMOD_FADE_TIME 1.5f
 
-static System			*pSystem;
-static Sound			*pSound;
-static Channel			*pChannel;
+static System* pSystem;
+static Sound* pSound;
+static Channel* pChannel;
 static FMOD_RESULT		result;
 static char lastPlayedSound[512];
 
@@ -38,6 +38,7 @@ CFMODManager::CFMODManager()
 	m_bFadeOut = false;
 	m_bIsPlayingSound = false;
 	m_bShouldLoop = false;
+	m_bHasLoaded = false;
 	m_flTime = m_flFadeOutTime = 0.0f;
 	lastPlayedSound[0] = 0;
 }
@@ -63,11 +64,14 @@ void CFMODManager::Init(void)
 
 	m_pVarMusicVolume = cvar->FindVar("snd_musicvolume");
 	m_pVarMuteSoundFocus = cvar->FindVar("snd_mute_losefocus");
+	m_bHasLoaded = true;
 }
 
 void CFMODManager::Exit(void)
 {
+	m_bHasLoaded = false;
 	result = pSystem->release();
+
 	if (result != FMOD_OK)
 		Warning("FMOD ERROR: System did not terminate properly!\n");
 	else
@@ -83,7 +87,7 @@ void CFMODManager::Restart()
 	// Attempt to play any prev. sound...
 	float volume = 0.0f;
 	bool muted = false;
-	Sound *currSound = NULL;
+	Sound* currSound = NULL;
 
 	if (pChannel)
 	{
@@ -130,7 +134,7 @@ const char* CFMODManager::GetFullPathToSound(const char* pathToFileFromModFolder
 }
 
 // Returns the current sound playing.
-const char *CFMODManager::GetCurrentSoundName(void)
+const char* CFMODManager::GetCurrentSoundName(void)
 {
 	return szActiveSound;
 }
@@ -138,6 +142,9 @@ const char *CFMODManager::GetCurrentSoundName(void)
 // Handles FMOD sound system, called each frame.
 void CFMODManager::Think(void)
 {
+	if (!IsModuleLoaded())
+		return;
+
 	// Do we wish to play the in game soundtracks? If not, play on demand. (forced from main menu (transit only))
 	bool bShouldPlayInSequence = GameBaseClient->IsInGame();
 	bool bShouldMuteFMOD = (engine->IsPaused() || (m_pVarMuteSoundFocus && m_pVarMuteSoundFocus->GetBool() && !engine->IsActiveApp()));
@@ -203,8 +210,11 @@ System* CFMODManager::GetFMODSystem()
 	return pSystem;
 }
 
-void CFMODManager::PlayLoadingMusic(const char *szSoundPath)
+void CFMODManager::PlayLoadingMusic(const char* szSoundPath)
 {
+	if (!FMODManager()->IsModuleLoaded())
+		return;
+
 	m_bFadeIn = false;
 	m_bFadeOut = false;
 	m_bIsPlayingSound = false;
@@ -231,8 +241,11 @@ void CFMODManager::PlayLoadingMusic(const char *szSoundPath)
 }
 
 // Fades in and sets all needed params for playing a sound through FMOD.
-bool CFMODManager::PlayAmbientSound(const char *szSoundPath, bool bLoop)
+bool CFMODManager::PlayAmbientSound(const char* szSoundPath, bool bLoop)
 {
+	if (!FMODManager()->IsModuleLoaded())
+		return false;
+
 	// We don't want to play the same sound or any other before it is done!
 	if (m_bFadeOut || m_bFadeIn || m_bIsPlayingSound || !strcmp(szSoundPath, szActiveSound))
 		return false;
@@ -288,7 +301,7 @@ void CFMODManager::StopAmbientSound(bool force)
 
 // We store a transit char which will be looked up right before the sound is fully faded out. (swapping) 
 // This allow us to override a current playing song without interferring too much.
-bool CFMODManager::TransitionAmbientSound(const char *szSoundPath, bool bLoop)
+bool CFMODManager::TransitionAmbientSound(const char* szSoundPath, bool bLoop)
 {
 	m_bShouldLoop = bLoop;
 
