@@ -56,6 +56,7 @@ public:
 	void SetBloodColor( int nBloodColor );
 
 	virtual void		DoMuzzleFlash();
+	virtual void		CalculateIKLocks(float currentTime);
 
 public:
 

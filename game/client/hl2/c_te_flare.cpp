@@ -206,12 +206,7 @@ void C_Flare::Update( float timeDelta )
 	float visible = PixelVisibility_FractionVisible( params, &m_queryHandle );
 
 	float	fColor;
-#ifdef HL2_CLIENT_DLL
-	float	baseScale = m_flScale;
-#else
-	// NOTE!!!  This is bigger by a factor of 1.2 to deal with fixing a bug from HL2.  See dlight_t.h
 	float	baseScale = m_flScale * 1.2f;
-#endif
 
 	//Account for fading out
 	if ( ( m_flTimeBurnOut != -1.0f ) && ( ( m_flTimeBurnOut - gpGlobals->curtime ) <= 10.0f ) )

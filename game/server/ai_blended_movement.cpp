@@ -1028,6 +1028,7 @@ void CAI_BlendedMotor::BuildVelocityScript( const AILocalMoveGoal_t &move )
 		}
 		*/
 	}
+
 	if (npc_height_adjust.GetBool())
 	{
 		float flDist = (move.thinkTrace.vEndPosition - m_vecPrevOrigin2).Length2D();

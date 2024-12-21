@@ -102,7 +102,6 @@ public:
 	virtual void UpdateClientSideAnimation();
 	void DoAnimationEvent(PlayerAnimEvent_t event, int nData = 0, bool bSkipPrediction = false, float flData = 1.0f);
 	float GetPlaybackRateForAnimEvent(PlayerAnimEvent_t event, int nData);
-	virtual void CalculateIKLocks(float currentTime);
 
 	float GetRespawnTime(void) { return m_BB2Local.m_flPlayerRespawnTime; }
 

@@ -1366,39 +1366,22 @@ public:
 	}
 };
 
-
-//-----------------------------------------------------------------------------
-// Purpose: Receives the clients IK floor position
-//-----------------------------------------------------------------------------
-
-void CBaseAnimating::SetIKGroundContactInfo( float minHeight, float maxHeight )
-{
-	m_flIKGroundContactTime = gpGlobals->curtime;
-	m_flIKGroundMinHeight = minHeight;
-	m_flIKGroundMaxHeight = maxHeight;
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Initializes IK floor position
 //-----------------------------------------------------------------------------
 
-void CBaseAnimating::InitStepHeightAdjust( void )
+void CBaseAnimating::InitStepHeightAdjust(void)
 {
-	m_flIKGroundContactTime = 0;
-	m_flIKGroundMinHeight = 0;
-	m_flIKGroundMaxHeight = 0;
-
 	// FIXME: not safe to call GetAbsOrigin here. Hierarchy might not be set up!
 	m_flEstIkFloor = GetAbsOrigin().z;
 	m_flEstIkOffset = 0;
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Interpolates client IK floor position and drops entity down so that the feet will reach
 //-----------------------------------------------------------------------------
 
-ConVar npc_height_adjust( "npc_height_adjust", "1", FCVAR_ARCHIVE, "Enable test mode for ik height adjustment" );
+ConVar npc_height_adjust("npc_height_adjust", "1", FCVAR_ARCHIVE, "Enable test mode for ik height adjustment");
 
 void CBaseAnimating::UpdateStepOrigin()
 {
@@ -1409,45 +1392,10 @@ void CBaseAnimating::UpdateStepOrigin()
 		return;
 	}
 
-	/*
-	if (m_debugOverlays & OVERLAY_NPC_SELECTED_BIT)
-	{
-		Msg("%x : %x\n", GetMoveParent(), GetGroundEntity() );
-	}
-	*/
-
-	if (m_flIKGroundContactTime > 0.2 && m_flIKGroundContactTime > gpGlobals->curtime - 0.2)
-	{
-		if ((GetFlags() & (FL_FLY | FL_SWIM)) == 0 && GetMoveParent() == NULL && GetGroundEntity() != NULL && !GetGroundEntity()->IsMoving())
-		{
-			Vector toAbs = GetAbsOrigin() - GetLocalOrigin();
-			if (toAbs.z == 0.0)
-			{
-				CAI_BaseNPC *pNPC = MyNPCPointer();
-				// FIXME:  There needs to be a default step height somewhere
-				float height = 18.0f;
-				if (pNPC)
-				{
-					height = pNPC->StepHeight();
-				}
-
-				// debounce floor location
-				m_flEstIkFloor = m_flEstIkFloor * 0.2 + m_flIKGroundMinHeight * 0.8;
-
-				// don't let heigth difference between min and max exceed step height
-				float bias = clamp( (m_flIKGroundMaxHeight - m_flIKGroundMinHeight) - height, 0.f, height );
-				// save off reasonable offset
-				m_flEstIkOffset = clamp( m_flEstIkFloor - GetAbsOrigin().z, -height + bias, 0.0f );
-				return;
-			}
-		}
-	}
-
 	// don't use floor offset, decay the value
 	m_flEstIkOffset *= 0.5;
 	m_flEstIkFloor = GetLocalOrigin().z;
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Returns the origin to use for model rendering
