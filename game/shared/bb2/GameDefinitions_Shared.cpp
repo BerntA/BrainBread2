@@ -1954,6 +1954,8 @@ namespace ACHIEVEMENTS
 		{ "ACH_MAP_COLTEC_C", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 750, false, "bbc_coltec" },
 		{ "ACH_MAP_FEVER", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 1000, false, "bbc_fever" },
 		{ "ACH_MAP_DAYCITY", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false, "bbc_daycity" },
+		{ "ACH_MAP_FRED_FARM", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 150, false, "bbc_farm" },
+
 		{ "ACH_MAP_FORGOTTEN_MANSION", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 1500, false, "bbs_forgotten_mansion" },
 
 		{ "ACH_MAP_ROOFTOP", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false, "bba_rooftop" },
