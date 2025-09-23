@@ -180,43 +180,45 @@ void ParseParticleEffectsMap( const char *pMapName, bool bLoadSheets, IFileList 
 	}
 
 	// Open the manifest file, and read the particles specified inside it
-	KeyValues *manifest = new KeyValues( szMapManifestFilename );
-	if ( manifest->LoadFromFile( filesystem, szMapManifestFilename, "GAME" ) )
+	KeyValues* manifest = new KeyValues(szMapManifestFilename);
+	if (manifest->LoadFromFile(filesystem, szMapManifestFilename, "GAME"))
 	{
-		DevMsg( "Successfully loaded particle effects manifest '%s' for map '%s'\n", szMapManifestFilename, pMapName );
-		for ( KeyValues *sub = manifest->GetFirstSubKey(); sub != NULL; sub = sub->GetNextKey() )
+		DevMsg("Successfully loaded particle effects manifest '%s' for map '%s'\n", szMapManifestFilename, pMapName);
+		for (KeyValues* sub = manifest->GetFirstSubKey(); sub != NULL; sub = sub->GetNextKey())
 		{
-			if ( !Q_stricmp( sub->GetName(), "file" ) )
+			if (!Q_stricmp(sub->GetName(), "file"))
 			{
 				// Ensure the particles are in the particles directory
-				char szPath[ 512 ];
-				Q_strncpy( szPath, sub->GetString(), sizeof( szPath ) );
-				Q_StripFilename( szPath );
-				char *pszPath = (szPath[0] == '!') ? &szPath[1] : &szPath[0];
-				if ( pszPath && pszPath[0] && !Q_stricmp( pszPath, "particles" ) )
+				char szPath[512];
+				Q_strncpy(szPath, sub->GetString(), sizeof(szPath));
+				Q_StripFilename(szPath);
+				char* pszPath = (szPath[0] == '!') ? &szPath[1] : &szPath[0];
+				if (pszPath && pszPath[0] && !Q_stricmp(pszPath, "particles"))
 				{
-					files.AddToTail( sub->GetString() );
+					files.AddToTail(sub->GetString());
 					continue;
 				}
 				else
 				{
-					Warning( "CParticleMgr::LevelInit:  Manifest '%s' contains a particle file '%s' that's not under the particles directory. Custom particles must be placed in the particles directory.\n", szMapManifestFilename, sub->GetString() );
+					Warning("CParticleMgr::LevelInit:  Manifest '%s' contains a particle file '%s' that's not under the particles directory. Custom particles must be placed in the particles directory.\n", szMapManifestFilename, sub->GetString());
 				}
 			}
 			else
 			{
-				Warning( "CParticleMgr::LevelInit:  Manifest '%s' with bogus file type '%s', expecting 'file'\n", szMapManifestFilename, sub->GetName() );
+				Warning("CParticleMgr::LevelInit:  Manifest '%s' with bogus file type '%s', expecting 'file'\n", szMapManifestFilename, sub->GetName());
 			}
 		}
+		manifest->deleteThis();
 	}
 	else
 	{
 		// Don't print a warning, and don't proceed any further if the file doesn't exist!
+		manifest->deleteThis();
 		return;
 	}
 
 	int nCount = files.Count();
-	if ( !nCount )
+	if (!nCount)
 	{
 		return;
 	}
