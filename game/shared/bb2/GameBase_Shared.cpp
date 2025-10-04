@@ -948,6 +948,7 @@ void CGameBaseShared::EntityKilledByPlayer(CBaseEntity *pKiller, CBaseEntity *pV
 
 		case WEAPON_ID_REXMP412:
 		case WEAPON_ID_REXMP412_AKIMBO:
+			AchievementManager::WriteToStat(pClient, "BBX_KI_357");
 			break;
 
 		case WEAPON_ID_AK74:

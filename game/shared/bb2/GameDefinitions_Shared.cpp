@@ -1883,7 +1883,7 @@ namespace ACHIEVEMENTS
 		//{ "ACH_WEP_HK45", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 0, true, NULL },
 		{ "ACH_WEP_GLOCK", "BBX_KI_GLOCK17", 200, ACHIEVEMENT_TYPE_DEFAULT, 300, false, NULL },
 		//{ "ACH_WEP_USP", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 0, true, NULL },
-		//{ "ACH_WEP_357", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 0, true, NULL },
+		{ "ACH_WEP_357", "BBX_KI_357", 430, ACHIEVEMENT_TYPE_DEFAULT, 1000, false, NULL },
 		{ "ACH_WEP_DUAL", "BBX_KI_AKIMBO", 500, ACHIEVEMENT_TYPE_DEFAULT, 750, false, NULL },
 
 		// SMGs
@@ -1955,6 +1955,7 @@ namespace ACHIEVEMENTS
 		{ "ACH_MAP_FEVER", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 1000, false, "bbc_fever" },
 		{ "ACH_MAP_DAYCITY", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false, "bbc_daycity" },
 		{ "ACH_MAP_FRED_FARM", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 150, false, "bbc_farm" },
+		{ "ACH_MAP_HOSPITAL", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false, "bbc_hospital" },
 
 		{ "ACH_MAP_FORGOTTEN_MANSION", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 1500, false, "bbs_forgotten_mansion" },
 
@@ -1973,6 +1974,9 @@ namespace ACHIEVEMENTS
 		{ "ACH_MAP_BACKYARD_A", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false, "bba_backyard" },
 		{ "ACH_MAP_MECKLENBURG_A", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 500, false, "bba_mecklenburg" },
 		{ "ACH_MAP_RISHIKA_A", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 3500, false, "bba_rishika" },
+
+		// Festive maps, e.g halloween
+		{ "ACH_MAP_HALLOWEVE25", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 250, false, "bba_halloweve25" },
 
 		// Hidden:
 		{ "ACH_SECRET_WATCHYOURSTEP", "", 0, ACHIEVEMENT_TYPE_MAP, 0, true, NULL },
