@@ -21,6 +21,38 @@ void SetGenericTextMessage(hudtextparms_t& params);
 ConVar func_transition_time("func_transition_time", "1.25");
 ConVar func_transition_fade_time("func_transition_fade_time", "0.5");
 
+class CTraceFilterTransitionBlockers : public CTraceFilterSimple
+{
+public:
+	CTraceFilterTransitionBlockers(const IHandleEntity* passentity, int collisionGroup)
+		: CTraceFilterSimple(passentity, collisionGroup)
+	{
+	}
+
+	~CTraceFilterTransitionBlockers()
+	{
+		m_pBlockages.RemoveAll();
+	}
+
+	TraceType_t	GetTraceType() const OVERRIDE
+	{
+		return TRACE_ENTITIES_ONLY;
+	}
+
+	bool ShouldHitEntity(IHandleEntity* pHandleEntity, int contentsMask) OVERRIDE
+	{
+		if (CTraceFilterSimple::ShouldHitEntity(pHandleEntity, contentsMask))
+		{
+			CBaseEntity* pEntity = EntityFromEntityHandle(pHandleEntity);
+			if (pEntity && !pEntity->IsPlayer() && !pEntity->IsWorld())
+				m_pBlockages.AddToTail(pEntity);
+		}
+		return false;
+	}
+
+	CUtlVector<CBaseEntity*> m_pBlockages;
+};
+
 LINK_ENTITY_TO_CLASS(func_transition, CFuncTransition);
 
 BEGIN_DATADESC(CFuncTransition)
@@ -186,7 +218,7 @@ void CFuncTransition::TransitionUse(CBaseEntity* pActivator, CBaseEntity* pCalle
 	item.flTime = (gpGlobals->curtime + func_transition_time.GetFloat());
 	m_pTransitionItems.AddToTail(item);
 
-	KillBlockers();
+	KillBlockers(pPlayer);
 }
 
 void CFuncTransition::TransitionThink(void)
@@ -225,30 +257,33 @@ void CFuncTransition::TeleportTo(CBasePlayer* pPlayer)
 	pPlayer->Teleport(&m_vSaveOrigin, &m_vSaveAngles, &vec3_origin);
 }
 
-void CFuncTransition::KillBlockers(void)
+void CFuncTransition::KillBlockers(CBasePlayer* pPlayer)
 {
-	CBaseEntity* pEntity = NULL;
-	Vector vecSrc = m_vSaveOrigin, vecTarget = vec3_origin;
+	Assert(pPlayer != NULL);
+
+	Vector vecSrc = m_vSaveOrigin;
 	trace_t tr;
-	CTraceFilterNoNPCsOrPlayer filter(this, COLLISION_GROUP_NONE);
-	CTakeDamageInfo damageInfo(this, this, 1000, DMG_GENERIC | DMG_PREVENT_PHYSICS_FORCE);
+	CTraceFilterTransitionBlockers filter(pPlayer, pPlayer->GetCollisionGroup());
+	CTakeDamageInfo damageInfo(this, this, 10000, DMG_GENERIC | DMG_PREVENT_PHYSICS_FORCE);
 	const int mask = MASK_SHOT & (~CONTENTS_HITBOX);
 
-	for (CEntitySphereQuery sphere(m_vSaveOrigin, 50.0f); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity())
+	UTIL_TraceHull(vecSrc, vecSrc, VEC_HULL_MIN, VEC_HULL_MAX, mask, &filter, &tr);
+
+	for (auto* pEntity : filter.m_pBlockages)
 	{
-		if (!pEntity || !pEntity->IsNPC() || (pEntity->m_takedamage == DAMAGE_NO) || pEntity->IsHumanBoss() || pEntity->IsZombieBoss())
+		if (pEntity->IsHumanBoss() || pEntity->IsZombieBoss())
+			continue; // that would be lame!
+
+		if (!pEntity->IsNPC())
+		{
+			UTIL_Remove(pEntity); // just nuke it...
 			continue;
-
-		vecTarget = pEntity->WorldSpaceCenter();
-		UTIL_TraceLine(vecSrc, vecTarget, mask, &filter, &tr);
-
-		if (tr.fraction != 1.0)
-			continue; // npc is probably hiding behind the door?
+		}
 
 		if (pEntity->MyCombatCharacterPointer())
 			pEntity->MyCombatCharacterPointer()->SetLastHitGroup(HITGROUP_GENERIC);
 
-		pEntity->TakeDamage(damageInfo); // end his missery!
+		pEntity->TakeDamage(damageInfo); // end its missery!
 	}
 }
 

@@ -35,7 +35,7 @@ public:
 	void TransitionUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value);
 	void TransitionThink(void);
 	void TeleportTo(CBasePlayer* pPlayer);
-	void KillBlockers(void);
+	void KillBlockers(CBasePlayer* pPlayer);
 
 	void Lock();
 	void Unlock();
