@@ -22,12 +22,7 @@ extern "C" FILE* __cdecl __iob_func(void) { return _iob; }
 #endif
 
 #include "curl/curl.h"
-#include "rapidjson/fwd.h"
-#include "rapidjson/document_safe.h"
 
-typedef rapidjson::Document JSONDocument;
-#define DAY_OF_WEEK_SATURDAY 6
-#define DAY_OF_WEEK_SUNDAY 0
 #endif
 
 ConVar bb2_enable_ban_list("bb2_enable_ban_list", "1", FCVAR_GAMEDLL, "Enable or Disable the official ban list?", true, 0.0f, true, 1.0f);
@@ -35,24 +30,7 @@ static ConVar bb2_debug_libcurl("bb2_debug_libcurl", "0", FCVAR_GAMEDLL | FCVAR_
 static ConVar bb2_libcurl_timeout("bb2_libcurl_timeout", "0", FCVAR_GAMEDLL | FCVAR_HIDDEN, "Set LIBCURL timeout time.");
 
 #ifndef OSX
-static JSONDocument* ParseJSON(const char* data)
-{
-	if (!(data && data[0])) // Empty?
-		return NULL;
-
-	// Parse JSON data.
-	JSONDocument* document = new JSONDocument;
-	document->Parse(data);
-	if (document->HasParseError() || (document->Size() <= 0)) // Couldn't parse? Return NULL.
-	{
-		delete document;
-		return NULL;
-	}
-
-	return document;
-}
-
-#define MAX_BUFFER_SIZE 4096
+#define MAX_BUFFER_SIZE 8192
 static char g_pDataBuffer[MAX_BUFFER_SIZE];
 
 static size_t DataWriteCallback(char* buf, size_t size, size_t nmemb, void* up)
@@ -123,25 +101,6 @@ void LoadSharedData(void)
 
 			iActiveItemType++;
 		}
-	}
-
-	// Parse time data for events.
-	KeyValues* pkvEventData = GetChecksumKeyValue("Events");
-	if (pkvEventData)
-	{
-		// DISABLED XP EVENT ...
-		//KeyValues* pkvXP = pkvEventData->FindKey("XP");
-		//if (pkvXP && CurlGetRequest(pkvXP->GetString("url")))
-		//{
-		//	JSONDocument* pDocument = ParseJSON(g_pDataBuffer);
-		//	if (pDocument && pDocument->HasMember("day_of_week"))
-		//	{
-		//		int weekDay = (*pDocument)["day_of_week"].GetInt();
-		//		if (((weekDay == DAY_OF_WEEK_SATURDAY) || (weekDay == DAY_OF_WEEK_SUNDAY)) && HL2MPRules())
-		//			HL2MPRules()->SetXPRate(MAX(pkvXP->GetFloat("value", 1.0f), 1.0f));
-		//	}
-		//	delete pDocument;
-		//}
 	}
 #endif
 }
