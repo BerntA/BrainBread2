@@ -31,6 +31,4 @@ public:
 	virtual bool IsClientCreated(void) const { return true; }
 };
 
-extern ConVar bb2_render_body;
-
 #endif // C_FIRSTPERSON_BODY_H

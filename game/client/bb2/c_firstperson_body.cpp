@@ -17,7 +17,7 @@
 #include "GlobalRenderEffects.h"
 #include "GameBase_Shared.h"
 
-ConVar bb2_render_body("bb2_render_body", "1", FCVAR_CHEAT, "Render firstperson body.");
+static ConVar bb2_render_body("bb2_render_body", "1", FCVAR_CHEAT, "Render firstperson body.");
 
 C_FirstpersonBody::C_FirstpersonBody()
 {
