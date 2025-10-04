@@ -16,6 +16,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+static ConVar bb2_body_blood("bb2_body_blood", "1", FCVAR_ARCHIVE, "Display blood on the body and viewmodel.", true, 0, true, 1);
+
 class C_BloodyTextureProxy : public IMaterialProxy, public CGameEventListener
 {
 public:
@@ -90,18 +92,24 @@ void C_BloodyTextureProxy::OnBind(void* pC_BaseEntity)
 	if (!pC_BaseEntity || (blendFactor == NULL))
 		return;
 
-	C_HL2MP_Player *pLocal = C_HL2MP_Player::GetLocalHL2MPPlayer();
+	if (!bb2_body_blood.GetBool())
+	{
+		blendFactor->SetFloatValue(0.0f);
+		return;
+	}
+
+	C_HL2MP_Player* pLocal = C_HL2MP_Player::GetLocalHL2MPPlayer();
 	if (!pLocal)
 		return;
 
-	C_BaseEntity *pEntity = BindArgToEntity(pC_BaseEntity);
+	C_BaseEntity* pEntity = BindArgToEntity(pC_BaseEntity);
 
 	bool bShouldDrawBlood = false;
 
-	C_BaseViewModel *pViewModel = dynamic_cast<C_BaseViewModel*> (pEntity);
+	C_BaseViewModel* pViewModel = dynamic_cast<C_BaseViewModel*> (pEntity);
 	if (pViewModel)
 	{
-		C_HL2MP_Player *pPlayer = ToHL2MPPlayer(pViewModel->GetOwner());
+		C_HL2MP_Player* pPlayer = ToHL2MPPlayer(pViewModel->GetOwner());
 		if (pPlayer)
 		{
 			if ((pPlayer == pLocal) || (GetSpectatorTarget() == pPlayer->entindex()))
@@ -110,7 +118,7 @@ void C_BloodyTextureProxy::OnBind(void* pC_BaseEntity)
 					bShouldDrawBlood = pPlayer->IsMaterialOverlayFlagActive(MAT_OVERLAY_BLOOD);
 				else
 				{
-					C_BaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
+					C_BaseCombatWeapon* pWeapon = pPlayer->GetActiveWeapon();
 					if (pWeapon)
 						bShouldDrawBlood = pWeapon->m_bIsBloody;
 				}
