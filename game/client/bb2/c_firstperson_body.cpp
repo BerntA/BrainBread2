@@ -17,7 +17,8 @@
 #include "GlobalRenderEffects.h"
 #include "GameBase_Shared.h"
 
-static ConVar bb2_render_body("bb2_render_body", "1", FCVAR_CHEAT, "Render firstperson body.");
+static ConVar bb2_render_body("bb2_render_body", "1", FCVAR_ARCHIVE, "Render firstperson body.");
+extern ConVar bb2_body_blood;
 
 C_FirstpersonBody::C_FirstpersonBody()
 {
@@ -55,7 +56,7 @@ int C_FirstpersonBody::DrawModel(int flags)
 
 	int ret = BaseClass::DrawModel(flags);
 
-	if (pOwner->IsMaterialOverlayFlagActive(MAT_OVERLAY_BLOOD))
+	if (pOwner->IsMaterialOverlayFlagActive(MAT_OVERLAY_BLOOD) && bb2_body_blood.GetBool())
 	{
 		modelrender->ForcedMaterialOverride(GlobalRenderEffects->GetBloodOverlay());
 		BaseClass::DrawModel(STUDIO_RENDER | STUDIO_TRANSPARENCY);

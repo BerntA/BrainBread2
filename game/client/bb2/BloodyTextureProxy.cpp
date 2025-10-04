@@ -16,7 +16,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-static ConVar bb2_body_blood("bb2_body_blood", "1", FCVAR_ARCHIVE, "Display blood on the body and viewmodel.", true, 0, true, 1);
+ConVar bb2_body_blood("bb2_body_blood", "1", FCVAR_ARCHIVE, "Display blood on the body and viewmodel.", true, 0, true, 1);
 
 class C_BloodyTextureProxy : public IMaterialProxy, public CGameEventListener
 {
