@@ -1976,7 +1976,8 @@ namespace ACHIEVEMENTS
 		{ "ACH_MAP_RISHIKA_A", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 3500, false, "bba_rishika" },
 
 		// Festive maps, e.g halloween
-		{ "ACH_MAP_HALLOWEVE25", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 250, false, "bba_halloweve25" },
+		{ "ACH_MAP_HALLOWEVE25", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 250, false, "bba_brainoween25" },
+		{ "ACH_MAP_HALLOWEVE26", "", 0, ACHIEVEMENT_TYPE_DEFAULT, 250, false, "bba_brainoween26" },
 
 		// Hidden:
 		{ "ACH_SECRET_WATCHYOURSTEP", "", 0, ACHIEVEMENT_TYPE_MAP, 0, true, NULL },
